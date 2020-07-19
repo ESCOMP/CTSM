@@ -123,6 +123,7 @@ contains
    type(mct_ggrid)    :: dom_clm                              ! domain information
    character(len=CL)  :: stream_fldFileName_urbantv           ! urban tv streams filename
    character(len=CL)  :: urbantvmapalgo = 'nn'                ! mapping alogrithm for urban ac
+   character(len=CL)  :: urbantv_tintalgo = 'linear'          ! time interpolation alogrithm
    character(len=CL)  :: fldList                              ! field string
    character(*), parameter :: urbantvString = "tbuildmax_"    ! base string for field string
    character(*), parameter :: subName = "('urbantv_init')"
@@ -133,7 +134,8 @@ contains
         stream_year_last_urbantv,   &
         model_year_align_urbantv,   &
         urbantvmapalgo,             &
-        stream_fldFileName_urbantv
+        stream_fldFileName_urbantv, &
+        urbantv_tintalgo
    !-----------------------------------------------------------------------
 
    begl = bounds%begl; endl = bounds%endl
@@ -163,6 +165,7 @@ contains
    call shr_mpi_bcast(stream_year_last_urbantv, mpicom)
    call shr_mpi_bcast(model_year_align_urbantv, mpicom)
    call shr_mpi_bcast(stream_fldFileName_urbantv, mpicom)
+   call shr_mpi_bcast(urbantv_tintalgo, mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -171,6 +174,7 @@ contains
       write(iulog,*) '  stream_year_last_urbantv   = ',stream_year_last_urbantv
       write(iulog,*) '  model_year_align_urbantv   = ',model_year_align_urbantv
       write(iulog,*) '  stream_fldFileName_urbantv = ',stream_fldFileName_urbantv
+      write(iulog,*) '  urbantv_tintalgo           = ',urbantv_tintalgo
       write(iulog,*) ' '
    endif
 
@@ -210,7 +214,7 @@ contains
         fillalgo='none',                               &
         mapalgo=urbantvmapalgo,                        &
         calendar=get_calendar(),                       &
-        tintalgo='linear',                             &
+        tintalgo=urbantv_tintalgo,                     &
         taxmode='extend'                                 )
 
    if (masterproc) then

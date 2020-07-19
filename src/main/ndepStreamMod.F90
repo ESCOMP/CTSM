@@ -15,7 +15,7 @@ module ndepStreamMod
   use clm_varctl  , only: iulog
   use abortutils  , only: endrun
   use fileutils   , only: getavu, relavu
-  use decompMod   , only: bounds_type, ldecomp, gsmap_lnd_gdc2glo
+  use decompMod   , only: bounds_type, ldecomp
   use domainMod   , only: ldomain
 
   ! !PUBLIC TYPES:
@@ -57,6 +57,7 @@ contains
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
+   use decompMod        , only : gsmap_lnd_gdc2glo 
    !
    ! arguments
    implicit none
@@ -69,6 +70,7 @@ contains
    type(mct_ggrid)    :: dom_clm   ! domain information
    character(len=CL)  :: stream_fldFileName_ndep
    character(len=CL)  :: ndepmapalgo = 'bilinear'
+   character(len=CL)  :: ndep_tintalgo = 'linear'
    character(len=CS)  :: ndep_taxmode = 'extend'
    character(len=CL)  :: ndep_varlist = 'NDEP_year'
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
@@ -78,11 +80,12 @@ contains
 
    namelist /ndepdyn_nml/          &
         stream_year_first_ndep,    &
-	stream_year_last_ndep,     &
+        stream_year_last_ndep,     &
         model_year_align_ndep,     &
         ndepmapalgo, ndep_taxmode, &
         ndep_varlist,              &
-        stream_fldFileName_ndep
+        stream_fldFileName_ndep,   &
+        ndep_tintalgo
 
    ! Default values for namelist
     stream_year_first_ndep  = 1                ! first year in stream to use
@@ -113,6 +116,7 @@ contains
    call shr_mpi_bcast(stream_fldFileName_ndep, mpicom)
    call shr_mpi_bcast(ndep_varlist           , mpicom)
    call shr_mpi_bcast(ndep_taxmode           , mpicom)
+   call shr_mpi_bcast(ndep_tintalgo          , mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -123,6 +127,7 @@ contains
       write(iulog,*) '  stream_fldFileName_ndep = ',stream_fldFileName_ndep
       write(iulog,*) '  ndep_varList            = ',ndep_varList
       write(iulog,*) '  ndep_taxmode            = ',ndep_taxmode
+      write(iulog,*) '  ndep_tintalgo           = ',ndep_tintalgo
       write(iulog,*) ' '
    endif
    ! Read in units
@@ -154,8 +159,9 @@ contains
         fldListModel=ndep_varlist,                 &
         fillalgo='none',                           &
         mapalgo=ndepmapalgo,                       &
+        tintalgo=ndep_tintalgo,                    &
         calendar=get_calendar(),                   &
-	taxmode=ndep_taxmode                       )
+        taxmode=ndep_taxmode                       )
 
 
    if (masterproc) then
@@ -257,7 +263,7 @@ contains
  end subroutine ndep_interp
 
  !==============================================================================
-  subroutine clm_domain_mct(bounds, dom_clm)
+  subroutine clm_domain_mct(bounds, dom_clm, nlevels)
 
     !-------------------------------------------------------------------
     ! Set domain data type for internal clm grid
@@ -266,24 +272,37 @@ contains
     use mct_mod     , only : mct_ggrid, mct_gsMap_lsize, mct_gGrid_init
     use mct_mod     , only : mct_gsMap_orderedPoints, mct_gGrid_importIAttr
     use mct_mod     , only : mct_gGrid_importRAttr
+    use mct_mod     , only : mct_gsMap
+    use decompMod   , only : gsmap_lnd_gdc2glo, gsMap_lnd2Dsoi_gdc2glo
     implicit none
     !
     ! arguments
     type(bounds_type), intent(in) :: bounds
     type(mct_ggrid), intent(out)   :: dom_clm     ! Output domain information for land model
+    integer, intent(in), optional :: nlevels      ! Number of levels if this is a 3D field
     !
     ! local variables
-    integer :: g,i,j              ! index
+    integer :: g,i,j,k            ! index
     integer :: lsize              ! land model domain data size
     real(r8), pointer :: data(:)  ! temporary
     integer , pointer :: idata(:) ! temporary
+    integer :: nlevs              ! Number of vertical levels
+    type(mct_gsMap), pointer :: gsmap => null() ! MCT GS map
     !-------------------------------------------------------------------
+    ! SEt number of levels, and get the GS map for either the 2D or 3D grid
+    nlevs = 1
+    if ( present(nlevels) ) nlevs = nlevels
+    if ( nlevs == 1 ) then
+       gsmap => gsmap_lnd_gdc2glo
+    else
+       gsmap => gsMap_lnd2Dsoi_gdc2glo
+    end if
     !
     ! Initialize mct domain type
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
     ! Note that in addition land carries around landfrac for the purposes of domain checking
-    !
-    lsize = mct_gsMap_lsize(gsmap_lnd_gdc2glo, mpicom)
+    ! 
+    lsize = mct_gsMap_lsize(gsmap, mpicom)
     call mct_gGrid_init( GGrid=dom_clm, &
          CoordChars='lat:lon:hgt', OtherChars='area:aream:mask:frac', lsize=lsize )
     !
@@ -293,7 +312,8 @@ contains
     !
     ! Determine global gridpoint number attribute, GlobGridNum, which is set automatically by MCT
     !
-    call mct_gsMap_orderedPoints(gsmap_lnd_gdc2glo, iam, idata)
+    call mct_gsMap_orderedPoints(gsmap, iam, idata)
+    gsmap => null()
     call mct_gGrid_importIAttr(dom_clm,'GlobGridNum',idata,lsize)
     !
     ! Determine domain (numbering scheme is: West to East and South to North to South pole)
@@ -312,35 +332,45 @@ contains
     ! Fill in correct values for domain components
     ! Note aream will be filled in in the atm-lnd mapper
     !
+    do k = 1, nlevs
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%lonc(g)
     end do
-    call mct_gGrid_importRattr(dom_clm,"lon",data,lsize)
+    end do
+    call mct_gGrid_importRattr(dom_clm,"lon",data,lsize) 
 
+    do k = 1, nlevs
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%latc(g)
     end do
-    call mct_gGrid_importRattr(dom_clm,"lat",data,lsize)
+    end do
+    call mct_gGrid_importRattr(dom_clm,"lat",data,lsize) 
 
+    do k = 1, nlevs
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = ldomain%area(g)/(re*re)
     end do
-    call mct_gGrid_importRattr(dom_clm,"area",data,lsize)
+    end do
+    call mct_gGrid_importRattr(dom_clm,"area",data,lsize) 
 
+    do k = 1, nlevs
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = real(ldomain%mask(g), r8)
     end do
-    call mct_gGrid_importRattr(dom_clm,"mask",data,lsize)
+    end do
+    call mct_gGrid_importRattr(dom_clm,"mask",data,lsize) 
 
+    do k = 1, nlevs
     do g = bounds%begg,bounds%endg
        i = 1 + (g - bounds%begg)
        data(i) = real(ldomain%frac(g), r8)
     end do
-    call mct_gGrid_importRattr(dom_clm,"frac",data,lsize)
+    end do
+    call mct_gGrid_importRattr(dom_clm,"frac",data,lsize) 
 
     deallocate(data)
     deallocate(idata)

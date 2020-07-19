@@ -73,8 +73,13 @@ module CNFireBaseMod
       real(r8) :: cmb_cmplt_fact(num_fp) = (/ 0.5_r8, 0.25_r8 /) ! combustion completion factor (unitless)
   end type
 
+  type, public :: params_type
+     real(r8) :: prh30                ! Factor related to dependence of fuel combustibility on 30-day running mean of relative humidity (unitless)
+     real(r8) :: ignition_efficiency  ! Ignition efficiency of cloud-to-ground lightning (unitless)
+  end type params_type
+
   !
-  type, extends(cnfire_method_type) :: cnfire_base_type
+  type, abstract, extends(cnfire_method_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
 
@@ -89,10 +94,13 @@ module CNFireBaseMod
       !
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: CNFireInit        ! Initialization of CNFire
+      procedure, public :: CNFireReadParams  ! Read in constant parameters from the paramsfile
       procedure, public :: CNFireReadNML     ! Read in namelist for CNFire
       procedure, public :: CNFireInterp      ! Interpolate fire data
       procedure, public :: CNFireArea        ! Calculate fire area
       procedure, public :: CNFireFluxes      ! Calculate fire fluxes
+      procedure(need_lightning_and_popdens_interface), public, deferred :: &
+           need_lightning_and_popdens ! Returns true if need lightning & popdens
       !
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: hdm_init    ! position datasets for dynamic human population density
@@ -102,7 +110,25 @@ module CNFireBaseMod
   end type cnfire_base_type
   !-----------------------------------------------------------------------
 
+  abstract interface
+     !-----------------------------------------------------------------------
+     function need_lightning_and_popdens_interface(this) result(need_lightning_and_popdens)
+       !
+       ! !DESCRIPTION:
+       ! Returns true if need lightning and popdens, false otherwise
+       !
+       ! USES
+       import :: cnfire_base_type
+       !
+       ! !ARGUMENTS:
+       class(cnfire_base_type), intent(in) :: this
+       logical :: need_lightning_and_popdens  ! function result
+       !-----------------------------------------------------------------------
+     end function need_lightning_and_popdens_interface
+  end interface
+
   type(cnfire_const_type), public, protected :: cnfire_const          ! Fire constants shared by Li versons
+  type(params_type)      , public, protected :: cnfire_params         ! Fire parameters shared by Li versions
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -123,7 +149,7 @@ contains
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
-    if ( this%need_lightning_and_popdens ) then
+    if ( this%need_lightning_and_popdens() ) then
        ! Allocate lightning forcing data
        allocate( this%forc_lnfm(bounds%begg:bounds%endg) )
        this%forc_lnfm(bounds%begg:) = nan
@@ -173,7 +199,7 @@ contains
                              rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree, &
                              lfuel, ufuel, cmb_cmplt_fact
 
-    if ( this%need_lightning_and_popdens ) then
+    if ( this%need_lightning_and_popdens() ) then
        cli_scale                 = cnfire_const%cli_scale
        boreal_peatfire_c         = cnfire_const%boreal_peatfire_c
        non_boreal_peatfire_c     = cnfire_const%non_boreal_peatfire_c
@@ -255,7 +281,7 @@ contains
     type(bounds_type), intent(in) :: bounds
     !-----------------------------------------------------------------------
 
-    if ( this%need_lightning_and_popdens ) then
+    if ( this%need_lightning_and_popdens() ) then
        call this%hdm_interp(bounds)
        call this%lnfm_interp(bounds)
     end if
@@ -957,6 +983,30 @@ contains
   end subroutine CNFireFluxes
 
   !-----------------------------------------------------------------------
+  subroutine CNFireReadParams( this, ncid )
+    !
+    ! Read in the constant parameters from the input NetCDF parameter file
+    ! !USES:
+    use ncdio_pio   , only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(cnfire_base_type)         :: this
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'CNFireReadParams'
+    !--------------------------------------------------------------------
+
+    ! Factor related to dependence of fuel combustibility on 30-day running mean of relative humidity (unitless)
+    call readNcdioScalar(ncid, 'prh30', subname, cnfire_params%prh30)
+    ! Ignition efficiency of cloud-to-ground lightning (unitless)
+    call readNcdioScalar(ncid, 'ignition_efficiency', subname, cnfire_params%ignition_efficiency)
+
+  end subroutine CNFireReadParams
+
+  !-----------------------------------------------------------------------
   subroutine hdm_init( this, bounds, NLFilename )
    !
    ! !DESCRIPTION:
@@ -985,6 +1035,7 @@ contains
    type(mct_ggrid)    :: dom_clm                     ! domain information
    character(len=CL)  :: stream_fldFileName_popdens  ! population density streams filename
    character(len=CL)  :: popdensmapalgo = 'bilinear' ! mapping alogrithm for population density
+   character(len=CL)  :: popdens_tintalgo = 'nearest'! time interpolation alogrithm for population density
    character(*), parameter :: subName = "('hdmdyn_init')"
    character(*), parameter :: F00 = "('(hdmdyn_init) ',4a)"
    !-----------------------------------------------------------------------
@@ -994,7 +1045,8 @@ contains
         stream_year_last_popdens,   &
         model_year_align_popdens,   &
         popdensmapalgo,             &
-        stream_fldFileName_popdens
+        stream_fldFileName_popdens, &
+        popdens_tintalgo
 
    ! Default values for namelist
    stream_year_first_popdens  = 1       ! first year in stream to use
@@ -1021,6 +1073,7 @@ contains
    call shr_mpi_bcast(stream_year_last_popdens, mpicom)
    call shr_mpi_bcast(model_year_align_popdens, mpicom)
    call shr_mpi_bcast(stream_fldFileName_popdens, mpicom)
+   call shr_mpi_bcast(popdens_tintalgo, mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -1029,6 +1082,7 @@ contains
       write(iulog,*) '  stream_year_last_popdens   = ',stream_year_last_popdens
       write(iulog,*) '  model_year_align_popdens   = ',model_year_align_popdens
       write(iulog,*) '  stream_fldFileName_popdens = ',stream_fldFileName_popdens
+      write(iulog,*) '  popdens_tintalgo           = ',popdens_tintalgo
       write(iulog,*) ' '
    endif
 
@@ -1060,7 +1114,7 @@ contains
         fillalgo='none',                               &
         mapalgo=popdensmapalgo,                        &
         calendar=get_calendar(),                       &
-        tintalgo='nearest',                            &
+        tintalgo=popdens_tintalgo,                     &
         taxmode='extend'                           )
 
    if (masterproc) then
@@ -1138,6 +1192,7 @@ contains
   integer            :: nml_error                  ! namelist i/o error flag
   type(mct_ggrid)    :: dom_clm                    ! domain information
   character(len=CL)  :: stream_fldFileName_lightng ! lightning stream filename to read
+  character(len=CL)  :: lightng_tintalgo = 'linear'! time interpolation alogrithm
   character(len=CL)  :: lightngmapalgo = 'bilinear'! Mapping alogrithm
   character(*), parameter :: subName = "('lnfmdyn_init')"
   character(*), parameter :: F00 = "('(lnfmdyn_init) ',4a)"
@@ -1148,7 +1203,8 @@ contains
         stream_year_last_lightng,   &
         model_year_align_lightng,   &
         lightngmapalgo,             &
-        stream_fldFileName_lightng
+        stream_fldFileName_lightng, &
+        lightng_tintalgo
 
    ! Default values for namelist
     stream_year_first_lightng  = 1      ! first year in stream to use
@@ -1175,6 +1231,7 @@ contains
    call shr_mpi_bcast(stream_year_last_lightng, mpicom)
    call shr_mpi_bcast(model_year_align_lightng, mpicom)
    call shr_mpi_bcast(stream_fldFileName_lightng, mpicom)
+   call shr_mpi_bcast(lightng_tintalgo, mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -1183,6 +1240,7 @@ contains
       write(iulog,*) '  stream_year_last_lightng   = ',stream_year_last_lightng
       write(iulog,*) '  model_year_align_lightng   = ',model_year_align_lightng
       write(iulog,*) '  stream_fldFileName_lightng = ',stream_fldFileName_lightng
+      write(iulog,*) '  lightng_tintalgo           = ',lightng_tintalgo
       write(iulog,*) ' '
    endif
 
@@ -1212,6 +1270,7 @@ contains
         fldListFile='lnfm',                           &
         fldListModel='lnfm',                          &
         fillalgo='none',                              &
+        tintalgo=lightng_tintalgo,                    &
         mapalgo=lightngmapalgo,                       &
         calendar=get_calendar(),                      &
         taxmode='cycle'                            )

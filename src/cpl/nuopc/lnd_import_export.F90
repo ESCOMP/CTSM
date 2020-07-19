@@ -858,7 +858,7 @@ contains
          minus=.true., ungridded_index=4, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%flux_ch4_grc, minus=.true., rc=rc)
+    call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%ch4_surf_flux_tot_grc, minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_ram1', bounds, input=lnd2atm_inst%ram1_grc, rc=rc)
@@ -978,7 +978,7 @@ contains
     if (num > fldsMax) then
        call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), &
             ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__)
-       return
+       call shr_sys_abort(trim(subname)//": ERROR: num > fldsMax")
     endif
     fldlist(num)%stdname = trim(stdname)
 
@@ -1195,6 +1195,7 @@ contains
     integer             , intent(out)   :: rc
 
     ! local variables
+    logical                     :: l_minus  ! local version of minus
     integer                     :: g, i, n
     real(R8), pointer           :: fldptr1d(:)
     real(R8), pointer           :: fldptr2d(:,:)
@@ -1204,6 +1205,11 @@ contains
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
+
+    l_minus = .false.
+    if (present(minus)) then
+       l_minus = minus
+    end if
 
     ! Determine if field with name fldname exists in state
     call ESMF_StateGet(state, trim(fldname), itemFlag, rc=rc)
@@ -1237,7 +1243,7 @@ contains
              n = g - bounds%begg + 1
              fldptr2d(ungridded_index,n) = input(g)
           end do
-          if (present(minus)) then
+          if (l_minus) then
              fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
           end if
        else
@@ -1247,7 +1253,7 @@ contains
              n = g - bounds%begg + 1
              fldptr1d(n) = input(g)
           end do
-          if (present(minus)) then
+          if (l_minus) then
              fldptr1d(:) = -fldptr1d(:)
           end if
        end if
