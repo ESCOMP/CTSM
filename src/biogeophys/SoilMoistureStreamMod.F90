@@ -67,7 +67,6 @@ contains
     !
     !
     ! !USES:
-    use clm_varctl       , only : inst_name
     use clm_time_manager , only : get_calendar
     use ncdio_pio        , only : pio_subsystem
     use shr_pio_mod      , only : shr_pio_getiotype
@@ -172,7 +171,7 @@ contains
     
     call shr_strdata_create(sdat_soilm,name="soil_moisture",    &
          pio_subsystem=pio_subsystem,                  & 
-         pio_iotype=shr_pio_getiotype(inst_name),      &
+         pio_iotype=shr_pio_getiotype('LND'),          &
          mpicom=mpicom, compid=comp_id,                &
          gsmap=gsMap_lnd2Dsoi_gdc2glo, ggrid=dom_clm,  &
          nxg=ldomain%ni, nyg=ldomain%nj,               &

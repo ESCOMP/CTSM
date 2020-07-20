@@ -92,6 +92,7 @@ def _main_func():
         gmake = case.get_value("GMAKE")
         gmake_opts = get_standard_makefile_args(case)
         driver = case.get_value("COMP_INTERFACE").lower()
+        cimeroot = case.get_value("CIMEROOT")
         lilac_mode = case.get_value("LILAC_MODE")
 
         if lilac_mode == 'on':
