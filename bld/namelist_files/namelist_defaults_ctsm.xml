@@ -855,7 +855,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- 2013 -->
 <finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="20130101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="2013"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true." use_init_interp=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200705.nc
 </finidat>
@@ -3003,47 +3003,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <!-- mapping files for 0.125x0.125 END -->
 
-<!-- mapping files for ne0np4CONUS.ne30x8 START added on Mon Jan 14 21:41:02 2019-->
-<!-- Created by lnd/clm/bld/namelist_files/createMapEntry.pl--> 
-
-<map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_5x5min_nomask_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="GLOBE-Gardner"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_GLOBE-Gardner_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="LandScan2004"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_LandScan2004_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="10x10min"    frm_lmask="nomask"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_10x10min_nomask_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="0.5x0.5"    frm_lmask="MODIS"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_0.5x0.5_MODIS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="ORNL-Soil"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_5x5min_ORNL-Soil_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="0.5x0.5"    frm_lmask="AVHRR"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_0.5x0.5_AVHRR_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="MODIS-wCsp"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_MODIS-wCsp_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_1km-merge-10min_HYDRO1K-merge-nomask_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="360x720cru"    frm_lmask="cruncep"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_360x720cru_cruncep_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="10x10min"    frm_lmask="IGBPmergeICESatGIS"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_10x10min_IGBPmergeICESatGIS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="GLOBE-Gardner-mergeGIS"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_GLOBE-Gardner-mergeGIS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="0.9x1.25"    frm_lmask="GRDC"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_0.9x1.25_GRDC_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="ISRIC-WISE"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_5x5min_ISRIC-WISE_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="USGS"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_USGS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="0.25x0.25"    frm_lmask="MODIS"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_0.25x0.25_MODIS_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="MODISv2"     to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_3x3min_MODISv2_to_conus_30_x8_nomask_aave_da_c190505.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="IGBP-GSDP"  to_hgrid="ne0np4CONUS.ne30x8"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/conus_30_x8/map_5x5min_IGBP-GSDP_to_conus_30_x8_nomask_aave_da_c181003.nc</map>
-
-<!-- mapping files for ne0np4CONUS.ne30x8 END -->
 
 <!-- mapping files for 94x192 START added on Tue May 21 15:02:45 2019-->
 <!-- Created by lnd/clm/bld/namelist_files/createMapEntry.pl--> 
