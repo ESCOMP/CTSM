@@ -315,7 +315,6 @@ contains
    ! Read the namelist data stream information.  
    !
    ! Uses:
-   use clm_varctl       , only : inst_name
    use clm_time_manager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype

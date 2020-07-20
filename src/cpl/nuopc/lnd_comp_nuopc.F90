@@ -24,7 +24,7 @@ module lnd_comp_nuopc
   use domainMod              , only : ldomain
   use controlMod             , only : control_setNL
   use clm_varorb             , only : eccen, obliqr, lambm0, mvelpp
-  use clm_varctl             , only : inst_index, inst_suffix, inst_name
+  use clm_varctl             , only : inst_index, inst_suffix
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
   use clm_varcon             , only : re
@@ -216,8 +216,6 @@ contains
 
     call get_component_instance(gcomp, inst_suffix, inst_index, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    inst_name = "LND"//trim(inst_suffix)
 
     !----------------------------------------------------------------------------
     ! reset shr logging to my log file
