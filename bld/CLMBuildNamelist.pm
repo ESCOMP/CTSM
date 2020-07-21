@@ -1193,7 +1193,16 @@ sub setup_cmdl_run_type {
   my $val;
   my $var = "clm_start_type";
   my $ic_date = $nl->get_value('start_ymd');
-  my $st_year = int( $ic_date / 10000);
+  my $st_year;
+  if ( defined($ic_date) ) {
+     $st_year = int( $ic_date / 10000);
+  } else {
+    $st_year = $nl_flags->{'sim_year'};
+    $ic_date = $st_year *10000 + 101;
+    my $date = 'start_ymd';
+    my $group = $definition->get_group_name($date);
+    $nl->set_variable_value($group, $date, $ic_date );
+  }
   if (defined $opts->{$var}) {
     if ($opts->{$var} eq "default" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
@@ -1209,6 +1218,7 @@ sub setup_cmdl_run_type {
                   'sim_year'=>$st_year );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
+  $nl_flags->{'st_year'}        = $st_year;
 }
 
 #-------------------------------------------------------------------------------
@@ -2218,7 +2228,7 @@ sub setup_logic_initial_conditions {
 
   if (not defined $finidat ) {
     my $ic_date = $nl->get_value('start_ymd');
-    my $st_year = int( $ic_date / 10000);
+    my $st_year = $nl_flags->{'st_year'};
     my $nofail = 1;
     my %settings;
     $settings{'hgrid'}   = $nl_flags->{'res'};
