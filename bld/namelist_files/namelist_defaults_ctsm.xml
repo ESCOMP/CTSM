@@ -1039,7 +1039,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <flanduse_timeseries hgrid="4x5"           sim_year_range="1850-2000" irrigate=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_4x5_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
 <flanduse_timeseries hgrid="48x96"         sim_year_range="1850-2000" irrigate=".true."
- use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_48x96_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
+ use_crop=".false." >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_48x96_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc</flanduse_timeseries>
 
 <flanduse_timeseries hgrid="1x1_brazil"    sim_year_range="1850-2000" irrigate=".true."
  use_crop=".false."  >lnd/clm2/surfdata_map/landuse.timeseries_1x1_brazil_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
