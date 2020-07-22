@@ -995,7 +995,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     logical          :: readvar
-    integer ,pointer :: haslake_id(:)
+    real(r8),pointer :: haslake_id(:)
     !
     !
     character(len=*), parameter :: subname = 'surfrd_lakemask'
@@ -1009,7 +1009,7 @@ contains
            dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: HASLAKE is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
 
-    where (haslake_id == 1.)
+    where (haslake_id == 1._r8)
         haslake = .true.
     elsewhere
         haslake = .false.
