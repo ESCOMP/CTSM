@@ -22,7 +22,7 @@ Clone WRF and CTSM Repositories
 
 Clone the WRF CTSM feature branch::
 
-    git clone git@github.com:negin513/WRF-1.git
+    git clone https://github.com/negin513/WRF-1.git
     cd WRF-1
     git checkout lilac_dev
 
