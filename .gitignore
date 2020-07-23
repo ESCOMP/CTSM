@@ -6,6 +6,9 @@ manage_externals.log
 /cime/
 /components/
 
+# run system test log file
+run_sys_test.log
+
 # ignore svn directories
 **/.svn/**
 .svn/
