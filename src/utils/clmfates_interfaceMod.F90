@@ -46,7 +46,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_vertsoilc
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
-   use clm_varctl        , only : use_fates_spitfire
+   use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_planthydro
    use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_ed_st3
@@ -134,6 +134,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
+   use FATESFireBase          , only : fates_fire_base_type
 
    implicit none
    
@@ -174,6 +175,9 @@ module CLMFatesInterfaceMod
       ! fates_restart is the inteface calss for restarting the model
       type(fates_restart_interface_type) :: fates_restart
 
+      ! fates_fire_data_method determines the fire data passed from HLM to FATES
+      class(fates_fire_base_type), allocatable :: fates_fire_data_method
+
    contains
       
       procedure, public :: init
@@ -189,6 +193,11 @@ module CLMFatesInterfaceMod
       procedure, public :: wrap_canopy_radiation
       procedure, public :: wrap_bgc_summary
       procedure, public :: TransferZ0mDisp
+      procedure, public :: InterpFileInputs  ! Interpolate inputs from files
+      procedure, public :: Init2  ! Initialization after determining subgrid weights
+      procedure, public :: InitAccBuffer ! Initialize any accumulation buffers
+      procedure, public :: InitAccVars   ! Initialize any accumulation variables
+      procedure, public :: UpdateAccVars ! Update any accumulation variables
       procedure, private :: init_history_io
       procedure, private :: wrap_update_hlmfates_dyn
       procedure, private :: init_soil_depths
@@ -227,7 +236,6 @@ module CLMFatesInterfaceMod
      logical                                        :: verbose_output
      integer                                        :: pass_masterproc
      integer                                        :: pass_vertsoilc
-     integer                                        :: pass_spitfire     
      integer                                        :: pass_ed_st3
      integer                                        :: pass_logging
      integer                                        :: pass_ed_prescribed_phys
@@ -258,6 +266,8 @@ module CLMFatesInterfaceMod
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         
+        call set_fates_ctrlparms('spitfire_mode',ival=fates_spitfire_mode)
+        
         if(is_restart()) then
            pass_is_restart = 1
         else
@@ -272,13 +282,6 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
         
-        if(use_fates_spitfire) then
-           pass_spitfire = 1
-        else
-           pass_spitfire = 0
-        end if
-        call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
-
         if(use_fates_fixed_biogeog)then
            pass_biogeog = 1
         else 
@@ -382,7 +385,9 @@ module CLMFatesInterfaceMod
       use FatesInterfaceTypesMod, only : numpft_fates => numpft
       use FatesParameterDerivedMod, only : param_derived
       use subgridMod, only :  natveg_patch_exists
-       use clm_instur      , only : wt_nat_patch
+      use clm_instur       , only : wt_nat_patch
+      use CNFireFactoryMod , only: create_fates_fire_data_method
+
       implicit none
       
       ! Input Arguments
@@ -563,6 +568,9 @@ module CLMFatesInterfaceMod
       ! Report Fates Parameters (debug flag in lower level routines)
       call FatesReportParameters(masterproc)
 
+      ! Fire data to send to FATES
+      call create_fates_fire_data_method( this%fates_fire_data_method )
+
     end subroutine init
 
     ! ===================================================================================
@@ -606,13 +614,17 @@ module CLMFatesInterfaceMod
    subroutine dynamics_driv(this, nc, bounds_clump,      &
          atm2lnd_inst, soilstate_inst, temperature_inst, &
          waterstate_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
-         frictionvel_inst )
+         frictionvel_inst)
     
       ! This wrapper is called daily from clm_driver
       ! This wrapper calls ed_driver, which is the daily dynamics component of FATES
       ! ed_driver is not a hlm_fates_inst_type procedure because we need an extra step 
       ! to process array bounding information 
       
+      ! !USES
+      use CNFireFactoryMod, only: scalar_lightning
+
+      ! !ARGUMENTS:
       implicit none
       class(hlm_fates_interface_type), intent(inout) :: this
       type(bounds_type),intent(in)                   :: bounds_clump
@@ -627,6 +639,7 @@ module CLMFatesInterfaceMod
 
       ! !LOCAL VARIABLES:
       integer  :: s                        ! site index
+      integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
@@ -646,6 +659,8 @@ module CLMFatesInterfaceMod
       integer  :: days_per_year
       real(r8) :: model_day
       real(r8) :: day_of_year
+      real(r8), pointer :: lnfm24(:)
+      integer  :: ier
       !-----------------------------------------------------------------------
 
       ! ---------------------------------------------------------------------------------
@@ -675,10 +690,29 @@ module CLMFatesInterfaceMod
                         model_day, floor(day_of_year), &
                         days_per_year, 1.0_r8/dble(days_per_year))
 
+      if (fates_spitfire_mode > scalar_lightning) then
+         allocate(lnfm24(bounds_clump%begg:bounds_clump%endg), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg="allocation error for lnfm24"//&
+                 errmsg(sourcefile, __LINE__))
+         endif
+
+         lnfm24 = this%fates_fire_data_method%GetLight24()
+      end if
 
       do s=1,this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
+
+         if (fates_spitfire_mode > scalar_lightning) then
+            g = col%gridcell(c)
+            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+               p = ifp + col%patchi(c)
+
+               this%fates(nc)%bc_in(s)%lightning24(ifp) = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+               this%fates(nc)%bc_in(s)%pop_density(ifp) = this%fates_fire_data_method%forc_hdm(g)
+            end do
+         end if
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
@@ -1995,6 +2029,129 @@ module CLMFatesInterfaceMod
 
     return
  end subroutine TransferZ0mDisp
+
+  !-----------------------------------------------------------------------
+  subroutine InterpFileInputs(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Interpolate inputs from files
+    !
+    ! NOTE(wjs, 2016-02-23) Stuff done here could probably be done at the end of
+    ! InitEachTimeStep, rather than in this separate routine, except for the
+    ! fact that
+    ! (currently) this Interp stuff is done with proc bounds rather thna clump
+    ! bounds. I
+    ! think that is needed so that you don't update a given stream multiple
+    ! times. If we
+    ! rework the handling of threading / clumps so that there is a separate
+    ! object for
+    ! each clump, then I think this problem would disappear - at which point we
+    ! could
+    ! remove this Interp routine, moving its body to the end of
+    ! InitEachTimeStep.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InterpFileInputs'
+    !-----------------------------------------------------------------------
+
+    call this%fates_fire_data_method%CNFireInterp(bounds)
+
+  end subroutine InterpFileInputs
+
+  !-----------------------------------------------------------------------
+  subroutine Init2(this, bounds, NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Initialization after subgrid weights are determined
+    !
+    ! This copy should only be called if use_fates is .true.
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    character(len=*), intent(in) :: NLFilename ! namelist filename
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'Init2'
+    !-----------------------------------------------------------------------
+
+    call this%fates_fire_data_method%CNFireInit(bounds, NLFilename)
+
+  end subroutine Init2
+
+  !-----------------------------------------------------------------------
+  subroutine InitAccBuffer(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialized any accumulation buffers needed for FATES
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitAccBuffer'
+    !-----------------------------------------------------------------------
+
+    call this%fates_fire_data_method%InitAccBuffer( bounds )
+
+  end subroutine InitAccBuffer
+
+
+  !-----------------------------------------------------------------------
+  subroutine InitAccVars(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialized any accumulation variables needed for FATES
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitAccVars'
+    !-----------------------------------------------------------------------
+
+    call this%fates_fire_data_method%InitAccVars( bounds )
+
+  end subroutine InitAccVars
+
+  !-----------------------------------------------------------------------
+  subroutine UpdateAccVars(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Update any accumulation variables needed for FATES
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'UpdateAccVars'
+    !-----------------------------------------------------------------------
+
+    call this%fates_fire_data_method%UpdateAccVars( bounds )
+
+  end subroutine UpdateAccVars
 
  ! ======================================================================================
 

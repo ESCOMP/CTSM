@@ -185,7 +185,7 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,spitfire" >
 The method type to use for CNFire
 
 nofire:        Turn fire effects off
@@ -618,9 +618,16 @@ Toggle to turn on the FATES model
 Switch deciding which nutrient model to use in FATES.
 </entry>
 
-<entry id="use_fates_spitfire" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on spitfire module for modeling fire (only relevant if FATES is being used).
+<entry id="fates_spitfire_mode" type="integer" category="physics"
+        group="clm_inparm" valid_values="0,1,2,3,4" value=".false.">
+Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
+Relevant only if use_fates = .true.
+Allowed values are:
+ 1 : use a global constant lightning rate found in fates_params.
+ 2 : use an external lightning dataset. 
+ 3 : use an external confirmed ignitions dataset. 
+ 4 : use external lightning and population datasets to simulate both natural and anthropogenic
+ignitions.
 </entry>
 
 <entry id="use_fates_fixed_biogeog" type="logical" category="physics"
