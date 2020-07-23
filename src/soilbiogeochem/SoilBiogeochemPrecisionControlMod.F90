@@ -43,7 +43,7 @@ contains
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
-    real(r8), parameter :: totvegcthresh = 0.1_r8   ! Total vegetation carbon threshold to zero out decomposition pools
+    real(r8), parameter :: totvegcthresh = 1.0_r8   ! Total vegetation carbon threshold to zero out decomposition pools
     !-----------------------------------------------------------------------
     ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
     ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)

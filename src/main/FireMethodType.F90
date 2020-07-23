@@ -22,6 +22,9 @@ module FireMethodType
      ! Read namelist for the fire datasets
      procedure(FireReadNML_interface), public, deferred :: FireReadNML
 
+     ! Read parameters  for the fire datasets
+     procedure(CNFireReadParams_interface), public, deferred :: CNFireReadParams
+
      ! Interpolate the fire datasets
      procedure(FireInterp_interface) , public, deferred :: FireInterp
 

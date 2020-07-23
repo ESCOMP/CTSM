@@ -342,7 +342,6 @@ contains
     type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
     type(ESMF_Time)         :: currTime              ! Current time
     type(ESMF_Time)         :: startTime             ! Start time
-    type(ESMF_Time)         :: stopTime              ! Stop time
     type(ESMF_Time)         :: refTime               ! Ref time
     type(ESMF_TimeInterval) :: timeStep              ! Model timestep
     type(ESMF_Calendar)     :: esmf_calendar         ! esmf calendar
@@ -352,12 +351,9 @@ contains
     integer                 :: yy,mm,dd              ! Temporaries for time query
     integer                 :: start_ymd             ! start date (YYYYMMDD)
     integer                 :: start_tod             ! start time of day (sec)
-    integer                 :: stop_ymd              ! stop date (YYYYMMDD)
-    integer                 :: stop_tod              ! stop time of day (sec)
     integer                 :: curr_ymd              ! Start date (YYYYMMDD)
     integer                 :: curr_tod              ! Start time of day (sec)
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
-    integer                 :: dtime_clm             ! ctsm time-step
     integer, pointer        :: gindex(:)             ! global index space for land and ocean points
     integer, pointer        :: gindex_lnd(:)         ! global index space for just land points
     integer, pointer        :: gindex_ocn(:)         ! global index space for just ocean points
@@ -479,7 +475,7 @@ contains
     !----------------------
 
     call ESMF_ClockGet( clock, &
-         currTime=currTime, startTime=startTime, stopTime=stopTime, refTime=RefTime, &
+         currTime=currTime, startTime=startTime, refTime=RefTime, &
          timeStep=timeStep, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -490,10 +486,6 @@ contains
     call ESMF_TimeGet( startTime, yy=yy, mm=mm, dd=dd, s=start_tod, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call shr_cal_ymd2date(yy,mm,dd,start_ymd)
-
-    call ESMF_TimeGet( stopTime, yy=yy, mm=mm, dd=dd, s=stop_tod, rc=rc )
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call shr_cal_ymd2date(yy,mm,dd,stop_ymd)
 
     call ESMF_TimeGet( refTime, yy=yy, mm=mm, dd=dd, s=ref_tod, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -510,6 +502,13 @@ contains
        call shr_sys_abort( subname//'ERROR:: bad calendar for ESMF' )
     end if
 
+    call ESMF_TimeIntervalGet( timeStep, s=dtime_sync, rc=rc )
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    if (masterproc) then
+       write(iulog,*)'dtime = ', dtime_sync
+    end if
+
     !----------------------
     ! Initialize module orbital values and update orbital
     !----------------------
@@ -524,14 +523,15 @@ contains
     ! Initialize CTSM time manager
     !----------------------
 
+    ! Note that we assume that CTSM's internal dtime matches the coupling time step.
+    ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
     call set_timemgr_init(       &
          calendar_in=calendar,   &
          start_ymd_in=start_ymd, &
          start_tod_in=start_tod, &
          ref_ymd_in=ref_ymd,     &
          ref_tod_in=ref_tod,     &
-         stop_ymd_in=stop_ymd,   &
-         stop_tod_in=stop_tod)
+         dtime_in=dtime_sync)
 
     !----------------------
     ! Read namelist, grid and surface data
@@ -548,7 +548,7 @@ contains
          username_in=username)
 
     ! note that the memory for gindex_ocn will be allocated in the following call
-    call initialize1(gindex_ocn)
+    call initialize1(dtime=dtime_sync, gindex_ocn=gindex_ocn)
 
     ! If no land then abort for now
     ! TODO: need to handle the case of noland with CMEPS
@@ -705,26 +705,6 @@ contains
        end if
     end do
 100 format(a,3(d13.5,2x))
-
-    !--------------------------------
-    ! Check that ctsm internal dtime aligns with ctsm coupling interval
-    !--------------------------------
-
-    call ESMF_ClockGet( clock, timeStep=timeStep, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_TimeIntervalGet( timeStep, s=dtime_sync, rc=rc )
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    dtime_clm = get_step_size()
-
-    if (masterproc) then
-       write(iulog,*)'dtime_sync= ',dtime_sync,' dtime_ctsm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
-    end if
-    if (mod(dtime_sync,dtime_clm) /= 0) then
-       write(iulog,*)'ctsm dtime ',dtime_clm,' and clock dtime ',dtime_sync,' never align'
-       rc = ESMF_FAILURE
-       return
-    end if
 
     !--------------------------------
     ! Create land export state
@@ -1008,11 +988,12 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call shr_cal_ymd2date(yr_sync, mon_sync, day_sync, ymd_sync)
 
-    if ( (ymd /= ymd_sync) .and. (tod /= tod_sync) ) then
+    if ( (ymd /= ymd_sync) .or. (tod /= tod_sync) ) then
        write(iulog,*)'ctsm ymd=',ymd     ,' ctsm tod= ',tod
        write(iulog,*)'sync ymd=',ymd_sync,' sync tod= ',tod_sync
-       rc = ESMF_FAILURE
        call ESMF_LogWrite(subname//" CTSM clock not in sync with Master Sync clock",ESMF_LOGMSG_ERROR)
+       rc = ESMF_FAILURE
+       return
     end if
 
     !--------------------------------

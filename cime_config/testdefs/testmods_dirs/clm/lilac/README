@@ -1,0 +1,4 @@
+This testmods directory inherits from the directory containing the
+user_nl_ctsm file that is staged for users by the build_ctsm
+script. Thus, tests using this testmod will include the settings that
+users get by default in LILAC configurations.

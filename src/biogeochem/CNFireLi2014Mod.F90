@@ -40,7 +40,7 @@ module CNFireLi2014Mod
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use FireMethodType                     , only : fire_method_type
-  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const
+  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
   !
   implicit none
   private
@@ -570,7 +570,8 @@ contains
                    min(1._r8,exp(SHR_CONST_PI*(forc_t(c)-SHR_CONST_TKFRZ)/10._r8))
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
-              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(3._r8*grc%lat(g)))*0.25_r8)*(1._r8-fs)*(1._r8-cropf_col(c)) 
+              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(3._r8*grc%lat(g)))* &
+                         cnfire_params%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c)) 
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10.0_r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               if ( wtlf(c) > 0.0_r8 )then
