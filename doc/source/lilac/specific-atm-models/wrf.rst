@@ -13,7 +13,7 @@ repeats some information from earlier sections but with minimal explanation.
 .. important::
 
   This section assumes use of a machine that has been ported to CIME.
-  In this example we assume NCAR’s cheyenne computer in particular.
+  In this example we assume NCAR’s Cheyenne HPC system in particular.
 
 
 Clone WRF and CTSM Repositories
@@ -21,24 +21,19 @@ Clone WRF and CTSM Repositories
 
 Clone the WRF CTSM feature branch::
 
-    git clone https://github.com/billsacks/WRF.git
-    cd WRF
+    git clone git@github.com:negin513/WRF-1.git
+    cd WRF-1
     git checkout lilac_dev
 
 .. todo::
 
-    update the git address to WRF feature branch...
+    update the git address to WRF repository and feature branch...
 
 Clone the CTSM repository::
 
     git clone https://github.com/ESCOMP/CTSM.git
     cd CTSM
-    git checkout lilac_cap
     ./manage_externals/checkout_externals
-
-.. todo::
-
-    Remove "git checkout lilac_cap" from the above when ready
 
 
 Build CTSM and its dependencies
@@ -48,15 +43,15 @@ Build CTSM and its dependencies based on the instructions from previous sections
 
     ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --machine MACHINE --compiler COMPILER
 
-For example on `Cheyenne:` for `Intel` compiler::
+For example on ``Cheyenne`` and for ``Intel`` compiler::
 
     ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
 
 
 .. note::
 
-    Run ./lilac/build_ctsm -h to see all options available,
-    for example if you would like to run with threading support you can use `--build-with-openmp`
+    Run ``./lilac/build_ctsm -h`` to see all options available.
+    For example if you would like to run with threading support you can use ``--build-with-openmp``.
 
 .. warning::
 
@@ -67,11 +62,11 @@ Building WRF with CTSM
 ----------------------
 
 First, load the same modules and set the same environments as used for CTSM build by
-sourcing ctsm_build_environment.sh for Bash::
+sourcing ``ctsm_build_environment.sh`` for Bash::
 
     source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.sh
 
-or sourcing ctsm_build_environment.csh for Cshell:
+or sourcing ``ctsm_build_environment.csh`` for Cshell:
 
 .. code-block:: Tcsh
 
@@ -127,7 +122,7 @@ in parallel.
 
 .. tip::
 
-    dmpar or distributed memory parallelization is the most highly tested and
+    ``dmpar`` or distributed memory parallelization is the most highly tested and
     recommended for compiling WRF.
 
 The next prompt requests an option for nesting. Currently nesting is not
@@ -144,8 +139,7 @@ or search the file for the string "Error" with a capital E.
 
 .. note::
 
-    The ./compile step may take more than 30 minutes to complete.
-    While you wait, follow the instructions in Section 3.2.2 (next)
+    The ``./compile`` step may take more than 30 minutes to complete.
 
 .. tip::
 
@@ -155,8 +149,8 @@ or search the file for the string "Error" with a capital E.
 .. seealso::
 
     For further detail on preparing the CTSM, including how to
-    recompile when making code changes to the CTSM, read `Section 3.2.
-    <https:../obtaining-building-and-running/index.html>`__
+    recompile when making code changes to the CTSM, read
+    section :numref:`obtaining-building-and-running` .
 
 Compile WRF Preprocessing System (WPS)
 --------------------------------------
@@ -191,7 +185,7 @@ Then, compile WPS::
 
 .. note::
 
-    If wps builds succesfully you should see geogrid.exe, ungrib.exe, and metgrid.exe.
+    If wps builds succesfully you should see ``geogrid.exe``, ``ungrib.exe``, and ``metgrid.exe``.
     Alternatively, you can check the log for successful build messages.
 
 
@@ -250,7 +244,6 @@ metgrid step::
 
 
 
-
 Run real.exe
 ------------
 
@@ -275,10 +268,6 @@ To run WRF-CTSM, in your namelist change land-surface option to 51::
     sf_surface_physics = 51
 
 
-.. todo::
-
-    add the link and adding some note that nested run is not possible....
-
 Run real.exe (if compiled parallel submit a batch job) to generate
 ``wrfinput`` and ``wrfbdy`` files.
 
@@ -290,9 +279,13 @@ Check the last line of the real log file for the following message::
 Set CTSM runtime options
 ------------------------
 
-Now follow the instructions in this Section::
+.. todo::
 
- https:../obtaining-building-and-running/setting-ctsm-runtime-options.html
+    Sam, can you please clarify this section. 
+
+Now follow the instructions in section :numref:`setting-ctsm-runtime-options`
+for setting CTSM runtime options.
+
 
 In step 3 of that Section we used for this example::
 
@@ -331,17 +324,17 @@ If real.exe completed successfully, we should have ``wrfinput`` and ``wrfbdy`` f
 in our directory. 
 
 If you plan to use this example's preexisting files, copy
-the following files to your WRF/run directory::
+the following files to your WRF run directory::
 
- /glade/work/slevis/git_wrf/WRF/test/em_real/namelist.input.ctsm.2013.d01.12month
- /glade/work/slevis/git_wrf/WRF/test/em_real/wrfinput_d01.ERAI.12month
- /glade/work/slevis/git_wrf/WRF/test/em_real/wrfbdy_d01.ERAI.12month
+ ln -sf /glade/work/slevis/git_wrf/WRF/test/em_real/namelist.input.ctsm.2013.d01.12month namelist.input
+ ln -sf /glade/work/slevis/git_wrf/WRF/test/em_real/wrfinput_d01.ERAI.12month wrfinput_d01
+ ln -sf /glade/work/slevis/git_wrf/WRF/test/em_real/wrfbdy_d01.ERAI.12month wrfbdy_d01
 
 Now run WRF-CTSM. On Cheyenne this means submitting a batch job to PBS (Pro workload management system).
 For detailed instructions on running a batch job on Cheyenne, please check:
 https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne/running-jobs/submitting-jobs-pbs
 
-A simple PBS script to run WRF-CTSM on Cheyenne looks like this:
+A simple PBS script to run WRF-CTSM on ``Cheyenne`` looks like this:
 
 .. code-block:: Tcsh
 
@@ -364,7 +357,9 @@ A simple PBS script to run WRF-CTSM on Cheyenne looks like this:
     ### Run the executable
     mpiexec_mpt ./wrf.exe
 
-If you named this script run_wrf_ctsm.csh, submit the job like this::
+To submit a batch job to the ``Cheyenne`` queues, use ``qsub`` command followed
+by the PBS script name. 
+For example, if you named this script ``run_wrf_ctsm.csh``, submit the job like this::
 
     qsub run_wrf_ctsm.csh
 
