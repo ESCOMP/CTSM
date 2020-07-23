@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev105
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326) / Chris Fischer
-Date: Mon Jul 13 15:51:21 MDT 2020
+Date: Wed Jul 22 18:47:37 MDT 2020
 One-line Summary: Bring in some new SE grids for CAM as well as initial condition files for them
 
 Purpose of changes
@@ -13,7 +13,8 @@ Purpose of changes
    Also add some new initial condition (IC) files for 1979, 2000, and 2013 for use when coupled to CAM
 
    The process for picking initial condition files was improved so that there can be more than one year that matches
-   and it will do the best to pick the best match. Also added the possibility for 1982 and 2013 simulation years.
+   and it will do the best to pick the best match. Also added the possibility for 1982 and 2013 simulation years for
+   specific grid matches.
 
   Also update cime to a newer version that supports these new grids.
 
@@ -75,6 +76,10 @@ Caveats for developers (e.g., code that is duplicated that requires double maint
    for the lnd_tuning_mode desired. It will pick based on year over an exact match in resolution.
    You can get around this by setting use_init_interp to be specific for a resolution
 
+   Also realized that there is a dependence between the namelist_defaults_ctsm.xml file and namelist_defaults_overall.xml
+   for the clm_start_type item. It must be coordinated with use_init_interp, init_interp_attributes and finidat
+   to work properly. I added a comment about this. We should probably just move them into the same file.
+
 Changes to tests or testing: Added tests for new grids
 
 Code reviewed by: self, fischer-ncar, adamrher
@@ -86,7 +91,7 @@ CTSM testing: regular
 
   build-namelist tests:
 
-    izumi - OK (121 tests fail comparison to previous verison due to new IC files)
+    cheyenne - OK (130 tests fail comparison to previous verison due to new IC files)
 
   tools-tests (test/tools):
 
@@ -102,7 +107,7 @@ CTSM testing: regular
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
+    cheyenne ---- OK
     izumi ------- PASS
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
@@ -111,7 +116,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: No bit-for-bit
+Changes answers relative to baseline: No bit-for-bit (unless running with CAM because of new finidat files)
 
 Detailed list of changes
 ------------------------
