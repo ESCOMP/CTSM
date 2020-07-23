@@ -1,8 +1,8 @@
 .. _specific-atm-models:
 
-=====================================
- Notes on specific atmosphere models
-=====================================
+==============================================================
+ Instructions on running CTSM with specific atmosphere models 
+==============================================================
 
 .. toctree::
    :maxdepth: 2
