@@ -119,7 +119,7 @@ The first set of options in this file specifies key file names:
   NWP / prediction applications, you will typically want a customized initial condition
   file. The process for generating this file will depend on your atmosphere model and
   workflow, but an example for WRF is given in section
-  :numref:`wrf-create-input-namelists-for-ctsm-and-lilac`.
+  :numref:`wrf-set-ctsm-runtime-options`.
 
 The remainder of this file specifies a variety of high-level options, each of which sets
 the default values for a number of CTSM's runtime parameters. The default values should be

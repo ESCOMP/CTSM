@@ -276,6 +276,8 @@ Check the last line of the real log file for the following message::
 
     SUCCESS COMPLETE REAL_EM INIT
 
+.. _wrf-set-ctsm-runtime-options:
+
 Set CTSM runtime options
 ------------------------
 
