@@ -1817,7 +1817,8 @@ sub setup_logic_co2_type {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, $opts->{$var});
     } else {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'} );
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'},
+                  'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
     }
   }
 }
@@ -2187,7 +2188,7 @@ sub setup_logic_surface_dataset {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with ecosystem dynamics (use_fates=.true)." );
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
-              'hgrid'=>$nl_flags->{'res'},
+              'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
               'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
               'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
 }
@@ -3127,9 +3128,17 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+       # Also check at f19 resolution
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+       # If not found report an error
+       if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+          $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
+                        "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
+                        "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
+                        "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
+       }
     }
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
