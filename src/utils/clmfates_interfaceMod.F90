@@ -697,7 +697,6 @@ module CLMFatesInterfaceMod
       integer  :: s                        ! site index
       integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
-      integer  :: g                        ! gridcell index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
       integer  :: nlevsoil                 ! number of soil layers at the site
