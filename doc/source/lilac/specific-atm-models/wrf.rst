@@ -8,12 +8,13 @@
 
 This section includes instructions on how to use WRF with CTSM using LILAC.
 The procedure for building and running the CTSM library and its dependencies
-repeats some information from earlier sections but with minimal explanation.
+repeats some information from earlier section
+:numref:`obtaining-building-and-running` but with minimal explanation.
 
 .. important::
 
-  This section assumes use of a machine that has been ported to CIME.
-  In this example we assume NCAR’s Cheyenne HPC system in particular.
+  This section assumes use of a machine that has been ported to ``CIME``.
+  In this example we assume NCAR’s ``Cheyenne`` HPC system in particular.
 
 
 Clone WRF and CTSM Repositories
@@ -145,12 +146,6 @@ or search the file for the string "Error" with a capital E.
 
     Optional: One may use ``tmux`` or ``nohup`` for configuring and compiling.
     Try ``man nohup`` for more information.
-
-.. seealso::
-
-    For further detail on preparing the CTSM, including how to
-    recompile when making code changes to the CTSM, read
-    section :numref:`obtaining-building-and-running` .
 
 Compile WRF Preprocessing System (WPS)
 --------------------------------------
@@ -333,8 +328,8 @@ the following files to your WRF run directory::
  ln -sf /glade/work/slevis/git_wrf/WRF/test/em_real/wrfbdy_d01.ERAI.12month wrfbdy_d01
 
 Now run WRF-CTSM. On Cheyenne this means submitting a batch job to PBS (Pro workload management system).
-For detailed instructions on running a batch job on Cheyenne, please check:
-https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne/running-jobs/submitting-jobs-pbs
+Please check NCAR CISL's `instructions on running a batch job on Cheyenne. 
+<https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne/running-jobs/submitting-jobs-pbs>`__
 
 A simple PBS script to run WRF-CTSM on ``Cheyenne`` looks like this:
 
