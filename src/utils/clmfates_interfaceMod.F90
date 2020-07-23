@@ -674,7 +674,6 @@ module CLMFatesInterfaceMod
       integer  :: s                        ! site index
       integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
-      integer  :: g                        ! gridcell index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
       integer  :: nlevsoil                 ! number of soil layers at the site
@@ -720,9 +719,9 @@ module CLMFatesInterfaceMod
       do s=1,this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
+         g = col%gridcell(c)
 
          if (fates_spitfire_mode > scalar_lightning) then
-            g = col%gridcell(c)
             do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
                p = ifp + col%patchi(c)
 
