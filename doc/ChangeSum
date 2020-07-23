@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev105 erik/fis 07/23/2020 Bring in some new SE grids for CAM as well as initial condition files for them
   ctsm1.0.dev104    sacks 07/06/2020 Add LILAC
   ctsm1.0.dev103   slevis 06/29/2020 Gridcell-level error-check for methane (CH4)
   ctsm1.0.dev102 erik/ole 06/26/2020 Some important fixes for LUNA in clm5_0, and small urban issue in clm5_0
