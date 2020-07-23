@@ -33,7 +33,7 @@ module ncdio_pio
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
   use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
   use pio            , only : pio_iotask_rank, PIO_REARR_SUBSET, PIO_REARR_BOX
-  use pio            , only : pio_inq_vartype
+  use pio            , only : pio_inq_vartype, pio_syncfile
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -68,6 +68,7 @@ module ncdio_pio
   public :: ncd_inqvdlen       ! inquire variable dimension size
   public :: ncd_inqvdname      ! inquire variable dimension name
   public :: ncd_io             ! write local data
+  public :: ncd_pio_syncfile   ! flush file contents to disk
 
   integer,parameter,public :: ncd_int       = pio_int
   integer,parameter,public :: ncd_log       =-pio_int
@@ -2541,5 +2542,10 @@ contains
     iodesc_list(iodnum)%dimids(1:ndims) = dimids(1:ndims)
 
   end subroutine ncd_getiodesc
+
+  subroutine ncd_pio_syncfile(ncid)
+    type(file_desc_t) :: ncid
+    call pio_syncfile(ncid)
+  end subroutine ncd_pio_syncfile
 
 end module ncdio_pio
