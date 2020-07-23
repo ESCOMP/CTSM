@@ -774,7 +774,7 @@ sub setup_cmdl_fates_mode {
       }
     } else {
        # dis-allow fates specific namelist items with non-fates runs
-	my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
+	my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
 		       "use_fates_cohort_age_tracking", 
                       "use_fates_inventory_init","use_fates_fixed_biogeog", "fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
        foreach my $var ( @list ) {
@@ -940,12 +940,13 @@ sub setup_cmdl_fire_light_res {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
     }
     my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
-    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) ) {
-       $log->fatal_error("fire_method is being set even though bgc is NOT cn or bgc.");
+    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
+       $log->fatal_error("fire_method is being set while use_cn and use_fates are both false.");
     }
     if ( defined($fire_method) && $fire_method eq "nofire" ) {
        $nl_flags->{$var} = ".false.";
-    } elsif ( &value_is_true($nl->get_value('use_cn')) ) {
+#   } elsif ( &value_is_true($nl->get_value('use_cn')) || $nl_flags->{'fates_spitfire_mode'} > 1 ) {
+    } elsif ( &value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates')) ) {
        $nl_flags->{$var} = ".true.";
     } else {
        $nl_flags->{$var} = ".false.";
@@ -3892,7 +3893,7 @@ sub setup_logic_fates {
 
     if ($physv->as_long() >= $physv->as_long("clm4_5") && &value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
-        my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
+        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
                        "use_fates_inventory_init","use_fates_fixed_biogeog", "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'} );
