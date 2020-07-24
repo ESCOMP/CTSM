@@ -433,6 +433,10 @@ contains
        call crop_inst%InitAccBuffer(bounds)
     end if
 
+    if (use_fates) then
+       call clm_fates%InitAccBuffer(bounds)
+    end if
+
     call print_accum_fields()
 
     call t_stopf('init_accflds')
