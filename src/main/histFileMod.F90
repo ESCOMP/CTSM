@@ -2780,88 +2780,88 @@ contains
     !***     Grid definition variables ***
     !-------------------------------------------------------------------------------
     ! For define mode -- only do this for first time-sample
-    if (mode == 'define' .and. tape(t)%ntimes == 1) then
+    if(tape(t)%ntimes == 1) then
+       if (mode == 'define') then
 
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
-              long_name='coordinate longitude', units='degrees_east', &
-              ncid=nfid(t), missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='coordinate longitude', units='degrees_east', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
-              long_name='coordinate latitude', units='degrees_north', &
-              ncid=nfid(t), missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='coordinate latitude', units='degrees_north', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat',&
-              long_name='grid cell areas', units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='grid cell areas', units='km^2', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
-              dim1name='lon', dim2name='lat', &
-              long_name='land fraction', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       else
-          call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
-              dim1name=grlnd, &
-              long_name='land fraction', ncid=nfid(t), &
-              missing_value=spval, fill_value=spval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='landmask', xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
-              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
-       else
-          call ncd_defvar(varname='landmask', xtype=ncd_int, &
-              dim1name=grlnd, &
-              long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
-              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
-       else
-          call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
-              dim1name=grlnd, &
-              long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
-       end if
-       if (ldomain%isgrid2d) then
-          call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
-              dim1name='lon', dim2name='lat', &
-              long_name='index of shallowest bedrock layer', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
-       else
-          call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
-              dim1name=grlnd, &
-              long_name='index of shallowest bedrock layer', ncid=nfid(t), &
-              imissing_value=ispval, ifill_value=ispval)
+          if (ldomain%isgrid2d) then
+             call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, dim1name='lon', &
+                  long_name='coordinate longitude', units='degrees_east', &
+                  ncid=nfid(t), missing_value=spval, fill_value=spval)
+          else
+             call ncd_defvar(varname='lon', xtype=tape(t)%ncprec, &
+                  dim1name=grlnd, &
+                  long_name='coordinate longitude', units='degrees_east', ncid=nfid(t), &
+                  missing_value=spval, fill_value=spval)
+          end if
+          if (ldomain%isgrid2d) then
+             call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, dim1name='lat', &
+                  long_name='coordinate latitude', units='degrees_north', &
+                  ncid=nfid(t), missing_value=spval, fill_value=spval)
+          else
+             call ncd_defvar(varname='lat', xtype=tape(t)%ncprec, &
+                  dim1name=grlnd, &
+                  long_name='coordinate latitude', units='degrees_north', ncid=nfid(t), &
+                  missing_value=spval, fill_value=spval)
+          end if
+          if (ldomain%isgrid2d) then
+             call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
+                  dim1name='lon', dim2name='lat',&
+                  long_name='grid cell areas', units='km^2', ncid=nfid(t), &
+                  missing_value=spval, fill_value=spval)
+          else
+             call ncd_defvar(varname='area', xtype=tape(t)%ncprec, &
+                  dim1name=grlnd, &
+                  long_name='grid cell areas', units='km^2', ncid=nfid(t), &
+                  missing_value=spval, fill_value=spval)
+          end if
+          if (ldomain%isgrid2d) then
+             call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
+                  dim1name='lon', dim2name='lat', &
+                  long_name='land fraction', ncid=nfid(t), &
+                  missing_value=spval, fill_value=spval)
+          else
+             call ncd_defvar(varname='landfrac', xtype=tape(t)%ncprec, &
+                  dim1name=grlnd, &
+                  long_name='land fraction', ncid=nfid(t), &
+                  missing_value=spval, fill_value=spval)
+          end if
+          if (ldomain%isgrid2d) then
+             call ncd_defvar(varname='landmask', xtype=ncd_int, &
+                  dim1name='lon', dim2name='lat', &
+                  long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
+                  imissing_value=ispval, ifill_value=ispval)
+          else
+             call ncd_defvar(varname='landmask', xtype=ncd_int, &
+                  dim1name=grlnd, &
+                  long_name='land/ocean mask (0.=ocean and 1.=land)', ncid=nfid(t), &
+                  imissing_value=ispval, ifill_value=ispval)
+          end if
+          if (ldomain%isgrid2d) then
+             call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
+                  dim1name='lon', dim2name='lat', &
+                  long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
+                  imissing_value=ispval, ifill_value=ispval)
+          else
+             call ncd_defvar(varname='pftmask' , xtype=ncd_int, &
+                  dim1name=grlnd, &
+                  long_name='pft real/fake mask (0.=fake and 1.=real)', ncid=nfid(t), &
+                  imissing_value=ispval, ifill_value=ispval)
+          end if
+          if (ldomain%isgrid2d) then
+             call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
+                  dim1name='lon', dim2name='lat', &
+                  long_name='index of shallowest bedrock layer', ncid=nfid(t), &
+                  imissing_value=ispval, ifill_value=ispval)
+          else
+             call ncd_defvar(varname='nbedrock' , xtype=ncd_int, &
+                  dim1name=grlnd, &
+                  long_name='index of shallowest bedrock layer', ncid=nfid(t), &
+                  imissing_value=ispval, ifill_value=ispval)
+          end if
+
        end if
 
     else if (mode == 'write') then
-
-       ! Most of this is constant and only needs to be done on tape(t)%ntimes=1
-       ! But, some may change for dynamic PATCH mode for example
 
        if (ldomain%isgrid2d) then
           call ncd_io(varname='lon', data=lon1d, ncid=nfid(t), flag='write')
@@ -2923,7 +2923,7 @@ contains
 
     ! Write/define 1d topological info
 
-    if (.not. tape(t)%dov2xy) then
+    if (.not. tape(t)%dov2xy .and. tape(t)%ntimes==1) then
        if (mode == 'define') then
           call hfields_1dinfo(t, mode='define')
        else if (mode == 'write') then
@@ -3501,37 +3501,39 @@ contains
           endif
 
           call t_startf('hist_htapes_wrapup_tconst')
-          ! Write time constant history variables
+          ! Write time constant history variables (not all are time constant!)
           call htape_timeconst(t, mode='write')
 
           ! Write 3D time constant history variables to first history tapes
-          if ( do_3Dtconst .and. tape(t)%ntimes == 1 )then
-             call htape_timeconst3D(t, &
-                  bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='write')
-             do_3Dtconst = .false.
+          if (tape(t)%ntimes == 1) then
+             if ( do_3Dtconst .and. tape(t)%ntimes == 1 )then
+                call htape_timeconst3D(t, &
+                     bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='write')
+                do_3Dtconst = .false.
+             end if
+
+             if (masterproc) then
+                write(iulog,*)
+                write(iulog,*) trim(subname),' : Writing current time sample to local history file ', &
+                     trim(locfnh(t)),' at nstep = ',get_nstep(), &
+                     ' for history time interval beginning at ', tape(t)%begtime, &
+                     ' and ending at ',time
+                write(iulog,*)
+                call shr_sys_flush(iulog)
+             endif
+
+             ! Update beginning time of next interval
+             tape(t)%begtime = time
+             call t_stopf('hist_htapes_wrapup_tconst')
+
+             ! Write history time samples
+             call t_startf('hist_htapes_wrapup_write')
+             call hfields_write(t, mode='write')
+             call t_stopf('hist_htapes_wrapup_write')
+
+             ! Zero necessary history buffers
+             call hfields_zero(t)
           end if
-
-          if (masterproc) then
-             write(iulog,*)
-             write(iulog,*) trim(subname),' : Writing current time sample to local history file ', &
-                  trim(locfnh(t)),' at nstep = ',get_nstep(), &
-                  ' for history time interval beginning at ', tape(t)%begtime, &
-                  ' and ending at ',time
-             write(iulog,*)
-             call shr_sys_flush(iulog)
-          endif
-
-          ! Update beginning time of next interval
-          tape(t)%begtime = time
-          call t_stopf('hist_htapes_wrapup_tconst')
-
-          ! Write history time samples
-          call t_startf('hist_htapes_wrapup_write')
-          call hfields_write(t, mode='write')
-          call t_stopf('hist_htapes_wrapup_write')
-
-          ! Zero necessary history buffers
-          call hfields_zero(t)
 
        end if
 
