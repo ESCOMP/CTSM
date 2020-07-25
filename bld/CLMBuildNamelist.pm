@@ -1193,7 +1193,16 @@ sub setup_cmdl_run_type {
   my $val;
   my $var = "clm_start_type";
   my $ic_date = $nl->get_value('start_ymd');
-  my $st_year = int( $ic_date / 10000);
+  my $st_year;
+  if ( defined($ic_date) ) {
+     $st_year = int( $ic_date / 10000);
+  } else {
+    $st_year = $nl_flags->{'sim_year'};
+    $ic_date = $st_year *10000 + 101;
+    my $date = 'start_ymd';
+    my $group = $definition->get_group_name($date);
+    $nl->set_variable_value($group, $date, $ic_date );
+  }
   if (defined $opts->{$var}) {
     if ($opts->{$var} eq "default" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
@@ -1209,6 +1218,7 @@ sub setup_cmdl_run_type {
                   'sim_year'=>$st_year );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
+  $nl_flags->{'st_year'}        = $st_year;
 }
 
 #-------------------------------------------------------------------------------
@@ -2218,7 +2228,7 @@ sub setup_logic_initial_conditions {
 
   if (not defined $finidat ) {
     my $ic_date = $nl->get_value('start_ymd');
-    my $st_year = int( $ic_date / 10000);
+    my $st_year = $nl_flags->{'st_year'};
     my $nofail = 1;
     my %settings;
     $settings{'hgrid'}   = $nl_flags->{'res'};
@@ -2276,47 +2286,67 @@ sub setup_logic_initial_conditions {
           #}
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_sim_years" );
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
+          #
+          # Figure out which sim_year has a usable finidat file that is closest to the desired one
+          #
           my $close = $nl->get_value("init_interp_how_close");
-          foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
+          my $closest_sim_year = undef;
+          my @sim_years = split( /,/, $nl->get_value("init_interp_sim_years") );
+SIMYR:    foreach my $sim_yr ( @sim_years ) {
              my $how_close = undef;
              if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
                 $how_close = abs(1850 - $sim_yr);
+             # EBK 07/20/2020 -- This makes sure the sim_year matched is based on the sim-year
+             #                   rather than  the start year.
+             #} elsif ( $nl_flags->{'flanduse_timeseries'} eq "null" ) {
+             #   $how_close = abs($nl_flags->{'sim_year'} - $sim_yr);
              } else {
                 $how_close = abs($st_year - $sim_yr);
              }
-             if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
-                $close = $how_close;
+             if ( ($sim_yr == $sim_years[-1]) || (($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close)) ) {
+                my $group = $definition->get_group_name($useinitvar);
                 $settings{'sim_year'} = $sim_yr;
-             }
-          } 
-          add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
-                     'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
-                     'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                     'use_fates'=>$nl_flags->{'use_fates'} );
-          $settings{$useinitvar} = $nl->get_value($useinitvar);
-          if ( $try > 1 ) {
-             my $group = $definition->get_group_name($useinitvar);
-             $nl->set_variable_value($group, $useinitvar, $use_init_interp_default );
-          }
-          if ( &value_is_true($nl->get_value($useinitvar) ) ) {
+                $settings{$useinitvar} = $defaults->get_value($useinitvar, \%settings);
+                if ( ! defined($settings{$useinitvar}) ) {
+                   $settings{$useinitvar} = $use_init_interp_default;
+                }
+                if ( &value_is_true($settings{$useinitvar}) ) {
 
-             add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
-                        'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
-                        'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                        'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},'nofail'=>1 );
-             my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
-             foreach my $pair ( split( /\s/, $attributes_string) ) {
-                if ( $pair =~ /^([a-z_]+)=([a-z._0-9]+)$/ ) {
-                   $settings{$1} = $2;
-                } else {
-                   $log->fatal_error("Problem interpreting init_interp_attributes");
+                   if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
+                      $close = $how_close;
+                      $closest_sim_year = $sim_yr;
+                   }
                 }
              }
-          } else {
+          }    # SIMYR:
+          $settings{'sim_year'} = $closest_sim_year;
+          add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
+                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
+                      'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                      'use_fates'=>$nl_flags->{'use_fates'} );
+          $settings{$useinitvar} = $nl->get_value($useinitvar);
+          if ( ! &value_is_true($nl->get_value($useinitvar) ) ) {
              if ( $nl_flags->{'clm_start_type'} =~ /startup/  ) {
                 $log->fatal_error("clm_start_type is startup so an initial conditions ($var) file is required, but can't find one without $useinitvar being set to true");
              }
-             $try = $done;
+          } else {
+             my $stat = add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
+                                 'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
+                                 'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                                 'hgrid'=>$nl_flags->{'res'}, 
+                                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, 'nofail'=>1 );
+             if ( $stat ) {
+                $log->fatal_error("$useinitvar is NOT synchronized with init_interp_attributes");
+             }
+             my $attributes = $nl->get_value("init_interp_attributes");
+             my $attributes_string = remove_leading_and_trailing_quotes($attributes);
+             foreach my $pair ( split( /\s/, $attributes_string) ) {
+                if ( $pair =~ /^([a-z_]+)=([a-zA-Z._0-9]+)$/ ) {
+                   $settings{$1} = $2;
+                } else {
+                   $log->fatal_error("Problem interpreting init_interp_attributes: $pair");
+                }
+             }
           }
        } else {
          $try = $done
@@ -3945,7 +3975,7 @@ sub add_default {
         }
       }
       else {
-        return;
+        return( 1 );
       }
     }
 
@@ -3980,6 +4010,7 @@ sub add_default {
     # set the value in the namelist
     $nl->set_variable_value($group, $var, $val);
   }
+  return( 0 );
 
 }
 

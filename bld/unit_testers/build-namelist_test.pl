@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 834;
+my $ntests = 890;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 507;
+   $ntests += 549;
 }
 plan( tests=>$ntests );
 
@@ -323,6 +323,39 @@ foreach my $options ( "-configuration nwp",
    }
    &cleanup();
 }
+
+print "\n===============================================================================\n";
+print "Test some CAM specific setups for special grids \n";
+print "=================================================================================\n";
+$phys = "clm5_0";
+$mode = "-phys $phys";
+&make_config_cache($phys);
+foreach my $options ( 
+                      "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res ne0np4.ARCTICGRIS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res 0.9x1.25 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=19500101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res 1.9x2.5 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res C192 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode clm5_0_cam6.0",
+                     ) {
+   &make_env_run();
+   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   is( $@, '', "options: $options" );
+   $cfiles->checkfilesexist( "$options", $mode );
+   $cfiles->shownmldiff( "default", $mode );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   &cleanup();
+}
+
 print "\n==============================================================\n";
 print "Test several use_cases and specific configurations for clm5_0\n";
 print "==============================================================\n";
@@ -335,7 +368,7 @@ foreach my $options (
                       "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
-                      "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19201023/'",
+                      "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
                      ) {
@@ -1223,7 +1256,17 @@ my @use_cases = ( "1850-2100_SSP1-2.6_transient",
                  );
 foreach my $res ( @glc_res ) {
    foreach my $usecase ( @usecases ) {
-      $options = "-bgc bgc -res $res -use_case $usecase -envxml_dir . ";
+      my $startymd = undef;
+      if ( ($usecase eq "1850_control") || ($usecase eq "20thC_transient") ) {
+         $startymd = 18500101;
+      } elsif ( $usecase eq "2000_control") {
+         $startymd = 20000101;
+      } elsif ( $usecase eq "2010_control") {
+         $startymd = 20100101;
+      } else {
+         $startymd = 20150101;
+      }
+      $options = "-bgc bgc -res $res -use_case $usecase -envxml_dir . -namelist '&a start_ymd=$startymd/'";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
@@ -1247,7 +1290,7 @@ my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 10;
 foreach my $res ( @tran_res ) {
-   $options = "-res $res -use_case $usecase -envxml_dir . ";
+   $options = "-res $res -use_case $usecase -envxml_dir . -namelist '&a start_ymd=18500101/'";
    &make_env_run();
    eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
    is( $@, '', "$options" );
@@ -1270,8 +1313,14 @@ $mode = "-phys $phys";
 my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
 foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
                       "1850-2100_SSP2-4.5_transient" ) {
+   my $startymd = undef;
+   if ( $usecase eq "1850_control") {
+      $startymd = 18500101;
+   } else {
+      $startymd = 20150101;
+   }
    foreach my $res ( @tran_res ) {
-      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
+      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=$startymd/'";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       is( $@, '', "$options" );
@@ -1292,7 +1341,7 @@ foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100
 my $res = "0.9x1.25";
 foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP1-1.9_transient",
                       "1850-2100_SSP4-6.0_transient" ) {
-      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . ";
+      $options = "-res $res -bgc bgc -crop -use_case $usecase -envxml_dir . -namelist '&a start_ymd=20150101/'";
       &make_env_run();
       eval{ system( "$bldnml $options > $tempfile 2>&1 " ); };
       isnt( $?, 0, $usecase );
@@ -1307,7 +1356,8 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
-                     "-bgc sp -envxml_dir . -vichydro", "-bgc bgc -dynamic_vegetation -ignore_warnings", "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000",
+                     "-bgc sp -envxml_dir . -vichydro", "-bgc bgc -dynamic_vegetation -ignore_warnings", 
+                     "-bgc bgc -clm_demand flanduse_timeseries -sim_year 1850-2000 -namelist '&a start_ymd=18500101/'",
                      "-bgc bgc -envxml_dir . -namelist '&a use_c13=.true.,use_c14=.true.,use_c14_bombspike=.true./'" );
   foreach my $clmopts ( @clmoptions ) {
      my @clmres = ( "10x15", "0.9x1.25", "1.9x2.5" );
