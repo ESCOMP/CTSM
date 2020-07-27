@@ -31,6 +31,7 @@ contains
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use shr_string_mod  , only: shr_string_listGetName
     use domainMod       , only: ldomain
+    use QSatMod         , only: QSat, QSat_temp  ! TODO: rm QSat_temp after testing
     use shr_infnan_mod  , only : isnan => shr_infnan_isnan
     !
     ! !ARGUMENTS:
@@ -44,8 +45,10 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: g,i,k,nstep,ier      ! indices, number of steps, and error code
     real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
-    real(r8) :: e                    ! vapor pressure (Pa)
-    real(r8) :: qsat                 ! saturation specific humidity (kg/kg)
+    real(r8) :: e                    ! vapor pressure (Pa) TODO: rm after tests
+    real(r8) :: dum1, dum2, dum3     ! arguments returned by subr. QSat but not used here
+    real(r8) :: qsat_old             ! TODO: rm after testing
+    real(r8) :: qsat_kg_kg           ! saturation specific humidity (kg/kg)
     real(r8) :: forc_t               ! atmospheric temperature (Kelvin)
     real(r8) :: forc_q               ! atmospheric specific humidity (kg/kg)
     real(r8) :: forc_pbot            ! atmospheric pressure (Pa)
@@ -56,6 +59,7 @@ contains
     real(r8) :: co2_ppmv_prog        ! temporary
     real(r8) :: co2_ppmv_val         ! temporary
     integer  :: co2_type_idx         ! integer flag for co2_type options
+    ! TODO: Delete through tdc, t after testing
     real(r8) :: esatw                ! saturation vapor pressure over water (Pa)
     real(r8) :: esati                ! saturation vapor pressure over ice (Pa)
     real(r8) :: a0,a1,a2,a3,a4,a5,a6 ! coefficients for esat over water
@@ -64,6 +68,7 @@ contains
     character(len=32) :: fname       ! name of field that is NaN
     character(len=32), parameter :: sub = 'lnd_import'
 
+    ! TODO: Delete through esati after testing
     ! Constants to compute vapor pressure
     parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
          a2=1.428945805e-02_r8, a3=2.650648471e-04_r8, &
@@ -189,23 +194,26 @@ contains
        wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc + forc_rainl
        wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc + forc_snowl
 
+! TODO: Delete these lines after testing, except the call QSat
        if (forc_t > SHR_CONST_TKFRZ) then
           e = esatw(tdc(forc_t))
        else
           e = esati(tdc(forc_t))
        end if
-       qsat           = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
+       qsat_old       = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
+       call QSat_temp(forc_t, forc_pbot, dum1, dum2, qsat_kg_kg, dum3)
+       if (qsat_kg_kg - qsat_old > 1.e-14_r8) write(iulog,*) 'qsat_new, qsat_old =', qsat_kg_kg, qsat_old  ! slevis diag
 
        !modify specific humidity if precip occurs
        if(1==2) then
           if((forc_rainc+forc_rainl) > 0._r8) then
-             forc_q = 0.95_r8*qsat
-             !           forc_q = qsat
+             forc_q = 0.95_r8 * qsat_kg_kg
+             !           forc_q = qsat_kg_kg
              wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
           endif
        endif
 
-       wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
+       wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat_kg_kg)
 
        ! Check that solar, specific-humidity and LW downward aren't negative
        if ( atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) <= 0.0_r8 )then

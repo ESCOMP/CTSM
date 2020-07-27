@@ -18,6 +18,7 @@ module lnd_import_export
   use atm2lndType           , only : atm2lnd_type
   use lnd_shr_methods       , only : chkerr
   use shr_megan_mod         , only : shr_megan_mechcomps_n  ! TODO: need to add a namelist read here (see https://github.com/ESCOMP/CTSM/issues/926)
+  use QSatMod               , only : QSat
 
   implicit none
   private ! except
@@ -66,14 +67,9 @@ contains
     integer                   :: num
     integer                   :: begg, endg                             ! bounds
     integer                   :: g,i,k                                  ! indices
-    real(r8)                  :: e                                      ! vapor pressure (Pa)
-    real(r8)                  :: qsat                                   ! saturation specific humidity (kg/kg)
+    real(r8)                  :: dum1, dum2, dum3                       ! arguments returned by subr. QSat but not used here
+    real(r8)                  :: qsat_kg_kg                             ! saturation specific humidity (kg/kg)
     real(r8)                  :: co2_ppmv_val                           ! temporary
-    real(r8)                  :: esatw                                  ! saturation vapor pressure over water (Pa)
-    real(r8)                  :: esati                                  ! saturation vapor pressure over ice (Pa)
-    real(r8)                  :: a0,a1,a2,a3,a4,a5,a6                   ! coefficients for esat over water
-    real(r8)                  :: b0,b1,b2,b3,b4,b5,b6                   ! coefficients for esat over ice
-    real(r8)                  :: tdc, t                                 ! Kelvins to Celcius function and its input
     real(r8)                  :: forc_t                                 ! atmospheric temperature (Kelvin)
     real(r8)                  :: forc_q                                 ! atmospheric specific humidity (kg/kg)
     real(r8)                  :: forc_pbot                              ! atmospheric pressure (Pa)
@@ -86,21 +82,6 @@ contains
     real(r8)                  :: topo_grc(bounds%begg:bounds%endg, 0:glc_nec)
     character(len=*), parameter :: subname='(lnd_import_export:import_fields)'
 
-    ! Constants to compute vapor pressure
-    parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
-         a2=1.428945805e-02_r8, a3=2.650648471e-04_r8, &
-         a4=3.031240396e-06_r8, a5=2.034080948e-08_r8, &
-         a6=6.136820929e-11_r8)
-
-    parameter (b0=6.109177956_r8    , b1=5.034698970e-01_r8, &
-         b2=1.886013408e-02_r8, b3=4.176223716e-04_r8, &
-         b4=5.824720280e-06_r8, b5=4.838803174e-08_r8, &
-         b6=1.838826904e-10_r8)
-
-    ! function declarations
-    tdc(t) = min( 50._r8, max(-50._r8,(t-SHR_CONST_TKFRZ)) )
-    esatw(t) = 100._r8*(a0+t*(a1+t*(a2+t*(a3+t*(a4+t*(a5+t*a6))))))
-    esati(t) = 100._r8*(b0+t*(b1+t*(b2+t*(b3+t*(b4+t*(b5+t*b6))))))
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -295,23 +276,18 @@ contains
        water_inst%wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
 
 
-       if (forc_t > SHR_CONST_TKFRZ) then
-          e = esatw(tdc(forc_t))
-       else
-          e = esati(tdc(forc_t))
-       end if
-       qsat = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
+       call QSat(forc_t, forc_pbot, dum1, dum2, qsat_kg_kg, dum3)
 
        ! modify specific humidity if precip occurs
        if (1==2) then
           if ((forc_rainc(g)+forc_rainl(g)) > 0._r8) then
-             forc_q = 0.95_r8*qsat
-             !forc_q = qsat
+             forc_q = 0.95_r8*qsat_kg_kg
+             !forc_q = qsat_kg_kg
              water_inst%wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
           endif
        endif
 
-       water_inst%wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
+       water_inst%wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat_kg_kg)
        water_inst%wateratm2lndbulk_inst%volr_grc(g) = 0._r8
        water_inst%wateratm2lndbulk_inst%volrmch_grc(g) = 0._r8
     end do
