@@ -29,10 +29,10 @@ module dynHarvestMod
   implicit none
   private
   !
-  public :: dynHarvest_init    ! initialize data structures for harvest information, used by both FATES and no-FATES
-  public :: dynHarvest_interp  ! get harvest data for current time step, if needed, only used by non-FATES
+  public :: dynHarvest_init    ! initialize data structures for harvest information, used by both FATES and non-FATES/CN
+  public :: dynHarvest_interp  ! get harvest data for current time step, if needed, only used by non-FATES/CN
   public :: dynHarvest_interp_resolve_harvesttypes  ! get harvest data for current time step, if needed, harvest-type-resolved.  only used by FATES.
-  public :: CNHarvest          ! harvest mortality routine for CN code, only used by non-FATES
+  public :: CNHarvest          ! harvest mortality routine for CN code, only used by non-FATES/CN
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: CNHarvestPftToColumn   ! gather patch-level harvest fluxes to the column level
@@ -52,7 +52,7 @@ module dynHarvestMod
   type(dyn_var_time_uninterp_type) :: harvest_inst(num_harvest_inst)   ! value of each harvest variable
 
   real(r8) , allocatable   :: harvest(:) ! harvest rates
-  logical,                 :: do_harvest ! whether we're in a period when we should do harvest
+  logical, private         :: do_harvest ! whether we're in a period when we should do harvest
   character(len=*), parameter, private :: string_not_set = "not_set"  ! string to initialize with to indicate string wasn't set
   character(len=64), public, protected :: harvest_units = string_not_set ! units from harvest variables 
   character(len=64), parameter, public :: mass_units = "gC/m2/yr"
