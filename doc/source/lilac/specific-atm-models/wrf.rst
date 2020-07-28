@@ -6,29 +6,41 @@
  Using CTSM with WRF
 =====================
 
-This section includes instructions on how to use WRF with CTSM using LILAC.
-The procedure for building and running the CTSM library and its dependencies
-repeats some information from earlier section
-:numref:`obtaining-building-and-running` but with minimal explanation.
+This section includes instructions on how to run WRF coupled with CTSM via LILAC
+framework.
+
+The procedure for running WRF with CTSM is similar to the
+workflow for running WRF real cases, except that it requires
+additional steps to (1) clone the CTSM repository, (2) build
+CTSM and LILAC, and (3) define namelist options reuired for CTSM.
+
+A full description of all steps for a WRF-CTSM run are included here.
+
+Specific new steps that would not be completed in a standard WRF real case
+are described in sections :numref:`clone-WRF-CTSM-repositories`,
+:numref:`build-CTSM-and-dependencies` , 
+and :numref:`wrf-set-ctsm-runtime-options`.
 
 .. important::
 
-  This section assumes use of a machine that has been ported to ``CIME``.
+  This section assumes use of a machine that has been ported to CIME.
+  If CIME is not ported to your machine, please see `instructions on porting CIME
+  <https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html#porting>`_.
+
   In this example we assume NCAR’s ``Cheyenne`` HPC system in particular.
 
+
+.. _clone-WRF-CTSM-repositories:
 
 Clone WRF and CTSM Repositories
 -------------------------------
 
 Clone the WRF CTSM feature branch::
 
-    git clone https://github.com/negin513/WRF-1.git
-    cd WRF-1
+    git clone https://github.com/negin513/WRF-1.git WRF-CTSM
+    cd WRF-CTSM
     git checkout lilac_dev
 
-.. todo::
-
-    update the git address to WRF repository and feature branch...
 
 Clone the CTSM repository::
 
@@ -36,28 +48,35 @@ Clone the CTSM repository::
     cd CTSM
     ./manage_externals/checkout_externals
 
+.. todo::
+
+    update the git address to WRF repository and feature branch...
+
+.. _build-CTSM-and-dependencies:
 
 Build CTSM and its dependencies
 -------------------------------
 
-Build CTSM and its dependencies based on the instructions from previous sections ::
+Build CTSM and its dependencies based on the instructions from section 
+:numref:`obtaining-and-building-ctsm`::
 
     ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --machine MACHINE --compiler COMPILER
 
 For example on ``Cheyenne`` and for ``Intel`` compiler::
 
-    ./lilac/build_ctsm /glade/scratch/$USER/ctsm_build_dir --compiler intel --machine cheyenne
+    ./lilac/build_ctsm ctsm_build_dir --compiler intel --machine cheyenne
 
+
+.. warning::
+
+    The directory you provided for the build script (``/PATH/TO/CTSM/BUILD``) must *not* exist.
+    Alternatively, you can use ``--rebuild`` option.
 
 .. note::
 
     Run ``./lilac/build_ctsm -h`` to see all options available.
     For example if you would like to run with threading support you can use ``--build-with-openmp``.
 
-.. warning::
-
-    The directory you provided for the build script (``/PATH/TO/CTSM/BUILD``) must *not* exist.
-    Alternatively, you can use ``--rebuild`` option.
 
 Building WRF with CTSM
 ----------------------
@@ -65,29 +84,29 @@ Building WRF with CTSM
 First, load the same modules and set the same environments as used for CTSM build by
 sourcing ``ctsm_build_environment.sh`` for Bash::
 
-    source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.sh
+    source ctsm_build_dir/ctsm_build_environment.sh 
 
 or sourcing ``ctsm_build_environment.csh`` for Cshell:
 
 .. code-block:: Tcsh
 
-    source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.csh
+    source ctsm_build_dir/ctsm_build_environment.csh 
 
 Set makefile variables from CTSM needed for the WRF build by setting the following environment.
 For example for Bash::
 
-    export WRF_CTSM_MKFILE=/glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
+    export WRF_CTSM_MKFILE=ctsm_build_dir/bld/ctsm.mk
 
 or for Cshell:
 
 .. code-block:: Tcsh
 
-    setenv WRF_CTSM_MKFILE /glade/scratch/$USER/ctsm_build_dir/bld/ctsm.mk
-
+    setenv WRF_CTSM_MKFILE ctsm_build_dir/bld/ctsm.mk
 
 There are also few other environmental setting that should be set for building WRF.
 Some of these are not required, but might help if you face any compilation errors.
-For more information check WRF Users' Guide.
+For more information check
+`WRF Users' Guide <https://www2.mmm.ucar.edu/wrf/users/docs/user_guide_v4/v4.2/WRFUsersGuide_v42.pdf>`_.
 
 
 Explicitly define which model core to build by (Bash)::
@@ -101,7 +120,7 @@ or (Cshell):
     setenv WRF_EM_CORE 1
 
 
-Explicilty turn off data assimilation by::
+Explicilty turn off data assimilation by (Bash)::
 
     export WRF_DA_CORE=0
 
@@ -113,6 +132,7 @@ or (Cshell):
 
 Now configure and build WRF for your machine and intended compiler::
 
+    cd ..
     ./clean -a
     ./configure
 
@@ -127,7 +147,7 @@ in parallel.
     recommended for compiling WRF.
 
 The next prompt requests an option for nesting. Currently nesting is not
-available for WRF-CTSM so enter 1.
+available for WRF-CTSM so select option 1 (basic).
 
 
 Now compile em_real and save the log::
@@ -135,8 +155,7 @@ Now compile em_real and save the log::
     ./compile em_real >& compile.log
 
 
-Check the bottom of your log file for a successful compilation message
-or search the file for the string "Error" with a capital E.
+Check the bottom of your log file for a successful compilation message.
 
 .. note::
 
@@ -153,7 +172,7 @@ Compile WRF Preprocessing System (WPS)
 The WRF Preprocessing System (WPS) is a set of programs to prepare
 inputs to the real program executable (real.exe) for WRF real-data simulations.
 If you wish to complete the offered example with preexisting inputs, then
-skip to the next section, which is titled "Run WRF."
+skip to section :numref:`wrf-set-ctsm-runtime-options`.
 
 .. warning::
 
@@ -273,30 +292,71 @@ Check the last line of the real log file for the following message::
 
 .. _wrf-set-ctsm-runtime-options:
 
+
 Set CTSM runtime options
 ------------------------
 
-.. todo::
+.. seealso::
 
-    Sam, can you please clarify this section. 
+    The instructions for setting CTSM runtime options, are discussed in depth
+    in section :numref:`setting-ctsm-runtime-options`.
 
-Now follow the instructions in section :numref:`setting-ctsm-runtime-options`
-for setting CTSM runtime options.
+The goal here is to create files that determine CTSM runtime options which
+are defined within these three files:
+
+- ``lnd_in``: This is the main namelist input file for CTSM
+
+- ``lnd_modelio.nml``: This sets CTSM's PIO (parallel I/O library) configuration settings
+
+- ``lilac_in``: This namelist controls the operation of LILAC
 
 
-In step 3 of that Section we used for this example::
+The basic process for creating the necessary input files are summarized as
+follows:
+
+Go to  ``runtime_inputs`` directory::
+
+    cd CTSM/ctsm_build_dir/runtime_inputs
+
+Next, modify and fill in the ``ctsm.cfg`` file to set high-level options to CTSM.
+A few options should be filled in; most can be left at their default values or changed if
+desired.
+
+The following is the recommended CTSM options to run WRF::
+
+    configuration     = nwp
+    structure         = fast
+    bgc_mode          = sp
+
+In ``ctsm.cfg`` you should specify CTSM domain file, surface dataset and finidat file.
+For this example (US domain), you can use the following settings::
 
  lnd_domain_file = /glade/work/slevis/barlage_wrf_ctsm/conus/gen_domain_files/domain.lnd.wrf2ctsm_lnd_wrf2ctsm_ocn.191211.nc
  fsurdat = /glade/work/slevis/git_wrf/ctsm_surf/surfdata_conus_hist_16pfts_Irrig_CMIP6_simyr2000_c191212.nc
  finidat = /glade/work/slevis/git_wrf/ctsm_init/finidat_interp_dest_wrfinit_snow_ERAI_12month.nc
 
-In step 4 of that Section we used for this example::
+Run the script ``make_runtime_inputs`` to create ``lnd_in`` and
+``clm.input_data_list``.
+
+
+Modify ``lilac_in`` as needed. For this example, you can use the following options::
 
  atm_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc'
  lnd_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc' 
 
-In step 6 of that Section you will copy some files to your WRF/run
-directory. Then you will be ready to continue.
+
+Run ``download_input_data`` script to download any of CTSM's standard input
+files that are needed based on settings in ``lnd_in`` and ``lilac_in``.
+
+
+Next, copy ``lnd_in``, ``lnd_modelio.nml`` and ``lilac_in`` to the direcotory
+from which you will be running the model (e.g. WRF/run).
+
+
+.. todo::
+
+    Sam, can you please clarify this section. I am not sure what this is
+    doing and why it is here. 
 
 .. note::
 
@@ -345,11 +405,6 @@ A simple PBS script to run WRF-CTSM on ``Cheyenne`` looks like this:
     #PBS -m abe
     #PBS -M your_email_address
     #PBS -l select=2:ncpus=36:mpiprocs=36
-
-    ### Set TMPDIR as recommended
-    setenv TMPDIR /glade/scratch/$USER/temp
-    mkdir -p $TMPDIR
-    source /glade/scratch/$USER/ctsm_build_dir/ctsm_build_environment.csh
 
     ### Run the executable
     mpiexec_mpt ./wrf.exe
