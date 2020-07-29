@@ -339,8 +339,9 @@ For this example (US domain), you can use the following settings::
  finidat = /glade/work/slevis/git_wrf/ctsm_init/finidat_interp_dest_wrfinit_snow_ERAI_12month.nc
 
 Run the script ``make_runtime_inputs`` to create ``lnd_in`` and
-``clm.input_data_list``.
+``clm.input_data_list``::
 
+    ./make_runtime_inputs
 
 Modify ``lilac_in`` as needed. For this example, you can use the following options::
 
@@ -349,8 +350,9 @@ Modify ``lilac_in`` as needed. For this example, you can use the following optio
 
 
 Run ``download_input_data`` script to download any of CTSM's standard input
-files that are needed based on settings in ``lnd_in`` and ``lilac_in``.
+files that are needed based on settings in ``lnd_in`` and ``lilac_in``::
 
+    ./download_input_data
 
 Next, copy ``lnd_in``, ``lnd_modelio.nml`` and ``lilac_in`` to the direcotory
 from which you will be running the model (e.g. WRF/run).
