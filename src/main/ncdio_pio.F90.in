@@ -68,6 +68,7 @@ module ncdio_pio
   public :: ncd_inqvdlen       ! inquire variable dimension size
   public :: ncd_inqvdname      ! inquire variable dimension name
   public :: ncd_io             ! write local data
+  public :: ncd_pio_syncfile   ! flush file contents to disk
 
   integer,parameter,public :: ncd_int       = pio_int
   integer,parameter,public :: ncd_log       =-pio_int
