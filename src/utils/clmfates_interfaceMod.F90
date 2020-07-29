@@ -134,6 +134,12 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
+   use dynSubgridControlMod   , only : get_do_harvest
+   use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
+   use dynHarvestMod          , only : harvest_units, mass_units, unitless_units
+   use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
+   use FatesConstantsMod      , only : hlm_harvest_area_fraction
+   use FatesConstantsMod      , only : hlm_harvest_carbon
    use FATESFireBase          , only : fates_fire_base_type
 
    implicit none
@@ -211,6 +217,11 @@ module CLMFatesInterfaceMod
    ! developer will at least question its usage (RGK)
    private :: hlm_bounds_to_fates_bounds
 
+   ! The GetAndSetTime function is used to get the current time from the CLM 
+   ! time procedures and then set to the fates global time variables during restart, 
+   ! init_coldstart, and dynamics_driv function calls
+   private :: GetAndSetTime
+
    logical :: debug  = .false.
 
    character(len=*), parameter, private :: sourcefile = &
@@ -237,6 +248,8 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_masterproc
      integer                                        :: pass_vertsoilc
      integer                                        :: pass_ed_st3
+     integer                                        :: pass_num_lu_harvest_cats
+     integer                                        :: pass_lu_harvest
      integer                                        :: pass_logging
      integer                                        :: pass_ed_prescribed_phys
      integer                                        :: pass_planthydro
@@ -323,6 +336,26 @@ module CLMFatesInterfaceMod
            pass_cohort_age_tracking = 0
         end if
         call set_fates_ctrlparms('use_cohort_age_tracking',ival=pass_cohort_age_tracking)
+
+        ! check fates logging namelist value first because hlm harvest overrides it
+        if(use_fates_logging) then
+           pass_logging = 1
+        else
+           pass_logging = 0
+        end if
+
+        if(get_do_harvest()) then
+           pass_logging = 1
+           pass_num_lu_harvest_cats = num_harvest_inst
+           pass_lu_harvest = 1
+        else
+           pass_lu_harvest = 0
+           pass_num_lu_harvest_cats = 0
+        end if
+
+        call set_fates_ctrlparms('use_lu_harvest',ival=pass_lu_harvest)
+        call set_fates_ctrlparms('num_lu_harvest_cats',ival=pass_num_lu_harvest_cats)
+        call set_fates_ctrlparms('use_logging',ival=pass_logging)
         
         if(use_fates_inventory_init) then
            pass_inventory_init = 1
@@ -507,7 +540,7 @@ module CLMFatesInterfaceMod
                ndecomp = 1
             end if
 
-            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp)
+            call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
             call zero_bcs(this%fates(nc),s)
 
@@ -643,22 +676,12 @@ module CLMFatesInterfaceMod
       integer  :: c                        ! column index (HLM)
       integer  :: ifp                      ! patch index
       integer  :: p                        ! HLM patch index
-      integer  :: yr                       ! year (0, ...)
-      integer  :: mon                      ! month (1, ..., 12)
-      integer  :: day                      ! day of month (1, ..., 31)
-      integer  :: sec                      ! seconds of the day
       integer  :: nlevsoil                 ! number of soil layers at the site
       integer  :: nld_si                   ! site specific number of decomposition layers
-      integer  :: current_year             
-      integer  :: current_month
-      integer  :: current_day
-      integer  :: current_tod
-      integer  :: current_date
-      integer  :: jan01_curr_year
-      integer  :: reference_date
-      integer  :: days_per_year
-      real(r8) :: model_day
-      real(r8) :: day_of_year
+      integer  :: begg,endg
+      real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
+      logical  :: after_start_of_harvest_ts
+      integer  :: iharv
       real(r8), pointer :: lnfm24(:)
       integer  :: ier
       !-----------------------------------------------------------------------
@@ -672,23 +695,16 @@ module CLMFatesInterfaceMod
       ! and it keeps all the boundaries in one location
       ! ---------------------------------------------------------------------------------
 
-      days_per_year = get_days_per_year()
-      call get_curr_date(current_year,current_month,current_day,current_tod)
-      current_date = current_year*10000 + current_month*100 + current_day
-      jan01_curr_year = current_year*10000 + 100 + 1
+      begg = bounds_clump%begg; endg = bounds_clump%endg
 
-      call get_ref_date(yr, mon, day, sec)
-      reference_date = yr*10000 + mon*100 + day
+      ! Set the FATES global time and date variables
+      call GetAndSetTime
 
-      call timemgr_datediff(reference_date, sec, current_date, current_tod, model_day)
-
-      call timemgr_datediff(jan01_curr_year,0,current_date,sec,day_of_year)
-      
-      call SetFatesTime(current_year, current_month, &
-                        current_day, current_tod, &
-                        current_date, reference_date, &
-                        model_day, floor(day_of_year), &
-                        days_per_year, 1.0_r8/dble(days_per_year))
+      if (get_do_harvest()) then
+         call dynHarvest_interp_resolve_harvesttypes(bounds_clump, &
+              harvest_rates=harvest_rates(begg:endg,1:num_harvest_inst), &
+              after_start_of_harvest_ts=after_start_of_harvest_ts)
+      endif
 
       if (fates_spitfire_mode > scalar_lightning) then
          allocate(lnfm24(bounds_clump%begg:bounds_clump%endg), stat=ier)
@@ -703,9 +719,9 @@ module CLMFatesInterfaceMod
       do s=1,this%fates(nc)%nsites
 
          c = this%f2hmap(nc)%fcolumn(s)
+         g = col%gridcell(c)
 
          if (fates_spitfire_mode > scalar_lightning) then
-            g = col%gridcell(c)
             do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
                p = ifp + col%patchi(c)
 
@@ -737,7 +753,6 @@ module CLMFatesInterfaceMod
                   atm2lnd_inst%wind24_patch(p)
 
          end do
-
          
          if(use_fates_planthydro)then
             this%fates(nc)%bc_in(s)%hksat_sisl(1:nlevsoil)  = soilstate_inst%hksat_col(c,1:nlevsoil)
@@ -747,7 +762,32 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%bsw_sisl(1:nlevsoil)    = soilstate_inst%bsw_col(c,1:nlevsoil)
             this%fates(nc)%bc_in(s)%h2o_liq_sisl(1:nlevsoil) =  waterstate_inst%h2osoi_liq_col(c,1:nlevsoil)
          end if
-         
+
+         ! get the harvest data, which is by gridcell
+         ! for now there is one veg column per gridcell, so store all harvest data in each site
+         ! this will eventually change
+         ! today's hlm harvest flag needs to be set no matter what
+         if (get_do_harvest()) then
+            if (after_start_of_harvest_ts) then
+               this%fates(nc)%bc_in(s)%hlm_harvest_rates(1:num_harvest_inst) = harvest_rates(g,1:num_harvest_inst)
+            else
+               this%fates(nc)%bc_in(s)%hlm_harvest_rates(1:num_harvest_inst) = 0._r8
+            end if
+            this%fates(nc)%bc_in(s)%hlm_harvest_catnames(1:num_harvest_inst) = harvest_varnames(1:num_harvest_inst)
+            
+            ! also pass the units that the harvest rates are specified in
+            if (trim(harvest_units) .eq. trim(unitless_units)) then
+               this%fates(nc)%bc_in(s)%hlm_harvest_units = hlm_harvest_area_fraction
+            else if (trim(harvest_units) .eq. trim(mass_units)) then
+               this%fates(nc)%bc_in(s)%hlm_harvest_units = hlm_harvest_carbon
+            else
+               write(iulog,*) 'units field not one of the specified options.'
+               write(iulog,*) harvest_units
+               call endrun(msg=errMsg(sourcefile, __LINE__))
+           end if
+
+
+         endif
 
       end do
 
@@ -1065,6 +1105,9 @@ module CLMFatesInterfaceMod
       ! I think that is it...
       ! ---------------------------------------------------------------------------------
 
+      ! Set the FATES global time and date variables
+      call GetAndSetTime 
+
       if(.not.initialized) then
 
          initialized=.true.
@@ -1268,8 +1311,6 @@ module CLMFatesInterfaceMod
                                                                 this%fates(nc)%sites, &
                                                                 this%fates(nc)%bc_out)
                     
-              
-
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
@@ -1310,6 +1351,10 @@ module CLMFatesInterfaceMod
      integer :: j
      integer :: s
      integer :: c
+
+
+     ! Set the FATES global time and date variables
+     call GetAndSetTime                                                                
 
      nclumps = get_proc_clumps()
 
@@ -2666,5 +2711,62 @@ module CLMFatesInterfaceMod
 
    
  end subroutine hlm_bounds_to_fates_bounds
+
+ ! ======================================================================================
+
+ subroutine GetAndSetTime()
+
+   ! CLM MODULES
+   use clm_time_manager  , only : get_days_per_year, &
+                                  get_curr_date,     &
+                                  get_ref_date,      &
+                                  timemgr_datediff
+
+   ! FATES MODULES
+   use FatesInterfaceMod     , only : SetFatesTime
+
+   ! LOCAL VARIABLES
+   integer  :: yr                       ! year (0, ...)
+   integer  :: mon                      ! month (1, ..., 12)
+   integer  :: day                      ! day of month (1, ..., 31)
+   integer  :: sec                      ! seconds of the day
+   integer  :: current_year             
+   integer  :: current_month
+   integer  :: current_day
+   integer  :: current_tod
+   integer  :: current_date
+   integer  :: jan01_curr_year
+   integer  :: reference_date
+   integer  :: days_per_year
+   real(r8) :: model_day
+   real(r8) :: day_of_year
+
+   
+   ! Get the current date and determine the set the start of the current year
+   call get_curr_date(current_year,current_month,current_day,current_tod)
+   current_date = current_year*10000 + current_month*100 + current_day
+   jan01_curr_year = current_year*10000 + 100 + 1
+
+   ! Get the reference date components and compute the date
+   call get_ref_date(yr, mon, day, sec)
+   reference_date = yr*10000 + mon*100 + day
+
+   ! Get the defined number of days per year 
+   days_per_year = get_days_per_year()
+
+   ! Determine the model day
+   call timemgr_datediff(reference_date, sec, current_date, current_tod, model_day)
+
+   ! Determine the current DOY
+   call timemgr_datediff(jan01_curr_year,0,current_date,sec,day_of_year)
+   
+   ! Set the FATES global time variables
+   call SetFatesTime(current_year, current_month, &
+                     current_day, current_tod, &
+                     current_date, reference_date, &
+                     model_day, floor(day_of_year), &
+                     days_per_year, 1.0_r8/dble(days_per_year))
+
+ end subroutine GetAndSetTime
 
 end module CLMFatesInterfaceMod

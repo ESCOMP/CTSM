@@ -2346,9 +2346,6 @@ sub setup_logic_surface_dataset {
     if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
         $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
     }
-    if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_fates'}) ) {
-        $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with ecosystem dynamics (use_fates=.true)." );
-    }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
                 'hgrid'=>$nl_flags->{'res'},
                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
@@ -2683,11 +2680,9 @@ sub setup_logic_do_harvest {
       if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
          $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
       }
-      elsif (!&value_is_true($nl->get_value('use_cn'))) {
-         $cannot_be_true = "$var can only be set to true when running with CN (use_cn = true)";
-      }
-      elsif (&value_is_true($nl->get_value('use_fates'))) {
-         $cannot_be_true = "$var currently doesn't work with ED";
+
+      elsif (!&value_is_true($nl->get_value('use_cn')) && !&value_is_true($nl->get_value('use_fates'))) {
+         $cannot_be_true = "$var can only be set to true when running with either CN or FATES";
       }
 
       if ($cannot_be_true) {
