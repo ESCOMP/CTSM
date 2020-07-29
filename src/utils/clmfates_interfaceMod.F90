@@ -135,6 +135,8 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use FATESFireBase          , only : fates_fire_base_type
+   use CNFireFactoryMod, only: no_fire, scalar_lightning, &
+                               successful_ignitions, anthro_ignitions
 
    implicit none
    
@@ -267,6 +269,10 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
         
         call set_fates_ctrlparms('spitfire_mode',ival=fates_spitfire_mode)
+        call set_fates_ctrlparms('sf_nofire_def',ival=no_fire)
+        call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
+        call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
+        call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
         
         if(is_restart()) then
            pass_is_restart = 1
