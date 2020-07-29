@@ -95,13 +95,16 @@ or sourcing ``ctsm_build_environment.csh`` for Cshell:
 Set makefile variables from CTSM needed for the WRF build by setting the following environment.
 For example for Bash::
 
-    export WRF_CTSM_MKFILE=ctsm_build_dir/bld/ctsm.mk
+    export WRF_CTSM_MKFILE=/glade/scratch/$USER/WRF-CTSM/CTSM/ctsm_build_dir/bld/ctsm.mk
 
 or for Cshell:
 
 .. code-block:: Tcsh
 
-    setenv WRF_CTSM_MKFILE ctsm_build_dir/bld/ctsm.mk
+    setenv WRF_CTSM_MKFILE /glade/scratch/$USER/WRF-CTSM/CTSM/ctsm_build_dir/bld/ctsm.mk
+
+.. warning::
+    Please note that you should point to the absolute path of the ``ctsm.mk`` file.
 
 There are also few other environmental setting that should be set for building WRF.
 Some of these are not required, but might help if you face any compilation errors.
