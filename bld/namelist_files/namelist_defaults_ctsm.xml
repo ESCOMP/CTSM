@@ -504,7 +504,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <init_interp_how_close>61</init_interp_how_close>
 
 <!-- What simulation years can find initial conditions to interpolate from (find one that's within the how_close years above)-->
-<init_interp_sim_years>1850,1979,2000,2010,2013</init_interp_sim_years>
+<init_interp_sim_years>1850,1979,2000,2013</init_interp_sim_years>
 
 <!--
 
@@ -530,8 +530,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTICGRIS.ne30x8">.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm5_0_cam6.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm5_0_cam6.0"
-                  hgrid="1.9x2.5"                                                                       >.true.</use_init_interp>
 <!-- For an inexact match use either low resolution or high resolution match for SP or BGC mode CLM4.5 and CLM5.0 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"                                >.true.</use_init_interp>
 <!-- Default to FALSE if couldn't find a match -->
@@ -686,13 +684,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
-<!-- 2010 IC's for specific low resolution matches CLM4.5 and CLM5.0 for both SP and BGC ... -->
-
-<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
-                        hgrid="1.9x2.5"  
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
-</init_interp_attributes>
-
 <!-- 2013 IC's - exact match for CONUS grid ... -->
 <init_interp_attributes sim_year="2013" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="ne0np4CONUS.ne30x8" use_cn=".false." maxpft="17"
@@ -842,20 +833,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
 </finidat>
 
-<!-- Present day and 2010 for coupled cases at low resolution -->
+<!-- Present day for coupled cases at low resolution -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
-</finidat>
-
-<!-- This is the same file as above but, for a different tuning mode -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20100101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2010"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true." use_init_interp=".true."
-         lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.BHIST.2010-01-01.0.9x1.25_gx1v7_simyr2010_c181015.nc
 </finidat>
 
 <!-- 2013 -->
