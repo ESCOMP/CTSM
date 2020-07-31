@@ -2249,7 +2249,7 @@ sub setup_logic_initial_conditions {
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
                        "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates",
-                       "lnd_tuning_mode", "hgrid",
+                       "lnd_tuning_mode", 
                      ) {
        $settings{$item}    = $nl_flags->{$item};
     }
