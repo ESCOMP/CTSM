@@ -2297,10 +2297,8 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
              my $how_close = undef;
              if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
                 $how_close = abs(1850 - $sim_yr);
-             # EBK 07/20/2020 -- This makes sure the sim_year matched is based on the sim-year
-             #                   rather than  the start year.
-             #} elsif ( $nl_flags->{'flanduse_timeseries'} eq "null" ) {
-             #   $how_close = abs($nl_flags->{'sim_year'} - $sim_yr);
+             } elsif ( $nl_flags->{'flanduse_timeseries'} eq "null" ) {
+                $how_close = abs($nl_flags->{'sim_year'} - $sim_yr);
              } else {
                 $how_close = abs($st_year - $sim_yr);
              }
