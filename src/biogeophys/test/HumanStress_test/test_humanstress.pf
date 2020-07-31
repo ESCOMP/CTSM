@@ -51,14 +51,14 @@ contains
     real(r8) :: shum   ! specific humidity
 
     real(r8) :: Teq, epott, sat_vapor
-    real(r8) :: esdT, qsdT
     real(r8) :: es_mb, de_mbdT, dlnes_mbdT, rs, rsdT, foftk, fdT
 
     pres = 100000._r8
 
     temp =  50._r8 + SHR_CONST_TKFRZ
     rh   = 100.0_r8
-    call QSat (temp, pres, sat_vapor, esdT, rs, qsdT)
+    call QSat (temp, pres, rs, &
+         es = sat_vapor)
     call VaporPres( rh, sat_vapor, vapor )
     call VaporPres( rh, rs, shum )
     call Wet_Bulb (temp,vapor,pres,rh,shum,Teq,epott,wbt)
@@ -66,7 +66,8 @@ contains
 
     temp =  59._r8 + SHR_CONST_TKFRZ
     rh   =  65.0_r8
-    call QSat (temp, pres, sat_vapor, esdT, rs, qsdT)
+    call QSat (temp, pres, rs, &
+         es = sat_vapor)
     call VaporPres( rh, sat_vapor, vapor )
     call VaporPres( rh, rs, shum )
     call Wet_Bulb (temp,vapor,pres,rh,shum,Teq,epott,wbt)
@@ -78,7 +79,8 @@ contains
        do while ( pres > 85000._r8 )
           temp =  53._r8 + SHR_CONST_TKFRZ
           do while ( temp > SHR_CONST_TKFRZ-127.0 )
-             call QSat (temp, pres, sat_vapor, esdT, rs, qsdT)
+             call QSat (temp, pres, rs, &
+                  es = sat_vapor)
              call VaporPres( rh, sat_vapor, vapor )
              call VaporPres( rh, rs, shum )
              call Wet_Bulb (temp,vapor,pres,rh,shum,Teq,epott,wbt)
@@ -110,7 +112,6 @@ contains
     real(r8) :: shum   ! specific humidity
 
     real(r8) :: Teq, epott, sat_vapor
-    real(r8) :: esdT, qsdT
     real(r8) :: es_mb, de_mbdT, dlnes_mbdT, rs, rsdT, foftk, fdT
 
     rh = 1.0_r8
@@ -119,7 +120,8 @@ contains
        do while ( pres < 110000._r8 )
           temp =  53._r8 + SHR_CONST_TKFRZ
           do while ( temp <= SHR_CONST_TKFRZ+58.0 )
-             call QSat (temp, pres, sat_vapor, esdT, rs, qsdT)
+             call QSat (temp, pres, rs, &
+                  es = sat_vapor)
              call VaporPres( rh, sat_vapor, vapor )
              call VaporPres( rh, rs, shum )
              write(*,*) 'temp, pres, rh : ', temp-SHR_CONST_TKFRZ, pres, rh
