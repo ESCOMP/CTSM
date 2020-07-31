@@ -2245,11 +2245,11 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $nl_flags->{'sim_year'};
        $opts->{'ignore_ic_year'} = 1; 
     } else {
-       delete( $settings{'sim_year'} );
+       $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
                        "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates",
-                       "lnd_tuning_mode"
+                       "lnd_tuning_mode", "hgrid",
                      ) {
        $settings{$item}    = $nl_flags->{$item};
     }
@@ -2320,7 +2320,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
           }    # SIMYR:
           $settings{'sim_year'} = $closest_sim_year;
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
-                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
+                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(), 'hgrid'=>$nl_flags->{'res'},
                       'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                       'use_fates'=>$nl_flags->{'use_fates'} );
           $settings{$useinitvar} = $nl->get_value($useinitvar);
