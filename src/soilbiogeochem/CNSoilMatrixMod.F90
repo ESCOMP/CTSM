@@ -863,10 +863,10 @@ contains
                      end if
                      cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc_cap(c,j+(i-1)*nlevdecomp,1)
                      if(use_c13)then
-                        cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc13_cap(c,j+(i-1)*nlevdecomp,1)
+                        cs13_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc13_cap(c,j+(i-1)*nlevdecomp,1)
                      end if
                      if(use_c14)then
-                        cs_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc14_cap(c,j+(i-1)*nlevdecomp,1)
+                        cs14_soil%matrix_cap_decomp_cpools_vr_col(c,j,i) = soilmatrixc14_cap(c,j+(i-1)*nlevdecomp,1)
                      end if
                      ns_soil%matrix_cap_decomp_npools_vr_col(c,j,i) = soilmatrixn_cap(c,j+(i-1)*nlevdecomp,1)
                   end do
