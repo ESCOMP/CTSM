@@ -61,8 +61,9 @@ contains
   subroutine QSat (T, p, qs, es, qsdT, esdT)
     !
     ! !DESCRIPTION:
-    ! Computes saturation mixing ratio and (optionally) the change in saturation
-    ! mixing ratio with respect to temperature.
+    ! Computes saturation mixing ratio and (optionally) the change in saturation mixing
+    ! ratio with respect to temperature. Mixing ratio and specific humidity are
+    ! approximately equal and can be treated as the same.
     ! Reference:  Polynomial approximations from:
     !             Piotr J. Flatau, et al.,1992:  Polynomial fits to saturation
     !             vapor pressure.  Journal of Applied Meteorology, 31, 1507-1513.
@@ -86,9 +87,7 @@ contains
     real(r8) :: td,vp,vp1,vp2
     !-----------------------------------------------------------------------
 
-    td = T - SHR_CONST_TKFRZ
-    if (td > 100.0_r8) td=100.0_r8
-    if (td < -75.0_r8) td=-75.0_r8
+    td = min(100.0_r8, max(-75.0_r8, T - SHR_CONST_TKFRZ))
 
     if (td >= 0.0_r8) then
        es_local = a0 + td*(a1 + td*(a2 + td*(a3 + td*(a4 &
