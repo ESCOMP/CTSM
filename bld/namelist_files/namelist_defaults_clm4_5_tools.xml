@@ -4992,16 +4992,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2016" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2018.c190806/mksrf_landuse_clm52_trendy2019_2016.c190806.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr2000-2019.c200727/mksrf_landuse_clm52_trendy2020_2016.c190727.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2017" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2018.c190806/mksrf_landuse_clm52_trendy2019_2017.c190806.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr2000-2019.c200727/mksrf_landuse_clm52_trendy2020_2017.c190727.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2018" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2018.c190806/mksrf_landuse_clm52_trendy2019_2018.c190806.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr2000-2019.c200727/mksrf_landuse_clm52_trendy2020_2018.c190727.nc
 </mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2019" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr2000-2019.c200727/mksrf_landuse_clm52_trendy2020_2019.c190727.nc
+</mksrf_fvegtyp>
+
 
 
 <!-- Potential Vegetation dataset -->
