@@ -475,7 +475,7 @@ contains
          ptr_patch=this%qflx_evap_veg_patch, default='inactive', c2l_scale_type='urbanf')
 
     this%qflx_evap_tot_patch(begp:endp) = spval
-    call hist_addfld1d (fname='QFLX_EVAP_TOT', units='kg m-2 s-1', &
+    call hist_addfld1d (fname='QFLX_EVAP_TOT', units='mm H2O/s', &
          avgflag='A', long_name='qflx_evap_soi + qflx_evap_can + qflx_tran_veg', &
          ptr_patch=this%qflx_evap_tot_patch, c2l_scale_type='urbanf')
 

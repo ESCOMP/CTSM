@@ -41,7 +41,7 @@ class SSP(SystemTestsCommon):
 
         # determine run lengths needed below
         stop_nf = self._case.get_value("STOP_N")
-        stop_n1 = int(stop_nf / 2)
+        stop_n1 = stop_nf / 2
         stop_n2 = stop_nf - stop_n1
 
         #-------------------------------------------------------------------

@@ -634,7 +634,7 @@
     </mach>
   </grid>
   <grid name="l%10x15">
-    <mach name="hobart|izumi">
+    <mach name="hobart">
       <pes pesize="any" compset="any">
 	<comment>none</comment>
 	<ntasks>

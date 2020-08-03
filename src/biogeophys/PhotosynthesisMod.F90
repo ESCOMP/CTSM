@@ -360,14 +360,14 @@ contains
     ! Don't output photosynthesis variables when FATES is on as they aren't calculated
     if (.not. use_fates) then
        this%fpsn_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FPSN', units='umol m-2 s-1',  &
+       call hist_addfld1d (fname='FPSN', units='umol/m2s',  &
             avgflag='A', long_name='photosynthesis', &
             ptr_patch=this%fpsn_patch, set_lake=0._r8, set_urb=0._r8)
 
        ! Don't by default output this rate limiting step as only makes sense if you are outputing
        ! the others each time-step
        this%fpsn_wc_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FPSN_WC', units='umol m-2 s-1',  &
+       call hist_addfld1d (fname='FPSN_WC', units='umol/m2s',  &
             avgflag='I', long_name='Rubisco-limited photosynthesis', &
             ptr_patch=this%fpsn_wc_patch, set_lake=0._r8, set_urb=0._r8, &
             default='inactive')
@@ -375,7 +375,7 @@ contains
        ! Don't by default output this rate limiting step as only makes sense if you are outputing
        ! the others each time-step
        this%fpsn_wj_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FPSN_WJ', units='umol m-2 s-1',  &
+       call hist_addfld1d (fname='FPSN_WJ', units='umol/m2s',  &
             avgflag='I', long_name='RuBP-limited photosynthesis', &
             ptr_patch=this%fpsn_wj_patch, set_lake=0._r8, set_urb=0._r8, &
             default='inactive')
@@ -383,7 +383,7 @@ contains
        ! Don't by default output this rate limiting step as only makes sense if you are outputing
        ! the others each time-step
        this%fpsn_wp_patch(begp:endp) = spval
-       call hist_addfld1d (fname='FPSN_WP', units='umol m-2 s-1',  &
+       call hist_addfld1d (fname='FPSN_WP', units='umol/m2s',  &
             avgflag='I', long_name='Product-limited photosynthesis', &
             ptr_patch=this%fpsn_wp_patch, set_lake=0._r8, set_urb=0._r8, &
             default='inactive')

@@ -23,7 +23,7 @@ module mkpftConstantsMod
   
   integer, parameter, public :: maxpft = 78   ! maximum # of PFT
 
-  integer, public    :: num_natpft = -1       ! number of PFTs on the natural vegetation
+  integer, public    :: num_natpft            ! number of PFTs on the natural vegetation
                                               ! landunit, NOT including bare ground
                                               ! (includes generic crops for runs with
                                               ! create_crop_landunit=false)

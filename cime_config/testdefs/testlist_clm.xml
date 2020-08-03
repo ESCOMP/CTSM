@@ -87,8 +87,8 @@
   </test>
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/reduceOutput">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="prebeta"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -96,15 +96,15 @@
   </test>
   <test name="ERI_D_Ld9_P48x1" grid="T31_g37" compset="I2000Clm50Sp" testmods="clm/reduceOutput">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_musgs" compset="I2000Clm50Sp" testmods="clm/SNICARFRC">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -304,7 +304,7 @@
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_musgs" compset="I1850Clm50Bgc" testmods="clm/ciso">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -321,7 +321,7 @@
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/reduceOutput">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -329,7 +329,7 @@
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_musgs" compset="I2000Clm50Sp" testmods="clm/o3">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -437,14 +437,14 @@
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">0:20</option>
       <option name="comment"  >Do a test with RTM and flooding on as that also impacts CLM code</option>
     </options>
   </test>
   <test name="ERP_D_P48x1" grid="f10_f10_musgs" compset="IHistClm50Bgc" testmods="clm/decStart">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -486,9 +486,9 @@
   </test>
   <test name="ERP_Ld5" grid="f19_g17" compset="I2000Clm50SpRtmFl" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="gnu" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="prebeta"/>
-      <machine name="izumi" compiler="gnu" category="prealpha"/>
+      <machine name="hobart" compiler="gnu" category="aux_clm"/>
+      <machine name="hobart" compiler="pgi" category="prebeta"/>
+      <machine name="hobart" compiler="gnu" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -512,7 +512,7 @@
   </test>
   <test name="ERP_Ld5_P48x1" grid="f10_f10_musgs" compset="I1850Clm50Bgc" testmods="clm/ciso">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -528,7 +528,7 @@
   </test>
   <test name="ERP_Ld5_P48x1" grid="f10_f10_musgs" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -536,7 +536,7 @@
   </test>
   <test name="ERP_Ld5_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/reduceOutput">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -544,7 +544,7 @@
   </test>
   <test name="ERP_Ld5_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/flexCN_FUN">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -552,7 +552,7 @@
   </test>
   <test name="ERP_Ld5_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/noFUN_flexCN">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -560,7 +560,7 @@
   </test>
   <test name="ERP_Ld5_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/luna">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -575,14 +575,14 @@
       <option name="comment"  >Multi-year global test of transient crops together with transient glaciers. Use no-evolve glaciers with ERP test</option>
     </options>
   </test>
-  <test name="ERP_P36x2_D_Ld5" grid="f09_g17" compset="I2000Clm45Sp" testmods="clm/prescribed">
+  <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I1850Clm45BgcGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >include a debug threaded test of I2000Clm45Bgc with prescribed streams on (has to be f09 for prescribed)</option>
+      <option name="comment"  >include a debug test of I1850Clm45Bgc</option>
     </options>
   </test>
   <test name="ERP_P36x2_D_Ld5" grid="f10_f10_musgs" compset="I1850Clm45BgcCru" testmods="clm/ciso">
@@ -825,8 +825,9 @@
   <test name="ERS_D_Ld3" grid="f19_f19_mg16" compset="I2000Clm40SpCruGs" testmods="clm/40default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="intel" category="prebeta"/>
-      <machine name="izumi" compiler="pgi" category="prebeta"/>
+      <machine name="edison" compiler="intel" category="prebeta"/>
+      <machine name="hobart" compiler="intel" category="prebeta"/>
+      <machine name="hobart" compiler="pgi" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -867,7 +868,7 @@
   </test>
   <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpGs" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -926,7 +927,7 @@
   <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="hobart" compiler="nag" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1016,7 +1017,7 @@
   </test>
   <test name="ERS_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropGs" testmods="clm/monthly">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">02:20:00</option>
@@ -1107,8 +1108,8 @@
   </test>
   <test name="PEM_Ld1" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="intel" category="prebeta"/>
+      <machine name="hobart" compiler="intel" category="aux_clm"/>
+      <machine name="hobart" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1128,9 +1129,9 @@
   </test>
   <test name="SMS" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
-      <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="hobart" compiler="intel" category="aux_clm"/>
+      <machine name="hobart" compiler="pgi" category="aux_clm"/>
+      <machine name="hobart" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1165,9 +1166,9 @@
   </test>
   <test name="SMS_D" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/crop">
     <machines>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="pgi" category="aux_clm"/>
-      <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="hobart" compiler="intel" category="aux_clm"/>
+      <machine name="hobart" compiler="pgi" category="aux_clm"/>
+      <machine name="hobart" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1175,8 +1176,8 @@
   </test>
   <test name="SMS_D_Ld1" grid="f19_g17" compset="I1850Clm45Cn" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="pgi" category="prebeta"/>
-      <machine name="izumi" compiler="gnu" category="aux_clm"/>
+      <machine name="hobart" compiler="pgi" category="prebeta"/>
+      <machine name="hobart" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1192,7 +1193,7 @@
   </test>
   <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpGs" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1208,7 +1209,7 @@
   </test>
   <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpGs" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1220,9 +1221,9 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prealpha"/>
-      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="hobart" compiler="nag" category="prealpha"/>
       <machine name="cheyenne" compiler="gnu" category="prealpha"/>
     </machines>
     <options>
@@ -1231,7 +1232,7 @@
   </test>
   <test name="SMS_D_Ld1_P48x1" grid="f10_f10_musgs" compset="I2000Clm45BgcCrop" testmods="clm/oldhyd">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1239,7 +1240,7 @@
   </test>
   <test name="SMS_D_Ld1_P48x1" grid="f10_f10_musgs" compset="I2000Clm50BgcCruGs" testmods="clm/af_bias_v7">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1316,7 +1317,7 @@
   </test>
   <test name="SMS_D_Ld5" grid="f10_f10_musgs" compset="I1850Clm45BgcCrop" testmods="clm/crop">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1372,8 +1373,8 @@
   </test>
   <test name="SMS_D_P48x1_Ld5" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrig_spunup">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="prebeta"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1407,6 +1408,7 @@
   <test name="SMS_Ld1" grid="f19_g17" compset="I2000Clm50BgcCruGs" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
+      <machine name="edison" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1439,7 +1441,7 @@
   <test name="SMS_Ld1_Mmpi-serial" grid="f45_f45_mg37" compset="I2000Clm50SpGs" testmods="clm/ptsRLA">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1464,8 +1466,8 @@
   </test>
   <test name="SMS_Ld2" grid="T31_g37" compset="IHistClm40CnGswGs">
     <machines>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="intel" category="prealpha"/>
+      <machine name="hobart" compiler="intel" category="aux_clm"/>
+      <machine name="hobart" compiler="intel" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1484,6 +1486,14 @@
   <test name="SMS_Ld5" grid="f45_f45_mg37" compset="I2000Clm40SpCruGs" testmods="clm/40ptsRLB">
     <machines>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+  <test name="SMS_Ld5" grid="f45_f45_mg37" compset="I2000Clm40SpCruGs" testmods="clm/40ptsROA">
+    <machines>
+      <machine name="edison" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1517,7 +1527,7 @@
   </test>
   <test name="SMS_Ld5_D_P48x1" grid="f10_f10_musgs" compset="IHistClm50Bgc" testmods="clm/monthly">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1525,7 +1535,7 @@
   </test>
   <test name="SMS_Ld5_D_P48x1" grid="f10_f10_musgs" compset="IHistClm50Bgc" testmods="clm/decStart">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1539,15 +1549,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Transient production low res future scenario SSP5-8.5 case with isotopes with a december 2050 start</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f09_g17" compset="ISSP585ExtClm50BgcCrop" testmods="clm/default">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Transient production future scenario SSP5-8.5 extension case</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f10_f10_musgs" compset="ISSP245Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
@@ -1630,7 +1631,7 @@
   </test>
   <test name="SMS_P48x1_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Cn" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1655,7 +1656,7 @@
   </test>
   <test name="SSP_Ld10" grid="f19_g17" compset="I1850Clm50Bgc" testmods="clm/rtmColdSSP">
     <machines>
-      <machine name="izumi" compiler="intel" category="prebeta"/>
+      <machine name="hobart" compiler="intel" category="prebeta"/>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
@@ -1665,7 +1666,7 @@
   <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm45FatesGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1674,7 +1675,7 @@
   <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="prebeta"/>
     </machines>
@@ -1693,7 +1694,7 @@
   <test name="ERS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1710,7 +1711,7 @@
   <test name="ERS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1719,7 +1720,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm45FatesGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1736,7 +1737,7 @@
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1754,7 +1755,7 @@
   <test name="SMS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1772,7 +1773,7 @@
   <test name="SMS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
@@ -1874,7 +1875,8 @@
   <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1884,11 +1886,21 @@
   <test name="ERS_D_Ld3" grid="f19_g16" compset="I2000Clm50FatesCruGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld5" grid="f19_g16" compset="I2000Clm45BgcCrop" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
     </options>
   </test>
   <test name="ERS_D_Ld5" grid="f19_g16" compset="I2000Clm50BgcCruGs" testmods="clm/default">
@@ -1898,13 +1910,13 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Run a short non-Fates test (without land-ice model) in the fates test list, to make sure fates changes do not mess up the standard model</option>
     </options>
   </test>
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1914,7 +1926,7 @@
   <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1923,7 +1935,8 @@
   <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1942,7 +1955,8 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="edison" compiler="intel" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1961,7 +1975,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesST3">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>      
     </machines>
     <options>
@@ -1971,7 +1985,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesPPhys">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1981,7 +1995,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesLogging">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -1997,7 +2011,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Lm13" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesColdDef">
+  <test name="SMS_Ly2" grid="1x1_brazil" compset="I2000Clm50FatesCruGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2022,7 +2036,7 @@
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
     </machines>
     <options>
-      <option name="wallclock">00:60:00</option>
+      <option name="wallclock">00:20:00</option>
       <option name="comment"  >The main point of this test is simply to make sure that the CMIP6WACCMDECK modifier works for
 2-degree since that resolution turns off Carbon isotopes </option>
     </options>

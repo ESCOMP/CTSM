@@ -71,7 +71,6 @@ contains
    type(mct_ggrid)    :: dom_clm   ! domain information 
    character(len=CL)  :: stream_fldFileName_ndep
    character(len=CL)  :: ndepmapalgo = 'bilinear'
-   character(len=CL)  :: ndep_tintalgo = 'linear'
    character(len=CS)  :: ndep_taxmode = 'extend'
    character(len=CL)  :: ndep_varlist = 'NDEP_year'
    character(*), parameter :: shr_strdata_unset = 'NOT_SET'
@@ -81,12 +80,11 @@ contains
 
    namelist /ndepdyn_nml/          &
         stream_year_first_ndep,    &
-        stream_year_last_ndep,     &
+	stream_year_last_ndep,     &
         model_year_align_ndep,     &
         ndepmapalgo, ndep_taxmode, &
         ndep_varlist,              &
-        stream_fldFileName_ndep,   &
-        ndep_tintalgo
+        stream_fldFileName_ndep
 
    ! Default values for namelist
     stream_year_first_ndep  = 1                ! first year in stream to use
@@ -117,7 +115,6 @@ contains
    call shr_mpi_bcast(stream_fldFileName_ndep, mpicom)
    call shr_mpi_bcast(ndep_varlist           , mpicom)
    call shr_mpi_bcast(ndep_taxmode           , mpicom)
-   call shr_mpi_bcast(ndep_tintalgo          , mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -128,7 +125,6 @@ contains
       write(iulog,*) '  stream_fldFileName_ndep = ',stream_fldFileName_ndep
       write(iulog,*) '  ndep_varList            = ',ndep_varList
       write(iulog,*) '  ndep_taxmode            = ',ndep_taxmode
-      write(iulog,*) '  ndep_tintalgo           = ',ndep_tintalgo
       write(iulog,*) ' '
    endif
    ! Read in units
@@ -160,9 +156,8 @@ contains
         fldListModel=ndep_varlist,                 &
         fillalgo='none',                           &
         mapalgo=ndepmapalgo,                       &
-        tintalgo=ndep_tintalgo,                    &
         calendar=get_calendar(),                   &
-        taxmode=ndep_taxmode                       )
+	taxmode=ndep_taxmode                       )
 
 
    if (masterproc) then

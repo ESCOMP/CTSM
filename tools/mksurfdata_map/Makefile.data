@@ -55,8 +55,8 @@ endif
 MKSURFDATA = $(BATCHJOBS) $(PWD)/mksurfdata.pl
 
 # f19 and f09 are standard resolutions, f10 is used for testing, f45 is used for FATES
-# ne30np4 is standard resolution for SE dycore in CAM
-STANDARD_RES = 0.9x1.25,1.9x2.5,10x15,4x5,ne30np4
+# ne30np4 is standard resolution for SE dycore in CAM, T31 is for paleo, 360x720cru is for same resolution as forcing data
+STANDARD_RES = 360x720cru,48x96,0.9x1.25,1.9x2.5,10x15,4x5,ne30np4
 
 FUTURE_RES = 0.9x1.25,1.9x2.5,10x15
 

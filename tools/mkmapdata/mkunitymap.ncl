@@ -23,8 +23,6 @@ begin
 
   print_str  = getenv("PRINT");       ; Do Extra printing for debugging
 
-  gitdescribe = getenv("GITDES");     ; Git describe from the source clone
-
   if ( ismissing(gridfile1) )then
      print( "ERROR: GRIDFILE1 is missing!" );
      exit
@@ -45,10 +43,6 @@ begin
      else
         printn = False;
      end if
-  end if
-
-  if ( ismissing(gitdescribe) )then
-     gitdescribe = systemfunc( "git describe" )
   end if
 
   ;
@@ -140,7 +134,7 @@ begin
   nc@grid_file_dst = gridfile2;
   nc@title   = "SCRIP mapping file between identical grids without ocean";
   nc@history = ldate+": create using mkunitymap.ncl";
-  nc@Version = gitdescribe;
+  nc@Version = systemfunc( "git describe" );
 
   ;
   ; Fraction

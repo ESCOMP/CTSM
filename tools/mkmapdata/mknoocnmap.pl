@@ -256,19 +256,13 @@ if ( $printlev > 0 ) {
   print "\n\nCreate SCRIP grid and mapping files for a single-point\n";
 }
 # land grid...
-my $GITDES = `cd $scrdir; git describe; cd -`;
-$GITDES =~ s/\n//g;
 my $grddir  = absolute_path( "$scrdir/../mkmapgrids" );
-my $cwd = getcwd();
-my $datdir = $grddir;
-if ( $cwd ne $scrdir ) {
-   $datdir = $cwd;
-}
-my $grid1   = "$datdir/SCRIPgrid_${name}_nomask_c${cdate}.nc";
+my $grid1   = "$grddir/SCRIPgrid_${name}_nomask_c${cdate}.nc";
 my $cmdenv  = "env S_LAT=$S_lat W_LON=$W_lon N_LAT=$N_lat E_LON=$E_lon " . 
-             "NX=$nx NY=$ny PTNAME=$name GITDES=$GITDES $print ";
+             "NX=$nx NY=$ny PTNAME=$name $print ";
 
-my $cmd     = "$cmdenv GRIDFILE=$grid1 ncl $scrdir/../mkmapgrids/mkscripgrid.ncl";
+chdir( "$grddir" );
+my $cmd     = "$cmdenv GRIDFILE=$grid1 ncl mkscripgrid.ncl";
 if ( $printlev > 0 ) {
    print "Create land SCRIP gridfile\n";
    print "Execute: $cmd\n";
@@ -276,8 +270,8 @@ if ( $printlev > 0 ) {
 system( $cmd );
 
 # ocean grid...
-my $grid2 = "$datdir/SCRIPgrid_${name}_noocean_c${cdate}.nc";
-my $cmd    = "$cmdenv GRIDFILE=$grid2 IMASK=0 ncl $scrdir/../mkmapgrids/mkscripgrid.ncl";
+my $grid2 = "$grddir/SCRIPgrid_${name}_noocean_c${cdate}.nc";
+my $cmd    = "$cmdenv GRIDFILE=$grid2 IMASK=0 ncl mkscripgrid.ncl";
 if ( $printlev > 0 ) {
    print "Create ocean SCRIP gridfile\n";
    print "Execute: $cmd\n";
@@ -287,9 +281,10 @@ system( $cmd );
 # Now create a unity mapping between the two...
 # Note reversal of grid1 & grid2, because we want an ocean -> land
 # mapping file
-my $mapfile = "$datdir/map_${name}_noocean_to_${name}_nomask_aave_da_${cdate}.nc";
+chdir( "$scrdir" );
+my $mapfile = "map_${name}_noocean_to_${name}_nomask_aave_da_${cdate}.nc";
 my $cmd = "env GRIDFILE1=$grid2 GRIDFILE2=$grid1 MAPFILE=$mapfile " .
-          "GITDES=$GITDES $print ncl $scrdir/mkunitymap.ncl";
+          "$print ncl $scrdir/mkunitymap.ncl";
 
 if ( $printlev > 0 ) {
   print "Create unity mapping file between the two gridfile\n";

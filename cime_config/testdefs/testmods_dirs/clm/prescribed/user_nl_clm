@@ -1,6 +1,0 @@
- use_soil_moisture_streams = .true.
- use_lai_streams = .true.
- hist_fincl1   += 'H2OSOI_PRESCRIBED_GRC'
- soilm_tintalgo = 'lower'    ! set time interpolation to use lower value, so can compare to input dataset
- lai_tintalgo = 'lower'      ! set time interpolation to use lower value, so can compare more directly to input dataset
- soilm_ignore_data_if_missing = .true.

@@ -23,15 +23,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <dtime>1800</dtime>
 
 <!-- CO2 volume mixing ratio -->
-<co2_ppmv sim_year="1000"                    >379.0</co2_ppmv>
-<co2_ppmv sim_year="2000"                    >379.0</co2_ppmv>
-<co2_ppmv sim_year="2010"                    >388.8</co2_ppmv>
-<co2_ppmv sim_year="2015"                    >397.5</co2_ppmv>
-<co2_ppmv sim_year="2100" ssp_rcp="SSP5-8.5" >1135.2</co2_ppmv>
-<co2_ppmv sim_year="2100" ssp_rcp="SSP5-3.4" >496.6</co2_ppmv>
-<co2_ppmv sim_year="2100" ssp_rcp="SSP1-2.6" >445.6</co2_ppmv>
-<co2_ppmv sim_year="1850"                    >284.7</co2_ppmv>
-<co2_ppmv sim_year="PtVg"                    >284.7</co2_ppmv>
+<co2_ppmv sim_year="1000"      >379.0</co2_ppmv>
+<co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
+<co2_ppmv sim_year="2010"      >388.8</co2_ppmv>
+<co2_ppmv sim_year="2015"      >397.5</co2_ppmv>
+<co2_ppmv sim_year="1850"      >284.7</co2_ppmv>
+<co2_ppmv sim_year="PtVg"      >284.7</co2_ppmv>
 
 <!-- CO2 type -->
 <co2_type>constant</co2_type>
@@ -112,9 +109,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <irrigate use_crop=".true." phys="clm5_0" use_cndv=".false." sim_year_range="1850-2100">.true.</irrigate>
 <irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."  sim_year_range="1850-2100">.false.</irrigate>
 <irrigate use_crop=".true." phys="clm4_5"                    sim_year_range="1850-2100">.false.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false." sim_year_range="2100-2300">.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true."  sim_year_range="2100-2300">.false.</irrigate>
-<irrigate use_crop=".true." phys="clm4_5"                    sim_year_range="2100-2300">.false.</irrigate>
 
 <irrigate use_crop=".true." >.false.</irrigate>
 <irrigate use_crop=".false.">.true.</irrigate>
@@ -384,7 +378,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.8.0.0_12pft_c191216.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_default_2trop.c190114.nc</fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -823,15 +817,6 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
 >lnd/clm2/surfdata_map/surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc</fsurdat>
 
-
-<!-- Extension surface datasets at 2100 -->
-<fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP1-2.6" >
-lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP1-2.6_78pfts_CMIP6_simyr2100_c200329.nc</fsurdat>
-<fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP5-8.5" >
-lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr2100_c200330.nc</fsurdat>
-<fsurdat hgrid="0.9x1.25"  sim_year="2100" use_crop=".true." ssp_rcp="SSP5-3.4" >
-lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_simyr2100_c200330.nc</fsurdat>
-
 <!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000" irrigate=".true."
@@ -942,15 +927,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <flanduse_timeseries hgrid="10x15"         sim_year_range="1850-2100" ssp_rcp="SSP5-3.4"
  use_crop=".true."   >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_10x15_SSP5-3.4_78pfts_CMIP6_simyr1850-2100_c190228.nc</flanduse_timeseries>
 
-<!-- Extensions of future scenarios - landuse time series files with crop on -->
-
-<flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="2100-2300" ssp_rcp="SSP5-8.5" use_crop=".true."
->lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_0.9x1.25_SSP5-8.5_78pfts_CMIP6_simyr2100-2300_c200330.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="2100-2300" ssp_rcp="SSP5-3.4" use_crop=".true."
->lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_0.9x1.25_SSP5-3.4_78pfts_CMIP6_simyr2100-2300_c200330.nc</flanduse_timeseries>
-<flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="2100-2300" ssp_rcp="SSP1-2.6" use_crop=".true."
->lnd/clm2/surfdata_map/release-clm5.0.30/landuse.timeseries_0.9x1.25_SSP1-2.6_78pfts_CMIP6_simyr2100-2300_c200329.nc</flanduse_timeseries>
-
 <!-- Future scenarios - landuse time series files with crop off -->
 
 <!-- SSP5-RCP8.5 - relative to {csmdata}) -->
@@ -1057,14 +1033,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <stream_year_last_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2101</stream_year_last_ndep>
 <model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="1850-2100"  >2015</model_year_align_ndep>
 
-<stream_year_first_ndep phys="clm4_5" use_cn=".true." sim_year_range="2100-2300"  >2101</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm4_5" use_cn=".true." sim_year_range="2100-2300"  >2101</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm4_5" use_cn=".true." sim_year_range="2100-2300"  >2101</model_year_align_ndep>
-
-<stream_year_first_ndep phys="clm5_0" use_cn=".true." sim_year_range="2100-2300"  >2101</stream_year_first_ndep>
-<stream_year_last_ndep  phys="clm5_0" use_cn=".true." sim_year_range="2100-2300"  >2101</stream_year_last_ndep>
-<model_year_align_ndep  phys="clm5_0" use_cn=".true." sim_year_range="2100-2300"  >2101</model_year_align_ndep>
-
 <stream_year_first_ndep use_cn=".true."   sim_year="2010" >2010</stream_year_first_ndep>
 <stream_year_last_ndep  use_cn=".true."   sim_year="2010" >2010</stream_year_last_ndep>
 
@@ -1084,26 +1052,28 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <stream_year_last_ndep  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_ndep>
 
 <stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
+
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
+>lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
+<!-- We currently only have the Tier I Nitogen deposition files available -->
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
+>lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
+>lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
+
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 
-<!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP2-4.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-<stream_fldfilename_ndep phys="clm5_0" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
-
+<!-- We currently only have the Tier I Nitogen deposition files available -->
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP585_b.e21.BWSSP585cmip6.f09_g17.CMIP6-SSP5-8.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190211.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP1-2.6"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP1-2.6-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP126_b.e21.BWSSP126cmip6.f09_g17.CMIP6-SSP1-2.6-WACCM.001_2014-2101_monthly_0.9x1.25_c190221.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP2-4.5"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5" hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP3-7.0"
->lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP3-7.0-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
+>lnd/clm2/ndepdata/fndep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_2014-2101_monthly_0.9x1.25_c190401.nc</stream_fldfilename_ndep>
 
 <ndep_taxmode            phys="clm5_0" use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_0" use_cn=".true.">NDEP_month</ndep_varlist>
@@ -1130,10 +1100,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <stream_year_last_soilm   >1997</stream_year_last_soilm>
 <model_year_align_soilm   >1997</model_year_align_soilm>
 
-<stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.1980-2014.MONS_climo.c190716.nc</stream_fldfilename_soilm>
+<stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.climo1980-2014.MONS_c190709.nc</stream_fldfilename_soilm>
 
 <soilm_tintalgo>linear</soilm_tintalgo>
-<soilm_offset  >0</soilm_offset>
 
 <!-- LAI streams namelist defaults -->
 <use_lai_streams        >.false.</use_lai_streams>
@@ -1192,14 +1161,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <stream_year_last_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2100</stream_year_last_popdens>
 <model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="1850-2100"  >2015</model_year_align_popdens>
 
-<stream_year_first_popdens phys="clm4_5" cnfireson=".true." sim_year_range="2100-2300"  >2100</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="2100-2300"  >2100</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm4_5" cnfireson=".true." sim_year_range="2100-2300"  >2100</model_year_align_popdens>
-
-<stream_year_first_popdens phys="clm5_0" cnfireson=".true." sim_year_range="2100-2300"  >2100</stream_year_first_popdens>
-<stream_year_last_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="2100-2300"  >2100</stream_year_last_popdens>
-<model_year_align_popdens  phys="clm5_0" cnfireson=".true." sim_year_range="2100-2300"  >2100</model_year_align_popdens>
-
 <stream_year_first_popdens use_cn=".true."   sim_year="2010" >2010</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="2010" >2010</stream_year_last_popdens>
 
@@ -1251,47 +1212,23 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_0.9x1.25_SSP5-3.4_78pfts_CMIP6_
 <stream_year_last_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
 <model_year_align_urbantv  phys="clm5_0" sim_year_range="1850-2100" >2015</model_year_align_urbantv>
 
-<stream_year_first_urbantv phys="clm4_5" sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year_range="1850-2100" >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm4_5" sim_year_range="1850-2100" >2015</model_year_align_urbantv>
-
-<stream_year_first_urbantv phys="clm5_0" sim_year_range="2100-2300" >2100</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm5_0" sim_year_range="2100-2300" >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm5_0" sim_year_range="2100-2300" >2100</model_year_align_urbantv>
-
-<stream_year_first_urbantv phys="clm4_5" sim_year_range="2100-2300" >2100</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year_range="2100-2300" >2106</stream_year_last_urbantv>
-<model_year_align_urbantv  phys="clm4_5" sim_year_range="2100-2300" >2100</model_year_align_urbantv>
+<stream_year_first_urbantv phys="clm4_5"  >2000</stream_year_first_urbantv>
+<stream_year_last_urbantv  phys="clm4_5"  >2000</stream_year_last_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="2000" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="2000" >2000</stream_year_last_urbantv>
 
-<stream_year_first_urbantv phys="clm4_5" sim_year="2000" >2000</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="2000" >2000</stream_year_last_urbantv>
-
 <stream_year_first_urbantv phys="clm5_0" sim_year="1850" >1850</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="1850" >1850</stream_year_last_urbantv>
 
-<stream_year_first_urbantv phys="clm4_5" sim_year="1850" >1850</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="1850" >1850</stream_year_last_urbantv>
-
 <stream_year_first_urbantv phys="clm5_0" sim_year="1000" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="1000" >2000</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm4_5" sim_year="1000" >2000</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="1000" >2000</stream_year_last_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_urbantv>
 
 <stream_year_first_urbantv phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_urbantv>
 <stream_year_last_urbantv  phys="clm5_0" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm4_5" sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_urbantv>
-
-<stream_year_first_urbantv phys="clm4_5" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_urbantv>
-<stream_year_last_urbantv  phys="clm4_5" sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_urbantv>
 
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 

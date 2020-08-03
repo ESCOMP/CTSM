@@ -1014,7 +1014,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (finidat == ' ') then
-       write(iulog,*)' WARNING: Setting use_init_interp has no effect if finidat is not also set'
+       call endrun(msg=' ERROR: Can only set use_init_interp if finidat is set')
     end if
 
     if (finidat_interp_source /= ' ') then
