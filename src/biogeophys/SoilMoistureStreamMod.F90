@@ -1,5 +1,7 @@
 module SoilMoistureStreamMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Read in soil moisture from data stream
@@ -35,10 +37,16 @@ module SoilMoistureStreamMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: PrescribedSoilMoistureInit    ! position datasets for soil moisture
+  public :: PrescribedSoilMoistureAdvance ! Advance the soil moisture stream (outside of Open-MP loops)
   public :: PrescribedSoilMoistureInterp  ! interpolates between two periods of soil moisture data
 
   ! !PRIVATE MEMBER DATA:
-  type(shr_strdata_type) :: sdat_soilm  ! soil moisture input data stream
+  type(shr_strdata_type) :: sdat_soilm    ! soil moisture input data stream
+  integer :: ism                          ! Soil moisture steram index
+  integer, allocatable :: g_to_ig(:)      ! Array matching gridcell index to data index
+  logical :: soilm_ignore_data_if_missing ! If should ignore overridding a point with soil moisture data
+                                          ! from the streams file, if the streams file shows that point 
+                                          ! as missing (namelist item)
   !
   ! !PRIVATE TYPES:
 
@@ -65,7 +73,6 @@ contains
     use shr_pio_mod      , only : shr_pio_getiotype
     use clm_nlUtilsMod   , only : find_nlgroup_name
     use ndepStreamMod    , only : clm_domain_mct
-    use histFileMod      , only : hist_addfld1d
     use shr_stream_mod   , only : shr_stream_file_null
     use shr_string_mod   , only : shr_string_listCreateField
     use clm_varpar       , only : nlevsoi
@@ -81,30 +88,35 @@ contains
     integer            :: model_year_align_soilm     ! align stream_year_first_soilm with 
     integer            :: nu_nml                     ! unit for namelist file
     integer            :: nml_error                  ! namelist i/o error flag
+    integer            :: soilm_offset               ! Offset in time for dataset (sec)
     type(mct_ggrid)    :: dom_clm                    ! domain information 
     character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
     character(len=CL)  :: soilm_tintalgo = 'linear'  ! Time interpolation alogrithm
 
-    character(*), parameter    :: subName = "('soil_moisture_init')"
-    character(*), parameter    :: F00 = "('(soil_moisture_init) ',4a)"
+    character(*), parameter    :: subName = "('PrescribedSoilMoistureInit')"
+    character(*), parameter    :: F00 = "('(PrescribedSoilMoistureInit) ',4a)"
     character(*), parameter    :: soilmString = "H2OSOI"  ! base string for field string
     character(SHR_KIND_CXX)    :: fldList            ! field string
     !-----------------------------------------------------------------------
     !
     ! deal with namelist variables here in init
     !
-    namelist /soil_moisture_streams/         &
-         stream_year_first_soilm,    &
-         stream_year_last_soilm,     &
-         model_year_align_soilm,     &
-         soilm_tintalgo,            &
+    namelist /soil_moisture_streams/   &
+         stream_year_first_soilm,      &
+         stream_year_last_soilm,       &
+         model_year_align_soilm,       &
+         soilm_tintalgo,               &
+         soilm_offset,                 &
+         soilm_ignore_data_if_missing, &
          stream_fldfilename_soilm
 
     ! Default values for namelist
-    stream_year_first_soilm     = 1      ! first year in stream to use
-    stream_year_last_soilm      = 1      ! last  year in stream to use
-    model_year_align_soilm      = 1      ! align stream_year_first_soilm with this model year
-    stream_fldfilename_soilm    = shr_stream_file_null
+    stream_year_first_soilm      = 1      ! first year in stream to use
+    stream_year_last_soilm       = 1      ! last  year in stream to use
+    model_year_align_soilm       = 1      ! align stream_year_first_soilm with this model year
+    stream_fldfilename_soilm     = shr_stream_file_null
+    soilm_offset                 = 0
+    soilm_ignore_data_if_missing = .false.
 
     ! Read soilm_streams namelist
     if (masterproc) then
@@ -128,6 +140,8 @@ contains
     call shr_mpi_bcast(model_year_align_soilm, mpicom)
     call shr_mpi_bcast(stream_fldfilename_soilm, mpicom)
     call shr_mpi_bcast(soilm_tintalgo, mpicom)
+    call shr_mpi_bcast(soilm_offset, mpicom)
+    call shr_mpi_bcast(soilm_ignore_data_if_missing, mpicom)
 
     if (masterproc) then
 
@@ -138,6 +152,12 @@ contains
        write(iulog,*) '  model_year_align_soilm   = ',model_year_align_soilm   
        write(iulog,*) '  stream_fldfilename_soilm = ',trim(stream_fldfilename_soilm)
        write(iulog,*) '  soilm_tintalgo = ',trim(soilm_tintalgo)
+       write(iulog,*) '  soilm_offset = ',soilm_offset
+       if ( soilm_ignore_data_if_missing )then
+          write(iulog,*) '  Do NOT override a point with streams data if the streams data is missing'
+       else
+          write(iulog,*) '  Abort, if you find a model point where the input streams data is set to missing value'
+       end if
 
     endif
 
@@ -160,7 +180,7 @@ contains
          yearFirst=stream_year_first_soilm,            &
          yearLast=stream_year_last_soilm,              &
          yearAlign=model_year_align_soilm,             &
-         offset=0,                                     &
+         offset=soilm_offset,                          &
          domFilePath='',                               &
          domFileName=trim(stream_fldFileName_soilm),   &
          domTvarName='time',                           &
@@ -186,6 +206,60 @@ contains
 
   end subroutine PrescribedSoilMoistureInit
 
+
+  !-----------------------------------------------------------------------
+  !
+  ! PrescribedSoilMoistureAdvance
+  !
+  !-----------------------------------------------------------------------
+  subroutine PrescribedSoilMoistureAdvance( bounds )
+    !
+    ! Advanace the prescribed soil moisture stream
+    !
+    ! !USES:
+    use clm_time_manager, only : get_curr_date
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)         , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    character(len=CL)  :: stream_var_name
+    integer :: g, ig
+    integer :: ier    ! error code
+    integer :: year    ! year (0, ...) for nstep+1
+    integer :: mon     ! month (1, ..., 12) for nstep+1
+    integer :: day     ! day of month (1, ..., 31) for nstep+1
+    integer :: sec     ! seconds into current date for nstep+1
+    integer :: mcdate  ! Current model date (yyyymmdd)
+
+    call get_curr_date(year, mon, day, sec)
+    mcdate = year*10000 + mon*100 + day
+
+    stream_var_name = 'H2OSOI'
+
+    ! Determine variable index
+    ism = mct_aVect_indexRA(sdat_soilm%avs(1),trim(stream_var_name))
+
+    call shr_strdata_advance(sdat_soilm, mcdate, sec, mpicom, trim(stream_var_name))
+
+    ! Map gridcell to AV index
+    ier = 0
+    if ( .not. allocated(g_to_ig) )then
+       allocate (g_to_ig(bounds%begg:bounds%endg), stat=ier)
+       if (ier /= 0) then
+          write(iulog,*) 'Prescribed soil moisture allocation error'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+
+       ig = 0
+       do g = bounds%begg,bounds%endg
+          ig = ig+1
+          g_to_ig(g) = ig
+       end do
+    end if
+
+  end subroutine PrescribedSoilMoistureAdvance
+
   !-----------------------------------------------------------------------
   !
   ! PrescribedSoilMoistureInterp
@@ -199,8 +273,8 @@ contains
     ! !USES:
     use clm_time_manager, only : get_curr_date
     use clm_varpar      , only : nlevsoi
-    use clm_varcon      , only : denh2o, denice, watmin
-    use landunit_varcon , only : istsoil
+    use clm_varcon      , only : denh2o, denice, watmin, spval
+    use landunit_varcon , only : istsoil, istcrop
     !
     ! !ARGUMENTS:
     implicit none
@@ -209,67 +283,88 @@ contains
     type(waterstate_type)     , intent(inout) :: waterstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c, g, j, ism, ig, n
-    integer :: year    ! year (0, ...) for nstep+1
-    integer :: mon     ! month (1, ..., 12) for nstep+1
-    integer :: day     ! day of month (1, ..., 31) for nstep+1
-    integer :: sec     ! seconds into current date for nstep+1
-    integer :: mcdate  ! Current model date (yyyymmdd)
-    integer :: ier    ! error code
-    integer, allocatable :: g_to_ig(:)
+    integer :: c, g, j, ig, n
     real(r8) :: soilm_liq_frac            ! liquid fraction of soil moisture
     real(r8) :: soilm_ice_frac            ! ice fraction of soil moisture
     real(r8) :: moisture_increment        ! soil moisture adjustment increment
     real(r8) :: h2osoi_vol_initial        ! initial vwc value
-    character(len=CL)  :: stream_var_name
+    character(*), parameter    :: subName = "('PrescribedSoilMoistureInterp')"
 
     !-----------------------------------------------------------------------
 
+    SHR_ASSERT_FL( (lbound(sdat_soilm%avs(1)%rAttr,1) == ism ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_soilm%avs(1)%rAttr,1) == ism ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(sdat_soilm%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_soilm%avs(1)%rAttr,2) >= g_to_ig(bounds%endg)+(nlevsoi-1)*size(g_to_ig) ), sourcefile, __LINE__)
     associate( &
          dz               =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
          watsat           =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)
          h2osoi_liq       =>    waterstate_inst%h2osoi_liq_col        , & ! Input/Output:  [real(r8) (:,:) ]  liquid water (kg/m2)
          h2osoi_ice       =>    waterstate_inst%h2osoi_ice_col        , & ! Input/Output:  [real(r8) (:,:) ]  ice water (kg/m2)
-         h2osoi_vol       =>    waterstate_inst%h2osoi_vol_col          & ! Output: volumetric soil water (m3/m3)
+         h2osoi_vol       =>    waterstate_inst%h2osoi_vol_col        , & ! Output: volumetric soil water (m3/m3)
+         h2osoi_vol_prs   =>    waterstate_inst%h2osoi_vol_prs_grc      & ! Output: prescribed volumetric soil water (m3/m3)
          )
+      SHR_ASSERT_FL( (lbound(h2osoi_vol,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_vol,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_vol,2) == 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_vol,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(dz,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(dz,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(dz,2) <= 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(dz,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(watsat,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(watsat,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(watsat,2) <= 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(watsat,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_liq,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_liq,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_liq,2) <= 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_liq,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_ice,1) <= bounds%begc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_ice,1) >= bounds%endc ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_ice,2) <= 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_ice,2) >= nlevsoi ),     sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_vol_prs,1) <= bounds%begg ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_vol_prs,1) >= bounds%endg ), sourcefile, __LINE__)
+      SHR_ASSERT_FL( (lbound(h2osoi_vol_prs,2) == 1 ),           sourcefile, __LINE__)
+      SHR_ASSERT_FL( (ubound(h2osoi_vol_prs,2) >= nlevsoi ),     sourcefile, __LINE__)
+      !
+      ! Set the prescribed soil moisture read from the file everywhere
+      !
+      do g = bounds%begg, bounds%endg
+         ig = g_to_ig(g)
+         do j = 1, nlevsoi
+               
+             !n = ig + (j-1)*size(g_to_ig)
+             n = ig + (j-1)*size(g_to_ig)
 
-      call get_curr_date(year, mon, day, sec)
-      mcdate = year*10000 + mon*100 + day
-      
-      stream_var_name = 'H2OSOI'
-      
-      ! Determine variable index
-      ism = mct_aVect_indexRA(sdat_soilm%avs(1),trim(stream_var_name))
-      
-      call shr_strdata_advance(sdat_soilm, mcdate, sec, mpicom, trim(stream_var_name))
-      
-      ! Map gridcell to AV index
-      ier = 0
-      allocate (g_to_ig(bounds%begg:bounds%endg), stat=ier)
-      if (ier /= 0) then
-         write(iulog,*) 'Prescribed soil moisture allocation error'
-         call endrun(msg=errMsg(sourcefile, __LINE__))
-      end if
-      
-      ig = 0
-      do g = bounds%begg,bounds%endg
-         ig = ig+1
-         g_to_ig(g) = ig
+             h2osoi_vol_prs(g,j) = sdat_soilm%avs(1)%rAttr(ism,n)
+
+             ! If soil moiture is being interpolated in time and the result is
+             ! large that probably means one of the two data points is missing (set to spval)
+             if ( h2osoi_vol_prs(g,j) > 10.0_r8 .and. (h2osoi_vol_prs(g,j) /= spval) )then
+                h2osoi_vol_prs(g,j) = spval
+             end if
+
+         end do
       end do
       
-      ! Read data from stream into column level variable
-      
       do c = bounds%begc, bounds%endc
-         if(lun%itype(col%landunit(c)) == istsoil) then
-            !
-            ! Set variable for each gridcell/column combination
-            !
-            ig = g_to_ig(col%gridcell(c))
+         !
+         ! Set variable for each gridcell/column combination
+         !
+         g = col%gridcell(c)
+         ig = g_to_ig(g)
             
+         ! EBK Jan/2020, also check weights on gridcell (See https://github.com/ESCOMP/CTSM/issues/847)
+         if ( (lun%itype(col%landunit(c)) == istsoil) .or. (lun%itype(col%landunit(c)) == istcrop) .and. &
+              (col%wtgcell(c) /= 0._r8) ) then
             !       this is a 2d field (gridcell/nlevsoi) !
             do j = 1, nlevsoi
                
-               n = ig + (j-1)*(bounds%endg-bounds%begg+1)
+               n = ig + (j-1)*size(g_to_ig)
 
                ! if soil water is zero, liq/ice fractions cannot be calculated
                if((h2osoi_liq(c, j) + h2osoi_ice(c, j)) > 0._r8) then
@@ -277,8 +372,21 @@ contains
                   ! save original soil moisture value
                   h2osoi_vol_initial = h2osoi_vol(c,j)
             
-                  ! update volumetric soil moisture
-                  h2osoi_vol(c,j) = sdat_soilm%avs(1)%rAttr(ism,n)
+                  ! Check if the vegetated land mask from the dataset on the
+                  ! file is different
+                  if ( (h2osoi_vol_prs(g,j) == spval) .and. (h2osoi_vol_initial /= spval) )then
+                     if ( soilm_ignore_data_if_missing )then
+                        cycle
+                     else
+                        write(iulog,*) 'Input soil moisture dataset is not vegetated as expected: gridcell=', &
+                                        g, ' active = ', col%active(c)
+                        call endrun(subname // ' ERROR:: The input soil moisture stream is NOT vegetated for one of the land points' )
+                     end if
+                  end if
+
+                  ! update volumetric soil moisture from data prescribed from the file
+                  h2osoi_vol(c,j) = h2osoi_vol_prs(g,j)
+
 
                   ! calculate liq/ice mass fractions
                   soilm_liq_frac  = h2osoi_liq(c, j) /(h2osoi_liq(c, j) + h2osoi_ice(c, j))
@@ -293,6 +401,8 @@ contains
                   h2osoi_liq(c,j) = h2osoi_liq(c,j) + (soilm_liq_frac * moisture_increment * dz(c, j) * denh2o)
                   h2osoi_ice(c,j) = h2osoi_ice(c,j) + (soilm_ice_frac * moisture_increment * dz(c, j) * denice)
 
+               else
+                  call endrun(subname // ':: ERROR h2osoil liquid plus ice is zero')
                endif
             enddo
          endif      

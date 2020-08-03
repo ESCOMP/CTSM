@@ -295,6 +295,22 @@
     <lname>SSP534_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
+  <!-- Future scenario compset - extensions -->
+  <compset>
+    <alias>ISSP585ExtClm50BgcCrop</alias>
+    <lname>SSP585EXT_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>ISSP534ExtClm50BgcCrop</alias>
+    <lname>SSP534EXT_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>ISSP126ExtClm50BgcCrop</alias>
+    <lname>SSP126EXT_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+  </compset>
+
 
 <!-- I CLM45 Compsets -->
 
@@ -485,9 +501,10 @@
 
   <entries>
     <entry id="RUN_STARTDATE">
-      <values>
+      <values match="last">
 	<value compset="HIST_"			  >1850-01-01</value>
 	<value compset="SSP"			  >2015-01-01</value>
+	<value compset="SSP[0-9]+EXT"             >2101-01-01</value>
 	<value compset="CLM[45].*_CISM.*_TEST"	  >1980-01-15</value>
 	<value compset="CLM[45]%[^_]*CNDV.*_TEST" >1997-12-31</value>
 	<value grid="a%1x1_mexicocityMEX"	  >1993-12-01</value>
