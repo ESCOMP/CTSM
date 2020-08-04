@@ -1553,7 +1553,7 @@ contains
           end if
           status = pio_put_var(ncid, varid, start, count, ival=tmpString(1:count(1)))
        else
-          status = pio_put_var(ncid, varid, data )
+          status = pio_put_var(ncid, varid, start, count, data )
        end if
 #elif ({DIMS}==1)
        start(1) = 1 ; count(1) = len(data)
