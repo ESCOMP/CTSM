@@ -505,7 +505,10 @@ until ((nfile>${#INGRID[*]})); do
       CLI_EXECUTABLE="python ${OCLI_FILE} chunked-rwg"
 
       if [ "$type" = "global" ]; then
-         NCHUNKS_DST=20
+         # NCHUNKS_DST = 10 works for all DST resolutions
+         # NCHUNKS_DST = 20 fails for 10x15
+         # Possible to calculate from DST_MAXSPATIALRES?
+         NCHUNKS_DST=10
          cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES} --weightfilemode WITHAUX"
          runcmd $cmd
       else
