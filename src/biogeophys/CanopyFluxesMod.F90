@@ -21,7 +21,6 @@ module CanopyFluxesMod
   use decompMod             , only : bounds_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-  use EDBtranMod            , only : btran_ed
   use SoilMoistStressMod    , only : calc_effective_soilporosity, calc_volumetric_h2oliq
   use SoilMoistStressMod    , only : calc_root_moist_stress, set_perchroot_opt
   use SimpleMathMod         , only : array_div_vector

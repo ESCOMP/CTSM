@@ -109,6 +109,7 @@
       <value compset="^1850_"		            >1850_control</value>
       <value compset="^1850_.*_CLM50%[^_]*NOANTHRO" >1850_noanthro_control</value>
       <value compset="^HIST_"		            >20thC_transient</value>
+      <!-- Future scenarios to 2100 -->
       <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
       <value compset="^SSP126_"	                    >1850-2100_SSP1-2.6_transient</value>
       <value compset="^SSP370_"	                    >1850-2100_SSP3-7.0_transient</value>
@@ -118,6 +119,11 @@
       <value compset="^SSP434_"	                    >1850-2100_SSP4-3.4_transient</value>
       <value compset="^SSP460_"	                    >1850-2100_SSP4-6.0_transient</value>
       <value compset="^SSP585_"	                    >1850-2100_SSP5-8.5_transient</value>
+      <!-- SSP extensions to 2300 -->
+      <value compset="^SSP585EXT_"                  >2100-2300_SSP5-8.5_transient</value>
+      <value compset="^SSP534EXT_"                  >2100-2300_SSP5-3.4_transient</value>
+      <value compset="^SSP126EXT_"                  >2100-2300_SSP1-2.6_transient</value>
+      <!-- Periods used for CAM -->
       <value compset="^AMIP_"	                    >20thC_transient</value>
       <value compset="^PIPD_"                       >1850-2100_SSP5-8.5_transient</value>
     </values>
