@@ -55,19 +55,48 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.1x0.1_nomask_c110712.nc</scripgriddata>
 <scripgriddata hgrid="0.5x0.5"   lmask="nomask"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="0.25x0.25" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.25x0.25_nomask_c191014.nc</scripgriddata>
+<scripgriddata hgrid="0.5x0.5"   lmask="AVHRR"     
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_AVHRR_c110228.nc</scripgriddata>
+<scripgriddata hgrid="0.5x0.5"   lmask="MODIS"     
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_MODIS_c110228.nc</scripgriddata>
+<scripgriddata hgrid="0.25x0.25" lmask="MODIS"     
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.25x0.25_MODIS_c170321.nc</scripgriddata>
 <scripgriddata hgrid="5x5min"    lmask="nomask"    
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_nomask_c191107.nc</scripgriddata>
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_nomask_c110530.nc</scripgriddata>
+<scripgriddata hgrid="5x5min"    lmask="IGBP-GSDP" 
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_IGBP-GSDP_c110228.nc</scripgriddata>
+<scripgriddata hgrid="5x5min"   lmask="ISRIC-WISE"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_ISRIC-WISE_c111114.nc</scripgriddata>
+<scripgriddata hgrid="5x5min"   lmask="ORNL-Soil"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_ORNL-Soil_c170630.nc</scripgriddata>
 <scripgriddata hgrid="10x10min" lmask="nomask"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_nomask_c110228.nc</scripgriddata>
-<scripgriddata hgrid="3x3min"    lmask="nomask"
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3min_nomask_c191102.nc</scripgriddata>
-<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="nomask">64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata hgrid="10x10min" lmask="IGBPmergeICESatGIS"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_IGBPmergeICESatGIS_c110818.nc</scripgriddata>
+<scripgriddata hgrid="3x3min"    lmask="MODIS"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_MODIS_c110915.nc</scripgriddata>
+<scripgriddata hgrid="3x3min"    lmask="MODIS-wCsp"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_MODISwcspsea_c151020.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="MODIS"     >64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="MODIS-wCsp">64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata hgrid="3x3min"    lmask="USGS"     
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3_USGS_c120912.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="USGS">64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata hgrid="3x3min"    lmask="LandScan2004"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_LandScan2004_c120517.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="LandScan2004">64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner_c120922.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="GLOBE-Gardner">64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata hgrid="3x3min"    lmask="GLOBE-Gardner-mergeGIS"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3minx3min_GLOBE-Gardner-mergeGIS_c120922.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="GLOBE-Gardner-mergeGIS">64bit_offset</scripgriddata_lrgfile_needed>
+<scripgriddata hgrid="360x720cru"   lmask="cruncep" 
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_cruncep_c120830.nc</scripgriddata>
 <scripgriddata hgrid="360x720cru"   lmask="nomask" 
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
-<!--scripgriddata hgrid="0.9x1.25"  lmask="nomask"
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.9x1.25_nomask_c191014.nc</scripgriddata-->
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>
+<scripgriddata hgrid="0.9x1.25"  lmask="GRDC"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.9x1.25_GRDC_c130307.nc</scripgriddata>
 
 <!-- Other raw data grids -->
 <!-- Note that the following is a UGRID file rather than a SCRIP grid file -->
@@ -90,43 +119,43 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="5x5_amazon"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5pt_amazon_nomask_c110308.nc</scripgriddata>
 
 <max_res hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">0.01</max_res>
-<max_res hgrid="0.23x0.31" lmask="nomask">0.23</max_res>
-<max_res hgrid="0.47x0.63" lmask="nomask">0.47</max_res>
-<max_res hgrid="0.9x1.25" lmask="nomask">0.9</max_res>
-<max_res hgrid="1.9x2.5" lmask="nomask">1.9</max_res>
-<max_res hgrid="2.5x3.33" lmask="nomask">2.5</max_res>
-<max_res hgrid="4x5" lmask="nomask">4</max_res>
-<max_res hgrid="10x15" lmask="nomask">10</max_res>
-<max_res hgrid="512x1024" lmask="nomask">0.35</max_res>
-<max_res hgrid="128x256" lmask="nomask">1.4</max_res>
-<max_res hgrid="94x192" lmask="nomask">1.9</max_res>
-<max_res hgrid="64x128" lmask="nomask">2.8</max_res>
-<max_res hgrid="48x96" lmask="nomask">3.75</max_res>
-<max_res hgrid="ne240np4" lmask="nomask">0.1</max_res>
-<max_res hgrid="ne120np4" lmask="nomask">0.1</max_res>
-<max_res hgrid="ne60np4" lmask="nomask">0.1</max_res>
-<max_res hgrid="ne30np4" lmask="nomask">0.1</max_res>
-<max_res hgrid="ne16np4" lmask="nomask">0.1</max_res>
-<max_res hgrid="ne4np4" lmask="nomask">0.1</max_res>
-<max_res hgrid="0.33x0.33" lmask="nomask">0.33</max_res>
-<max_res hgrid="0.1x0.1" lmask="nomask">0.1</max_res>
-<max_res hgrid="0.5x0.5" lmask="nomask">0.5</max_res>
-<max_res hgrid="0.25x0.25" lmask="nomask">0.25</max_res>
-<max_res hgrid="0.125x0.125" lmask="nomask">0.125</max_res>
-<max_res hgrid="5x5min" lmask="nomask">0.08</max_res>
-<max_res hgrid="10x10min" lmask="nomask">0.16</max_res>
-<max_res hgrid="3x3min" lmask="nomask">0.05</max_res>
-<max_res hgrid="360x720cru" lmask="nomask">0.5</max_res>
-<max_res hgrid="0.125nldas2" lmask="nomask">0.125</max_res>
-<max_res hgrid="1x1_asphaltjungleNJ" lmask="nomask">2</max_res>
-<max_res hgrid="1x1_brazil" lmask="nomask">2</max_res>
-<max_res hgrid="1x1_camdenNJ" lmask="nomask">2</max_res>
-<max_res hgrid="1x1_mexicocityMEX" lmask="nomask">1</max_res>
-<max_res hgrid="1x1_numaIA" lmask="nomask">0.5</max_res>
-<max_res hgrid="1x1_smallvilleIA" lmask="nomask">0.5</max_res>
-<max_res hgrid="1x1_urbanc_alpha" lmask="nomask">1</max_res>
-<max_res hgrid="1x1_vancouverCAN" lmask="nomask">1</max_res>
-<max_res hgrid="5x5_amazon" lmask="nomask">2.2</max_res>
+<max_res hgrid="0.23x0.31">0.23</max_res>
+<max_res hgrid="0.47x0.63">0.47</max_res>
+<max_res hgrid="0.9x1.25">0.9</max_res>
+<max_res hgrid="1.9x2.5">1.9</max_res>
+<max_res hgrid="2.5x3.33">2.5</max_res>
+<max_res hgrid="4x5">4</max_res>
+<max_res hgrid="10x15">10</max_res>
+<max_res hgrid="512x1024">0.35</max_res>
+<max_res hgrid="128x256">1.4</max_res>
+<max_res hgrid="94x192">1.9</max_res>
+<max_res hgrid="64x128">2.8</max_res>
+<max_res hgrid="48x96">3.75</max_res>
+<max_res hgrid="ne240np4">0.1</max_res>
+<max_res hgrid="ne120np4">0.1</max_res>
+<max_res hgrid="ne60np4">0.1</max_res>
+<max_res hgrid="ne30np4">0.1</max_res>
+<max_res hgrid="ne16np4">0.1</max_res>
+<max_res hgrid="ne4np4">0.1</max_res>
+<max_res hgrid="0.33x0.33">0.33</max_res>
+<max_res hgrid="0.1x0.1">0.1</max_res>
+<max_res hgrid="0.5x0.5">0.5</max_res>
+<max_res hgrid="0.25x0.25">0.25</max_res>
+<max_res hgrid="0.125x0.125">0.125</max_res>
+<max_res hgrid="5x5min">0.08</max_res>
+<max_res hgrid="10x10min">0.16</max_res>
+<max_res hgrid="3x3min">0.05</max_res>
+<max_res hgrid="360x720cru">0.5</max_res>
+<max_res hgrid="0.125nldas2">0.125</max_res>
+<max_res hgrid="1x1_asphaltjungleNJ">2</max_res>
+<max_res hgrid="1x1_brazil">2</max_res>
+<max_res hgrid="1x1_camdenNJ">2</max_res>
+<max_res hgrid="1x1_mexicocityMEX">1</max_res>
+<max_res hgrid="1x1_numaIA">0.5</max_res>
+<max_res hgrid="1x1_smallvilleIA">0.5</max_res>
+<max_res hgrid="1x1_urbanc_alpha">1</max_res>
+<max_res hgrid="1x1_vancouverCAN">1</max_res>
+<max_res hgrid="5x5_amazon">2.2</max_res>
 
 <!-- Ocean grids -->
 <scripgriddata hgrid="0.33x0.33"  lmask="0.33x0.33" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
@@ -138,25 +167,25 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- UNSTRUCT grid data files -->
 <unstructdata hgrid="0.5x0.5" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c191114.nc</unstructdata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</unstructdata>
 <unstructdata_type hgrid="0.5x0.5" lmask="nomask">ESMFMESH</unstructdata_type>
 <unstructdata hgrid="0.25x0.25" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c191114.nc</unstructdata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</unstructdata>
 <unstructdata_type hgrid="0.25x0.25" lmask="nomask">ESMFMESH</unstructdata_type>
 <unstructdata hgrid="0.125x0.125" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_c191114.nc</unstructdata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_c200129.nc</unstructdata>
 <unstructdata_type hgrid="0.125x0.125" lmask="nomask">ESMFMESH</unstructdata_type>
 <unstructdata hgrid="10x10min" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c191114.nc</unstructdata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c200129.nc</unstructdata>
 <unstructdata_type hgrid="10x10min" lmask="nomask">ESMFMESH</unstructdata_type>
 <unstructdata hgrid="5x5min" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c191114.nc</unstructdata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc</unstructdata>
 <unstructdata_type hgrid="5x5min" lmask="nomask">ESMFMESH</unstructdata_type>
 <unstructdata hgrid="3x3min" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c191114.nc</unstructdata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc</unstructdata>
 <unstructdata_type hgrid="3x3min" lmask="nomask">ESMFMESH</unstructdata_type>
 <unstructdata hgrid="0.9x1.25" lmask="nomask"
-   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c191114.nc</unstructdata>
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c200129.nc</unstructdata>
 <unstructdata_type hgrid="0.9x1.25" lmask="nomask">ESMFMESH</unstructdata_type>
 <unstructdata hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
    >lnd/clm2/mappingdata/grids/UGRID_1km-merge-10min_HYDRO1K-merge-nomask_c130402.nc</unstructdata>
@@ -322,7 +351,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/rawdata/mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc</mksrf_fvic>
 
 <mksrf_fch4 hgrid="360x720cru" lmask="cruncep"
->lnd/clm2/rawdata/mksrf_ch4inversion_0.5x0.5_cruncep_simyr2000.c191112.nc</mksrf_fch4>
+>lnd/clm2/rawdata/mksrf_ch4inversion_360x720_cruncep_simyr2000.c130322.nc</mksrf_fch4>
 
 <!-- mksrf_fvegtyp -->
 

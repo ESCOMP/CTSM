@@ -264,13 +264,20 @@ fi
 
 if [ "$phys" = "clm4_5" ]; then
     grids=(                    \
-           "0.5x0.5_nomask"    \
-           "0.25x0.25_nomask"  \
-           "0.125x0.125_nomask"  \
-           "5x5min_nomask"     \
-           "10x10min_nomask"   \
-           "0.9x1.25_nomask"   \
-           "3x3min_nomask"     \
+           "0.5x0.5_AVHRR"     \
+           "0.25x0.25_MODIS"   \
+           "0.5x0.5_MODIS"     \
+           "3x3min_LandScan2004" \
+           "3x3min_MODIS-wCsp" \
+           "3x3min_USGS"       \
+           "5x5min_IGBP-GSDP"  \
+           "5x5min_ISRIC-WISE" \
+           "5x5min_ORNL-Soil" \
+           "10x10min_IGBPmergeICESatGIS" \
+           "3x3min_GLOBE-Gardner" \
+           "3x3min_GLOBE-Gardner-mergeGIS" \
+           "0.9x1.25_GRDC" \
+           "360x720cru_cruncep" \
            "1km-merge-10min_HYDRO1K-merge-nomask" \
           )
 
@@ -299,7 +306,7 @@ do
 
    QUERYARGS="-res $grid -options lmask=$lmask,glc_nec=10 "
 
-   QUERYFIL="$QUERY -var unstructdata $QUERYARGS -onlyfiles"
+   QUERYFIL="$QUERY -var scripgriddata $QUERYARGS -onlyfiles"
 
    if [ "$verbose" = "YES" ]; then
       echo $QUERYFIL
@@ -315,7 +322,7 @@ do
    # Determine extra information about the source grid file
    SRC_EXTRA_ARGS[nfile]=""
    SRC_LRGFIL[nfile]="none"
-   SRC_TYPE[nfile]=`$QUERY -var unstructdata_type $QUERYARGS`
+   SRC_TYPE[nfile]=`$QUERY -var scripgriddata_type $QUERYARGS`
    SRC_MAXSPATIALRES[nfile]=`$QUERY -var max_res $QUERYARGS`
    if [ "${SRC_TYPE[nfile]}" = "UGRID" ]; then
        # For UGRID, we need extra information: the meshname variable
@@ -499,14 +506,14 @@ until ((nfile>${#INGRID[*]})); do
 
       if [ "$type" = "global" ]; then
          NCHUNKS_DST=20
-         cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
+         cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES} --weightfilemode WITHAUX"
          runcmd $cmd
       else
          NCHUNKS_DST=1
          cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --spatial_subset --no_genweights --spatial_subset_path ${SUBSETS_PATH} --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]}"
          runcmd $cmd
 
-         cmd="$mpirun ${CLI_EXECUTABLE} --source ${SUBSETS_PATH} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES}"
+         cmd="$mpirun ${CLI_EXECUTABLE} --source ${SUBSETS_PATH} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES} --weightfilemode WITHAUX"
          runcmd $cmd
       fi
 
