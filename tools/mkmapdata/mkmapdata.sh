@@ -270,9 +270,11 @@ if [ "$phys" = "clm4_5" ]; then
            "3x3min_LandScan2004" \
            "3x3min_MODIS-wCsp" \
            "3x3min_USGS"       \
+           "5x5min_nomask"     \
            "5x5min_IGBP-GSDP"  \
            "5x5min_ISRIC-WISE" \
            "5x5min_ORNL-Soil" \
+           "10x10min_nomask"   \
            "10x10min_IGBPmergeICESatGIS" \
            "3x3min_GLOBE-Gardner" \
            "3x3min_GLOBE-Gardner-mergeGIS" \
