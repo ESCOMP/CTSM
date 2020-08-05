@@ -184,7 +184,7 @@ contains
   subroutine clm_instInit(bounds)
     !
     ! !USES: 
-    use clm_varpar                         , only : nlevsno, numpft
+    use clm_varpar                         , only : nlevsno
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc

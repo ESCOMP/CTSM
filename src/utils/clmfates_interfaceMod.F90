@@ -78,6 +78,7 @@ module CLMFatesInterfaceMod
    use SolarAbsorbedType , only : solarabs_type
    use SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
    use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
+   use FrictionVelocityMod  , only : frictionvel_type
    use clm_time_manager  , only : is_restart
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
    use restUtilMod,        only : restartvar
@@ -304,13 +305,6 @@ module CLMFatesInterfaceMod
            pass_vertsoilc = 0
         end if
         call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
-        
-        if(use_fates_spitfire) then
-           pass_spitfire = 1
-        else
-           pass_spitfire = 0
-        end if
-        call set_fates_ctrlparms('use_spitfire',ival=pass_spitfire)
         
         if(use_fates_fixed_biogeog)then
            pass_biogeog = 1
