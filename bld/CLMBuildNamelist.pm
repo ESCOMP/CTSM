@@ -958,7 +958,6 @@ sub setup_cmdl_fire_light_res {
        $nl_flags->{$var} = ".false.";
     }
   }
-}
 
 #-------------------------------------------------------------------------------
 
@@ -2561,7 +2560,7 @@ sub setup_logic_do_harvest {
    # cannot_be_true will be set to a non-empty string in any case where
    # do_harvest should not be true; if it turns out that do_harvest IS true
    # in any of these cases, a fatal error will be generated
-   my $cannot_be_true = "" 
+   my $cannot_be_true = "";
 
       if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
          $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
