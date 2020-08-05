@@ -37,9 +37,9 @@ Clone WRF and CTSM Repositories
 
 Clone the WRF CTSM feature branch::
 
-    git clone https://github.com/negin513/WRF-1.git WRF-CTSM
+    git clone https://github.com/wrf-model/WRF.git WRF-CTSM
     cd WRF-CTSM
-    git checkout lilac_dev
+    git checkout ctsm_coupling
 
 
 Clone the CTSM repository::
@@ -57,8 +57,8 @@ Clone the CTSM repository::
 Build CTSM and its dependencies
 -------------------------------
 
-Build CTSM and its dependencies based on the instructions from section 
-:numref:`obtaining-and-building-ctsm`::
+In your CTSM directory, build CTSM and its dependencies based on the 
+instructions from section :numref:`obtaining-and-building-ctsm`::
 
     ./lilac/build_ctsm /PATH/TO/CTSM/BUILD --machine MACHINE --compiler COMPILER
 
@@ -112,7 +112,7 @@ For more information check
 `WRF Users' Guide <https://www2.mmm.ucar.edu/wrf/users/docs/user_guide_v4/v4.2/WRFUsersGuide_v42.pdf>`_.
 
 
-Explicitly define which model core to build by (Bash)::
+Explicitly define the model core to build by (Bash)::
 
     export WRF_EM_CORE=1
 
@@ -133,16 +133,16 @@ or (Cshell):
 
     setenv WRF_DA_CORE 0
 
-Now configure and build WRF for your machine and intended compiler::
+Now in your WRF directory configure and build WRF for your machine 
+and intended compiler::
 
-    cd ..
     ./clean -a
     ./configure
 
-
 At the prompt choose one of the options, based on the compiler used
 for building CTSM. Then you should choose if you'd like to build serially or
-in parallel.
+in parallel. For example, you can choose to build with ``intel`` compiler with 
+distributed memory parallelization (``dmpar``).
 
 .. tip::
 
@@ -223,7 +223,6 @@ If the geogrid step finishes successfully, you should see the following message 
     !  Successful completion of geogrid.  !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 Next, run ungrib to get gribbed data into usable format to be ingested by WRF.
 
 To run ungrib.exe, first link the GRIB data files that are going to be used::
@@ -243,7 +242,6 @@ Check ungrib log for the following message showing successful completion of ungr
     !  Successful completion of ungrib.   !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 At this point, you should see ungrib output (intermediate files) in your WPS directory.
 
 Horizontally interpolate the meteorological fields extracted by ungrib to
@@ -251,14 +249,12 @@ the model grids defined in geogrid::
 
     ./metgrid.exe >& log.metgrid
 
-
 Check the metgrid log for the following message showing successful completion of
 metgrid step::
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !  Successful completion of metgrid.  !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 
 Run real.exe
@@ -275,14 +271,9 @@ Edit namelist.input for your WRF domain and desirable configurations.
 This should be the same domain as WPS namelist.
 
 
-.. todo::
+To run WRF-CTSM, in your namelist change land-surface option to 6::
 
-    update the option number of wrf namelist.
-
-
-To run WRF-CTSM, in your namelist change land-surface option to 51::
-
-    sf_surface_physics = 51
+    sf_surface_physics = 6
 
 
 Run real.exe (if compiled parallel submit a batch job) to generate
@@ -354,30 +345,12 @@ files that are needed based on settings in ``lnd_in`` and ``lilac_in``::
 
     ./download_input_data
 
-Next, copy ``lnd_in``, ``lnd_modelio.nml`` and ``lilac_in`` to the direcotory
-from which you will be running the model (e.g. WRF/run).
+Next, copy or link ``lnd_in``, ``lnd_modelio.nml`` and ``lilac_in`` to the direcotory
+from which you will be running the model (e.g. WRF/run) ::
 
-
-.. todo::
-
-    Sam, can you please clarify this section. I am not sure what this is
-    doing and why it is here. 
-
-.. note::
-
- If you wish to merge your WRF initial conditions from a wrfinput file
- into the existing CTSM initial condition file, complete the following step.
-
-Type::
-
- module load ncl
- ncl transfer_wrfinput_to_ctsm_with_snow.ncl 'finidat="the_existing_finidat_file.nc"' 'wrfinput="your_wrfinput_file"' 'merged="the_merged_finidat_file.nc"'
-
-.. todo::
-
- Make the above ncl script available.
-
-
+    ln -sf /glade/scratch/$USER/WRF-CTSM/CTSM/ctsm_build_dir/runtime_inputs/lnd_in .
+    ln -sf /glade/scratch/$USER/WRF-CTSM/CTSM/ctsm_build_dir/runtime_inputs/lilac_in .
+    ln -sf /glade/scratch/$USER/WRF-CTSM/CTSM/ctsm_build_dir/runtime_inputs/lnd_modelio.nml .
 
 Run wrf.exe
 -----------
