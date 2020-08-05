@@ -129,6 +129,7 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
+    use clm_varctl, only : use_individual_pft_soil_column
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -151,8 +152,14 @@ contains
     end do
 
     if (npatches > 0) then
-       ! Assume that the vegetated landunit has one column
-       ncols = 1
+       if(use_individual_pft_soil_column) then
+          ! Assume one soil column for each patch
+          ncols = npatches
+       else
+          ! Assume that the vegetated landunit has one column
+          ncols = 1
+       endif
+
        nlunits = 1
     else
        ! As noted in natveg_patch_exists, we expect a naturally vegetated landunit in
