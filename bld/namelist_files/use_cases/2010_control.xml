@@ -12,11 +12,6 @@
 <irrigate use_crop=".true." phys="clm5_0" use_cndv=".true." >.false.</irrigate>
 <irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
 
-<finidat use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0" phys="clm5_0"
->lnd/clm2/initdata_map/clmi.BHIST.2010-01-01.0.9x1.25_gx1v7_simyr2010_c181015.nc
-</finidat>
-<use_init_interp use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0" phys="clm5_0">.true.</use_init_interp>
-
 <stream_year_first_ndep phys="clm4_0" bgc="cn"   >2010</stream_year_first_ndep>
 <stream_year_last_ndep  phys="clm4_0" bgc="cn"   >2010</stream_year_last_ndep>
 
