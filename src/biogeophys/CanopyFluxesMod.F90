@@ -321,13 +321,10 @@ contains
     real(r8) :: wtalq(bounds%begp:bounds%endp)       ! normalized latent heat cond. for air and leaf [-]
     real(r8) :: wtgaq                                ! normalized latent heat cond. for air and ground [-]
     real(r8) :: el(bounds%begp:bounds%endp)          ! vapor pressure on leaf surface [pa]
-    real(r8) :: deldT                                ! derivative of "el" on "t_veg" [pa/K]
     real(r8) :: qsatl(bounds%begp:bounds%endp)       ! leaf specific humidity [kg/kg]
     real(r8) :: qsatldT(bounds%begp:bounds%endp)     ! derivative of "qsatl" on "t_veg"
     real(r8) :: e_ref2m                              ! 2 m height surface saturated vapor pressure [Pa]
-    real(r8) :: de2mdT                               ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m                           ! 2 m height surface saturated specific humidity [kg/kg]
-    real(r8) :: dqsat2mdT                            ! derivative of 2 m height surface saturated specific humidity on t_ref2m
     real(r8) :: air(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
     real(r8) :: bir(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
     real(r8) :: cir(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
@@ -740,7 +737,9 @@ contains
          ! Saturated vapor pressure, specific humidity, and their derivatives
          ! at the leaf surface
 
-         call QSat (t_veg(p), forc_pbot(c), el(p), deldT, qsatl(p), qsatldT(p))
+         call QSat (t_veg(p), forc_pbot(c), qsatl(p), &
+              es = el(p), &
+              qsdT = qsatldT(p))
 
          ! Determine atmospheric co2 and o2
 
@@ -1109,7 +1108,9 @@ contains
             ! Re-calculate saturated vapor pressure, specific humidity, and their
             ! derivatives at the leaf surface
 
-            call QSat(t_veg(p), forc_pbot(c), el(p), deldT, qsatl(p), qsatldT(p))
+            call QSat(t_veg(p), forc_pbot(c), qsatl(p), &
+                 es = el(p), &
+                 qsdT = qsatldT(p))
 
             ! Update vegetation/ground surface temperature, canopy air
             ! temperature, canopy vapor pressure, aerodynamic temperature, and
@@ -1228,7 +1229,8 @@ contains
 
          ! 2 m height relative humidity
 
-         call QSat(t_ref2m(p), forc_pbot(c), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+         call QSat(t_ref2m(p), forc_pbot(c), qsat_ref2m, &
+              es = e_ref2m)
          rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
          rh_ref2m_r(p) = rh_ref2m(p)
 
