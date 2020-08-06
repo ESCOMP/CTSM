@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm1.0.dev106
 Originator(s):  erik (Erik Kluzek)
-Date:  Thu Aug  6 14:29:10 MDT 2020
+Date: Thu Aug  6 15:35:47 MDT 2020
 One-line Summary: Bit-for-bit updates for the CESM2.2.0 release
 
 Purpose of changes
@@ -9,9 +9,13 @@ Purpose of changes
 
 Fix some bit-for-bit things needed for the CESM2.2.0 release
 Bring changes needed from release-clm5.0.31-34 to trunk. ndep change.
+Brings in some changes for PtVg datasets for no-anthro compset.
 Do some refactoring of Fire class so that it makes sense for FATES to use the base class.
 Update RTM and MOSART with NUOPC changes and an update of a NetCDF-4 file to NetCDF-5
 needed for the cesm2.2.0 release.
+
+The 2010 finidat file is now set in the 2010_control use-case rather than relying on the
+finidat dataset matching.
 
 
 Bugs fixed or introduced
@@ -50,6 +54,12 @@ Notes of particular relevance for users
 Caveats for users (e.g., need to interpolate initial conditions):
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   if ndep file isn't found die with a warning rather than fatal error.
+   The warning allows you to override with CLM_BLDNML_OPTS="-ignore_warnings"
+
+   finidat file matching will now use the sim_year rather than start-year
+   for a control case (transient cases used the start-year)
+   Add 2010 f09 finidat file for clm5_0_cam6.0
 
 Changes made to namelist defaults (e.g., changed parameter values):
 
@@ -64,6 +74,8 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing: 
+   Add clm45cam6LndTuningMode testmod
+   Some tests needed more wallclock
 
 Code reviewed by: self
 
@@ -74,7 +86,7 @@ CTSM testing: regular
 
   build-namelist tests:
 
-    cheyenne - PASS
+    cheyenne - PASS (one test is different than ctsm1.0.dev105)
 
   python testing (see instructions in python/README.md; document testing done):
 
