@@ -40,7 +40,7 @@ module CNFireLi2016Mod
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
-  use CNFireMethodMod                    , only : cnfire_method_type
+  use FireMethodType                     , only : fire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
   !
   implicit none

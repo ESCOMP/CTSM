@@ -24,16 +24,17 @@ n is the configuration type:
 0 -- unused
 a -- unused
 b -- unused
-c -- mkprocdata_map clm4.5
-d -- mkmapgrids     clm4.5
-e -- gen_domain     clm4.5
-f -- PTCLM          clm4.5
-g -- mksurfdata_map clm4.5
-h -- interpinic     clm4.5
-i -- tools scripts  clm4.5
+c -- mkprocdata_map clm5.0
+d -- mkmapgrids     clm5.0
+e -- gen_domain     clm5.0
+f -- PTCLM          clm5.0
+g -- mksurfdata_map clm5.0
+h -- interpinic     clm5.0
+i -- tools scripts  clm5.0
 
 m is the resolution
 
+0 -- 0.9x1.25
 1 -- 48x96
 5 -- 10x15
 6 -- 5x5_amazon

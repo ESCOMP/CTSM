@@ -271,6 +271,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_furban   hgrid="3x3min"   lmask="LandScan2004"
 >lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc</mksrf_furban>
 
+<mksrf_furban   hgrid="3x3min"   lmask="LandScan2004" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.c181014.nc</mksrf_furban>
+
 <!-- mksrf_fglacier % glacier land-unit -->
 <!-- WJS (9-26-12): 
      There are two versions of this dataset: the "standard" version uses
@@ -300,6 +303,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- fire-related datasets -->
 <mksrf_fgdp hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fgdp>
+<mksrf_fgdp hgrid="0.5x0.5" lmask="AVHRR" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_gdp_0.5x0_zerogdp.c200413.nc</mksrf_fgdp>
 
 <mksrf_fpeat hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fpeat>
@@ -309,6 +314,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <mksrf_fabm hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc</mksrf_fabm>
+<mksrf_fabm hgrid="0.5x0.5" lmask="AVHRR" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_missingabm.c200413.nc</mksrf_fabm>
+
 
 <mksrf_ftopostats hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
 >lnd/clm2/rawdata/mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc</mksrf_ftopostats>
@@ -4672,7 +4680,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 <!-- 
-      Future scenarios 
+      Future scenarios  (up to 2100)
 -->
 
 <!-- SSP1-RCP 2.6 -->

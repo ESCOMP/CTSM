@@ -1,4 +1,123 @@
 ===============================================================
+Tag name:  ctsm1.0.dev106
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Aug  6 15:35:47 MDT 2020
+One-line Summary: Bit-for-bit updates for the CESM2.2.0 release
+
+Purpose of changes
+------------------
+
+Fix some bit-for-bit things needed for the CESM2.2.0 release
+Bring changes needed from release-clm5.0.31-34 to trunk. ndep change.
+Brings in some changes for PtVg datasets for no-anthro compset.
+Do some refactoring of Fire class so that it makes sense for FATES to use the base class.
+Update RTM and MOSART with NUOPC changes and an update of a NetCDF-4 file to NetCDF-5
+needed for the cesm2.2.0 release.
+
+The 2010 finidat file is now set in the 2010_control use-case rather than relying on the
+finidat dataset matching.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 
+ Fixes #1087 -- wrong finidat file
+ Fixes #1096 -- failing tests
+ Fixes #1036 -- ne30 case fails
+ Fixes #946 --- better error message
+ Fixes #983 --- Fire method renames
+ Fixes #938 --- mscripgrid issue
+
+Known bugs found since the previous tag (include github issue ID): 
+  #1098 -- ARCTICGRIS PE-layout is very slow...
+  #1097 -- xsmrpool_loss should only be written to the restart file if use_crop is true
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   if ndep file isn't found die with a warning rather than fatal error.
+   The warning allows you to override with CLM_BLDNML_OPTS="-ignore_warnings"
+
+   finidat file matching will now use the sim_year rather than start-year
+   for a control case (transient cases used the start-year)
+   Add 2010 f09 finidat file for clm5_0_cam6.0
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: 
+   Add clm45cam6LndTuningMode testmod
+   Some tests needed more wallclock
+
+Code reviewed by: self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (one test is different than ctsm1.0.dev105)
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyenne -= PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): rtm, mosart
+  RTM    to rtm1_0_72
+  MOSART to mosart1_0_37
+
+Pull Requests that document the changes (include PR ids): #1079
+(https://github.com/ESCOMP/ctsm/pull)
+  #1079 -- Bit-for-bit updates for the CESM2.2.0 release
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev105
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326) / Chris Fischer
 Date: Thu Jul 23 08:59:37 MDT 2020

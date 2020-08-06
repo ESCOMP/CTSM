@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 890;
+my $ntests = 889;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 549;
+   $ntests += 546;
 }
 plan( tests=>$ntests );
 
@@ -1043,6 +1043,11 @@ my %warntest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "missing_ndep_file"         =>{ options=>"-envxml_dir . -bgc bgc -ssp_rcp SSP5-3.4",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
      "bad_megan_spec"            =>{ options=>"-envxml_dir . -bgc bgc -megan",
                                      namelst=>"megan_specifier='ZZTOP=zztop'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1244,7 +1249,7 @@ print "==================================================\n";
 $phys = "clm4_5";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-my @glc_res = ( "48x96", "0.9x1.25", "1.9x2.5" );
+my @glc_res = ( "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_SSP1-2.6_transient",
                   "1850-2100_SSP2-4.5_transient",
                   "1850-2100_SSP3-7.0_transient",
@@ -1286,7 +1291,7 @@ foreach my $res ( @glc_res ) {
 $phys = "clm5_0";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-my @tran_res = ( "48x96", "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
+my @tran_res = ( "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 10;
 foreach my $res ( @tran_res ) {
