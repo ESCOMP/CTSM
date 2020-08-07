@@ -700,21 +700,21 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v7_simyr1850_c200728.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v7_simyr1850_c200728.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm4_5_cam6.0"
->lnd/clm2/initdata_map/clmi.B1850Clm45BgcGs.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200729.nc
+>lnd/clm2/initdata_map/clmi.B1850Clm45BgcGs.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 
@@ -722,7 +722,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="18500101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v7_simyr1850_c200728.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 
@@ -753,7 +753,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="18500101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm50SpCru.1706-01-01.0.9x1.25_gx1v7_simyr1850_c200728.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm50SpCru.1706-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 
@@ -799,14 +799,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200729.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200729.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
 </finidat>
 
 <!-- Present day no crop spinup ARCTIC grid with irrigation on -->
@@ -814,7 +814,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200728.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
 </finidat>
 
 <!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
@@ -822,7 +822,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200728.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
 </finidat>
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
@@ -846,7 +846,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
          ic_ymd="20130101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="2013"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200728.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
 </finidat>
 
 
