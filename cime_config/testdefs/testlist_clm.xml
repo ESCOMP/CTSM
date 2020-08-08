@@ -139,7 +139,7 @@
       <option name="comment">Remove this test and leave the transient one</option>
     </options>
   </test>
-  <test name="SMS_D_Ln9_P480x3" grid="f19_g16" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
+  <test name="SMS_D_Ln9_P480x3" grid="f19_g16" compset="IHistClm50SpGs" testmods="clm/waccmx_offline">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
