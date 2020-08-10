@@ -1,4 +1,133 @@
 ===============================================================
+Tag name:  ctsm1.0.dev107
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Aug 10 02:21:12 MDT 2020
+One-line Summary: Answer changes needed for CESM2.2.0
+
+Purpose of changes
+------------------
+
+A list of small answer changes needed for CESM2.2.0. Nitrogen deposition file now properly
+ends in 2015 rather than 2005. Have 2010_control compset match the 2000 IOC file rather than 2010.
+Modify the waccmx_offline tests to more closely match the CAM tests.
+
+Interpolate IC files for an exact match. Answers are identical for an exact match, but different
+when used for other resolutions.
+
+Two small bit-for-bit changes remove levurb and string_len dimensions on restart files.
+Remove xsmrpool_loss when use_crop is NOT true.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+  Answer changing fixes:
+  Fixes #1004 -- stream_year_last_ndep is set to 2005 instead of 2015 for historical with ctsm1.0.dev093 
+  Fixes #1012 -- Help prevent problems with WACCM-X testing by modifying our waccmx_offline test
+  Fixes #1090 -- Have 2010_control compset match 2000 simulation-year rather than 2010
+  Fixes #1089 -- Failure in FXHIST test when running with CAM 
+  Fixes #1037 -- Interpolate out-of-the-box initial conditions files for CESM2.2 release
+                 (only changes answers for resolutions other than IC file resolution)
+
+  Bit-for-bit changes:
+  Fixes #1101 -- levurb and string_len dimensions no longer needed on the restart files
+  Fixes #1097 -- xsmrpool_loss should only be written to the restart file if use_crop is true
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   2010_control doesn't match 2010 finidat file
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): Interpolated IC files
+   Add f19 2003 IC file, f09 and 19 1979 IC file
+   Remove 2010 IC file
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: waccm_offline test changed to more closely match the FXHIST CAM test
+
+Code reviewed by: self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (115 tests are different than before)
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Hist and SSP BGC compsets change answers because of the correction of the end year for ndep. 
+  You wouldn't think this would matter until you get to the end of the time-sequence -- but it 
+  does for the first time-step.
+
+  The 2010 compset changes answers because of using the 2000 finidat file rather than 2010
+
+  Some finidat files interpolated to the resolution they are designed for. This causes an apparent 
+  change of answers when these datasets are used for other resolutions (even though it does NOT for 
+  the resolution it's interpolated to)
+
+  waccm_offline tests are also changed in order to more closely match the FXHIST tests in CAM.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Hist, SSP, 2010 compsets, Clm45 and some f10, 1x1 because of IC files
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #1100
+(https://github.com/ESCOMP/ctsm/pull)
+   #1100 -- Answer changes needed for CESM2.2.0
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev106
 Originator(s):  erik (Erik Kluzek)
 Date: Thu Aug  6 15:35:47 MDT 2020
