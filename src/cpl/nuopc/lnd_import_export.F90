@@ -389,7 +389,6 @@ contains
     integer                   :: num
     integer                   :: begg, endg                          ! bounds
     integer                   :: g,i,k                               ! indices
-    real(r8)                  :: dum1, dum2, dum3                    ! arguments returned by subr. QSat but not used here
     real(r8)                  :: qsat_kg_kg                          ! saturation specific humidity (kg/kg)
     real(r8)                  :: forc_t                              ! atmospheric temperature (Kelvin)
     real(r8)                  :: forc_q                              ! atmospheric specific humidity (kg/kg)
@@ -685,7 +684,7 @@ contains
        wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
        wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
 
-       call QSat(forc_t, forc_pbot, dum1, dum2, qsat_kg_kg, dum3)
+       call QSat(forc_t, forc_pbot, qsat_kg_kg)
 
        ! modify specific humidity if precip occurs
        if (1==2) then

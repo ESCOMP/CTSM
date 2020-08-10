@@ -31,7 +31,7 @@ contains
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use shr_string_mod  , only: shr_string_listGetName
     use domainMod       , only: ldomain
-    use QSatMod         , only: QSat, QSat_temp  ! TODO: rm QSat_temp after testing
+    use QSatMod         , only: QSat
     use shr_infnan_mod  , only : isnan => shr_infnan_isnan
     !
     ! !ARGUMENTS:
@@ -45,9 +45,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: g,i,k,nstep,ier      ! indices, number of steps, and error code
     real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
-    real(r8) :: e                    ! vapor pressure (Pa) TODO: rm after tests
-    real(r8) :: dum1, dum2, dum3     ! arguments returned by subr. QSat but not used here
-    real(r8) :: qsat_old             ! TODO: rm after testing
     real(r8) :: qsat_kg_kg           ! saturation specific humidity (kg/kg)
     real(r8) :: forc_t               ! atmospheric temperature (Kelvin)
     real(r8) :: forc_q               ! atmospheric specific humidity (kg/kg)
@@ -59,32 +56,9 @@ contains
     real(r8) :: co2_ppmv_prog        ! temporary
     real(r8) :: co2_ppmv_val         ! temporary
     integer  :: co2_type_idx         ! integer flag for co2_type options
-    ! TODO: Delete through tdc, t after testing
-    real(r8) :: esatw                ! saturation vapor pressure over water (Pa)
-    real(r8) :: esati                ! saturation vapor pressure over ice (Pa)
-    real(r8) :: a0,a1,a2,a3,a4,a5,a6 ! coefficients for esat over water
-    real(r8) :: b0,b1,b2,b3,b4,b5,b6 ! coefficients for esat over ice
-    real(r8) :: tdc, t               ! Kelvins to Celcius function and its input
     character(len=32) :: fname       ! name of field that is NaN
     character(len=32), parameter :: sub = 'lnd_import'
 
-    ! TODO: Delete through esati after testing
-    ! Constants to compute vapor pressure
-    parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
-         a2=1.428945805e-02_r8, a3=2.650648471e-04_r8, &
-         a4=3.031240396e-06_r8, a5=2.034080948e-08_r8, &
-         a6=6.136820929e-11_r8)
-
-    parameter (b0=6.109177956_r8    , b1=5.034698970e-01_r8, &
-         b2=1.886013408e-02_r8, b3=4.176223716e-04_r8, &
-         b4=5.824720280e-06_r8, b5=4.838803174e-08_r8, &
-         b6=1.838826904e-10_r8)
-    !
-    ! function declarations
-    !
-    tdc(t) = min( 50._r8, max(-50._r8,(t-SHR_CONST_TKFRZ)) )
-    esatw(t) = 100._r8*(a0+t*(a1+t*(a2+t*(a3+t*(a4+t*(a5+t*a6))))))
-    esati(t) = 100._r8*(b0+t*(b1+t*(b2+t*(b3+t*(b4+t*(b5+t*b6))))))
     !---------------------------------------------------------------------------
 
     co2_type_idx = 0
@@ -194,15 +168,7 @@ contains
        wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc + forc_rainl
        wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc + forc_snowl
 
-! TODO: Delete these lines after testing, except the call QSat
-       if (forc_t > SHR_CONST_TKFRZ) then
-          e = esatw(tdc(forc_t))
-       else
-          e = esati(tdc(forc_t))
-       end if
-       qsat_old       = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
-       call QSat_temp(forc_t, forc_pbot, dum1, dum2, qsat_kg_kg, dum3)
-       if (qsat_kg_kg - qsat_old > 1.e-14_r8) write(iulog,*) 'qsat_new, qsat_old =', qsat_kg_kg, qsat_old  ! slevis diag
+       call QSat(forc_t, forc_pbot, qsat_kg_kg)
 
        !modify specific humidity if precip occurs
        if(1==2) then

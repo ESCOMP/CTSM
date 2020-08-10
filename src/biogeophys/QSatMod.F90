@@ -12,7 +12,6 @@ module QSatMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: QSat
-  public :: QSat_temp  ! TODO: rm after testing
   !-----------------------------------------------------------------------
 
   ! For water vapor (temperature range 0C-100C)
@@ -25,14 +24,6 @@ module QSatMod
   real(r8), parameter :: a6 =  0.892344772e-10_r8
   real(r8), parameter :: a7 = -0.373208410e-12_r8
   real(r8), parameter :: a8 =  0.209339997e-15_r8
-  ! TODO: Delete after testing
-  real(r8), parameter :: e0 =  6.107799961_r8
-  real(r8), parameter :: e1 =  4.436518521e-01_r8
-  real(r8), parameter :: e2 =  1.428945805e-02_r8
-  real(r8), parameter :: e3 =  2.650648471e-04_r8
-  real(r8), parameter :: e4 =  3.031240396e-06_r8
-  real(r8), parameter :: e5 =  2.034080948e-08_r8
-  real(r8), parameter :: e6 =  6.136820929e-11_r8
   ! For derivative:water vapor
   real(r8), parameter :: b0 =  0.444017302_r8
   real(r8), parameter :: b1 =  0.286064092e-01_r8
@@ -53,14 +44,6 @@ module QSatMod
   real(r8), parameter :: c6 =  0.387940929e-09_r8
   real(r8), parameter :: c7 =  0.149436277e-11_r8
   real(r8), parameter :: c8 =  0.262655803e-14_r8
-  ! TODO: Delete after testing
-  real(r8), parameter :: f0 =  6.109177956_r8
-  real(r8), parameter :: f1 =  5.034698970e-01_r8
-  real(r8), parameter :: f2 =  1.886013408e-02_r8
-  real(r8), parameter :: f3 =  4.176223716e-04_r8
-  real(r8), parameter :: f4 =  5.824720280e-06_r8
-  real(r8), parameter :: f5 =  4.838803174e-08_r8
-  real(r8), parameter :: f6 =  1.838826904e-10_r8
   ! For derivative:ice
   real(r8), parameter :: d0 =  0.503277922_r8
   real(r8), parameter :: d1 =  0.377289173e-01_r8
@@ -143,59 +126,4 @@ contains
 
   end subroutine QSat
 
-  !-----------------------------------------------------------------------
-  subroutine QSat_temp (T, p, es, esdT, qs, qsdT)
-    !
-    ! !DESCRIPTION:
-    ! Temporary subroutine similar to subr. QSat.
-    ! TODO:  Remove after testing.
-    !
-    ! !USES:
-    use shr_kind_mod , only: r8 => shr_kind_r8
-    use shr_const_mod, only: SHR_CONST_TKFRZ
-    !
-    ! !ARGUMENTS:
-    implicit none
-    real(r8), intent(in)  :: T        ! temperature (K)
-    real(r8), intent(in)  :: p        ! surface atmospheric pressure (pa)
-    real(r8), intent(out) :: es       ! vapor pressure (pa)
-    real(r8), intent(out) :: esdT     ! d(es)/d(T)
-    real(r8), intent(out) :: qs       ! humidity (kg/kg)
-    real(r8), intent(out) :: qsdT     ! d(qs)/d(T)
-    !
-    ! !LOCAL VARIABLES:
-    real(r8) :: T_limit
-    real(r8) :: td,vp,vp1,vp2
-    !-----------------------------------------------------------------------
-
-    T_limit = min( 50._r8, max(-50._r8, T - SHR_CONST_TKFRZ))
-
-    td       = T_limit
-    if (td >= 0.0_r8) then
-       es   = e0 + td*(e1 + td*(e2 + td*(e3 + td*(e4 &
-            + td*(e5 + td*e6)))))
-
-       esdT = b0 + td*(b1 + td*(b2 + td*(b3 + td*(b4 &
-            + td*(b5 + td*(b6 + td*(b7 + td*b8)))))))
-    else
-       es   = f0 + td*(f1 + td*(f2 + td*(f3 + td*(f4 &
-            + td*(f5 + td*f6)))))
-
-       esdT = d0 + td*(d1 + td*(d2 + td*(d3 + td*(d4 &
-            + td*(d5 + td*(d6 + td*(d7 + td*d8)))))))
-    endif
-
-    es    = es    * 100._r8            ! pa
-    esdT  = esdT  * 100._r8            ! pa/K
-
-    vp    = 1.0_r8   / (p - 0.378_r8*es)
-    vp1   = 0.622_r8 * vp
-    vp2   = vp1   * vp
-
-    qs    = es    * vp1             ! kg/kg
-    qsdT  = esdT  * vp2 * p         ! 1 / K
-
-  end subroutine QSat_temp
-
-  
 end module QSatMod
