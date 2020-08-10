@@ -1,4 +1,390 @@
 ===============================================================
+Tag name:  ctsm1.0.dev107
+Originator(s):  erik (Erik Kluzek)
+Date: Mon Aug 10 02:21:12 MDT 2020
+One-line Summary: Answer changes needed for CESM2.2.0
+
+Purpose of changes
+------------------
+
+A list of small answer changes needed for CESM2.2.0. Nitrogen deposition file now properly
+ends in 2015 rather than 2005. Have 2010_control compset match the 2000 IOC file rather than 2010.
+Modify the waccmx_offline tests to more closely match the CAM tests.
+
+Interpolate IC files for an exact match. Answers are identical for an exact match, but different
+when used for other resolutions.
+
+Two small bit-for-bit changes remove levurb and string_len dimensions on restart files.
+Remove xsmrpool_loss when use_crop is NOT true.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+  Answer changing fixes:
+  Fixes #1004 -- stream_year_last_ndep is set to 2005 instead of 2015 for historical with ctsm1.0.dev093 
+  Fixes #1012 -- Help prevent problems with WACCM-X testing by modifying our waccmx_offline test
+  Fixes #1090 -- Have 2010_control compset match 2000 simulation-year rather than 2010
+  Fixes #1089 -- Failure in FXHIST test when running with CAM 
+  Fixes #1037 -- Interpolate out-of-the-box initial conditions files for CESM2.2 release
+                 (only changes answers for resolutions other than IC file resolution)
+
+  Bit-for-bit changes:
+  Fixes #1101 -- levurb and string_len dimensions no longer needed on the restart files
+  Fixes #1097 -- xsmrpool_loss should only be written to the restart file if use_crop is true
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   2010_control doesn't match 2010 finidat file
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): Interpolated IC files
+   Add f19 2003 IC file, f09 and 19 1979 IC file
+   Remove 2010 IC file
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: waccm_offline test changed to more closely match the FXHIST CAM test
+
+Code reviewed by: self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (115 tests are different than before)
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Hist and SSP BGC compsets change answers because of the correction of the end year for ndep. 
+  You wouldn't think this would matter until you get to the end of the time-sequence -- but it 
+  does for the first time-step.
+
+  The 2010 compset changes answers because of using the 2000 finidat file rather than 2010
+
+  Some finidat files interpolated to the resolution they are designed for. This causes an apparent 
+  change of answers when these datasets are used for other resolutions (even though it does NOT for 
+  the resolution it's interpolated to)
+
+  waccm_offline tests are also changed in order to more closely match the FXHIST tests in CAM.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Hist, SSP, 2010 compsets, Clm45 and some f10, 1x1 because of IC files
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #1100
+(https://github.com/ESCOMP/ctsm/pull)
+   #1100 -- Answer changes needed for CESM2.2.0
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev106
+Originator(s):  erik (Erik Kluzek)
+Date: Thu Aug  6 15:35:47 MDT 2020
+One-line Summary: Bit-for-bit updates for the CESM2.2.0 release
+
+Purpose of changes
+------------------
+
+Fix some bit-for-bit things needed for the CESM2.2.0 release
+Bring changes needed from release-clm5.0.31-34 to trunk. ndep change.
+Brings in some changes for PtVg datasets for no-anthro compset.
+Do some refactoring of Fire class so that it makes sense for FATES to use the base class.
+Update RTM and MOSART with NUOPC changes and an update of a NetCDF-4 file to NetCDF-5
+needed for the cesm2.2.0 release.
+
+The 2010 finidat file is now set in the 2010_control use-case rather than relying on the
+finidat dataset matching.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 
+ Fixes #1087 -- wrong finidat file
+ Fixes #1096 -- failing tests
+ Fixes #1036 -- ne30 case fails
+ Fixes #946 --- better error message
+ Fixes #983 --- Fire method renames
+ Fixes #938 --- mscripgrid issue
+
+Known bugs found since the previous tag (include github issue ID): 
+  #1098 -- ARCTICGRIS PE-layout is very slow...
+  #1097 -- xsmrpool_loss should only be written to the restart file if use_crop is true
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   if ndep file isn't found die with a warning rather than fatal error.
+   The warning allows you to override with CLM_BLDNML_OPTS="-ignore_warnings"
+
+   finidat file matching will now use the sim_year rather than start-year
+   for a control case (transient cases used the start-year)
+   Add 2010 f09 finidat file for clm5_0_cam6.0
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: 
+   Add clm45cam6LndTuningMode testmod
+   Some tests needed more wallclock
+
+Code reviewed by: self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (one test is different than ctsm1.0.dev105)
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyenne -= PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (bit-for-bit)
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): rtm, mosart
+  RTM    to rtm1_0_72
+  MOSART to mosart1_0_37
+
+Pull Requests that document the changes (include PR ids): #1079
+(https://github.com/ESCOMP/ctsm/pull)
+  #1079 -- Bit-for-bit updates for the CESM2.2.0 release
+
+===============================================================
+===============================================================
+Tag name:  ctsm1.0.dev105
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326) / Chris Fischer
+Date: Thu Jul 23 08:59:37 MDT 2020
+One-line Summary: Bring in some new SE grids for CAM as well as initial condition files for them
+
+Purpose of changes
+------------------
+   Add new SE (Spectral Element) grids: ne30np4.pg2, ne30np4.pg3, ne30np4, ne60np4, ne120np4, ne120np4.pg2, ne120np4.pg3, 
+                                        ne0np4CONUS.ne30x8, ne0np4.ARCTIC.ne30x4, ne0np4.ARCTICGRIS.ne30x8
+   Add new datasets for them, some new tests, and add support for their creation.
+
+   Also add some new initial condition (IC) files for 1979, 2000, and 2013 for use when coupled to CAM
+
+   The process for picking initial condition files was improved so that there can be more than one year that matches
+   and it will do the best to pick the best match. Also added the possibility for 1982 and 2013 simulation years for
+   specific grid matches.
+
+  Also update cime to a newer version that supports these new grids. And update CMEPS (and hence add in fox, CDEPS)
+  to latest used on the nuopc_dev branch. Testing with nuopc wouldn't work without this update. The cime version updates
+  the tables for dry-deposition and changes answers for dry-deposition when it's turned on.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #992 #994
+   Fixes #992 -- New initial conditions for 1979, 2000
+   Fixes #994 -- New CAM SE grids
+   Fixes #888 -- Add support for various "physics grids" needed by CAM
+CIME Issues fixed (include issue #): #3593, #3569, #3564, PR#3557
+   cime/#3593 -- Fix mapping files for new grids
+   cime/#3569 -- Fix cime regression testing
+   cime/#3564 -- Change alias for arctic grids
+   cime/#3557 -- updates to dry deposition data (PR)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  Initial conditions (IC) for 1979 start date is technically 1982
+  New initial condition files are ONLY for when coupled to CAM (B and F compsets)
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Allow for new grids
+   User updates to cime:
+    - Allow a user supplied config_grids.xml file.
+    - Improved error message for incorrect setting of cime model.
+
+Changes made to namelist defaults (e.g., changed parameter values): Add IC files for 1982 and 2013 years
+
+Changes to the datasets (e.g., parameter, surface or initial files): New SE grid datasets
+   Remove conus_30_x8 grid (previous name for new ne0np4CONUS.ne30x8 grid
+   Add new grids: ne30np4.pg2, ne30np4.pg3, ne30np4, ne60np4, ne120np4, ne120np4.pg2, ne120np4.pg3, 
+                  ne0np4CONUS.ne30x8, ne0np4.ARCTIC.ne30x4, ne0np4.ARCTICGRIS.ne30x8
+   Add new mask: tx0.1v3
+   New IC files: 1982 for ARCTIC and ARCTICGRIS, ne120np4 for 2000 and 2013 for CONUS all when coupled to CAM
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Initial condition picking will pick the file it finds with the closet simulation year to the request
+   for the lnd_tuning_mode desired. It will pick based on year over an exact match in resolution.
+   You can get around this by setting use_init_interp to be specific for a resolution
+
+   Also realized that there is a dependence between the namelist_defaults_ctsm.xml file and namelist_defaults_overall.xml
+   for the clm_start_type item. It must be coordinated with use_init_interp, init_interp_attributes and finidat
+   to work properly. I added a comment about this. We should probably just move them into the same file.
+
+Changes to tests or testing: Added tests for new grids
+
+Code reviewed by: self, fischer-ncar, adamrher
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - OK (130 tests fail comparison to previous verison due to new IC files)
+
+  tools-tests (test/tools):
+
+    izumi - OK
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    izumi - OK
+
+  python testing (see instructions in python/README.md; document testing done):
+
+   izumi -- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit (unless running with CAM because of new finidat files)
+    Running with nuopc changes answers because of updates to nuopc drivers
+    Dry-deposition changes answers when turned on (but doesn't effect anything else)
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cmeps, cdeps, fox
+    cime updated to cime5.8.28 (from branch_tags/cime5.8.24_a01)
+    fox, and cdeps added in
+    cmeps, cdeps and fox updated to hashes used in the nuopc_dev branch of CESM
+
+Pull Requests that document the changes (include PR ids): #1038
+(https://github.com/ESCOMP/ctsm/pull)
+   #1038 -- New fsufdat and landuse time series files for ne grids
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev104
 Originator(s):  sacks (Bill Sacks)
 Date:  Mon Jul  6 09:58:15 MDT 2020
