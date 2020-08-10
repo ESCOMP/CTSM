@@ -22,7 +22,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- CO2 volume mixing ratio -->
 <co2_ppmv sim_year="1000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="1979"      >336.6</co2_ppmv>
-<co2_ppmv sim_year="1982"      >340.6</co2_ppmv>
 <co2_ppmv sim_year="2000"      >379.0</co2_ppmv>
 <co2_ppmv sim_year="2010"      >388.8</co2_ppmv>
 <co2_ppmv sim_year="2015"      >397.5</co2_ppmv>
@@ -505,7 +504,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <init_interp_how_close>61</init_interp_how_close>
 
 <!-- What simulation years can find initial conditions to interpolate from (find one that's within the how_close years above)-->
-<init_interp_sim_years>1850,1982,2000,2010,2013</init_interp_sim_years>
+<init_interp_sim_years>1850,1979,2000,2003,2013</init_interp_sim_years>
 
 <!--
 
@@ -520,25 +519,22 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- NOTE: Make sure all possible lnd_tuning_mode options are accounted for. Some finidat files are only for one mode -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1850"                                >.true.</use_init_interp>
 <!-- For an exact match for these grids -->
-<!-- These first three are for SP mode and CLM5.0 only -->
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1982" lnd_tuning_mode="clm5_0_cam6.0"
+<!-- These first five are for SP mode and CLM5.0 only -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam6.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="0.9x1.25"            >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam6.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"             >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam6.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTIC.ne30x4"    >.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1982" lnd_tuning_mode="clm5_0_cam6.0"
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979" lnd_tuning_mode="clm5_0_cam6.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTICGRIS.ne30x8">.true.</use_init_interp>
+<!-- 2003 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2003" lnd_tuning_mode="clm5_0_cam6.0"
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"             >.true.</use_init_interp>
+
+<!-- 2013 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm5_0_cam6.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm4_5_cam6.0"
-                  hgrid="0.9x1.25"                                                                      >.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm4_5_cam6.0"
-                  hgrid="1.9x2.5"                                                                       >.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm4_5_cam6.0"
-                  hgrid="48x96"                                                                         >.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm5_0_cam6.0"
-                  hgrid="0.9x1.25"                                                                      >.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm5_0_cam6.0"
-                  hgrid="1.9x2.5"                                                                       >.true.</use_init_interp>
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2010" lnd_tuning_mode="clm5_0_cam6.0"
-                  hgrid="48x96"                                                                         >.true.</use_init_interp>
 <!-- For an inexact match use either low resolution or high resolution match for SP or BGC mode CLM4.5 and CLM5.0 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"                                >.true.</use_init_interp>
 <!-- Default to FALSE if couldn't find a match -->
@@ -673,46 +669,30 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 
 <!-- If an exact match for these grids -->
-<init_interp_attributes sim_year="1982" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="0.9x1.25" use_cn=".false." maxpft="17"
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="1.9x2.5" use_cn=".false." maxpft="17"
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
                         hgrid="ne0np4.ARCTIC.ne30x4" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.ARCTIC.ne30x4 maxpft=17 mask=tx0.1v2 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="1982" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
                         hgrid="ne0np4.ARCTICGRIS.ne30x8" use_cn=".false." maxpft="17"
 >hgrid=ne0np4.ARCTICGRIS.ne30x8 maxpft=17 mask=tx0.1v2 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
-
-<!-- 2010 IC's for specific low resolution matches CLM4.5 and CLM5.0 for both SP and BGC ... -->
-
-<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
-                        hgrid="0.9x1.25"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
-                        hgrid="1.9x2.5"  
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
-                        hgrid="48x96"  
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
-</init_interp_attributes>
-
-
-<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
-                        hgrid="0.9x1.25"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
-</init_interp_attributes>
-<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
-                        hgrid="1.9x2.5"  
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
-</init_interp_attributes>
-
-<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
-                        hgrid="48x96"  
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+p
+<!-- 2003 -->
+<init_interp_attributes sim_year="2003" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+                        hgrid="1.9x2.5" use_cn=".false." maxpft="17"
+>hgrid=1.9x2.5 maxpft=17 mask=gx1v7 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
 <!-- 2013 IC's - exact match for CONUS grid ... -->
@@ -729,31 +709,31 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true." use_init_interp=".true."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_GSWP3v1"
->lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v7_simyr1850_c190718.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm45BgcGs.0901-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true." use_init_interp=".true."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_CRUv7"
->lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v7_simyr1850_c190718.nc
+>lnd/clm2/initdata_map/clmi.I1850Clm45BgcCruGs.1101-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false." use_init_interp=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm4_5_cam6.0"
->lnd/clm2/initdata_map/clmi.B1850.0161-01-01.0.9x1.25_gx1v7_simyr1850_c190111.nc
+>lnd/clm2/initdata_map/clmi.B1850Clm45BgcGs.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm5_0_GSWP3v1" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v7_simyr1850_c190111.nc
+         lnd_tuning_mode="clm5_0_GSWP3v1"
+>lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 
@@ -768,23 +748,23 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         lnd_tuning_mode="clm5_0_CRUv7" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru-ciso.1526-01-01.0.9x1.25_gx1v7_simyr1850_c190116.nc
+         lnd_tuning_mode="clm5_0_CRUv7"
+>lnd/clm2/initdata_map/clmi.I1850Clm50BgcCropCru-ciso.1526-01-01.0.9x1.25_gx1v7_simyr1850_c200728.nc
 </finidat>
 
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
-         lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.B1850.0161-01-01.0.9x1.25_gx1v7_simyr1850_c190111.nc
+         lnd_tuning_mode="clm5_0_cam6.0"
+>lnd/clm2/initdata_map/clmi.B1850Clm50BgcCrop.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200729.nc
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="18500101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm5_0_CRUv7" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.I1850Clm50SpCru.1706-01-01.0.9x1.25_gx1v7_simyr1850_c190111.nc
+         lnd_tuning_mode="clm5_0_CRUv7"
+>lnd/clm2/initdata_map/clmi.I1850Clm50SpCru.1706-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 
 
@@ -825,67 +805,68 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
 </finidat>
 
+<!-- Present day no crop spinup f09/f19 grid with irrigation on -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam6.0"
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+</finidat>
+
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm5_0_cam6.0"
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.1.9x2.5_gx1v7_simyr1979_c200806.nc
+</finidat>
+
 <!-- Present day no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19820101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1982"
+         ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1982-01-01.ARCTIC_ne30x4_mt12_simyr1982_c200425.nc
+         lnd_tuning_mode="clm5_0_cam6.0"
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTIC_ne30x4_mt12_simyr1979_c200806.nc
 </finidat>
 
 <!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
-         ic_ymd="19820101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1982"
+         ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
-         lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.FHISTSp.1982-01-01.ARCTICGRIS_ne30x8_mt12_simyr1982_c200428.nc
+         lnd_tuning_mode="clm5_0_cam6.0"
+>lnd/clm2/initdata_map/clmi.FHISTSp.1979-01-01.ARCTICGRIS_ne30x8_mt12_simyr1979_c200806.nc
 </finidat>
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
 <finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="2000101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
-         lnd_tuning_mode="clm5_0_cam6.0" use_init_interp=".true."
->lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200506.nc
+         lnd_tuning_mode="clm5_0_cam6.0"
+>lnd/clm2/initdata_map/clmi.F2000.2000-01-01.ne120pg3_mt13_simyr2000_c200728.nc
 </finidat>
 
-<!-- Present day and 2010 for coupled cases at low resolution -->
+<!-- Present day for coupled cases at low resolution -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true." use_init_interp=".true."
-         lnd_tuning_mode="clm4_5_cam6.0"
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c181015.nc
-</finidat>
-
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20100101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2010"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true." use_init_interp=".true."
-         lnd_tuning_mode="clm4_5_cam6.0"
->lnd/clm2/initdata_map/clmi.BHIST.2010-01-01.0.9x1.25_gx1v7_simyr2010_c181015.nc
-</finidat>
-
-<!-- This is the same file as above but, for a different tuning mode -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20000101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true." use_init_interp=".true."
+         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c181015.nc
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr2000_c200728.nc
 </finidat>
 
-<!-- This is the same file as above but, for a different tuning mode -->
-<finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
-         ic_ymd="20100101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2010"
-         ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true." use_init_interp=".true."
+<!-- 2003 -->
+<finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="20030101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="2003"
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.BHIST.2010-01-01.0.9x1.25_gx1v7_simyr2010_c181015.nc
+>lnd/clm2/initdata_map/clmi.BHISTSp.2000-01-01.1.9x2.5_gx1v7_simyr2003_c200807.nc
 </finidat>
+
 
 <!-- 2013 -->
 <finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="20130101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="2013"
-         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true." use_init_interp=".true."
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
->lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200705.nc
+>lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
 </finidat>
 
 

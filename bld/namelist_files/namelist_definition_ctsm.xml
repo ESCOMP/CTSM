@@ -2024,7 +2024,7 @@ How close in years to use when looking for an initial condition file (finidat) i
 </entry>
 
 <entry id="init_interp_sim_years" type="integer(6)"  category="default_settings"
-       group="default_settings" valid_values="1850,1979,2000,2010,2013" >
+       group="default_settings" valid_values="1850,1979,2000,2003,2010,2013" >
 Simulation years you can look for in initial condition files (finidat) if interpolation is turned on (use_init_interp is .true.)
 </entry>
 

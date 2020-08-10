@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 889;
+my $ntests = 893;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 546;
+   $ntests += 549;
 }
 plan( tests=>$ntests );
 
@@ -335,6 +335,7 @@ foreach my $options (
                       "-res ne0np4.ARCTICGRIS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res 0.9x1.25 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=19500101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20030101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res 1.9x2.5 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res C192 -bgc sp -use_case 2010_control -namelist '&a start_ymd=20100101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode clm5_0_cam6.0",
