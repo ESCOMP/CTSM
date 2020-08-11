@@ -79,6 +79,7 @@ module SnowHydrologyMod
       real(r8) :: rho_max               ! Wind drift compaction / maximum density (kg/m3)
       real(r8) :: tau_ref               ! Wind drift compaction / reference time (48*3600) (s)
       real(r8) :: scvng_fct_mlt_sf      ! Scaling factor modifying scavenging factors for BC, OC, and dust species inclusion in meltwater (-)
+      real(r8) :: ceta                  ! Overburden compaction constant (kg/m3)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -315,6 +316,8 @@ contains
     call readNcdioScalar(ncid, 'tau_ref', subname, params_inst%tau_ref)
     ! Scaling factor modifying scavenging factors for BC, OC, and dust species inclusion in meltwater (-)
     call readNcdioScalar(ncid, 'scvng_fct_mlt_sf', subname, params_inst%scvng_fct_mlt_sf)
+    ! Overburden compaction constant (kg/m3)
+    call readNcdioScalar(ncid, 'ceta', subname, params_inst%ceta)
 
   end subroutine readParams
 
@@ -3782,7 +3785,6 @@ contains
     real(r8) :: f1, f2                          ! overburden compaction modifiers to viscosity
     real(r8) :: eta                             ! Viscosity
 
-    real(r8), parameter :: ceta = 450._r8       ! overburden compaction constant [kg/m3]
     real(r8), parameter :: aeta = 0.1_r8        ! overburden compaction constant [1/K]
     real(r8), parameter :: beta = 0.023_r8      ! overburden compaction constant [m3/kg]
 
@@ -3791,7 +3793,7 @@ contains
 
     f1 = 1._r8 / (1._r8 + 60._r8 * h2osoi_liq / (denh2o * dz))
     f2 = 4.0_r8 ! currently fixed to maximum value, holds in absence of angular grains
-    eta = f1*f2*(bi/ceta)*exp(aeta*td + beta*bi)*params_inst%eta0_vionnet
+    eta = f1*f2*(bi/params_inst%ceta)*exp(aeta*td + beta*bi)*params_inst%eta0_vionnet
     compaction_rate = -(burden+wx/2._r8) / eta
 
   end function OverburdenCompactionVionnet2012
