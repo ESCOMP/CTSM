@@ -34,14 +34,14 @@ module lnd_comp_nuopc
   use clm_time_manager       , only : get_curr_date, get_curr_calday
   use clm_initializeMod      , only : initialize1, initialize2
   use clm_driver             , only : clm_drv
-  use lnd_import_export      , only : advertise_fields, realize_fields
-  use lnd_import_export      , only : import_fields, export_fields
   use nuopc_shr_methods      , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
   use nuopc_shr_methods      , only : set_component_logging, get_component_instance, log_clock_advance
   use perf_mod               , only : t_startf, t_stopf, t_barrierf
   use netcdf                 , only : nf90_open, nf90_nowrite, nf90_noerr, nf90_close, nf90_strerror
   use netcdf                 , only : nf90_inq_dimid, nf90_inq_varid, nf90_get_var
   use netcdf                 , only : nf90_inquire_dimension, nf90_inquire_variable
+  use lnd_import_export      , only : advertise_fields, realize_fields, import_fields, export_fields
+  use lnd_comp_shr           , only : mesh, model_meshfile, model_clock
 
   implicit none
   private ! except
@@ -201,7 +201,6 @@ contains
 
     call mpi_comm_dup(lmpicom, mpicom, ierr)
 
-
     ! Note still need compid for those parts of the code that use the data model
     ! functionality through subroutine calls
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
@@ -340,7 +339,7 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_Mesh)         :: mesh, gridmesh        ! esmf mesh
+    type(ESMF_Mesh)         :: gridmesh              ! temporary esmf mesh
     type(ESMF_DistGrid)     :: DistGrid              ! esmf global index space descriptor
     type(ESMF_VM)           :: vm
     type(ESMF_Time)         :: currTime              ! Current time
@@ -423,6 +422,7 @@ contains
 
 !$  call omp_set_num_threads(localPeCount)
     print *,__FILE__,__LINE__,localPeCount
+
     !----------------------
     ! Obtain attribute values
     !----------------------
@@ -544,6 +544,12 @@ contains
          ref_tod_in=ref_tod,     &
          dtime_in=dtime_sync)
 
+    !----------------------------------------------------------------------------
+    ! Set model clock in lnd_comp_shr
+    !----------------------------------------------------------------------------
+
+    model_clock = clock
+    
     !----------------------
     ! Read namelist, grid and surface data
     !----------------------
@@ -597,11 +603,11 @@ contains
     !--------------------------------
 
     ! determine if the mesh will be created or read in
-    call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=cvalue, rc=rc)
+    call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=model_meshfile, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (single_column) cvalue = 'create_mesh'
+    if (single_column) model_meshfile = 'create_mesh'
 
-    if (cvalue == 'create_mesh') then
+    if (trim(model_meshfile) == 'create_mesh') then
        ! get the datm grid from the domain file
        call NUOPC_CompAttributeGet(gcomp, name='domain_lnd', value=cvalue, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -658,11 +664,11 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
        ! read in the mesh from the file
-       mesh = ESMF_MeshCreate(filename=trim(cvalue), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
+       mesh = ESMF_MeshCreate(filename=trim(model_meshfile), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
             elementDistgrid=Distgrid, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (masterproc) then
-          write(iulog,*)'mesh file for domain is ',trim(cvalue)
+          write(iulog,*)'mesh file for domain is ',trim(model_meshfile)
        end if
     end if
 
@@ -778,7 +784,7 @@ contains
     !------------------------
 
     use clm_instMod, only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
-!$  use omp_lib, only : omp_set_num_threads
+    !$  use omp_lib, only : omp_set_num_threads
     use ESMF, only : ESMF_VM, ESMF_VMGet
 
     ! input/output variables
@@ -834,7 +840,7 @@ contains
     call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-!$  call omp_set_num_threads(localPeCount)
+    !$  call omp_set_num_threads(localPeCount)
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_setLogUnit (iulog)

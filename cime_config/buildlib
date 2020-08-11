@@ -106,6 +106,7 @@ def _main_func():
             caseroot = case.get_value("CASEROOT")
 
             paths = [os.path.join(caseroot,"SourceMods","src.clm"),
+                     os.path.join(lnd_root,"src","cpl",driver),
                      os.path.join(lnd_root,"src","main"),
                      os.path.join(lnd_root,"src","biogeophys"),
                      os.path.join(lnd_root,"src","biogeochem"),
@@ -119,8 +120,7 @@ def _main_func():
                      os.path.join(lnd_root,"src","fates","fire"),
                      os.path.join(lnd_root,"src","fates","parteh"),
                      os.path.join(lnd_root,"src","utils"),
-                     os.path.join(lnd_root,"src","cpl"),
-                     os.path.join(lnd_root,"src","cpl",driver)]
+                     os.path.join(lnd_root,"src","cpl")]
             if driver == 'nuopc':
                 paths.append(os.path.join(cimeroot,"src","drivers","nuopc","nuopc_cap_share"))
 
