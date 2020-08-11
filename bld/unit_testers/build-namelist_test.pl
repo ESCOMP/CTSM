@@ -29,7 +29,7 @@ OPTIONS
      -compare <directory>          Compare namelists for this version to namelists
                                    created by another version.
      -generate                     Leave the namelists in place to do a later compare.
-     -test                         Use the -test option to make sure datasets exist.
+     -no-test                      Do NOT Use the -test option to make sure datasets exist.
      -csmdata "dir"                Root directory of CESM input data.
 
 EOF
@@ -89,7 +89,7 @@ EOF
 #
 my %opts = ( help     => 0,
              generate => 0,
-             test     => 0,
+             test     => 1,
              compare  => undef,
              csmdata  => undef,
             );
@@ -98,7 +98,7 @@ GetOptions(
     "h|help"     => \$opts{'help'},
     "compare=s"  => \$opts{'compare'},
     "generate"   => \$opts{'generate'},
-    "test"       => \$opts{'test'},
+    "test!"      => \$opts{'test'},
     "csmdata=s"  => \$opts{'csmdata'},
 )  or usage();
 
@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 894;
+my $ntests = 902;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 549;
+   $ntests += 555;
 }
 plan( tests=>$ntests );
 
@@ -333,6 +333,8 @@ $mode = "-phys $phys";
 foreach my $options ( 
                       "-res ne0np4.ARCTIC.ne30x4 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res ne0np4.ARCTICGRIS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
+                      "-res 0.9x1.25 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=19790101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res 0.9x1.25 -bgc bgc -crop -use_case 20thC_transient -namelist '&a start_ymd=19500101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res ne0np4CONUS.ne30x8 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20130101/' -lnd_tuning_mode clm5_0_cam6.0",
                       "-res 1.9x2.5 -bgc sp -use_case 20thC_transient -namelist '&a start_ymd=20030101/' -lnd_tuning_mode clm5_0_cam6.0",
