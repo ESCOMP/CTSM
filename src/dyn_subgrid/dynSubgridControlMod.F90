@@ -248,9 +248,11 @@ contains
        end if
     end if
 
-    if (dyn_subgrid_control_inst%do_transient_pfts .or. dyn_subgrid_control_inst%do_transient_crops) then
+    if (dyn_subgrid_control_inst%do_transient_pfts .or. &
+         dyn_subgrid_control_inst%do_transient_crops .or. &
+         dyn_subgrid_control_inst%do_transient_lakes) then
        if (collapse_urban) then
-          write(iulog,*) 'ERROR: do_transient_pfts and do_transient_crops are &
+          write(iulog,*) 'ERROR: do_transient_pfts, do_transient_crops and do_transient_lakes are &
                           incompatible with collapse_urban = .true.'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
@@ -258,7 +260,7 @@ contains
            .or. toosmall_soil > 0._r8 .or. toosmall_crop > 0._r8 &
            .or. toosmall_glacier > 0._r8 .or. toosmall_lake > 0._r8 &
            .or. toosmall_wetland > 0._r8 .or. toosmall_urban > 0._r8) then
-          write(iulog,*) 'ERROR: do_transient_pfts and do_transient_crops are &
+          write(iulog,*) 'ERROR: do_transient_pfts, do_transient_crops and do_transient_lakes are &
                           incompatible with any of the following set to > 0: &
                           n_dom_pfts > 0, n_dom_landunits > 0, &
                           toosmall_soil > 0._r8, toosmall_crop > 0._r8, &
