@@ -8,8 +8,6 @@ module lnd_import_export
   use NUOPC                 , only : NUOPC_CompAttributeGet, NUOPC_Advertise, NUOPC_IsConnected
   use NUOPC_Model           , only : NUOPC_ModelGet
   use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
-  use shr_infnan_mod        , only : isnan => shr_infnan_isnan
-  use shr_string_mod        , only : shr_string_listGetName, shr_string_listGetNum
   use shr_sys_mod           , only : shr_sys_abort
   use clm_varctl            , only : iulog
   use clm_time_manager      , only : get_nstep
@@ -26,6 +24,7 @@ module lnd_import_export
   use shr_carma_mod         , only : shr_carma_readnl
   use shr_ndep_mod          , only : shr_ndep_readnl
   use lnd_shr_methods       , only : chkerr
+  use lnd_import_export_utils, only : derive_quantities, check_for_nans
 
   implicit none
   private ! except
@@ -40,7 +39,6 @@ module lnd_import_export
   private :: state_getimport
   private :: state_setexport
   private :: state_getfldptr
-  private :: check_for_nans
 
   type fld_list_type
      character(len=128) :: stdname
@@ -390,14 +388,8 @@ contains
     integer                   :: begg, endg                          ! bounds
     integer                   :: g,i,k                               ! indices
     real(r8)                  :: qsat_kg_kg                          ! saturation specific humidity (kg/kg)
-    real(r8)                  :: forc_t                              ! atmospheric temperature (Kelvin)
-    real(r8)                  :: forc_q                              ! atmospheric specific humidity (kg/kg)
     real(r8)                  :: forc_pbot                           ! atmospheric pressure (Pa)
     real(r8)                  :: co2_ppmv_input(bounds%begg:bounds%endg)   ! temporary
-    real(r8)                  :: forc_rainc(bounds%begg:bounds%endg) ! rainxy Atm flux mm/s
-    real(r8)                  :: forc_rainl(bounds%begg:bounds%endg) ! rainxy Atm flux mm/s
-    real(r8)                  :: forc_snowc(bounds%begg:bounds%endg) ! snowfxy Atm flux  mm/s
-    real(r8)                  :: forc_snowl(bounds%begg:bounds%endg) ! snowfxl Atm flux  mm/s
     real(r8)                  :: forc_noy(bounds%begg:bounds%endg)
     real(r8)                  :: forc_nhx(bounds%begg:bounds%endg)
     real(r8)                  :: frac_grc(bounds%begg:bounds%endg, 0:glc_nec)
@@ -453,16 +445,16 @@ contains
     call state_getimport(importState, 'Sa_tbot', bounds, output=atm2lnd_inst%forc_t_not_downscaled_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Faxa_rainc', bounds, output=forc_rainc, rc=rc )
+    call state_getimport(importState, 'Faxa_rainc', bounds, output=atm2lnd_inst%forc_rainc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Faxa_rainl', bounds, output=forc_rainl, rc=rc )
+    call state_getimport(importState, 'Faxa_rainl', bounds, output=atm2lnd_inst%forc_rainl, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Faxa_snowc', bounds, output=forc_snowc, rc=rc )
+    call state_getimport(importState, 'Faxa_snowc', bounds, output=atm2lnd_inst%forc_snowc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Faxa_snowl', bounds, output=forc_snowl, rc=rc )
+    call state_getimport(importState, 'Faxa_snowl', bounds, output=atm2lnd_inst%forc_snowl, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'Faxa_lwdn', bounds, output=atm2lnd_inst%forc_lwrad_not_downscaled_grc, rc=rc)
@@ -657,74 +649,10 @@ contains
     end if
 
     !--------------------------
-    ! Derived quantities
+    ! Derived quantities for required fields
     !--------------------------
 
-    do g = begg, endg
-       forc_t    = atm2lnd_inst%forc_t_not_downscaled_grc(g)
-       forc_q    = wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)
-       forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
-
-       atm2lnd_inst%forc_hgt_u_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of wind [m]
-       atm2lnd_inst%forc_hgt_t_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of temperature [m]
-       atm2lnd_inst%forc_hgt_q_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of humidity [m]
-
-       atm2lnd_inst%forc_vp_grc(g) = forc_q * forc_pbot  / (0.622_r8 + 0.378_r8 * forc_q)
-
-       atm2lnd_inst%forc_rho_not_downscaled_grc(g) = &
-            (forc_pbot - 0.378_r8 * atm2lnd_inst%forc_vp_grc(g)) / (rair * forc_t)
-
-       atm2lnd_inst%forc_po2_grc(g) = o2_molar_const * forc_pbot
-
-       atm2lnd_inst%forc_wind_grc(g) = sqrt(atm2lnd_inst%forc_u_grc(g)**2 + atm2lnd_inst%forc_v_grc(g)**2)
-
-       atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
-                                        atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
-
-       wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
-       wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
-
-       call QSat(forc_t, forc_pbot, qsat_kg_kg)
-
-       ! modify specific humidity if precip occurs
-       if (1==2) then
-          if ((forc_rainc(g)+forc_rainl(g)) > 0._r8) then
-             forc_q = 0.95_r8*qsat_kg_kg
-            !forc_q = qsat_kg_kg
-             wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
-          endif
-       endif
-
-       wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat_kg_kg)
-    end do
-
-    !--------------------------
-    ! Error checks
-    !--------------------------
-
-    ! Check that solar, specific-humidity and LW downward aren't negative
-    do g = begg,endg
-       if ( atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) <= 0.0_r8 ) then
-          call shr_sys_abort( subname//&
-               ' ERROR: Longwave down sent from the atmosphere model is negative or zero' )
-       end if
-       if ( (atm2lnd_inst%forc_solad_grc(g,1) < 0.0_r8) .or. &
-            (atm2lnd_inst%forc_solad_grc(g,2) < 0.0_r8) .or. &
-            (atm2lnd_inst%forc_solai_grc(g,1) < 0.0_r8) .or. &
-            (atm2lnd_inst%forc_solai_grc(g,2) < 0.0_r8) ) then
-          call shr_sys_abort( subname//&
-               ' ERROR: One of the solar fields (indirect/diffuse, vis or near-IR)'// &
-               ' from the atmosphere model is negative or zero' )
-       end if
-       if ( wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
-          call shr_sys_abort( subname//&
-               ' ERROR: Bottom layer specific humidty sent from the atmosphere model is less than zero' )
-       end if
-    end do
-
-    ! Make sure relative humidity is properly bounded
-    ! atm2lnd_inst%forc_rh_grc(g) = min( 100.0_r8, atm2lnd_inst%forc_rh_grc(g) )
-    ! atm2lnd_inst%forc_rh_grc(g) = max(   0.0_r8, atm2lnd_inst%forc_rh_grc(g) )
+    call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
 
   end subroutine import_fields
 
@@ -1312,32 +1240,5 @@ contains
     endif  ! status
 
   end subroutine state_getfldptr
-
-  !===============================================================================
-
-  subroutine check_for_nans(array, fname, begg)
-
-    ! input/output variables
-    real(r8)         , intent(in) :: array(:)
-    character(len=*) , intent(in) :: fname
-    integer          , intent(in) :: begg
-
-    ! local variables
-    integer :: i
-    !-------------------------------------------------------------------------------
-
-    ! Check if any input from mediator or output to mediator is NaN
-
-    if (any(isnan(array))) then
-       write(iulog,*) '# of NaNs = ', count(isnan(array))
-       write(iulog,*) 'Which are NaNs = ', isnan(array)
-       do i = 1, size(array)
-          if (isnan(array(i))) then
-             write(iulog,*) "NaN found in field ", trim(fname), ' at gridcell index ',begg+i-1
-          end if
-       end do
-       call shr_sys_abort(' ERROR: One or more of the output from CLM to the coupler are NaN ' )
-    end if
-  end subroutine check_for_nans
 
 end module lnd_import_export

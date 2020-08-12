@@ -27,12 +27,9 @@ contains
     use seq_flds_mod    , only: seq_flds_x2l_fields
     use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
     use clm_varctl      , only: ndep_from_cpl 
-    use clm_varcon      , only: rair, o2_molar_const, c13ratio
-    use shr_const_mod   , only: SHR_CONST_TKFRZ
-    use shr_string_mod  , only: shr_string_listGetName
+    use clm_varcon      , only: c13ratio
     use domainMod       , only: ldomain
-    use QSatMod         , only: QSat
-    use shr_infnan_mod  , only : isnan => shr_infnan_isnan
+    use lnd_import_export_utils, only : derive_quantities, check_for_nans
     !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds   ! bounds
@@ -43,15 +40,10 @@ contains
     type(wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst   ! clm internal input data type
     !
     ! !LOCAL VARIABLES:
+    integer  :: begg, endg           ! bounds
     integer  :: g,i,k,nstep,ier      ! indices, number of steps, and error code
-    real(r8) :: forc_rainc           ! rainxy Atm flux mm/s
     real(r8) :: qsat_kg_kg           ! saturation specific humidity (kg/kg)
-    real(r8) :: forc_t               ! atmospheric temperature (Kelvin)
-    real(r8) :: forc_q               ! atmospheric specific humidity (kg/kg)
     real(r8) :: forc_pbot            ! atmospheric pressure (Pa)
-    real(r8) :: forc_rainl           ! rainxy Atm flux mm/s
-    real(r8) :: forc_snowc           ! snowfxy Atm flux  mm/s
-    real(r8) :: forc_snowl           ! snowfxl Atm flux  mm/s
     real(r8) :: co2_ppmv_diag        ! temporary
     real(r8) :: co2_ppmv_prog        ! temporary
     real(r8) :: co2_ppmv_val         ! temporary
@@ -60,6 +52,9 @@ contains
     character(len=32), parameter :: sub = 'lnd_import'
 
     !---------------------------------------------------------------------------
+
+    ! Set bounds
+    begg = bounds%begg; endg = bounds%endg
 
     co2_type_idx = 0
     if (co2_type == 'prognostic') then
@@ -79,9 +74,8 @@ contains
     ! by 1000 mm/m resulting in an overall factor of unity.
     ! Below the units are therefore given in mm/s.
 
-
-    do g = bounds%begg,bounds%endg
-       i = 1 + (g - bounds%begg)
+    do g = begg,endg
+       i = 1 + (g - begg)
 
        ! Determine flooding input, sign convention is positive downward and
        ! hierarchy is atm/glc/lnd/rof/ice/ocn.  so water sent from rof to land is negative,
@@ -109,10 +103,10 @@ contains
        atm2lnd_inst%forc_t_not_downscaled_grc(g)     = x2l(index_x2l_Sa_tbot,i)      ! forc_txy  Atm state K
        atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) = x2l(index_x2l_Faxa_lwdn,i)    ! flwdsxy Atm flux  W/m^2
 
-       forc_rainc                                    = x2l(index_x2l_Faxa_rainc,i)   ! mm/s
-       forc_rainl                                    = x2l(index_x2l_Faxa_rainl,i)   ! mm/s
-       forc_snowc                                    = x2l(index_x2l_Faxa_snowc,i)   ! mm/s
-       forc_snowl                                    = x2l(index_x2l_Faxa_snowl,i)   ! mm/s
+       atm2lnd_inst%forc_rainc_grc(g)                = x2l(index_x2l_Faxa_rainc,i)   ! mm/s
+       atm2lnd_inst%forc_rainl_grc(g)                = x2l(index_x2l_Faxa_rainl,i)   ! mm/s
+       atm2lnd_inst%forc_snowc_grc(g)                = x2l(index_x2l_Faxa_snowc,i)   ! mm/s
+       atm2lnd_inst%forc_snowl_grc(g)                = x2l(index_x2l_Faxa_snowl,i)   ! mm/s
 
        ! atmosphere coupling, for prognostic/prescribed aerosols
        atm2lnd_inst%forc_aer_grc(g,1)                = x2l(index_x2l_Faxa_bcphidry,i)
@@ -148,74 +142,27 @@ contains
           atm2lnd_inst%forc_pch4_grc(g) = x2l(index_x2l_Sa_methane,i)
        endif
 
-       ! Determine derived quantities for required fields
+       !--------------------------
+       ! Check for nans from coupler
+       !--------------------------
 
-       forc_t = atm2lnd_inst%forc_t_not_downscaled_grc(g)
-       forc_q = wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)
+       call check_for_nans(x2l(:,i), fname, begg)
+
+    end do
+
+    !--------------------------
+    ! Derived quantities for required fields
+    !--------------------------
+
+    call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
+
+    ! Determine derived quantities for optional fields
+    ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
+    ! Note that forc_pbot is in Pa
+
+    do g = begg,endg
+
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
-       
-       atm2lnd_inst%forc_hgt_u_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of wind [m]
-       atm2lnd_inst%forc_hgt_t_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of temperature [m]
-       atm2lnd_inst%forc_hgt_q_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of humidity [m]
-       atm2lnd_inst%forc_vp_grc(g)    = forc_q * forc_pbot  / (0.622_r8 + 0.378_r8 * forc_q)
-       atm2lnd_inst%forc_rho_not_downscaled_grc(g) = &
-            (forc_pbot - 0.378_r8 * atm2lnd_inst%forc_vp_grc(g)) / (rair * forc_t)
-       atm2lnd_inst%forc_po2_grc(g)   = o2_molar_const * forc_pbot
-       atm2lnd_inst%forc_wind_grc(g)  = sqrt(atm2lnd_inst%forc_u_grc(g)**2 + atm2lnd_inst%forc_v_grc(g)**2)
-       atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
-                                        atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
-
-       wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc + forc_rainl
-       wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc + forc_snowl
-
-       call QSat(forc_t, forc_pbot, qsat_kg_kg)
-
-       !modify specific humidity if precip occurs
-       if(1==2) then
-          if((forc_rainc+forc_rainl) > 0._r8) then
-             forc_q = 0.95_r8 * qsat_kg_kg
-             !           forc_q = qsat_kg_kg
-             wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
-          endif
-       endif
-
-       wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat_kg_kg)
-
-       ! Check that solar, specific-humidity and LW downward aren't negative
-       if ( atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) <= 0.0_r8 )then
-          call endrun( sub//' ERROR: Longwave down sent from the atmosphere model is negative or zero' )
-       end if
-       if ( (atm2lnd_inst%forc_solad_grc(g,1) < 0.0_r8) .or.  (atm2lnd_inst%forc_solad_grc(g,2) < 0.0_r8) &
-       .or. (atm2lnd_inst%forc_solai_grc(g,1) < 0.0_r8) .or.  (atm2lnd_inst%forc_solai_grc(g,2) < 0.0_r8) ) then
-          call endrun( sub//' ERROR: One of the solar fields (indirect/diffuse, vis or near-IR)'// &
-                       ' from the atmosphere model is negative or zero' )
-       end if
-       if ( wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
-          call endrun( sub//' ERROR: Bottom layer specific humidty sent from the atmosphere model is less than zero' )
-       end if
-
-       ! Check if any input from the coupler is NaN
-       if ( any(isnan(x2l(:,i))) )then
-          write(iulog,*) '# of NaNs = ', count(isnan(x2l(:,i)))
-          write(iulog,*) 'Which are NaNs = ', isnan(x2l(:,i))
-          do k = 1, size(x2l(:,i))
-             if ( isnan(x2l(k,i)) )then
-                call shr_string_listGetName( seq_flds_x2l_fields, k, fname )
-                write(iulog,*) trim(fname)
-             end if
-          end do
-          write(iulog,*) 'gridcell index = ', g
-          call endrun( sub//' ERROR: One or more of the input from the atmosphere model are NaN '// &
-                       '(Not a Number from a bad floating point calculation)' )
-       end if
-
-       ! Make sure relative humidity is properly bounded
-       ! wateratm2lndbulk_inst%forc_rh_grc(g) = min( 100.0_r8, wateratm2lndbulk_inst%forc_rh_grc(g) )
-       ! wateratm2lndbulk_inst%forc_rh_grc(g) = max(   0.0_r8, wateratm2lndbulk_inst%forc_rh_grc(g) )
-
-       ! Determine derived quantities for optional fields
-       ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
-       ! Note that forc_pbot is in Pa
 
        if (co2_type_idx == 1) then
           co2_ppmv_val = co2_ppmv_prog
@@ -268,13 +215,10 @@ contains
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use seq_flds_mod       , only : seq_flds_l2x_fields
     use clm_varctl         , only : iulog
-    use clm_time_manager   , only : get_nstep
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
-    use domainMod          , only : ldomain
-    use shr_string_mod     , only : shr_string_listGetName
-    use shr_infnan_mod     , only : isnan => shr_infnan_isnan
+    use lnd_import_export_utils, only : check_for_nans
     !
     ! !ARGUMENTS:
     implicit none
@@ -285,6 +229,7 @@ contains
     real(r8)          , intent(out)   :: l2x(:,:)! land to coupler export state on land grid
     !
     ! !LOCAL VARIABLES:
+    integer  :: begg, endg  ! bounds
     integer  :: g,i,k ! indices
     integer  :: ier   ! error status
     integer  :: nstep ! time step index
@@ -294,12 +239,15 @@ contains
     character(len=32), parameter :: sub = 'lnd_export'
     !---------------------------------------------------------------------------
 
+    ! Set bounds
+    begg = bounds%begg; endg = bounds%endg
+
     ! cesm sign convention is that fluxes are positive downward
 
     l2x(:,:) = 0.0_r8
 
-    do g = bounds%begg,bounds%endg
-       i = 1 + (g-bounds%begg)
+    do g = begg,endg
+       i = 1 + (g-begg)
        l2x(index_l2x_Sl_t,i)        =  lnd2atm_inst%t_rad_grc(g)
        l2x(index_l2x_Sl_snowh,i)    =  waterlnd2atmbulk_inst%h2osno_grc(g)
        l2x(index_l2x_Sl_avsdr,i)    =  lnd2atm_inst%albd_grc(g,1)
@@ -384,19 +332,11 @@ contains
           l2x(index_l2x_Flgl_qice(num),i) = lnd2glc_inst%qice_grc(g,num)
        end do
 
-       ! Check if any output sent to the coupler is NaN
-       if ( any(isnan(l2x(:,i))) )then
-          write(iulog,*) '# of NaNs = ', count(isnan(l2x(:,i)))
-          write(iulog,*) 'Which are NaNs = ', isnan(l2x(:,i))
-          do k = 1, size(l2x(:,i))
-             if ( isnan(l2x(k,i)) )then
-                call shr_string_listGetName( seq_flds_l2x_fields, k, fname )
-                write(iulog,*) trim(fname)
-             end if
-          end do
-          write(iulog,*) 'gridcell index = ', g
-          call endrun( sub//' ERROR: One or more of the output from CLM to the coupler are NaN ' )
-       end if
+       !--------------------------
+       ! Check for nans to coupler
+       !--------------------------
+
+       call check_for_nans(l2x(:,i), fname, begg)
 
     end do
 
