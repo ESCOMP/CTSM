@@ -2965,6 +2965,7 @@ lnd/clm2/surfdata_map/landuse.timeseries_ne30np4_hist_16pfts_Irrig_CMIP6_simyr18
 <!-- (some other defaults for dynamic subgrid   -->
 <!-- are set in the BuildNamelist code)         -->
 <!-- =========================================  -->
+<do_transient_lakes>.false.</do_transient_lakes>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
 
 <!-- =========================================  -->
