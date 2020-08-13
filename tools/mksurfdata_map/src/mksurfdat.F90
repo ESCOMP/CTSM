@@ -1227,7 +1227,6 @@ program mksurfdat
              call ncd_put_time_slice(ncid, varid, ntim, get_pct_p2l_array(pctcft))
           end if
 
-          ! IV add ncd_put_time_slice for pct lake
           call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
           call ncd_put_time_slice(ncid, varid, ntim, pctlak)
           
