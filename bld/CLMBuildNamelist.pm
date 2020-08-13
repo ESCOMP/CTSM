@@ -2550,13 +2550,6 @@ sub setup_logic_do_transient_lakes {
 
    my $var = 'do_transient_lakes';
 
-   # Start by assuming a default value of '.true.'. Then check a number of
-   # conditions under which do_transient_lakes cannot be true. Under these
-   # conditions: (1) set default value to '.false.'; (2) make sure that the
-   # value is indeed false (e.g., that the user didn't try to set it to true).
-
-   my $default_val = ".true.";
-
    # cannot_be_true will be set to a non-empty string in any case where
    # do_transient_lakes should not be true; if it turns out that
    # do_transient_lakes IS true in any of these cases, a fatal error will be
@@ -2576,15 +2569,11 @@ sub setup_logic_do_transient_lakes {
       $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
    }
 
-   if ($cannot_be_true) {
-      $default_val = ".false.";
-   }
-
    if (!$cannot_be_true) {
       # Note that, if the variable cannot be true, we don't call add_default
       # - so that we don't clutter up the namelist with variables that don't
       # matter for this case
-      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, val=>$default_val);
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
    }
 
    # Make sure the value is false when it needs to be false - i.e., that the
