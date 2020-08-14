@@ -3,6 +3,7 @@ module lnd_import_export
   use ESMF
   use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod           , only : shr_sys_abort
+  use shr_const_mod         , only : fillvalue=>SHR_CONST_SPVAL
   use clm_varctl            , only : iulog, ndep_from_cpl
   use clm_time_manager      , only : get_nstep
   use clm_instMod           , only : atm2lnd_inst, lnd2atm_inst, water_inst
@@ -129,19 +130,19 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_rainc', bounds, &
-         output=atm2lnd_inst%forc_rainc, rc=rc )
+         output=atm2lnd_inst%forc_rainc_grc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_rainl', bounds, &
-         output=atm2lnd_inst%forc_rainl, rc=rc )
+         output=atm2lnd_inst%forc_rainl_grc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_snowc', bounds, &
-         output=atm2lnd_inst%forc_snowc, rc=rc )
+         output=atm2lnd_inst%forc_snowc_grc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_snowl', bounds, &
-         output=atm2lnd_inst%forc_snowl, rc=rc )
+         output=atm2lnd_inst%forc_snowl_grc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_lwdn', bounds, &
@@ -239,7 +240,7 @@ contains
     ! Derived quantities for required fields
     !--------------------------
 
-    call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
+    call derive_quantities(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst)
 
   end subroutine import_fields
 

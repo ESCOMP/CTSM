@@ -445,16 +445,16 @@ contains
     call state_getimport(importState, 'Sa_tbot', bounds, output=atm2lnd_inst%forc_t_not_downscaled_grc, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Faxa_rainc', bounds, output=atm2lnd_inst%forc_rainc, rc=rc )
+    call state_getimport(importState, 'Faxa_rainc', bounds, output=atm2lnd_inst%forc_rainc_grc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Faxa_rainl', bounds, output=atm2lnd_inst%forc_rainl, rc=rc )
+    call state_getimport(importState, 'Faxa_rainl', bounds, output=atm2lnd_inst%forc_rainl_grc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Faxa_snowc', bounds, output=atm2lnd_inst%forc_snowc, rc=rc )
+    call state_getimport(importState, 'Faxa_snowc', bounds, output=atm2lnd_inst%forc_snowc_grc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_getimport(importState, 'Faxa_snowl', bounds, output=atm2lnd_inst%forc_snowl, rc=rc )
+    call state_getimport(importState, 'Faxa_snowl', bounds, output=atm2lnd_inst%forc_snowl_grc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'Faxa_lwdn', bounds, output=atm2lnd_inst%forc_lwrad_not_downscaled_grc, rc=rc)
