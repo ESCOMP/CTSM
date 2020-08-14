@@ -147,7 +147,7 @@ module CLMFatesInterfaceMod
    use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
    use FatesConstantsMod      , only : hlm_harvest_area_fraction
    use FatesConstantsMod      , only : hlm_harvest_carbon
-
+   use perf_mod               , only : t_startf, t_stopf
    implicit none
    
    type, public :: f2hmap_type
@@ -264,6 +264,9 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
      integer                                        :: pass_biogeog 
+
+
+     call t_startf('fates_globals')
 
      if (use_fates) then
 
@@ -401,6 +404,8 @@ module CLMFatesInterfaceMod
      ! it will return some nominal dimension sizes of 1
      
      call SetFatesGlobalElements(use_fates)
+
+     call t_stopf('fates_globals')
      
      return
    end subroutine CLMFatesGlobals
@@ -458,6 +463,8 @@ module CLMFatesInterfaceMod
       ! 1) allocate the vectors
       ! 2) add the history variables defined in clm_inst to the history machinery
 
+
+      call t_startf('fates_init')
       
       ! Parameter Routines
       call param_derived%Init( numpft_fates )
@@ -618,6 +625,8 @@ module CLMFatesInterfaceMod
       ! Fire data to send to FATES
       call create_fates_fire_data_method( this%fates_fire_data_method )
 
+      call t_stopf('fates_init')
+
     end subroutine init
 
     ! ===================================================================================
@@ -637,6 +646,8 @@ module CLMFatesInterfaceMod
       ! local variables
       integer :: c
 
+      call t_startf('fates_check_hlm_active')
+
       do c = bounds_clump%begc,bounds_clump%endc
 
          ! FATES ACTIVE BUT HLM IS NOT
@@ -653,6 +664,8 @@ module CLMFatesInterfaceMod
             call endrun(msg=errMsg(sourcefile, __LINE__))
          end if
       end do
+
+      call t_stopf('fates_check_hlm_active')
 
    end subroutine check_hlm_active
 
@@ -711,6 +724,9 @@ module CLMFatesInterfaceMod
       ! one day.  The cost of holding site level boundary conditions is minimal
       ! and it keeps all the boundaries in one location
       ! ---------------------------------------------------------------------------------
+
+
+      call t_startf('fates_dynamics_daily_driver')
 
       begg = bounds_clump%begg; endg = bounds_clump%endg
 
@@ -878,6 +894,7 @@ module CLMFatesInterfaceMod
                                                   bounds_clump%endg
       end if
 
+      call t_stopf('fates_dynamics_daily_driver')
       
       return
    end subroutine dynamics_driv
@@ -905,6 +922,8 @@ module CLMFatesInterfaceMod
      integer :: p       ! HLM patch index
      integer :: s       ! site index
      integer :: c       ! column index
+
+     call t_startf('fates_wrap_update_hlmfates_dyn')
 
      associate(                                &
          tlai => canopystate_inst%tlai_patch , &
@@ -1036,6 +1055,9 @@ module CLMFatesInterfaceMod
 
        end do
      end associate
+
+     call t_stopf('fates_wrap_update_hlmfates_dyn')
+
    end subroutine wrap_update_hlmfates_dyn
 
    ! ====================================================================================
@@ -1096,6 +1118,7 @@ module CLMFatesInterfaceMod
 
       logical, save           :: initialized = .false.
 
+     call t_startf('fates_restart')
 
       nclumps = get_proc_clumps()
 
@@ -1338,6 +1361,8 @@ module CLMFatesInterfaceMod
          !$OMP END PARALLEL DO
          
       end if
+
+     call t_stopf('fates_restart')
       
       return
    end subroutine restart
@@ -1367,6 +1392,7 @@ module CLMFatesInterfaceMod
      integer :: s
      integer :: c
 
+     call t_startf('fates_initcoldstart')
 
      ! Set the FATES global time and date variables
      call GetAndSetTime                                                                
@@ -1455,6 +1481,8 @@ module CLMFatesInterfaceMod
      end do
      !$OMP END PARALLEL DO
      
+     call t_stopf('fates_initcoldstart')
+
    end subroutine init_coldstart
 
    ! ======================================================================================
@@ -1492,6 +1520,8 @@ module CLMFatesInterfaceMod
       
       type(ed_patch_type), pointer :: cpatch  ! c"urrent" patch  INTERF-TODO: SHOULD
                                               ! BE HIDDEN AS A FATES PRIVATE
+
+     call t_startf('fates_wrapsunfrac')
 
       associate( forc_solad => atm2lnd_inst%forc_solad_grc, &
                  forc_solai => atm2lnd_inst%forc_solai_grc, &
@@ -1546,6 +1576,8 @@ module CLMFatesInterfaceMod
 
       end associate
 
+     call t_stopf('fates_wrapsunfrac')
+
    end subroutine wrap_sunfrac
    
    ! ===================================================================================
@@ -1569,6 +1601,8 @@ module CLMFatesInterfaceMod
      ! parameters
      integer,parameter                              :: rsmax0 = 2.e4_r8
 
+     call t_startf('fates_prepcanfluxes')
+
      do s = 1, this%fates(nc)%nsites
         ! filter flag == 1 means that this patch has not been called for photosynthesis
         this%fates(nc)%bc_in(s)%filter_photo_pa(:) = 1
@@ -1580,6 +1614,9 @@ module CLMFatesInterfaceMod
         end if
 
      end do
+
+     call t_stopf('fates_prepcanfluxes')
+
   end subroutine prep_canopyfluxes
 
    ! ====================================================================================
@@ -1621,6 +1658,8 @@ module CLMFatesInterfaceMod
       integer  :: ifp
       integer  :: p
       integer  :: nlevsoil
+
+     call t_startf('fates_wrapbtran')
 
       associate(& 
          sucsat      => soilstate_inst%sucsat_col           , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm) 
@@ -1751,6 +1790,8 @@ module CLMFatesInterfaceMod
         end do
       end associate
 
+     call t_stopf('fates_wrapbtran')
+
    end subroutine wrap_btran
 
    ! ====================================================================================
@@ -1765,7 +1806,6 @@ module CLMFatesInterfaceMod
     use clm_varcon        , only : rgas, tfrz, namep  
     use clm_varctl        , only : iulog
     use pftconMod         , only : pftcon
-    use perf_mod          , only : t_startf, t_stopf
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
     use EDTypesMod        , only : dinc_ed
@@ -1793,7 +1833,8 @@ module CLMFatesInterfaceMod
     integer                                        :: s,c,p,ifp,j,icp
     real(r8)                                       :: dtime
 
-    call t_startf('edpsn')
+    call t_startf('fates_psn')
+
     associate(&
           t_soisno  => temperature_inst%t_soisno_col , &
           t_veg     => temperature_inst%t_veg_patch  , &
@@ -1878,7 +1919,8 @@ module CLMFatesInterfaceMod
       end do
       
     end associate
-    call t_stopf('edpsn')
+
+    call t_stopf('fates_psn')
 
  end subroutine wrap_photosynthesis
 
@@ -1895,6 +1937,7 @@ module CLMFatesInterfaceMod
    integer                                        :: s,c,p,ifp,icp
    real(r8)                                       :: dtime
 
+   call t_startf('fates_wrapaccfluxes')
 
     ! Run a check on the filter
     do icp = 1,fn
@@ -1921,6 +1964,8 @@ module CLMFatesInterfaceMod
                                this%fates(nc)%sites, &
                                dtime)
 
+   call t_stopf('fates_wrapaccfluxes')
+
  end subroutine wrap_accumulatefluxes
 
  ! ======================================================================================
@@ -1942,6 +1987,8 @@ module CLMFatesInterfaceMod
     
     ! locals
     integer                                    :: s,c,p,ifp,icp
+
+    call t_startf('fates_wrapcanopyradiation')
 
     associate(&
          albgrd_col   =>    surfalb_inst%albgrd_col         , & !in
@@ -2007,6 +2054,8 @@ module CLMFatesInterfaceMod
     
   end associate
 
+  call t_stopf('fates_wrapcanopyradiation')
+
  end subroutine wrap_canopy_radiation
 
  ! ======================================================================================
@@ -2025,6 +2074,8 @@ module CLMFatesInterfaceMod
     ! locals
     real(r8) :: dtime
     integer  :: s,c
+
+    call t_startf('fates_wrapbgcsummary')
 
     associate(& 
         hr            => soilbiogeochem_carbonflux_inst%hr_col,      & ! (gC/m2/s) total heterotrophic respiration
@@ -2049,6 +2100,9 @@ module CLMFatesInterfaceMod
             dtime)
 
     end associate
+
+    call t_stopf('fates_wrapbgcsummary')
+
  end subroutine wrap_bgc_summary
 
  ! ======================================================================================
@@ -2069,6 +2123,8 @@ module CLMFatesInterfaceMod
     integer :: ifp  ! Fates patch index
     integer :: p    ! CLM patch index
 
+    call t_startf('fates_transferz0disp')
+
     SHR_ASSERT_FL((ubound(z0m_patch, 1) == bounds_clump%endp), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(displa_patch, 1) == bounds_clump%endp), sourcefile, __LINE__)
 
@@ -2086,6 +2142,8 @@ module CLMFatesInterfaceMod
           displa_patch(p) = this%fates(ci)%bc_out(s)%displa_pa(ifp)
        end do
     end do
+
+    call t_stopf('fates_transferz0disp')
 
     return
  end subroutine TransferZ0mDisp
@@ -2121,7 +2179,11 @@ module CLMFatesInterfaceMod
     character(len=*), parameter :: subname = 'InterpFileInputs'
     !-----------------------------------------------------------------------
 
+    call t_startf('fates_interpfileinputs')
+
     call this%fates_fire_data_method%CNFireInterp(bounds)
+
+    call t_stopf('fates_interpfileinputs')
 
   end subroutine InterpFileInputs
 
@@ -2145,7 +2207,11 @@ module CLMFatesInterfaceMod
     character(len=*), parameter :: subname = 'Init2'
     !-----------------------------------------------------------------------
 
+    call t_startf('fates_init2')
+
     call this%fates_fire_data_method%CNFireInit(bounds, NLFilename)
+
+    call t_stopf('fates_init2')
 
   end subroutine Init2
 
@@ -2166,7 +2232,11 @@ module CLMFatesInterfaceMod
     character(len=*), parameter :: subname = 'InitAccBuffer'
     !-----------------------------------------------------------------------
 
+    call t_startf('fates_initaccbuff')
+
     call this%fates_fire_data_method%InitAccBuffer( bounds )
+
+    call t_stopf('fates_initaccbuff')
 
   end subroutine InitAccBuffer
 
@@ -2188,7 +2258,11 @@ module CLMFatesInterfaceMod
     character(len=*), parameter :: subname = 'InitAccVars'
     !-----------------------------------------------------------------------
 
+    call t_startf('fates_initaccvars')
+
     call this%fates_fire_data_method%InitAccVars( bounds )
+
+    call t_stopf('fates_initaccvars')
 
   end subroutine InitAccVars
 
@@ -2209,7 +2283,11 @@ module CLMFatesInterfaceMod
     character(len=*), parameter :: subname = 'UpdateAccVars'
     !-----------------------------------------------------------------------
 
+    call t_startf('fates_updateaccvars')
+
     call this%fates_fire_data_method%UpdateAccVars( bounds )
+
+    call t_stopf('fates_updateaccvars')
 
   end subroutine UpdateAccVars
 
@@ -2251,6 +2329,8 @@ module CLMFatesInterfaceMod
    
    type(fates_bounds_type) :: fates_bounds
    type(fates_bounds_type) :: fates_clump
+
+    call t_startf('fates_inithistoryio')
 
    ! This routine initializes the types of output variables
    ! not the variables themselves, just the types
@@ -2386,6 +2466,9 @@ module CLMFatesInterfaceMod
       end associate
 
    end do
+
+   call t_stopf('fates_inithistoryio')
+
  end subroutine init_history_io
 
  ! ======================================================================================
@@ -2403,6 +2486,7 @@ module CLMFatesInterfaceMod
     integer :: nlevsoil
     integer :: nlevdecomp
 
+    call t_startf('fates_initsoildepths')
 
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
@@ -2437,6 +2521,8 @@ module CLMFatesInterfaceMod
 
     end do
 
+    call t_stopf('fates_initsoildepths')
+
     return
  end subroutine init_soil_depths
 
@@ -2463,6 +2549,8 @@ module CLMFatesInterfaceMod
 
     if( .not. use_fates_planthydro ) return
        
+    call t_startf('fates_rootsoilflux')
+
     nc = bounds_clump%clump_index
     
     ! Perform a check that the number of columns submitted to fates for 
@@ -2495,6 +2583,8 @@ module CLMFatesInterfaceMod
        
 
     end do
+
+    call t_stopf('fates_rootsoilflux')
     
  end subroutine ComputeRootSoilFlux
 
@@ -2560,6 +2650,7 @@ module CLMFatesInterfaceMod
 
    if ( .not.use_fates_planthydro ) return
 
+   call t_startf('fates_wraphydrodriv')
 
    dtime = get_step_size_real()
 
@@ -2634,6 +2725,7 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in, & 
          dtime)
 
+   call t_stopf('fates_wraphydrodriv')
 
    return
  end subroutine wrap_hydraulics_drive
@@ -2655,6 +2747,8 @@ module CLMFatesInterfaceMod
 
    type(bounds_type), intent(in) :: hlm
    type(fates_bounds_type), intent(out) :: fates
+
+   call t_startf('fates_hlm2fatesbnds')
 
    fates%cohort_begin = hlm%begcohort
    fates%cohort_end = hlm%endcohort
@@ -2725,6 +2819,7 @@ module CLMFatesInterfaceMod
    fates%elage_begin = 1
    fates%elage_end   = num_elements * nlevage
 
+   call t_stopf('fates_hlm2fatesbnds')
    
  end subroutine hlm_bounds_to_fates_bounds
 
@@ -2757,6 +2852,7 @@ module CLMFatesInterfaceMod
    real(r8) :: model_day
    real(r8) :: day_of_year
 
+   call t_startf('fates_getandsettime')
    
    ! Get the current date and determine the set the start of the current year
    call get_curr_date(current_year,current_month,current_day,current_tod)
@@ -2782,6 +2878,8 @@ module CLMFatesInterfaceMod
                      current_date, reference_date, &
                      model_day, floor(day_of_year), &
                      days_per_year, 1.0_r8/dble(days_per_year))
+
+   call t_stopf('fates_getandsettime')
 
  end subroutine GetAndSetTime
 
