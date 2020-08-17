@@ -452,13 +452,13 @@
         <comment>none</comment>
         <ntasks>
           <ntasks_atm>-1</ntasks_atm>
-          <ntasks_lnd>-150</ntasks_lnd>
-          <ntasks_rof>-150</ntasks_rof>
-          <ntasks_ice>-150</ntasks_ice>
-          <ntasks_ocn>-150</ntasks_ocn>
-          <ntasks_glc>-150</ntasks_glc>
-          <ntasks_wav>-150</ntasks_wav>
-          <ntasks_cpl>-150</ntasks_cpl>
+          <ntasks_lnd>-70</ntasks_lnd>
+          <ntasks_rof>-70</ntasks_rof>
+          <ntasks_ice>-70</ntasks_ice>
+          <ntasks_ocn>-70</ntasks_ocn>
+          <ntasks_glc>-70</ntasks_glc>
+          <ntasks_wav>-70</ntasks_wav>
+          <ntasks_cpl>-70</ntasks_cpl>
         </ntasks>
         <nthrds>
           <nthrds_atm>1</nthrds_atm>
@@ -526,13 +526,13 @@
         <comment>none</comment>
         <ntasks>
           <ntasks_atm>-1</ntasks_atm>
-          <ntasks_lnd>-150</ntasks_lnd>
-          <ntasks_rof>-150</ntasks_rof>
-          <ntasks_ice>-150</ntasks_ice>
-          <ntasks_ocn>-150</ntasks_ocn>
-          <ntasks_glc>-150</ntasks_glc>
-          <ntasks_wav>-150</ntasks_wav>
-          <ntasks_cpl>-150</ntasks_cpl>
+          <ntasks_lnd>-70</ntasks_lnd>
+          <ntasks_rof>-70</ntasks_rof>
+          <ntasks_ice>-70</ntasks_ice>
+          <ntasks_ocn>-70</ntasks_ocn>
+          <ntasks_glc>-70</ntasks_glc>
+          <ntasks_wav>-70</ntasks_wav>
+          <ntasks_cpl>-70</ntasks_cpl>
         </ntasks>
         <nthrds>
           <nthrds_atm>1</nthrds_atm>
@@ -600,13 +600,13 @@
         <comment>none</comment>
         <ntasks>
           <ntasks_atm>-1</ntasks_atm>
-          <ntasks_lnd>-150</ntasks_lnd>
-          <ntasks_rof>-150</ntasks_rof>
-          <ntasks_ice>-150</ntasks_ice>
-          <ntasks_ocn>-150</ntasks_ocn>
-          <ntasks_glc>-150</ntasks_glc>
-          <ntasks_wav>-150</ntasks_wav>
-          <ntasks_cpl>-150</ntasks_cpl>
+          <ntasks_lnd>-70</ntasks_lnd>
+          <ntasks_rof>-70</ntasks_rof>
+          <ntasks_ice>-70</ntasks_ice>
+          <ntasks_ocn>-70</ntasks_ocn>
+          <ntasks_glc>-70</ntasks_glc>
+          <ntasks_wav>-70</ntasks_wav>
+          <ntasks_cpl>-70</ntasks_cpl>
         </ntasks>
         <nthrds>
           <nthrds_atm>1</nthrds_atm>
