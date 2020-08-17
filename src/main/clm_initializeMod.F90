@@ -14,7 +14,7 @@ module clm_initializeMod
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_varctl      , only : use_soil_moisture_streams
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec, haslake
+  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio       , only : file_desc_t
@@ -181,7 +181,7 @@ contains
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
     allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
     allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
-    allocate (haslake      (begg:endg                      ))
+
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
 
@@ -263,7 +263,7 @@ contains
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking.
 
-    deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
+    deallocate (wt_lunit, wt_cft, wt_glc_mec)
 
     call t_stopf('clm_init1')
 
@@ -276,7 +276,6 @@ contains
     ! CLM initialization - second phase
     !
     ! !USES:
-
     use shr_orb_mod           , only : shr_orb_decl
     use shr_scam_mod          , only : shr_scam_getCloseLatLon
     use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
@@ -486,9 +485,7 @@ contains
        call dyn_hwcontent_set_baselines(bounds_clump, &
             filter_inactive_and_active(nc)%num_icemecc, &
             filter_inactive_and_active(nc)%icemecc, &
-            filter_inactive_and_active(nc)%num_lakec, &
-            filter_inactive_and_active(nc)%lakec, &
-            urbanparams_inst, soilstate_inst, lakestate_inst, water_inst, temperature_inst)
+            urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
     end do
 
     ! ------------------------------------------------------------------------
@@ -626,10 +623,7 @@ contains
              call dyn_hwcontent_set_baselines(bounds_clump, &
                   filter_inactive_and_active(nc)%num_icemecc, &
                   filter_inactive_and_active(nc)%icemecc, &
-                  filter_inactive_and_active(nc)%num_lakec, &
-                  filter_inactive_and_active(nc)%lakec, &
-                  urbanparams_inst, soilstate_inst, lakestate_inst, &
-                  water_inst, temperature_inst)
+                  urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
           end do
        else if (nsrest == nsrBranch) then
           call endrun(msg='ERROR clm_initializeMod: '//&
