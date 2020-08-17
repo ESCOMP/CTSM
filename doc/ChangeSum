@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm1.0.dev108   slevis 08/17/2020 Reduce duplication between caps
   ctsm1.0.dev105 erik/fis 07/23/2020 Bring in some new SE grids for CAM as well as initial condition files for them
   ctsm1.0.dev104    sacks 07/06/2020 Add LILAC
   ctsm1.0.dev103   slevis 06/29/2020 Gridcell-level error-check for methane (CH4)
