@@ -483,7 +483,7 @@
       </pes>
     </mach>
   </grid>
-  <grid name="l%ne0np4.ARCTICGRIS.ne30x8" >
+  <grid name="l%ne0np4.ARCTICGRIS.ne30" >
     <mach name="any">
       <pes pesize="any" compset="any">
         <comment>none</comment>
@@ -520,7 +520,7 @@
       </pes>
     </mach>
   </grid>
-  <grid name="l%ne0np4.ARCTICGRIS.ne30x8" >
+  <grid name="l%ne0np4.ARCTICGRIS.ne30" >
     <mach name="cheyenne">
       <pes pesize="any" compset="any">
         <comment>none</comment>
@@ -557,7 +557,7 @@
       </pes>
     </mach>
   </grid>
-  <grid name="l%ne0np4.ARCTIC.ne30x4" >
+  <grid name="l%ne0np4.ARCTIC.ne30" >
     <mach name="any">
       <pes pesize="any" compset="any">
         <comment>none</comment>
@@ -594,7 +594,7 @@
       </pes>
     </mach>
   </grid>
-  <grid name="l%ne0np4.ARCTIC.ne30x4" >
+  <grid name="l%ne0np4.ARCTIC.ne30" >
     <mach name="cheyenne">
       <pes pesize="any" compset="any">
         <comment>none</comment>
