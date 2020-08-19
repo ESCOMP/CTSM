@@ -1159,13 +1159,14 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
+  <test name="ERS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50SpGs" testmods="clm/clm50cam6LndTuningMode_1979Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases"</option>
+      <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases, be sure to run with stub GLC
+for ERS test as otherwise it won't work for a sub-day test"</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
