@@ -708,8 +708,6 @@ module CNFUNMod
          !  (:) ]  Used C from the soil (gC/m2/s)
          h2osoi_liq             => waterstatebulk_inst%h2osoi_liq_col                                , & ! Input:   [real(r8) (:,:)]
          !   liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)
-         qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch                            , & ! Input:   [real(r8) (:)  ]
-         !   vegetation transpiration (mm H2O/s) (+ = to atm)
          t_soisno               => temperature_inst%t_soisno_col                                 , & ! Input:   [real(r8) (:,:)]
          !   soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
          crootfr                => soilstate_inst%crootfr_patch                                    & ! Input:   [real(r8) (:,:)]

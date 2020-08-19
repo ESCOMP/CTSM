@@ -148,7 +148,7 @@ contains
     logical           , intent(in) :: is_simple_buildtemp        ! If using simple building temp method
     logical           , intent(in) :: is_prog_buildtemp          ! If using prognostic building temp method
 
-    SHR_ASSERT_ALL((ubound(t_grnd_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(t_grnd_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     call this%InitAllocate ( bounds )
     call this%InitHistory ( bounds, is_simple_buildtemp )
@@ -632,24 +632,24 @@ contains
     if (.not. use_hydrstress) then
        call hist_addfld1d (fname='BTRAN', units='unitless',  &
             avgflag='A', long_name='transpiration beta factor', &
-            ptr_patch=this%btran_patch, set_lake=spval, set_urb=spval)
+            ptr_patch=this%btran_patch, l2g_scale_type='veg')
     end if
 
     this%btran_min_patch(begp:endp) = spval
     call hist_addfld1d (fname='BTRANMN', units='unitless',  &
          avgflag='A', long_name='daily minimum of transpiration beta factor', &
-         ptr_patch=this%btran_min_patch, set_lake=spval, set_urb=spval)
+         ptr_patch=this%btran_min_patch, l2g_scale_type='veg')
 
     this%btran2_patch(begp:endp) = spval
     call hist_addfld1d (fname='BTRAN2', units='unitless',  &
          avgflag='A', long_name='root zone soil wetness factor', &
-         ptr_patch=this%btran2_patch, set_lake=spval, set_urb=spval)
+         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
 
     if (use_cn) then
        this%rresis_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='RRESIS', units='proportion', type2d='levgrnd', &
             avgflag='A', long_name='root resistance in each soil layer', &
-            ptr_patch=this%rresis_patch, default='inactive')
+            ptr_patch=this%rresis_patch, l2g_scale_type='veg', default='inactive')
     end if
 
     this%errsoi_col(begc:endc) = spval
@@ -697,7 +697,7 @@ contains
     integer  :: j,l,c,p,levs,lev
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(t_grnd_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(t_grnd_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     ! Columns
     if ( is_simple_buildtemp )then
@@ -875,11 +875,6 @@ contains
          dim1name='pft', &
          long_name='instantaneous daily minimum of transpiration wetness factor', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%btran_min_inst_patch) 
-
-    call restartvar(ncid=ncid, flag=flag, varname='eflx_grnd_lake', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='net heat flux into lake/snow surface, excluding light transmission', units='W/m^2', &
-         interpinic_flag='interp', readvar=readvar, data=this%eflx_grnd_lake_patch)
 
     call this%eflx_dynbal_dribbler%Restart(bounds, ncid, flag)
 

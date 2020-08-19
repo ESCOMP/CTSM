@@ -12,7 +12,7 @@ module WaterStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
   use clm_varctl     , only : use_bedrock, iulog
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
   use clm_varcon     , only : spval, namec
@@ -35,6 +35,7 @@ module WaterStateType
      real(r8), pointer :: h2osoi_liq_col         (:,:) ! col liquid water (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_ice_col         (:,:) ! col ice lens (kg/m2) (new) (-nlevsno+1:nlevgrnd)    
      real(r8), pointer :: h2osoi_vol_col         (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
+     real(r8), pointer :: h2osoi_vol_prs_grc     (:,:) ! grc volumetric soil water prescribed (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd)
      real(r8), pointer :: h2osfc_col             (:)   ! col surface water (mm H2O)
      real(r8), pointer :: snocan_patch           (:)   ! patch canopy snow water (mm H2O)
      real(r8), pointer :: liqcan_patch           (:)   ! patch canopy liquid water (mm H2O)
@@ -118,6 +119,10 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          dim2beg = 1, dim2end = nlevgrnd)
+    call AllocateVar2d(var = this%h2osoi_vol_prs_grc, name = 'h2osoi_vol_prs_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         dim2beg = 1, dim2end = nlevgrnd)
     call AllocateVar2d(var = this%h2osoi_ice_col, name = 'h2osoi_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
@@ -155,6 +160,7 @@ contains
     !
     ! !USES:
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use clm_varctl     , only : use_soil_moisture_streams
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
@@ -194,6 +200,15 @@ contains
          avgflag='A', &
          long_name=this%info%lname('volumetric soil water (natural vegetated and crop landunits only)'), &
          ptr_col=this%h2osoi_vol_col, l2g_scale_type='veg')
+
+    if ( use_soil_moisture_streams )then
+       call hist_addfld2d ( &
+            fname=this%info%fname('H2OSOI_PRESCRIBED_GRC'), &
+            units='mm3/mm3', type2d='levsoi',  &
+            avgflag='A', &
+            long_name=this%info%lname('volumetric soil water prescribed (vegetated landunits only)'), &
+            ptr_gcell=this%h2osoi_vol_prs_grc, l2g_scale_type='veg',  default='inactive')
+    end if
 
     ! this%h2osoi_liq_col(begc:endc,:) = spval
     ! call hist_addfld2d ( &
@@ -290,9 +305,9 @@ contains
     real(r8)           :: ratio
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(watsat_col)           == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soisno_col)         == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno_input_col)     == (/bounds%endc/))          , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col)           == (/bounds%endc,nlevgrnd/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno_col)         == (/bounds%endc,nlevgrnd/)) , sourcefile, __LINE__)
 
     ratio = this%info%get_ratio()
 
@@ -312,6 +327,7 @@ contains
       ! and urban pervious road (other urban columns have zero soil water)
 
       this%h2osoi_vol_col(bounds%begc:bounds%endc,         1:) = spval
+      this%h2osoi_vol_prs_grc(bounds%begg:bounds%endg,     1:) = spval
       this%h2osoi_liq_col(bounds%begc:bounds%endc,-nlevsno+1:) = spval
       this%h2osoi_ice_col(bounds%begc:bounds%endc,-nlevsno+1:) = spval
       do c = bounds%begc,bounds%endc
@@ -518,7 +534,7 @@ contains
     real(r8) :: totwat       ! total soil water (mm)
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , sourcefile, __LINE__)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('H2OSFC'), &
@@ -696,7 +712,7 @@ contains
     character(len=*), parameter :: subname = 'CalculateTotalH2osno'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osno_total, 1) == bounds%endc), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
 
 #ifndef NDEBUG
     call this%CheckSnowConsistency(num_c, filter_c, caller)

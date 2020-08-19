@@ -284,8 +284,8 @@ contains
     character(len=*), parameter :: subname = 'set_glacier_baselines'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(vals_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(baselines_col) == [bounds%endc]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(vals_col) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(baselines_col) == [bounds%endc]), sourcefile, __LINE__)
 
     ! Average values from column to landunit for the natural veg landunit, in case there
     ! are multiple columns on the natural veg landunit.
@@ -506,7 +506,7 @@ contains
     character(len=*), parameter :: subname = 'dyn_water_content_final'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(delta_liq) == [bounds%endg]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(delta_liq) == [bounds%endg]), sourcefile, __LINE__)
 
     associate( &
          begg => bounds%begg, &
@@ -573,8 +573,8 @@ contains
     character(len=*), parameter :: subname = 'dyn_water_content'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == (/bounds%endg/)), sourcefile, __LINE__)
 
     call ComputeLiqIceMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstate_inst, waterdiagnostic_inst, &
@@ -648,8 +648,8 @@ contains
     !-------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(heat_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(liquid_water_temp_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat_grc) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(liquid_water_temp_grc) == (/bounds%endg/)), sourcefile, __LINE__)
 
     call ComputeHeatNonLake(bounds, num_nolakec, filter_nolakec, &
          urbanparams_inst, soilstate_inst, &

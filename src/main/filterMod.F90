@@ -247,7 +247,7 @@ contains
     type(glc_behavior_type) , intent(in) :: glc_behavior
     !------------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
 
     call setFiltersOneGroup(bounds, &
          filter, include_inactive = .false., &
@@ -307,7 +307,7 @@ contains
     integer :: g           !gridcell index
     !------------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
 
     nc = bounds%clump_index
 
@@ -558,8 +558,8 @@ contains
     character(len=*), parameter :: subname = 'setExposedvegpFilter'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_CLUMP, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(frac_veg_nosno) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_veg_nosno) == (/bounds%endp/)), sourcefile, __LINE__)
 
     nc = bounds%clump_index
 

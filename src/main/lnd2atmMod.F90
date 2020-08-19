@@ -8,7 +8,6 @@ module lnd2atmMod
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_megan_mod        , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
   use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
@@ -190,7 +189,7 @@ contains
     real(r8), parameter :: convertgC2kgCO2 = 1.0e-3_r8 * (amCO2/amC)
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(net_carbon_exchange_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(net_carbon_exchange_grc) == (/bounds%endg/)), sourcefile, __LINE__)
 
     call handle_ice_runoff(bounds, water_inst%waterfluxbulk_inst, glc_behavior, &
          melt_non_icesheet_ice_runoff = lnd2atm_inst%params%melt_non_icesheet_ice_runoff, &
@@ -240,6 +239,11 @@ contains
          solarabs_inst%fsa_patch (bounds%begp:bounds%endp), &
          lnd2atm_inst%fsa_grc    (bounds%begg:bounds%endg), &
          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
+
+    call p2g(bounds, &
+         frictionvel_inst%z0m_actual_patch (bounds%begp:bounds%endp), &
+         lnd2atm_inst%z0m_grc              (bounds%begg:bounds%endg), &
+         p2c_scale_type='unity', c2l_scale_type= 'urbans', l2g_scale_type='unity')
 
     call p2g(bounds, &
          frictionvel_inst%fv_patch (bounds%begp:bounds%endp), &
@@ -328,15 +332,6 @@ contains
          dust_inst%flx_mss_vrt_dst_patch(bounds%begp:bounds%endp, :), &
          lnd2atm_inst%flxdst_grc        (bounds%begg:bounds%endg, :), &
          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-
-    ! ch4 flux
-    if (use_lch4) then
-       call c2g( bounds,     &
-            ch4_inst%ch4_surf_flux_tot_col (bounds%begc:bounds%endc), &
-            lnd2atm_inst%flux_ch4_grc      (bounds%begg:bounds%endg), &
-            c2l_scale_type= 'unity', l2g_scale_type='unity' )
-    end if
 
     !----------------------------------------------------
     ! lnd -> rof
@@ -465,9 +460,9 @@ contains
     character(len=*), parameter :: subname = 'handle_ice_runoff'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(qflx_ice_runoff_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(qflx_liq_from_ice_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(eflx_sh_ice_to_liq_col) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(qflx_ice_runoff_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_liq_from_ice_col) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(eflx_sh_ice_to_liq_col) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do c = bounds%begc, bounds%endc
        if (col%active(c)) then

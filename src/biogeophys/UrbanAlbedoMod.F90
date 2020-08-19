@@ -467,13 +467,13 @@ contains
 
     ! this code assumes that numrad = 2 , with the following
     ! index values: 1 = visible, 2 = NIR
-    SHR_ASSERT_ALL(numrad == 2, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL(numrad == 2, sourcefile, __LINE__)
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(coszen)        == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsn_roof)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsn_improad) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(coszen)        == (/bounds%endl/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(albsn_roof)    == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(albsn_improad) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_urbanc, filter_urbanc, &
          caller = 'UrbanAlbedoMod:SnowAlbedo', &
@@ -576,13 +576,13 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(canyon_hwr)     == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(coszen)         == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(zen)            == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir)           == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_road)      == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_sunwall)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_shadewall) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(canyon_hwr)     == (/bounds%endl/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(coszen)         == (/bounds%endl/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(zen)            == (/bounds%endl/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdir)           == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdir_road)      == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdir_sunwall)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdir_shadewall) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
 
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
@@ -705,11 +705,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(canyon_hwr)     == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif)           == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_road)      == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_sunwall)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_shadewall) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(canyon_hwr)     == (/bounds%endl/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdif)           == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdif_road)      == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdif_sunwall)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdif_shadewall) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
 
     associate(                            & 
          vf_sr =>    urbanparams_inst%vf_sr , & ! Input:  [real(r8) (:) ]  view factor of sky for road                       
@@ -879,35 +879,35 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(coszen)             == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(canyon_hwr)         == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(wtroad_perv)        == (/bounds%endl/)),         errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir)               == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif)               == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_improad_dir)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_perroad_dir)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_wall_dir)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_roof_dir)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_improad_dif)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_perroad_dif)    == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_wall_dif)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(alb_roof_dif)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_road)          == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_sunwall)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdir_shadewall)     == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_road)          == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_sunwall)       == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sdif_shadewall)     == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_improad_dir)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_perroad_dir)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_improad_dif)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_perroad_dif)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_sunwall_dir)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_sunwall_dif)   == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_shadewall_dir) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_shadewall_dif) == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_roof_dir)      == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(sref_roof_dif)      == (/bounds%endl, numrad/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(coszen)             == (/bounds%endl/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(canyon_hwr)         == (/bounds%endl/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(wtroad_perv)        == (/bounds%endl/)),         sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdir)               == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdif)               == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(alb_improad_dir)    == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(alb_perroad_dir)    == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(alb_wall_dir)       == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(alb_roof_dir)       == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(alb_improad_dif)    == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(alb_perroad_dif)    == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(alb_wall_dif)       == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(alb_roof_dif)       == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdir_road)          == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdir_sunwall)       == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdir_shadewall)     == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdif_road)          == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdif_sunwall)       == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sdif_shadewall)     == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_improad_dir)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_perroad_dir)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_improad_dif)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_perroad_dif)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_sunwall_dir)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_sunwall_dif)   == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_shadewall_dir) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_shadewall_dif) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_roof_dir)      == (/bounds%endl, numrad/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sref_roof_dif)      == (/bounds%endl, numrad/)), sourcefile, __LINE__)
 
     associate(                                                           & 
          vf_sr              =>    urbanparams_inst%vf_sr               , & ! Input:  [real(r8) (:)   ]  view factor of sky for road                       

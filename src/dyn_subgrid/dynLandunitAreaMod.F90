@@ -121,7 +121,7 @@ contains
     character(len=*), parameter :: subname = 'update_landunit_weights_one_gcell'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(landunit_weights) == max_lunit), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(landunit_weights) == max_lunit), sourcefile, __LINE__)
 
     landunit_sum = sum(landunit_weights)
     

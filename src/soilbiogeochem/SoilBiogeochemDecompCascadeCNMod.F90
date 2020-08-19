@@ -20,7 +20,6 @@ module SoilBiogeochemDecompCascadeCNMod
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilStateType                      , only : soilstate_type
-  use CanopyStateType                    , only : canopystate_type
   use TemperatureType                    , only : temperature_type 
   use ch4Mod                             , only : ch4_type
   use ColumnType                         , only : col                
@@ -540,7 +539,7 @@ contains
    !-----------------------------------------------------------------------
    subroutine decomp_rate_constants_cn(bounds, &
         num_soilc, filter_soilc, &
-        canopystate_inst, soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+        soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
      !
      ! !DESCRIPTION:
      ! calculate rate constants and decomposition pathways for the BGC model 
@@ -556,7 +555,6 @@ contains
      type(bounds_type)                    , intent(in)    :: bounds          
      integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
      integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
-     type(canopystate_type)               , intent(in)    :: canopystate_inst
      type(soilstate_type)                 , intent(in)    :: soilstate_inst
      type(temperature_type)               , intent(in)    :: temperature_inst 
      type(ch4_type)                       , intent(in)    :: ch4_inst
@@ -608,8 +606,6 @@ contains
           dz             => col%dz                                      , & ! Input:  [real(r8) (:,:)   ]  soil layer thickness (m)                               
 
           soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
-
-          alt_indx       => canopystate_inst%alt_indx_col               , & ! Input:  [integer  (:)     ]  current depth of thaw                                     
 
           t_soisno       => temperature_inst%t_soisno_col               , & ! Input:  [real(r8) (:,:)   ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
 

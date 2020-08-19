@@ -63,7 +63,7 @@ module restFileMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine restFile_write( bounds, file, rdate, noptr)
+  subroutine restFile_write( bounds, file, writing_finidat_interp_dest_file, rdate, noptr)
     !
     ! !DESCRIPTION:
     ! Define/write CLM restart file.
@@ -71,6 +71,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)           :: bounds          
     character(len=*)  , intent(in)           :: file  ! output netcdf restart file
+    logical           , intent(in)           :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file
     character(len=*)  , intent(in), optional :: rdate ! restart file time stamp for name
     logical           , intent(in), optional :: noptr ! if should NOT write to the restart pointer file
     !
@@ -100,7 +101,8 @@ contains
 
     call accumulRest( ncid, flag='define' )
 
-    call clm_instRest(bounds, ncid, flag='define')
+    call clm_instRest(bounds, ncid, flag='define', &
+         writing_finidat_interp_dest_file=writing_finidat_interp_dest_file)
 
     if (present(rdate)) then 
        call hist_restart_ncd (bounds, ncid, flag='define', rdate=rdate )
@@ -116,7 +118,8 @@ contains
 
     call accumulRest( ncid, flag='write' )
 
-    call clm_instRest(bounds, ncid, flag='write')
+    call clm_instRest(bounds, ncid, flag='write', &
+         writing_finidat_interp_dest_file=writing_finidat_interp_dest_file)
 
     call hist_restart_ncd (bounds, ncid, flag='write' )
 
@@ -191,7 +194,8 @@ contains
 
     call accumulRest( ncid, flag='read' )
 
-    call clm_instRest( bounds_proc, ncid, flag='read' )
+    call clm_instRest( bounds_proc, ncid, flag='read', &
+         writing_finidat_interp_dest_file=.false.)
 
     call restFile_set_derived(bounds_proc, glc_behavior)
 
@@ -357,9 +361,6 @@ contains
     ! Close restart file and write restart pointer file if
     ! in write mode, otherwise just close restart file if in read mode
     !
-    ! !USES:
-    use clm_time_manager, only : is_last_step
-    !
     ! !ARGUMENTS:
     character(len=*) , intent(in) :: file  ! local output filename
     !
@@ -484,7 +485,7 @@ contains
     use clm_varctl           , only : caseid, ctitle, version, username, hostname, fsurdat
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
-    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
+    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevcan
     use clm_varpar           , only : maxpatch_glcmec, nvegwcs
     use decompMod            , only : get_proc_global
     !
@@ -517,7 +518,6 @@ contains
     call ncd_defdim(ncid , nameCohort , numCohort      ,  dimid)
 
     call ncd_defdim(ncid , 'levgrnd' , nlevgrnd       ,  dimid)
-    call ncd_defdim(ncid , 'levurb'  , nlevurb        ,  dimid)
     call ncd_defdim(ncid , 'levlak'  , nlevlak        ,  dimid)
     call ncd_defdim(ncid , 'levsno'  , nlevsno        ,  dimid)
     call ncd_defdim(ncid , 'levsno1' , nlevsno+1      ,  dimid)
@@ -527,7 +527,6 @@ contains
     if ( use_hydrstress ) then
       call ncd_defdim(ncid , 'vegwcs'  , nvegwcs        ,  dimid)
     end if
-    call ncd_defdim(ncid , 'string_length', 64        ,  dimid)
     call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
     call ncd_defdim(ncid , 'glc_nec1', maxpatch_glcmec+1, dimid)
 
@@ -679,7 +678,7 @@ contains
     !
     ! !USES:
     use decompMod,  only : get_proc_global
-    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd, nlevurb
+    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd
     use clm_varctl, only : single_column, nsrest, nsrStartup
     !
     ! !ARGUMENTS:
@@ -718,7 +717,6 @@ contains
          'use_init_interp = .true. in user_nl_clm'
     call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
     call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
-    call check_dim(ncid, 'levurb'  , nlevurb)
     call check_dim(ncid, 'levlak'  , nlevlak) 
 
   end subroutine restFile_dimcheck

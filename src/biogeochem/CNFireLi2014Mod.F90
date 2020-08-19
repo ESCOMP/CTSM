@@ -17,7 +17,6 @@ module CNFireLi2014Mod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
-  use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog, spinup_state
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
   use clm_varcon                         , only : dzsoi_decomp
@@ -40,8 +39,8 @@ module CNFireLi2014Mod
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
-  use CNFireMethodMod                    , only : cnfire_method_type
-  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const
+  use FireMethodType                     , only : fire_method_type
+  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
   !
   implicit none
   private
@@ -52,35 +51,31 @@ module CNFireLi2014Mod
   type, extends(cnfire_base_type) :: cnfire_li2014_type
     private
   contains
-     !
-     ! !PUBLIC MEMBER FUNCTIONS:
-     procedure, public :: CNFireArea    ! Calculate fire area
-     procedure, public :: CNFireFluxes
+    !
+    ! !PUBLIC MEMBER FUNCTIONS:
+    procedure, public :: need_lightning_and_popdens
+    procedure, public :: CNFireArea    ! Calculate fire area
+    procedure, public :: CNFireFluxes
   end type cnfire_li2014_type
-
-  !
-  ! !PRIVATE MEMBER DATA:
-  !-----------------------------------------------------------------------
-
-  interface cnfire_li2014_type
-     ! initialize a new cnfire_base object
-     module procedure constructor
-  end interface cnfire_li2014_type
-  !-----------------------------------------------------------------------
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
 
-  !------------------------------------------------------------------------
-  type(cnfire_li2014_type) function constructor()
-    !
-    ! !DESCRIPTION:
-    ! Creates an object of type cnfire_base_type.
+  !-----------------------------------------------------------------------
+  function need_lightning_and_popdens(this)
     ! !ARGUMENTS:
-    constructor%need_lightning_and_popdens = .true.
-  end function constructor
+    class(cnfire_li2014_type), intent(in) :: this
+    logical :: need_lightning_and_popdens  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'need_lightning_and_popdens'
+    !-----------------------------------------------------------------------
+
+    need_lightning_and_popdens = .true.
+  end function need_lightning_and_popdens
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -142,9 +137,9 @@ contains
     real(r8), pointer :: prec10_col(:)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(totlitc_col)           == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soi17cm_col)         == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(totlitc_col)           == (/bounds%endc/))                              , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soi17cm_col)         == (/bounds%endc/))                              , sourcefile, __LINE__)
 
     associate(                                                                      & 
          totlitc            => totlitc_col                                     , & ! Input:  [real(r8) (:)     ]  (gC/m2) total lit C (column-level mean)           
@@ -558,6 +553,7 @@ contains
         c = filter_soilc(fc)
         g = col%gridcell(c)
         hdmlf=this%forc_hdm(g)
+        nfire(c) = 0._r8
         if( cropf_col(c)  <  1.0 )then
            if (trotr1_col(c)+trotr2_col(c)>0.6_r8) then
               farea_burned(c)=min(1.0_r8,baf_crop(c)+baf_peatf(c))
@@ -574,7 +570,8 @@ contains
                    min(1._r8,exp(SHR_CONST_PI*(forc_t(c)-SHR_CONST_TKFRZ)/10._r8))
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
-              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(3._r8*grc%lat(g)))*0.25_r8)*(1._r8-fs)*(1._r8-cropf_col(c)) 
+              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(3._r8*grc%lat(g)))* &
+                         cnfire_params%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c)) 
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10.0_r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               if ( wtlf(c) > 0.0_r8 )then
@@ -683,14 +680,14 @@ contains
    logical :: transient_landcover  ! whether this run has any prescribed transient landcover
    !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(froot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(croot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(stem_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(totsomc_col)          == (/bounds%endc/))                               , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_npools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(somc_fire_col)        == (/bounds%endc/))                               , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(froot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(croot_prof_patch)     == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(stem_prof_patch)      == (/bounds%endp,nlevdecomp_full/))               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(totsomc_col)          == (/bounds%endc/))                               , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_npools_vr_col) == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(somc_fire_col)        == (/bounds%endc/))                               , sourcefile, __LINE__)
 
    ! NOTE: VR      = Vertically Resolved
    !       conv.   = conversion

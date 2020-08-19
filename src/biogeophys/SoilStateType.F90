@@ -66,8 +66,8 @@ module SoilStateType
      real(r8), pointer :: csol_col             (:,:) ! col heat capacity, soil solids (J/m**3/Kelvin) (nlevgrnd) 
 
      ! roots
-     real(r8), pointer :: rootr_patch          (:,:) ! patch effective fraction of roots in each soil layer (nlevgrnd)
-     real(r8), pointer :: rootr_col            (:,:) ! col effective fraction of roots in each soil layer (nlevgrnd)  
+     real(r8), pointer :: rootr_patch          (:,:) ! patch effective fraction of roots in each soil layer (SMS method only) (nlevgrnd)
+     real(r8), pointer :: rootr_col            (:,:) ! col effective fraction of roots in each soil layer (SMS method only) (nlevgrnd)  
      real(r8), pointer :: rootfr_col           (:,:) ! col fraction of roots in each soil layer (nlevgrnd) 
      real(r8), pointer :: rootfr_patch         (:,:) ! patch fraction of roots for water in each soil layer (nlevgrnd)
      real(r8), pointer :: crootfr_patch        (:,:) ! patch fraction of roots for carbon in each soil layer (nlevgrnd)
@@ -248,15 +248,18 @@ contains
     if (use_cn) then
        this%rootr_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='ROOTR', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='effective fraction of roots in each soil layer', &
-            ptr_patch=this%rootr_patch, default='inactive')
+            avgflag='A', long_name='effective fraction of roots in each soil layer (SMS method)', &
+            ptr_patch=this%rootr_patch, l2g_scale_type='veg', default='inactive')
     end if
 
-    if (use_cn) then
+    if (use_cn .and. .not.(use_hydrstress)) then
+       ! rootr_col isn't computed for use_hydrstress = .true. (In contrast, rootr_patch is
+       ! still computed, albeit using the inconsistent Soil Moisture Stress (SMS) method.)
+       ! (See also https://github.com/ESCOMP/CTSM/issues/812.)
        this%rootr_col(begc:endc,:) = spval
        call hist_addfld2d (fname='ROOTR_COLUMN', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='effective fraction of roots in each soil layer', &
-            ptr_col=this%rootr_col, default='inactive')
+            avgflag='A', long_name='effective fraction of roots in each soil layer (SMS method)', &
+            ptr_col=this%rootr_col, l2g_scale_type='veg', default='inactive')
        
     end if
 

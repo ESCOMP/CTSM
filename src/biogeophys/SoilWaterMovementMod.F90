@@ -7,9 +7,8 @@ module SoilWaterMovementMod
   ! module contains different subroutines to couple soil and root water interactions
   !
   ! created by Jinyun Tang, Mar 12, 2014
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use shr_sys_mod         , only : shr_sys_flush
+  use shr_sys_mod       , only : shr_sys_flush
  
   !
   implicit none
@@ -18,6 +17,7 @@ module SoilWaterMovementMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SoilWater            ! Calculate soil hydrology   
   public :: init_soilwater_movement
+  public :: readParams
   private :: soilwater_zengdecker2009
   private :: soilwater_moisture_form
 !  private :: soilwater_mixed_form
@@ -29,6 +29,11 @@ module SoilWaterMovementMod
   private :: compute_qcharge
   private :: IceImpedance
   private :: TridiagonalCol
+
+  type, private :: params_type
+     real(r8) :: e_ice                   ! Soil ice impedance factor (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
   !
   ! The following is only public for the sake of unit testing; it should not be called
   ! directly by CLM code outside this module
@@ -80,6 +85,27 @@ module SoilWaterMovementMod
 contains
 
 !#1
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SoilWaterMovement'
+    !--------------------------------------------------------------------
+
+    ! Soil ice impedance factor (unitless)
+    call readNcdioScalar(ncid, 'e_ice', subname, params_inst%e_ice)
+
+  end subroutine readParams
+
+!#2
   !-----------------------------------------------------------------------
   subroutine init_soilwater_movement()
     !
@@ -190,7 +216,7 @@ contains
   end subroutine init_soilwater_movement
   
 
-!#2
+!#3
    !------------------------------------------------------------------------------   
    function use_aquifer_layer() result(lres)
      !
@@ -209,7 +235,7 @@ contains
 
    end function use_aquifer_layer
 
-!#3
+!#4
   !-----------------------------------------------------------------------
   subroutine SoilWater(bounds, num_hydrologyc, filter_hydrologyc, &
        num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
@@ -375,7 +401,7 @@ contains
     !-----------------------------------------------------------------------   
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(baseflow_sink)  == (/bounds%endc, nlevsoi/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(baseflow_sink)  == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
 !this is just a placeholder for now
     baseflow_sink = 0.
@@ -456,8 +482,8 @@ contains
     use shr_kind_mod               , only : r8 => shr_kind_r8     
     use shr_const_mod              , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
     use decompMod                  , only : bounds_type        
-    use clm_varcon                 , only : wimp,grav,hfus,tfrz
-    use clm_varcon                 , only : e_ice,denh2o, denice
+    use clm_varcon                 , only : grav,hfus,tfrz
+    use clm_varcon                 , only : denh2o, denice
     use clm_varpar                 , only : nlevsoi, max_patch_per_col, nlevgrnd
     use clm_time_manager           , only : get_step_size_real, get_nstep
     use column_varcon              , only : icol_roof, icol_road_imperv
@@ -573,8 +599,6 @@ contains
          qflx_infl         =>    waterfluxbulk_inst%qflx_infl_col       , & ! Input:  [real(r8) (:)   ]  infiltration (mm H2O /s)                          
 
          qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  vegetation/soil water exchange (mm H2O/s) (+ = to atm)
-         qflx_tran_veg_col =>    waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         rootr_col         =>    soilstate_inst%rootr_col           , & ! Input:  [real(r8) (:,:) ]  effective fraction of roots in each soil layer  
          t_soisno          =>    temperature_inst%t_soisno_col        & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
          )
 
@@ -709,7 +733,7 @@ contains
             if (origflag == 1) then
                imped(c,j)=(1._r8-0.5_r8*(fracice(c,j)+fracice(c,min(nlevsoi, j+1))))
             else
-               imped(c,j)=10._r8**(-e_ice*(0.5_r8*(icefrac(c,j)+icefrac(c,min(nlevsoi, j+1)))))
+               imped(c,j)=10._r8**(-params_inst%e_ice*(0.5_r8*(icefrac(c,j)+icefrac(c,min(nlevsoi, j+1)))))
             endif
             hk(c,j) = imped(c,j)*s1*s2
             dhkdw(c,j) = imped(c,j)*(2._r8*bsw(c,j)+3._r8)*s2* &
@@ -1436,7 +1460,6 @@ contains
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
     use abortutils           , only : endrun
     use decompMod            , only : bounds_type
-    use clm_varcon           , only : e_ice
     use clm_varpar           , only : nlevsoi
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use SoilStateType        , only : soilstate_type
@@ -1500,10 +1523,10 @@ contains
             ! s1 is interface value, s2 is node value
             if(j==nlayers)then
              s1 = s2(j)
-             call IceImpedance(icefrac(c,j), e_ice, imped(j) )
+             call IceImpedance(icefrac(c,j), imped(j) )
             else
              s1 = 0.5_r8 * (s2(j) + s2(j+1))
-             call IceImpedance(0.5_r8*(icefrac(c,j) + icefrac(c,j+1)), e_ice, imped(j) )
+             call IceImpedance(0.5_r8*(icefrac(c,j) + icefrac(c,j+1)), imped(j) )
             endif
 
   ! impose constraints on relative saturation at the layer interface
@@ -2120,7 +2143,7 @@ contains
 
 !#13
   !-----------------------------------------------------------------------
-  subroutine IceImpedance(icefrac, e_ice, imped)
+  subroutine IceImpedance(icefrac, imped)
     !
     !DESCRIPTION
     ! compute soil suction potential
@@ -2132,7 +2155,6 @@ contains
     ! !ARGUMENTS:
     implicit none
     real(r8), intent(in)  :: icefrac    !fraction of pore space filled with ice
-    real(r8), intent(in)  :: e_ice      !shape parameter
 
     real(r8), intent(out) :: imped      !hydraulic conductivity reduction due to the presence of ice in pore space
     !
@@ -2140,7 +2162,7 @@ contains
     character(len=32) :: subname = 'IceImpedance'  ! subroutine name
     !------------------------------------------------------------------------------
 
-    imped = 10._r8**(-e_ice*icefrac)
+    imped = 10._r8**(-params_inst%e_ice*icefrac)
 
   end subroutine IceImpedance
 
@@ -2153,7 +2175,6 @@ contains
     !
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
     use clm_varpar     , only : nlevurb
     use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl     , only : iulog
@@ -2177,11 +2198,11 @@ contains
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(a)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(b)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(c)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(r)    == (/ubj/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(u)    == (/ubj/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(a)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(b)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(c)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(r)    == (/ubj/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(u)    == (/ubj/)), sourcefile, __LINE__)
 
     ! Solve the matrix
 

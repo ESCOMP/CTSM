@@ -127,6 +127,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
+    logical :: allow_fractional_frac_sno_eff  ! if true, frac_sno_eff can be fractional; otherwise it needs to be 0/1
 
     character(len=*), parameter :: subname = 'CalcFracSnoEff'
     !-----------------------------------------------------------------------
@@ -139,14 +140,20 @@ contains
     do fc = 1, num_c
        c = filter_c(fc)
 
-       if (urbpoi(c) .or. lun_itype_col(c) == istdlak) then
+       if (urbpoi(c) .or. lun_itype_col(c) == istdlak .or. .not. use_subgrid_fluxes) then
           ! subgrid_fluxes parameterization not used for urban and lake columns
-          frac_sno_eff(c) = 1._r8
+          allow_fractional_frac_sno_eff = .false.
        else
-          if (use_subgrid_fluxes) then
-             frac_sno_eff(c) = frac_sno(c)
-          else
+          allow_fractional_frac_sno_eff = .true.
+       end if
+
+       if (allow_fractional_frac_sno_eff) then
+          frac_sno_eff(c) = frac_sno(c)
+       else
+          if (frac_sno(c) > 0._r8) then
              frac_sno_eff(c) = 1._r8
+          else
+             frac_sno_eff(c) = 0._r8
           end if
        end if
     end do

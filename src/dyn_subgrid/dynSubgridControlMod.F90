@@ -287,7 +287,7 @@ contains
     character(len=*), parameter :: subname = 'get_flanduse_timeseries'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_flanduse_timeseries = dyn_subgrid_control_inst%flanduse_timeseries
 
@@ -299,7 +299,7 @@ contains
     ! Return the value of the do_transient_pfts control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_do_transient_pfts = dyn_subgrid_control_inst%do_transient_pfts
 
@@ -311,7 +311,7 @@ contains
     ! Return the value of the do_transient_crops control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_do_transient_crops = dyn_subgrid_control_inst%do_transient_crops
 
@@ -334,7 +334,7 @@ contains
     ! Return the value of the do_harvest control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_do_harvest = dyn_subgrid_control_inst%do_harvest
 
@@ -346,7 +346,7 @@ contains
     ! Return the value of the reset_dynbal_baselines control flag
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_reset_dynbal_baselines = dyn_subgrid_control_inst%reset_dynbal_baselines
 
@@ -361,7 +361,7 @@ contains
     ! controls error-checking, not any operation of the code.)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_for_testing_allow_non_annual_changes = dyn_subgrid_control_inst%for_testing_allow_non_annual_changes
 
@@ -379,7 +379,7 @@ contains
     ! true will break water and energy conservation!
     ! -----------------------------------------------------------------------
 
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_for_testing_zero_dynbal_fluxes = dyn_subgrid_control_inst%for_testing_zero_dynbal_fluxes
 
