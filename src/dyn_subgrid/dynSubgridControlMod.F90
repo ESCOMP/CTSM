@@ -1,4 +1,4 @@
-module dynSubgridControlMod
+module ctsm_DynSubgridControl
 
   !---------------------------------------------------------------------------
   !
@@ -13,8 +13,8 @@ module dynSubgridControlMod
   ! !USES:
 #include "shr_assert.h"
   use shr_log_mod        , only : errMsg => shr_log_errMsg
-  use abortutils         , only : endrun
-  use clm_varctl         , only : fname_len
+  use ctsm_AbortUtils         , only : endrun
+  use ctsm_VarCtl         , only : fname_len
   !
   implicit none
   private
@@ -76,7 +76,7 @@ contains
     ! Initialize the dyn_subgrid_control settings.
     !
     ! !USES:
-    use spmdMod           , only : masterproc
+    use ctsm_Spmd           , only : masterproc
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -102,10 +102,10 @@ contains
     ! Read dyn_subgrid_control namelist variables
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use clm_varctl     , only : iulog
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_FileUtils      , only : getavu, relavu
+    use ctsm_NlUtils , only : find_nlgroup_name
+    use ctsm_VarCtl     , only : iulog
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -195,7 +195,7 @@ contains
     !
     ! !USES:
     use shr_kind_mod, only: r8 => shr_kind_r8
-    use clm_varctl, only : iulog, use_cndv, use_fates, use_cn, use_crop, &
+    use ctsm_VarCtl, only : iulog, use_cndv, use_fates, use_cn, use_crop, &
                            n_dom_pfts, n_dom_landunits, collapse_urban, &
                            toosmall_soil, toosmall_crop, toosmall_glacier, &
                            toosmall_lake, toosmall_wetland, toosmall_urban
@@ -385,4 +385,4 @@ contains
 
   end function get_for_testing_zero_dynbal_fluxes
 
-end module dynSubgridControlMod
+end module ctsm_DynSubgridControl

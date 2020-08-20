@@ -1,4 +1,4 @@
-module BandDiagonalMod
+module ctsm_BandDiagonalSolver
 
 #include "shr_assert.h"
 
@@ -7,10 +7,10 @@ module BandDiagonalMod
   ! Band Diagonal matrix solution
   !
   ! !USES:
-  use decompMod      , only : bounds_type
-  use abortutils     , only : endrun
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use clm_varctl     , only : iulog
+  use ctsm_VarCtl     , only : iulog
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -220,4 +220,4 @@ contains
 
   end subroutine BandDiagonal
 
-end module BandDiagonalMod
+end module ctsm_BandDiagonalSolver

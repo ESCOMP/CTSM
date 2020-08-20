@@ -1,4 +1,4 @@
-module dynInitColumnsMod
+module ctsm_DynInitColumns
 
   !---------------------------------------------------------------------------
   !
@@ -9,17 +9,17 @@ module dynInitColumnsMod
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
-  use decompMod            , only : bounds_type
-  use abortutils           , only : endrun
-  use clm_varctl           , only : iulog  
-  use clm_varcon           , only : namec
-  use TemperatureType      , only : temperature_type
-  use WaterType            , only : water_type
-  use SoilHydrologyType    , only : soilhydrology_type
-  use GridcellType         , only : grc
-  use LandunitType         , only : lun
-  use ColumnType           , only : col
-  use dynColumnTemplateMod , only : template_col_from_landunit, TEMPLATE_NONE_FOUND
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_AbortUtils           , only : endrun
+  use ctsm_VarCtl           , only : iulog  
+  use ctsm_VarCon           , only : namec
+  use ctsm_TemperatureType      , only : temperature_type
+  use ctsm_WaterType            , only : water_type
+  use ctsm_SoilHydrologyType    , only : soilhydrology_type
+  use ctsm_GridcellType         , only : grc
+  use ctsm_LandunitType         , only : lun
+  use ctsm_ColumnType           , only : col
+  use ctsm_DynColumnTemplate , only : template_col_from_landunit, TEMPLATE_NONE_FOUND
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -52,7 +52,7 @@ contains
     ! Do initialization for all columns that are newly-active in this time step
     !
     ! !USES:
-    use GetGlobalValuesMod , only : GetGlobalWrite
+    use ctsm_GetGlobalValues , only : GetGlobalWrite
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                        ! bounds
@@ -97,7 +97,7 @@ contains
     ! Returns TEMPLATE_NONE_FOUND if there is no column to use for initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice_mec, istdlak, istwet, isturb_MIN, isturb_MAX
+    use ctsm_LandunitVarCon, only : istsoil, istcrop, istice_mec, istdlak, istwet, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     integer :: c_template  ! function result
@@ -183,7 +183,7 @@ contains
     ! Returns TEMPLATE_NONE_FOUND if there is no column to use for initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop
+    use ctsm_LandunitVarCon, only : istsoil, istcrop
     !
     ! !ARGUMENTS:
     integer :: c_template  ! function result
@@ -266,4 +266,4 @@ contains
 
   end subroutine copy_state
 
-end module dynInitColumnsMod
+end module ctsm_DynInitColumns

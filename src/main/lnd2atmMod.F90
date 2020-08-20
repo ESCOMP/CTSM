@@ -1,4 +1,4 @@
-module lnd2atmMod
+module ctsm_Lnd2Atm
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,33 +10,33 @@ module lnd2atmMod
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
   use shr_megan_mod        , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
-  use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
-  use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl           , only : iulog, use_lch4
+  use ctsm_VarPar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
+  use ctsm_VarCon           , only : rair, grav, cpair, hfus, tfrz, spval
+  use ctsm_VarCtl           , only : iulog, use_lch4
   use seq_drydep_mod       , only : n_drydep, drydep_method, DD_XLND
-  use decompMod            , only : bounds_type
-  use subgridAveMod        , only : p2g, c2g
-  use filterColMod         , only : filter_col_type, col_filter_from_logical_array
-  use lnd2atmType          , only : lnd2atm_type
-  use atm2lndType          , only : atm2lnd_type
-  use ch4Mod               , only : ch4_type
-  use DUSTMod              , only : dust_type
-  use DryDepVelocity       , only : drydepvel_type
-  use VocEmissionMod       , only : vocemis_type
-  use CNFireEmissionsMod   , only : fireemis_type
-  use EnergyFluxType       , only : energyflux_type
-  use FrictionVelocityMod  , only : frictionvel_type
-  use SolarAbsorbedType    , only : solarabs_type
-  use SurfaceAlbedoType    , only : surfalb_type
-  use TemperatureType      , only : temperature_type
-  use WaterFluxBulkType    , only : waterfluxbulk_type
-  use WaterType            , only : water_type
-  use glcBehaviorMod       , only : glc_behavior_type
-  use glc2lndMod           , only : glc2lnd_type
-  use ColumnType           , only : col
-  use LandunitType         , only : lun
-  use GridcellType         , only : grc                
-  use landunit_varcon      , only : istice_mec
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_SubgridAve        , only : p2g, c2g
+  use ctsm_FilterCol         , only : filter_col_type, col_filter_from_logical_array
+  use ctsm_Lnd2AtmType          , only : lnd2atm_type
+  use ctsm_Atm2LndType          , only : atm2lnd_type
+  use ctsm_Methane               , only : ch4_type
+  use ctsm_DustMod              , only : dust_type
+  use ctsm_DryDepVelocity       , only : drydepvel_type
+  use ctsm_VocEmissionMod  , only : vocemis_type
+  use ctsm_CNFireEmissionsMod   , only : fireemis_type
+  use ctsm_EnergyFluxType       , only : energyflux_type
+  use ctsm_FrictionVelocity  , only : frictionvel_type
+  use ctsm_SolarAbsorbedType    , only : solarabs_type
+  use ctsm_SurfaceAlbedoType    , only : surfalb_type
+  use ctsm_TemperatureType      , only : temperature_type
+  use ctsm_WaterFluxBulkType    , only : waterfluxbulk_type
+  use ctsm_WaterType            , only : water_type
+  use ctsm_GlacierBehavior       , only : glc_behavior_type
+  use ctsm_Glc2Lnd           , only : glc2lnd_type
+  use ctsm_ColumnType           , only : col
+  use ctsm_LandunitType         , only : lun
+  use ctsm_GridcellType         , only : grc                
+  use ctsm_LandunitVarCon      , only : istice_mec
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -66,7 +66,7 @@ contains
     ! run started.
     !
     ! !USES:
-    use clm_varcon, only : sb
+    use ctsm_VarCon, only : sb
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds  
@@ -401,7 +401,7 @@ contains
     ! calculate total water storage for history files
     ! first set tws to gridcell total endwb
     ! second add river storage as gridcell average depth (1.e-3 converts [m3/km2] to [mm])
-    ! TODO - this was in BalanceCheckMod - not sure where it belongs?
+    ! TODO - this was in ctsm_BalanceCheck - not sure where it belongs?
 
     call c2g( bounds, &
          water_inst%waterbalancebulk_inst%endwb_col(bounds%begc:bounds%endc), &
@@ -503,4 +503,4 @@ contains
   end subroutine handle_ice_runoff
 
 
-end module lnd2atmMod
+end module ctsm_Lnd2Atm

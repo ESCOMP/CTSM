@@ -1,4 +1,4 @@
-module SnowCoverFractionNiuYang2007Mod
+module ctsm_SnowCoverFractionNiuYang2007
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,12 +9,12 @@ module SnowCoverFractionNiuYang2007Mod
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use abortutils     , only : endrun
-  use decompMod      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_Decomp      , only : bounds_type
   use ncdio_pio      , only : file_desc_t
-  use clm_varctl     , only : iulog, use_subgrid_fluxes
-  use paramUtilMod   , only : readNcdioScalar
-  use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
+  use ctsm_VarCtl     , only : iulog, use_subgrid_fluxes
+  use ctsm_ParamUtil   , only : readNcdioScalar
+  use ctsm_SnowCoverFractionBase, only : snow_cover_fraction_base_type
 
   implicit none
   save
@@ -252,4 +252,4 @@ contains
 
   end subroutine ReadParams
 
-end module SnowCoverFractionNiuYang2007Mod
+end module ctsm_SnowCoverFractionNiuYang2007

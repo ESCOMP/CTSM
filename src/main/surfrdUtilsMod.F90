@@ -1,4 +1,4 @@
-module surfrdUtilsMod
+module ctsm_SurfReadUtils
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Contains utility methods that can be used when reading surface datasets or similar
@@ -7,10 +7,10 @@ module surfrdUtilsMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varctl   , only : iulog
-  use abortutils   , only : endrun
+  use ctsm_VarCtl   , only : iulog
+  use ctsm_AbortUtils   , only : endrun
   use shr_log_mod  , only : errMsg => shr_log_errMsg
-  use spmdMod      , only : masterproc
+  use ctsm_Spmd      , only : masterproc
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -119,10 +119,10 @@ contains
     !        Convert generic crop types that were read in as seperate CFT's on
     !        a crop landunit, and put them on the vegetated landunit.
     ! !USES:
-    use clm_instur      , only : wt_lunit, wt_nat_patch
-    use clm_varpar      , only : cft_size
-    use pftconMod       , only : nc3crop
-    use landunit_varcon , only : istsoil, istcrop
+    use ctsm_VarSur      , only : wt_lunit, wt_nat_patch
+    use ctsm_VarPar      , only : cft_size
+    use ctsm_PftCon       , only : nc3crop
+    use ctsm_LandunitVarCon , only : istsoil, istcrop
     ! !ARGUMENTS:
     implicit none
     integer          , intent(in)    :: begg, endg
@@ -160,7 +160,7 @@ contains
     ! Keep landunits above the user-defined thresholds and remove the rest
     !
     ! !USES:
-    use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+    use ctsm_LandunitVarCon, only: max_lunit, istsoil, istcrop, istice_mec, &
                                istdlak, istwet, isturb_tbd, isturb_hd, &
                                isturb_md
     !
@@ -270,7 +270,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(weight) == (/endg, upper_bound/)), sourcefile, __LINE__)
 
     ! Find the top N dominant pfts or landunits to collapse the data to
-    ! n_dominant < 0 is not allowed (error check in controlMod.F90)
+    ! n_dominant < 0 is not allowed (error check in ctsm_Control.F90)
     ! Default value n_dominant = 0 or a user-selected n_dominant = upper_bound
     ! means "do not collapse pfts" and skip over this subroutine's work
     if (n_dominant > 0 .and. n_dominant < upper_bound) then
@@ -330,8 +330,8 @@ contains
     ! -
     !
     ! !USES:
-    use clm_varpar, only: cft_lb, cft_ub
-    use pftconMod, only: pftcon
+    use ctsm_VarPar, only: cft_lb, cft_ub
+    use ctsm_PftCon, only: pftcon
     !
     ! !ARGUMENTS:
     ! Use begg and endg rather than 'bounds', because bounds may not be
@@ -373,9 +373,9 @@ contains
     ! Collapse unused crop types into types used in this run.
     !
     ! !USES:
-    use clm_varctl , only : irrigate, use_crop
-    use clm_varpar , only : cft_lb, cft_ub, maxveg
-    use pftconMod  , only : nc3crop, nc3irrig, pftcon
+    use ctsm_VarCtl , only : irrigate, use_crop
+    use ctsm_VarPar , only : cft_lb, cft_ub, maxveg
+    use ctsm_PftCon  , only : nc3crop, nc3irrig, pftcon
     !
     ! !ARGUMENTS:
 
@@ -484,4 +484,4 @@ contains
   end subroutine collapse_crop_types
 
 
-end module surfrdUtilsMod
+end module ctsm_SurfReadUtils

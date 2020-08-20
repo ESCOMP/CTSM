@@ -1,4 +1,4 @@
-module WaterFluxType
+module ctsm_WaterFluxType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,16 +7,16 @@ module WaterFluxType
   !
   ! !USES:
   use shr_kind_mod   , only: r8 => shr_kind_r8
-  use clm_varpar     , only : nlevsno, nlevsoi
-  use clm_varcon     , only : spval
-  use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
+  use ctsm_VarPar     , only : nlevsno, nlevsoi
+  use ctsm_VarCon     , only : spval
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_Decomp      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
   !
   implicit none
   private
@@ -385,7 +385,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use ctsm_HistFile , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
@@ -809,7 +809,7 @@ contains
   subroutine InitCold(this, bounds)
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop
+    use ctsm_LandunitVarCon, only : istsoil, istcrop
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
@@ -901,4 +901,4 @@ contains
 
   end subroutine Restart
 
-end module WaterFluxType
+end module ctsm_WaterFluxType

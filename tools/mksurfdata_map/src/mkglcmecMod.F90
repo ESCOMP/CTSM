@@ -14,7 +14,7 @@ module mkglcmecMod
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use mkdomainMod , only : domain_checksame
+  use mkctsm_Domain , only : domain_checksame
   implicit none
 
   private           ! By default make data private
@@ -147,7 +147,7 @@ subroutine mkglcmec(ldomain, mapfname, &
 !
 ! !USES:
   use shr_sys_mod, only : shr_sys_abort
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkutilsMod, only : slightly_below, slightly_above
@@ -496,7 +496,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
 ! PCT_GLC_ICESHEET across all elevation bins.
 !
 ! !USES:
-  use mkdomainMod , only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain , only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    

@@ -14,7 +14,7 @@ module mkharvestMod
 ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_sys_mod  , only : shr_sys_flush
-  use mkdomainMod  , only : domain_checksame
+  use mkctsm_Domain  , only : domain_checksame
 
   implicit none
 
@@ -830,7 +830,7 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
 ! the model.
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    

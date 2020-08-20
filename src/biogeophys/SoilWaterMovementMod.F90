@@ -1,4 +1,4 @@
-module SoilWaterMovementMod
+module ctsm_SoilWaterMovement
 
 #include "shr_assert.h"
 
@@ -90,7 +90,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -113,13 +113,13 @@ contains
     !specify method for doing soil&root water interactions
     !
     ! !USES:
-    use abortutils      , only : endrun   
-    use fileutils       , only : getavu, relavu
-    use spmdMod         , only : mpicom, masterproc
+    use ctsm_AbortUtils      , only : endrun   
+    use ctsm_FileUtils       , only : getavu, relavu
+    use ctsm_Spmd         , only : mpicom, masterproc
     use shr_mpi_mod     , only : shr_mpi_bcast
-    use clm_varctl      , only : iulog, use_bedrock
-    use controlMod      , only : NLFilename
-    use clm_nlUtilsMod  , only : find_nlgroup_name
+    use ctsm_VarCtl      , only : iulog, use_bedrock
+    use ctsm_Control      , only : NLFilename
+    use ctsm_NlUtils  , only : find_nlgroup_name
 
     ! !ARGUMENTS:
     !------------------------------------------------------------------------------
@@ -247,21 +247,21 @@ contains
     !
     !USES
     use shr_kind_mod      , only : r8 => shr_kind_r8
-    use clm_varpar        , only : nlevsoi
-    use decompMod         , only : bounds_type   
-    use abortutils        , only : endrun   
-    use clm_varpar        , only : nlevsoi
-    use SoilHydrologyType , only : soilhydrology_type
-    use SoilStateType     , only : soilstate_type
-    use TemperatureType   , only : temperature_type
-    use WaterFluxBulkType     , only : waterfluxbulk_type
-    use EnergyFluxType    , only : energyflux_type
-    use WaterStateBulkType    , only : waterstatebulk_type
-    use CanopyStateType   , only : canopystate_type
-    use ColumnType        , only : col
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use clm_varcon        , only : denh2o, denice
-    use clm_varctl,  only : use_flexibleCN   
+    use ctsm_VarPar        , only : nlevsoi
+    use ctsm_Decomp         , only : bounds_type   
+    use ctsm_AbortUtils        , only : endrun   
+    use ctsm_VarPar        , only : nlevsoi
+    use ctsm_SoilHydrologyType , only : soilhydrology_type
+    use ctsm_SoilStateType     , only : soilstate_type
+    use ctsm_TemperatureType   , only : temperature_type
+    use ctsm_WaterFluxBulkType     , only : waterfluxbulk_type
+    use ctsm_EnergyFluxType    , only : energyflux_type
+    use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+    use ctsm_CanopyStateType   , only : canopystate_type
+    use ctsm_ColumnType        , only : col
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+    use ctsm_VarCon        , only : denh2o, denice
+    use ctsm_VarCtl,  only : use_flexibleCN   
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds                ! bounds
@@ -378,13 +378,13 @@ contains
     ! is vertically distributed over the soil column. 
     !
     !USES:
-    use decompMod        , only : bounds_type
+    use ctsm_Decomp        , only : bounds_type
     use shr_kind_mod     , only : r8 => shr_kind_r8
-    use clm_varpar       , only : nlevsoi, max_patch_per_col
-    use SoilStateType    , only : soilstate_type
-    use WaterFluxBulkType    , only : waterfluxbulk_type
-    use PatchType        , only : patch
-    use ColumnType       , only : col
+    use ctsm_VarPar       , only : nlevsoi, max_patch_per_col
+    use ctsm_SoilStateType    , only : soilstate_type
+    use ctsm_WaterFluxBulkType    , only : waterfluxbulk_type
+    use ctsm_PatchType        , only : patch
+    use ctsm_ColumnType       , only : col
     !
     ! !ARGUMENTS:
     type(bounds_type)    , intent(in)    :: bounds                          ! bounds
@@ -481,27 +481,27 @@ contains
     ! !USES:
     use shr_kind_mod               , only : r8 => shr_kind_r8     
     use shr_const_mod              , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
-    use decompMod                  , only : bounds_type        
-    use clm_varcon                 , only : grav,hfus,tfrz
-    use clm_varcon                 , only : denh2o, denice
-    use clm_varpar                 , only : nlevsoi, max_patch_per_col, nlevgrnd
-    use clm_time_manager           , only : get_step_size_real, get_nstep
-    use column_varcon              , only : icol_roof, icol_road_imperv
-    use clm_varctl                 , only : use_flexibleCN, use_hydrstress
-    use TridiagonalMod             , only : Tridiagonal
-    use abortutils                 , only : endrun     
-    use SoilStateType              , only : soilstate_type
-    use SoilHydrologyType          , only : soilhydrology_type
-    use TemperatureType            , only : temperature_type
-    use WaterFluxBulkType              , only : waterfluxbulk_type
-    use EnergyFluxType             , only : energyflux_type
-    use WaterStateBulkType             , only : waterstatebulk_type
-    use CanopyStateType            , only : canopystate_type
-    use SoilWaterRetentionCurveMod , only : soil_water_retention_curve_type
-    use PatchType                  , only : patch
-    use ColumnType                 , only : col
-    use clm_varctl                 , only : iulog
-    use SoilWaterPlantSinkMod      , only : COmpute_EffecRootFrac_And_VertTranSink
+    use ctsm_Decomp                  , only : bounds_type        
+    use ctsm_VarCon                 , only : grav,hfus,tfrz
+    use ctsm_VarCon                 , only : denh2o, denice
+    use ctsm_VarPar                 , only : nlevsoi, max_patch_per_col, nlevgrnd
+    use ctsm_TimeManager           , only : get_step_size_real, get_nstep
+    use ctsm_ColumnVarCon              , only : icol_roof, icol_road_imperv
+    use ctsm_VarCtl                 , only : use_flexibleCN, use_hydrstress
+    use ctsm_TridiagonalSolver             , only : Tridiagonal
+    use ctsm_AbortUtils                 , only : endrun     
+    use ctsm_SoilStateType              , only : soilstate_type
+    use ctsm_SoilHydrologyType          , only : soilhydrology_type
+    use ctsm_TemperatureType            , only : temperature_type
+    use ctsm_WaterFluxBulkType              , only : waterfluxbulk_type
+    use ctsm_EnergyFluxType             , only : energyflux_type
+    use ctsm_WaterStateBulkType             , only : waterstatebulk_type
+    use ctsm_CanopyStateType            , only : canopystate_type
+    use ctsm_SoilWaterRetentionCurve , only : soil_water_retention_curve_type
+    use ctsm_PatchType                  , only : patch
+    use ctsm_ColumnType                 , only : col
+    use ctsm_VarCtl                 , only : iulog
+    use ctsm_SoilWaterPlantSink      , only : COmpute_EffecRootFrac_And_VertTranSink
     !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in)    :: bounds               ! bounds
@@ -1066,22 +1066,22 @@ contains
     ! !USES:
     use shr_kind_mod         , only : r8 => shr_kind_r8
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE,SHR_CONST_G
-    use abortutils           , only : endrun
-    use decompMod            , only : bounds_type
-    use clm_varctl           , only : iulog, use_hydrstress
-    use clm_varcon           , only : denh2o, denice
-    use clm_varpar           , only : nlevsoi
-    use clm_time_manager     , only : get_step_size_real, get_nstep
-    use SoilStateType        , only : soilstate_type
-    use SoilHydrologyType    , only : soilhydrology_type
-    use TemperatureType      , only : temperature_type
-    use WaterFluxBulkType        , only : waterfluxbulk_type
-    use WaterStateBulkType       , only : waterstatebulk_type
-    use EnergyFluxType       , only : energyflux_type
-    use CanopyStateType      , only : canopystate_type
-    use SoilWaterRetentionCurveMod , only : soil_water_retention_curve_type
-    use PatchType            , only : patch
-    use ColumnType           , only : col
+    use ctsm_AbortUtils           , only : endrun
+    use ctsm_Decomp            , only : bounds_type
+    use ctsm_VarCtl           , only : iulog, use_hydrstress
+    use ctsm_VarCon           , only : denh2o, denice
+    use ctsm_VarPar           , only : nlevsoi
+    use ctsm_TimeManager     , only : get_step_size_real, get_nstep
+    use ctsm_SoilStateType        , only : soilstate_type
+    use ctsm_SoilHydrologyType    , only : soilhydrology_type
+    use ctsm_TemperatureType      , only : temperature_type
+    use ctsm_WaterFluxBulkType        , only : waterfluxbulk_type
+    use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+    use ctsm_EnergyFluxType       , only : energyflux_type
+    use ctsm_CanopyStateType      , only : canopystate_type
+    use ctsm_SoilWaterRetentionCurve , only : soil_water_retention_curve_type
+    use ctsm_PatchType            , only : patch
+    use ctsm_ColumnType           , only : col
     !
     ! !ARGUMENTS:
     implicit none
@@ -1458,13 +1458,13 @@ contains
     ! !USES:
     use shr_kind_mod         , only : r8 => shr_kind_r8
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
-    use abortutils           , only : endrun
-    use decompMod            , only : bounds_type
-    use clm_varpar           , only : nlevsoi
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use SoilStateType        , only : soilstate_type
-    use SoilHydrologyType    , only : soilhydrology_type
-    use ColumnType           , only : col
+    use ctsm_AbortUtils           , only : endrun
+    use ctsm_Decomp            , only : bounds_type
+    use ctsm_VarPar           , only : nlevsoi
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+    use ctsm_SoilStateType        , only : soilstate_type
+    use ctsm_SoilHydrologyType    , only : soilhydrology_type
+    use ctsm_ColumnType           , only : col
     !
     ! !ARGUMENTS:
     implicit none
@@ -1575,15 +1575,15 @@ contains
     ! !USES:
     use shr_kind_mod         , only : r8 => shr_kind_r8
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
-    use abortutils           , only : endrun
-    use decompMod            , only : bounds_type
-    use clm_varpar           , only : nlevsoi
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use SoilStateType        , only : soilstate_type
-    use SoilHydrologyType    , only : soilhydrology_type
-    use TemperatureType      , only : temperature_type
-    use WaterFluxBulkType        , only : waterfluxbulk_type
-    use ColumnType           , only : col
+    use ctsm_AbortUtils           , only : endrun
+    use ctsm_Decomp            , only : bounds_type
+    use ctsm_VarPar           , only : nlevsoi
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+    use ctsm_SoilStateType        , only : soilstate_type
+    use ctsm_SoilHydrologyType    , only : soilhydrology_type
+    use ctsm_TemperatureType      , only : temperature_type
+    use ctsm_WaterFluxBulkType        , only : waterfluxbulk_type
+    use ctsm_ColumnType           , only : col
     !
     ! !ARGUMENTS:
     implicit none
@@ -1885,10 +1885,10 @@ contains
     ! !USES:
     use shr_kind_mod         , only : r8 => shr_kind_r8
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
-    use abortutils           , only : endrun
-    use decompMod            , only : bounds_type
-    use clm_varpar           , only : nlevsoi
-    use ColumnType           , only : col
+    use ctsm_AbortUtils           , only : endrun
+    use ctsm_Decomp            , only : bounds_type
+    use ctsm_VarPar           , only : nlevsoi
+    use ctsm_ColumnType           , only : col
     !
     ! !ARGUMENTS:
     implicit none
@@ -1957,11 +1957,11 @@ contains
     ! !USES:
     use shr_kind_mod         , only : r8 => shr_kind_r8
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
-    use abortutils           , only : endrun
-    use decompMod            , only : bounds_type
-    use clm_varpar           , only : nlevsoi
-    use ColumnType           , only : col
-    use SoilHydrologyType    , only : soilhydrology_type
+    use ctsm_AbortUtils           , only : endrun
+    use ctsm_Decomp            , only : bounds_type
+    use ctsm_VarPar           , only : nlevsoi
+    use ctsm_ColumnType           , only : col
+    use ctsm_SoilHydrologyType    , only : soilhydrology_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -2032,17 +2032,17 @@ contains
     ! !USES:
     use shr_kind_mod         , only : r8 => shr_kind_r8
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE, SHR_CONST_G
-    use abortutils           , only : endrun
-    use decompMod            , only : bounds_type
-    use clm_time_manager     , only : get_step_size_real
-    use clm_varpar           , only : nlevsoi
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use SoilStateType        , only : soilstate_type
-    use SoilHydrologyType    , only : soilhydrology_type
-    use TemperatureType      , only : temperature_type
-    use WaterFluxBulkType        , only : waterfluxbulk_type
-    use WaterStateBulkType       , only : waterstatebulk_type
-    use ColumnType           , only : col
+    use ctsm_AbortUtils           , only : endrun
+    use ctsm_Decomp            , only : bounds_type
+    use ctsm_TimeManager     , only : get_step_size_real
+    use ctsm_VarPar           , only : nlevsoi
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+    use ctsm_SoilStateType        , only : soilstate_type
+    use ctsm_SoilHydrologyType    , only : soilhydrology_type
+    use ctsm_TemperatureType      , only : temperature_type
+    use ctsm_WaterFluxBulkType        , only : waterfluxbulk_type
+    use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+    use ctsm_ColumnType           , only : col
     !
     ! !ARGUMENTS:
     implicit none
@@ -2150,7 +2150,7 @@ contains
     !
     ! !USES
     use shr_kind_mod  , only : r8 => shr_kind_r8
-    use abortutils    , only : endrun
+    use ctsm_AbortUtils    , only : endrun
     !
     ! !ARGUMENTS:
     implicit none
@@ -2175,11 +2175,11 @@ contains
     !
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use clm_varpar     , only : nlevurb
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl     , only : iulog
-    use decompMod      , only : bounds_type
-    use ColumnType     , only : col                
+    use ctsm_VarPar     , only : nlevurb
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarCtl     , only : iulog
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_ColumnType     , only : col                
     !
     ! !ARGUMENTS:
     implicit none
@@ -2250,4 +2250,4 @@ contains
     
   end subroutine TridiagonalCol
 
- end module SoilWaterMovementMod
+ end module ctsm_SoilWaterMovement

@@ -1,10 +1,10 @@
 module test_subgridWeights
 
-  ! Tests of subgridWeightsMod
+  ! Tests of ctsm_SubgridWeights
 
   use pfunit_mod
-  use unittestSubgridMod
-  use subgridWeightsMod
+  use ctsm_UnitTestSubgrid
+  use ctsm_SubgridWeights
   use shr_kind_mod, only : r8 => shr_kind_r8
 
   implicit none

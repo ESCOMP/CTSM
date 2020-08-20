@@ -1,4 +1,4 @@
-module CNGapMortalityMod
+module ctsm_CNGapMortalityMod
 
 #include "shr_assert.h"
 
@@ -9,25 +9,25 @@ module CNGapMortalityMod
   !
   ! !USES:
   use shr_kind_mod            , only : r8 => shr_kind_r8
-  use decompMod               , only : bounds_type
-  use abortutils              , only : endrun
+  use ctsm_Decomp               , only : bounds_type
+  use ctsm_AbortUtils              , only : endrun
   use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use pftconMod               , only : pftcon
-  use CNDVType                , only : dgvs_type
-  use CNVegCarbonStateType    , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType     , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType  , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType   , only : cnveg_nitrogenflux_type
-  use CanopyStateType         , only : canopystate_type            
-  use ColumnType              , only : col                
-  use PatchType               , only : patch                
+  use ctsm_PftCon               , only : pftcon
+  use ctsm_CNDVType                , only : dgvs_type
+  use ctsm_CNVegCarbonStateType    , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType     , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType  , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType   , only : cnveg_nitrogenflux_type
+  use ctsm_CanopyStateType         , only : canopystate_type            
+  use ctsm_ColumnType              , only : col                
+  use ctsm_PatchType               , only : patch                
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: readParams
-  public :: CNGapMortality
+  public :: ctsm_CNGapMortality
 
   type, private :: params_type
      real(r8):: am     ! mortality rate based on annual rate, fractional mortality (1/yr)
@@ -79,7 +79,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine ctsm_CNGapMortality (bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        dgvs_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, canopystate_inst, &  
        leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch)  
@@ -88,11 +88,11 @@ contains
     ! Gap-phase mortality routine for coupled carbon-nitrogen code (CN)
     !
     ! !USES:
-    use clm_time_manager , only: get_days_per_year
-    use clm_varpar       , only: nlevdecomp_full
-    use clm_varcon       , only: secspday
-    use clm_varctl       , only: use_cndv, spinup_state
-    use pftconMod        , only: npcropmin
+    use ctsm_TimeManager , only: get_days_per_year
+    use ctsm_VarPar       , only: nlevdecomp_full
+    use ctsm_VarCon       , only: secspday
+    use ctsm_VarCtl       , only: use_cndv, spinup_state
+    use ctsm_PftCon        , only: npcropmin
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -280,7 +280,7 @@ contains
 
     end associate
 
-  end subroutine CNGapMortality
+  end subroutine ctsm_CNGapMortality
 
   !-----------------------------------------------------------------------
   subroutine CNGap_PatchToColumn (bounds, num_soilc, filter_soilc, &
@@ -292,7 +292,7 @@ contains
     ! assigns them to the three litter pools
     !
     ! !USES:
-    use clm_varpar , only : maxsoil_patches, nlevdecomp, nlevdecomp_full
+    use ctsm_VarPar , only : maxsoil_patches, nlevdecomp, nlevdecomp_full
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -490,4 +490,4 @@ contains
 
   end subroutine CNGap_PatchToColumn
 
-end module CNGapMortalityMod
+end module ctsm_CNGapMortalityMod

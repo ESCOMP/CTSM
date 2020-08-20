@@ -1,7 +1,7 @@
 module gridmapMod
 
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use fileutils,    only : getfil
+  use ctsm_FileUtils,    only : getfil
 
   implicit none
   private

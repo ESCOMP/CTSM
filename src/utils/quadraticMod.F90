@@ -1,9 +1,9 @@
-module quadraticMod
+module ctsm_QuadraticSolver
 
-  use abortutils  ,   only: endrun
+  use ctsm_AbortUtils  ,   only: endrun
   use shr_kind_mod,   only: r8 => shr_kind_r8
   use shr_log_mod ,   only: errMsg => shr_log_errMsg
-  use clm_varctl  ,   only: iulog
+  use ctsm_VarCtl  ,   only: iulog
 
   implicit none
 
@@ -73,4 +73,4 @@ contains
 
   end subroutine quadratic
 
-end module quadraticMod
+end module ctsm_QuadraticSolver

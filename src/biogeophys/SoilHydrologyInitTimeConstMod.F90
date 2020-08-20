@@ -1,19 +1,19 @@
-module SoilHydrologyInitTimeConstMod
+module ctsm_SoilHydrologyInitTimeConst
 
   !------------------------------------------------------------------------------
   ! DESCRIPTION:
-  ! Initialize time constant variables for SoilHydrologyType
+  ! Initialize time constant variables for ctsm_SoilHydrologyType
   !
   ! !USES
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use decompMod         , only : bounds_type
-  use SoilStateType     , only : soilstate_type
-  use SoilHydrologyType , only : soilhydrology_type
-  use WaterStateBulkType, only : waterstatebulk_type
-  use LandunitType      , only : lun                
-  use ColumnType        , only : col                
-  use SoilStateInitTimeConstMod, only: organic_max
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_SoilStateType     , only : soilstate_type
+  use ctsm_SoilHydrologyType , only : soilhydrology_type
+  use ctsm_WaterStateBulkType, only : waterstatebulk_type
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_ColumnType        , only : col                
+  use ctsm_SoilStateInitTimeConst, only: organic_max
   !
   implicit none
   private
@@ -38,16 +38,16 @@ contains
     ! !USES:
     use shr_const_mod   , only : shr_const_pi
     use shr_spfn_mod    , only : shr_spfn_erf
-    use abortutils      , only : endrun
-    use spmdMod         , only : masterproc
-    use clm_varctl      , only : fsurdat, iulog, use_vichydro
-    use clm_varpar      , only : toplev_equalspace
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlayer, nlayert
-    use clm_varcon      , only : dzsoi, spval, nlvic, dzvic, pc, grlnd
-    use clm_varcon      , only : aquifer_water_baseline
-    use landunit_varcon , only : istwet, istdlak, istice_mec
-    use column_varcon   , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
-    use fileutils       , only : getfil
+    use ctsm_AbortUtils      , only : endrun
+    use ctsm_Spmd         , only : masterproc
+    use ctsm_VarCtl      , only : fsurdat, iulog, use_vichydro
+    use ctsm_VarPar      , only : toplev_equalspace
+    use ctsm_VarPar      , only : nlevsoi, nlevgrnd, nlayer, nlayert
+    use ctsm_VarCon      , only : dzsoi, spval, nlvic, dzvic, pc, grlnd
+    use ctsm_VarCon      , only : aquifer_water_baseline
+    use ctsm_LandunitVarCon , only : istwet, istdlak, istice_mec
+    use ctsm_ColumnVarCon   , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
+    use ctsm_FileUtils       , only : getfil
     use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
     !
     ! !ARGUMENTS:
@@ -240,7 +240,7 @@ contains
     ! to be used for runoff simulations (added by M. Huang)
     !
     ! !USES:
-    use clm_varpar, only : nlevsoi, nlayert, nlayer
+    use ctsm_VarPar, only : nlevsoi, nlayert, nlayer
     !
     ! !ARGUMENTS:
     integer                  , intent(in)    :: c               ! column index
@@ -365,7 +365,7 @@ contains
      ! h2osoi_ice is actually water equavlent ice content.
      !
      ! !USES:
-     use clm_varpar  , only : nlevsoi, nlayer
+     use ctsm_VarPar  , only : nlevsoi, nlayer
      !
      ! !ARGUMENTS:
      integer , intent(in)  :: c
@@ -447,4 +447,4 @@ contains
 
    end subroutine linear_interp
 
-end module SoilHydrologyInitTimeConstMod
+end module ctsm_SoilHydrologyInitTimeConst

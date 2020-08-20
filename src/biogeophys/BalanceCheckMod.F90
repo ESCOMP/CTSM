@@ -1,4 +1,4 @@
-module BalanceCheckMod
+module ctsm_BalanceCheck
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,32 +8,32 @@ module BalanceCheckMod
 #include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
-  use decompMod          , only : bounds_type
-  use abortutils         , only : endrun
-  use clm_varctl         , only : iulog
-  use clm_varcon         , only : namep, namec
-  use clm_varpar         , only : nlevsoi
-  use GetGlobalValuesMod , only : GetGlobalIndex
-  use atm2lndType        , only : atm2lnd_type
-  use EnergyFluxType     , only : energyflux_type
-  use SolarAbsorbedType  , only : solarabs_type
-  use SoilHydrologyType  , only : soilhydrology_type
-  use SurfaceAlbedoType  , only : surfalb_type
-  use WaterStateType     , only : waterstate_type
-  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
-  use WaterDiagnosticType, only : waterdiagnostic_type
-  use Wateratm2lndType   , only : wateratm2lnd_type
-  use WaterBalanceType   , only : waterbalance_type
-  use WaterFluxType      , only : waterflux_type
-  use WaterType          , only : water_type
-  use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake, ComputeWaterMassLake
-  use GridcellType       , only : grc                
-  use LandunitType       , only : lun                
-  use ColumnType         , only : col                
-  use PatchType          , only : patch                
-  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
-  use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
-  use column_varcon      , only : icol_road_perv, icol_road_imperv
+  use ctsm_Decomp          , only : bounds_type
+  use ctsm_AbortUtils         , only : endrun
+  use ctsm_VarCtl         , only : iulog
+  use ctsm_VarCon         , only : namep, namec
+  use ctsm_VarPar         , only : nlevsoi
+  use ctsm_GetGlobalValues , only : GetGlobalIndex
+  use ctsm_Atm2LndType        , only : atm2lnd_type
+  use ctsm_EnergyFluxType     , only : energyflux_type
+  use ctsm_SolarAbsorbedType  , only : solarabs_type
+  use ctsm_SoilHydrologyType  , only : soilhydrology_type
+  use ctsm_SurfaceAlbedoType  , only : surfalb_type
+  use ctsm_WaterStateType     , only : waterstate_type
+  use ctsm_WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
+  use ctsm_WaterDiagnosticType, only : waterdiagnostic_type
+  use ctsm_WaterAtm2LndType   , only : wateratm2lnd_type
+  use ctsm_WaterBalanceType   , only : waterbalance_type
+  use ctsm_WaterFluxType      , only : waterflux_type
+  use ctsm_WaterType          , only : water_type
+  use ctsm_TotalWaterAndHeat, only : ComputeWaterMassNonLake, ComputeWaterMassLake
+  use ctsm_GridcellType       , only : grc                
+  use ctsm_LandunitType       , only : lun                
+  use ctsm_ColumnType         , only : col                
+  use ctsm_PatchType          , only : patch                
+  use ctsm_LandunitVarCon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
+  use ctsm_ColumnVarCon      , only : icol_roof, icol_sunwall, icol_shadewall
+  use ctsm_ColumnVarCon      , only : icol_road_perv, icol_road_imperv
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -70,8 +70,8 @@ contains
     ! Initialize balance check
     !
     ! !USES:
-    use spmdMod           , only : masterproc
-    use clm_time_manager  , only : get_step_size_real
+    use ctsm_Spmd           , only : masterproc
+    use ctsm_TimeManager  , only : get_step_size_real
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
@@ -247,11 +247,11 @@ contains
      ! error = abs(precipitation - change of water storage - evaporation - runoff)
      !
      ! !USES:
-     use clm_varcon        , only : spval
-     use clm_time_manager  , only : get_step_size_real, get_nstep
-     use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
-     use CanopyStateType   , only : canopystate_type
-     use subgridAveMod
+     use ctsm_VarCon        , only : spval
+     use ctsm_TimeManager  , only : get_step_size_real, get_nstep
+     use ctsm_TimeManager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
+     use ctsm_CanopyStateType   , only : canopystate_type
+     use ctsm_SubgridAve
      !
      ! !ARGUMENTS:
      type(bounds_type)     , intent(in)    :: bounds  
@@ -378,7 +378,7 @@ contains
        dtime = get_step_size_real()
 
        ! Determine column level incoming snow and rain
-       ! Assume no incident precipitation on urban wall columns (as in CanopyHydrologyMod.F90).
+       ! Assume no incident precipitation on urban wall columns (as in ctsm_CanopyHydrology.F90).
 
        do c = bounds%begc,bounds%endc
           g = col%gridcell(c)
@@ -728,4 +728,4 @@ contains
 
    end subroutine BalanceCheck
 
-end module BalanceCheckMod
+end module ctsm_BalanceCheck

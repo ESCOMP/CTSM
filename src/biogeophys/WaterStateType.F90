@@ -1,4 +1,4 @@
-module WaterStateType
+module ctsm_WaterStateType
 
 #include "shr_assert.h"
 
@@ -10,17 +10,17 @@ module WaterStateType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use abortutils     , only : endrun
-  use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varctl     , only : use_bedrock, iulog
-  use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
-  use clm_varcon     , only : spval, namec
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_Decomp      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use ctsm_VarCtl     , only : use_bedrock, iulog
+  use ctsm_VarPar     , only : nlevgrnd, nlevsoi, nlevurb, nlevsno   
+  use ctsm_VarCon     , only : spval, namec
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
   !
   implicit none
   save
@@ -159,8 +159,8 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
-    use clm_varctl     , only : use_soil_moisture_streams
+    use ctsm_HistFile    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use ctsm_VarCtl     , only : use_soil_moisture_streams
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
@@ -286,10 +286,10 @@ contains
     !
     ! !USES:
     use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use landunit_varcon , only : istwet, istsoil, istcrop, istice_mec  
-    use column_varcon   , only : icol_road_perv, icol_road_imperv
-    use clm_varcon      , only : denice, denh2o, bdsno 
-    use clm_varcon      , only : tfrz, aquifer_water_baseline
+    use ctsm_LandunitVarCon , only : istwet, istsoil, istcrop, istice_mec  
+    use ctsm_ColumnVarCon   , only : icol_road_perv, icol_road_imperv
+    use ctsm_VarCon      , only : denice, denh2o, bdsno 
+    use ctsm_VarCon      , only : tfrz, aquifer_water_baseline
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(inout) :: this
@@ -511,11 +511,11 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon       , only : denice, denh2o, pondmx, watmin
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step, is_restart
-    use clm_varctl       , only : bound_h2osoi
+    use ctsm_VarCon       , only : denice, denh2o, pondmx, watmin
+    use ctsm_LandunitVarCon  , only : istcrop, istdlak, istsoil  
+    use ctsm_ColumnVarCon    , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_TimeManager , only : is_first_step, is_restart
+    use ctsm_VarCtl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
@@ -783,4 +783,4 @@ contains
 
   end subroutine CheckSnowConsistency
 
-end module WaterStateType
+end module ctsm_WaterStateType

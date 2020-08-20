@@ -1,4 +1,4 @@
-module LakeFluxesMod
+module ctsm_LakeFluxes
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,21 +8,21 @@ module LakeFluxesMod
   ! !USES
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
-  use decompMod            , only : bounds_type
-  use atm2lndType          , only : atm2lnd_type
-  use EnergyFluxType       , only : energyflux_type
-  use FrictionVelocityMod  , only : frictionvel_type
-  use LakeStateType        , only : lakestate_type
-  use SolarAbsorbedType    , only : solarabs_type
-  use TemperatureType      , only : temperature_type
-  use WaterFluxBulkType        , only : waterfluxbulk_type
-  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
-  use WaterStateBulkType       , only : waterstatebulk_type
-  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-  use HumanIndexMod        , only : humanindex_type
-  use GridcellType         , only : grc                
-  use ColumnType           , only : col                
-  use PatchType            , only : patch                
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_Atm2LndType          , only : atm2lnd_type
+  use ctsm_EnergyFluxType       , only : energyflux_type
+  use ctsm_FrictionVelocity  , only : frictionvel_type
+  use ctsm_LakeStateType        , only : lakestate_type
+  use ctsm_SolarAbsorbedType    , only : solarabs_type
+  use ctsm_TemperatureType      , only : temperature_type
+  use ctsm_WaterFluxBulkType        , only : waterfluxbulk_type
+  use ctsm_WaterAtm2LndBulkType        , only : wateratm2lndbulk_type
+  use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use ctsm_HumanIndices        , only : humanindex_type
+  use ctsm_GridcellType         , only : grc                
+  use ctsm_ColumnType           , only : col                
+  use ctsm_PatchType            , only : patch                
   !    
   ! !PUBLIC TYPES:
   implicit none
@@ -48,7 +48,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -83,15 +83,15 @@ contains
     ! WARNING: This subroutine assumes lake columns have one and only one pft.
     !
     ! !USES:
-    use clm_varpar          , only : nlevlak
-    use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
-    use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval
-    use clm_varctl          , only : use_lch4
-    use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
-    use LakeCon             , only : lake_use_old_fcrit_minz0
-    use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
-    use QSatMod             , only : QSat
-    use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
+    use ctsm_VarPar          , only : nlevlak
+    use ctsm_VarCon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
+    use ctsm_VarCon          , only : sb, vkc, grav, denh2o, tfrz, spval
+    use ctsm_VarCtl          , only : use_lch4
+    use ctsm_LakeConstants             , only : betavis, z0frzlake, tdmax, emg_lake
+    use ctsm_LakeConstants             , only : lake_use_old_fcrit_minz0
+    use ctsm_LakeConstants             , only : minz0lake, cur0, cus, curm, fcrit
+    use ctsm_QSat             , only : QSat
+    use ctsm_HumanIndices       , only : all_human_stress_indices, fast_human_stress_indices, &
                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                      SwampCoolEff, KtoC, VaporPres
@@ -525,7 +525,7 @@ contains
                   ! That probably slightly overestimates the dimensionless fetch as u* is often smaller than 0.1 u
                   cur = cur0 + curm* exp( max( -(fetch(c)*grav/ur(p)/ur(p))**(1._r8/3._r8)/fcrit, &   ! Fetch-limited
                        -(lakedepth(c)*grav/ur(p)/ur(p))**0.5_r8 ) )           ! depth-limited
-                  ! In this case fcrit is 22, not 100 in clm_varcon
+                  ! In this case fcrit is 22, not 100 in ctsm_VarCon
                else
                   ! Fetch relationship from Vickers & Mahrt 1997
                   cur = cur0 + curm* exp( max( -(fetch(c)*grav/ustar(p)/ustar(p))**(1._r8/3._r8)/fcrit, &   ! Fetch-limited
@@ -706,4 +706,4 @@ contains
 
   end subroutine LakeFluxes
 
-end module LakeFluxesMod
+end module ctsm_LakeFluxes

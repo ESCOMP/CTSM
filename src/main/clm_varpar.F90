@@ -1,4 +1,4 @@
-module clm_varpar
+module ctsm_VarPar
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,15 +7,15 @@ module clm_varpar
   ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_sys_mod  , only: shr_sys_abort
-  use spmdMod      , only: masterproc
-  use clm_varctl   , only: use_extralakelayers, use_vertsoilc
-  use clm_varctl   , only: use_century_decomp, use_c13, use_c14
-  use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
-  use clm_varctl   , only: use_vichydro, rundef
-  use clm_varctl   , only: soil_layerstruct_predefined
-  use clm_varctl   , only: soil_layerstruct_userdefined
-  use clm_varctl   , only: soil_layerstruct_userdefined_nlevsoi
-  use clm_varctl   , only: use_fates
+  use ctsm_Spmd      , only: masterproc
+  use ctsm_VarCtl   , only: use_extralakelayers, use_vertsoilc
+  use ctsm_VarCtl   , only: use_century_decomp, use_c13, use_c14
+  use ctsm_VarCtl   , only: iulog, use_crop, create_crop_landunit, irrigate
+  use ctsm_VarCtl   , only: use_vichydro, rundef
+  use ctsm_VarCtl   , only: soil_layerstruct_predefined
+  use ctsm_VarCtl   , only: soil_layerstruct_userdefined
+  use ctsm_VarCtl   , only: soil_layerstruct_userdefined_nlevsoi
+  use ctsm_VarCtl   , only: use_fates
 
   !
   ! !PUBLIC TYPES:
@@ -71,7 +71,7 @@ module clm_varpar
   integer, public :: ndecomp_pools
   integer, public :: ndecomp_cascade_transitions
 
-  ! Indices used in surface file read and set in clm_varpar_init
+  ! Indices used in surface file read and set in ctsm_VarPar_init
 
   integer, public :: natpft_lb          ! In PATCH arrays, lower bound of Patches on the natural veg landunit (i.e., bare ground index)
   integer, public :: natpft_ub          ! In PATCH arrays, upper bound of Patches on the natural veg landunit
@@ -90,14 +90,14 @@ module clm_varpar
   integer, public :: max_patch_per_col
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public clm_varpar_init          ! set parameters
+  public ctsm_VarPar_init          ! set parameters
   !
   !-----------------------------------------------------------------------
 
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varpar_init(actual_maxsoil_patches, actual_numcft)
+  subroutine ctsm_VarPar_init(actual_maxsoil_patches, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Initialize module variables 
@@ -110,7 +110,7 @@ contains
     ! !LOCAL VARIABLES:
     !
     integer :: j  ! loop index
-    character(len=32) :: subname = 'clm_varpar_init'  ! subroutine name
+    character(len=32) :: subname = 'ctsm_VarPar_init'  ! subroutine name
     !------------------------------------------------------------------------------
 
     ! actual_maxsoil_patches and actual_numcft were read directly from the
@@ -246,6 +246,6 @@ contains
        end if
     endif
 
-  end subroutine clm_varpar_init
+  end subroutine ctsm_VarPar_init
 
-end module clm_varpar
+end module ctsm_VarPar

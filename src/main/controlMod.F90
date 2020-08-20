@@ -1,4 +1,4 @@
-module controlMod
+module ctsm_Control
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -14,42 +14,42 @@ module controlMod
   use shr_nl_mod                       , only: shr_nl_find_group_name
   use shr_const_mod                    , only: SHR_CONST_CDAY
   use shr_log_mod                      , only: errMsg => shr_log_errMsg
-  use abortutils                       , only: endrun
-  use spmdMod                          , only: masterproc, mpicom
-  use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
-  use decompMod                        , only: clump_pproc
-  use clm_varcon                       , only: h2osno_max
-  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
-  use fileutils                        , only: getavu, relavu, get_filename
-  use histFileMod                      , only: max_tapes, max_namlen 
-  use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
-  use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
-  use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fincl7, hist_fincl8
-  use histFileMod                      , only: hist_fincl9, hist_fincl10
-  use histFileMod                      , only: hist_fexcl1, hist_fexcl2, hist_fexcl3,  hist_fexcl4, hist_fexcl5, hist_fexcl6
-  use histFileMod                      , only: hist_fexcl7, hist_fexcl8, hist_fexcl9, hist_fexcl10
-  use initInterpMod                    , only: initInterp_readnl
-  use LakeCon                          , only: deepmixing_depthcrit, deepmixing_mixfact
-  use CanopyfluxesMod                  , only: perchroot, perchroot_alt
-  use CanopyHydrologyMod               , only: CanopyHydrology_readnl
-  use SurfaceAlbedoMod                 , only: SurfaceAlbedo_readnl
-  use SurfaceResistanceMod             , only: soil_resistance_readNL
-  use SnowHydrologyMod                 , only: SnowHydrology_readnl
-  use SurfaceAlbedoMod                 , only: albice, lake_melt_icealb
-  use UrbanParamsType                  , only: UrbanReadNML
-  use HumanIndexMod                    , only: HumanIndexReadNML
-  use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
-  use CNSharedParamsMod                , only: use_fun
-  use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
-  use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
-  use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
-  use SoilBiogeochemVerticalProfileMod , only: surfprof_exp 
-  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
-  use SoilHydrologyMod                 , only: soilHydReadNML
-  use CNFireFactoryMod                 , only: CNFireReadNML
-  use CanopyFluxesMod                  , only: CanopyFluxesReadNML
+  use ctsm_AbortUtils                       , only: endrun
+  use ctsm_Spmd                          , only: masterproc, mpicom
+  use ctsm_Spmd                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
+  use ctsm_Decomp                        , only: clump_pproc
+  use ctsm_VarCon                       , only: h2osno_max
+  use ctsm_VarPar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
+  use ctsm_FileUtils                        , only: getavu, relavu, get_filename
+  use ctsm_HistFile                      , only: max_tapes, max_namlen 
+  use ctsm_HistFile                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
+  use ctsm_HistFile                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
+  use ctsm_HistFile                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fincl7, hist_fincl8
+  use ctsm_HistFile                      , only: hist_fincl9, hist_fincl10
+  use ctsm_HistFile                      , only: hist_fexcl1, hist_fexcl2, hist_fexcl3,  hist_fexcl4, hist_fexcl5, hist_fexcl6
+  use ctsm_HistFile                      , only: hist_fexcl7, hist_fexcl8, hist_fexcl9, hist_fexcl10
+  use ctsm_InitInterpMod                    , only: ctsm_InitInterp_readnl
+  use ctsm_LakeConstants                          , only: deepmixing_depthcrit, deepmixing_mixfact
+  use ctsm_CanopyFluxes                  , only: perchroot, perchroot_alt
+  use ctsm_CanopyHydrology               , only: CanopyHydrology_readnl
+  use ctsm_SurfaceAlbedo                 , only: SurfaceAlbedo_readnl
+  use ctsm_SurfaceResistance             , only: soil_resistance_readNL
+  use ctsm_SnowHydrology                 , only: SnowHydrology_readnl
+  use ctsm_SurfaceAlbedo                 , only: albice, lake_melt_icealb
+  use ctsm_UrbanParamsType                  , only: UrbanReadNML
+  use ctsm_HumanIndices                    , only: HumanIndexReadNML
+  use ctsm_CNPrecisionControlMod            , only: ctsm_CNPrecisionControlReadNML
+  use ctsm_CNSharedParamsMod                , only: use_fun
+  use ctsm_CIsoAtmTimeSeriesRead             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
+  use ctsm_SoilBiogeochemCompetition     , only: suplnitro, suplnNon
+  use ctsm_SoilBiogeochemLittVertTransp  , only: som_adv_flux, max_depth_cryoturb
+  use ctsm_SoilBiogeochemVerticalProfile , only: surfprof_exp 
+  use ctsm_SoilBiogeochemNitrifDenitrif  , only: no_frozen_nitrif_denitrif
+  use ctsm_SoilHydrology                 , only: soilHydReadNML
+  use ctsm_CNFireFactoryMod                 , only: CNFireReadNML
+  use ctsm_CanopyFluxes                  , only: CanopyFluxesReadNML
   use seq_drydep_mod                   , only: drydep_method, DD_XLND, n_drydep
-  use clm_varctl
+  use ctsm_VarCtl
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -105,7 +105,7 @@ contains
     end if
     ! Set the filename
     NLFilename = NLFile
-    NLFilename_in = NLFilename   ! For use in external namelists and to avoid creating dependencies on controlMod
+    NLFilename_in = NLFilename   ! For use in external namelists and to avoid creating dependencies on ctsm_Control
   end subroutine control_setNL
 
   !------------------------------------------------------------------------
@@ -116,12 +116,12 @@ contains
     ! Initialize CLM run control information
     !
     ! !USES:
-    use CNMRespMod                       , only : CNMRespReadNML
-    use LunaMod                          , only : LunaReadNML
-    use CNNDynamicsMod                   , only : CNNDynamicsReadNML
-    use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
-    use CNPhenologyMod                   , only : CNPhenologyReadNML
-    use landunit_varcon                  , only : max_lunit
+    use ctsm_CNMaintRespMod                       , only : ctsm_CNMaintRespReadNML
+    use ctsm_Luna                          , only : LunaReadNML
+    use ctsm_CNNDynamicsMod                   , only : ctsm_CNNDynamicsReadNML
+    use ctsm_SoilBiogeochemDecompCascadeBGC, only : DecompCascadeBGCreadNML
+    use ctsm_CNPhenologyMod                   , only : ctsm_CNPhenologyReadNML
+    use ctsm_LandunitVarCon                  , only : max_lunit
     !
     ! ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -130,7 +130,7 @@ contains
     integer :: i                    ! loop indices
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
-    logical :: use_init_interp      ! Apply initInterp to the file given by finidat
+    logical :: use_init_interp      ! Apply ctsm_InitInterp to the file given by finidat
     !------------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
@@ -499,13 +499,13 @@ contains
 
     call mpi_bcast (use_init_interp, 1, MPI_LOGICAL, 0, mpicom, ierr)
     if (use_init_interp) then
-       call initInterp_readnl( NLFilename )
+       call ctsm_InitInterp_readnl( NLFilename )
     end if
 
-    !I call init_hydrology to set up default hydrology sub-module methods.
+    !I call ctsm_InitHydrology to set up default hydrology sub-module methods.
     !For future version, I suggest to  put the following two calls inside their
     !own modules, which are called from their own initializing methods
-    call init_hydrology( NLFilename )
+    call ctsm_InitHydrology( NLFilename )
 
     call soil_resistance_readnl ( NLFilename )
     call CanopyFluxesReadNML    ( NLFilename )
@@ -527,15 +527,15 @@ contains
     ! ----------------------------------------------------------------------
 
     if ( use_fun ) then
-       call CNMRespReadNML( NLFilename )
+       call ctsm_CNMaintRespReadNML( NLFilename )
     end if
 
     call soilHydReadNML(   NLFilename )
     if ( use_cn ) then
        call CNFireReadNML(             NLFilename )
-       call CNPrecisionControlReadNML( NLFilename )
-       call CNNDynamicsReadNML       ( NLFilename )
-       call CNPhenologyReadNML       ( NLFilename )
+       call ctsm_CNPrecisionControlReadNML( NLFilename )
+       call ctsm_CNNDynamicsReadNML       ( NLFilename )
+       call ctsm_CNPhenologyReadNML       ( NLFilename )
     end if
     if ( use_century_decomp ) then
        call DecompCascadeBGCreadNML( NLFilename )
@@ -1118,4 +1118,4 @@ contains
 
 
 
-end module controlMod
+end module ctsm_Control

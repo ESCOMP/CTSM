@@ -1,4 +1,4 @@
-module GlacierSurfaceMassBalanceMod
+module ctsm_GlacierSurfaceMassBalance
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,17 +7,17 @@ module GlacierSurfaceMassBalanceMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use clm_varcon     , only : secspday
-  use clm_varpar     , only : nlevgrnd
-  use clm_varctl     , only : glc_snow_persistence_max_days
-  use clm_time_manager, only : get_step_size_real
-  use landunit_varcon, only : istice_mec
-  use ColumnType     , only : col                
-  use LandunitType   , only : lun
-  use glc2lndMod     , only : glc2lnd_type
-  use WaterStateBulkType , only : waterstatebulk_type
-  use WaterFluxBulkType  , only : waterfluxbulk_type
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_VarCon     , only : secspday
+  use ctsm_VarPar     , only : nlevgrnd
+  use ctsm_VarCtl     , only : glc_snow_persistence_max_days
+  use ctsm_TimeManager, only : get_step_size_real
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_ColumnType     , only : col                
+  use ctsm_LandunitType   , only : lun
+  use ctsm_Glc2Lnd     , only : glc2lnd_type
+  use ctsm_WaterStateBulkType , only : waterstatebulk_type
+  use ctsm_WaterFluxBulkType  , only : waterfluxbulk_type
 
   ! !PUBLIC TYPES:
   implicit none
@@ -77,7 +77,7 @@ contains
     !
     ! NOTE(wjs, 2016-06-29) Currently this is separated from the main ComputeSurfaceMassBalance
     ! routine so that it can be called from the same place in the driver loop where it was
-    ! done before the introduction of GlacierSurfaceMassBalanceMod. This was needed to maintain
+    ! done before the introduction of ctsm_GlacierSurfaceMassBalance. This was needed to maintain
     ! identical answers, due to the adjustment of h2osoi_ice and h2osoi_liq in this
     ! routine. In principle we should be able to do these adjustments of h2osoi_ice and
     ! h2osoi_liq later in the driver loop: this would just mean that some intervening
@@ -356,4 +356,4 @@ contains
 
   end subroutine AdjustRunoffTerms
 
-end module GlacierSurfaceMassBalanceMod
+end module ctsm_GlacierSurfaceMassBalance

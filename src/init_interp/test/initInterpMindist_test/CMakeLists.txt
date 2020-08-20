@@ -1,9 +1,9 @@
 set (pfunit_sources
   test_set_mindist.pf
   test_set_single_match.pf
-  initInterpMindistTestUtils.pf)
+  ctsm_InitInterpMindistTestUtils.pf)
 
-create_pFUnit_test(initInterpMindist test_initInterpMindist_exe
+create_pFUnit_test(ctsm_InitInterpMindist test_ctsm_InitInterpMindist_exe
   "${pfunit_sources}" "")
 
-target_link_libraries(test_initInterpMindist_exe clm csm_share)
+target_link_libraries(test_ctsm_InitInterpMindist_exe clm csm_share)

@@ -1,18 +1,18 @@
 module test_patch_state_updater
 
-  ! Tests of dynPatchStateUpdaterMod
+  ! Tests of ctsm_DynPatchStateUpdater
 
   use pfunit_mod
-  use dynPatchStateUpdaterMod
+  use ctsm_DynPatchStateUpdater
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
-  use unittestFilterBuilderMod
-  use PatchType
-  use LandunitType
-  use subgridWeightsMod, only : compute_higher_order_weights
-  use clm_varpar, only : mxpft
-  use landunit_varcon, only : istwet
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_UnitTestFilterBuilder
+  use ctsm_PatchType
+  use ctsm_LandunitType
+  use ctsm_SubgridWeights, only : compute_higher_order_weights
+  use ctsm_VarPar, only : mxpft
+  use ctsm_LandunitVarCon, only : istwet
 
   implicit none
 

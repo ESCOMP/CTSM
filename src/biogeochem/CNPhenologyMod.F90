@@ -1,9 +1,9 @@
-module CNPhenologyMod
+module ctsm_CNPhenologyMod
 
 #include "shr_assert.h"
 
   !-----------------------------------------------------------------------
-  ! !MODULE: CNPhenologyMod
+  ! !MODULE: ctsm_CNPhenologyMod
   !
   ! !DESCRIPTION:
   ! Module holding routines used in phenology model for coupled carbon
@@ -13,38 +13,38 @@ module CNPhenologyMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use shr_sys_mod                     , only : shr_sys_flush
-  use decompMod                       , only : bounds_type
-  use clm_varpar                      , only : maxveg, nlevdecomp_full
-  use clm_varctl                      , only : iulog, use_cndv
-  use clm_varcon                      , only : tfrz
-  use abortutils                      , only : endrun
-  use CanopyStateType                 , only : canopystate_type
-  use CNDVType                        , only : dgvs_type
-  use CNVegstateType                  , only : cnveg_state_type
-  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-  use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
-  use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
-  use CropType                        , only : crop_type
-  use pftconMod                       , only : pftcon
-  use SoilStateType                   , only : soilstate_type
-  use TemperatureType                 , only : temperature_type
-  use WaterDiagnosticBulkType         , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType            , only : wateratm2lndbulk_type
-  use initVerticalMod                 , only : find_soil_layer_containing_depth
-  use ColumnType                      , only : col
-  use GridcellType                    , only : grc                
-  use PatchType                       , only : patch   
-  use atm2lndType                     , only : atm2lnd_type             
+  use ctsm_Decomp                       , only : bounds_type
+  use ctsm_VarPar                      , only : maxveg, nlevdecomp_full
+  use ctsm_VarCtl                      , only : iulog, use_cndv
+  use ctsm_VarCon                      , only : tfrz
+  use ctsm_AbortUtils                      , only : endrun
+  use ctsm_CanopyStateType                 , only : canopystate_type
+  use ctsm_CNDVType                        , only : dgvs_type
+  use ctsm_CNVegStateType                  , only : cnveg_state_type
+  use ctsm_CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  use ctsm_CropType                        , only : crop_type
+  use ctsm_PftCon                       , only : pftcon
+  use ctsm_SoilStateType                   , only : soilstate_type
+  use ctsm_TemperatureType                 , only : temperature_type
+  use ctsm_WaterDiagnosticBulkType         , only : waterdiagnosticbulk_type
+  use ctsm_WaterAtm2LndBulkType            , only : wateratm2lndbulk_type
+  use ctsm_InitVertical                 , only : find_soil_layer_containing_depth
+  use ctsm_ColumnType                      , only : col
+  use ctsm_GridcellType                    , only : grc                
+  use ctsm_PatchType                       , only : patch   
+  use ctsm_Atm2LndType                     , only : atm2lnd_type             
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: readParams           ! Read parameters
-  public :: CNPhenologyreadNML   ! Read namelist
-  public :: CNPhenologyInit      ! Initialization
-  public :: CNPhenology          ! Update
+  public :: ctsm_CNPhenologyreadNML   ! Read namelist
+  public :: ctsm_CNPhenologyInit      ! Initialization
+  public :: ctsm_CNPhenology          ! Update
   !
   ! !PRIVATE DATA MEMBERS:
   type, private :: params_type
@@ -103,17 +103,17 @@ module CNPhenologyMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNPhenologyReadNML( NLFilename )
+  subroutine ctsm_CNPhenologyReadNML( NLFilename )
     !
     ! !DESCRIPTION:
-    ! Read the namelist for CNPhenology
+    ! Read the namelist for ctsm_CNPhenology
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -122,7 +122,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'CNPhenologyReadNML'
+    character(len=*), parameter :: subname = 'ctsm_CNPhenologyReadNML'
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting
@@ -158,7 +158,7 @@ contains
 
     !-----------------------------------------------------------------------
     
-  end subroutine CNPhenologyReadNML
+  end subroutine ctsm_CNPhenologyReadNML
 
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
@@ -167,14 +167,14 @@ contains
     !
     ! !USES:
     use ncdio_pio    , only: file_desc_t
-    use paramUtilMod , only : readNcdioScalar
+    use ctsm_ParamUtil , only : readNcdioScalar
 
     ! !ARGUMENTS:
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=*), parameter  :: subname = 'readParams_CNPhenology'
+    character(len=*), parameter  :: subname = 'readParams_ctsm_CNPhenology'
     !-----------------------------------------------------------------------
 
     call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
@@ -193,7 +193,7 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
+  subroutine ctsm_CNPhenology (bounds, num_soilc, filter_soilc, num_soilp, &
        filter_soilp, num_pcropp, filter_pcropp, &
        doalb, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, temperature_inst, atm2lnd_inst, crop_inst, &
        canopystate_inst, soilstate_inst, dgvs_inst, &
@@ -202,7 +202,7 @@ contains
        c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
        leaf_prof_patch, froot_prof_patch, phase)
     ! !USES:
-    use CNSharedParamsMod, only: use_fun
+    use ctsm_CNSharedParamsMod, only: use_fun
     !
     ! !DESCRIPTION:
     ! Dynamic phenology routine for coupled carbon-nitrogen code (CN)
@@ -245,7 +245,7 @@ contains
 
 
     if ( phase == 1 ) then
-       call CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
+       call ctsm_CNPhenologyClimate(num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
             temperature_inst, cnveg_state_inst, crop_inst)
    
        call CNEvergreenPhenology(num_soilp, filter_soilp, &
@@ -295,19 +295,19 @@ contains
        call endrun( 'bad phase' )
     end if
 
-  end subroutine CNPhenology
+  end subroutine ctsm_CNPhenology
 
   !-----------------------------------------------------------------------
-  subroutine CNPhenologyInit(bounds)
+  subroutine ctsm_CNPhenologyInit(bounds)
     !
     ! !DESCRIPTION:
-    ! Initialization of CNPhenology. Must be called after time-manager is
+    ! Initialization of ctsm_CNPhenology. Must be called after time-manager is
     ! initialized, and after pftcon file is read in.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size_real
-    use clm_varctl      , only: use_crop
-    use clm_varcon      , only: secspday
+    use ctsm_TimeManager, only: get_step_size_real
+    use ctsm_VarCtl      , only: use_crop
+    use ctsm_VarCon      , only: secspday
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  
@@ -366,18 +366,18 @@ contains
 
     if ( use_crop ) call CropPhenologyInit(bounds)
 
-  end subroutine CNPhenologyInit
+  end subroutine ctsm_CNPhenologyInit
 
   !-----------------------------------------------------------------------
-  subroutine CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
+  subroutine ctsm_CNPhenologyClimate (num_soilp, filter_soilp, num_pcropp, filter_pcropp, &
        temperature_inst, cnveg_state_inst, crop_inst)
     !
     ! !DESCRIPTION:
     ! For coupled carbon-nitrogen code (CN).
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
-    use clm_time_manager , only : get_curr_date, is_first_step
+    use ctsm_TimeManager , only : get_days_per_year
+    use ctsm_TimeManager , only : get_curr_date, is_first_step
     !
     ! !ARGUMENTS:
     integer                , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -456,7 +456,7 @@ contains
 
     end associate
 
-  end subroutine CNPhenologyClimate
+  end subroutine ctsm_CNPhenologyClimate
 
   !-----------------------------------------------------------------------
   subroutine CNEvergreenPhenology (num_soilp, filter_soilp , &
@@ -467,9 +467,9 @@ contains
     ! For coupled carbon-nitrogen code (CN).
     !
     ! !USES:
-    use clm_varcon       , only : secspday
-    use clm_time_manager , only : get_days_per_year
-    use clm_varctl       , only : CN_evergreen_phenology_opt   
+    use ctsm_VarCon       , only : secspday
+    use ctsm_TimeManager , only : get_days_per_year
+    use ctsm_VarCtl       , only : CN_evergreen_phenology_opt   
     !
     ! !ARGUMENTS:
     integer           , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -637,8 +637,8 @@ contains
     !
     ! !USES:
     use shr_const_mod   , only: SHR_CONST_TKFRZ, SHR_CONST_PI
-    use clm_varcon      , only: secspday
-    use clm_varctl      , only: use_cndv
+    use ctsm_VarCon      , only: secspday
+    use ctsm_VarCtl      , only: use_cndv
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -905,7 +905,7 @@ contains
             else if (offset_flag(p) == 0.0_r8) then
                if (use_cndv) then
                   ! If days_active > 355, then remove patch in
-                  ! CNDVEstablishment at the end of the year.
+                  ! ctsm_CNDVEstablishment at the end of the year.
                   ! days_active > 355 is a symptom of seasonal decid. patches occurring in
                   ! gridcells where dayl never drops below crit_dayl.
                   ! This results in TLAI>1e4 in a few gridcells.
@@ -948,11 +948,11 @@ contains
     ! per year.
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
-    use CNSharedParamsMod, only : use_fun
-    use clm_varcon       , only : secspday
+    use ctsm_TimeManager , only : get_days_per_year
+    use ctsm_CNSharedParamsMod, only : use_fun
+    use ctsm_VarCon       , only : secspday
     use shr_const_mod    , only : SHR_CONST_TKFRZ, SHR_CONST_PI
-    use CNSharedParamsMod, only : CNParamsShareInst
+    use ctsm_CNSharedParamsMod, only : CNParamsShareInst
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -1388,18 +1388,18 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, get_rad_step_size
-    use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
-    use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
-    use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
-    use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
-    use pftconMod        , only : nirrig_cotton, nirrig_rice
-    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    use ctsm_TimeManager , only : get_curr_date, get_curr_calday, get_days_per_year, get_rad_step_size
+    use ctsm_PftCon        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
+    use ctsm_PftCon        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
+    use ctsm_PftCon        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
+    use ctsm_PftCon        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
+    use ctsm_PftCon        , only : nirrig_cotton, nirrig_rice
+    use ctsm_PftCon        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
-    use clm_varcon       , only : spval, secspday
-    use clm_varctl       , only : use_fertilizer 
-    use clm_varctl       , only : use_c13, use_c14
-    use clm_varcon       , only : c13ratio, c14ratio
+    use ctsm_VarCon       , only : spval, secspday
+    use ctsm_VarCtl       , only : use_fertilizer 
+    use ctsm_VarCtl       , only : use_c13, use_c14
+    use ctsm_VarCon       , only : c13ratio, c14ratio
     !
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_pcropp       ! number of prog crop patches in filter
@@ -2009,8 +2009,8 @@ contains
     ! initialized, and after pftcon file is read in.
     !
     ! !USES:
-    use pftconMod       , only: npcropmin, npcropmax
-    use clm_time_manager, only: get_calday
+    use ctsm_PftCon       , only: npcropmin, npcropmax
+    use ctsm_TimeManager, only: get_calday
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  
@@ -2340,11 +2340,11 @@ contains
     ! pools during the phenological offset period.
     !
     ! !USES:
-    use pftconMod        , only : npcropmin
-    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    use ctsm_PftCon        , only : npcropmin
+    use ctsm_PftCon        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
-    use CNSharedParamsMod, only : use_fun
-    use clm_varctl       , only : CNratio_floating    
+    use ctsm_CNSharedParamsMod, only : use_fun
+    use ctsm_VarCtl       , only : CNratio_floating    
     !
     ! !ARGUMENTS:
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -2562,8 +2562,8 @@ contains
     ! pools as the result of background litter fall.
     !
     ! !USES:
-    use CNSharedParamsMod   , only : use_fun
-    use clm_varctl          , only : CNratio_floating    
+    use ctsm_CNSharedParamsMod   , only : use_fun
+    use ctsm_VarCtl          , only : CNratio_floating    
     ! !ARGUMENTS:
     implicit none
     integer                       , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -2693,8 +2693,8 @@ contains
     ! Determines the flux of C and N from live wood to
     ! dead wood pools, for stem and coarse root.
     !
-    use CNSharedParamsMod, only: use_fun
-    use clm_varctl          , only : CNratio_floating    
+    use ctsm_CNSharedParamsMod, only: use_fun
+    use ctsm_VarCtl          , only : CNratio_floating    
     ! !ARGUMENTS:
     integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
@@ -2801,9 +2801,9 @@ contains
     ! destined for the product pools.
     !
     ! !USES:
-    use clm_varctl    , only : use_crop
-    use clm_varctl    , only : use_grainproduct
-    use subgridAveMod , only : p2c
+    use ctsm_VarCtl    , only : use_crop
+    use ctsm_VarCtl    , only : use_grainproduct
+    use ctsm_SubgridAve , only : p2c
     !
     ! !ARGUMENTS:
     type(bounds_type)             , intent(in)    :: bounds
@@ -2861,9 +2861,9 @@ contains
     ! to the column level and assign them to the three litter pools
     !
     ! !USES:
-    use clm_varpar , only : max_patch_per_col, nlevdecomp
-    use pftconMod  , only : npcropmin
-    use clm_varctl , only : use_grainproduct
+    use ctsm_VarPar , only : max_patch_per_col, nlevdecomp
+    use ctsm_PftCon  , only : npcropmin
+    use ctsm_VarCtl , only : use_grainproduct
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -3008,4 +3008,4 @@ contains
 
   end subroutine CNLitterToColumn
 
-end module CNPhenologyMod
+end module ctsm_CNPhenologyMod

@@ -1,16 +1,16 @@
 module test_set_mindist
 
-  ! Tests of initInterpMindist: set_mindist
+  ! Tests of ctsm_InitInterpMindist: set_mindist
 
   use pfunit_mod
-  use initInterpMindist
-  use initInterpMindistTestUtils, only : create_subgrid_info, create_glc_behavior
-  use initInterpMindistTestUtils, only : subgrid_special_indices, ilun_special
+  use ctsm_InitInterpMindist
+  use ctsm_InitInterpMindistTestUtils, only : create_subgrid_info, create_glc_behavior
+  use ctsm_InitInterpMindistTestUtils, only : subgrid_special_indices, ilun_special
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varcon   , only: spval
-  use unittestSimpleSubgridSetupsMod
-  use unittestSubgridMod
-  use glcBehaviorMod, only: glc_behavior_type
+  use ctsm_VarCon   , only: spval
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_UnitTestSubgrid
+  use ctsm_GlacierBehavior, only: glc_behavior_type
 
   implicit none
 
@@ -343,7 +343,7 @@ contains
   end subroutine glcmec_elevclassesSame_findsSameColType
 
   @Test
-  subroutine glcmec_elevclassesSame_findsSamePatchType(this)
+  subroutine glcmec_elevclassesSame_findsSamectsm_PatchType(this)
     ! When glc elevation classes are the same between input and output: Choose patch from
     ! the same patch type, even if it isn't the one with the closest topographic height.
     !
@@ -378,7 +378,7 @@ contains
     ! the same type to arise in practice, so we haven't defined the behavior of this
     ! case.)
     @assertEqual(3, mindist_index_p)
-  end subroutine glcmec_elevclassesSame_findsSamePatchType
+  end subroutine glcmec_elevclassesSame_findsSamectsm_PatchType
 
   @Test
   subroutine glcmec_elevclassesDiffer_findsClosestHeight(this)

@@ -1,4 +1,4 @@
-module glcBehaviorMod
+module ctsm_GlacierBehavior
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,14 +9,14 @@ module glcBehaviorMod
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use abortutils     , only : endrun
-  use clm_varctl     , only : iulog
-  use landunit_varcon, only : istice_mec
-  use clm_instur     , only : wt_lunit, wt_glc_mec
-  use decompMod      , only : bounds_type
-  use filterColMod   , only : filter_col_type
-  use ColumnType     , only : col
-  use PatchType      , only : patch
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_VarSur     , only : wt_lunit, wt_glc_mec
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_FilterCol   , only : filter_col_type
+  use ctsm_ColumnType     , only : col
+  use ctsm_PatchType      , only : patch
 
   ! !PUBLIC TYPES:
   implicit none
@@ -42,7 +42,7 @@ module glcBehaviorMod
      ! already spun-up) for dynamic landunits; (4) ensure that all glacier columns are
      ! given spun-up initial conditions by init_interp.
      !
-     ! More details on (4) (echoing the similar comment in subgridWeightsMod): We need all
+     ! More details on (4) (echoing the similar comment in ctsm_SubgridWeights): We need all
      ! glacier and vegetated points to be active in the icemask region for the sake of
      ! init_interp - since we only interpolate onto active points, and we don't know which
      ! points will have non-zero area until after initialization (as long as we can't send
@@ -549,11 +549,11 @@ contains
     ! Reads GLACIER_REGION field from surface dataset, returns it in glacier_region_map
     !
     ! !USES:
-    use clm_varctl , only : fsurdat
-    use fileutils  , only : getfil
+    use ctsm_VarCtl , only : fsurdat
+    use ctsm_FileUtils  , only : getfil
     use ncdio_pio  , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
-    use spmdMod    , only : masterproc
-    use clm_varcon , only : grlnd
+    use ctsm_Spmd    , only : masterproc
+    use ctsm_VarCon , only : grlnd
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: begg  ! beginning grid cell index
@@ -596,10 +596,10 @@ contains
     ! Read local namelist items
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_NlUtils , only : find_nlgroup_name
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -665,7 +665,7 @@ contains
     ! Get number of subgrid units in glc_mec landunit on one grid cell
     !
     ! !USES:
-    use clm_varpar      , only : maxpatch_glcmec
+    use ctsm_VarPar      , only : maxpatch_glcmec
     !
     ! !ARGUMENTS:
     class(glc_behavior_type), intent(in) :: this
@@ -965,7 +965,7 @@ contains
     use glc_elevclass_mod, only : glc_get_elevation_class, GLC_ELEVCLASS_ERR_NONE
     use glc_elevclass_mod, only : GLC_ELEVCLASS_ERR_TOO_LOW, GLC_ELEVCLASS_ERR_TOO_HIGH
     use glc_elevclass_mod, only : glc_errcode_to_string
-    use column_varcon    , only : icemec_class_to_col_itype
+    use ctsm_ColumnVarCon    , only : icemec_class_to_col_itype
     !
     ! !ARGUMENTS:
     class(glc_behavior_type), intent(in) :: this
@@ -1019,7 +1019,7 @@ contains
     ! Returns a column-level filter of ice_mec columns with the collapse_to_atm_topo behavior
     !
     ! !USES:
-    use filterColMod, only : filter_col_type, col_filter_from_grcflags_ltypes
+    use ctsm_FilterCol, only : filter_col_type, col_filter_from_grcflags_ltypes
     !
     ! !ARGUMENTS:
     class(glc_behavior_type), intent(in) :: this
@@ -1074,4 +1074,4 @@ contains
 
   end function get_collapse_to_atm_topo
 
-end module glcBehaviorMod
+end module ctsm_GlacierBehavior

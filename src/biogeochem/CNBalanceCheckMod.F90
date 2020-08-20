@@ -1,4 +1,4 @@
-module CNBalanceCheckMod
+module ctsm_CNctsm_BalanceCheck
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,20 +8,20 @@ module CNBalanceCheckMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_infnan_mod                  , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use decompMod                       , only : bounds_type
-  use abortutils                      , only : endrun
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif
-  use clm_time_manager                , only : get_step_size_real
-  use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
-  use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
-  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
-  use SoilBiogeochemNitrogenfluxType  , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemCarbonfluxType    , only : soilbiogeochem_carbonflux_type
-  use CNProductsMod                   , only : cn_products_type
-  use ColumnType                      , only : col                
-  use GridcellType                    , only : grc
-  use CNSharedParamsMod               , only : use_fun
+  use ctsm_Decomp                       , only : bounds_type
+  use ctsm_AbortUtils                      , only : endrun
+  use ctsm_VarCtl                      , only : iulog, use_nitrif_denitrif
+  use ctsm_TimeManager                , only : get_step_size_real
+  use ctsm_CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  use ctsm_CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use ctsm_CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use ctsm_CNProductsMod                   , only : cn_products_type
+  use ctsm_ColumnType                      , only : col                
+  use ctsm_GridcellType                    , only : grc
+  use ctsm_CNSharedParamsMod               , only : use_fun
 
   !
   implicit none
@@ -190,7 +190,7 @@ contains
        cnveg_carbonstate_inst, c_products_inst)
     !
     ! !USES:
-    use subgridAveMod, only: c2g
+    use ctsm_SubgridAve, only: c2g
     !
     ! !DESCRIPTION:
     ! Perform carbon mass conservation check for column and patch
@@ -394,9 +394,9 @@ contains
     ! Perform nitrogen mass conservation check
     !
     ! !USES:
-    use clm_varctl, only : use_crop
-    use subgridAveMod, only: c2g
-    use atm2lndType, only: atm2lnd_type
+    use ctsm_VarCtl, only : use_crop
+    use ctsm_SubgridAve, only: c2g
+    use ctsm_Atm2LndType, only: atm2lnd_type
     !
     ! !ARGUMENTS:
     class(cn_balance_type)                  , intent(inout) :: this
@@ -625,4 +625,4 @@ contains
 
   end subroutine NBalanceCheck
 
-end module CNBalanceCheckMod
+end module ctsm_CNctsm_BalanceCheck

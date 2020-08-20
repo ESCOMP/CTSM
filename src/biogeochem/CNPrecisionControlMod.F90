@@ -1,4 +1,4 @@
-module CNPrecisionControlMod
+module ctsm_CNPrecisionControlMod
 
 #include "shr_assert.h"
 
@@ -8,17 +8,17 @@ module CNPrecisionControlMod
   ! 
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-  use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
-  use PatchType              , only : patch
-  use abortutils             , only : endrun
+  use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+  use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+  use ctsm_PatchType              , only : patch
+  use ctsm_AbortUtils             , only : endrun
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public:: CNPrecisionControlReadNML
-  public:: CNPrecisionControl
+  public:: ctsm_CNPrecisionControlReadNML
+  public:: ctsm_CNPrecisionControl
 
   ! !PUBLIC DATA:
   real(r8), public :: ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
@@ -36,17 +36,17 @@ module CNPrecisionControlMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNPrecisionControlReadNML( NLFilename )
+  subroutine ctsm_CNPrecisionControlReadNML( NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for CN Precision control
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog, use_nguardrail
+    use ctsm_VarCtl     , only : iulog, use_nguardrail
     use shr_log_mod    , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
@@ -56,7 +56,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'CNPrecisionControlReadNML'
+    character(len=*), parameter :: subname = 'ctsm_CNPrecisionControlReadNML'
     character(len=*), parameter :: nmlname = 'cnprecision_inparm'
     !-----------------------------------------------------------------------
     namelist /cnprecision_inparm/ ncrit, ccrit, cnegcrit, nnegcrit
@@ -92,10 +92,10 @@ contains
     ! Have precision control for froot be determined by use_nguardrail setting
     prec_control_for_froot = .not. use_nguardrail
 
-  end subroutine CNPrecisionControlReadNML
+  end subroutine ctsm_CNPrecisionControlReadNML
 
   !-----------------------------------------------------------------------
-  subroutine CNPrecisionControl(bounds, num_soilp, filter_soilp, &
+  subroutine ctsm_CNPrecisionControl(bounds, num_soilp, filter_soilp, &
        cnveg_carbonstate_inst, c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst, &
        cnveg_nitrogenstate_inst)
     !
@@ -103,10 +103,10 @@ contains
     ! Force leaf and deadstem c and n to 0 if they get too small.
     !
     ! !USES:
-    use clm_varctl , only : iulog, use_c13, use_c14
-    use clm_varctl , only : use_crop
-    use pftconMod  , only : nc3crop
-    use decompMod  , only : bounds_type
+    use ctsm_VarCtl , only : iulog, use_c13, use_c14
+    use ctsm_VarCtl , only : use_crop
+    use ctsm_PftCon  , only : nc3crop
+    use ctsm_Decomp  , only : bounds_type
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds          ! bounds
@@ -633,7 +633,7 @@ contains
 
     end associate
 
- end subroutine CNPrecisionControl
+ end subroutine ctsm_CNPrecisionControl
 
  subroutine TruncateCandNStates( bounds, filter_soilp, num_soilp, carbon_patch, nitrogen_patch, pc, pn, lineno, &
                                  num_truncatep, filter_truncatep, croponly, allowneg )
@@ -644,10 +644,10 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use clm_varctl , only : use_c13, use_c14, use_nguardrail
-    use clm_varctl , only : iulog
-    use pftconMod  , only : nc3crop
-    use decompMod  , only : bounds_type
+    use ctsm_VarCtl , only : use_c13, use_c14, use_nguardrail
+    use ctsm_VarCtl , only : iulog
+    use ctsm_PftCon  , only : nc3crop
+    use ctsm_Decomp  , only : bounds_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -713,12 +713,12 @@ contains
     ! zero.
     !
     ! !USES:
-    use abortutils , only : endrun
-    use clm_varctl , only : iulog
+    use ctsm_AbortUtils , only : endrun
+    use ctsm_VarCtl , only : iulog
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use clm_varctl , only : use_c13, use_c14
-    use pftconMod  , only : nc3crop
-    use decompMod  , only : bounds_type
+    use ctsm_VarCtl , only : use_c13, use_c14
+    use ctsm_PftCon  , only : nc3crop
+    use ctsm_Decomp  , only : bounds_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -779,10 +779,10 @@ contains
     ! zero.
     !
     ! !USES:
-    use abortutils , only : endrun
+    use ctsm_AbortUtils , only : endrun
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use clm_varctl , only : iulog
-    use decompMod  , only : bounds_type
+    use ctsm_VarCtl , only : iulog
+    use ctsm_Decomp  , only : bounds_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -819,7 +819,7 @@ contains
    ! occur, do the truncation for the given patch-level state, putting the truncation
    ! amount in truncation_patch.
    !
-   use decompMod  , only : bounds_type
+   use ctsm_Decomp  , only : bounds_type
    ! !ARGUMENTS:
    implicit none
    type(bounds_type) , intent (in)    :: bounds              ! bounds
@@ -845,4 +845,4 @@ contains
 
  end subroutine TruncateAdditional
 
-end module CNPrecisionControlMod
+end module ctsm_CNPrecisionControlMod

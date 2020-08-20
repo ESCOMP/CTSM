@@ -1,4 +1,4 @@
-module CNRootDynMod
+module ctsm_CNRootDynMod
 
 !-----------------------------------------------------------------------
 ! !DESCRIPTION:
@@ -7,33 +7,33 @@ module CNRootDynMod
 !
 ! !USES:
    use shr_kind_mod                    , only : r8 => shr_kind_r8
-   use clm_time_manager                , only : get_step_size_real
-   use clm_varpar                      , only : nlevsoi, nlevgrnd
-   use clm_varctl                      , only : use_vertsoilc, use_bedrock
-   use decompMod                       , only : bounds_type
-   use pftconMod                       , only : noveg, npcropmin, pftcon 
-   use ColumnType                      , only : col
-   use PatchType                       , only : patch
-   use CNVegStateType                  , only : cnveg_state_type
-   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
-   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
-   use SoilStateType                   , only : soilstate_type
-   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-   use CropType                        , only : crop_type
+   use ctsm_TimeManager                , only : get_step_size_real
+   use ctsm_VarPar                      , only : nlevsoi, nlevgrnd
+   use ctsm_VarCtl                      , only : use_vertsoilc, use_bedrock
+   use ctsm_Decomp                       , only : bounds_type
+   use ctsm_PftCon                       , only : noveg, npcropmin, pftcon 
+   use ctsm_ColumnType                      , only : col
+   use ctsm_PatchType                       , only : patch
+   use ctsm_CNVegStateType                  , only : cnveg_state_type
+   use ctsm_CNVegCarbonStateType            , only : cnveg_carbonstate_type
+   use ctsm_CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+   use ctsm_CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+   use ctsm_SoilStateType                   , only : soilstate_type
+   use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+   use ctsm_CropType                        , only : crop_type
 
 ! !PUBLIC TYPES:
   implicit none
   save
   private
-  public :: CNRootDyn
+  public :: ctsm_CNRootDyn
 !-----------------------------------------------------------------------
 
 contains
 
 !-----------------------------------------------------------------------
 !
-subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+subroutine ctsm_CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst,   &
            cnveg_state_inst, crop_inst,  soilstate_inst, soilbiogeochem_nitrogenstate_inst)
 !
@@ -272,6 +272,6 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
 
      end associate
 
- end subroutine CNRootDyn
+ end subroutine ctsm_CNRootDyn
 
-end module CNRootDynMod
+end module ctsm_CNRootDynMod

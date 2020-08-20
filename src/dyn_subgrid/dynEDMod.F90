@@ -1,12 +1,12 @@
-module dynEDMod
+module ctsm_DynFates
 
   !-----------------------------------------------------------------------
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use landunit_varcon, only : istsoil
-  use PatchType      , only : patch
-  use ColumnType     , only : col
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_LandunitVarCon, only : istsoil
+  use ctsm_PatchType      , only : patch
+  use ctsm_ColumnType     , only : col
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -40,4 +40,4 @@ contains
 
   end subroutine dyn_ED
 
-end module dynEDMod
+end module ctsm_DynFates

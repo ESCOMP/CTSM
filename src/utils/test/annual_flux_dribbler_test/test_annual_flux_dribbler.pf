@@ -1,14 +1,14 @@
 module test_annual_flux_dribbler
 
-  ! Tests of AnnualFluxDribbler
+  ! Tests of ctsm_AnnualFluxDribbler
 
   use pfunit_mod
-  use AnnualFluxDribbler
+  use ctsm_AnnualFluxDribbler
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
-  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
-  use unittestTimeManagerMod, only : &
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_UnitTestTimeManager, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use ctsm_UnitTestTimeManager, only : &
        set_date => unittest_timemgr_set_curr_date
 
   implicit none

@@ -1,4 +1,4 @@
-module clm_varcon
+module ctsm_VarCon
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -14,9 +14,9 @@ module clm_varcon
                            SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
                            SHR_CONST_RGAS, SHR_CONST_PSTD,                    &
                            SHR_CONST_MWDAIR, SHR_CONST_MWWV
-  use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
-  use clm_varpar   , only: ngases
-  use clm_varpar   , only: nlayer
+  use ctsm_VarPar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
+  use ctsm_VarPar   , only: ngases
+  use ctsm_VarPar   , only: nlayer
   
   !
   ! !PUBLIC TYPES:
@@ -26,8 +26,8 @@ module clm_varcon
   !-----------------------------------------------------------------------
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: clm_varcon_init  ! initialize constants in clm_varcon
-  public :: clm_varcon_clean ! deallocate variables allocated by clm_varcon_init
+  public :: ctsm_VarCon_init  ! initialize constants in ctsm_VarCon
+  public :: ctsm_VarCon_clean ! deallocate variables allocated by ctsm_VarCon_init
   !
   ! !REVISION HISTORY:
   ! Created by Mariana Vertenstein
@@ -100,7 +100,7 @@ module clm_varcon
   ! should remain spval throughout the run (e.g., indicating that this level is not valid
   ! for this column type); similarly, if it starts as a valid value, it should never
   ! become spval. This is needed for init_interp to work correctly on multi-level fields.
-  ! For more details, see the note near the top of initInterpMultilevelInterp.
+  ! For more details, see the note near the top of ctsm_InitInterpMultilevelInterp.
   real(r8), public, parameter ::  spval = 1.e36_r8          ! special value for real data
 
   ! Keep this negative to avoid conflicts with possible valid values
@@ -203,7 +203,7 @@ module clm_varcon
   real(r8), public :: omegas(numrad)           ! two-stream parameter omega for snow by band
   data (omegas(i),i=1,numrad) /0.8_r8, 0.4_r8/
 
-  ! Lake Model Constants will be defined in LakeCon.
+  ! Lake Model Constants will be defined in ctsm_LakeConstants.
 
   !------------------------------------------------------------------
   ! Soil depths are constants for now; lake depths can vary by gridcell
@@ -254,14 +254,14 @@ module clm_varcon
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varcon_init( is_simple_buildtemp )
+  subroutine ctsm_VarCon_init( is_simple_buildtemp )
     !
     ! !DESCRIPTION:
-    ! This subroutine initializes constant arrays in clm_varcon. 
-    ! MUST be called  after clm_varpar_init.
+    ! This subroutine initializes constant arrays in ctsm_VarCon. 
+    ! MUST be called  after ctsm_VarPar_init.
     !
     ! !USES:
-    use clm_varpar, only: nlevgrnd, nlevlak, nlevdecomp_full, nlayer
+    use ctsm_VarPar, only: nlevgrnd, nlevlak, nlevdecomp_full, nlayer
     !
     ! !ARGUMENTS:
     implicit none
@@ -286,17 +286,17 @@ contains
         ac_wasteheat_factor = 0.0_r8
     end if
 
-  end subroutine clm_varcon_init
+  end subroutine ctsm_VarCon_init
 
   !-----------------------------------------------------------------------
-  subroutine clm_varcon_clean()
+  subroutine ctsm_VarCon_clean()
     !
     ! !DESCRIPTION:
-    ! Deallocate variables allocated by clm_varcon_init
+    ! Deallocate variables allocated by ctsm_VarCon_init
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'clm_varcon_clean'
+    character(len=*), parameter :: subname = 'ctsm_VarCon_clean'
     !-----------------------------------------------------------------------
 
     deallocate(zlak)
@@ -308,7 +308,7 @@ contains
     deallocate(nlvic)
     deallocate(dzvic)
 
-  end subroutine clm_varcon_clean
+  end subroutine ctsm_VarCon_clean
 
 
-end module clm_varcon
+end module ctsm_VarCon

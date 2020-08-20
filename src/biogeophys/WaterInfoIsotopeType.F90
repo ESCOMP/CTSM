@@ -1,4 +1,4 @@
-module WaterInfoIsotopeType
+module ctsm_WaterInfoIsotopeType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -11,7 +11,7 @@ module WaterInfoIsotopeType
   ! !USES:
   !
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use WaterInfoTracerType, only : water_info_tracer_type
+  use ctsm_WaterInfoTracerType, only : water_info_tracer_type
   !
   implicit none
   private
@@ -49,7 +49,7 @@ contains
     character(len=*), intent(in)  :: tracer_name
     real(r8), intent(in)          :: ratio
     logical,  intent(in)          :: included_in_consistency_check
-    logical , intent(in)          :: communicated_with_coupler  ! see documentation in WaterInfoTracerType.F90
+    logical , intent(in)          :: communicated_with_coupler  ! see documentation in ctsm_WaterInfoTracerType.F90
 
     this%water_info_tracer_type = water_info_tracer_type( &
          tracer_name = tracer_name, &
@@ -58,4 +58,4 @@ contains
          communicated_with_coupler = communicated_with_coupler)
   end function constructor
 
-end module WaterInfoIsotopeType
+end module ctsm_WaterInfoIsotopeType

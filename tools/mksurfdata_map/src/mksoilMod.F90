@@ -14,7 +14,7 @@ module mksoilMod
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8, r4=>shr_kind_r4
   use shr_sys_mod , only : shr_sys_flush
-  use mkdomainMod , only : domain_checksame
+  use mkctsm_Domain , only : domain_checksame
   use mksoilUtilsMod, only : mkrank, dominant_soil_color
   implicit none
 
@@ -142,7 +142,7 @@ subroutine mksoiltex(ldomain, mapfname, datfname, ndiag, sand_o, clay_o)
 ! igbp soil 'mapunits' and their corresponding textures
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    
@@ -571,7 +571,7 @@ subroutine mksoilcol(ldomain, mapfname, datfname, ndiag, &
 ! igbp soil 'mapunits' and their corresponding textures
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    
@@ -797,7 +797,7 @@ subroutine mkorganic(ldomain, mapfname, datfname, ndiag, organic_o)
 ! make organic matter dataset
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    
@@ -977,7 +977,7 @@ subroutine mkfmax(ldomain, mapfname, datfname, ndiag, fmax_o)
 ! make percent fmax
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    
@@ -1163,7 +1163,7 @@ subroutine mksoilAtt( ncid, dynlanduse, xtype )
 ! add atttributes to output file regarding the soil module
 !
 ! !USES:
-  use fileutils  , only : get_filename
+  use ctsm_FileUtils  , only : get_filename
   use mkncdio    , only : check_ret, ncd_defvar, ncd_def_spatial_var
   use mkvarpar   
   use mkvarctl   

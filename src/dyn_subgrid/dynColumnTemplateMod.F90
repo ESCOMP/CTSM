@@ -1,4 +1,4 @@
-module dynColumnTemplateMod
+module ctsm_DynColumnTemplate
 
   !---------------------------------------------------------------------------
   !
@@ -14,11 +14,11 @@ module dynColumnTemplateMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod    , only : r8 => shr_kind_r8
-  use decompMod       , only : bounds_type
-  use GridcellType    , only : grc
-  use LandunitType    , only : lun
-  use ColumnType      , only : col
-  use clm_varcon      , only : ispval
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_GridcellType    , only : grc
+  use ctsm_LandunitType    , only : lun
+  use ctsm_ColumnType      , only : col
+  use ctsm_VarCon      , only : ispval
 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -139,7 +139,7 @@ contains
     ! See also the notes about cactive under 'template_col_from_landunit'.
     !
     ! !USES:
-    use landunit_varcon, only : istsoil
+    use ctsm_LandunitVarCon, only : istsoil
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)  :: bounds                      ! bounds
@@ -164,4 +164,4 @@ contains
 
   
 
-end module dynColumnTemplateMod
+end module ctsm_DynColumnTemplate

@@ -1,10 +1,10 @@
 
-module spmdMod
+module ctsm_Spmd
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: spmdMod
+! !MODULE: ctsm_Spmd
 !
 ! !DESCRIPTION:
 ! SPMD initialization
@@ -16,7 +16,7 @@ module spmdMod
 !-----------------------------------------------------------------------
 
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use clm_varctl  , only: iulog
+  use ctsm_VarCtl  , only: iulog
   implicit none
 
   private
@@ -139,4 +139,4 @@ contains
 
   end subroutine spmd_init
 
-end module spmdMod
+end module ctsm_Spmd

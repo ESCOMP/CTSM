@@ -1,15 +1,15 @@
-module unittestGlcMec
+module ctsm_UnitTestGlcMec
 
   ! This module contains routines that assist unit tests working with glc_mec
   ! (istice_mec) landunits.
 
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
-  use landunit_varcon, only : istice_mec
-  use column_varcon, only : icemec_class_to_col_itype
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_ColumnVarCon, only : icemec_class_to_col_itype
   use glc_elevclass_mod, only : glc_elevclass_init, glc_elevclass_clean
-  use clm_varpar, only : maxpatch_glcmec
+  use ctsm_VarPar, only : maxpatch_glcmec
 
   implicit none
   private
@@ -65,4 +65,4 @@ contains
   end subroutine setup_single_icemec_column
 
 
-end module unittestGlcMec
+end module ctsm_UnitTestGlcMec

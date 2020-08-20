@@ -5,11 +5,11 @@ module test_dynVarTimeUninterp
   use pfunit_mod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use dynVarTimeUninterpMod, only : dyn_var_time_uninterp_type
-  use test_dynVarShared
-  use dynFileMod, only : dyn_file_type
+  use ctsm_TestDynVarShared
+  use ctsm_DynFile, only : dyn_file_type
   use ncdio_pio, only : ncd_get_read_times, ncd_reset_read_times
-  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
-  use unittestTimeManagerMod, only : set_year => unittest_timemgr_set_curr_year
+  use ctsm_UnitTestTimeManager, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use ctsm_UnitTestTimeManager, only : set_year => unittest_timemgr_set_curr_year
 
   implicit none
   save

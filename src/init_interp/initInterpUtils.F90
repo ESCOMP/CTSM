@@ -1,15 +1,15 @@
-module initInterpUtils
+module ctsm_InitInterpUtils
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! This module contains various utilities used by initInterp
+  ! This module contains various utilities used by ctsm_InitInterp
   !
   ! !USES:
 
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use ncdio_pio    , only: file_desc_t, ncd_inqdlen, ncd_inqdid, ncd_io
-  use abortutils   , only: endrun
+  use ctsm_AbortUtils   , only: endrun
 
   implicit none
   private
@@ -109,4 +109,4 @@ contains
 
   end function glc_elevclasses_are_same
 
-end module initInterpUtils
+end module ctsm_InitInterpUtils

@@ -1,4 +1,4 @@
-module IssueFixedMetadataHandler
+module ctsm_IssueFixedMetadataHandler
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,8 +6,8 @@ module IssueFixedMetadataHandler
   ! been fixed as of the writing of this file.
   !
   ! !USES:
-  use clm_varctl , only : iulog
-  use abortutils , only : endrun
+  use ctsm_VarCtl , only : iulog
+  use ctsm_AbortUtils , only : endrun
   use ncdio_pio  , only : file_desc_t, ncd_global
   use ncdio_pio  , only : ncd_putatt, ncd_getatt, check_att
   use ncdio_pio  , only : ncd_inqnatts, ncd_inqattname
@@ -186,4 +186,4 @@ contains
 
   end function issue_fixed_attname
 
-end module IssueFixedMetadataHandler
+end module ctsm_IssueFixedMetadataHandler

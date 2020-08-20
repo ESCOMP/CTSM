@@ -1,4 +1,4 @@
-module SoilWaterRetentionCurveFactoryMod
+module ctsm_SoilWaterRetentionCurveFactory
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,9 +6,9 @@ module SoilWaterRetentionCurveFactoryMod
   ! out the particular type to return.
   !
   ! !USES:
-  use abortutils          , only : endrun
+  use ctsm_AbortUtils          , only : endrun
   use shr_log_mod         , only : errMsg => shr_log_errMsg
-  use clm_varctl          , only : iulog
+  use ctsm_VarCtl          , only : iulog
   implicit none
   save
   private
@@ -29,9 +29,9 @@ contains
     ! is determined based on a namelist parameter.
     !
     ! !USES:
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use SoilWaterRetentionCurveClappHornberg1978Mod, only : soil_water_retention_curve_clapp_hornberg_1978_type
-    use SoilWaterRetentionCurveVanGenuchten1980Mod, only : soil_water_retention_curve_vangenuchten_1980_type
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+    use ctsm_SoilWaterRetentionCurveClappHornberg1978, only : soil_water_retention_curve_clapp_hornberg_1978_type
+    use ctsm_SoilWaterRetentionCurveVanGenuchten1980, only : soil_water_retention_curve_vangenuchten_1980_type
     !
     ! !ARGUMENTS:
     class(soil_water_retention_curve_type), allocatable :: soil_water_retention_curve  ! function result
@@ -68,4 +68,4 @@ contains
 
   end function create_soil_water_retention_curve
 
-end module SoilWaterRetentionCurveFactoryMod
+end module ctsm_SoilWaterRetentionCurveFactory

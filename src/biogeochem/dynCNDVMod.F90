@@ -7,10 +7,10 @@ module dynCNDVMod
   !
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod    , only : bounds_type
-  use LandunitType , only : lun                
-  use PatchType    , only : patch                
-  use CNDVType     , only : dgvs_type
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_LandunitType , only : lun                
+  use ctsm_PatchType    , only : patch                
+  use ctsm_CNDVType     , only : dgvs_type
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -31,7 +31,7 @@ contains
      ! Should be called once, in model initialization
      !
      ! !USES:
-     use clm_varctl, only : nsrest, nsrStartup
+     use ctsm_VarCtl, only : nsrest, nsrStartup
      !
      ! !ARGUMENTS:
      type(bounds_type), intent(in)    :: bounds  
@@ -58,8 +58,8 @@ contains
     ! Time interpolate cndv pft weights from annual to time step
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date, get_step_size_real, get_nstep, get_curr_yearfrac
-    use landunit_varcon , only : istsoil ! CNDV incompatible with dynLU
+    use ctsm_TimeManager, only : get_curr_date, get_step_size_real, get_nstep, get_curr_yearfrac
+    use ctsm_LandunitVarCon , only : istsoil ! CNDV incompatible with dynLU
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds  

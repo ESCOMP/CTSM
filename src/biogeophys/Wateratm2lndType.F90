@@ -1,4 +1,4 @@
-module Wateratm2lndType
+module ctsm_WaterAtm2LndType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,13 +8,13 @@ module Wateratm2lndType
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varcon     , only : spval
-  use ColumnType     , only : col
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : AllocateVar1d, CalcTracerFromBulk, CalcTracerFromBulkFixedRatio
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_Decomp      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use ctsm_VarCon     , only : spval
+  use ctsm_ColumnType     , only : col
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_WaterTracerUtils, only : AllocateVar1d, CalcTracerFromBulk, CalcTracerFromBulkFixedRatio
   !
   implicit none
   save
@@ -137,7 +137,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_HistFile    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(wateratm2lnd_type), intent(inout) :: this
@@ -444,4 +444,4 @@ contains
 
   end subroutine Clean
 
-end module Wateratm2lndType
+end module ctsm_WaterAtm2LndType

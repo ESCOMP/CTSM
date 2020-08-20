@@ -6,14 +6,14 @@ module restUtilMod
 #include "shr_assert.h"
   use shr_kind_mod, only: r8=>shr_kind_r8, r4 => shr_kind_r4, i4=>shr_kind_i4
   use shr_sys_mod,  only: shr_sys_abort
-  use spmdMod,      only: masterproc
-  use clm_varctl,   only: iulog, nsrest, nsrContinue, nsrBranch
-  use clm_varcon,   only: spval, ispval
-  use decompMod,    only: bounds_type
-  use abortutils,   only: endrun
+  use ctsm_Spmd,      only: masterproc
+  use ctsm_VarCtl,   only: iulog, nsrest, nsrContinue, nsrBranch
+  use ctsm_VarCon,   only: spval, ispval
+  use ctsm_Decomp,    only: bounds_type
+  use ctsm_AbortUtils,   only: endrun
   use ncdio_pio
   use pio
-  use ncdio_utils,  only: find_var_on_file
+  use ctsm_NcdIoUtils,  only: find_var_on_file
   use shr_string_mod, only: shr_string_listGetName
   !
   implicit none
@@ -146,7 +146,7 @@ contains
        call write_interpinic_flag(ncid=ncid, varid=varid, varname=varname, &
             interpinic_flag=interpinic_flag)
 
-       ! This attribute is written in order to communicate this metadata to initInterp
+       ! This attribute is written in order to communicate this metadata to ctsm_InitInterp
        call ncd_putatt(ncid, varid, 'varnames_on_old_files', trim(varname))
 
        if (present(comment)) then
@@ -292,7 +292,7 @@ contains
        call write_interpinic_flag(ncid=ncid, varid=varid, varname=varname, &
             interpinic_flag=interpinic_flag)
 
-       ! This attribute is written in order to communicate this metadata to initInterp
+       ! This attribute is written in order to communicate this metadata to ctsm_InitInterp
        call ncd_putatt(ncid, varid, 'varnames_on_old_files', trim(varname))
 
        if (present(comment)) then
@@ -438,7 +438,7 @@ contains
        call write_interpinic_flag(ncid=ncid, varid=varid, varname=varname, &
             interpinic_flag=interpinic_flag)
 
-       ! This attribute is written in order to communicate this metadata to initInterp
+       ! This attribute is written in order to communicate this metadata to ctsm_InitInterp
        call ncd_putatt(ncid, varid, 'varnames_on_old_files', trim(varname))
 
        if (switchdim) then
@@ -563,7 +563,7 @@ contains
     ! also set a column-level field from a patch-level field, etc.
     !
     ! !USES:
-    use subgridAveMod, only : c2g
+    use ctsm_SubgridAve, only : c2g
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds

@@ -1,11 +1,11 @@
 module test_acspinup
 
-  ! Tests of the acspinup functions in SoilBiogeochemStateType
+  ! Tests of the acspinup functions in ctsm_SoilBiogeochemStateType
 
   use pfunit_mod
 
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use SoilBiogeochemStateType, only : get_spinup_latitude_term
+  use ctsm_SoilBiogeochemStateType, only : get_spinup_latitude_term
 
   implicit none
   save

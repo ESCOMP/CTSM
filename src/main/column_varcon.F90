@@ -1,4 +1,4 @@
-module column_varcon
+module ctsm_ColumnVarCon
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,7 +6,7 @@ module column_varcon
   !
   ! !USES:
 #include "shr_assert.h"
-  use landunit_varcon, only : isturb_MIN
+  use ctsm_LandunitVarCon, only : isturb_MIN
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -50,7 +50,7 @@ contains
     ! about anywhere, really), you should use the pre-set col%hydrologically_active(c).
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop
+    use ctsm_LandunitVarCon, only : istsoil, istcrop
     !
     ! !ARGUMENTS:
     logical :: hydrologically_active  ! function result
@@ -83,8 +83,8 @@ contains
     ! Convert an icemec class (1..maxpatch_glcmec) into col%itype
     !
     ! !USES:
-    use clm_varpar, only : maxpatch_glcmec
-    use landunit_varcon, only : istice_mec
+    use ctsm_VarPar, only : maxpatch_glcmec
+    use ctsm_LandunitVarCon, only : istice_mec
     !
     ! !ARGUMENTS:
     integer :: col_itype                ! function result
@@ -108,8 +108,8 @@ contains
     ! Convert a col%itype value (for an icemec landunit) into an icemec class (1..maxpatch_glcmec)
     !
     ! !USES:
-    use clm_varpar, only : maxpatch_glcmec
-    use landunit_varcon, only : istice_mec
+    use ctsm_VarPar, only : maxpatch_glcmec
+    use ctsm_LandunitVarCon, only : istice_mec
     !
     ! !ARGUMENTS:
     integer :: icemec_class          ! function result
@@ -167,4 +167,4 @@ contains
   end subroutine write_coltype_metadata
 
 
-end module column_varcon
+end module ctsm_ColumnVarCon

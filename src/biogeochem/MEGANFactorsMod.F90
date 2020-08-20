@@ -1,12 +1,12 @@
-module MEGANFactorsMod
+module ctsm_MeganFactorsMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Manages input of MEGAN emissions factors from netCDF file
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use abortutils,   only : endrun
-  use clm_varctl,   only : iulog
+  use ctsm_AbortUtils,   only : endrun
+  use ctsm_VarCtl,   only : iulog
   use shr_log_mod,  only : errMsg => shr_log_errMsg
   !
   implicit none
@@ -91,8 +91,8 @@ contains
     ! !USES:
     use ncdio_pio, only : ncd_pio_openfile,ncd_inqdlen
     use pio, only : pio_inq_varid,pio_get_var,file_desc_t,pio_closefile
-    use fileutils   , only : getfil
-    use clm_varpar  , only : mxpft
+    use ctsm_FileUtils   , only : getfil
+    use ctsm_VarPar  , only : mxpft
     !
     ! !ARGUMENTS:
     character(len=*),intent(in) :: filename ! MEGAN factors input file
@@ -304,4 +304,4 @@ contains
 
   end function gen_hashkey
 
-end module MEGANFactorsMod
+end module ctsm_MeganFactorsMod

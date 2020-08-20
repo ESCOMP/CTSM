@@ -1,4 +1,4 @@
-module dynpftFileMod
+module ctsm_DynPftFile
 
 #include "shr_assert.h"
 
@@ -9,16 +9,16 @@ module dynpftFileMod
   ! !USES:
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
-  use decompMod             , only : bounds_type, BOUNDS_LEVEL_PROC
-  use dynFileMod            , only : dyn_file_type
+  use ctsm_Decomp             , only : bounds_type, BOUNDS_LEVEL_PROC
+  use ctsm_DynFile            , only : dyn_file_type
   use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
-  use clm_varctl            , only : iulog
-  use abortutils            , only : endrun
-  use spmdMod               , only : masterproc, mpicom
-  use clm_varcon            , only : grlnd, nameg
-  use LandunitType          , only : lun                
-  use ColumnType            , only : col                
-  use PatchType             , only : patch                
+  use ctsm_VarCtl            , only : iulog
+  use ctsm_AbortUtils            , only : endrun
+  use ctsm_Spmd               , only : masterproc, mpicom
+  use ctsm_VarCon            , only : grlnd, nameg
+  use ctsm_LandunitType          , only : lun                
+  use ctsm_ColumnType            , only : col                
+  use ctsm_PatchType             , only : patch                
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -52,9 +52,9 @@ contains
     ! that bound the initial model date)
     !
     ! !USES:
-    use clm_varpar     , only : maxveg, natpft_size
+    use ctsm_VarPar     , only : maxveg, natpft_size
     use ncdio_pio
-    use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
+    use ctsm_DynTimeInfo , only : YEAR_POSITION_START_OF_TIMESTEP
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds          ! proc-level bounds
@@ -107,8 +107,8 @@ contains
     ! PCT_NAT_PFT on the surface dataset.
     !
     ! !USES:
-    use clm_instur, only : wt_nat_patch
-    use clm_varpar, only : natpft_size
+    use ctsm_VarSur, only : wt_nat_patch
+    use ctsm_VarPar, only : natpft_size
     use ncdio_pio
     !
     ! !ARGUMENTS:
@@ -176,9 +176,9 @@ contains
     ! Read namelist settings related to pftdyn consistency checks
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use controlMod     , only : NLFilename
+    use ctsm_FileUtils      , only : getavu, relavu
+    use ctsm_NlUtils , only : find_nlgroup_name
+    use ctsm_Control     , only : NLFilename
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -241,8 +241,8 @@ contains
     ! dyn_var_time_uninterp_type.
     !
     ! !USES:
-    use landunit_varcon , only : istsoil
-    use clm_varpar      , only : natpft_lb, natpft_ub
+    use ctsm_LandunitVarCon , only : istsoil
+    use ctsm_VarPar      , only : natpft_lb, natpft_ub
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
@@ -285,4 +285,4 @@ contains
 
   end subroutine dynpft_interp
 
-end module dynpftFileMod
+end module ctsm_DynPftFile

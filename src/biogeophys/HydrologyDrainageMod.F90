@@ -1,4 +1,4 @@
-module HydrologyDrainageMod
+module ctsm_HydrologyDrainage
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,23 +6,23 @@ module HydrologyDrainageMod
   !
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use decompMod         , only : bounds_type
-  use clm_varctl        , only : iulog, use_vichydro
-  use clm_varcon        , only : denh2o, denice, rpi, spval
-  use atm2lndType       , only : atm2lnd_type
-  use glc2lndMod        , only : glc2lnd_type
-  use SoilHydrologyType , only : soilhydrology_type  
-  use SoilStateType     , only : soilstate_type
-  use TemperatureType   , only : temperature_type
-  use WaterFluxBulkType     , only : waterfluxbulk_type
-  use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use WaterBalanceType    , only : waterbalance_type
-  use GlacierSurfaceMassBalanceMod, only : glacier_smb_type
-  use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake
-  use LandunitType      , only : lun                
-  use ColumnType        , only : col                
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_VarCtl        , only : iulog, use_vichydro
+  use ctsm_VarCon        , only : denh2o, denice, rpi, spval
+  use ctsm_Atm2LndType       , only : atm2lnd_type
+  use ctsm_Glc2Lnd        , only : glc2lnd_type
+  use ctsm_SoilHydrologyType , only : soilhydrology_type  
+  use ctsm_SoilStateType     , only : soilstate_type
+  use ctsm_TemperatureType   , only : temperature_type
+  use ctsm_WaterFluxBulkType     , only : waterfluxbulk_type
+  use ctsm_WaterAtm2LndBulkType     , only : wateratm2lndbulk_type
+  use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use ctsm_WaterBalanceType    , only : waterbalance_type
+  use ctsm_GlacierSurfaceMassBalance, only : glacier_smb_type
+  use ctsm_TotalWaterAndHeat, only : ComputeWaterMassNonLake
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_ColumnType        , only : col                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -49,14 +49,14 @@ contains
     ! Calculates soil/snow hydrology with drainage (subsurface runoff)
     !
     ! !USES:
-    use landunit_varcon  , only : istwet, istsoil, istice_mec, istcrop
-    use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
-    use clm_varcon       , only : denh2o, denice
-    use clm_varctl       , only : use_vichydro
-    use clm_varpar       , only : nlevgrnd, nlevurb
-    use clm_time_manager , only : get_step_size_real, get_nstep
-    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw
-    use SoilWaterMovementMod , only : use_aquifer_layer
+    use ctsm_LandunitVarCon  , only : istwet, istsoil, istice_mec, istcrop
+    use ctsm_ColumnVarCon    , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
+    use ctsm_VarCon       , only : denh2o, denice
+    use ctsm_VarCtl       , only : use_vichydro
+    use ctsm_VarPar       , only : nlevgrnd, nlevurb
+    use ctsm_TimeManager , only : get_step_size_real, get_nstep
+    use ctsm_SoilHydrology , only : CLMVICMap, Drainage, PerchedLateralFlow, LateralFlowPowerLaw
+    use ctsm_SoilWaterMovement , only : use_aquifer_layer
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -223,4 +223,4 @@ contains
 
  end subroutine HydrologyDrainage
 
-end module HydrologyDrainageMod
+end module ctsm_HydrologyDrainage

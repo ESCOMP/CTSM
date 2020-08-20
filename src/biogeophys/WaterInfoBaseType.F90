@@ -1,4 +1,4 @@
-module WaterInfoBaseType
+module ctsm_WaterInfoBaseType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -103,4 +103,4 @@ contains
      ratio = this%ratio
   end function
 
-end module WaterInfoBaseType
+end module ctsm_WaterInfoBaseType

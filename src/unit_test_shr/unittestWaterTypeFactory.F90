@@ -1,4 +1,4 @@
-module unittestWaterTypeFactory
+module ctsm_UnitTestctsm_WaterTypeFactory
 
   ! This module contains a class and associated methods that assist unit tests that need
   ! to create a water_type instance
@@ -23,11 +23,11 @@ module unittestWaterTypeFactory
 
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno
-  use ColumnType, only : col
-  use WaterType, only : water_type, water_params_type
+  use ctsm_VarPar, only : nlevsoi, nlevgrnd, nlevsno
+  use ctsm_ColumnType, only : col
+  use ctsm_WaterType, only : water_type, water_params_type
   use unittestArrayMod, only : col_array
-  use unittestSubgridMod, only : bounds
+  use ctsm_UnitTestSubgrid, only : bounds
 
   implicit none
   private
@@ -175,4 +175,4 @@ contains
     ! in each test.
   end subroutine teardown
 
-end module unittestWaterTypeFactory
+end module ctsm_UnitTestctsm_WaterTypeFactory

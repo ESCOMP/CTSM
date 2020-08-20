@@ -1,4 +1,4 @@
-module UrbanFluxesMod
+module ctsm_UrbanFluxes
 
   !----------------------------------------------------------------------- 
   ! !DESCRIPTION: 
@@ -8,28 +8,28 @@ module UrbanFluxesMod
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_sys_mod          , only : shr_sys_flush 
   use shr_log_mod          , only : errMsg => shr_log_errMsg
-  use decompMod            , only : bounds_type
-  use clm_varpar           , only : numrad
-  use clm_varcon           , only : namel
-  use clm_varctl           , only : iulog
-  use abortutils           , only : endrun  
-  use UrbanParamsType      , only : urbanparams_type
-  use UrbanParamsType      , only : urban_wasteheat_on, urban_hac_on, urban_hac
-  use UrbanParamsType      , only : IsSimpleBuildTemp
-  use atm2lndType          , only : atm2lnd_type
-  use SoilStateType        , only : soilstate_type
-  use TemperatureType      , only : temperature_type
-  use WaterStateBulkType       , only : waterstatebulk_type
-  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-  use FrictionVelocityMod  , only : frictionvel_type
-  use EnergyFluxType       , only : energyflux_type
-  use WaterFluxBulkType        , only : waterfluxbulk_type
-  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
-  use HumanIndexMod        , only : humanindex_type
-  use GridcellType         , only : grc                
-  use LandunitType         , only : lun                
-  use ColumnType           , only : col                
-  use PatchType            , only : patch                
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_VarPar           , only : numrad
+  use ctsm_VarCon           , only : namel
+  use ctsm_VarCtl           , only : iulog
+  use ctsm_AbortUtils           , only : endrun  
+  use ctsm_UrbanParamsType      , only : urbanparams_type
+  use ctsm_UrbanParamsType      , only : urban_wasteheat_on, urban_hac_on, urban_hac
+  use ctsm_UrbanParamsType      , only : IsSimpleBuildTemp
+  use ctsm_Atm2LndType          , only : atm2lnd_type
+  use ctsm_SoilStateType        , only : soilstate_type
+  use ctsm_TemperatureType      , only : temperature_type
+  use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use ctsm_FrictionVelocity  , only : frictionvel_type
+  use ctsm_EnergyFluxType       , only : energyflux_type
+  use ctsm_WaterFluxBulkType        , only : waterfluxbulk_type
+  use ctsm_WaterAtm2LndBulkType        , only : wateratm2lndbulk_type
+  use ctsm_HumanIndices        , only : humanindex_type
+  use ctsm_GridcellType         , only : grc                
+  use ctsm_LandunitType         , only : lun                
+  use ctsm_ColumnType           , only : col                
+  use ctsm_PatchType            , only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -61,7 +61,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -89,15 +89,15 @@ contains
     ! shadewall, pervious and impervious road).
 
     ! !USES:
-    use clm_varcon          , only : cpair, vkc, spval, grav, pondmx_urban, rpi, rgas
-    use clm_varcon          , only : ht_wasteheat_factor, ac_wasteheat_factor, wasteheat_limit
-    use column_varcon       , only : icol_shadewall, icol_road_perv, icol_road_imperv
-    use column_varcon       , only : icol_roof, icol_sunwall
-    use filterMod           , only : filter
-    use QSatMod             , only : QSat
-    use clm_varpar          , only : maxpatch_urb, nlevurb, nlevgrnd
-    use clm_time_manager    , only : get_step_size_real, get_nstep, is_near_local_noon
-    use HumanIndexMod       , only : all_human_stress_indices, fast_human_stress_indices, &
+    use ctsm_VarCon          , only : cpair, vkc, spval, grav, pondmx_urban, rpi, rgas
+    use ctsm_VarCon          , only : ht_wasteheat_factor, ac_wasteheat_factor, wasteheat_limit
+    use ctsm_ColumnVarCon       , only : icol_shadewall, icol_road_perv, icol_road_imperv
+    use ctsm_ColumnVarCon       , only : icol_roof, icol_sunwall
+    use ctsm_Filters           , only : filter
+    use ctsm_QSat             , only : QSat
+    use ctsm_VarPar          , only : maxpatch_urb, nlevurb, nlevgrnd
+    use ctsm_TimeManager    , only : get_step_size_real, get_nstep, is_near_local_noon
+    use ctsm_HumanIndices       , only : all_human_stress_indices, fast_human_stress_indices, &
                                      Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                      swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                      SwampCoolEff, KtoC, VaporPres
@@ -951,10 +951,10 @@ contains
     ! Calculate the wasteheat flux from urban heating or air-conditioning.
     !
     ! !USES:
-    use clm_varcon         , only : ht_wasteheat_factor, ac_wasteheat_factor, &
+    use ctsm_VarCon         , only : ht_wasteheat_factor, ac_wasteheat_factor, &
                                     wasteheat_limit
-    use EnergyFluxType     , only : energyflux_type
-    use UrbanParamsType    , only : IsProgBuildTemp
+    use ctsm_EnergyFluxType     , only : energyflux_type
+    use ctsm_UrbanParamsType    , only : IsProgBuildTemp
     implicit none
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! bounds
@@ -1038,7 +1038,7 @@ contains
     ! in CLM4.5.
     !
     ! !USES:
-    use clm_varcon         , only : ht_wasteheat_factor, ac_wasteheat_factor
+    use ctsm_VarCon         , only : ht_wasteheat_factor, ac_wasteheat_factor
     implicit none
     ! !ARGUMENTS:
     real(r8), intent(in)  :: eflx_urban_ac
@@ -1078,11 +1078,11 @@ contains
   ! in CLM4.5.
   !
   ! !USES:
-    use clm_varpar     , only : nlevurb
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use LandunitType   , only : landunit_type
-    use ColumnType     , only : column_type
-    use TemperatureType, only : temperature_type
+    use ctsm_VarPar     , only : nlevurb
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_LandunitType   , only : landunit_type
+    use ctsm_ColumnType     , only : column_type
+    use ctsm_TemperatureType, only : temperature_type
 
     implicit none
   ! !ARGUMENTS:
@@ -1139,4 +1139,4 @@ contains
 
   !----------------------------------------------------------------------- 
 
-end module UrbanFluxesMod
+end module ctsm_UrbanFluxes

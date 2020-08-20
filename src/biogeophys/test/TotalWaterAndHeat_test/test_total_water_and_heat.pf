@@ -1,13 +1,13 @@
 module test_total_water_and_heat
 
-  ! Tests of TotalWaterAndHeatMod
+  ! Tests of ctsm_TotalWaterAndHeat
 
   use pfunit_mod
-  use TotalWaterAndHeatMod
+  use ctsm_TotalWaterAndHeat
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
-  use clm_varcon, only : tfrz, cpliq, hfus
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_VarCon, only : tfrz, cpliq, hfus
 
   implicit none
 

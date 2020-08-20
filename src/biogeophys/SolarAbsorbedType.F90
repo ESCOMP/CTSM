@@ -1,12 +1,12 @@
-module SolarAbsorbedType
+module ctsm_SolarAbsorbedType
 
   !------------------------------------------------------------------------------
   ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_log_mod  , only: errMsg => shr_log_errMsg
-  use decompMod    , only : bounds_type
-  use clm_varcon   , only : spval
-  use clm_varctl   , only : use_luna
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_VarCon   , only : spval
+  use ctsm_VarCtl   , only : use_luna
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -98,7 +98,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar    , only : nlevcan, nlevcan, numrad, nlevsno
+    use ctsm_VarPar    , only : nlevcan, nlevcan, numrad, nlevsno
     !
     ! !ARGUMENTS:
     class(solarabs_type) :: this
@@ -168,10 +168,10 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-    use clm_varctl    , only : use_snicar_frc , use_SSRE
-    use clm_varpar    , only : nlevsno
-    use histFileMod   , only : hist_addfld1d, hist_addfld2d
-    use histFileMod   , only : no_snow_normal
+    use ctsm_VarCtl    , only : use_snicar_frc , use_SSRE
+    use ctsm_VarPar    , only : nlevsno
+    use ctsm_HistFile   , only : hist_addfld1d, hist_addfld2d
+    use ctsm_HistFile   , only : no_snow_normal
     !
     ! !ARGUMENTS:
     class(solarabs_type) :: this
@@ -342,7 +342,7 @@ contains
     !
     ! Initialize module surface albedos to reasonable values
     !
-    use landunit_varcon, only : istsoil, istcrop
+    use ctsm_LandunitVarCon, only : istsoil, istcrop
     !
     ! !ARGUMENTS:
     class(solarabs_type) :: this
@@ -375,9 +375,9 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : shr_infnan_isnan
-    use clm_varctl     , only : use_snicar_frc, iulog 
-    use spmdMod        , only : masterproc
-    use abortutils     , only : endrun
+    use ctsm_VarCtl     , only : use_snicar_frc, iulog 
+    use ctsm_Spmd        , only : masterproc
+    use ctsm_AbortUtils     , only : endrun
     use ncdio_pio      , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use restUtilMod
     !
@@ -474,4 +474,4 @@ contains
 
   end subroutine Restart
 
-end module SolarAbsorbedType
+end module ctsm_SolarAbsorbedType

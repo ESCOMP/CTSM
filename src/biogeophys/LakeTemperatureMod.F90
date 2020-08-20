@@ -1,4 +1,4 @@
-module LakeTemperatureMod
+module ctsm_LakeTemperature
 
 #include "shr_assert.h"
 
@@ -9,18 +9,18 @@ module LakeTemperatureMod
   !
   ! !USES
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use decompMod         , only : bounds_type
-  use ch4Mod            , only : ch4_type
-  use EnergyFluxType    , only : energyflux_type
-  use LakeStateType     , only : lakestate_type
-  use SoilStateType     , only : soilstate_type
-  use SolarAbsorbedType , only : solarabs_type
-  use TemperatureType   , only : temperature_type
-  use WaterFluxBulkType     , only : waterfluxbulk_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use ColumnType        , only : col                
-  use PatchType         , only : patch                
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_Methane            , only : ch4_type
+  use ctsm_EnergyFluxType    , only : energyflux_type
+  use ctsm_LakeStateType     , only : lakestate_type
+  use ctsm_SoilStateType     , only : soilstate_type
+  use ctsm_SolarAbsorbedType , only : solarabs_type
+  use ctsm_TemperatureType   , only : temperature_type
+  use ctsm_WaterFluxBulkType     , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use ctsm_ColumnType        , only : col                
+  use ctsm_PatchType         , only : patch                
   !    
   ! !PUBLIC TYPES:
   implicit none
@@ -106,18 +106,18 @@ contains
     !      considering changed heat capacity. Also do soil water balance check.
     ! 10 ) Convective mixing 
     ! 11 ) Do final energy check to detect small numerical errors (especially from convection)
-    !      and dump small imbalance into sensible heat, or pass large errors to BalanceCheckMod for abort.
+    !      and dump small imbalance into sensible heat, or pass large errors to ctsm_BalanceCheck for abort.
     !
     ! !USES:
-    use LakeCon           , only : betavis, za_lake, n2min, tdmax, pudz, depthcrit, mixfact
-    use LakeCon           , only : lakepuddling, lake_no_ed
-    use QSatMod            , only : QSat
-    use TridiagonalMod     , only : Tridiagonal
-    use clm_varpar         , only : nlevlak, nlevgrnd, nlevsno
-    use clm_time_manager   , only : get_step_size_real
-    use clm_varcon         , only : hfus, cpliq, cpice, tkwat, tkice, denice
-    use clm_varcon         , only : vkc, grav, denh2o, tfrz, cnfac
-    use clm_varctl         , only : iulog, use_lch4
+    use ctsm_LakeConstants           , only : betavis, za_lake, n2min, tdmax, pudz, depthcrit, mixfact
+    use ctsm_LakeConstants           , only : lakepuddling, lake_no_ed
+    use ctsm_QSat            , only : QSat
+    use ctsm_TridiagonalSolver     , only : Tridiagonal
+    use ctsm_VarPar         , only : nlevlak, nlevgrnd, nlevsno
+    use ctsm_TimeManager   , only : get_step_size_real
+    use ctsm_VarCon         , only : hfus, cpliq, cpice, tkwat, tkice, denice
+    use ctsm_VarCon         , only : vkc, grav, denh2o, tfrz, cnfac
+    use ctsm_VarCtl         , only : iulog, use_lch4
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds	  
@@ -1078,9 +1078,9 @@ contains
      ! For lakes, the proper soil layers (not snow) should always be saturated.
      !
      ! !USES:
-     use clm_varcon  , only : denh2o, denice, tfrz, tkwat, tkice, tkair
-     use clm_varcon  , only : cpice,  cpliq, thk_bedrock, csol_bedrock
-     use clm_varpar  , only : nlevsno, nlevsoi, nlevgrnd
+     use ctsm_VarCon  , only : denh2o, denice, tfrz, tkwat, tkice, tkair
+     use ctsm_VarCon  , only : cpice,  cpliq, thk_bedrock, csol_bedrock
+     use ctsm_VarPar  , only : nlevsno, nlevsoi, nlevgrnd
      !
      ! !ARGUMENTS:
      type(bounds_type)      , intent(in)  :: bounds  
@@ -1265,9 +1265,9 @@ contains
      ! Errors will be trapped at the end of LakeTemperature.
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size_real
-     use clm_varcon       , only : tfrz, hfus, denh2o, denice, cpliq, cpice
-     use clm_varpar       , only : nlevsno, nlevgrnd, nlevlak
+     use ctsm_TimeManager , only : get_step_size_real
+     use ctsm_VarCon       , only : tfrz, hfus, denh2o, denice, cpliq, cpice
+     use ctsm_VarPar       , only : nlevsno, nlevgrnd, nlevlak
      !
      ! !ARGUMENTS:
      type(bounds_type)      , intent(in)    :: bounds                     
@@ -1474,5 +1474,5 @@ contains
 
    end subroutine PhaseChange_Lake
 
- end module LakeTemperatureMod
+ end module ctsm_LakeTemperature
 

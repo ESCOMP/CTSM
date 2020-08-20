@@ -1,4 +1,4 @@
-module filterMod
+module ctsm_Filters
 
 #include "shr_assert.h"
 
@@ -11,14 +11,14 @@ module filterMod
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use abortutils     , only : endrun
-  use clm_varctl     , only : iulog
-  use decompMod      , only : bounds_type  
-  use GridcellType   , only : grc
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch
-  use glcBehaviorMod , only : glc_behavior_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_Decomp      , only : bounds_type  
+  use ctsm_GridcellType   , only : grc
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_PatchType      , only : patch
+  use ctsm_GlacierBehavior , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -112,7 +112,7 @@ module filterMod
   !
   ! Ideally, we would like to restructure the initialization code and driver ordering so
   ! that this version of the filters is never needed. At that point, we could remove this
-  ! filter_inactive_and_active variable, and simplify filterMod to look the way it did
+  ! filter_inactive_and_active variable, and simplify ctsm_Filters to look the way it did
   ! before this variable was added (i.e., when there was only a single group of filters).
   !
   type(clumpfilter), allocatable, public :: filter_inactive_and_active(:)
@@ -159,7 +159,7 @@ contains
     ! Allocate CLM filters, for one group of filters.
     !
     ! !USES:
-    use decompMod , only : get_proc_clumps, get_clump_bounds
+    use ctsm_Decomp , only : get_proc_clumps, get_clump_bounds
     !
     ! !ARGUMENTS:
     type(clumpfilter), intent(inout), allocatable :: this_filter(:)  ! the filter to allocate
@@ -240,7 +240,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Set CLM filters.
-    use decompMod , only : BOUNDS_LEVEL_CLUMP
+    use ctsm_Decomp , only : BOUNDS_LEVEL_CLUMP
     !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in) :: bounds
@@ -287,9 +287,9 @@ contains
     ! is called at the right time in the driver loop.
     !
     ! !USES:
-    use decompMod       , only : BOUNDS_LEVEL_CLUMP
-    use pftconMod       , only : npcropmin
-    use landunit_varcon , only : istsoil, istcrop, istice_mec
+    use ctsm_Decomp       , only : BOUNDS_LEVEL_CLUMP
+    use ctsm_PftCon       , only : npcropmin
+    use ctsm_LandunitVarCon , only : istsoil, istcrop, istice_mec
     !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in)    :: bounds  
@@ -543,7 +543,7 @@ contains
     ! need to be called at a different time in the driver loop. 
     !
     ! !USES:
-    use decompMod , only : BOUNDS_LEVEL_CLUMP
+    use ctsm_Decomp , only : BOUNDS_LEVEL_CLUMP
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds  
@@ -581,4 +581,4 @@ contains
   end subroutine setExposedvegpFilter
 
 
-end module filterMod
+end module ctsm_Filters

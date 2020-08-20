@@ -1,4 +1,4 @@
-module initVerticalMod
+module ctsm_InitVertical
 
 #include "shr_assert.h"
 
@@ -10,26 +10,26 @@ module initVerticalMod
   use shr_infnan_mod    , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use shr_sys_mod       , only : shr_sys_abort
-  use decompMod         , only : bounds_type
-  use spmdMod           , only : masterproc
-  use clm_varpar        , only : nlevsno, nlevgrnd, nlevlak
-  use clm_varpar        , only : toplev_equalspace, nlev_equalspace
-  use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
-  use clm_varctl        , only : fsurdat, iulog
-  use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
-  use clm_varctl        , only : use_bedrock, rundef
-  use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
-  use clm_varctl        , only : use_fates
-  use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
-  use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
-  use landunit_varcon   , only : istdlak, istice_mec
-  use fileutils         , only : getfil
-  use LandunitType      , only : lun                
-  use GridcellType      , only : grc                
-  use ColumnType        , only : col                
-  use glcBehaviorMod    , only : glc_behavior_type
-  use SnowHydrologyMod  , only : InitSnowLayers             
-  use abortUtils        , only : endrun    
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_Spmd           , only : masterproc
+  use ctsm_VarPar        , only : nlevsno, nlevgrnd, nlevlak
+  use ctsm_VarPar        , only : toplev_equalspace, nlev_equalspace
+  use ctsm_VarPar        , only : nlevsoi, nlevsoifl, nlevurb 
+  use ctsm_VarCtl        , only : fsurdat, iulog
+  use ctsm_VarCtl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
+  use ctsm_VarCtl        , only : use_bedrock, rundef
+  use ctsm_VarCtl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
+  use ctsm_VarCtl        , only : use_fates
+  use ctsm_VarCon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
+  use ctsm_ColumnVarCon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
+  use ctsm_LandunitVarCon   , only : istdlak, istice_mec
+  use ctsm_FileUtils         , only : getfil
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_GridcellType      , only : grc                
+  use ctsm_ColumnType        , only : col                
+  use ctsm_GlacierBehavior    , only : glc_behavior_type
+  use ctsm_SnowHydrology  , only : InitSnowLayers             
+  use ctsm_AbortUtils     , only : endrun    
   use ncdio_pio
   !
   ! !PUBLIC TYPES:
@@ -55,7 +55,7 @@ contains
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
-    use clm_varcon, only : zmin_bedrock
+    use ctsm_VarCon, only : zmin_bedrock
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
@@ -201,7 +201,7 @@ contains
              dzsoi(j) = soil_layerstruct_userdefined(j)
           end do
        else if (soil_layerstruct_predefined == '49SL_10m') then
-          !scs: 10 meter soil column, nlevsoi set to 49 in clm_varpar
+          !scs: 10 meter soil column, nlevsoi set to 49 in ctsm_VarPar
           do j = 1, 10
              dzsoi(j) = 1.e-2_r8     ! 10-mm layers
           enddo
@@ -745,8 +745,8 @@ contains
     ! from the upper layers.
     !
     ! !USES:
-    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
-    use column_varcon  , only : icol_road_perv
+    use ctsm_LandunitVarCon, only : istice_mec, isturb_MIN, isturb_MAX
+    use ctsm_ColumnVarCon  , only : icol_road_perv
     !
     ! !ARGUMENTS:
     integer, intent(in) :: col_itype  ! col%itype value
@@ -795,4 +795,4 @@ contains
   end function hasBedrock
 
 
-end module initVerticalMod
+end module ctsm_InitVertical

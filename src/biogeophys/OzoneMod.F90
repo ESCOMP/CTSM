@@ -1,4 +1,4 @@
-module OzoneMod
+module ctsm_Ozone
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -14,10 +14,10 @@ module OzoneMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use decompMod   , only : bounds_type
-  use clm_varcon  , only : spval
-  use OzoneBaseMod, only : ozone_base_type
-  use abortutils  , only : endrun
+  use ctsm_Decomp   , only : bounds_type
+  use ctsm_VarCon  , only : spval
+  use ctsm_OzoneBase, only : ozone_base_type
+  use ctsm_AbortUtils  , only : endrun
 
   implicit none
   save
@@ -31,10 +31,10 @@ module OzoneMod
      real(r8), pointer :: o3uptakesun_patch(:) ! ozone dose, sunlit leaves (mmol O3/m^2)
 
      ! NOTE(wjs, 2014-09-29) tlai_old_patch really belongs alongside tlai_patch in
-     ! CanopyStateType.  But there are problems with any way I can think to implement
+     ! ctsm_CanopyStateType.  But there are problems with any way I can think to implement
      ! that:
      ! 
-     ! - Updating tlai_old from a call in clm_driver, just before tlai is updated: This
+     ! - Updating tlai_old from a call in ctsm_Driver, just before tlai is updated: This
      !   is problematic to do correctly because tlai is updated in different places
      !   depending on whether you're using SP, CN or ED.
      ! 
@@ -189,7 +189,7 @@ contains
     ! Initialize ozone history variables
     !
     ! !USES:
-    use histFileMod  , only : hist_addfld1d
+    use ctsm_HistFile  , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
@@ -314,7 +314,7 @@ contains
     ! Calculate ozone stress.
     !
     ! !USES:
-    use PatchType            , only : patch
+    use ctsm_PatchType            , only : patch
     !
     ! !ARGUMENTS:
     class(ozone_type)      , intent(inout) :: this
@@ -394,8 +394,8 @@ contains
     !
     ! !USES:
     use shr_const_mod        , only : SHR_CONST_RGAS
-    use pftconMod            , only : pftcon
-    use clm_time_manager     , only : get_step_size
+    use ctsm_PftCon            , only : pftcon
+    use ctsm_TimeManager     , only : get_step_size
     !
     ! !ARGUMENTS:
     real(r8) , intent(in)    :: forc_ozone ! ozone partial pressure (mol/mol)
@@ -509,4 +509,4 @@ contains
   end subroutine CalcOzoneStressOnePoint
 
 
-end module OzoneMod
+end module ctsm_Ozone

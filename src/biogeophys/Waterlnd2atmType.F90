@@ -1,4 +1,4 @@
-module Waterlnd2atmType
+module ctsm_WaterLnd2AtmType
 
 #include "shr_assert.h"
 
@@ -9,11 +9,11 @@ module Waterlnd2atmType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : AllocateVar1d
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_Decomp      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_WaterTracerUtils, only : AllocateVar1d
   !
   implicit none
   save
@@ -141,7 +141,7 @@ contains
     ! Initialize history vars
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_HistFile    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(waterlnd2atm_type), intent(inout) :: this
@@ -193,4 +193,4 @@ contains
 
   end subroutine InitCold
 
-end module Waterlnd2atmType
+end module ctsm_WaterLnd2AtmType

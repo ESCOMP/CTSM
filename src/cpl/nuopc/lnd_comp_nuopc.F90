@@ -18,21 +18,21 @@ module lnd_comp_nuopc
   use shr_file_mod           , only : shr_file_getlogunit, shr_file_setlogunit
   use shr_orb_mod            , only : shr_orb_decl, shr_orb_params, SHR_ORB_UNDEF_REAL, SHR_ORB_UNDEF_INT
   use shr_cal_mod            , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
-  use spmdMod                , only : masterproc, mpicom, spmd_init
-  use decompMod              , only : bounds_type, ldecomp, get_proc_bounds
-  use domainMod              , only : ldomain
-  use controlMod             , only : control_setNL
-  use clm_varorb             , only : eccen, obliqr, lambm0, mvelpp
-  use clm_varctl             , only : inst_index, inst_suffix, inst_name
-  use clm_varctl             , only : single_column, clm_varctl_set, iulog
-  use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
-  use clm_varcon             , only : re
-  use clm_time_manager       , only : set_timemgr_init, advance_timestep
-  use clm_time_manager       , only : set_nextsw_cday, update_rad_dtime
-  use clm_time_manager       , only : get_nstep, get_step_size
-  use clm_time_manager       , only : get_curr_date, get_curr_calday
-  use clm_initializeMod      , only : initialize1, initialize2
-  use clm_driver             , only : clm_drv
+  use ctsm_Spmd                , only : masterproc, mpicom, spmd_init
+  use ctsm_Decomp              , only : bounds_type, ldecomp, get_proc_bounds
+  use ctsm_Domain              , only : ldomain
+  use ctsm_Control             , only : control_setNL
+  use ctsm_VarOrb             , only : eccen, obliqr, lambm0, mvelpp
+  use ctsm_VarCtl             , only : inst_index, inst_suffix, inst_name
+  use ctsm_VarCtl             , only : single_column, ctsm_VarCtl_set, iulog
+  use ctsm_VarCtl             , only : nsrStartup, nsrContinue, nsrBranch
+  use ctsm_VarCon             , only : re
+  use ctsm_TimeManager       , only : set_timemgr_init, advance_timestep
+  use ctsm_TimeManager       , only : set_nextsw_cday, update_rad_dtime
+  use ctsm_TimeManager       , only : get_nstep, get_step_size
+  use ctsm_TimeManager       , only : get_curr_date, get_curr_calday
+  use ctsm_Initialize      , only : initialize1, initialize2
+  use ctsm_Driver             , only : clm_drv
   use lnd_import_export      , only : advertise_fields, realize_fields
   use lnd_import_export      , only : import_fields, export_fields
   use lnd_shr_methods        , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
@@ -328,7 +328,7 @@ contains
 
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
 
-    use clm_instMod, only : lnd2atm_inst, lnd2glc_inst, water_inst
+    use ctsm_Inst, only : lnd2atm_inst, lnd2glc_inst, water_inst
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -538,7 +538,7 @@ contains
     !----------------------
 
     ! set default values for run control variables
-    call clm_varctl_set(&
+    call ctsm_VarCtl_set(&
          caseid_in=caseid, ctitle_in=ctitle,                     &
          brnch_retain_casename_in=brnch_retain_casename,         &
          single_column_in=single_column, scmlat_in=scmlat, scmlon_in=scmlon, &
@@ -766,7 +766,7 @@ contains
     ! Run CTSM
     !------------------------
     
-    use clm_instMod, only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
+    use ctsm_Inst, only : water_inst, atm2lnd_inst, glc2lnd_inst, lnd2atm_inst, lnd2glc_inst
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -927,7 +927,7 @@ contains
 
        call t_startf ('shr_orb_decl')
 
-       ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
+       ! Note - the orbital inquiries set the values in ctsm_VarOrb via the module use statements
        call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 

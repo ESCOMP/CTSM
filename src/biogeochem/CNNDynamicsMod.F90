@@ -1,4 +1,4 @@
-module CNNDynamicsMod
+module ctsm_CNNDynamicsMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,30 +7,30 @@ module CNNDynamicsMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use decompMod                       , only : bounds_type
-  use clm_varcon                      , only : dzsoi_decomp, zisoi
-  use clm_varctl                      , only : use_nitrif_denitrif, use_vertsoilc, nfix_timeconst
-  use subgridAveMod                   , only : p2c
-  use atm2lndType                     , only : atm2lnd_type
-  use CNVegStateType                  , only : cnveg_state_type
-  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType	      , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType	      , only : cnveg_nitrogenflux_type
-  use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
-  use CropType                        , only : crop_type
-  use ColumnType                      , only : col                
-  use PatchType                       , only : patch                
+  use ctsm_Decomp                       , only : bounds_type
+  use ctsm_VarCon                      , only : dzsoi_decomp, zisoi
+  use ctsm_VarCtl                      , only : use_nitrif_denitrif, use_vertsoilc, nfix_timeconst
+  use ctsm_SubgridAve                   , only : p2c
+  use ctsm_Atm2LndType                     , only : atm2lnd_type
+  use ctsm_CNVegStateType                  , only : cnveg_state_type
+  use ctsm_CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType	      , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType	      , only : cnveg_nitrogenflux_type
+  use ctsm_SoilBiogeochemStateType         , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
+  use ctsm_WaterFluxBulkType                   , only : waterfluxbulk_type
+  use ctsm_CropType                        , only : crop_type
+  use ctsm_ColumnType                      , only : col                
+  use ctsm_PatchType                       , only : patch                
   use perf_mod                        , only : t_startf, t_stopf
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNNDynamicsReadNML          ! Read in namelist for Mineral Nitrogen Dynamics
+  public :: ctsm_CNNDynamicsReadNML          ! Read in namelist for Mineral Nitrogen Dynamics
   public :: CNNDeposition               ! Update N deposition rate from atm forcing
   public :: CNNFixation                 ! Update N Fixation rate
   public :: CNNFert                     ! Update N fertilizer for crops
@@ -49,19 +49,19 @@ module CNNDynamicsMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNNDynamicsReadNML( NLFilename )
+  subroutine ctsm_CNNDynamicsReadNML( NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for Mineral Nitrogen Dynamics
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
+    use ctsm_AbortUtils     , only : endrun
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -70,7 +70,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'CNNDynamicsReadNML'
+    character(len=*), parameter :: subname = 'ctsm_CNNDynamicsReadNML'
     character(len=*), parameter :: nmlname = 'mineral_nitrogen_dynamics'
     !-----------------------------------------------------------------------
     real(r8) :: freelivfix_intercept   ! intercept of line of free living fixation with annual ET
@@ -111,7 +111,7 @@ contains
     params_inst%freelivfix_intercept = freelivfix_intercept
     params_inst%freelivfix_slope_wET = freelivfix_slope_wET
 
-  end subroutine CNNDynamicsReadNML
+  end subroutine ctsm_CNNDynamicsReadNML
 
   !-----------------------------------------------------------------------
   subroutine CNNDeposition( bounds, &
@@ -125,7 +125,7 @@ contains
     ! directly into the canopy and mineral N entering the soil pool.
     !
     ! !USES:
-    use CNSharedParamsMod    , only: use_fun
+    use ctsm_CNSharedParamsMod    , only: use_fun
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
@@ -156,9 +156,9 @@ contains
        waterfluxbulk_inst, soilbiogeochem_nitrogenflux_inst)
 
 
-    use clm_time_manager , only : get_days_per_year
+    use ctsm_TimeManager , only : get_days_per_year
     use shr_sys_mod      , only : shr_sys_flush
-    use clm_varcon       , only : secspday, spval
+    use ctsm_VarCon       , only : secspday, spval
  
     integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter                                                                                                                     
     integer                                , intent(in)    :: filter_soilc(:) ! filter for soil columns                                                                                                                                  
@@ -200,10 +200,10 @@ contains
     ! All N fixation goes to the soil mineral N pool.
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
+    use ctsm_TimeManager , only : get_days_per_year
     use shr_sys_mod      , only : shr_sys_flush
-    use clm_varcon       , only : secspday, spval
-    use CNSharedParamsMod    , only: use_fun
+    use ctsm_VarCon       , only : secspday, spval
+    use ctsm_CNSharedParamsMod    , only: use_fun
     !
     ! !ARGUMENTS:
     integer                                , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -303,8 +303,8 @@ contains
     ! nitrogen in the soil root zone.
     !
     ! !USES:
-    use pftconMod, only : ntmp_soybean, nirrig_tmp_soybean
-    use pftconMod, only : ntrp_soybean, nirrig_trp_soybean
+    use ctsm_PftCon, only : ntmp_soybean, nirrig_tmp_soybean
+    use ctsm_PftCon, only : ntrp_soybean, nirrig_trp_soybean
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -438,4 +438,4 @@ contains
 
   end subroutine CNSoyfix
 
-end module CNNDynamicsMod
+end module ctsm_CNNDynamicsMod

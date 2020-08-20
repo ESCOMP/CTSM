@@ -1,14 +1,14 @@
 module test_SnowHydrology_initSnowLayers
   
-  ! Tests of SnowHydrologyMod: initSnowLayers
+  ! Tests of ctsm_SnowHydrology: initSnowLayers
   
   use pfunit_mod
-  use SnowHydrologyMod
+  use ctsm_SnowHydrology
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
-  use ColumnType, only : col
-  use clm_varpar, only : nlevsno
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_ColumnType, only : col
+  use ctsm_VarPar, only : nlevsno
 
   implicit none
   
@@ -42,7 +42,7 @@ contains
     call setup_single_veg_patch(pft_type = 1)
     allocate(snow_depth(bounds%begc:bounds%endc))
     snow_depth(:) = 0._r8
-    col%zi(bounds%begc:bounds%endc,0) = 0._r8 ! Normally initialized elsewhere (initVerticalMod)
+    col%zi(bounds%begc:bounds%endc,0) = 0._r8 ! Normally initialized elsewhere (ctsm_InitVertical)
 
     ! Exercise
     call InitSnowLayers(bounds, snow_depth)
@@ -63,7 +63,7 @@ contains
     call setup_single_veg_patch(pft_type = 1)
     allocate(snow_depth(bounds%begc:bounds%endc))
     snow_depth(:) = 1._r8
-    col%zi(bounds%begc:bounds%endc,0) = 0._r8 ! Normally initialized elsewhere (initVerticalMod)
+    col%zi(bounds%begc:bounds%endc,0) = 0._r8 ! Normally initialized elsewhere (ctsm_InitVertical)
 
     ! Exercise
     call InitSnowLayers(bounds, snow_depth)

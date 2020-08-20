@@ -1,4 +1,4 @@
-module clm_nlUtilsMod
+module ctsm_NlUtils
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -113,4 +113,4 @@ end subroutine find_nlgroup_name
 
 !-----------------------------------------------------------------------
 
-end module clm_nlUtilsMod
+end module ctsm_NlUtils

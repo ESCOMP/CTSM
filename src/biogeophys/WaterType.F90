@@ -1,4 +1,4 @@
-module WaterType
+module ctsm_WaterType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -56,28 +56,28 @@ module WaterType
 #include "shr_assert.h"
   use shr_kind_mod             , only : r8 => shr_kind_r8
   use shr_log_mod              , only : errMsg => shr_log_errMsg
-  use abortutils               , only : endrun
-  use decompMod                , only : bounds_type
-  use clm_varctl               , only : iulog
-  use clm_varpar               , only : nlevsno
+  use ctsm_AbortUtils               , only : endrun
+  use ctsm_Decomp                , only : bounds_type
+  use ctsm_VarCtl               , only : iulog
+  use ctsm_VarPar               , only : nlevsno
   use ncdio_pio                , only : file_desc_t
-  use WaterFluxBulkType        , only : waterfluxbulk_type
-  use WaterFluxType            , only : waterflux_type
-  use WaterStateBulkType       , only : waterstatebulk_type
-  use WaterStateType           , only : waterstate_type
-  use WaterDiagnosticType      , only : waterdiagnostic_type
-  use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
-  use WaterBalanceType         , only : waterbalance_type
-  use WaterInfoBaseType        , only : water_info_base_type
-  use WaterInfoBulkType        , only : water_info_bulk_type
-  use WaterInfoTracerType      , only : water_info_tracer_type
-  use WaterInfoIsotopeType     , only : water_info_isotope_type
-  use Waterlnd2atmType         , only : waterlnd2atm_type
-  use Waterlnd2atmBulkType     , only : waterlnd2atmbulk_type
-  use Wateratm2lndType         , only : wateratm2lnd_type
-  use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
-  use WaterTracerContainerType , only : water_tracer_container_type
-  use WaterTracerUtils         , only : CompareBulkToTracer, SetTracerToBulkTimesRatio
+  use ctsm_WaterFluxBulkType        , only : waterfluxbulk_type
+  use ctsm_WaterFluxType            , only : waterflux_type
+  use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+  use ctsm_WaterStateType           , only : waterstate_type
+  use ctsm_WaterDiagnosticType      , only : waterdiagnostic_type
+  use ctsm_WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use ctsm_WaterBalanceType         , only : waterbalance_type
+  use ctsm_WaterInfoBaseType        , only : water_info_base_type
+  use ctsm_WaterInfoBulkType        , only : water_info_bulk_type
+  use ctsm_WaterInfoTracerType      , only : water_info_tracer_type
+  use ctsm_WaterInfoIsotopeType     , only : water_info_isotope_type
+  use ctsm_WaterLnd2AtmType         , only : waterlnd2atm_type
+  use ctsm_WaterLnd2AtmBulkType     , only : waterlnd2atmbulk_type
+  use ctsm_WaterAtm2LndType         , only : wateratm2lnd_type
+  use ctsm_WaterAtm2LndBulkType     , only : wateratm2lndbulk_type
+  use ctsm_WaterTracerContainerType , only : water_tracer_container_type
+  use ctsm_WaterTracerUtils         , only : CompareBulkToTracer, SetTracerToBulkTimesRatio
 
   implicit none
   private
@@ -409,9 +409,9 @@ contains
     ! Read the water_tracers namelist; set this%params
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -1045,4 +1045,4 @@ contains
   end subroutine Summary
 
 
-end module WaterType
+end module ctsm_WaterType

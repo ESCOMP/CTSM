@@ -1,4 +1,4 @@
-module SatellitePhenologyMod
+module ctsm_SatellitePhenologyMod
 
 #include "shr_assert.h"
 
@@ -15,21 +15,21 @@ module SatellitePhenologyMod
   use shr_kind_mod    , only : CL => shr_kind_CL
   use shr_kind_mod    , only : CXX => shr_kind_CXX
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : bounds_type
-  use abortutils      , only : endrun
-  use clm_varctl      , only : scmlat,scmlon,single_column
-  use clm_varctl      , only : iulog, use_lai_streams
-  use clm_varcon      , only : grlnd
-  use controlMod      , only : NLFilename
-  use decompMod       , only : gsmap_lnd_gdc2glo
-  use domainMod       , only : ldomain
-  use fileutils       , only : getavu, relavu
-  use PatchType       , only : patch                
-  use CanopyStateType , only : canopystate_type
-  use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_VarCtl      , only : scmlat,scmlon,single_column
+  use ctsm_VarCtl      , only : iulog, use_lai_streams
+  use ctsm_VarCon      , only : grlnd
+  use ctsm_Control      , only : NLFilename
+  use ctsm_Decomp       , only : gsmap_lnd_gdc2glo
+  use ctsm_Domain       , only : ldomain
+  use ctsm_FileUtils       , only : getavu, relavu
+  use ctsm_PatchType       , only : patch                
+  use ctsm_CanopyStateType , only : canopystate_type
+  use ctsm_WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
   use perf_mod        , only : t_startf, t_stopf
-  use spmdMod         , only : masterproc
-  use spmdMod         , only : mpicom, comp_id
+  use ctsm_Spmd         , only : masterproc
+  use ctsm_Spmd         , only : mpicom, comp_id
   use mct_mod
   use ncdio_pio   
   !
@@ -38,8 +38,8 @@ module SatellitePhenologyMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: SatellitePhenology     ! CLMSP Ecosystem dynamics: phenology, vegetation
-  public :: SatellitePhenologyInit ! Dynamically allocate memory
+  public :: ctsm_SatellitePhenology     ! CLMSP Ecosystem dynamics: phenology, vegetation
+  public :: ctsm_SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
   public :: lai_advance            ! Advance the LAI streams (outside of a Open-MP threading loop)
@@ -78,13 +78,13 @@ contains
     !
     !
     ! !USES:
-    use clm_varctl       , only : inst_name
-    use clm_time_manager , only : get_calendar
+    use ctsm_VarCtl       , only : inst_name
+    use ctsm_TimeManager , only : get_calendar
     use ncdio_pio        , only : pio_subsystem
     use shr_pio_mod      , only : shr_pio_getiotype
-    use clm_nlUtilsMod   , only : find_nlgroup_name
-    use ndepStreamMod    , only : clm_domain_mct
-    use histFileMod      , only : hist_addfld1d
+    use ctsm_NlUtils   , only : find_nlgroup_name
+    use ctsm_NDepStream    , only : clm_domain_mct
+    use ctsm_HistFile      , only : hist_addfld1d
     use shr_stream_mod   , only : shr_stream_file_null
     use shr_string_mod   , only : shr_string_listCreateField
     !
@@ -212,7 +212,7 @@ contains
     ! Advance LAI streams
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date
+    use ctsm_TimeManager, only : get_curr_date
     !
     ! !ARGUMENTS:
     implicit none
@@ -254,7 +254,7 @@ contains
     ! Interpolate data stream information for Lai.
     !
     ! !USES:
-    use pftconMod       , only : noveg
+    use ctsm_PftCon       , only : noveg
     !
     ! !ARGUMENTS:
     implicit none
@@ -290,7 +290,7 @@ contains
   end subroutine lai_interp
 
   !-----------------------------------------------------------------------
-  subroutine SatellitePhenologyInit (bounds)
+  subroutine ctsm_SatellitePhenologyInit (bounds)
     !
     ! !DESCRIPTION:
     ! Dynamically allocate memory and set to signaling NaN.
@@ -328,10 +328,10 @@ contains
        call lai_init(bounds)
     endif
 
-  end subroutine SatellitePhenologyInit
+  end subroutine ctsm_SatellitePhenologyInit
 
   !-----------------------------------------------------------------------
-  subroutine SatellitePhenology(bounds, num_nolakep, filter_nolakep, &
+  subroutine ctsm_SatellitePhenology(bounds, num_nolakep, filter_nolakep, &
        waterdiagnosticbulk_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
@@ -339,7 +339,7 @@ contains
     ! Calculates leaf areas (tlai, elai),  stem areas (tsai, esai) and height (htop).
     !
     ! !USES:
-    use pftconMod, only : noveg, nbrdlf_dcd_brl_shrub
+    use ctsm_PftCon, only : noveg, nbrdlf_dcd_brl_shrub
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                          
@@ -433,7 +433,7 @@ contains
 
     end associate
 
-  end subroutine SatellitePhenology
+  end subroutine ctsm_SatellitePhenology
 
   !-----------------------------------------------------------------------
   subroutine interpMonthlyVeg (bounds, canopystate_inst)
@@ -442,8 +442,8 @@ contains
     ! Determine if 2 new months of data are to be read.
     !
     ! !USES:
-    use clm_varctl      , only : fsurdat
-    use clm_time_manager, only : get_curr_date, get_step_size_real, get_nstep
+    use ctsm_VarCtl      , only : fsurdat
+    use ctsm_TimeManager, only : get_curr_date, get_step_size_real, get_nstep
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  
@@ -496,11 +496,11 @@ contains
     ! read 12 months of veg data for dry deposition
     !
     ! !USES:
-    use clm_varpar  , only : maxveg, maxsoil_patches
-    use pftconMod   , only : noveg
-    use domainMod   , only : ldomain
-    use fileutils   , only : getfil
-    use clm_varctl  , only : fsurdat
+    use ctsm_VarPar  , only : maxveg, maxsoil_patches
+    use ctsm_PftCon   , only : noveg
+    use ctsm_Domain   , only : ldomain
+    use ctsm_FileUtils   , only : getfil
+    use ctsm_VarCtl  , only : fsurdat
     use shr_scam_mod, only : shr_scam_getCloseLatLon
     !
     ! !ARGUMENTS:
@@ -596,12 +596,12 @@ contains
     ! Read monthly vegetation data for two consec. months.
     !
     ! !USES:
-    use clm_varpar       , only : maxveg
-    use pftconMod        , only : noveg
-    use fileutils        , only : getfil
-    use spmdMod          , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
+    use ctsm_VarPar       , only : maxveg
+    use ctsm_PftCon        , only : noveg
+    use ctsm_FileUtils        , only : getfil
+    use ctsm_Spmd          , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
     use shr_scam_mod     , only : shr_scam_getCloseLatLon
-    use clm_time_manager , only : get_nstep
+    use ctsm_TimeManager , only : get_nstep
     use netcdf
     !
     ! !ARGUMENTS:
@@ -716,4 +716,4 @@ contains
 
   end subroutine readMonthlyVegetation
 
-end module SatellitePhenologyMod
+end module ctsm_SatellitePhenologyMod

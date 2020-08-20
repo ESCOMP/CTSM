@@ -16,7 +16,7 @@ module mkVICparamsMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use mkdomainMod , only : domain_checksame
+  use mkctsm_Domain , only : domain_checksame
 
   implicit none
 
@@ -43,7 +43,7 @@ subroutine mkVICparams(ldomain, mapfname, datfname, ndiag, &
 ! make VIC parameters
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkncdio
   use mkdiagnosticsMod, only : output_diagnostics_continuous

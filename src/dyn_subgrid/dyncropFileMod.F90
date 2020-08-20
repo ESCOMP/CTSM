@@ -1,4 +1,4 @@
-module dyncropFileMod
+module ctsm_DynCropFile
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,16 +9,16 @@ module dyncropFileMod
 #include "shr_assert.h"
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use shr_kind_mod          , only : r8 => shr_kind_r8
-  use decompMod             , only : bounds_type, BOUNDS_LEVEL_PROC
-  use dynFileMod            , only : dyn_file_type
+  use ctsm_Decomp             , only : bounds_type, BOUNDS_LEVEL_PROC
+  use ctsm_DynFile            , only : dyn_file_type
   use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
-  use clm_varctl            , only : iulog
-  use clm_varcon            , only : grlnd, namec
-  use abortutils            , only : endrun
-  use spmdMod               , only : masterproc, mpicom
-  use LandunitType          , only : lun                
-  use ColumnType            , only : col                
-  use PatchType             , only : patch                
+  use ctsm_VarCtl            , only : iulog
+  use ctsm_VarCon            , only : grlnd, namec
+  use ctsm_AbortUtils            , only : endrun
+  use ctsm_Spmd               , only : masterproc, mpicom
+  use ctsm_LandunitType          , only : lun                
+  use ctsm_ColumnType            , only : col                
+  use ctsm_PatchType             , only : patch                
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -52,9 +52,9 @@ contains
     ! samples that bound the initial model date)
     !
     ! !USES:
-    use clm_varpar     , only : cft_size
+    use ctsm_VarPar     , only : cft_size
     use ncdio_pio      , only : check_dim
-    use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
+    use ctsm_DynTimeInfo , only : YEAR_POSITION_START_OF_TIMESTEP
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds           ! proc-level bounds
@@ -122,12 +122,12 @@ contains
     ! dyn_var_time_uninterp_type. 
     !
     ! !USES:
-    use CropType          , only : crop_type
-    use landunit_varcon   , only : istcrop
-    use clm_varpar        , only : cft_size, cft_lb, cft_ub
-    use clm_varctl        , only : use_crop
-    use surfrdUtilsMod    , only : collapse_crop_types, collapse_crop_var
-    use subgridWeightsMod , only : set_landunit_weight
+    use ctsm_CropType          , only : crop_type
+    use ctsm_LandunitVarCon   , only : istcrop
+    use ctsm_VarPar        , only : cft_size, cft_lb, cft_ub
+    use ctsm_VarCtl        , only : use_crop
+    use ctsm_SurfReadUtils    , only : collapse_crop_types, collapse_crop_var
+    use ctsm_SubgridWeights , only : set_landunit_weight
 
     implicit none
     !
@@ -216,4 +216,4 @@ contains
 
   end subroutine dyncrop_interp
 
-end module dyncropFileMod
+end module ctsm_DynCropFile

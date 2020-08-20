@@ -1,4 +1,4 @@
-module CNVegetationFacade
+module ctsm_CNVegetationFacade
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -18,12 +18,12 @@ module CNVegetationFacade
   ! get_downreg_patch, etc., so that we don't need to handle the non-cn case here (note
   ! that, currently, we return NaN for most of these getters, because these arrays are
   ! invalid and shouldn't be used when running in SP mode). Also, in its EcosystemDynamics
-  ! routine, it would call SatellitePhenology (but note that the desired interface for
+  ! routine, it would call ctsm_SatellitePhenology (but note that the desired interface for
   ! EcosystemDynamics would be quite different... could just pass everything needed by any
   ! model, and ignore unneeded arguments). Then we can get rid of comments in this module
   ! like, "only call if use_cn is true", as well as use_cn conditionals in this module.
   !
-  ! NOTE(wjs, 2016-02-23) Currently, SatellitePhenology is called even when running with
+  ! NOTE(wjs, 2016-02-23) Currently, ctsm_SatellitePhenology is called even when running with
   ! CN, for the sake of dry deposition. This seems weird to me, and my gut feeling -
   ! without understanding it well - is that this should be rewritten to depend on LAI from
   ! CN rather than from satellite phenology. Until that is done, the separation between SP
@@ -31,8 +31,8 @@ module CNVegetationFacade
   !
   ! NOTE(wjs, 2016-02-23) Currently, this class coordinates calls to soil BGC routines as
   ! well as veg BGC routines (even though it doesn't contain any soil BGC types). This is
-  ! because CNDriver coordinates both the veg & soil BGC. We should probably split up
-  ! CNDriver so that there is a cleaner separation between veg BGC and soil BGC, to allow
+  ! because ctsm_CNDriver coordinates both the veg & soil BGC. We should probably split up
+  ! ctsm_CNDriver so that there is a cleaner separation between veg BGC and soil BGC, to allow
   ! easier swapping of (for example) CN and ED. At that point, this class could
   ! coordinate just the calls to veg BGC routines, with a similar facade class
   ! coordinating the calls to soil BGC routines.
@@ -43,57 +43,57 @@ module CNVegetationFacade
   use shr_infnan_mod                  , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use perf_mod                        , only : t_startf, t_stopf
-  use decompMod                       , only : bounds_type
-  use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
-  use abortutils                      , only : endrun
-  use spmdMod                         , only : masterproc
-  use clm_time_manager                , only : get_curr_date, get_ref_date
-  use clm_time_manager                , only : get_nstep, is_end_curr_year, is_first_step
-  use CNBalanceCheckMod               , only : cn_balance_type
-  use CNVegStateType                  , only : cnveg_state_type
-  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
-  use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
-  use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
-  use FireMethodType                  , only : fire_method_type
-  use CNProductsMod                   , only : cn_products_type
-  use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
-  use SpeciesIsotopeType              , only : species_isotope_type
-  use SpeciesNonIsotopeType           , only : species_non_isotope_type
-  use CanopyStateType                 , only : canopystate_type
-  use PhotosynthesisMod               , only : photosyns_type
-  use atm2lndType                     , only : atm2lnd_type
-  use WaterStateBulkType                  , only : waterstatebulk_type
-  use WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
-  use Wateratm2lndBulkType                   , only : wateratm2lndbulk_type
-  use SoilStateType                   , only : soilstate_type
-  use TemperatureType                 , only : temperature_type 
-  use CropType                        , only : crop_type
-  use ch4Mod                          , only : ch4_type
-  use CNDVType                        , only : dgvs_type
-  use CNDVDriverMod                   , only : CNDVDriver, CNDVHIST
-  use EnergyFluxType                  , only : energyflux_type
-  use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
-  use FrictionVelocityMod             , only : frictionvel_type
-  use ActiveLayerMod                  , only : active_layer_type
-  use SoilBiogeochemStateType         , only : soilBiogeochem_state_type
-  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemCarbonFluxType    , only : soilBiogeochem_carbonflux_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use CNFireEmissionsMod              , only : fireemis_type, CNFireEmisUpdate
-  use CNDriverMod                     , only : CNDriverInit
-  use CNDriverMod                     , only : CNDriverSummarizeStates, CNDriverSummarizeFluxes
-  use CNDriverMod                     , only : CNDriverNoLeaching, CNDriverLeaching
-  use CNCStateUpdate1Mod              , only : CStateUpdateDynPatch
-  use CNNStateUpdate1Mod              , only : NStateUpdateDynPatch
-  use CNVegStructUpdateMod            , only : CNVegStructUpdate
-  use CNAnnualUpdateMod               , only : CNAnnualUpdate
+  use ctsm_Decomp                       , only : bounds_type
+  use ctsm_VarCtl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
+  use ctsm_AbortUtils                      , only : endrun
+  use ctsm_Spmd                         , only : masterproc
+  use ctsm_TimeManager                , only : get_curr_date, get_ref_date
+  use ctsm_TimeManager                , only : get_nstep, is_end_curr_year, is_first_step
+  use ctsm_CNctsm_BalanceCheck               , only : cn_balance_type
+  use ctsm_CNVegStateType                  , only : cnveg_state_type
+  use ctsm_CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use ctsm_CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use ctsm_CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  use ctsm_CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use ctsm_FireMethodType                  , only : fire_method_type
+  use ctsm_CNProductsMod                   , only : cn_products_type
+  use ctsm_NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
+  use ctsm_SpeciesIsotopeType              , only : species_isotope_type
+  use ctsm_SpeciesNonIsotopeType           , only : species_non_isotope_type
+  use ctsm_CanopyStateType                 , only : canopystate_type
+  use ctsm_Photosynthesis               , only : photosyns_type
+  use ctsm_Atm2LndType                     , only : atm2lnd_type
+  use ctsm_WaterStateBulkType                  , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType                  , only : waterdiagnosticbulk_type
+  use ctsm_WaterFluxBulkType                   , only : waterfluxbulk_type
+  use ctsm_WaterAtm2LndBulkType                   , only : wateratm2lndbulk_type
+  use ctsm_SoilStateType                   , only : soilstate_type
+  use ctsm_TemperatureType                 , only : temperature_type 
+  use ctsm_CropType                        , only : crop_type
+  use ctsm_Methane                          , only : ch4_type
+  use ctsm_CNDVType                        , only : dgvs_type
+  use ctsm_CNDVDriverMod                   , only : ctsm_CNDVDriver, CNDVHIST
+  use ctsm_EnergyFluxType                  , only : energyflux_type
+  use ctsm_SaturatedExcessRunoff        , only : saturated_excess_runoff_type
+  use ctsm_FrictionVelocity             , only : frictionvel_type
+  use ctsm_ActiveLayer                  , only : active_layer_type
+  use ctsm_SoilBiogeochemStateType         , only : soilBiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemCarbonFluxType    , only : soilBiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_CNFireEmissionsMod              , only : fireemis_type, CNFireEmisUpdate
+  use ctsm_CNDriverMod                     , only : ctsm_CNDriverInit
+  use ctsm_CNDriverMod                     , only : ctsm_CNDriverSummarizeStates, ctsm_CNDriverSummarizeFluxes
+  use ctsm_CNDriverMod                     , only : ctsm_CNDriverNoLeaching, ctsm_CNDriverLeaching
+  use ctsm_CNCStateUpdate1Mod              , only : CStateUpdateDynPatch
+  use ctsm_CNNStateUpdate1Mod              , only : NStateUpdateDynPatch
+  use ctsm_CNVegStructUpdateMod            , only : ctsm_CNVegStructUpdate
+  use ctsm_CNAnnualUpdateMod               , only : ctsm_CNAnnualUpdate
   use dynConsBiogeochemMod            , only : dyn_cnbal_patch, dyn_cnbal_col
   use dynCNDVMod                      , only : dynCNDV_init, dynCNDV_interp
-  use CNPrecisionControlMod           , only: CNPrecisionControl
-  use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
+  use ctsm_CNPrecisionControlMod           , only: ctsm_CNPrecisionControl
+  use ctsm_SoilBiogeochemPrecisionControl , only: SoilBiogeochemPrecisionControl
   !
   implicit none
   private
@@ -135,13 +135,13 @@ module CNVegetationFacade
      ! the other CN Vegetation stuff. A question to ask is: Is this module used when
      ! running with SP or ED? If so, then it should probably remain outside of CNVeg.
      !
-     ! From the clm_instMod section on "CN vegetation types":
+     ! From the ctsm_Inst section on "CN vegetation types":
      ! - nutrient_competition_method
      !   - I'm pretty sure this should be moved into here; it's just a little messy to do
      !     so, because of how it's initialized (specifically, the call to readParameters
-     !     in clm_initializeMod).
+     !     in ctsm_Initialize).
      !
-     ! From the clm_instMod section on "general biogeochem types":
+     ! From the ctsm_Inst section on "general biogeochem types":
      ! - ch4_inst
      !   - probably not: really seems to belong in soilbiogeochem
      ! - crop_inst
@@ -201,8 +201,8 @@ contains
     ! Should be called regardless of whether use_cn is true
     !
     ! !USES:
-    use CNFireFactoryMod , only : create_cnfire_method
-    use clm_varcon       , only : c13ratio, c14ratio
+    use ctsm_CNFireFactoryMod , only : create_cnfire_method
+    use ctsm_VarCon       , only : c13ratio, c14ratio
     use ncdio_pio        , only : file_desc_t
     !
     ! !ARGUMENTS:
@@ -287,11 +287,11 @@ contains
     ! Read in the general CN control namelist
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -405,7 +405,7 @@ contains
     class(cn_vegetation_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
     ! NOTE(wjs, 2016-02-23) These need to be pointers to agree with the interface of
-    ! UpdateAccVars in CNDVType (they are pointers there as a workaround for a compiler
+    ! UpdateAccVars in ctsm_CNDVType (they are pointers there as a workaround for a compiler
     ! bug).
     real(r8), pointer , intent(in)   :: t_a10_patch(:)      ! 10-day running mean of the 2 m temperature (K)
     real(r8), pointer , intent(in)   :: t_ref2m_patch(:)    ! 2 m height surface air temperature (K)
@@ -437,7 +437,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only : file_desc_t
-    use clm_varcon, only : c3_r2, c14ratio
+    use ctsm_VarCon, only : c3_r2, c14ratio
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -535,7 +535,7 @@ contains
     character(len=*), parameter :: subname = 'Init2'
     !-----------------------------------------------------------------------
 
-    call CNDriverInit(bounds, NLFilename, this%cnfire_method)
+    call ctsm_CNDriverInit(bounds, NLFilename, this%cnfire_method)
 
     if (use_cndv) then
        call dynCNDV_init(bounds, this%dgvs_inst)
@@ -650,9 +650,9 @@ contains
     ! Should only be called if use_cn is true
     !
     ! !USES:
-    use dynPriorWeightsMod      , only : prior_weights_type
-    use dynPatchStateUpdaterMod, only : patch_state_updater_type
-    use dynColumnStateUpdaterMod, only : column_state_updater_type
+    use ctsm_DynPriorWeights      , only : prior_weights_type
+    use ctsm_DynPatchStateUpdater, only : patch_state_updater_type
+    use ctsm_DynColumnStateUpdater, only : column_state_updater_type
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(inout) :: this
@@ -778,7 +778,7 @@ contains
     character(len=*), parameter :: subname = 'InitColumnBalance'
     !-----------------------------------------------------------------------
 
-    call CNDriverSummarizeStates(bounds, &
+    call ctsm_CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
@@ -813,7 +813,7 @@ contains
     ! Called before DynamicAreaConservation.
     !
     ! !USES:
-    use subgridAveMod, only : c2g
+    use ctsm_SubgridAve, only : c2g
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type)               , intent(inout) :: this
@@ -834,7 +834,7 @@ contains
     character(len=*), parameter :: subname = 'InitGridcellBalance'
     !-----------------------------------------------------------------------
 
-    call CNDriverSummarizeStates(bounds, &
+    call ctsm_CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
@@ -936,7 +936,7 @@ contains
 
     call crop_inst%CropIncrementYear(num_pcropp, filter_pcropp)
 
-    call CNDriverNoLeaching(bounds,                                         &
+    call ctsm_CNDriverNoLeaching(bounds,                                         &
          num_soilc, filter_soilc,                       &
          num_soilp, filter_soilp,                       &
          num_pcropp, filter_pcropp, doalb,              &
@@ -962,7 +962,7 @@ contains
     call CNFireEmisUpdate(bounds, num_soilp, filter_soilp, &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, fireemis_inst )
 
-    call CNAnnualUpdate(bounds,            &
+    call ctsm_CNAnnualUpdate(bounds,            &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
          this%cnveg_state_inst, this%cnveg_carbonflux_inst)
@@ -1018,7 +1018,7 @@ contains
     ! Update the nitrogen leaching rate as a function of soluble mineral N 
     ! and total soil water outflow.
     
-    call CNDriverLeaching(bounds, &
+    call ctsm_CNDriverLeaching(bounds, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
          waterstatebulk_inst, waterfluxbulk_inst, &
@@ -1027,11 +1027,11 @@ contains
 
     ! Set controls on very low values in critical state variables 
 
-    call t_startf('CNPrecisionControl')
-    call CNPrecisionControl(bounds, num_soilp, filter_soilp, &
+    call t_startf('ctsm_CNPrecisionControl')
+    call ctsm_CNPrecisionControl(bounds, num_soilp, filter_soilp, &
          this%cnveg_carbonstate_inst, this%c13_cnveg_carbonstate_inst, &
          this%c14_cnveg_carbonstate_inst, this%cnveg_nitrogenstate_inst)
-    call t_stopf('CNPrecisionControl')
+    call t_stopf('ctsm_CNPrecisionControl')
 
     call t_startf('SoilBiogeochemPrecisionControl')
     call SoilBiogeochemPrecisionControl(num_soilc, filter_soilc,  &
@@ -1041,7 +1041,7 @@ contains
 
     ! Call to all CN summary routines
 
-    call  CNDriverSummarizeStates(bounds, &
+    call  ctsm_CNDriverSummarizeStates(bounds, &
          num_allc, filter_allc, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
@@ -1054,7 +1054,7 @@ contains
          c14_soilbiogeochem_carbonstate_inst, &
          soilbiogeochem_nitrogenstate_inst)
 
-    call  CNDriverSummarizeFluxes(bounds, &
+    call  ctsm_CNDriverSummarizeFluxes(bounds, &
          num_soilc, filter_soilc, &
          num_soilp, filter_soilp, &
          this%cnveg_carbonflux_inst, &
@@ -1071,7 +1071,7 @@ contains
     ! vegetation structure (LAI, SAI, height)
 
     if (doalb) then   
-       call CNVegStructUpdate(num_soilp, filter_soilp, &
+       call ctsm_CNVegStructUpdate(num_soilp, filter_soilp, &
             waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
             crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
     end if
@@ -1089,7 +1089,7 @@ contains
     ! Should only be called if use_cn is true
     !
     ! !USES:
-    use clm_time_manager   , only : get_nstep_since_startup_or_lastDA_restart_or_pause
+    use ctsm_TimeManager   , only : get_nstep_since_startup_or_lastDA_restart_or_pause
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type)               , intent(inout) :: this
@@ -1183,7 +1183,7 @@ contains
                   ncdate,' nbdate=',nbdate,' kyr=',kyr,' nstep=', nstep
           end if
 
-          call CNDVDriver(bounds, &
+          call ctsm_CNDVDriver(bounds, &
                num_natvegp, filter_natvegp, kyr,  &
                atm2lnd_inst, wateratm2lndbulk_inst, &
                this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst, this%dgvs_inst)
@@ -1341,8 +1341,8 @@ contains
   end function get_root_respiration_patch
 
   ! TODO(wjs, 2016-02-19) annsum_npp, agnpp and bgnpp are all needed for the estimation
-  ! of tillers in ch4Mod. Rather than providing getters for these three things so that
-  ! ch4Mod can estimate tillers, it would probably be better if the tiller estimation
+  ! of tillers in ctsm_Methane. Rather than providing getters for these three things so that
+  ! ctsm_Methane can estimate tillers, it would probably be better if the tiller estimation
   ! algorithm was moved into some CNVeg-specific module, and then tillers could be
   ! queried directly.
 
@@ -1434,8 +1434,8 @@ contains
     ! Get patch-level fine root carbon array
     !
     ! !USES:
-    use pftconMod           , only : pftcon
-    use PatchType           , only : patch
+    use ctsm_PftCon           , only : pftcon
+    use ctsm_PatchType           , only : patch
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(in) :: this
@@ -1478,8 +1478,8 @@ contains
     ! Get patch-level live coarse root carbon array
     !
     ! !USES:
-    use pftconMod           , only : pftcon
-    use PatchType           , only : patch
+    use ctsm_PftCon           , only : pftcon
+    use ctsm_PatchType           , only : patch
     !
     ! !ARGUMENTS:
     class(cn_vegetation_type), intent(in) :: this
@@ -1545,4 +1545,4 @@ contains
   end function get_totvegc_col
 
 
-end module CNVegetationFacade
+end module ctsm_CNVegetationFacade

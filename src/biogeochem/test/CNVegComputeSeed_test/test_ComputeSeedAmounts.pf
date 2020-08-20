@@ -1,17 +1,17 @@
 module test_ComputeSeedAmounts
 
-  ! Tests of CNVegComputeSeedMod: ComputeSeedAmounts
+  ! Tests of ctsm_CNVegComputeSeedMod: ComputeSeedAmounts
 
   use pfunit_mod
-  use CNVegComputeSeedMod
+  use ctsm_CNVegComputeSeedMod
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
-  use unittestFilterBuilderMod
-  use pftconMod
-  use CNSpeciesMod
-  use PatchType
-  use clm_varcon, only : c3_r2, c4_r2, c14ratio
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_UnitTestFilterBuilder
+  use ctsm_PftCon
+  use ctsm_CNSpeciesMod
+  use ctsm_PatchType
+  use ctsm_VarCon, only : c3_r2, c4_r2, c14ratio
 
   implicit none
 

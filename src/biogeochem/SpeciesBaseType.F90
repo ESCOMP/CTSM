@@ -1,4 +1,4 @@
-module SpeciesBaseType
+module ctsm_SpeciesBaseType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -75,4 +75,4 @@ module SpeciesBaseType
      end function is_isotope_interface
   end interface
 
-end module SpeciesBaseType
+end module ctsm_SpeciesBaseType

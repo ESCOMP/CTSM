@@ -1,4 +1,4 @@
-module CNVegCarbonStateType
+module ctsm_CNVegCarbonStateType
 
 #include "shr_assert.h"
 
@@ -9,18 +9,18 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
-  use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
-  use clm_varctl     , only : iulog, use_cndv, use_crop
-  use decompMod      , only : bounds_type
-  use abortutils     , only : endrun
-  use spmdMod        , only : masterproc 
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch
-  use CNSpeciesMod   , only : species_from_string, CN_SPECIES_C12
-  use dynPatchStateUpdaterMod, only : patch_state_updater_type
-  use CNVegComputeSeedMod, only : ComputeSeedAmounts
+  use ctsm_PftCon	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
+  use ctsm_VarCon     , only : spval, c3_r2, c4_r2, c14ratio
+  use ctsm_VarCtl     , only : iulog, use_cndv, use_crop
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_Spmd        , only : masterproc 
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_PatchType      , only : patch
+  use ctsm_CNSpeciesMod   , only : species_from_string, CN_SPECIES_C12
+  use ctsm_DynPatchStateUpdater, only : patch_state_updater_type
+  use ctsm_CNVegComputeSeedMod, only : ComputeSeedAmounts
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -151,11 +151,11 @@ contains
     ! Read the namelist for CNVegCarbonState
     !
     !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this
@@ -281,8 +281,8 @@ contains
     ! add history fields for all CN variables, always set as default='inactive'
     !
     ! !USES:
-    use clm_varctl , only : use_c13, use_c14
-    use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
+    use ctsm_VarCtl , only : use_c13, use_c14
+    use ctsm_HistFile, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     !
     ! !ARGUMENTS:
     class (cnveg_carbonstate_type) :: this
@@ -868,8 +868,8 @@ contains
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
     !
     ! !USES:
-    use landunit_varcon	 , only : istsoil, istcrop 
-    use clm_varctl, only : MM_Nuptake_opt    
+    use ctsm_LandunitVarCon	 , only : istsoil, istcrop 
+    use ctsm_VarCtl, only : MM_Nuptake_opt    
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this 
@@ -1043,11 +1043,11 @@ contains
     !
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-    use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
-    use clm_time_manager , only : is_restart
-    use landunit_varcon	 , only : istsoil, istcrop 
-    use spmdMod          , only : mpicom
+    use ctsm_VarCon       , only : c13ratio, c14ratio
+    use ctsm_VarCtl       , only : spinup_state, use_cndv, MM_Nuptake_opt
+    use ctsm_TimeManager , only : is_restart
+    use ctsm_LandunitVarCon	 , only : istsoil, istcrop 
+    use ctsm_Spmd          , only : mpicom
     use shr_mpi_mod      , only : shr_mpi_sum
     use restUtilMod
     use ncdio_pio
@@ -2389,8 +2389,8 @@ contains
        soilbiogeochem_ctrunc_col)
     !
     ! !USES:
-    use subgridAveMod, only : p2c
-    use clm_time_manager , only : get_nstep
+    use ctsm_SubgridAve, only : p2c
+    use ctsm_TimeManager , only : get_nstep
 
     !
     ! !DESCRIPTION:
@@ -2755,4 +2755,4 @@ contains
 
   end subroutine DynamicPatchAdjustments
 
-end module CNVegCarbonStateType
+end module ctsm_CNVegCarbonStateType

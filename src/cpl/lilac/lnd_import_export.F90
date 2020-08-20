@@ -6,16 +6,16 @@ module lnd_import_export
   use shr_string_mod        , only : shr_string_listGetName, shr_string_listGetNum
   use shr_sys_mod           , only : shr_sys_abort
   use shr_const_mod         , only : SHR_CONST_TKFRZ, fillvalue=>SHR_CONST_SPVAL
-  use clm_varctl            , only : iulog, co2_ppmv, ndep_from_cpl
-  use clm_varcon            , only : rair, o2_molar_const
-  use clm_time_manager      , only : get_nstep
-  use clm_instMod           , only : atm2lnd_inst, lnd2atm_inst, water_inst
-  use domainMod             , only : ldomain
-  use spmdMod               , only : masterproc
+  use ctsm_VarCtl            , only : iulog, co2_ppmv, ndep_from_cpl
+  use ctsm_VarCon            , only : rair, o2_molar_const
+  use ctsm_TimeManager      , only : get_nstep
+  use ctsm_Inst           , only : atm2lnd_inst, lnd2atm_inst, water_inst
+  use ctsm_Domain             , only : ldomain
+  use ctsm_Spmd               , only : masterproc
   use decompmod             , only : bounds_type
-  use lnd2atmType           , only : lnd2atm_type
-  use lnd2glcMod            , only : lnd2glc_type
-  use atm2lndType           , only : atm2lnd_type
+  use ctsm_Lnd2AtmType           , only : lnd2atm_type
+  use ctsm_Lnd2Glc            , only : lnd2glc_type
+  use ctsm_Atm2LndType           , only : atm2lnd_type
   use lnd_shr_methods       , only : chkerr
   use shr_megan_mod         , only : shr_megan_mechcomps_n  ! TODO: need to add a namelist read here (see https://github.com/ESCOMP/CTSM/issues/926)
 

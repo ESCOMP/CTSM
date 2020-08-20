@@ -1,4 +1,4 @@
-module SoilMoistStressMod
+module ctsm_SoilMoistStress
 
 #include "shr_assert.h"
 
@@ -75,8 +75,8 @@ contains
     !
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use decompMod      , only : bounds_type
-    use ColumnType     , only : col
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_ColumnType     , only : col
     !
     ! !ARGUMENTS:
     implicit none
@@ -122,8 +122,8 @@ contains
     !
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use decompMod      , only : bounds_type
-    use ColumnType     , only : col
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_ColumnType     , only : col
     implicit none
     !
     ! !ARGUMENTS:
@@ -177,8 +177,8 @@ contains
     !
     ! !USES
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use decompMod      , only : bounds_type
-    use ColumnType     , only : col
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_ColumnType     , only : col
     !
     ! !ARGUMENTS:
     implicit none
@@ -225,14 +225,14 @@ contains
     !
     ! !USES
     use shr_kind_mod    , only: r8 => shr_kind_r8
-    use clm_varcon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
-    use decompMod       , only : bounds_type
-    use ActiveLayerMod  , only : active_layer_type
-    use EnergyFluxType  , only : energyflux_type
-    use TemperatureType , only : temperature_type
-    use SoilStateType   , only : soilstate_type
-    use SimpleMathMod   , only : array_normalization
-    use PatchType       , only : patch
+    use ctsm_VarCon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
+    use ctsm_Decomp       , only : bounds_type
+    use ctsm_ActiveLayer  , only : active_layer_type
+    use ctsm_EnergyFluxType  , only : energyflux_type
+    use ctsm_TemperatureType , only : temperature_type
+    use ctsm_SoilStateType   , only : soilstate_type
+    use ctsm_SimpleMath   , only : array_normalization
+    use ctsm_PatchType       , only : patch
     !
     ! !ARGUMENTS:
     implicit none
@@ -319,17 +319,17 @@ contains
     !
     ! USES
     use shr_kind_mod         , only : r8 => shr_kind_r8  
-    use decompMod            , only : bounds_type
-    use clm_varcon           , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment
-    use pftconMod            , only : pftcon
-    use TemperatureType      , only : temperature_type
-    use SoilStateType        , only : soilstate_type
-    use EnergyFluxType       , only : energyflux_type
-    use WaterStateBulkType       , only : waterstatebulk_type
-    use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use PatchType            , only : patch
-    use clm_varctl           , only : iulog, use_hydrstress
+    use ctsm_Decomp            , only : bounds_type
+    use ctsm_VarCon           , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment
+    use ctsm_PftCon            , only : pftcon
+    use ctsm_TemperatureType      , only : temperature_type
+    use ctsm_SoilStateType        , only : soilstate_type
+    use ctsm_EnergyFluxType       , only : energyflux_type
+    use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+    use ctsm_WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+    use ctsm_PatchType            , only : patch
+    use ctsm_VarCtl           , only : iulog, use_hydrstress
     !
     ! !ARGUMENTS:
     implicit none
@@ -408,8 +408,8 @@ contains
 
                !it is possible to further separate out a btran function, but I will leave it for the moment, jyt
                ! We need btran here regardless of whether use_hydrstress is true or false 
-               ! in order to calculate rootr.  rootr is needed by SoilWaterPlantSinkMod.F90 and ch4Mod.F90 when
-               ! use_hydrstress = false, and by ch4Mod.F90 when use_hydrstress = true or false.
+               ! in order to calculate rootr.  rootr is needed by ctsm_SoilWaterPlantSink.F90 and ctsm_Methane.F90 when
+               ! use_hydrstress = false, and by ctsm_Methane.F90 when use_hydrstress = true or false.
                ! Note that, with use_hydrstress = true, btran will be recalculated using the PHS method later,
                ! but this SMS form of btran is still used to calculate rootr here; we're living with this
                ! inconsistency for now.
@@ -427,8 +427,8 @@ contains
 
       ! Normalize root resistances to get layer contribution to ET
       ! Note that rootr as calculated here is based on the SMS (soil moisture stress) method, 
-      ! not the PHS (plant hydraulic stress) method. It is (should) only be used by SoilWaterPlantSinkMod.F90
-      ! and ch4Mod.F90 when use_hydrstress = false, and by ch4Mod.F90 when use_hydrstress = true or false.
+      ! not the PHS (plant hydraulic stress) method. It is (should) only be used by ctsm_SoilWaterPlantSink.F90
+      ! and ctsm_Methane.F90 when use_hydrstress = false, and by ctsm_Methane.F90 when use_hydrstress = true or false.
       do j = 1,nlevgrnd
          do f = 1, fn
             p = filterp(f)
@@ -454,16 +454,16 @@ contains
     !
     ! USES
     use shr_kind_mod    , only : r8 => shr_kind_r8  
-    use clm_varcon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
-    use decompMod       , only : bounds_type
-    use ActiveLayerMod  , only : active_layer_type
-    use EnergyFluxType  , only : energyflux_type
-    use TemperatureType , only : temperature_type
-    use SoilStateType   , only : soilstate_type
-    use WaterStateBulkType  , only : waterstatebulk_type
-    use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use abortutils      , only : endrun       
+    use ctsm_VarCon      , only : tfrz      !temperature where water freezes [K], this is taken as constant at the moment 
+    use ctsm_Decomp       , only : bounds_type
+    use ctsm_ActiveLayer  , only : active_layer_type
+    use ctsm_EnergyFluxType  , only : energyflux_type
+    use ctsm_TemperatureType , only : temperature_type
+    use ctsm_SoilStateType   , only : soilstate_type
+    use ctsm_WaterStateBulkType  , only : waterstatebulk_type
+    use ctsm_WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+    use ctsm_AbortUtils      , only : endrun       
     !
     ! !ARGUMENTS:
     implicit none
@@ -523,4 +523,4 @@ contains
 
   end subroutine calc_root_moist_stress
 
-end module SoilMoistStressMod
+end module ctsm_SoilMoistStress

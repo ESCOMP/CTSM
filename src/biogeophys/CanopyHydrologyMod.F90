@@ -1,4 +1,4 @@
-module CanopyHydrologyMod
+module ctsm_CanopyHydrology
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -14,25 +14,25 @@ module CanopyHydrologyMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use shr_sys_mod     , only : shr_sys_flush
-  use decompMod       , only : bounds_type
-  use abortutils      , only : endrun
-  use clm_time_manager, only : get_step_size_real
-  use clm_varctl      , only : iulog
-  use column_varcon   , only : icol_sunwall, icol_shadewall
-  use subgridAveMod   , only : p2c
-  use LandunitType    , only : lun                
-  use atm2lndType     , only : atm2lnd_type
-  use AerosolMod      , only : aerosol_type
-  use CanopyStateType , only : canopystate_type
-  use TemperatureType , only : temperature_type
-  use WaterType       , only : water_type
-  use WaterFluxBulkType       , only : waterfluxbulk_type
-  use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
-  use WaterStateBulkType      , only : waterstatebulk_type
-  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
-  use WaterTracerUtils        , only : CalcTracerFromBulk
-  use ColumnType      , only : col, column_type
-  use PatchType       , only : patch, patch_type
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_TimeManager, only : get_step_size_real
+  use ctsm_VarCtl      , only : iulog
+  use ctsm_ColumnVarCon   , only : icol_sunwall, icol_shadewall
+  use ctsm_SubgridAve   , only : p2c
+  use ctsm_LandunitType    , only : lun                
+  use ctsm_Atm2LndType     , only : atm2lnd_type
+  use ctsm_Aerosols      , only : aerosol_type
+  use ctsm_CanopyStateType , only : canopystate_type
+  use ctsm_TemperatureType , only : temperature_type
+  use ctsm_WaterType       , only : water_type
+  use ctsm_WaterFluxBulkType       , only : waterfluxbulk_type
+  use ctsm_WaterAtm2LndBulkType    , only : wateratm2lndbulk_type
+  use ctsm_WaterStateBulkType      , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+  use ctsm_WaterTracerUtils        , only : CalcTracerFromBulk
+  use ctsm_ColumnType      , only : col, column_type
+  use ctsm_PatchType       , only : patch, patch_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -83,8 +83,8 @@ contains
     ! Read the namelist for CanopyHydrology
     !
     ! !USES:
-    use spmdMod       , only : masterproc, mpicom
-    use fileutils     , only : getavu, relavu, opnfil
+    use ctsm_Spmd       , only : masterproc, mpicom
+    use ctsm_FileUtils     , only : getavu, relavu, opnfil
     use shr_nl_mod    , only : shr_nl_find_group_name
     use shr_mpi_mod   , only : shr_mpi_bcast
     !
@@ -142,7 +142,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -1095,7 +1095,7 @@ contains
         ! partitioning into snow falling on ground vs. h2osfc done in a separate routine
         ! for bulk, then compute the tracer versions of those fluxes. Also note that some
         ! other code may assume that this is always 0: e.g., there is code in
-        ! SnowHydrologyMod with the comment, "all snow falls on ground, no snow on
+        ! ctsm_SnowHydrology with the comment, "all snow falls on ground, no snow on
         ! h2osfc".
         qflx_snow_h2osfc(c) = 0._r8
      end do
@@ -1119,7 +1119,7 @@ contains
      ! can transpire.  Adjusted for stem area which does not transpire.
      !
      ! ! USES:
-     use clm_varcon         , only : tfrz
+     use ctsm_VarCon         , only : tfrz
      ! !ARGUMENTS:
      type(bounds_type), intent(in) :: bounds
      integer, intent(in) :: num_soilp
@@ -1177,4 +1177,4 @@ contains
 
    end subroutine BulkDiag_FracWet
 
-end module CanopyHydrologyMod
+end module ctsm_CanopyHydrology

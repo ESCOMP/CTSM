@@ -64,8 +64,8 @@ contains
     ! Assumes that dyn_file has already been initialized.
     !
     ! !USES:
-    use dynFileMod     , only : dyn_file_type
-    use dynTimeInfoMod , only : time_info_type
+    use ctsm_DynFile     , only : dyn_file_type
+    use ctsm_DynTimeInfo , only : time_info_type
     !
     ! !ARGUMENTS:
     type(dyn_file_type), target, intent(in) :: dyn_file ! file containing this variable
@@ -123,7 +123,7 @@ contains
     ! underlying dyn_file variable
     !
     ! !USES:
-    use dynFileMod     , only : dyn_file_type
+    use ctsm_DynFile     , only : dyn_file_type
     !
     ! !ARGUMENTS:
     class(dyn_var_time_interp_type) , intent(inout) :: this             ! this object
@@ -171,8 +171,8 @@ contains
     ! or time time_index_upper
     !
     ! !USES:
-    use dynFileMod     , only : dyn_file_type
-    use dynTimeInfoMod , only : time_info_type
+    use ctsm_DynFile     , only : dyn_file_type
+    use ctsm_DynTimeInfo , only : time_info_type
     !
     ! !ARGUMENTS:
     class(dyn_var_time_interp_type), intent(inout) :: this   ! this object

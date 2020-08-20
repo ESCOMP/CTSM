@@ -1,4 +1,4 @@
-module decompMod
+module ctsm_Decomp
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,8 +9,8 @@ module decompMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   ! Must use shr_sys_abort rather than endrun here to avoid circular dependency
   use shr_sys_mod , only : shr_sys_abort 
-  use clm_varctl  , only : iulog
-  use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
+  use ctsm_VarCtl  , only : iulog
+  use ctsm_VarCon  , only : grlnd, nameg, namel, namec, namep, nameCohort
   use mct_mod     , only : mct_gsMap
   !
   ! !PUBLIC TYPES:
@@ -234,7 +234,7 @@ contains
      !    Make sure this IS being called from a threaded region
 #ifdef _OPENMP
      ! FIX(SPM, 090314) - for debugging fates and openMP
-     !write(iulog,*) 'SPM omp debug decompMod 1 ', &
+     !write(iulog,*) 'SPM omp debug ctsm_Decomp 1 ', &
           !OMP_GET_NUM_THREADS(),OMP_GET_MAX_THREADS(),OMP_GET_THREAD_NUM()
 
      if ( OMP_GET_NUM_THREADS() == 1 .and. OMP_GET_MAX_THREADS() > 1 )then
@@ -304,7 +304,7 @@ contains
      !    Make sure this is NOT being called from a threaded region
 #ifdef _OPENMP
      ! FIX(SPM, 090314) - for debugging fates and openMP
-     !write(*,*) 'SPM omp debug decompMod 2 ', &
+     !write(*,*) 'SPM omp debug ctsm_Decomp 2 ', &
           !OMP_GET_NUM_THREADS(),OMP_GET_MAX_THREADS(),OMP_GET_THREAD_NUM()
 
      if ( OMP_GET_NUM_THREADS() > 1 )then
@@ -425,7 +425,7 @@ contains
      ! Determine 1d size from clmlevel
      !
      ! !USES:
-     use domainMod , only : ldomain
+     use ctsm_Domain , only : ldomain
      !
      ! !ARGUMENTS:
      character(len=*), intent(in) :: clmlevel    !type of clm 1d array
@@ -482,4 +482,4 @@ contains
 
   end subroutine get_clmlevel_gsmap
 
-end module decompMod
+end module ctsm_Decomp

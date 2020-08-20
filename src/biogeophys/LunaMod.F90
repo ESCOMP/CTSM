@@ -1,4 +1,4 @@
-module LunaMod
+module ctsm_Luna
 
 #include "shr_assert.h"
   
@@ -9,24 +9,24 @@ module LunaMod
   ! !USES:
   use shr_kind_mod          , only : r8  => shr_kind_r8
   use shr_log_mod           , only : errMsg  => shr_log_errMsg
-  use clm_varcon            , only : rgas, tfrz,spval
-  use abortutils            , only : endrun
-  use clm_varctl            , only : iulog
-  use clm_varcon            , only : namep 
-  use clm_varpar            , only : nlevcan
-  use decompMod             , only : bounds_type
-  use pftconMod             , only : pftcon
-  use FrictionvelocityMod   , only : frictionvel_type 
-  use atm2lndType           , only : atm2lnd_type
-  use CanopyStateType       , only : canopystate_type
-  use PhotosynthesisMod     , only : photosyns_type
-  use TemperatureType       , only : temperature_type
-  use PatchType             , only : patch
-  use GridcellType          , only : grc     
-  use SolarAbsorbedType     , only : solarabs_type
-  use SurfaceAlbedoType     , only : surfalb_type
-  use WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
-  !use EDPhotosynthesisMod  , only : vcmaxc, jmaxc
+  use ctsm_VarCon            , only : rgas, tfrz,spval
+  use ctsm_AbortUtils            , only : endrun
+  use ctsm_VarCtl            , only : iulog
+  use ctsm_VarCon            , only : namep 
+  use ctsm_VarPar            , only : nlevcan
+  use ctsm_Decomp             , only : bounds_type
+  use ctsm_PftCon             , only : pftcon
+  use ctsm_FrictionVelocity   , only : frictionvel_type 
+  use ctsm_Atm2LndType           , only : atm2lnd_type
+  use ctsm_CanopyStateType       , only : canopystate_type
+  use ctsm_Photosynthesis     , only : photosyns_type
+  use ctsm_TemperatureType       , only : temperature_type
+  use ctsm_PatchType             , only : patch
+  use ctsm_GridcellType          , only : grc     
+  use ctsm_SolarAbsorbedType     , only : solarabs_type
+  use ctsm_SurfaceAlbedoType     , only : surfalb_type
+  use ctsm_WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
+  !use EDctsm_Photosynthesis  , only : vcmaxc, jmaxc
   
   
   implicit none
@@ -100,13 +100,13 @@ module LunaMod
     ! Read the namelist for LUNA
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
+    use ctsm_AbortUtils     , only : endrun
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -156,7 +156,7 @@ module LunaMod
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -209,12 +209,12 @@ module LunaMod
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
-    use clm_varpar            , only : nlevsoi, mxpft
+    use ctsm_TimeManager      , only : get_step_size_real, is_end_curr_day
+    use ctsm_VarPar            , only : nlevsoi, mxpft
     use perf_mod              , only : t_startf, t_stopf
-    use clm_varctl            , only : use_cn
-    use quadraticMod          , only : quadratic
-    use CNSharedParamsMod     , only : CNParamsShareInst
+    use ctsm_VarCtl            , only : use_cn
+    use ctsm_QuadraticSolver          , only : quadratic
+    use ctsm_CNSharedParamsMod     , only : CNParamsShareInst
     use shr_infnan_mod, only : isnan => shr_infnan_isnan
         
     implicit none
@@ -517,7 +517,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
+    use ctsm_TimeManager      , only : get_step_size_real, is_end_curr_day
     implicit none
     
       ! !ARGUMENTS:
@@ -645,7 +645,7 @@ subroutine Acc24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns_i
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real
+    use ctsm_TimeManager      , only : get_step_size_real
     implicit none
     
     ! !ARGUMENTS:
@@ -714,7 +714,7 @@ subroutine Acc24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns_i
           tlaii = lai_sun_z(p,z) + lai_sha_z(p,z)          
           if(tlaii > 0._r8)then
               TRad = (par_sun_z(p,z)*lai_sun_z(p,z)+par_sha_z(p,z)*lai_sha_z(p,z))/tlaii
-              TRad = par_sun_z(p,z) !RF & GBB. Make LUNA predict sunlit fraction N fractionation, scale in PhotosynthesisMod. 
+              TRad = par_sun_z(p,z) !RF & GBB. Make LUNA predict sunlit fraction N fractionation, scale in ctsm_Photosynthesis. 
               par24d_z(p,z)=   par24d_z(p,z)+ dtime * TRad 
              if(TRad > par24x_z(p,z))then
                 par24x_z(p,z) = TRad
@@ -744,7 +744,7 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
+    use ctsm_TimeManager      , only : get_step_size_real, is_end_curr_day
     implicit none
     
     ! !ARGUMENTS:
@@ -1394,5 +1394,5 @@ subroutine  Quadratic(a,b,c,r1,r2)
 end subroutine Quadratic
 	
 
-end module LunaMod
+end module ctsm_Luna
 

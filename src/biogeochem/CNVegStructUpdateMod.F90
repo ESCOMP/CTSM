@@ -1,4 +1,4 @@
-module CNVegStructUpdateMod
+module ctsm_CNVegStructUpdateMod
 
   !-----------------------------------------------------------------------
   ! Module for vegetation structure updates (LAI, SAI, htop, hbot)
@@ -6,28 +6,28 @@ module CNVegStructUpdateMod
   ! !USES:
   use shr_kind_mod         , only: r8 => shr_kind_r8
   use shr_const_mod        , only : SHR_CONST_PI
-  use clm_varctl           , only : iulog, use_cndv
-  use CNDVType             , only : dgv_ecophyscon    
-  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-  use FrictionVelocityMod  , only : frictionvel_type
-  use CNDVType             , only : dgvs_type
-  use CNVegStateType       , only : cnveg_state_type
-  use CropType             , only : crop_type
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type
-  use CanopyStateType      , only : canopystate_type
-  use PatchType            , only : patch                
+  use ctsm_VarCtl           , only : iulog, use_cndv
+  use ctsm_CNDVType             , only : dgv_ecophyscon    
+  use ctsm_WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use ctsm_FrictionVelocity  , only : frictionvel_type
+  use ctsm_CNDVType             , only : dgvs_type
+  use ctsm_CNVegStateType       , only : cnveg_state_type
+  use ctsm_CropType             , only : crop_type
+  use ctsm_CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use ctsm_CanopyStateType      , only : canopystate_type
+  use ctsm_PatchType            , only : patch                
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNVegStructUpdate
+  public :: ctsm_CNVegStructUpdate
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNVegStructUpdate(num_soilp, filter_soilp, &
+  subroutine ctsm_CNVegStructUpdate(num_soilp, filter_soilp, &
        waterdiagnosticbulk_inst, frictionvel_inst, dgvs_inst, cnveg_state_inst, crop_inst, &
        cnveg_carbonstate_inst, canopystate_inst)
     !
@@ -36,16 +36,16 @@ contains
     ! vegetation structure (LAI, SAI, height)
     !
     ! !USES:
-    use pftconMod        , only : noveg, nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
-    use pftconMod        , only : npcropmin 
-    use pftconMod        , only : ntmp_corn, nirrig_tmp_corn
-    use pftconMod        , only : ntrp_corn, nirrig_trp_corn
-    use pftconMod        , only : nsugarcane, nirrig_sugarcane
-    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    use ctsm_PftCon        , only : noveg, nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
+    use ctsm_PftCon        , only : npcropmin 
+    use ctsm_PftCon        , only : ntmp_corn, nirrig_tmp_corn
+    use ctsm_PftCon        , only : ntrp_corn, nirrig_trp_corn
+    use ctsm_PftCon        , only : nsugarcane, nirrig_sugarcane
+    use ctsm_PftCon        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
-    use pftconMod        , only : pftcon
-    use clm_varctl       , only : spinup_state
-    use clm_time_manager , only : get_rad_step_size
+    use ctsm_PftCon        , only : pftcon
+    use ctsm_VarCtl       , only : spinup_state
+    use ctsm_TimeManager , only : get_rad_step_size
     !
     ! !ARGUMENTS:
     integer                      , intent(in)    :: num_soilp       ! number of column soil points in patch filter
@@ -82,7 +82,7 @@ contains
     ! tsai(p) = max( tsai_alpha(ivt(p))*tsai_old + max(tlai_old-tlai(p),0_r8), tsai_min(ivt(p)) )
     ! notes:
     ! * RHS tsai & tlai are from previous timestep
-    ! * should create tsai_alpha(ivt(p)) & tsai_min(ivt(p)) in pftconMod.F90 - slevis
+    ! * should create tsai_alpha(ivt(p)) & tsai_min(ivt(p)) in ctsm_PftCon.F90 - slevis
     ! * all non-crop patches use same values:
     !   crop    tsai_alpha,tsai_min = 0.0,0.1
     !   noncrop tsai_alpha,tsai_min = 0.5,1.0  (includes bare soil and urban)
@@ -248,7 +248,7 @@ contains
                   htmx(p) = 0._r8
                   peaklai(p) = 0
                end if
-               !if (harvdate(p) < 999 .and. tlai(p) > 0._r8) write(iulog,*) 'CNVegStructUpdate: tlai>0 after harvest!' ! remove after initial debugging?
+               !if (harvdate(p) < 999 .and. tlai(p) > 0._r8) write(iulog,*) 'ctsm_CNVegStructUpdate: tlai>0 after harvest!' ! remove after initial debugging?
 
                ! canopy top and bottom heights
                htop(p) = ztopmx(ivt(p)) * (min(tlai(p)/(laimx(ivt(p))-1._r8),1._r8))**2
@@ -306,6 +306,6 @@ contains
 
     end associate 
 
- end subroutine CNVegStructUpdate
+ end subroutine ctsm_CNVegStructUpdate
 
-end module CNVegStructUpdateMod
+end module ctsm_CNVegStructUpdateMod

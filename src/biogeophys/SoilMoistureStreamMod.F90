@@ -1,4 +1,4 @@
-module SoilMoistureStreamMod
+module ctsm_SoilMoistureStream
 
 #include "shr_assert.h"
 
@@ -12,22 +12,22 @@ module SoilMoistureStreamMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_kind_mod    , only : CL => shr_kind_CL, CXX => shr_kind_CXX
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : bounds_type
-  use abortutils      , only : endrun
-  use clm_varctl      , only : scmlat,scmlon,single_column
-  use clm_varctl      , only : iulog, use_soil_moisture_streams
-  use clm_varcon      , only : grlnd
-  use controlMod      , only : NLFilename
-  use decompMod       , only : gsMap_lnd2Dsoi_gdc2glo
-  use domainMod       , only : ldomain
-  use fileutils       , only : getavu, relavu
-  use LandunitType    , only : lun
-  use ColumnType      , only : col                
-  use SoilStateType   , only : soilstate_type
-  use WaterStateBulkType, only : waterstatebulk_type
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_VarCtl      , only : scmlat,scmlon,single_column
+  use ctsm_VarCtl      , only : iulog, use_soil_moisture_streams
+  use ctsm_VarCon      , only : grlnd
+  use ctsm_Control      , only : NLFilename
+  use ctsm_Decomp       , only : gsMap_lnd2Dsoi_gdc2glo
+  use ctsm_Domain       , only : ldomain
+  use ctsm_FileUtils       , only : getavu, relavu
+  use ctsm_LandunitType    , only : lun
+  use ctsm_ColumnType      , only : col                
+  use ctsm_SoilStateType   , only : soilstate_type
+  use ctsm_WaterStateBulkType, only : waterstatebulk_type
   use perf_mod        , only : t_startf, t_stopf
-  use spmdMod         , only : masterproc
-  use spmdMod         , only : mpicom, comp_id
+  use ctsm_Spmd         , only : masterproc
+  use ctsm_Spmd         , only : mpicom, comp_id
   use mct_mod
   use ncdio_pio   
   !
@@ -67,15 +67,15 @@ contains
     !
     !
     ! !USES:
-    use clm_varctl       , only : inst_name
-    use clm_time_manager , only : get_calendar
+    use ctsm_VarCtl       , only : inst_name
+    use ctsm_TimeManager , only : get_calendar
     use ncdio_pio        , only : pio_subsystem
     use shr_pio_mod      , only : shr_pio_getiotype
-    use clm_nlUtilsMod   , only : find_nlgroup_name
-    use ndepStreamMod    , only : clm_domain_mct
+    use ctsm_NlUtils   , only : find_nlgroup_name
+    use ctsm_NDepStream    , only : clm_domain_mct
     use shr_stream_mod   , only : shr_stream_file_null
     use shr_string_mod   , only : shr_string_listCreateField
-    use clm_varpar       , only : nlevsoi
+    use ctsm_VarPar       , only : nlevsoi
     !
     ! !ARGUMENTS:
     implicit none
@@ -217,7 +217,7 @@ contains
     ! Advanace the prescribed soil moisture stream
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date
+    use ctsm_TimeManager, only : get_curr_date
     !
     ! !ARGUMENTS:
     type(bounds_type)         , intent(in)    :: bounds
@@ -271,10 +271,10 @@ contains
     ! Assign data stream information for prescribed soil moisture.
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date
-    use clm_varpar      , only : nlevsoi
-    use clm_varcon      , only : denh2o, denice, watmin, spval
-    use landunit_varcon , only : istsoil, istcrop
+    use ctsm_TimeManager, only : get_curr_date
+    use ctsm_VarPar      , only : nlevsoi
+    use ctsm_VarCon      , only : denh2o, denice, watmin, spval
+    use ctsm_LandunitVarCon , only : istsoil, istcrop
     !
     ! !ARGUMENTS:
     implicit none
@@ -412,4 +412,4 @@ contains
 
   end subroutine PrescribedSoilMoistureInterp
 
-end module SoilMoistureStreamMod
+end module ctsm_SoilMoistureStream

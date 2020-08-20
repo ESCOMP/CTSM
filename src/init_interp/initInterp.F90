@@ -1,4 +1,4 @@
-module initInterpMod
+module ctsm_InitInterpMod
 
   !----------------------------------------------------------------------- 
   ! Interpolate initial conditions file from one resolution and/or landmask
@@ -6,26 +6,26 @@ module initInterpMod
   !----------------------------------------------------------------------- 
 
 #include "shr_assert.h"
-  use initInterpBounds, only : interp_bounds_type
-  use initInterpMindist, only: set_mindist, set_single_match
-  use initInterpMindist, only: subgrid_type, subgrid_special_indices_type
-  use initInterp1dData, only : interp_1d_data
-  use initInterp2dvar, only: interp_2dvar_type
-  use initInterpMultilevelBase, only : interp_multilevel_type
-  use initInterpMultilevelContainer, only : interp_multilevel_container_type
-  use initInterpUtils, only: glc_elevclasses_are_same
+  use ctsm_InitInterpBounds, only : interp_bounds_type
+  use ctsm_InitInterpMindist, only: set_mindist, set_single_match
+  use ctsm_InitInterpMindist, only: subgrid_type, subgrid_special_indices_type
+  use ctsm_InitInterp1dData, only : interp_1d_data
+  use ctsm_InitInterp2dvar, only: interp_2dvar_type
+  use ctsm_InitInterpMultilevelBase, only : interp_multilevel_type
+  use ctsm_InitInterpMultilevelContainer, only : interp_multilevel_container_type
+  use ctsm_InitInterpUtils, only: glc_elevclasses_are_same
   use shr_kind_mod   , only: r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_const_mod  , only: SHR_CONST_PI, SHR_CONST_REARTH
   use shr_sys_mod    , only: shr_sys_flush
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_string_mod , only: shr_string_listGetName
-  use clm_varctl     , only: iulog
-  use abortutils     , only: endrun
-  use spmdMod        , only: masterproc
+  use ctsm_VarCtl     , only: iulog
+  use ctsm_AbortUtils     , only: endrun
+  use ctsm_Spmd        , only: masterproc
   use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
-  use IssueFixedMetadataHandler, only : copy_issue_fixed_metadata
-  use glcBehaviorMod , only: glc_behavior_type
-  use ncdio_utils    , only: find_var_on_file
+  use ctsm_IssueFixedMetadataHandler, only : copy_issue_fixed_metadata
+  use ctsm_GlacierBehavior , only: glc_behavior_type
+  use ctsm_NcdIoUtils    , only: find_var_on_file
   use ncdio_pio
   use pio
 
@@ -35,8 +35,8 @@ module initInterpMod
 
   ! Public methods
 
-  public :: initInterp_readnl  ! Read namelist
-  public :: initInterp
+  public :: ctsm_InitInterp_readnl  ! Read namelist
+  public :: ctsm_InitInterp
 
   ! Private methods
 
@@ -83,15 +83,15 @@ contains
   !=======================================================================
 
   !-----------------------------------------------------------------------
-  subroutine initInterp_readnl(NLFilename)
+  subroutine ctsm_InitInterp_readnl(NLFilename)
     !
     ! !DESCRIPTION:
-    ! Read the namelist for initInterp
+    ! Read the namelist for ctsm_InitInterp
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -102,7 +102,7 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=64) :: init_interp_method
 
-    character(len=*), parameter :: subname = 'initInterp_readnl'
+    character(len=*), parameter :: subname = 'ctsm_InitInterp_readnl'
     !-----------------------------------------------------------------------
 
     namelist /clm_initinterp_inparm/ &
@@ -133,7 +133,7 @@ contains
 
     if (masterproc) then
        write(iulog,*) ' '
-       write(iulog,*) 'initInterp settings:'
+       write(iulog,*) 'ctsm_InitInterp settings:'
        write(iulog,nml=clm_initinterp_inparm)
        write(iulog,*) ' '
     end if
@@ -164,16 +164,16 @@ contains
       end if
     end subroutine check_nl_consistency
 
-  end subroutine initInterp_readnl
+  end subroutine ctsm_InitInterp_readnl
 
 
-  subroutine initInterp (filei, fileo, bounds, glc_behavior)
+  subroutine ctsm_InitInterp (filei, fileo, bounds, glc_behavior)
 
     !----------------------------------------------------------------------- 
     ! Read initial data from netCDF instantaneous initial data history file 
     !-----------------------------------------------------------------------
 
-    use decompMod, only: bounds_type
+    use ctsm_Decomp, only: bounds_type
 
     ! --------------------------------------------------------------------
     ! arguments
@@ -667,7 +667,7 @@ contains
     !
     ! NOTE(wjs, 2015-10-31) I really don't like having this variable-specific logic here,
     ! but I can't see a great way around this. (One alternative would be to do this
-    ! cleanup when reading the restart file, e.g., in subgridRestMod. But (1) that feels
+    ! cleanup when reading the restart file, e.g., in ctsm_SubgridRest. But (1) that feels
     ! like a hidden way to accomplish this, and (2) that would apply for *any* restart
     ! read, as opposed to just restart reads following init_interp, which could mask
     ! problems with other restart files.)
@@ -712,7 +712,7 @@ contains
     deallocate(lun_activeo)
     deallocate(grc_activeo)
 
-  end subroutine initInterp
+  end subroutine ctsm_InitInterp
 
   !-----------------------------------------------------------------------
   subroutine copy_metadata(ncidi, ncido)
@@ -1275,7 +1275,7 @@ contains
     !
     ! TODO(wjs, 2015-11-01) This is a lot of code for simply reading in a 1-d variable.
     ! It would be nice if there was a routine that did all of this for you, similarly to
-    ! what initInterp2dvar does for 2-d variables.
+    ! what ctsm_InitInterp2dvar does for 2-d variables.
     call ncd_inqvdname(ncid=ncido, varname=snlsno_varname, dimnum=1, dname=vec_dimname, &
          err_code=err_code)
     if (err_code /= 0) then
@@ -1310,7 +1310,7 @@ contains
     ! bug #67 is resolved.
     !
     ! !USES:
-    use clm_varctl, only : use_c13, use_c14, for_testing_allow_interp_non_ciso_to_ciso
+    use ctsm_VarCtl, only : use_c13, use_c14, for_testing_allow_interp_non_ciso_to_ciso
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncidi
@@ -1379,4 +1379,4 @@ contains
   end subroutine check_interp_non_ciso_to_ciso
 
 
-end module initInterpMod
+end module ctsm_InitInterpMod

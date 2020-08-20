@@ -1,4 +1,4 @@
-module landunit_varcon
+module ctsm_LandunitVarCon
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -41,7 +41,7 @@ module landunit_varcon
 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: landunit_varcon_init  ! initialize constants in this module
+  public :: ctsm_LandunitVarCon_init  ! initialize constants in this module
   public :: landunit_is_special   ! returns true if this is a special landunit
 
   !
@@ -52,10 +52,10 @@ module landunit_varcon
 contains
   
   !-----------------------------------------------------------------------
-  subroutine landunit_varcon_init()
+  subroutine ctsm_LandunitVarCon_init()
     !
     ! !DESCRIPTION:
-    ! Initialize constants in landunit_varcon
+    ! Initialize constants in ctsm_LandunitVarCon
     !
     ! !USES:
     !
@@ -63,12 +63,12 @@ contains
     !
     ! !LOCAL VARIABLES:
     
-    character(len=*), parameter :: subname = 'landunit_varcon_init'
+    character(len=*), parameter :: subname = 'ctsm_LandunitVarCon_init'
     !-----------------------------------------------------------------------
     
     call set_landunit_names()
 
-  end subroutine landunit_varcon_init
+  end subroutine ctsm_LandunitVarCon_init
 
   !-----------------------------------------------------------------------
   function landunit_is_special(ltype) result(is_special)
@@ -130,4 +130,4 @@ contains
 
   end subroutine set_landunit_names
 
-end module landunit_varcon
+end module ctsm_LandunitVarCon

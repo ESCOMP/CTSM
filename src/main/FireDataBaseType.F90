@@ -11,15 +11,15 @@ module FireDataBaseType
   use shr_strdata_mod                    , only : shr_strdata_type, shr_strdata_create, shr_strdata_print
   use shr_strdata_mod                    , only : shr_strdata_advance
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varctl                         , only : iulog
-  use spmdMod                            , only : masterproc, mpicom, comp_id
-  use fileutils                          , only : getavu, relavu
-  use decompMod                          , only : gsmap_lnd_gdc2glo
-  use domainMod                          , only : ldomain
-  use abortutils                         , only : endrun
-  use decompMod                          , only : bounds_type
+  use ctsm_VarCtl                         , only : iulog
+  use ctsm_Spmd                            , only : masterproc, mpicom, comp_id
+  use ctsm_FileUtils                          , only : getavu, relavu
+  use ctsm_Decomp                          , only : gsmap_lnd_gdc2glo
+  use ctsm_Domain                          , only : ldomain
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_Decomp                          , only : bounds_type
   use mct_mod
-  use FireMethodType                     , only : fire_method_type
+  use ctsm_FireMethodType                     , only : fire_method_type
   !
   implicit none
   private
@@ -146,13 +146,13 @@ contains
    ! Initialize data stream information for population density.
    !
    ! !USES:
-   use clm_varctl       , only : inst_name
-   use clm_time_manager , only : get_calendar
+   use ctsm_VarCtl       , only : inst_name
+   use ctsm_TimeManager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
-   use clm_nlUtilsMod   , only : find_nlgroup_name
-   use ndepStreamMod    , only : clm_domain_mct
-   use histFileMod      , only : hist_addfld1d
+   use ctsm_NlUtils   , only : find_nlgroup_name
+   use ctsm_NDepStream    , only : clm_domain_mct
+   use ctsm_HistFile      , only : hist_addfld1d
    !
    ! !ARGUMENTS:
    implicit none
@@ -267,7 +267,7 @@ contains
   ! Interpolate data stream information for population density.
   !
   ! !USES:
-  use clm_time_manager, only : get_curr_date
+  use ctsm_TimeManager, only : get_curr_date
   !
   ! !ARGUMENTS:
   class(fire_base_type)       :: this
@@ -303,13 +303,13 @@ contains
   ! Initialize data stream information for Lightning.
   !
   ! !USES:
-  use clm_varctl       , only : inst_name
-  use clm_time_manager , only : get_calendar
+  use ctsm_VarCtl       , only : inst_name
+  use ctsm_TimeManager , only : get_calendar
   use ncdio_pio        , only : pio_subsystem
   use shr_pio_mod      , only : shr_pio_getiotype
-  use clm_nlUtilsMod   , only : find_nlgroup_name
-  use ndepStreamMod    , only : clm_domain_mct
-  use histFileMod      , only : hist_addfld1d
+  use ctsm_NlUtils   , only : find_nlgroup_name
+  use ctsm_NDepStream    , only : clm_domain_mct
+  use ctsm_HistFile      , only : hist_addfld1d
   !
   ! !ARGUMENTS:
   implicit none
@@ -424,7 +424,7 @@ contains
   ! Interpolate data stream information for Lightning.
   !
   ! !USES:
-  use clm_time_manager, only : get_curr_date
+  use ctsm_TimeManager, only : get_curr_date
   !
   ! !ARGUMENTS:
   class(fire_base_type)       :: this

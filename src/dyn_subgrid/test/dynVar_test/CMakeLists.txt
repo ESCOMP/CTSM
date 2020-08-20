@@ -4,7 +4,7 @@ set (pfunit_sources
 
 # extra sources used for this test, which are not .pf files
 set (extra_sources
-  test_dynVarShared.F90)
+  ctsm_TestDynVarShared.F90)
 
 create_pfUnit_test(dynVar test_dynVar_exe
   "${pfunit_sources}" "${extra_sources}")

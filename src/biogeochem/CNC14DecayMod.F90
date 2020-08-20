@@ -1,23 +1,23 @@
-module CNC14DecayMod
+module ctsm_CNC14DecayMod
 
   !-----------------------------------------------------------------------
   ! Module for 14-carbon flux variable update, non-mortality fluxes.
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
-  use clm_time_manager                   , only : get_step_size_real, get_days_per_year
-  use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
-  use clm_varcon                         , only : secspday
-  use clm_varctl                         , only : spinup_state
-  use decompMod                          , only : bounds_type
-  use pftconMod                          , only : npcropmin
-  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
-  use PatchType                          , only : patch
-  use ColumnType                         , only : col
-  use GridcellType                       , only : grc
-  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use ctsm_TimeManager                   , only : get_step_size_real, get_days_per_year
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
+  use ctsm_VarCon                         , only : secspday
+  use ctsm_VarCtl                         , only : spinup_state
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_PftCon                          , only : npcropmin
+  use ctsm_CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use ctsm_PatchType                          , only : patch
+  use ctsm_ColumnType                         , only : col
+  use ctsm_GridcellType                       , only : grc
+  use ctsm_SoilBiogeochemStateType            , only : get_spinup_latitude_term
   !
   implicit none
   private
@@ -156,4 +156,4 @@ contains
 
   end subroutine C14Decay
 
-end module CNC14DecayMod
+end module ctsm_CNC14DecayMod

@@ -1,4 +1,4 @@
-module WaterTracerUtils
+module ctsm_WaterTracerUtils
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,13 +8,13 @@ module WaterTracerUtils
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod      , only : bounds_type, get_beg, get_end
-  use clm_varctl     , only : iulog
-  use abortutils     , only : endrun
+  use ctsm_Decomp      , only : bounds_type, get_beg, get_end
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_AbortUtils     , only : endrun
   use shr_infnan_mod , only : shr_infnan_isnan
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use clm_varcon     , only : spval
-  use WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_VarCon     , only : spval
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
   use shr_sys_mod    , only : shr_sys_flush
 
   implicit none
@@ -53,7 +53,7 @@ contains
     character(len=*)                  , intent(in)    :: name          ! variable name
     type(water_tracer_container_type) , intent(inout) :: container
     type(bounds_type)                 , intent(in)    :: bounds
-    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in decompMod
+    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in ctsm_Decomp
     real(r8)                   , intent(in), optional :: ival          ! initial value, if not NaN
     !
     ! !LOCAL VARIABLES:
@@ -94,7 +94,7 @@ contains
     character(len=*)                  , intent(in)    :: name          ! variable name
     type(water_tracer_container_type) , intent(inout) :: container
     type(bounds_type)                 , intent(in)    :: bounds
-    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in decompMod
+    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in ctsm_Decomp
     integer                           , intent(in)    :: dim2beg
     integer                           , intent(in)    :: dim2end
     real(r8)                   , intent(in), optional :: ival          ! initial value, if not NaN
@@ -428,4 +428,4 @@ contains
 
   end subroutine SetTracerToBulkTimesRatio
 
-end module WaterTracerUtils
+end module ctsm_WaterTracerUtils

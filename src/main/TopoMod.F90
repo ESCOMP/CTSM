@@ -1,4 +1,4 @@
-module TopoMod
+module ctsm_Topo
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,14 +7,14 @@ module TopoMod
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod      , only : bounds_type
-  use PatchType      , only : patch
-  use ColumnType     , only : col
-  use LandunitType   , only : lun
-  use glc2lndMod     , only : glc2lnd_type
-  use glcBehaviorMod , only : glc_behavior_type
-  use landunit_varcon, only : istice_mec
-  use filterColMod   , only : filter_col_type, col_filter_from_logical_array_active_only
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_PatchType      , only : patch
+  use ctsm_ColumnType     , only : col
+  use ctsm_LandunitType   , only : lun
+  use ctsm_Glc2Lnd     , only : glc2lnd_type
+  use ctsm_GlacierBehavior , only : glc_behavior_type
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_FilterCol   , only : filter_col_type, col_filter_from_logical_array_active_only
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -88,7 +88,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine InitHistory(this, bounds)
     ! !USES:
-    use histFileMod  , only : hist_addfld1d
+    use ctsm_HistFile  , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(topo_type), intent(inout) :: this
@@ -112,8 +112,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds)
     ! !USES:
-    use column_varcon    , only: col_itype_to_icemec_class
-    use clm_instur, only : topo_glc_mec
+    use ctsm_ColumnVarCon    , only: col_itype_to_icemec_class
+    use ctsm_VarSur, only : topo_glc_mec
     ! !ARGUMENTS:
     class(topo_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
@@ -204,8 +204,8 @@ contains
     !
     ! Should be called each time step.
     !
-    ! Should be called after glc2lndMod:update_glc2lnd_fracs, and before
-    ! atm2lndMod:downscale_forcings
+    ! Should be called after ctsm_Glc2Lnd:update_glc2lnd_fracs, and before
+    ! ctsm_Atm2Lnd:downscale_forcings
     !
     ! !ARGUMENTS:
     class(topo_type)        , intent(inout) :: this
@@ -318,4 +318,4 @@ contains
 
   end subroutine Clean
 
-end module TopoMod
+end module ctsm_Topo

@@ -1,13 +1,13 @@
 module test_init_interp_multilevel_split
 
-  ! Tests of initInterpMultilevelSplit
+  ! Tests of ctsm_InitInterpMultilevelSplit
 
   use pfunit_mod
-  use initInterpMultilevelSplit
-  use initInterpMultilevelInterp, only : interp_multilevel_interp_type
-  use initInterpMultilevelCopy, only : interp_multilevel_copy_type
-  use initInterpMultilevelMock, only : interp_multilevel_mock_type
-  use multilevel_interp_factory
+  use ctsm_InitInterpMultilevelSplit
+  use ctsm_InitInterpMultilevelInterp, only : interp_multilevel_interp_type
+  use ctsm_InitInterpMultilevelCopy, only : interp_multilevel_copy_type
+  use ctsm_InitInterpMultilevelMock, only : interp_multilevel_mock_type
+  use ctsm_MultilevelInterpFactory
   use shr_kind_mod , only : r8 => shr_kind_r8
 
   implicit none

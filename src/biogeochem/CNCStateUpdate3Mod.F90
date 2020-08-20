@@ -1,4 +1,4 @@
-module CNCStateUpdate3Mod
+module ctsm_CNCStateUpdate3Mod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,12 +7,12 @@ module CNCStateUpdate3Mod
   ! !USES:
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
-  use abortutils                     , only : endrun
-  use clm_time_manager               , only : get_step_size_real
-  use clm_varpar                     , only : nlevdecomp, ndecomp_pools, i_cwd, i_met_lit, i_cel_lit, i_lig_lit
-  use CNVegCarbonStateType          , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType           , only : cnveg_carbonflux_type
-  use SoilBiogeochemCarbonStateType , only : soilbiogeochem_carbonstate_type
+  use ctsm_AbortUtils                     , only : endrun
+  use ctsm_TimeManager               , only : get_step_size_real
+  use ctsm_VarPar                     , only : nlevdecomp, ndecomp_pools, i_cwd, i_met_lit, i_cel_lit, i_lig_lit
+  use ctsm_CNVegCarbonStateType          , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType           , only : cnveg_carbonflux_type
+  use ctsm_SoilBiogeochemCarbonStateType , only : soilbiogeochem_carbonstate_type
   !
   implicit none
   private
@@ -184,4 +184,4 @@ contains
 
   end subroutine CStateUpdate3
 
-end module CNCStateUpdate3Mod
+end module ctsm_CNCStateUpdate3Mod

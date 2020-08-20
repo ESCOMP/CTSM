@@ -1,10 +1,10 @@
-module reweightMod
+module ctsm_Reweight
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Top level driver for things that happen when subgrid weights are changed. This is in
-  ! a separate module from subgridWeightsMod in order to keep subgridWeightsMod lower-
-  ! level - and particularly to break its dependency on filterMod.
+  ! a separate module from ctsm_SubgridWeights in order to keep ctsm_SubgridWeights lower-
+  ! level - and particularly to break its dependency on ctsm_Filters.
   !
   !
   ! !USES:
@@ -38,10 +38,10 @@ contains
     ! landunit weights on the grid cell, etc.).
     !
     ! !USES:
-    use filterMod         , only : setFilters
-    use subgridWeightsMod , only : set_active, check_weights
-    use decompMod         , only : bounds_type, BOUNDS_LEVEL_CLUMP
-    use glcBehaviorMod    , only : glc_behavior_type
+    use ctsm_Filters         , only : setFilters
+    use ctsm_SubgridWeights , only : set_active, check_weights
+    use ctsm_Decomp         , only : bounds_type, BOUNDS_LEVEL_CLUMP
+    use ctsm_GlacierBehavior    , only : glc_behavior_type
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds                      ! clump bounds
@@ -57,4 +57,4 @@ contains
 
   end subroutine reweight_wrapup
 
-end module reweightMod
+end module ctsm_Reweight

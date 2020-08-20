@@ -1,4 +1,4 @@
-module SoilHydrologyMod
+module ctsm_SoilHydrology
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,30 +7,30 @@ module SoilHydrologyMod
 #include "shr_assert.h"
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use abortutils        , only : endrun
-  use decompMod         , only : bounds_type
-  use clm_varctl        , only : iulog, use_vichydro
-  use clm_varcon        , only : denh2o, denice, rpi
-  use clm_varcon        , only : pondmx_urban
-  use clm_varpar        , only : nlevsoi, nlevgrnd, nlayer, nlayert
-  use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
-  use column_varcon     , only : icol_road_imperv
-  use landunit_varcon   , only : istsoil, istcrop
-  use clm_time_manager  , only : get_step_size_real
-  use EnergyFluxType    , only : energyflux_type
-  use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
-  use SoilHydrologyType , only : soilhydrology_type  
-  use SoilStateType     , only : soilstate_type
-  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
-  use WaterFluxType     , only : waterflux_type
-  use WaterFluxBulkType , only : waterfluxbulk_type
-  use WaterStateType    , only : waterstate_type
-  use WaterStateBulkType, only : waterstatebulk_type
-  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
-  use TemperatureType   , only : temperature_type
-  use LandunitType      , only : lun                
-  use ColumnType        , only : column_type, col
-  use PatchType         , only : patch                
+  use ctsm_AbortUtils        , only : endrun
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_VarCtl        , only : iulog, use_vichydro
+  use ctsm_VarCon        , only : denh2o, denice, rpi
+  use ctsm_VarCon        , only : pondmx_urban
+  use ctsm_VarPar        , only : nlevsoi, nlevgrnd, nlayer, nlayert
+  use ctsm_ColumnVarCon     , only : icol_roof, icol_sunwall, icol_shadewall
+  use ctsm_ColumnVarCon     , only : icol_road_imperv
+  use ctsm_LandunitVarCon   , only : istsoil, istcrop
+  use ctsm_TimeManager  , only : get_step_size_real
+  use ctsm_EnergyFluxType    , only : energyflux_type
+  use ctsm_InfiltrationExcessRunoff, only : infiltration_excess_runoff_type
+  use ctsm_SoilHydrologyType , only : soilhydrology_type  
+  use ctsm_SoilStateType     , only : soilstate_type
+  use ctsm_WaterAtm2LndBulkType, only : wateratm2lndbulk_type
+  use ctsm_WaterFluxType     , only : waterflux_type
+  use ctsm_WaterFluxBulkType , only : waterfluxbulk_type
+  use ctsm_WaterStateType    , only : waterstate_type
+  use ctsm_WaterStateBulkType, only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
+  use ctsm_TemperatureType   , only : temperature_type
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_ColumnType        , only : column_type, col
+  use ctsm_PatchType         , only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -77,7 +77,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -105,11 +105,11 @@ contains
     ! Read the namelist for soil hydrology
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     use shr_log_mod    , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
@@ -163,7 +163,7 @@ contains
     ! Set diagnostic variables related to the fraction of water and ice in each layer
     !
     ! !USES:
-    use clm_varcon, only : denice
+    use ctsm_VarCon, only : denice
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -577,8 +577,8 @@ contains
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use clm_varcon       , only : pondmx, tfrz, watmin,denice,denh2o
-     use column_varcon    , only : icol_roof, icol_road_imperv
+     use ctsm_VarCon       , only : pondmx, tfrz, watmin,denice,denh2o
+     use ctsm_ColumnVarCon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds  
@@ -891,8 +891,8 @@ contains
      ! Calculate subsurface drainage
      !
      ! !USES:
-     use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
-     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
+     use ctsm_VarCon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
+     use ctsm_ColumnVarCon    , only : icol_roof, icol_road_imperv, icol_road_perv
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds               
@@ -1464,8 +1464,8 @@ contains
      ! mapping from VIC to CLM layers, M.Huang
      !
      ! !USES:
-     use clm_varcon  , only : denh2o, denice, watmin
-     use decompMod   , only : bounds_type
+     use ctsm_VarCon  , only : denh2o, denice, watmin
+     use ctsm_Decomp   , only : bounds_type
      !
      ! !REVISION HISTORY:
      ! Created by Maoyi Huang
@@ -1572,8 +1572,8 @@ contains
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use clm_varcon       , only : pondmx, tfrz, watmin,denice,denh2o
-     use column_varcon    , only : icol_roof, icol_road_imperv
+     use ctsm_VarCon       , only : pondmx, tfrz, watmin,denice,denh2o
+     use ctsm_ColumnVarCon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds  
@@ -1694,8 +1694,8 @@ contains
      ! Calculate subsurface drainage from perched saturated zone
      !
      ! !USES:
-     use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
-     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
+     use ctsm_VarCon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
+     use ctsm_ColumnVarCon    , only : icol_roof, icol_road_imperv, icol_road_perv
 
      !
      ! !ARGUMENTS:
@@ -1854,8 +1854,8 @@ contains
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use clm_varcon       , only : denice,denh2o
-     use column_varcon    , only : icol_roof, icol_road_imperv
+     use ctsm_VarCon       , only : denice,denh2o
+     use ctsm_ColumnVarCon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds  
@@ -1950,9 +1950,9 @@ contains
      ! Calculate subsurface drainage
      !
      ! !USES:
-     use clm_varcon       , only : pondmx, watmin,rpi, secspday, nlvic
-     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
-     use GridcellType     , only : grc                
+     use ctsm_VarCon       , only : pondmx, watmin,rpi, secspday, nlvic
+     use ctsm_ColumnVarCon    , only : icol_roof, icol_road_imperv, icol_road_perv
+     use ctsm_GridcellType     , only : grc                
 
      !
      ! !ARGUMENTS:
@@ -2270,7 +2270,7 @@ contains
      ! Calculate watertable, considering aquifer recharge but no drainage.
      !
      ! !USES:
-     use column_varcon    , only : icol_roof, icol_road_imperv
+     use ctsm_ColumnVarCon    , only : icol_roof, icol_road_imperv
      !
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds  
@@ -2526,4 +2526,4 @@ contains
    end subroutine WithdrawGroundwaterIrrigation
 
 !#0
-end module SoilHydrologyMod
+end module ctsm_SoilHydrology

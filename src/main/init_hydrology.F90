@@ -1,4 +1,4 @@
-subroutine init_hydrology( NLFilename )
+subroutine ctsm_InitHydrology( NLFilename )
 !
 !DESCRIPTION
 ! Initialize implementation methods for different hydrology sub-modules 
@@ -6,15 +6,15 @@ subroutine init_hydrology( NLFilename )
 ! created by Jinyun Tang, Mar 22, 2014.
 
   ! !USES:
-  use spmdMod       , only : masterproc, mpicom
-  use fileutils     , only : getavu, relavu, opnfil
+  use ctsm_Spmd       , only : masterproc, mpicom
+  use ctsm_FileUtils     , only : getavu, relavu, opnfil
   use shr_nl_mod    , only : shr_nl_find_group_name
   use shr_mpi_mod   , only : shr_mpi_bcast
     
-  use FuncPedotransferMod,  only : init_pedof
-  use RootBiophysMod,       only : init_rootprof
-  use SoilWaterMovementMod, only : init_soilwater_movement
-  use SoilMoistStressMod,   only : init_root_moist_stress
+  use ctsm_FuncPedotransfer,  only : init_pedof
+  use ctsm_RootBiophys,       only : init_rootprof
+  use ctsm_SoilWaterMovement, only : init_soilwater_movement
+  use ctsm_SoilMoistStress,   only : init_root_moist_stress
 implicit none
 
   character(len=*), intent(IN) :: NLFilename ! Namelist filename
@@ -36,4 +36,4 @@ implicit none
 ! in controlmod instead, as is done for canopyhydrology
 !  call init_soil_resistance
   
-end subroutine init_hydrology
+end subroutine ctsm_InitHydrology

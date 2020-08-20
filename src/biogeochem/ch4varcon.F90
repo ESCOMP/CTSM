@@ -4,9 +4,9 @@ module ch4varcon
   ! Module containing CH4 parameters and logical switches and routine to read constants from CLM namelist.
   !
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use abortutils  , only : endrun
-  use clm_varctl  , only : iulog
-  use clm_varctl  , only : NLFileName_in
+  use ctsm_AbortUtils  , only : endrun
+  use ctsm_VarCtl  , only : iulog
+  use ctsm_VarCtl  , only : NLFileName_in
   !
   implicit none
   !
@@ -83,8 +83,8 @@ contains
     ! Read and initialize CH4 constants
     !
     ! !USES:
-    use fileutils   , only : relavu, getavu
-    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL, MPI_INTEGER
+    use ctsm_FileUtils   , only : relavu, getavu
+    use ctsm_Spmd     , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL, MPI_INTEGER
     use shr_nl_mod  , only : shr_nl_find_group_name
     use shr_log_mod , only : errMsg => shr_log_errMsg
     !

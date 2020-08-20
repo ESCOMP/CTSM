@@ -1,4 +1,4 @@
-module TridiagonalMod
+module ctsm_TridiagonalSolver
 
 #include "shr_assert.h"
 
@@ -27,11 +27,11 @@ contains
     !
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
-    use clm_varpar     , only : nlevurb
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl     , only : iulog
-    use decompMod      , only : bounds_type
-    use ColumnType     , only : col                
+    use ctsm_VarPar     , only : nlevurb
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarCtl     , only : iulog
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_ColumnType     , only : col                
     !
     ! !ARGUMENTS:
     implicit none
@@ -114,4 +114,4 @@ contains
 
   end subroutine Tridiagonal
 
-end module TridiagonalMod
+end module ctsm_TridiagonalSolver

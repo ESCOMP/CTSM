@@ -1,4 +1,4 @@
-module WaterFluxBulkType
+module ctsm_WaterFluxBulkType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,13 +10,13 @@ module WaterFluxBulkType
   ! !USES:
   use shr_kind_mod   , only: r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : nlevsno, nlevsoi
-  use clm_varcon     , only : spval
-  use decompMod      , only : bounds_type
-  use CNSharedParamsMod           , only : use_fun
-  use WaterFluxType     , only : waterflux_type
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_VarPar     , only : nlevsno, nlevsoi
+  use ctsm_VarCon     , only : spval
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_CNSharedParamsMod           , only : use_fun
+  use ctsm_WaterFluxType     , only : waterflux_type
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   private
@@ -145,7 +145,7 @@ contains
   subroutine InitBulkHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use ctsm_HistFile , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
     class(waterfluxbulk_type), intent(in) :: this
@@ -269,7 +269,7 @@ contains
     ! restart file for restart or branch runs
     !
     ! !USES 
-    use accumulMod  , only : init_accum_field
+    use ctsm_Accumulators  , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(waterfluxbulk_type), intent(in) :: this
@@ -296,8 +296,8 @@ contains
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES 
-    use accumulMod       , only : extract_accum_field
-    use clm_time_manager , only : get_nstep
+    use ctsm_Accumulators       , only : extract_accum_field
+    use ctsm_TimeManager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(waterfluxbulk_type), intent(in) :: this
@@ -331,8 +331,8 @@ contains
   subroutine UpdateAccVars (this, bounds)
     !
     ! USES
-    use clm_time_manager, only : get_nstep
-    use accumulMod      , only : update_accum_field, extract_accum_field
+    use ctsm_TimeManager, only : get_nstep
+    use ctsm_Accumulators      , only : update_accum_field, extract_accum_field
     !
     ! !ARGUMENTS:
     class(waterfluxbulk_type), intent(in):: this
@@ -388,4 +388,4 @@ contains
     call this%restart ( bounds, ncid, flag=flag )
 
   end subroutine RestartBulk
-end module WaterFluxBulkType
+end module ctsm_WaterFluxBulkType

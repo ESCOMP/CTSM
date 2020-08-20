@@ -1,9 +1,9 @@
 module test_unittestSubgrid
 
-  ! Tests of unittestSubgridMod
+  ! Tests of ctsm_UnitTestSubgrid
 
   use pfunit_mod
-  use unittestSubgridMod
+  use ctsm_UnitTestSubgrid
   use shr_kind_mod , only : r8 => shr_kind_r8
 
   implicit none
@@ -27,7 +27,7 @@ contains
 
   @Test
   subroutine get_ltype_special_returnsSpecialLandunit(this)
-    use landunit_varcon, only : landunit_is_special
+    use ctsm_LandunitVarCon, only : landunit_is_special
     class(TestUnittestSubgrid), intent(inout) :: this
     integer :: ltype
 

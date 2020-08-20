@@ -1,4 +1,4 @@
-module accumulMod
+module ctsm_Accumulators
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -22,13 +22,13 @@ module accumulMod
 #include "shr_assert.h"
   use shr_kind_mod, only: r8 => shr_kind_r8
   use shr_sys_mod , only: shr_sys_abort
-  use abortutils  , only: endrun
-  use clm_varctl  , only: iulog, nsrest, nsrStartup
-  use clm_varcon  , only: spval, ispval
-  use PatchType   , only : patch
-  use ColumnType  , only : col
-  use LandunitType, only : lun
-  use GridcellType, only : grc
+  use ctsm_AbortUtils  , only: endrun
+  use ctsm_VarCtl  , only: iulog, nsrest, nsrStartup
+  use ctsm_VarCon  , only: spval, ispval
+  use ctsm_PatchType   , only : patch
+  use ctsm_ColumnType  , only : col
+  use ctsm_LandunitType, only : lun
+  use ctsm_GridcellType, only : grc
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -149,8 +149,8 @@ contains
     !
     ! !USES:
     use shr_const_mod, only: SHR_CONST_CDAY
-    use clm_time_manager, only : get_step_size
-    use decompMod, only : get_proc_bounds
+    use ctsm_TimeManager, only : get_step_size
+    use ctsm_Decomp, only : get_proc_bounds
     !
     ! !ARGUMENTS:
     implicit none
@@ -278,7 +278,7 @@ contains
     ! Diagnostic printout of accumulated fields
     !
     ! !USES:
-    use spmdMod, only : masterproc
+    use ctsm_Spmd, only : masterproc
     !
     ! !ARGUMENTS:
     implicit none
@@ -823,4 +823,4 @@ contains
   end function acctype_to_string
 
 
-end module accumulMod
+end module ctsm_Accumulators

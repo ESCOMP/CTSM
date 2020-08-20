@@ -1,4 +1,4 @@
-module dynColumnStateUpdaterMod
+module ctsm_DynColumnStateUpdater
 
 #include "shr_assert.h"
 
@@ -91,14 +91,14 @@ module dynColumnStateUpdaterMod
   ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
-  use abortutils           , only : endrun
-  use clm_varctl           , only : iulog  
-  use clm_varcon           , only : namec, spval
-  use decompMod            , only : bounds_type, BOUNDS_LEVEL_PROC
-  use ColumnType           , only : col
-  use LandunitType         , only : lun
-  use landunit_varcon      , only : max_lunit, landunit_is_special
-  use dynColumnTemplateMod , only : template_col_from_natveg_array, TEMPLATE_NONE_FOUND
+  use ctsm_AbortUtils           , only : endrun
+  use ctsm_VarCtl           , only : iulog  
+  use ctsm_VarCon           , only : namec, spval
+  use ctsm_Decomp            , only : bounds_type, BOUNDS_LEVEL_PROC
+  use ctsm_ColumnType           , only : col
+  use ctsm_LandunitType         , only : lun
+  use ctsm_LandunitVarCon      , only : max_lunit, landunit_is_special
+  use ctsm_DynColumnTemplate , only : template_col_from_natveg_array, TEMPLATE_NONE_FOUND
   !
   implicit none
   private
@@ -948,4 +948,4 @@ contains
 
   end subroutine update_column_state
 
-end module dynColumnStateUpdaterMod
+end module ctsm_DynColumnStateUpdater

@@ -1,4 +1,4 @@
-module dynFileMod
+module ctsm_DynFile
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Contains a derived type that is essentially a file_desc_t, but also adds a
@@ -7,9 +7,9 @@ module dynFileMod
   !
   ! !USES:
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use dynTimeInfoMod , only : time_info_type, year_position_type
+  use ctsm_DynTimeInfo , only : time_info_type, year_position_type
   use ncdio_pio      , only : file_desc_t, ncd_pio_openfile, ncd_inqdid, ncd_inqdlen, ncd_io
-  use abortutils     , only : endrun
+  use ctsm_AbortUtils     , only : endrun
   implicit none
   private
   !
@@ -45,11 +45,11 @@ contains
     ! based on this YEAR variable and the current model year.
     !
     ! year_position is a flag saying how to obtain the model year relative to the current
-    ! timestep; it must be one of the parameters defined in dynTimeInfoMod (e.g.,
+    ! timestep; it must be one of the parameters defined in ctsm_DynTimeInfo (e.g.,
     ! YEAR_POSITION_START_OF_TIMESTEP or YEAR_POSITION_END_OF_TIMESTEP)
     !
     ! !USES:
-    use fileutils        , only : getfil
+    use ctsm_FileUtils        , only : getfil
     !
     ! !ARGUMENTS:
     character(len=*)         , intent(in) :: filename
@@ -88,4 +88,4 @@ contains
 
   end function constructor
 
-end module dynFileMod
+end module ctsm_DynFile

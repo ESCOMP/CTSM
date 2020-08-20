@@ -5,11 +5,11 @@ module test_balance
   use pfunit_mod
   
   use shr_kind_mod  , only : r8 => shr_kind_r8
-  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
-  use unittestSubgridMod
+  use ctsm_UnitTestTimeManager, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use ctsm_UnitTestSubgrid
   use ncdio_pio   ! use the fake version of this module
-  use BalanceCheckMod
-  use unittestUtils  , only : endrun_msg
+  use ctsm_BalanceCheck
+  use ctsm_UnitTestUtils  , only : endrun_msg
 
   implicit none
   save

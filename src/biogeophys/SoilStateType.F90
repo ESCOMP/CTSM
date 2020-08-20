@@ -1,19 +1,19 @@
-module SoilStateType
+module ctsm_SoilStateType
 
   !------------------------------------------------------------------------------
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod       , only : bounds_type
-  use abortutils      , only : endrun
-  use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno
-  use clm_varcon      , only : spval
-  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot
-  use clm_varctl      , only : iulog, hist_wrtch4diag
-  use LandunitType    , only : lun                
-  use ColumnType      , only : col                
-  use PatchType       , only : patch                
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_VarPar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno
+  use ctsm_VarCon      , only : spval
+  use ctsm_VarCtl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot
+  use ctsm_VarCtl      , only : iulog, hist_wrtch4diag
+  use ctsm_LandunitType    , only : lun                
+  use ctsm_ColumnType      , only : col                
+  use ctsm_PatchType       , only : patch                
   !
   implicit none
   save
@@ -183,7 +183,7 @@ contains
     ! History fields initialization
     !
     ! !USES:
-    use histFileMod   , only: hist_addfld1d, hist_addfld2d, no_snow_normal
+    use ctsm_HistFile   , only: hist_addfld1d, hist_addfld2d, no_snow_normal
     !
     ! !ARGUMENTS:
     class(soilstate_type) :: this
@@ -335,7 +335,7 @@ contains
     ! Initialize module soil state variables to reasonable values
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd
+    use ctsm_VarPar      , only : nlevgrnd
     !
     ! !ARGUMENTS:
     class(soilstate_type) :: this
@@ -358,8 +358,8 @@ contains
     ! !USES:
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
     use restUtilMod
-    use spmdMod          , only : masterproc
-    use RootBiophysMod   , only : init_vegrootfr
+    use ctsm_Spmd          , only : masterproc
+    use ctsm_RootBiophys   , only : init_vegrootfr
     !
     ! !ARGUMENTS:
     class(soilstate_type) :: this
@@ -412,4 +412,4 @@ contains
     
   end subroutine Restart
 
-end module SoilStateType
+end module ctsm_SoilStateType

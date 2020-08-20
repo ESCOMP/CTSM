@@ -1,4 +1,4 @@
-module WaterInfoBulkType
+module ctsm_WaterInfoBulkType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,7 +10,7 @@ module WaterInfoBulkType
   ! !USES:
   !
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
   private
@@ -120,4 +120,4 @@ contains
     included = .false.
   end function is_included_in_consistency_check
 
-end module WaterInfoBulkType
+end module ctsm_WaterInfoBulkType

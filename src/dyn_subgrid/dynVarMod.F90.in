@@ -28,11 +28,11 @@ module dynVarMod
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use clm_varctl     , only : iulog
-  use dynFileMod     , only : dyn_file_type
-  use dynTimeInfoMod , only : time_info_type
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_DynFile     , only : dyn_file_type
+  use ctsm_DynTimeInfo , only : time_info_type
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use abortutils     , only : endrun
+  use ctsm_AbortUtils     , only : endrun
   implicit none
   private
   !
@@ -264,7 +264,7 @@ contains
     ! Wrapper to read a time slice of the variable; result goes in the data argument.
     !
     ! !USES:
-    use spmdMod   , only : masterproc
+    use ctsm_Spmd   , only : masterproc
     !
     ! !ARGUMENTS:
     class(dyn_var_type) , intent(inout) :: this    ! this object
@@ -308,9 +308,9 @@ contains
     ! This routine applies the conversion given by conversion_factor.
     !
     ! !USES:
-    use spmdMod        , only : masterproc
+    use ctsm_Spmd        , only : masterproc
     use ncdio_pio      , only : ncd_io
-    use surfrdUtilsMod , only : check_sums_equal_1
+    use ctsm_SurfReadUtils , only : check_sums_equal_1
     !
     ! !ARGUMENTS:
     class(dyn_var_type) , intent(inout) :: this ! this object (needs to be intent(inout) because this%dynfile is intent(inout) in the ncd_io call)

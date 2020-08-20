@@ -1,4 +1,4 @@
-module SoilBiogeochemNitrogenUptakeMod
+module ctsm_SoilBiogeochemNitrogenUptake
 
 #include "shr_assert.h"
 
@@ -8,7 +8,7 @@ module SoilBiogeochemNitrogenUptakeMod
   !
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod    , only : bounds_type
+  use ctsm_Decomp    , only : bounds_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -77,4 +77,4 @@ contains
 
   end subroutine SoilBiogeochemNitrogenUptake
   
-end module SoilBiogeochemNitrogenUptakeMod
+end module ctsm_SoilBiogeochemNitrogenUptake

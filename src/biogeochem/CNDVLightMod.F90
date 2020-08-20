@@ -1,4 +1,4 @@
-module CNDVLightMod
+module ctsm_CNDVLightMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,11 +9,11 @@ module CNDVLightMod
   ! !USES:
   use shr_kind_mod         , only: r8 => shr_kind_r8
   use shr_const_mod        , only : SHR_CONST_PI
-  use decompMod            , only : bounds_type
-  use pftconMod            , only : pftcon
-  use CNDVType             , only : dgv_ecophyscon, dgvs_type
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type
-  use PatchType            , only : patch                
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_PftCon            , only : pftcon
+  use ctsm_CNDVType             , only : dgv_ecophyscon, dgvs_type
+  use ctsm_CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use ctsm_PatchType            , only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -104,7 +104,7 @@ contains
             if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
                stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                ! stemdiam derived here from cn's formula for htop found in
-               ! CNVegStructUpdate and cn's assumption stemdiam=2*htop/taper
+               ! ctsm_CNVegStructUpdate and cn's assumption stemdiam=2*htop/taper
                ! this derivation neglects upper htop limit enforced elsewhere
                stemdiam = (24._r8 * deadstemc(p) / (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8)
             else
@@ -228,4 +228,4 @@ contains
 
   end subroutine Light
 
-end module CNDVLightMod
+end module ctsm_CNDVLightMod

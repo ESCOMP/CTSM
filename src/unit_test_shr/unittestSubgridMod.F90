@@ -1,4 +1,4 @@
-module unittestSubgridMod
+module ctsm_UnitTestSubgrid
 
   ! Provides routines to aid with the setup of subgrid structure for unit tests that need
   ! it. 
@@ -39,11 +39,11 @@ module unittestSubgridMod
   !    tests (it will only do anything if the subgrid setup was done).
 
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod    , only : bounds_type, procinfo, get_proc_bounds
-  use GridcellType , only : grc                
-  use LandunitType , only : lun                
-  use ColumnType   , only : col                
-  use PatchType    , only : patch                
+  use ctsm_Decomp    , only : bounds_type, procinfo, get_proc_bounds
+  use ctsm_GridcellType , only : grc                
+  use ctsm_LandunitType , only : lun                
+  use ctsm_ColumnType   , only : col                
+  use ctsm_PatchType    , only : patch                
 
   implicit none
   private
@@ -116,7 +116,7 @@ contains
     ! called for each test.
     !
     ! !USES:
-    use clm_varpar, only : natpft_lb
+    use ctsm_VarPar, only : natpft_lb
     !
     ! !ARGUMENTS:
     !
@@ -150,8 +150,8 @@ contains
     ! columns, pfts, etc. for the test.
     !
     ! !USES:
-    use initSubgridMod, only : clm_ptrs_compdown
-    use subgridWeightsMod, only : compute_higher_order_weights
+    use ctsm_InitSubgrid, only : clm_ptrs_compdown
+    use ctsm_SubgridWeights, only : compute_higher_order_weights
     !
     ! !ARGUMENTS:
     !
@@ -171,7 +171,7 @@ contains
   subroutine set_decomp_info
     !
     ! !DESCRIPTION:
-    ! Set up decomp info in decompMod.
+    ! Set up decomp info in ctsm_Decomp.
     !
     ! We need to do this (in addition to just making sure that the bounds derived type
     ! object is set up correctly) for the sake of callers of get_proc_bounds.
@@ -243,12 +243,12 @@ contains
     ! Allocate subgrid arrays, and initialize them to default values.
     !
     ! !USES:
-    use landunit_varcon , only : max_lunit
-    use clm_varcon      , only : ispval
-    use GridcellType    , only : grc
-    use LandunitType    , only : lun
-    use ColumnType      , only : col
-    use PatchType       , only : patch
+    use ctsm_LandunitVarCon , only : max_lunit
+    use ctsm_VarCon      , only : ispval
+    use ctsm_GridcellType    , only : grc
+    use ctsm_LandunitType    , only : lun
+    use ctsm_ColumnType      , only : col
+    use ctsm_PatchType       , only : patch
     !
     ! !ARGUMENTS:
     !
@@ -326,7 +326,7 @@ contains
     ! Add a landunit, and make it active. The index of the just-added landunit can be
     ! obtained from the module-level variable, li.
     !
-    ! This is simply a wrapper to the routine in initSubgridMod. We provide this for two
+    ! This is simply a wrapper to the routine in ctsm_InitSubgrid. We provide this for two
     ! reasons:
     !
     ! (1) To allow the module-level li variable to be protected
@@ -335,7 +335,7 @@ contains
     ! add_landunit
     !
     ! !USES:
-    use initSubgridMod, only : add_landunit
+    use ctsm_InitSubgrid, only : add_landunit
     !
     ! !ARGUMENTS:
     integer  , intent(in)    :: my_gi   ! grid cell index on which this landunit should be placed
@@ -359,7 +359,7 @@ contains
     ! Add a column, and make it active. The index of the just-added column can be obtained
     ! from the module-level variable, ci.
     !
-    ! This is simply a wrapper to the routine in initSubgridMod. We provide this for two
+    ! This is simply a wrapper to the routine in ctsm_InitSubgrid. We provide this for two
     ! reasons:
     !
     ! (1) To allow the module-level ci variable to be protected
@@ -368,7 +368,7 @@ contains
     ! add_column
     !
     ! !USES:
-    use initSubgridMod, only : add_column
+    use ctsm_InitSubgrid, only : add_column
     !
     ! !ARGUMENTS:
     integer  , intent(in)    :: my_li   ! landunit index on which this column should be placed
@@ -392,7 +392,7 @@ contains
     ! Add a patch, and make it active. The index of the just-added patch can be obtained
     ! from the module-level variable, pi.
     !
-    ! This is simply a wrapper to the routine in initSubgridMod. We provide this for two
+    ! This is simply a wrapper to the routine in ctsm_InitSubgrid. We provide this for two
     ! reasons:
     !
     ! (1) To allow the module-level pi variable to be protected
@@ -401,7 +401,7 @@ contains
     ! add_patch
     !
     ! !USES:
-    use initSubgridMod, only : add_patch
+    use ctsm_InitSubgrid, only : add_patch
     !
     ! !ARGUMENTS:
     integer  , intent(in)    :: my_ci   ! column index on which this patch should be placed
@@ -425,7 +425,7 @@ contains
     ! Returns a landunit type corresponding to a special landunit
     !
     ! !USES:
-    use landunit_varcon, only : max_lunit, landunit_is_special
+    use ctsm_LandunitVarCon, only : max_lunit, landunit_is_special
     !
     ! !ARGUMENTS:
     integer :: ltype  ! function result
@@ -459,7 +459,7 @@ contains
   subroutine init_nlevsno()
     ! Initialize nlevsno to a reasonable value, if it is not already set
 
-    use clm_varpar, only : nlevsno
+    use ctsm_VarPar, only : nlevsno
 
     if (nlevsno <= 0) then
        nlevsno_orig = nlevsno
@@ -473,11 +473,11 @@ contains
   subroutine reset_nlevsno
     ! If we set nlevsno in init_nlevsno, then reset it to its original value
 
-    use clm_varpar, only : nlevsno
+    use ctsm_VarPar, only : nlevsno
 
     if (nlevsno_set) then
        nlevsno = nlevsno_orig
     end if
   end subroutine reset_nlevsno
 
-end module unittestSubgridMod
+end module ctsm_UnitTestSubgrid

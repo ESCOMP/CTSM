@@ -1,4 +1,4 @@
-module CNVegCarbonFluxType
+module ctsm_CNVegCarbonFluxType
 
 #include "shr_assert.h"
 
@@ -8,22 +8,22 @@ module CNVegCarbonFluxType
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use decompMod                          , only : bounds_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp
-  use clm_varcon                         , only : spval, dzsoi_decomp
-  use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
-  use clm_varctl                         , only : use_grainproduct
-  use clm_varctl                         , only : iulog
-  use landunit_varcon                    , only : istsoil, istcrop, istdlak 
-  use pftconMod                          , only : npcropmin
-  use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
-  use PatchType                          , only : patch                
-  use AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
-  use dynSubgridControlMod               , only : get_for_testing_allow_non_annual_changes
-  use abortutils                         , only : endrun
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, ndecomp_pools
+  use ctsm_VarPar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp
+  use ctsm_VarCon                         , only : spval, dzsoi_decomp
+  use ctsm_VarCtl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
+  use ctsm_VarCtl                         , only : use_grainproduct
+  use ctsm_VarCtl                         , only : iulog
+  use ctsm_LandunitVarCon                    , only : istsoil, istcrop, istdlak 
+  use ctsm_PftCon                          , only : npcropmin
+  use ctsm_LandunitType                       , only : lun                
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_PatchType                          , only : patch                
+  use ctsm_AnnualFluxDribbler                 , only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
+  use ctsm_DynSubgridControl               , only : get_for_testing_allow_non_annual_changes
+  use ctsm_AbortUtils                         , only : endrun
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -751,8 +751,8 @@ contains
     else if (carbon_type == 'c14') then
        carbon_type_suffix = 'c_14'
     else
-       write(iulog,*) 'CNVegCarbonFluxType InitAllocate: Unknown carbon_type: ', trim(carbon_type)
-       call endrun(msg='CNVegCarbonFluxType InitAllocate: Unknown carbon_type: ' // &
+       write(iulog,*) 'ctsm_CNVegCarbonFluxType InitAllocate: Unknown carbon_type: ', trim(carbon_type)
+       call endrun(msg='ctsm_CNVegCarbonFluxType InitAllocate: Unknown carbon_type: ' // &
             errMsg(sourcefile, __LINE__))
     end if
 
@@ -792,10 +792,10 @@ contains
     ! add history fields for all CN variables, always set as default='inactive'
     !
     ! !USES:
-    use clm_varpar , only : nlevdecomp, nlevdecomp_full, nlevgrnd
-    use clm_varctl , only : hist_wrtch4diag
-    use CNSharedParamsMod, only: use_fun
-    use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
+    use ctsm_VarPar , only : nlevdecomp, nlevdecomp_full, nlevgrnd
+    use ctsm_VarCtl , only : hist_wrtch4diag
+    use ctsm_CNSharedParamsMod, only: use_fun
+    use ctsm_HistFile, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     !
     ! !ARGUMENTS:
     class(cnveg_carbonflux_type) :: this    
@@ -3499,10 +3499,10 @@ contains
     !
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-    use clm_time_manager , only : is_restart
-    use clm_varcon       , only : c13ratio, c14ratio
-    use clm_varctl       , only : use_lch4
-    use CNSharedParamsMod, only : use_fun
+    use ctsm_TimeManager , only : is_restart
+    use ctsm_VarCon       , only : c13ratio, c14ratio
+    use ctsm_VarCtl       , only : use_lch4
+    use ctsm_CNSharedParamsMod, only : use_fun
     use restUtilMod
     use ncdio_pio
     !
@@ -4047,12 +4047,12 @@ contains
     ! Perform patch and column-level carbon summary calculations
     !
     ! !USES:
-    use clm_time_manager                   , only: get_step_size_real
-    use clm_varcon                         , only: secspday
-    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
-    use subgridAveMod                      , only: p2c, c2g
-    use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
-    use CNSharedParamsMod                  , only: use_fun
+    use ctsm_TimeManager                   , only: get_step_size_real
+    use ctsm_VarCon                         , only: secspday
+    use ctsm_VarCtl                         , only: nfix_timeconst, carbon_resp_opt
+    use ctsm_SubgridAve                      , only: p2c, c2g
+    use ctsm_SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
+    use ctsm_CNSharedParamsMod                  , only: use_fun
     !
     ! !ARGUMENTS:
     class(cnveg_carbonflux_type)   :: this
@@ -4673,6 +4673,6 @@ contains
 
   end subroutine Summary_carbonflux
 
-end module CNVegCarbonFluxType
+end module ctsm_CNVegCarbonFluxType
 
 

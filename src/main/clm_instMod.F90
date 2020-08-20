@@ -1,4 +1,4 @@
-module clm_instMod
+module ctsm_Inst
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,88 +6,88 @@ module clm_instMod
   !
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
-  use decompMod       , only : bounds_type
-  use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
-  use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
-  use clm_varctl      , only : use_century_decomp, use_crop, snow_cover_fraction_method, paramfile
-  use clm_varcon      , only : bdsno, c13ratio, c14ratio
-  use landunit_varcon , only : istice_mec, istsoil
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_VarPar      , only : ndecomp_pools, nlevdecomp_full
+  use ctsm_VarCtl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
+  use ctsm_VarCtl      , only : use_century_decomp, use_crop, snow_cover_fraction_method, paramfile
+  use ctsm_VarCon      , only : bdsno, c13ratio, c14ratio
+  use ctsm_LandunitVarCon , only : istice_mec, istsoil
   use perf_mod        , only : t_startf, t_stopf
-  use controlMod      , only : NLFilename
-  use fileutils       , only : getfil
+  use ctsm_Control      , only : NLFilename
+  use ctsm_FileUtils       , only : getfil
   use ncdio_pio       , only : file_desc_t, ncd_pio_openfile, ncd_pio_closefile
 
   !-----------------------------------------
   ! Constants
   !-----------------------------------------
 
-  use UrbanParamsType                    , only : urbanparams_type   ! Constants 
-  use UrbanParamsType                    , only : IsSimpleBuildTemp, IsProgBuildTemp
-  use UrbanTimeVarType                   , only : urbantv_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use CNDVType                           , only : dgv_ecophyscon     ! Constants 
+  use ctsm_UrbanParamsType                    , only : urbanparams_type   ! Constants 
+  use ctsm_UrbanParamsType                    , only : IsSimpleBuildTemp, IsProgBuildTemp
+  use ctsm_UrbanTimeVarType                   , only : urbantv_type
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_CNDVType                           , only : dgv_ecophyscon     ! Constants 
 
   !-----------------------------------------
   ! Definition of component types 
   !-----------------------------------------
 
-  use ActiveLayerMod                  , only : active_layer_type
-  use AerosolMod                      , only : aerosol_type
-  use CanopyStateType                 , only : canopystate_type
-  use ch4Mod                          , only : ch4_type
-  use CNVegetationFacade              , only : cn_vegetation_type
-  use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use CropType                        , only : crop_type
-  use DryDepVelocity                  , only : drydepvel_type
-  use DUSTMod                         , only : dust_type
-  use EnergyFluxType                  , only : energyflux_type
-  use FrictionVelocityMod             , only : frictionvel_type
-  use GlacierSurfaceMassBalanceMod    , only : glacier_smb_type
-  use InfiltrationExcessRunoffMod     , only : infiltration_excess_runoff_type
-  use IrrigationMod                   , only : irrigation_type
-  use LakeStateType                   , only : lakestate_type
-  use OzoneBaseMod                    , only : ozone_base_type
-  use OzoneFactoryMod                 , only : create_and_init_ozone_type
-  use PhotosynthesisMod               , only : photosyns_type
-  use SoilHydrologyType               , only : soilhydrology_type
-  use SaturatedExcessRunoffMod        , only : saturated_excess_runoff_type
-  use SoilStateType                   , only : soilstate_type
-  use SolarAbsorbedType               , only : solarabs_type
-  use SurfaceRadiationMod             , only : surfrad_type
-  use SurfaceAlbedoType               , only : surfalb_type
-  use TemperatureType                 , only : temperature_type
-  use WaterType                       , only : water_type
-  use UrbanParamsType                 , only : urbanparams_type
-  use UrbanTimeVarType                , only : urbantv_type
-  use HumanIndexMod                   , only : humanindex_type
-  use VOCEmissionMod                  , only : vocemis_type
-  use CNFireEmissionsMod              , only : fireemis_type
-  use atm2lndType                     , only : atm2lnd_type
-  use lnd2atmType                     , only : lnd2atm_type
-  use lnd2glcMod                      , only : lnd2glc_type 
-  use glc2lndMod                      , only : glc2lnd_type
-  use glcBehaviorMod                  , only : glc_behavior_type
-  use TopoMod                         , only : topo_type
-  use GridcellType                    , only : grc
-  use LandunitType                    , only : lun                
-  use ColumnType                      , only : col                
-  use PatchType                       , only : patch                
-  use CLMFatesInterfaceMod            , only : hlm_fates_interface_type
-  use SnowCoverFractionBaseMod        , only : snow_cover_fraction_base_type
-  use SnowCoverFractionFactoryMod     , only : CreateAndInitSnowCoverFraction
-  use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
-  use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
+  use ctsm_ActiveLayer                  , only : active_layer_type
+  use ctsm_Aerosols                      , only : aerosol_type
+  use ctsm_CanopyStateType                 , only : canopystate_type
+  use ctsm_Methane                          , only : ch4_type
+  use ctsm_CNVegetationFacade              , only : cn_vegetation_type
+  use ctsm_SoilBiogeochemStateType         , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_CropType                        , only : crop_type
+  use ctsm_DryDepVelocity                  , only : drydepvel_type
+  use ctsm_DustMod                         , only : dust_type
+  use ctsm_EnergyFluxType                  , only : energyflux_type
+  use ctsm_FrictionVelocity             , only : frictionvel_type
+  use ctsm_GlacierSurfaceMassBalance    , only : glacier_smb_type
+  use ctsm_InfiltrationExcessRunoff     , only : infiltration_excess_runoff_type
+  use ctsm_Irrigation                   , only : irrigation_type
+  use ctsm_LakeStateType                   , only : lakestate_type
+  use ctsm_OzoneBase                    , only : ozone_base_type
+  use ctsm_OzoneFactory                 , only : create_and_init_ozone_type
+  use ctsm_Photosynthesis               , only : photosyns_type
+  use ctsm_SoilHydrologyType               , only : soilhydrology_type
+  use ctsm_SaturatedExcessRunoff        , only : saturated_excess_runoff_type
+  use ctsm_SoilStateType                   , only : soilstate_type
+  use ctsm_SolarAbsorbedType               , only : solarabs_type
+  use ctsm_SurfaceRadiation             , only : surfrad_type
+  use ctsm_SurfaceAlbedoType               , only : surfalb_type
+  use ctsm_TemperatureType                 , only : temperature_type
+  use ctsm_WaterType                       , only : water_type
+  use ctsm_UrbanParamsType                 , only : urbanparams_type
+  use ctsm_UrbanTimeVarType                , only : urbantv_type
+  use ctsm_HumanIndices                   , only : humanindex_type
+  use ctsm_VocEmissionMod                  , only : vocemis_type
+  use ctsm_CNFireEmissionsMod              , only : fireemis_type
+  use ctsm_Atm2LndType                     , only : atm2lnd_type
+  use ctsm_Lnd2AtmType                     , only : lnd2atm_type
+  use ctsm_Lnd2Glc                      , only : lnd2glc_type 
+  use ctsm_Glc2Lnd                      , only : glc2lnd_type
+  use ctsm_GlacierBehavior                  , only : glc_behavior_type
+  use ctsm_Topo                         , only : topo_type
+  use ctsm_GridcellType                    , only : grc
+  use ctsm_LandunitType                    , only : lun                
+  use ctsm_ColumnType                      , only : col                
+  use ctsm_PatchType                       , only : patch                
+  use ctsm_FatesInterface            , only : hlm_fates_interface_type
+  use ctsm_SnowCoverFractionBase        , only : snow_cover_fraction_base_type
+  use ctsm_SnowCoverFractionFactory     , only : CreateAndInitSnowCoverFraction
+  use ctsm_SoilWaterRetentionCurve      , only : soil_water_retention_curve_type
+  use ctsm_NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
   !
-  use SoilStateInitTimeConstMod       , only : SoilStateInitTimeConst
-  use SoilHydrologyInitTimeConstMod   , only : SoilHydrologyInitTimeConst
-  use SurfaceAlbedoMod                , only : SurfaceAlbedoInitTimeConst 
-  use LakeCon                         , only : LakeConInit 
-  use SoilBiogeochemPrecisionControlMod, only: SoilBiogeochemPrecisionControlInit
-  use SoilWaterMovementMod            , only : use_aquifer_layer
+  use ctsm_SoilStateInitTimeConst       , only : SoilStateInitTimeConst
+  use ctsm_SoilHydrologyInitTimeConst   , only : SoilHydrologyInitTimeConst
+  use ctsm_SurfaceAlbedo                , only : SurfaceAlbedoInitTimeConst 
+  use ctsm_LakeConstants                         , only : ctsm_LakeConstantsInit 
+  use ctsm_SoilBiogeochemPrecisionControl, only: SoilBiogeochemPrecisionControlInit
+  use ctsm_SoilWaterMovement            , only : use_aquifer_layer
   !
   implicit none
   private  ! By default everything is private
@@ -184,19 +184,19 @@ contains
   subroutine clm_instInit(bounds)
     !
     ! !USES: 
-    use clm_varpar                         , only : nlevsno
-    use controlMod                         , only : nlfilename, fsurdat
-    use domainMod                          , only : ldomain
-    use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
-    use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
-    use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
-    use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
+    use ctsm_VarPar                         , only : nlevsno
+    use ctsm_Control                         , only : nlfilename, fsurdat
+    use ctsm_Domain                          , only : ldomain
+    use ctsm_SoilBiogeochemDecompCascadeBGC  , only : init_decompcascade_bgc
+    use ctsm_SoilBiogeochemDecompCascadeCN   , only : init_decompcascade_cn
+    use ctsm_SoilBiogeochemDecompCascadeConType , only : init_decomp_cascade_constants
+    use ctsm_SoilBiogeochemCompetition       , only : SoilBiogeochemCompetitionInit
     
-    use initVerticalMod                    , only : initVertical
-    use accumulMod                         , only : print_accum_fields 
-    use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
-    use decompMod                          , only : get_proc_bounds
-    use BalanceCheckMod                    , only : GetBalanceCheckSkipSteps
+    use ctsm_InitVertical                    , only : initVertical
+    use ctsm_Accumulators                         , only : print_accum_fields 
+    use ctsm_SoilWaterRetentionCurveFactory  , only : create_soil_water_retention_curve
+    use ctsm_Decomp                          , only : get_proc_bounds
+    use ctsm_BalanceCheck                    , only : GetBalanceCheckSkipSteps
     !
     ! !ARGUMENTS    
     type(bounds_type), intent(in) :: bounds  ! processor bounds
@@ -312,7 +312,7 @@ contains
     call frictionvel_inst%Init(bounds, NLFilename = NLFilename, params_ncid = params_ncid)
 
     call lakestate_inst%Init(bounds)
-    call LakeConInit()
+    call ctsm_LakeConstantsInit()
 
     allocate(ozone_inst, source = create_and_init_ozone_type(bounds))
 
@@ -475,8 +475,8 @@ contains
     !
     ! !USES:
     use ncdio_pio       , only : file_desc_t
-    use UrbanParamsType , only : IsSimpleBuildTemp, IsProgBuildTemp
-    use decompMod       , only : get_proc_bounds, get_proc_clumps, get_clump_bounds
+    use ctsm_UrbanParamsType , only : IsSimpleBuildTemp, IsProgBuildTemp
+    use ctsm_Decomp       , only : get_proc_bounds, get_proc_clumps, get_clump_bounds
 
     !
     ! !DESCRIPTION:
@@ -582,5 +582,5 @@ contains
 
  end subroutine clm_instRest
 
-end module clm_instMod
+end module ctsm_Inst
 

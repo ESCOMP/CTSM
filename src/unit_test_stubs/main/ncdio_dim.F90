@@ -1,4 +1,4 @@
-module ncdio_dim
+module ctsm_NcdIoDim
   ! This module is specific to using the ncdio_pio_fake version of ncdio_pio. This
   ! provides a derived type for holding a single dimension from a fake netcdf file, and
   ! associated methods for working with this derived type.
@@ -7,12 +7,12 @@ module ncdio_dim
   private
   save
 
-  public :: ncdio_dim_type
+  public :: ctsm_NcdIoDim_type
 
   integer, parameter, public :: max_name = 256   ! max length for a dimension name
 
   ! This type store a single dimension in a fake file
-  type :: ncdio_dim_type
+  type :: ctsm_NcdIoDim_type
      private
      character(len=max_name) :: dimname  ! dimension name
      integer :: dimlen  ! dimension length
@@ -20,17 +20,17 @@ module ncdio_dim
    contains
      procedure :: get_dimname  ! get the dimension name
      procedure :: get_dimlen   ! get the dimension length
-  end type ncdio_dim_type
+  end type ctsm_NcdIoDim_type
 
-  interface ncdio_dim_type
+  interface ctsm_NcdIoDim_type
      module procedure constructor
-  end interface ncdio_dim_type
+  end interface ctsm_NcdIoDim_type
 
 contains
 
   !-----------------------------------------------------------------------
-  type(ncdio_dim_type) function constructor(dimname, dimlen)
-    ! Create a new object of type ncdio_dim_type
+  type(ctsm_NcdIoDim_type) function constructor(dimname, dimlen)
+    ! Create a new object of type ctsm_NcdIoDim_type
 
     character(len=*) , intent(in) :: dimname  ! dimension name
     integer          , intent(in) :: dimlen   ! dimension length
@@ -42,7 +42,7 @@ contains
   !-----------------------------------------------------------------------
   character(len=max_name) function get_dimname(this)
     ! Get the name associated with this dimension
-    class(ncdio_dim_type), intent(in) :: this
+    class(ctsm_NcdIoDim_type), intent(in) :: this
 
     get_dimname = this%dimname
   end function get_dimname
@@ -50,9 +50,9 @@ contains
   !-----------------------------------------------------------------------
   integer function get_dimlen(this)
     ! Get the length associated with this dimension
-    class(ncdio_dim_type), intent(in) :: this
+    class(ctsm_NcdIoDim_type), intent(in) :: this
 
     get_dimlen = this%dimlen
   end function get_dimlen
 
-end module ncdio_dim
+end module ctsm_NcdIoDim

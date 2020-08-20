@@ -59,8 +59,8 @@ contains
     ! Assumes that dyn_file has already been initialized.
     !
     ! !USES:
-    use dynFileMod     , only : dyn_file_type
-    use dynTimeInfoMod , only : time_info_type
+    use ctsm_DynFile     , only : dyn_file_type
+    use ctsm_DynTimeInfo , only : time_info_type
     !
     ! !ARGUMENTS:
     type(dyn_file_type), target, intent(in) :: dyn_file ! file containing this variable
@@ -156,8 +156,8 @@ contains
     ! for which we currently have stored data.
     !
     ! !USES:
-    use dynFileMod     , only : dyn_file_type
-    use dynTimeInfoMod , only : time_info_type
+    use ctsm_DynFile     , only : dyn_file_type
+    use ctsm_DynTimeInfo , only : time_info_type
     !
     ! !ARGUMENTS:
     class(dyn_var_time_uninterp_type), intent(inout) :: this   ! this object

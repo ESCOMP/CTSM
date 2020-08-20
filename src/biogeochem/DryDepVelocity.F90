@@ -1,4 +1,4 @@
-Module DryDepVelocity                                              
+Module ctsm_DryDepVelocity                                              
 
   !-----------------------------------------------------------------------  
   !  
@@ -56,26 +56,26 @@ Module DryDepVelocity
 
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_kind_mod         , only : r8 => shr_kind_r8 
-  use abortutils           , only : endrun
-  use clm_time_manager     , only : get_nstep, get_curr_date, get_curr_time 
-  use spmdMod              , only : masterproc
+  use ctsm_AbortUtils           , only : endrun
+  use ctsm_TimeManager     , only : get_nstep, get_curr_date, get_curr_time 
+  use ctsm_Spmd              , only : masterproc
   use seq_drydep_mod       , only : n_drydep, drydep_list 
   use seq_drydep_mod       , only : drydep_method, DD_XLND
   use seq_drydep_mod       , only : index_o3=>o3_ndx, index_o3a=>o3a_ndx, index_so2=>so2_ndx, index_h2=>h2_ndx
   use seq_drydep_mod       , only : index_co=>co_ndx, index_ch4=>ch4_ndx, index_pan=>pan_ndx
   use seq_drydep_mod       , only : index_xpan=>xpan_ndx
-  use decompMod            , only : bounds_type
-  use clm_varcon           , only : namep
-  use atm2lndType          , only : atm2lnd_type
-  use CanopyStateType      , only : canopystate_type
-  use FrictionVelocityMod  , only : frictionvel_type
-  use PhotosynthesisMod    , only : photosyns_type
-  use WaterStateBulkType       , only : waterstatebulk_type
-  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType       , only : wateratm2lndbulk_type
-  use GridcellType         , only : grc                
-  use LandunitType         , only : lun                
-  use PatchType            , only : patch                
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_VarCon           , only : namep
+  use ctsm_Atm2LndType          , only : atm2lnd_type
+  use ctsm_CanopyStateType      , only : canopystate_type
+  use ctsm_FrictionVelocity  , only : frictionvel_type
+  use ctsm_Photosynthesis    , only : photosyns_type
+  use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use ctsm_WaterAtm2LndBulkType       , only : wateratm2lndbulk_type
+  use ctsm_GridcellType         , only : grc                
+  use ctsm_LandunitType         , only : lun                
+  use ctsm_PatchType            , only : patch                
   !
   implicit none 
   private
@@ -144,8 +144,8 @@ CONTAINS
     ! Initialize history output fields for dry deposition diagnositics
     !
     ! !USES 
-    use clm_varcon     , only : spval
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_VarCon     , only : spval
+    use ctsm_HistFile    , only : hist_addfld1d
     use seq_drydep_mod , only : mapping
     !
     ! !ARGUMENTS:
@@ -192,17 +192,17 @@ CONTAINS
     use shr_const_mod  , only : tmelt => shr_const_tkfrz
     use seq_drydep_mod , only : seq_drydep_setHCoeff, mapping, drat, foxd
     use seq_drydep_mod , only : rcls, h2_a, h2_b, h2_c, ri, rac, rclo, rlu, rgss, rgso
-    use landunit_varcon, only : istsoil, istice_mec, istdlak, istwet
-    use clm_varctl     , only : iulog
-    use pftconMod      , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree
-    use pftconMod      , only : ndllf_dcd_brl_tree, nbrdlf_evr_trp_tree
-    use pftconMod      , only : nbrdlf_evr_tmp_tree, nbrdlf_dcd_trp_tree
-    use pftconMod      , only : nbrdlf_dcd_tmp_tree, nbrdlf_dcd_brl_tree
-    use pftconMod      , only : nbrdlf_evr_shrub, nbrdlf_dcd_tmp_shrub
-    use pftconMod      , only : nbrdlf_dcd_brl_shrub,nc3_arctic_grass
-    use pftconMod      , only : nc3_nonarctic_grass, nc4_grass, nc3crop
-    use pftconMod      , only : nc3irrig, npcropmin, npcropmax
-    use clm_varcon     , only : spval
+    use ctsm_LandunitVarCon, only : istsoil, istice_mec, istdlak, istwet
+    use ctsm_VarCtl     , only : iulog
+    use ctsm_PftCon      , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree
+    use ctsm_PftCon      , only : ndllf_dcd_brl_tree, nbrdlf_evr_trp_tree
+    use ctsm_PftCon      , only : nbrdlf_evr_tmp_tree, nbrdlf_dcd_trp_tree
+    use ctsm_PftCon      , only : nbrdlf_dcd_tmp_tree, nbrdlf_dcd_brl_tree
+    use ctsm_PftCon      , only : nbrdlf_evr_shrub, nbrdlf_dcd_tmp_shrub
+    use ctsm_PftCon      , only : nbrdlf_dcd_brl_shrub,nc3_arctic_grass
+    use ctsm_PftCon      , only : nc3_nonarctic_grass, nc4_grass, nc3crop
+    use ctsm_PftCon      , only : nc3irrig, npcropmin, npcropmax
+    use ctsm_VarCon     , only : spval
 
     !
     ! !ARGUMENTS:
@@ -680,4 +680,4 @@ CONTAINS
 
   end subroutine depvel_compute
 
-end module DryDepVelocity
+end module ctsm_DryDepVelocity

@@ -1,33 +1,33 @@
 module test_water_type
 
-  ! Tests of WaterType
+  ! Tests of ctsm_WaterType
 
   use pfunit_mod
-  use WaterType
+  use ctsm_WaterType
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
-  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
-  use unittestUtils, only : endrun_msg
-  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
+  use ctsm_UnitTestSubgrid, only : bounds, unittest_subgrid_teardown
+  use ctsm_UnitTestSimpleSubgridSetups, only : setup_single_veg_patch
+  use ctsm_UnitTestUtils, only : endrun_msg
+  use ctsm_UnitTestctsm_WaterTypeFactory, only : unittest_water_type_factory_type
 
   implicit none
 
   @TestCase
-  type, extends(TestCase) :: TestWaterType
+  type, extends(TestCase) :: Testctsm_WaterType
      type(water_type) :: water_inst
      type(unittest_water_type_factory_type) :: factory
    contains
      procedure :: setUp
      procedure :: tearDown
      procedure :: init_water_inst_1pt
-  end type TestWaterType
+  end type Testctsm_WaterType
 
   real(r8), parameter :: tol = 1.e-13_r8
 
 contains
 
   subroutine setUp(this)
-    class(TestWaterType), intent(inout) :: this
+    class(Testctsm_WaterType), intent(inout) :: this
 
     call this%factory%init()
     call this%factory%setup_before_subgrid( &
@@ -37,7 +37,7 @@ contains
   end subroutine setUp
 
   subroutine tearDown(this)
-    class(TestWaterType), intent(inout) :: this
+    class(Testctsm_WaterType), intent(inout) :: this
 
     call this%factory%teardown(this%water_inst)
     call unittest_subgrid_teardown()
@@ -46,7 +46,7 @@ contains
   subroutine init_water_inst_1pt(this)
     ! Initializes the subgrid structure for a single point, and initializes
     ! this%water_inst
-    class(TestWaterType), intent(inout) :: this
+    class(Testctsm_WaterType), intent(inout) :: this
 
     call setup_single_veg_patch(pft_type=1)
     call this%factory%setup_after_subgrid(snl = 0, dz = 1._r8)
@@ -62,7 +62,7 @@ contains
 
   @Test
   subroutine tracerConsistencyCheck_passes(this)
-    class(TestWaterType), intent(inout) :: this
+    class(Testctsm_WaterType), intent(inout) :: this
 
     call this%init_water_inst_1pt()
 
@@ -78,7 +78,7 @@ contains
   subroutine tracerConsistencyCheck_changed1dBulkButNotFirstTracer_fails(this)
     ! If we change a 1d bulk variable, but don't change the first tracer variable, the
     ! tracer consistency check should fail
-    class(TestWaterType), intent(inout) :: this
+    class(Testctsm_WaterType), intent(inout) :: this
     real(r8) :: ratio
     integer :: i
     character(len=:), allocatable :: expected_msg
@@ -112,7 +112,7 @@ contains
   subroutine tracerConsistencyCheck_changed1dBulkButNotLastTracer_fails(this)
     ! If we change a 1d bulk variable, but don't change the last tracer variable, the
     ! tracer consistency check should fail
-    class(TestWaterType), intent(inout) :: this
+    class(Testctsm_WaterType), intent(inout) :: this
     real(r8) :: ratio
     integer :: i
     character(len=:), allocatable :: expected_msg
@@ -146,7 +146,7 @@ contains
   subroutine tracerConsistencyCheck_changed1dTracer_fails(this)
     ! If we change a 1d tracer variable, but don't change the corresponding bulk
     ! variable, the tracer consistency check should fail
-    class(TestWaterType), intent(inout) :: this
+    class(Testctsm_WaterType), intent(inout) :: this
     integer :: bulk_tracer
     character(len=:), allocatable :: expected_msg
 
@@ -173,7 +173,7 @@ contains
     ! If we change a 2d variable inconsistently between bult and tracer, the tracer
     ! consistency check should fail. This confirms that the multi-layer variables have
     ! each of their layers added
-    class(TestWaterType), intent(inout) :: this
+    class(Testctsm_WaterType), intent(inout) :: this
     integer :: lev
     integer :: bulk_tracer
     real(r8) :: ratio

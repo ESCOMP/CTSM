@@ -3,9 +3,9 @@ module test_quadratic
   ! Tests of quadratic
 
   use pfunit_mod
-  use quadraticMod
+  use ctsm_QuadraticSolver
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestUtils, only : endrun_msg
+  use ctsm_UnitTestUtils, only : endrun_msg
 
   implicit none
 

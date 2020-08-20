@@ -1,4 +1,4 @@
-module paramUtilMod
+module ctsm_ParamUtil
    !
    ! module that deals with reading parameter files
    !
@@ -35,7 +35,7 @@ contains
      !
      ! read the netcdf file...generic, could be used for any parameter read
      !
-     use abortutils   , only : endrun
+     use ctsm_AbortUtils   , only : endrun
      use ncdio_pio    , only : file_desc_t,ncd_io
 
      implicit none
@@ -71,7 +71,7 @@ contains
      !
      ! read the netcdf file...generic, could be used for any parameter read
      !
-     use abortutils   , only : endrun
+     use ctsm_AbortUtils   , only : endrun
      use ncdio_pio    , only : file_desc_t,ncd_io
 
      implicit none
@@ -107,7 +107,7 @@ contains
      !
      ! read the netcdf file...generic, could be used for any parameter read
      !
-     use abortutils   , only : endrun
+     use ctsm_AbortUtils   , only : endrun
      use ncdio_pio    , only : file_desc_t,ncd_io
 
      implicit none
@@ -144,7 +144,7 @@ contains
      !
      ! read the netcdf file...generic, could be used for any parameter read
      !
-     use abortutils   , only : endrun
+     use ctsm_AbortUtils   , only : endrun
      use ncdio_pio    , only : file_desc_t
 
      implicit none
@@ -178,7 +178,7 @@ contains
      !
      ! read the netcdf file...generic, could be used for any parameter read
      !
-     use abortutils   , only : endrun
+     use ctsm_AbortUtils   , only : endrun
      use ncdio_pio    , only : file_desc_t
 
      implicit none
@@ -211,7 +211,7 @@ contains
      !
      ! read the netcdf file...generic, could be used for any parameter read
      !
-     use abortutils   , only : endrun
+     use ctsm_AbortUtils   , only : endrun
      use ncdio_pio    , only : file_desc_t
 
      implicit none
@@ -244,7 +244,7 @@ contains
      ! Assert that the expected number of dimensions and dimension
      ! names for a variable match the actual names on the file.
      !
-     use abortutils   , only : endrun
+     use ctsm_AbortUtils   , only : endrun
      use ncdio_pio    , only : file_desc_t, var_desc_t, check_var, ncd_inqvdname, ncd_inqvdims
 
      implicit none
@@ -288,4 +288,4 @@ contains
    end subroutine checkDimensions
   !-----------------------------------------------------------------------
 
-end module paramUtilMod
+end module ctsm_ParamUtil

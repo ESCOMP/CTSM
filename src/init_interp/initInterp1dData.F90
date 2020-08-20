@@ -1,4 +1,4 @@
-module initInterp1dData
+module ctsm_InitInterp1dData
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,7 +9,7 @@ module initInterp1dData
 #include "shr_assert.h"
   use shr_kind_mod   , only: r8 => shr_kind_r8
   use shr_infnan_mod , only: shr_infnan_isnan
-  use clm_varcon     , only: spval, ispval
+  use ctsm_VarCon     , only: spval, ispval
 
   implicit none
   private
@@ -122,4 +122,4 @@ contains
 
   end subroutine interp_1d_data_int
 
-end module initInterp1dData
+end module ctsm_InitInterp1dData

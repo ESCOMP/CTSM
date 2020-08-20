@@ -1,4 +1,4 @@
-module WaterDiagnosticBulkType
+module ctsm_WaterDiagnosticBulkType
 
 #include "shr_assert.h"
 
@@ -14,20 +14,20 @@ module WaterDiagnosticBulkType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use decompMod      , only : bounds_type
-  use abortutils     , only : endrun
-  use clm_varctl     , only : use_cn, iulog, use_luna
-  use clm_varpar     , only : nlevgrnd, nlevsno   
-  use clm_varcon     , only : spval
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use filterColMod   , only : filter_col_type, col_filter_from_ltypes
-  use WaterDiagnosticType, only : waterdiagnostic_type
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterStateType, only : waterstate_type
-  use WaterStateBulkType, only : waterstatebulk_type
-  use WaterFluxType, only : waterflux_type
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_VarCtl     , only : use_cn, iulog, use_luna
+  use ctsm_VarPar     , only : nlevgrnd, nlevsno   
+  use ctsm_VarCon     , only : spval
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_FilterCol   , only : filter_col_type, col_filter_from_ltypes
+  use ctsm_WaterDiagnosticType, only : waterdiagnostic_type
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_WaterStateType, only : waterstate_type
+  use ctsm_WaterStateBulkType, only : waterstatebulk_type
+  use ctsm_WaterFluxType, only : waterflux_type
   !
   implicit none
   save
@@ -111,7 +111,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -220,7 +220,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
+    use ctsm_HistFile    , only : hist_addfld1d, hist_addfld2d, no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type), intent(in) :: this
@@ -609,10 +609,10 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl       , only : bound_h2osoi
+    use ctsm_Spmd          , only : masterproc
+    use ctsm_VarCon       , only : pondmx, watmin, spval, nameg
+    use ctsm_ColumnVarCon    , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarCtl       , only : bound_h2osoi
     use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
     use restUtilMod
     !
@@ -759,9 +759,9 @@ contains
     !
     ! !USES:
     use ncdio_pio        , only : file_desc_t
-    use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
-    use landunit_varcon  , only : istdlak
-    use clm_time_manager , only : is_restart
+    use ctsm_IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
+    use ctsm_LandunitVarCon  , only : istdlak
+    use ctsm_TimeManager , only : is_restart
     !
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type), intent(inout) :: this
@@ -809,7 +809,7 @@ contains
                bounds = bounds, &
                num_c = filter_lakec%num, &
                filter_c = filter_lakec%indices, &
-               caller = 'WaterDiagnosticBulkType_RestartBulk', &
+               caller = 'ctsm_WaterDiagnosticBulkType_RestartBulk', &
                h2osno_total = h2osno_total(bounds%begc:bounds%endc))
           do fc = 1, filter_lakec%num
              c = filter_lakec%indices(fc)
@@ -857,7 +857,7 @@ contains
          waterstate_inst, waterflux_inst)
 
     call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
-         caller = 'WaterDiagnosticBulkType:Summary', &
+         caller = 'ctsm_WaterDiagnosticBulkType:Summary', &
          h2osno_total = this%h2osno_total_col(bounds%begc:bounds%endc))
 
     do fp = 1, num_soilp
@@ -916,4 +916,4 @@ contains
 
   end subroutine ResetBulk
 
-end module WaterDiagnosticBulkType
+end module ctsm_WaterDiagnosticBulkType

@@ -1,16 +1,16 @@
 module test_column_state_updater
 
-  ! Tests of dynColumnStateUpdaterMod
+  ! Tests of ctsm_DynColumnStateUpdater
 
   use pfunit_mod
-  use dynColumnStateUpdaterMod
+  use ctsm_DynColumnStateUpdater
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use landunit_varcon, only : istsoil, max_lunit
-  use pftconMod, only : noveg
-  use ColumnType
-  use LandunitType
-  use subgridWeightsMod, only : compute_higher_order_weights
+  use ctsm_UnitTestSubgrid
+  use ctsm_LandunitVarCon, only : istsoil, max_lunit
+  use ctsm_PftCon, only : noveg
+  use ctsm_ColumnType
+  use ctsm_LandunitType
+  use ctsm_SubgridWeights, only : compute_higher_order_weights
 
   implicit none
 

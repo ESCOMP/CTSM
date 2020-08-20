@@ -1,24 +1,24 @@
-module SoilBiogeochemLittVertTranspMod
+module ctsm_SoilBiogeochemLittVertTransp
 
   !-----------------------------------------------------------------------
   ! calculate vertical mixing of all decomposing C and N pools
   !
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varctl                         , only : iulog, use_c13, use_c14, spinup_state, use_vertsoilc, use_fates, use_cn
-  use clm_varcon                         , only : secspday
-  use decompMod                          , only : bounds_type
-  use abortutils                         , only : endrun
-  use ActiveLayerMod                     , only : active_layer_type
-  use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use ColumnType                         , only : col                
-  use GridcellType                       , only : grc
-  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use ctsm_VarCtl                         , only : iulog, use_c13, use_c14, spinup_state, use_vertsoilc, use_fates, use_cn
+  use ctsm_VarCon                         , only : secspday
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_ActiveLayer                     , only : active_layer_type
+  use ctsm_SoilBiogeochemStateType            , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_GridcellType                       , only : grc
+  use ctsm_SoilBiogeochemStateType            , only : get_spinup_latitude_term
   !
   implicit none
   private
@@ -95,12 +95,12 @@ contains
     ! Initial code by C. Koven and W. Riley
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size_real
-    use clm_varpar       , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
-    use clm_varcon       , only : zsoi, dzsoi_decomp, zisoi
-    use TridiagonalMod   , only : Tridiagonal
-    use ColumnType       , only : col
-    use clm_varctl       , only : use_bedrock
+    use ctsm_TimeManager , only : get_step_size_real
+    use ctsm_VarPar       , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
+    use ctsm_VarCon       , only : zsoi, dzsoi_decomp, zisoi
+    use ctsm_TridiagonalSolver   , only : Tridiagonal
+    use ctsm_ColumnType       , only : col
+    use ctsm_VarCtl       , only : use_bedrock
 
     !
     ! !ARGUMENTS:
@@ -507,4 +507,4 @@ contains
 
   end subroutine SoilBiogeochemLittVertTransp
  
-end module SoilBiogeochemLittVertTranspMod
+end module ctsm_SoilBiogeochemLittVertTransp

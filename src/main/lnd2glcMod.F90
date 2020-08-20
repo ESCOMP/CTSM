@@ -1,4 +1,4 @@
-module lnd2glcMod
+module ctsm_Lnd2Glc
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -17,19 +17,19 @@ module lnd2glcMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : get_proc_bounds, bounds_type
-  use domainMod       , only : ldomain
-  use clm_varpar      , only : maxpatch_glcmec
-  use clm_varctl      , only : iulog
-  use clm_varcon      , only : spval, tfrz, namec
-  use column_varcon   , only : col_itype_to_icemec_class
-  use landunit_varcon , only : istice_mec, istsoil
-  use abortutils      , only : endrun
-  use TemperatureType , only : temperature_type
-  use WaterFluxBulkType   , only : waterfluxbulk_type
-  use LandunitType    , only : lun                
-  use ColumnType      , only : col
-  use TopoMod         , only : topo_type
+  use ctsm_Decomp       , only : get_proc_bounds, bounds_type
+  use ctsm_Domain       , only : ldomain
+  use ctsm_VarPar      , only : maxpatch_glcmec
+  use ctsm_VarCtl      , only : iulog
+  use ctsm_VarCon      , only : spval, tfrz, namec
+  use ctsm_ColumnVarCon   , only : col_itype_to_icemec_class
+  use ctsm_LandunitVarCon , only : istice_mec, istsoil
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_TemperatureType , only : temperature_type
+  use ctsm_WaterFluxBulkType   , only : waterfluxbulk_type
+  use ctsm_LandunitType    , only : lun                
+  use ctsm_ColumnType      , only : col
+  use ctsm_Topo         , only : topo_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -84,8 +84,8 @@ contains
     ! Initialize land variables required by glc
     !
     ! !USES:
-    use clm_varcon , only : spval
-    use histFileMod, only : hist_addfld1d
+    use ctsm_VarCon , only : spval
+    use ctsm_HistFile, only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(lnd2glc_type) :: this
@@ -107,7 +107,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod, only : hist_addfld1d,hist_addfld2d 
+    use ctsm_HistFile, only : hist_addfld1d,hist_addfld2d 
     !
     ! !ARGUMENTS:
     class(lnd2glc_type) :: this
@@ -123,7 +123,7 @@ contains
     this%qice_grc(begg:endg,0:maxpatch_glcmec) = spval
     ! For this and the following fields, set up a pointer to the field simply for the
     ! sake of changing the indexing, so that levels start with an index of 1, as is
-    ! assumed by histFileMod - so levels go 1:(nec+1) rather than 0:nec
+    ! assumed by ctsm_HistFile - so levels go 1:(nec+1) rather than 0:nec
     data2dptr => this%qice_grc(:,0:maxpatch_glcmec)
     call hist_addfld2d (fname='QICE_FORC', units='mm/s', type2d='elevclas', &
          avgflag='A', long_name='qice forcing sent to GLC', &
@@ -271,7 +271,7 @@ contains
     ! this code - as well as the code in update_clm_s2x - may need to be reworked somewhat.
     !
     ! !USES:
-    use subgridWeightsMod , only : get_landunit_weight
+    use ctsm_SubgridWeights , only : get_landunit_weight
     !
     ! !ARGUMENTS:
     integer, intent(in) :: c  ! column index
@@ -300,5 +300,5 @@ contains
 
   end function bareland_normalization
 
-end module lnd2glcMod
+end module ctsm_Lnd2Glc
 

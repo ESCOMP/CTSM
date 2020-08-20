@@ -1,4 +1,4 @@
-module clm_instur
+module ctsm_VarSur
 
   !-----------------------------------------------------------------------
   ! Module containing 2-d surface boundary data information
@@ -47,4 +47,4 @@ module clm_instur
   real(r8), pointer :: topo_glc_mec(:,:) 
   !-----------------------------------------------------------------------
 
-end module clm_instur
+end module ctsm_VarSur

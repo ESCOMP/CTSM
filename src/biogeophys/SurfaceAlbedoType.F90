@@ -1,13 +1,13 @@
-module SurfaceAlbedoType
+module ctsm_SurfaceAlbedoType
 
 #include "shr_assert.h"
 
   !-----------------------------------------------------------------------
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use clm_varpar     , only : numrad, nlevcan, nlevsno
-  use abortutils     , only : endrun
-  use clm_varctl     , only : use_SSRE
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_VarPar     , only : numrad, nlevcan, nlevsno
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_VarCtl     , only : use_SSRE
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -97,8 +97,8 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    use clm_varcon    , only: spval, ispval
-    use clm_varctl    , only: use_SSRE
+    use ctsm_VarCon    , only: spval, ispval
+    use ctsm_VarCtl    , only: use_SSRE
     !
     ! !ARGUMENTS:
     class(surfalb_type) :: this
@@ -167,8 +167,8 @@ contains
     ! !USES:
     use shr_kind_mod  , only: cs => shr_kind_CS
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    use clm_varcon    , only: spval
-    use histFileMod   , only: hist_addfld1d, hist_addfld2d
+    use ctsm_VarCon    , only: spval
+    use ctsm_HistFile   , only: hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(surfalb_type) :: this
@@ -281,10 +281,10 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varctl , only : use_snicar_frc, iulog 
-    use spmdMod    , only : masterproc
-    use decompMod  , only : bounds_type
-    use abortutils , only : endrun
+    use ctsm_VarCtl , only : use_snicar_frc, iulog 
+    use ctsm_Spmd    , only : masterproc
+    use ctsm_Decomp  , only : bounds_type
+    use ctsm_AbortUtils , only : endrun
     use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use restUtilMod
     !
@@ -665,4 +665,4 @@ contains
 
   end subroutine Restart
 
-end module SurfaceAlbedoType
+end module ctsm_SurfaceAlbedoType

@@ -1,4 +1,4 @@
-module subgridRestMod
+module ctsm_SubgridRest
 
 #include "shr_assert.h"
 
@@ -7,19 +7,19 @@ module subgridRestMod
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use glc_elevclass_mod  , only : glc_get_num_elevation_classes, glc_get_elevclass_bounds
-  use abortutils         , only : endrun
-  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, ldecomp
-  use domainMod          , only : ldomain
-  use clm_time_manager   , only : get_curr_date
-  use clm_varcon         , only : nameg, namel, namec, namep
-  use clm_varpar         , only : nlevsno, nlevgrnd
+  use ctsm_AbortUtils         , only : endrun
+  use ctsm_Decomp          , only : bounds_type, BOUNDS_LEVEL_PROC, ldecomp
+  use ctsm_Domain          , only : ldomain
+  use ctsm_TimeManager   , only : get_curr_date
+  use ctsm_VarCon         , only : nameg, namel, namec, namep
+  use ctsm_VarPar         , only : nlevsno, nlevgrnd
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
-  use GetGlobalValuesMod , only : GetGlobalIndexArray
-  use GridcellType       , only : grc                
-  use LandunitType       , only : lun                
-  use ColumnType         , only : col                
-  use PatchType          , only : patch                
+  use ctsm_GetGlobalValues , only : GetGlobalIndexArray
+  use ctsm_GridcellType       , only : grc                
+  use ctsm_LandunitType       , only : lun                
+  use ctsm_ColumnType         , only : col                
+  use ctsm_PatchType          , only : patch                
   use restUtilMod
   !
   ! !PUBLIC TYPES:
@@ -596,8 +596,8 @@ contains
       ! Return true if we should check weights
       !
       ! !USES:
-      use clm_varctl, only : nsrest, nsrContinue, use_cndv, use_fates
-      use dynSubgridControlMod, only : get_do_transient_pfts
+      use ctsm_VarCtl, only : nsrest, nsrContinue, use_cndv, use_fates
+      use ctsm_DynSubgridControl, only : get_do_transient_pfts
       !
       ! !ARGUMENTS:
       !
@@ -645,8 +645,8 @@ contains
       ! inconsistencies between the restart file and the surface dataset.
       !
       ! !USES:
-      use landunit_varcon, only : istsoil
-      use clm_varctl, only : iulog
+      use ctsm_LandunitVarCon, only : istsoil
+      use ctsm_VarCtl, only : iulog
       !
       ! !ARGUMENTS:
       type(bounds_type), intent(in)    :: bounds ! bounds
@@ -718,4 +718,4 @@ contains
   end subroutine subgridRest_read_cleanup
 
 
-end module subgridRestMod
+end module ctsm_SubgridRest

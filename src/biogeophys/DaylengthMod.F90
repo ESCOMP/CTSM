@@ -1,4 +1,4 @@
-module DaylengthMod
+module ctsm_DayLength
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,15 +6,15 @@ module DaylengthMod
   !
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod    , only : bounds_type
-  use GridcellType , only : grc                
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_GridcellType , only : grc                
   !
   implicit none
   save
   private
 
   ! TODO(wjs, 2018-05-16) We should make this object-oriented, and move max_dayl, dayl
-  ! and prev_dayl out of GridcellType into a new type defined here. Then can also move
+  ! and prev_dayl out of ctsm_GridcellType into a new type defined here. Then can also move
   ! the hist_addfld1d calls for DAYL and PREV_DAYL to here.
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -171,7 +171,7 @@ contains
     ! should NOT be called in initialization.
     !
     ! !USES:
-    use clm_time_manager, only : is_first_step_of_this_run_segment
+    use ctsm_TimeManager, only : is_first_step_of_this_run_segment
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -211,4 +211,4 @@ contains
 
   end subroutine UpdateDaylength
 
-end module DaylengthMod
+end module ctsm_DayLength

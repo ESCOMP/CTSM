@@ -1,4 +1,4 @@
-module CNVegComputeSeedMod
+module ctsm_CNVegComputeSeedMod
 
   !-----------------------------------------------------------------------
   ! Module to compute seed amounts for new patch areas
@@ -7,13 +7,13 @@ module CNVegComputeSeedMod
 #include "shr_assert.h"
 
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use pftconMod      , only : pftcon, noveg
-  use clm_varcon     , only : c3_r2, c4_r2, c14ratio
-  use clm_varctl     , only : iulog
-  use PatchType      , only : patch
-  use abortutils     , only : endrun
-  use CNSpeciesMod   , only : CN_SPECIES_C12, CN_SPECIES_C13, CN_SPECIES_C14, CN_SPECIES_N
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_PftCon      , only : pftcon, noveg
+  use ctsm_VarCon     , only : c3_r2, c4_r2, c14ratio
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_PatchType      , only : patch
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_CNSpeciesMod   , only : CN_SPECIES_C12, CN_SPECIES_C13, CN_SPECIES_C14, CN_SPECIES_N
   !
   ! !PUBLIC ROUTINES:
   implicit none
@@ -63,7 +63,7 @@ contains
     type(bounds_type)              , intent(in) :: bounds
     integer                        , intent(in) :: num_soilp_with_inactive       ! number of points in filter
     integer                        , intent(in) :: filter_soilp_with_inactive(:) ! soil patch filter that includes inactive points
-    integer                        , intent(in) :: species                       ! which C/N species we're operating on; should be one of the values in CNSpeciesMod
+    integer                        , intent(in) :: species                       ! which C/N species we're operating on; should be one of the values in ctsm_CNSpeciesMod
     real(r8)                       , intent(in) :: leafc_seed                    ! seed amount for leaf C
     real(r8)                       , intent(in) :: deadstemc_seed                ! seed amount for deadstem C
     real(r8)                       , intent(in) :: leaf_patch( bounds%begp: )   ! current leaf C or N content (g/m2)
@@ -161,7 +161,7 @@ contains
     !
     ! !ARGUMENTS:
     real(r8) :: multiplier  ! function result
-    integer, intent(in) :: species ! which C/N species we're operating on; should be one of the values in CNSpeciesMod
+    integer, intent(in) :: species ! which C/N species we're operating on; should be one of the values in ctsm_CNSpeciesMod
     integer, intent(in) :: pft_type
     integer, intent(in) :: component ! which plant component; should be one of the COMPONENT_* parameters defined in this module
     !
@@ -255,4 +255,4 @@ contains
 
   end subroutine LeafProportions
 
-end module CNVegComputeSeedMod
+end module ctsm_CNVegComputeSeedMod

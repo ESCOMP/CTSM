@@ -1,4 +1,4 @@
-module ndepStreamMod
+module ctsm_NDepStream
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -11,12 +11,12 @@ module ndepStreamMod
   use shr_strdata_mod, only: shr_strdata_type, shr_strdata_create
   use shr_strdata_mod, only: shr_strdata_print, shr_strdata_advance
   use mct_mod     , only: mct_ggrid
-  use spmdMod     , only: mpicom, masterproc, comp_id, iam
-  use clm_varctl  , only: iulog
-  use abortutils  , only: endrun
-  use fileutils   , only: getavu, relavu
-  use decompMod   , only: bounds_type, ldecomp
-  use domainMod   , only: ldomain
+  use ctsm_Spmd     , only: mpicom, masterproc, comp_id, iam
+  use ctsm_VarCtl  , only: iulog
+  use ctsm_AbortUtils  , only: endrun
+  use ctsm_FileUtils   , only: getavu, relavu
+  use ctsm_Decomp   , only: bounds_type, ldecomp
+  use ctsm_Domain   , only: ldomain
 
   ! !PUBLIC TYPES:
   implicit none
@@ -51,14 +51,14 @@ contains
    !
    ! Uses:
    use shr_kind_mod     , only : CS => shr_kind_cs
-   use clm_varctl       , only : inst_name
-   use clm_time_manager , only : get_calendar
+   use ctsm_VarCtl       , only : inst_name
+   use ctsm_TimeManager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
-   use decompMod        , only : gsmap_lnd_gdc2glo 
+   use ctsm_Decomp        , only : gsmap_lnd_gdc2glo 
    !
    ! arguments
    implicit none
@@ -223,9 +223,9 @@ contains
  subroutine ndep_interp(bounds, atm2lnd_inst)
 
    !-----------------------------------------------------------------------
-   use clm_time_manager, only : get_curr_date, get_days_per_year
-   use clm_varcon      , only : secspday
-   use atm2lndType     , only : atm2lnd_type
+   use ctsm_TimeManager, only : get_curr_date, get_days_per_year
+   use ctsm_VarCon      , only : secspday
+   use ctsm_Atm2LndType     , only : atm2lnd_type
    !
    ! Arguments
    type(bounds_type) , intent(in)    :: bounds
@@ -268,13 +268,13 @@ contains
 
     !-------------------------------------------------------------------
     ! Set domain data type for internal clm grid
-    use clm_varcon  , only : re
-    use domainMod   , only : ldomain
+    use ctsm_VarCon  , only : re
+    use ctsm_Domain   , only : ldomain
     use mct_mod     , only : mct_ggrid, mct_gsMap_lsize, mct_gGrid_init
     use mct_mod     , only : mct_gsMap_orderedPoints, mct_gGrid_importIAttr
     use mct_mod     , only : mct_gGrid_importRAttr
     use mct_mod     , only : mct_gsMap
-    use decompMod   , only : gsmap_lnd_gdc2glo, gsMap_lnd2Dsoi_gdc2glo
+    use ctsm_Decomp   , only : gsmap_lnd_gdc2glo, gsMap_lnd2Dsoi_gdc2glo
     implicit none
     !
     ! arguments
@@ -378,4 +378,4 @@ contains
 
   end subroutine clm_domain_mct
 
-end module ndepStreamMod
+end module ctsm_NDepStream

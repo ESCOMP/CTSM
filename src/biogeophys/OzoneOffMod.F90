@@ -1,4 +1,4 @@
-module OzoneOffMod
+module ctsm_OzoneOff
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,8 +9,8 @@ module OzoneOffMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use decompMod   , only : bounds_type
-  use OzoneBaseMod, only : ozone_base_type
+  use ctsm_Decomp   , only : bounds_type
+  use ctsm_OzoneBase, only : ozone_base_type
 
   implicit none
   save
@@ -114,4 +114,4 @@ contains
 
   end subroutine CalcOzoneStress
 
-end module OzoneOffMod
+end module ctsm_OzoneOff

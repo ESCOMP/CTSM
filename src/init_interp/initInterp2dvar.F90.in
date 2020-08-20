@@ -1,4 +1,4 @@
-module initInterp2dvar
+module ctsm_InitInterp2dvar
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,10 +7,10 @@ module initInterp2dvar
   !
   ! !USES:
 #include "shr_assert.h" 
-  use abortutils     , only: endrun
+  use ctsm_AbortUtils     , only: endrun
   use shr_log_mod    , only: errMsg => shr_log_errMsg
   use shr_kind_mod   , only: r8 => shr_kind_r8, i4=>shr_kind_i4
-  use clm_varctl     , only: iulog
+  use ctsm_VarCtl     , only: iulog
   use ncdio_pio      , only: file_desc_t, var_desc_t, ncd_inqvid, ncd_inqvdids
   use ncdio_pio      , only: ncd_inqdlen, ncd_inqdname, ncd_io, ncd_getatt
   use pio            , only: pio_inq_varid, pio_get_var
@@ -83,7 +83,7 @@ contains
     ! Creates an interp_2dvar_type object
     !
     ! !USES:
-    use initInterpBounds, only : interp_bounds_type
+    use ctsm_InitInterpBounds, only : interp_bounds_type
     !
     ! !ARGUMENTS:
     type(interp_2dvar_type) :: this  ! function result
@@ -380,4 +380,4 @@ contains
   end subroutine set_switchdim
 
 
-end module initInterp2dvar
+end module ctsm_InitInterp2dvar

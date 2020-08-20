@@ -37,7 +37,7 @@ contains
     ! without regard to the weight of overlap or dominance of each overlapping index.
     !
     ! !USES:
-    use mkdomainMod, only : domain_type, domain_clean, domain_read, domain_checksame
+    use mkctsm_Domain, only : domain_type, domain_clean, domain_read, domain_checksame
     use mkgridmapMod
     use mkncdio
     use mkindexmapMod, only : get_max_indices

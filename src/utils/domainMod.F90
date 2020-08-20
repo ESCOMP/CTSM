@@ -1,8 +1,8 @@
-module domainMod
+module ctsm_Domain
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: domainMod
+! !MODULE: ctsm_Domain
 !
 ! !DESCRIPTION:
 ! Module containing 2-d global surface boundary data information
@@ -10,8 +10,8 @@ module domainMod
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_abort
-  use spmdMod     , only : masterproc
-  use clm_varctl  , only : iulog
+  use ctsm_Spmd     , only : masterproc
+  use ctsm_VarCtl  , only : iulog
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -46,7 +46,7 @@ module domainMod
 !
 ! !REVISION HISTORY:
 ! Originally clm_varsur by Mariana Vertenstein
-! Migrated from clm_varsur to domainMod by T Craig
+! Migrated from clm_varsur to ctsm_Domain by T Craig
 !
   character*16,parameter :: set   = 'domain_set      '
   character*16,parameter :: unset = 'NOdomain_unsetNO'
@@ -229,4 +229,4 @@ end subroutine domain_check
 
 !------------------------------------------------------------------------------
 
-end module domainMod
+end module ctsm_Domain

@@ -1,4 +1,4 @@
-module NutrientCompetitionMethodMod
+module ctsm_NutrientCompetitionMethodMod
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -35,7 +35,7 @@ module NutrientCompetitionMethodMod
      real(r8) :: dayscrecover      ! number of days to recover negative cpool
   end type params_type
   !
-  type(params_type), public, protected  :: params_inst  ! params_inst is populated in readParamsMod
+  type(params_type), public, protected  :: params_inst  ! params_inst is populated in ctsm_ReadParams
 
   abstract interface
 
@@ -58,7 +58,7 @@ module NutrientCompetitionMethodMod
        ! read in kinetic parameters that are needed for doing nutrient competition
        !
        ! !USES:
-       use decompMod              , only : bounds_type       
+       use ctsm_Decomp              , only : bounds_type       
        import :: nutrient_competition_method_type
        !
        ! !ARGUMENTS:
@@ -82,18 +82,18 @@ module NutrientCompetitionMethodMod
        !
        ! USES
        use shr_kind_mod           , only : r8 => shr_kind_r8
-       use decompMod              , only : bounds_type       
-       use PhotosynthesisMod      , only : photosyns_type
-       use CropType               , only : crop_type
-       use CanopyStateType        , only : canopystate_type
-       use CNVegStateType         , only : cnveg_state_type
-       use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-       use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
-       use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
-       use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
-       use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
-       use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-       use EnergyFluxType         , only : energyflux_type
+       use ctsm_Decomp              , only : bounds_type       
+       use ctsm_Photosynthesis      , only : photosyns_type
+       use ctsm_CropType               , only : crop_type
+       use ctsm_CanopyStateType        , only : canopystate_type
+       use ctsm_CNVegStateType         , only : cnveg_state_type
+       use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+       use ctsm_CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+       use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+       use ctsm_CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
+       use ctsm_SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
+       use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+       use ctsm_EnergyFluxType         , only : energyflux_type
        import :: nutrient_competition_method_type
        !
        ! !ARGUMENTS:
@@ -131,15 +131,15 @@ module NutrientCompetitionMethodMod
        !
        ! !USES:
        use shr_kind_mod          , only : r8 => shr_kind_r8
-       use decompMod             , only : bounds_type       
-       use CNVegStateType        , only : cnveg_state_type
-       use CropType              , only : crop_type
-       use CanopyStateType       , only : canopystate_type
-       use CNVegCarbonStateType  , only : cnveg_carbonstate_type
-       use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
-       use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
-       use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
-       use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+       use ctsm_Decomp             , only : bounds_type       
+       use ctsm_CNVegStateType        , only : cnveg_state_type
+       use ctsm_CropType              , only : crop_type
+       use ctsm_CanopyStateType       , only : canopystate_type
+       use ctsm_CNVegCarbonStateType  , only : cnveg_carbonstate_type
+       use ctsm_CNVegCarbonFluxType   , only : cnveg_carbonflux_type
+       use ctsm_CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
+       use ctsm_CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
+       use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
        import :: nutrient_competition_method_type
        !
        ! !ARGUMENTS:
@@ -176,7 +176,7 @@ contains
     ! !USES:
     use shr_log_mod , only : errMsg => shr_log_errMsg
     use ncdio_pio   , only : file_desc_t,ncd_io
-    use abortutils  , only : endrun
+    use ctsm_AbortUtils  , only : endrun
     !
     ! !ARGUMENTS:
     class(nutrient_competition_method_type), intent(in) :: this
@@ -199,4 +199,4 @@ contains
 
   end subroutine readParams
 
-end module NutrientCompetitionMethodMod
+end module ctsm_NutrientCompetitionMethodMod

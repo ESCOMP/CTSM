@@ -1,4 +1,4 @@
-module unittestUtils
+module ctsm_UnitTestUtils
 
   ! Miscellaneous utilities to aid unit testing
 
@@ -30,4 +30,4 @@ contains
 
   end function endrun_msg
 
-end module unittestUtils
+end module ctsm_UnitTestUtils

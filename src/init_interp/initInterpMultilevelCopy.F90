@@ -1,4 +1,4 @@
-module initInterpMultilevelCopy
+module ctsm_InitInterpMultilevelCopy
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,7 +9,7 @@ module initInterpMultilevelCopy
 #include "shr_assert.h" 
 
   use shr_kind_mod             , only : r8 => shr_kind_r8
-  use initInterpMultilevelBase , only : interp_multilevel_type
+  use ctsm_InitInterpMultilevelBase , only : interp_multilevel_type
 
   implicit none
   private
@@ -134,5 +134,5 @@ contains
 
   end function get_description
 
-end module initInterpMultilevelCopy
+end module ctsm_InitInterpMultilevelCopy
 

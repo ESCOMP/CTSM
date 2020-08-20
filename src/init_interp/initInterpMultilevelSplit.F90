@@ -1,4 +1,4 @@
-module initInterpMultilevelSplit
+module ctsm_InitInterpMultilevelSplit
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -11,9 +11,9 @@ module initInterpMultilevelSplit
 
   use shr_kind_mod             , only : r8 => shr_kind_r8
   use shr_log_mod              , only : errMsg => shr_log_errMsg
-  use abortutils               , only : endrun
-  use clm_varctl               , only : iulog
-  use initInterpMultilevelBase , only : interp_multilevel_type
+  use ctsm_AbortUtils               , only : endrun
+  use ctsm_VarCtl               , only : iulog
+  use ctsm_InitInterpMultilevelBase , only : interp_multilevel_type
 
   implicit none
   private
@@ -206,4 +206,4 @@ contains
   end subroutine interp_multilevel
 
 
-end module initInterpMultilevelSplit
+end module ctsm_InitInterpMultilevelSplit

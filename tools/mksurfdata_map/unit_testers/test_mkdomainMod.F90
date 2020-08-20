@@ -1,7 +1,7 @@
-module test_mkdomainMod
+module test_mkctsm_Domain
 ! Module for testing mkindexmapMod
 
-  use mkdomainMod
+  use mkctsm_Domain
   use test_mod
   use shr_kind_mod, only : r8 => shr_kind_r8
 
@@ -10,7 +10,7 @@ module test_mkdomainMod
 
   public :: test_domain_read_dims
 
-  character(len=*), parameter :: modname = 'test_mkdomainMod'
+  character(len=*), parameter :: modname = 'test_mkctsm_Domain'
    
 contains
 
@@ -89,7 +89,7 @@ contains
       call test_is((domain%is_2d .eqv. is_2d_t), modname//' -- '//subname//' -- '//trim(testname)//' -- is_2d')
     end subroutine check_results_2d
   end subroutine test_domain_read_dims
-end module test_mkdomainMod
+end module test_mkctsm_Domain
     
 
     

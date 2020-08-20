@@ -10,7 +10,7 @@ module test_pftrun
   use mkvarpar, only: numstdpft
   use mkpftConstantsMod, only: maxpft, c3cropindex, c3irrcropindex
   use mkpctPftTypeMod    , only : pct_pft_type
-  use mkdomainMod        , only : domain_type, for_test_create_domain, domain_clean
+  use mkctsm_Domain        , only : domain_type, for_test_create_domain, domain_clean
 
   implicit none
   save

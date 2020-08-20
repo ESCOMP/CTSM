@@ -1,4 +1,4 @@
-module CNFUNMod
+module ctsm_CNFunMod
 !--------------------------------------------------------------------
   !---
 ! ! DESCRIPTION
@@ -20,27 +20,27 @@ module CNFUNMod
 ! !USES: 
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use clm_varctl                      , only : iulog
-  use PatchType                       , only : patch
-  use ColumnType                      , only : col
-  use pftconMod                       , only : pftcon, npcropmin
-  use decompMod                       , only : bounds_type
-  use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
-  use abortutils                      , only : endrun
-  use CNVegstateType                  , only : cnveg_state_type
-  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-  use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
-  use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemNitrogenStateType  , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_VarCtl                      , only : iulog
+  use ctsm_PatchType                       , only : patch
+  use ctsm_ColumnType                      , only : col
+  use ctsm_PftCon                       , only : pftcon, npcropmin
+  use ctsm_Decomp                       , only : bounds_type
+  use ctsm_VarCtl                      , only : use_nitrif_denitrif,use_flexiblecn
+  use ctsm_AbortUtils                      , only : endrun
+  use ctsm_CNVegStateType                  , only : cnveg_state_type
+  use ctsm_CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType  , only : soilbiogeochem_nitrogenstate_type
 
-  use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use WaterStateBulkType                  , only : waterstatebulk_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
-  use TemperatureType                 , only : temperature_type
-  use SoilStateType                   , only : soilstate_type
-  use CanopyStateType                 , only : canopystate_type
+  use ctsm_SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use ctsm_WaterStateBulkType                  , only : waterstatebulk_type
+  use ctsm_WaterFluxBulkType                   , only : waterfluxbulk_type
+  use ctsm_TemperatureType                 , only : temperature_type
+  use ctsm_SoilStateType                   , only : soilstate_type
+  use ctsm_CanopyStateType                 , only : canopystate_type
   use perf_mod                        , only : t_startf, t_stopf
 
   implicit none
@@ -48,8 +48,8 @@ module CNFUNMod
 !
 ! !PUBLIC MEMBER FUNCTIONS:
   public:: readParams            ! Read in parameters needed for FUN
-  public:: CNFUNInit             ! FUN calculation initialization
-  public:: CNFUN                 ! Run FUN
+  public:: ctsm_CNFunInit             ! FUN calculation initialization
+  public:: ctsm_CNFun                 ! Run FUN
   
   type, private :: params_type
      real(r8) :: ndays_on        ! number of days to complete leaf onset
@@ -58,7 +58,7 @@ module CNFUNMod
  
   !
   type(params_type), private :: params_inst  ! params_inst is
-  !  populated in readParamsMod
+  !  populated in ctsm_ReadParams
   !
   !
   ! !PRIVATE DATA MEMBERS:
@@ -93,7 +93,7 @@ module CNFUNMod
   type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
   !
   ! !LOCAL VARIABLES:
-  character(len=32)  :: subname = 'CNFUNParamsType'
+  character(len=32)  :: subname = 'ctsm_CNFunParamsType'
   character(len=100) :: errCode = '-Error reading in parameters file:'
   logical            :: readv ! has variable been read in or not
   real(r8)           :: tempr ! temporary to read in parameter
@@ -118,13 +118,13 @@ module CNFUNMod
 
 !--------------------------------------------------------------------
  !---
- subroutine CNFUNInit (bounds,cnveg_state_inst,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst)
+ subroutine ctsm_CNFunInit (bounds,cnveg_state_inst,cnveg_carbonstate_inst,cnveg_nitrogenstate_inst)
   !
   ! !DESCRIPTION:
   !
   ! !USES:
-  use clm_varcon      , only: secspday, fun_period
-  use clm_time_manager, only: get_step_size_real,get_nstep,get_curr_date,get_days_per_year
+  use ctsm_VarCon      , only: secspday, fun_period
+  use ctsm_TimeManager, only: get_step_size_real,get_nstep,get_curr_date,get_days_per_year
   !
   ! !ARGUMENTS:
   type(bounds_type)             , intent(in)    :: bounds
@@ -141,7 +141,7 @@ module CNFUNMod
   integer           :: nstep                    ! time step number
   integer           :: nstep_fun                ! Number of
   !  atmospheric timesteps between calls to FUN
-  character(len=32) :: subname = 'CNFUNInit'
+  character(len=32) :: subname = 'ctsm_CNFunInit'
 !--------------------------------------------------------------------
   !---
 
@@ -190,16 +190,16 @@ module CNFUNMod
 !--------------------------------------------------------------------
   !---
   end associate
-  end subroutine CNFUNInit 
+  end subroutine ctsm_CNFunInit 
 !--------------------------------------------------------------------
   !---
 
   !--------------------------------------------------------------------
   !---  
-  ! Start the CNFUN subroutine
+  ! Start the ctsm_CNFun subroutine
   !--------------------------------------------------------------------
   !---
-  subroutine CNFUN(bounds,num_soilc, filter_soilc,num_soilp&
+  subroutine ctsm_CNFun(bounds,num_soilc, filter_soilc,num_soilp&
        &,filter_soilp,waterstatebulk_inst, &
        & waterfluxbulk_inst,temperature_inst,soilstate_inst&
        &,cnveg_state_inst,cnveg_carbonstate_inst,&
@@ -210,13 +210,13 @@ module CNFUNMod
        & soilbiogeochem_nitrogenstate_inst)
 
 ! !USES:
-   use clm_time_manager, only : get_step_size_real, get_curr_date, get_days_per_year 
-   use clm_varpar      , only : nlevdecomp
-   use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
-   use clm_varctl      , only : use_nitrif_denitrif
-   use PatchType       , only : patch
-   use subgridAveMod   , only : p2c
-   use pftconMod       , only : npcropmin
+   use ctsm_TimeManager, only : get_step_size_real, get_curr_date, get_days_per_year 
+   use ctsm_VarPar      , only : nlevdecomp
+   use ctsm_VarCon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
+   use ctsm_VarCtl      , only : use_nitrif_denitrif
+   use ctsm_PatchType       , only : patch
+   use ctsm_SubgridAve   , only : p2c
+   use ctsm_PftCon       , only : npcropmin
 !
 ! !ARGUMENTS: 
    type(bounds_type)                       , intent(in)    :: bounds
@@ -715,7 +715,7 @@ module CNFUNMod
          )
   !--------------------------------------------------------------------
   !-----------
-  ! Initialize output fluxes, which were also initialized in CNFUNMod.
+  ! Initialize output fluxes, which were also initialized in ctsm_CNFunMod.
   !--------------------------------------------------------------------
   !-----------
   local_use_flexibleCN            = use_flexibleCN
@@ -724,7 +724,7 @@ module CNFUNMod
   rootc_dens_step                 = 0._r8
   plant_ndemand_pool              = 0._r8
 
-  call t_startf('CNFUNzeroarrays')
+  call t_startf('ctsm_CNFunzeroarrays')
   do fp = 1,num_soilp        ! PFT Starts
      p = filter_soilp(fp)
      availc_pool(p)                  = 0._r8
@@ -789,12 +789,12 @@ module CNFUNMod
   
   ! Time step of FUN
   dt           =  get_step_size_real()
-  call t_stopf('CNFUNzeroarrays')
+  call t_stopf('ctsm_CNFunzeroarrays')
   !--------------------------------------------------------------------
   !----------------------------
   ! Calculation starts
   !--------------------------------------------------------------------
-  call t_startf('CNFUNcalcs1')
+  call t_startf('ctsm_CNFuncalcs1')
   !----------------------------
   do fp = 1,num_soilp        ! PFT Starts
      p = filter_soilp(fp)
@@ -877,9 +877,9 @@ module CNFUNMod
         end do
      end do
   end do
-  call t_stopf('CNFUNcalcs1')
+  call t_stopf('ctsm_CNFuncalcs1')
 
-  call t_startf('CNFUNzeroarrays2')
+  call t_startf('ctsm_CNFunzeroarrays2')
   do fp = 1,num_soilp        ! PFT Starts
      p = filter_soilp(fp)
      n_passive_acc(p)                = 0._r8
@@ -953,10 +953,10 @@ module CNFUNMod
   end do
 
   burned_off_carbon               = 0._r8 
-  call t_stopf('CNFUNzeroarrays2')
+  call t_stopf('ctsm_CNFunzeroarrays2')
 
 
-  call t_startf('CNFUNcalcs')
+  call t_startf('ctsm_CNFuncalcs')
 pft:do fp = 1,num_soilp        ! PFT Starts
       p = filter_soilp(fp)
       c = patch%column(p)
@@ -1545,7 +1545,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
        
   end do pft ! PFT Ends 
 
-  call t_stopf('CNFUNcalcs')
+  call t_stopf('ctsm_CNFuncalcs')
   
   call p2c(bounds, num_soilc, filter_soilc,                               &
            cnveg_carbonflux_inst%soilc_change_patch(bounds%begp:bounds%endp), &
@@ -1556,7 +1556,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
            soilbiogeochem_nitrogenflux_inst%nfix_to_sminn_col(bounds%begc:bounds%endc))
     
   end associate
-  end subroutine CNFUN
+  end subroutine ctsm_CNFun
 !=========================================================================================
   real(r8) function fun_cost_fix(fixer,a_fix,b_fix,c_fix,big_cost,crootfr,s_fix, tc_soisno)
 
@@ -1796,4 +1796,4 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
 
 !==========================================================================
 
-end module CNFUNMod 
+end module ctsm_CNFunMod 

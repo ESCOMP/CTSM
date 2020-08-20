@@ -1,4 +1,4 @@
-create_pFUnit_test(clm_time_manager test_clm_time_manager_exe
-  "test_clm_time_manager.pf" "")
+create_pFUnit_test(ctsm_TimeManager test_ctsm_TimeManager_exe
+  "test_ctsm_TimeManager.pf" "")
 
-target_link_libraries(test_clm_time_manager_exe clm csm_share esmf_wrf_timemgr)
+target_link_libraries(test_ctsm_TimeManager_exe clm csm_share esmf_wrf_timemgr)

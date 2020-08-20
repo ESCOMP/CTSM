@@ -1,4 +1,4 @@
-module SoilBiogeochemVerticalProfileMod
+module ctsm_SoilBiogeochemVerticalProfile
 
 #include "shr_assert.h"
 
@@ -43,17 +43,17 @@ contains
     ! 
     ! !USES:
     use shr_log_mod             , only : errMsg => shr_log_errMsg
-    use decompMod               , only : bounds_type
-    use abortutils              , only : endrun
-    use clm_varcon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp, zmin_bedrock
-    use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxsoil_patches
-    use clm_varctl              , only : use_vertsoilc, iulog, use_bedrock
-    use pftconMod               , only : noveg, pftcon
-    use SoilBiogeochemStateType , only : soilbiogeochem_state_type
-    use ActiveLayerMod          , only : active_layer_type
-    use SoilStateType           , only : soilstate_type
-    use ColumnType              , only : col                
-    use PatchType               , only : patch                
+    use ctsm_Decomp               , only : bounds_type
+    use ctsm_AbortUtils              , only : endrun
+    use ctsm_VarCon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp, zmin_bedrock
+    use ctsm_VarPar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxsoil_patches
+    use ctsm_VarCtl              , only : use_vertsoilc, iulog, use_bedrock
+    use ctsm_PftCon               , only : noveg, pftcon
+    use ctsm_SoilBiogeochemStateType , only : soilbiogeochem_state_type
+    use ctsm_ActiveLayer          , only : active_layer_type
+    use ctsm_SoilStateType           , only : soilstate_type
+    use ctsm_ColumnType              , only : col                
+    use ctsm_PatchType               , only : patch                
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
@@ -274,4 +274,4 @@ contains
 
   end subroutine SoilBiogeochemVerticalProfile
   
-end module SoilBiogeochemVerticalProfileMod
+end module ctsm_SoilBiogeochemVerticalProfile

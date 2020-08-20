@@ -1,10 +1,10 @@
-module LandunitType
+module ctsm_LandunitType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Landunit data type allocation 
   ! -------------------------------------------------------- 
-  ! landunits types can have values of (see landunit_varcon.F90)
+  ! landunits types can have values of (see ctsm_LandunitVarCon.F90)
   ! -------------------------------------------------------- 
   !   1  => (istsoil)    soil (vegetated or bare soil landunit)
   !   2  => (istcrop)    crop (only for crop configuration)
@@ -18,7 +18,7 @@ module LandunitType
   !
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varcon     , only : ispval
+  use ctsm_VarCon     , only : ispval
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -91,10 +91,10 @@ contains
     allocate(this%urbpoi       (begl:endl)); this%urbpoi    (:) = .false.
     allocate(this%glcmecpoi    (begl:endl)); this%glcmecpoi (:) = .false.
 
-    ! The following is initialized in routine setActive in module reweightMod
+    ! The following is initialized in routine setActive in module ctsm_Reweight
     allocate(this%active       (begl:endl))
 
-    ! The following is set in routine urbanparams_inst%Init in module UrbanParamsType
+    ! The following is set in routine urbanparams_inst%Init in module ctsm_UrbanParamsType
     allocate(this%canyon_hwr   (begl:endl)); this%canyon_hwr   (:) = nan
     allocate(this%wtroad_perv  (begl:endl)); this%wtroad_perv  (:) = nan
     allocate(this%ht_roof      (begl:endl)); this%ht_roof      (:) = nan
@@ -137,4 +137,4 @@ contains
 
   end subroutine Clean
 
-end module LandunitType
+end module ctsm_LandunitType

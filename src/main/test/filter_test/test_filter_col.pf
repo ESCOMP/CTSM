@@ -1,15 +1,15 @@
 module test_filter_col
 
-  ! Tests of filterColMod
+  ! Tests of ctsm_FilterCol
 
   use pfunit_mod
-  use filterColMod
+  use ctsm_FilterCol
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
   use unittestArrayMod
-  use ColumnType, only : col
-  use landunit_varcon, only : istsoil
+  use ctsm_ColumnType, only : col
+  use ctsm_LandunitVarCon, only : istsoil
 
   implicit none
 

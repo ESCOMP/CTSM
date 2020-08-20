@@ -1,4 +1,4 @@
-module SoilBiogeochemDecompCascadeConType
+module ctsm_SoilBiogeochemDecompCascadeConType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,7 +7,7 @@ module SoilBiogeochemDecompCascadeConType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : ndecomp_cascade_transitions, ndecomp_pools
+  use ctsm_VarPar     , only : ndecomp_cascade_transitions, ndecomp_pools
   !
   implicit none
   private
@@ -106,4 +106,4 @@ contains
 
   end subroutine init_decomp_cascade_constants
 
-end module SoilBiogeochemDecompCascadeConType
+end module ctsm_SoilBiogeochemDecompCascadeConType

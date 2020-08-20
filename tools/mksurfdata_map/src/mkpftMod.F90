@@ -17,7 +17,7 @@ module mkpftMod
   use shr_sys_mod , only : shr_sys_flush
   use mkvarpar    , only : noveg
   use mkvarctl    , only : numpft
-  use mkdomainMod , only : domain_checksame
+  use mkctsm_Domain , only : domain_checksame
   use mkpftConstantsMod
 
   implicit none
@@ -228,7 +228,7 @@ subroutine mkpft(ldomain, mapfname, fpft, ndiag, &
 ! generally 100% everywhere; this will be normalized later to account for special landunits.
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    
@@ -950,7 +950,7 @@ subroutine mkpftAtt( ncid, dynlanduse, xtype )
 ! make PFT attributes on the output file
 !
   use mkncdio    , only : check_ret, ncd_defvar, ncd_def_spatial_var
-  use fileutils  , only : get_filename
+  use ctsm_FileUtils  , only : get_filename
   use mkvarctl   , only : mksrf_fvegtyp, mksrf_flai
   use mkvarpar   
 

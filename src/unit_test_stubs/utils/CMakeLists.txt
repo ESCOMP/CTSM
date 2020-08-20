@@ -10,7 +10,7 @@ list(APPEND clm_sources "${clm_genf90_sources}")
 
 list(APPEND clm_sources
   restUtilMod_stub.F90
-  spmdMod_stub.F90
+  ctsm_Spmd_stub.F90
   clmfates_paraminterfaceMod_stub.F90
   )
 

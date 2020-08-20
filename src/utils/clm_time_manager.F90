@@ -1,11 +1,11 @@
-module clm_time_manager
+module ctsm_TimeManager
 
 #include "shr_assert.h"
    use shr_kind_mod, only: r8 => shr_kind_r8
    use shr_sys_mod , only: shr_sys_abort
-   use spmdMod     , only: masterproc
-   use clm_varctl  , only: iulog
-   use clm_varcon  , only: isecspday
+   use ctsm_Spmd     , only: masterproc
+   use ctsm_VarCtl  , only: iulog
+   use ctsm_VarCon  , only: isecspday
    use ESMF
 
    implicit none
@@ -1320,7 +1320,7 @@ contains
     ! Get the local time for this longitude that is evenly divisible by the time-step
     !
     ! uses
-    use clm_varcon, only: degpsec, isecspday
+    use ctsm_VarCon, only: degpsec, isecspday
     ! Arguments
     real(r8)         , intent(in) :: londeg  ! Longitude in degrees
     integer, optional, intent(in) :: offset  ! Offset from current time in seconds (either sign)
@@ -1353,7 +1353,7 @@ contains
     ! Get the local time for this longitude
     !
     ! uses
-    use clm_varcon, only: degpsec, isecspday
+    use ctsm_VarCon, only: degpsec, isecspday
     ! Arguments
     real(r8)         , intent(in) :: londeg       ! Longitude in degrees
     integer, optional, intent(in) :: starttime    ! Start time (sec)
@@ -1396,7 +1396,7 @@ contains
     ! Is this longitude near it's local noon?
     !
     ! uses
-    use clm_varcon, only: degpsec, isecspday
+    use ctsm_VarCon, only: degpsec, isecspday
     ! Arguments
     real(r8), intent(in) :: londeg   ! Longitude in degrees
     integer , intent(in) :: deltasec ! Number of seconds before or after local noon
@@ -1690,7 +1690,7 @@ contains
 
   logical function is_restart( )
     ! Determine if restart run
-    use clm_varctl, only : nsrest, nsrContinue
+    use ctsm_VarCtl, only : nsrest, nsrContinue
     if (nsrest == nsrContinue) then
        is_restart = .true.
     else
@@ -1702,7 +1702,7 @@ contains
 
   subroutine timemgr_spmdbcast( )
 
-    use spmdMod    , only : mpicom, MPI_INTEGER
+    use ctsm_Spmd    , only : mpicom, MPI_INTEGER
     use shr_mpi_mod, only : shr_mpi_bcast
 
     integer :: ier
@@ -1859,4 +1859,4 @@ contains
   end subroutine for_test_set_curr_date
 
 
-end module clm_time_manager
+end module ctsm_TimeManager

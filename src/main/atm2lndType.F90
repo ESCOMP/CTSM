@@ -1,4 +1,4 @@
-module atm2lndType
+module ctsm_Atm2LndType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,12 +8,12 @@ module atm2lndType
   use shr_kind_mod  , only : r8 => shr_kind_r8
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod   , only : errMsg => shr_log_errMsg
-  use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
-  use clm_varcon    , only : rair, grav, cpair, hfus, tfrz, spval
-  use clm_varctl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna
-  use decompMod     , only : bounds_type
-  use abortutils    , only : endrun
-  use PatchType     , only : patch
+  use ctsm_VarPar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
+  use ctsm_VarCon    , only : rair, grav, cpair, hfus, tfrz, spval
+  use ctsm_VarCtl    , only : iulog, use_c13, use_cn, use_lch4, use_cndv, use_fates, use_luna
+  use ctsm_Decomp     , only : bounds_type
+  use ctsm_AbortUtils    , only : endrun
+  use ctsm_PatchType     , only : patch
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -337,9 +337,9 @@ contains
     ! Read the atm2lnd namelist
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -518,7 +518,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod, only : hist_addfld1d
+    use ctsm_HistFile, only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
@@ -669,8 +669,8 @@ contains
     ! restart file for restart or branch runs
     !
     ! !USES 
-    use clm_varcon  , only : spval
-    use accumulMod  , only : init_accum_field
+    use ctsm_VarCon  , only : spval
+    use ctsm_Accumulators  , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
@@ -733,8 +733,8 @@ contains
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES 
-    use accumulMod       , only : extract_accum_field
-    use clm_time_manager , only : get_nstep
+    use ctsm_Accumulators       , only : extract_accum_field
+    use ctsm_TimeManager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(atm2lnd_type) :: this
@@ -813,8 +813,8 @@ contains
   subroutine UpdateAccVars (this, bounds)
     !
     ! USES
-    use clm_time_manager, only : get_nstep
-    use accumulMod      , only : update_accum_field, extract_accum_field
+    use ctsm_TimeManager, only : get_nstep
+    use ctsm_Accumulators      , only : update_accum_field, extract_accum_field
     !
     ! !ARGUMENTS:
     class(atm2lnd_type)                 :: this
@@ -1027,4 +1027,4 @@ contains
   end subroutine Clean
 
 
-end module atm2lndType
+end module ctsm_Atm2LndType

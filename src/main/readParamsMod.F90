@@ -1,4 +1,4 @@
-module readParamsMod
+module ctsm_ReadParams
 
   !-----------------------------------------------------------------------
   !
@@ -7,9 +7,9 @@ module readParamsMod
   ! well defined functionality (eg. ED).
   !
   ! ! USES:
-  use clm_varctl , only : paramfile, iulog, use_fates, use_cn
-  use spmdMod    , only : masterproc
-  use fileutils  , only : getfil
+  use ctsm_VarCtl , only : paramfile, iulog, use_fates, use_cn
+  use ctsm_Spmd    , only : masterproc
+  use ctsm_FileUtils  , only : getfil
   use ncdio_pio  , only : ncd_pio_closefile, ncd_pio_openfile
   use ncdio_pio  , only : file_desc_t , ncd_inqdid, ncd_inqdlen
 
@@ -26,37 +26,37 @@ contains
   subroutine readParameters (nutrient_competition_method, photosyns_inst)
     !
     ! ! USES:
-    use CNSharedParamsMod                 , only : CNParamsReadShared
-    use CNGapMortalityMod                 , only : readCNGapMortParams                    => readParams
-    use CNMRespMod                        , only : readCNMRespParams                      => readParams
-    use CNFUNMod                          , only : readCNFUNParams                        => readParams
-    use CNPhenologyMod                    , only : readCNPhenolParams                     => readParams
-    use SoilBiogeochemCompetitionMod      , only : readSoilBiogeochemCompetitionParams    => readParams
-    use SoilBiogeochemNLeachingMod        , only : readSoilBiogeochemNLeachingParams      => readParams
-    use SoilBiogeochemNitrifDenitrifMod   , only : readSoilBiogeochemNitrifDenitrifParams => readParams
-    use SoilBiogeochemLittVertTranspMod   , only : readSoilBiogeochemLittVertTranspParams => readParams
-    use SoilBiogeochemPotentialMod        , only : readSoilBiogeochemPotentialParams      => readParams
-    use SoilBiogeochemDecompMod           , only : readSoilBiogeochemDecompParams         => readParams
-    use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
-    use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
-    use ch4Mod                            , only : readCH4Params                          => readParams
-    use LunaMod                           , only : readParams_Luna                        => readParams
-    use BareGroundFluxesMod               , only : readParams_BareGroundFluxes            => readParams
-    use LakeFluxesMod                     , only : readParams_LakeFluxes                  => readParams
-    use CanopyFluxesMod                   , only : readParams_CanopyFluxes                => readParams
-    use UrbanFluxesMod                    , only : readParams_UrbanFluxes                 => readParams
-    use CanopyHydrologyMod                , only : readParams_CanopyHydrology             => readParams
-    use SoilHydrologyMod                  , only : readParams_SoilHydrology               => readParams
-    use SoilStateInitTimeConstMod         , only : readParams_SoilStateInitTimeConst      => readParams
-    use SoilWaterMovementMod              , only : readParams_SoilWaterMovement           => readParams
-    use SaturatedExcessRunoffMod          , only : readParams_SaturatedExcessRunoff       => readParams
-    use InfiltrationExcessRunoffMod       , only : readParams_InfiltrationExcessRunoff    => readParams
-    use SurfaceResistanceMod              , only : readParams_SurfaceResistance           => readParams
-    use WaterDiagnosticBulkType           , only : readParams_WaterDiagnosticBulk         => readParams
-    use SnowHydrologyMod                  , only : readParams_SnowHydrology               => readParams
-    use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
-    use clm_varctl,                         only : NLFilename_in
-    use PhotosynthesisMod                 , only : photosyns_type
+    use ctsm_CNSharedParamsMod                 , only : CNParamsReadShared
+    use ctsm_CNGapMortalityMod                 , only : readCNGapMortParams                    => readParams
+    use ctsm_CNMaintRespMod                        , only : readctsm_CNMaintRespParams                      => readParams
+    use ctsm_CNFunMod                          , only : readctsm_CNFunParams                        => readParams
+    use ctsm_CNPhenologyMod                    , only : readCNPhenolParams                     => readParams
+    use ctsm_SoilBiogeochemCompetition      , only : readSoilBiogeochemCompetitionParams    => readParams
+    use ctsm_SoilBiogeochemNLeaching        , only : readSoilBiogeochemNLeachingParams      => readParams
+    use ctsm_SoilBiogeochemNitrifDenitrif   , only : readSoilBiogeochemNitrifDenitrifParams => readParams
+    use ctsm_SoilBiogeochemLittVertTransp   , only : readSoilBiogeochemLittVertTranspParams => readParams
+    use ctsm_SoilBiogeochemPotential        , only : readSoilBiogeochemPotentialParams      => readParams
+    use ctsm_SoilBiogeochemDecomp           , only : readSoilBiogeochemDecompParams         => readParams
+    use ctsm_SoilBiogeochemDecompCascadeBGC , only : readSoilBiogeochemDecompBgcParams      => readParams
+    use ctsm_SoilBiogeochemDecompCascadeCN  , only : readSoilBiogeochemDecompCnParams       => readParams
+    use ctsm_Methane                            , only : readCH4Params                          => readParams
+    use ctsm_Luna                           , only : readParams_Luna                        => readParams
+    use ctsm_BareGroundFluxes               , only : readParams_BareGroundFluxes            => readParams
+    use ctsm_LakeFluxes                     , only : readParams_LakeFluxes                  => readParams
+    use ctsm_CanopyFluxes                   , only : readParams_CanopyFluxes                => readParams
+    use ctsm_UrbanFluxes                    , only : readParams_UrbanFluxes                 => readParams
+    use ctsm_CanopyHydrology                , only : readParams_CanopyHydrology             => readParams
+    use ctsm_SoilHydrology                  , only : readParams_SoilHydrology               => readParams
+    use ctsm_SoilStateInitTimeConst         , only : readParams_SoilStateInitTimeConst      => readParams
+    use ctsm_SoilWaterMovement              , only : readParams_SoilWaterMovement           => readParams
+    use ctsm_SaturatedExcessRunoff          , only : readParams_SaturatedExcessRunoff       => readParams
+    use ctsm_InfiltrationExcessRunoff       , only : readParams_InfiltrationExcessRunoff    => readParams
+    use ctsm_SurfaceResistance              , only : readParams_SurfaceResistance           => readParams
+    use ctsm_WaterDiagnosticBulkType           , only : readParams_WaterDiagnosticBulk         => readParams
+    use ctsm_SnowHydrology                  , only : readParams_SnowHydrology               => readParams
+    use ctsm_NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
+    use ctsm_VarCtl,                         only : NLFilename_in
+    use ctsm_Photosynthesis                 , only : photosyns_type
     !
     ! !ARGUMENTS:
     type(photosyns_type)                   , intent(in) :: photosyns_inst
@@ -85,8 +85,8 @@ contains
     if (use_cn) then
        call nutrient_competition_method%readParams(ncid)
        call readCNGapMortParams(ncid)
-       call readCNMRespParams(ncid)
-       call readCNFUNParams(ncid)
+       call readctsm_CNMaintRespParams(ncid)
+       call readctsm_CNFunParams(ncid)
        call readCNPhenolParams(ncid)
     end if
 
@@ -131,4 +131,4 @@ contains
 
   end subroutine readParameters
 
-end module readParamsMod
+end module ctsm_ReadParams

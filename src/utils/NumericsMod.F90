@@ -1,4 +1,4 @@
-module NumericsMod
+module ctsm_Numerics
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -158,4 +158,4 @@ contains
 
   end subroutine truncate_small_values_one_lev
 
-end module NumericsMod
+end module ctsm_Numerics

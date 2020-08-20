@@ -1,4 +1,4 @@
-module CNCStateUpdate1Mod
+module ctsm_CNCStateUpdate1Mod
 
   !-----------------------------------------------------------------------
   ! Module for carbon state variable update, non-mortality fluxes.
@@ -6,20 +6,20 @@ module CNCStateUpdate1Mod
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp
-  use clm_time_manager                   , only : get_step_size_real
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use pftconMod                          , only : npcropmin, nc3crop, pftcon
-  use abortutils                         , only : endrun
-  use decompMod                          , only : bounds_type
-  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
-  use CropType                           , only : crop_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
-  use PatchType                          , only : patch
-  use clm_varctl                         , only : use_fates, use_cn, iulog
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, nlevdecomp
+  use ctsm_TimeManager                   , only : get_step_size_real
+  use ctsm_VarPar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use ctsm_PftCon                          , only : npcropmin, nc3crop, pftcon
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType                , only : cnveg_carbonflux_type
+  use ctsm_CropType                           , only : crop_type
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use ctsm_PatchType                          , only : patch
+  use ctsm_VarCtl                         , only : use_fates, use_cn, iulog
   !
   implicit none
   private
@@ -148,7 +148,7 @@ contains
     ! On the radiation time step, update all the prognostic carbon state
     ! variables (except for gap-phase mortality and fire fluxes)
     !
-    use clm_varctl, only : carbon_resp_opt
+    use ctsm_VarCtl, only : carbon_resp_opt
     ! !ARGUMENTS:
     integer                              , intent(in)    :: num_soilc       ! number of soil columns filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -514,4 +514,4 @@ contains
   
   end subroutine CStateUpdate1
 
-end module CNCStateUpdate1Mod
+end module ctsm_CNCStateUpdate1Mod

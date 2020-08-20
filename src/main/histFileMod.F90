@@ -1,4 +1,4 @@
-module histFileMod
+module ctsm_HistFile
 
 #include "shr_assert.h"
 
@@ -10,25 +10,25 @@ module histFileMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_sys_mod    , only : shr_sys_flush
-  use spmdMod        , only : masterproc
-  use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_vertsoilc, use_fates
-  use clm_varcon     , only : spval, ispval, dzsoi_decomp 
-  use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
-  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
-  use GetGlobalValuesMod , only : GetGlobalIndexArray
-  use GridcellType   , only : grc                
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch                
+  use ctsm_Spmd        , only : masterproc
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_VarCtl     , only : iulog, use_vertsoilc, use_fates
+  use ctsm_VarCon     , only : spval, ispval, dzsoi_decomp 
+  use ctsm_VarCon     , only : grlnd, nameg, namel, namec, namep, nameCohort
+  use ctsm_Decomp      , only : get_proc_bounds, get_proc_global, bounds_type
+  use ctsm_GetGlobalValues , only : GetGlobalIndexArray
+  use ctsm_GridcellType   , only : grc                
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_PatchType      , only : patch                
   use EDTypesMod     , only : nclmax
   use EDTypesMod     , only : nlevleaf
-  use FatesInterfaceMod , only : nlevsclass, nlevage
-  use FatesInterfaceMod , only : nlevheight
+  use ctsm_FatesInterfaceMod , only : nlevsclass, nlevage
+  use ctsm_FatesInterfaceMod , only : nlevheight
   use EDTypesMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
   use EDTypesMod        , only : num_elements_fates => num_elements
-  use FatesInterfaceMod , only : maxveg_fates => numpft
+  use ctsm_FatesInterfaceMod , only : maxveg_fates => numpft
   use ncdio_pio 
 
   !
@@ -478,8 +478,8 @@ contains
     ! appropriate variables and calling appropriate routines
     !
     ! !USES:
-    use clm_time_manager, only: get_prev_time
-    use clm_varcon      , only: secspday
+    use ctsm_TimeManager, only: get_prev_time
+    use ctsm_VarCon      , only: secspday
     !
     ! !ARGUMENTS:
     !
@@ -1097,8 +1097,8 @@ contains
     ! call to p2g, and the lack of explicit bounds on its arguments; see also bug 1786)
     !
     ! !USES:
-    use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
-    use decompMod       , only : BOUNDS_LEVEL_PROC
+    use ctsm_SubgridAve   , only : p2g, c2g, l2g, p2l, c2l, p2c
+    use ctsm_Decomp       , only : BOUNDS_LEVEL_PROC
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1391,8 +1391,8 @@ contains
     ! call to p2g, and the lack of explicit bounds on its arguments; see also bug 1786)
     !
     ! !USES:
-    use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
-    use decompMod       , only : BOUNDS_LEVEL_PROC
+    use ctsm_SubgridAve   , only : p2g, c2g, l2g, p2l, c2l, p2c
+    use ctsm_Decomp       , only : BOUNDS_LEVEL_PROC
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1895,13 +1895,13 @@ contains
     ! wrapper calls to define the history file contents.
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, nlevcan, nvegwcs,nlevsoi
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
-    use landunit_varcon , only : max_lunit
-    use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
-    use clm_varctl      , only : version, hostname, username, conventions, source
-    use domainMod       , only : ldomain
-    use fileutils       , only : get_filename
+    use ctsm_VarPar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, nlevcan, nvegwcs,nlevsoi
+    use ctsm_VarPar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
+    use ctsm_LandunitVarCon , only : max_lunit
+    use ctsm_VarCtl      , only : caseid, ctitle, fsurdat, finidat, paramfile
+    use ctsm_VarCtl      , only : version, hostname, username, conventions, source
+    use ctsm_Domain       , only : ldomain
+    use ctsm_FileUtils       , only : get_filename
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                   ! tape index
@@ -1995,7 +1995,7 @@ contains
     ! data set as a whole, as opposed to a single variable
 
     call ncd_putatt(lnfid, ncd_global, 'Conventions', trim(conventions))
-    call getdatetime(curdate, curtime)
+    call ctsm_GetDateTime(curdate, curtime)
     str = 'created on ' // curdate // ' ' // curtime
     call ncd_putatt(lnfid, ncd_global, 'history' , trim(str))
     call ncd_putatt(lnfid, ncd_global, 'source'  , trim(source))
@@ -2004,7 +2004,7 @@ contains
     call ncd_putatt(lnfid, ncd_global, 'version' , trim(version))
 
     str = &
-    '$Id: histFileMod.F90 42903 2012-12-21 15:32:10Z muszala $'
+    '$Id: ctsm_HistFile.F90 42903 2012-12-21 15:32:10Z muszala $'
     call ncd_putatt(lnfid, ncd_global, 'revision_id', trim(str))
     call ncd_putatt(lnfid, ncd_global, 'case_title', trim(ctitle))
     call ncd_putatt(lnfid, ncd_global, 'case_id', trim(caseid))
@@ -2112,7 +2112,7 @@ contains
     ! Add global metadata defining landunit types
     !
     ! !USES:
-    use landunit_varcon, only : max_lunit, landunit_names, landunit_name_length
+    use ctsm_LandunitVarCon, only : max_lunit, landunit_names, landunit_name_length
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: lnfid ! local file id
@@ -2139,7 +2139,7 @@ contains
     ! Add global metadata defining column types
     !
     ! !USES:
-    use column_varcon, only : write_coltype_metadata
+    use ctsm_ColumnVarCon, only : write_coltype_metadata
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: lnfid ! local file id
@@ -2161,8 +2161,8 @@ contains
     ! Add global metadata defining natpft types
     !
     ! !USES:
-    use clm_varpar, only : natpft_lb, natpft_ub
-    use pftconMod , only : pftname_len, pftname
+    use ctsm_VarPar, only : natpft_lb, natpft_ub
+    use ctsm_PftCon , only : pftname_len, pftname
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: lnfid ! local file id
@@ -2191,8 +2191,8 @@ contains
     ! Add global metadata defining natpft types
     !
     ! !USES:
-    use clm_varpar, only : cft_lb, cft_ub
-    use pftconMod , only : pftname_len, pftname
+    use ctsm_VarPar, only : cft_lb, cft_ub
+    use ctsm_PftCon , only : pftname_len, pftname
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: lnfid ! local file id
@@ -2226,10 +2226,10 @@ contains
     ! contents.
     !
     ! !USES:
-    use subgridAveMod  , only : c2g
-    use clm_varpar     , only : nlevgrnd ,nlevlak
+    use ctsm_SubgridAve  , only : c2g
+    use ctsm_VarPar     , only : nlevgrnd ,nlevlak
     use shr_string_mod , only : shr_string_listAppend
-    use domainMod      , only : ldomain
+    use ctsm_Domain      , only : ldomain
     !
     ! !ARGUMENTS:
     integer           , intent(in) :: t    ! tape index
@@ -2489,43 +2489,43 @@ contains
     !
     ! !DESCRIPTION:
     ! Write time constant values to primary history tape.
-    use clm_time_manager, only : get_step_size
+    use ctsm_TimeManager, only : get_step_size
     ! Issue the required netcdf wrapper calls to define the history file
     ! contents.
     !
     ! !USES:
-    use clm_varcon      , only : zsoi, zlak, secspday, isecspday, isecsphr, isecspmin
-    use domainMod       , only : ldomain, lon1d, lat1d
-    use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
-    use clm_time_manager, only : get_ref_date, get_calendar, NO_LEAP_C, GREGORIAN_C
-    use FatesInterfaceMod, only : fates_hdim_levsclass
-    use FatesInterfaceMod, only : fates_hdim_pfmap_levscpf
-    use FatesInterfaceMod, only : fates_hdim_scmap_levscpf
-    use FatesInterfaceMod, only : fates_hdim_levage
-    use FatesInterfaceMod, only : fates_hdim_levheight
-    use FatesInterfaceMod, only : fates_hdim_levpft
-    use FatesInterfaceMod, only : fates_hdim_scmap_levscag
-    use FatesInterfaceMod, only : fates_hdim_agmap_levscag
-    use FatesInterfaceMod, only : fates_hdim_scmap_levscagpft
-    use FatesInterfaceMod, only : fates_hdim_agmap_levscagpft
-    use FatesInterfaceMod, only : fates_hdim_pftmap_levscagpft
-    use FatesInterfaceMod, only : fates_hdim_agmap_levagepft
-    use FatesInterfaceMod, only : fates_hdim_pftmap_levagepft
-    use FatesInterfaceMod, only : fates_hdim_levfuel
-    use FatesInterfaceMod, only : fates_hdim_levcwdsc
-    use FatesInterfaceMod, only : fates_hdim_levcan
-    use FatesInterfaceMod, only : fates_hdim_canmap_levcnlf
-    use FatesInterfaceMod, only : fates_hdim_lfmap_levcnlf
-    use FatesInterfaceMod, only : fates_hdim_canmap_levcnlfpf
-    use FatesInterfaceMod, only : fates_hdim_lfmap_levcnlfpf
-    use FatesInterfaceMod, only : fates_hdim_pftmap_levcnlfpf
-    use FatesInterfaceMod, only : fates_hdim_levelem
-    use FatesInterfaceMod, only : fates_hdim_elmap_levelpft
-    use FatesInterfaceMod, only : fates_hdim_pftmap_levelpft
-    use FatesInterfaceMod, only : fates_hdim_elmap_levelcwd
-    use FatesInterfaceMod, only : fates_hdim_cwdmap_levelcwd
-    use FatesInterfaceMod, only : fates_hdim_elmap_levelage
-    use FatesInterfaceMod, only : fates_hdim_agemap_levelage
+    use ctsm_VarCon      , only : zsoi, zlak, secspday, isecspday, isecsphr, isecspmin
+    use ctsm_Domain       , only : ldomain, lon1d, lat1d
+    use ctsm_TimeManager, only : get_nstep, get_curr_date, get_curr_time
+    use ctsm_TimeManager, only : get_ref_date, get_calendar, NO_LEAP_C, GREGORIAN_C
+    use ctsm_FatesInterfaceMod, only : fates_hdim_levsclass
+    use ctsm_FatesInterfaceMod, only : fates_hdim_pfmap_levscpf
+    use ctsm_FatesInterfaceMod, only : fates_hdim_scmap_levscpf
+    use ctsm_FatesInterfaceMod, only : fates_hdim_levage
+    use ctsm_FatesInterfaceMod, only : fates_hdim_levheight
+    use ctsm_FatesInterfaceMod, only : fates_hdim_levpft
+    use ctsm_FatesInterfaceMod, only : fates_hdim_scmap_levscag
+    use ctsm_FatesInterfaceMod, only : fates_hdim_agmap_levscag
+    use ctsm_FatesInterfaceMod, only : fates_hdim_scmap_levscagpft
+    use ctsm_FatesInterfaceMod, only : fates_hdim_agmap_levscagpft
+    use ctsm_FatesInterfaceMod, only : fates_hdim_pftmap_levscagpft
+    use ctsm_FatesInterfaceMod, only : fates_hdim_agmap_levagepft
+    use ctsm_FatesInterfaceMod, only : fates_hdim_pftmap_levagepft
+    use ctsm_FatesInterfaceMod, only : fates_hdim_levfuel
+    use ctsm_FatesInterfaceMod, only : fates_hdim_levcwdsc
+    use ctsm_FatesInterfaceMod, only : fates_hdim_levcan
+    use ctsm_FatesInterfaceMod, only : fates_hdim_canmap_levcnlf
+    use ctsm_FatesInterfaceMod, only : fates_hdim_lfmap_levcnlf
+    use ctsm_FatesInterfaceMod, only : fates_hdim_canmap_levcnlfpf
+    use ctsm_FatesInterfaceMod, only : fates_hdim_lfmap_levcnlfpf
+    use ctsm_FatesInterfaceMod, only : fates_hdim_pftmap_levcnlfpf
+    use ctsm_FatesInterfaceMod, only : fates_hdim_levelem
+    use ctsm_FatesInterfaceMod, only : fates_hdim_elmap_levelpft
+    use ctsm_FatesInterfaceMod, only : fates_hdim_pftmap_levelpft
+    use ctsm_FatesInterfaceMod, only : fates_hdim_elmap_levelcwd
+    use ctsm_FatesInterfaceMod, only : fates_hdim_cwdmap_levelcwd
+    use ctsm_FatesInterfaceMod, only : fates_hdim_elmap_levelage
+    use ctsm_FatesInterfaceMod, only : fates_hdim_agemap_levelage
 
 
     !
@@ -2769,7 +2769,7 @@ contains
        timedata(2) = time
        call ncd_io('time_bounds', timedata, 'write', nfid(t), nt=tape(t)%ntimes)
 
-       call getdatetime (cdate, ctime)
+       call ctsm_GetDateTime (cdate, ctime)
        call ncd_io('date_written', cdate, 'write', nfid(t), nt=tape(t)%ntimes)
 
        call ncd_io('time_written', ctime, 'write', nfid(t), nt=tape(t)%ntimes)
@@ -2887,7 +2887,7 @@ contains
     ! Write history tape.  Issue the call to write the variable.
     !
     ! !USES:
-    use domainMod , only : ldomain
+    use ctsm_Domain , only : ldomain
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                ! tape index
@@ -3054,8 +3054,8 @@ contains
     ! Write/define 1d info for history tape.
     !
     ! !USES:
-    use decompMod   , only : ldecomp
-    use domainMod   , only : ldomain, ldomain
+    use ctsm_Decomp   , only : ldecomp
+    use ctsm_Domain   , only : ldomain, ldomain
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                ! tape index
@@ -3376,10 +3376,10 @@ contains
     !   date = yyyy/mm+1/01 with mscur = 0.
     !
     ! !USES:
-    use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
-    use clm_varcon      , only : secspday
+    use ctsm_TimeManager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
+    use ctsm_VarCon      , only : secspday
     use perf_mod        , only : t_startf, t_stopf
-    use clm_varpar      , only : nlevgrnd
+    use ctsm_VarPar      , only : nlevgrnd
     !
     ! !ARGUMENTS:
     logical, intent(in) :: rstwr    ! true => write restart file this step
@@ -3596,11 +3596,11 @@ contains
     ! A new history file is used on a branch run.
     !
     ! !USES:
-    use clm_varctl      , only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
-    use fileutils       , only : getfil
-    use domainMod       , only : ldomain
-    use clm_varpar      , only : nlevgrnd, nlevlak, numrad, nlevdecomp_full
-    use clm_time_manager, only : is_restart
+    use ctsm_VarCtl      , only : nsrest, caseid, inst_suffix, nsrStartup, nsrBranch
+    use ctsm_FileUtils       , only : getfil
+    use ctsm_Domain       , only : ldomain
+    use ctsm_VarPar      , only : nlevgrnd, nlevlak, numrad, nlevdecomp_full
+    use ctsm_TimeManager, only : is_restart
     use restUtilMod     , only : iflag_skip
     use pio
     !
@@ -4518,8 +4518,8 @@ contains
      ! Determine history dataset filenames.
      !
      ! !USES:
-     use clm_varctl, only : caseid, inst_suffix
-     use clm_time_manager, only : get_curr_date, get_prev_date
+     use ctsm_VarCtl, only : caseid, inst_suffix
+     use ctsm_TimeManager, only : get_curr_date, get_prev_date
      !
      ! !ARGUMENTS:
      integer, intent(in)  :: hist_freq   !history file frequency
@@ -4804,9 +4804,9 @@ contains
     ! initial or branch run to initialize the actual history tapes.
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs,nlevsoi
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec
-    use landunit_varcon , only : max_lunit
+    use ctsm_VarPar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs,nlevsoi
+    use ctsm_VarPar      , only : natpft_size, cft_size, maxpatch_glcmec
+    use ctsm_LandunitVarCon , only : max_lunit
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: fname                      ! field name
@@ -5108,9 +5108,9 @@ contains
 
     !
     ! !USES:
-    use clm_varpar  , only : nlevdecomp_full
-    use clm_varctl  , only : iulog
-    use abortutils  , only : endrun
+    use ctsm_VarPar  , only : nlevdecomp_full
+    use ctsm_VarCtl  , only : iulog
+    use ctsm_AbortUtils  , only : endrun
     use shr_log_mod , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
@@ -5339,5 +5339,5 @@ contains
   end function avgflag_valid
 
 
-end module histFileMod
+end module ctsm_HistFile
 

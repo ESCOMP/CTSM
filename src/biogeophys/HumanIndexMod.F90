@@ -1,9 +1,9 @@
-module HumanIndexMod
+module ctsm_HumanIndices
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: HumanIndexMod
+! !MODULE: ctsm_HumanIndices
 !
 ! !DESCRIPTION:
 ! Calculates Wetbulb Temperature, Stull Wet Bulb Temperature,
@@ -15,7 +15,7 @@ module HumanIndexMod
 !
 ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
-  use decompMod            , only : bounds_type
+  use ctsm_Decomp            , only : bounds_type
 ! !PUBLIC TYPES:
   implicit none
   save
@@ -130,7 +130,7 @@ module HumanIndexMod
 !          Modification makes all moisture calculations
 !          internal to Wet_Bulb.  External input of RH used,
 !          Not external Q due to differences in QSat_2 and
-!          QSatMod at high RH and T>45C.
+!          ctsm_QSat at high RH and T>45C.
 !EOP
 !-----------------------------------------------------------------------
 
@@ -257,8 +257,8 @@ subroutine InitHistory(this, bounds)
 ! Initialize history data
 !
 ! !USES:
-    use clm_varcon      , only : spval
-    use histFileMod     , only : hist_addfld1d
+    use ctsm_VarCon      , only : spval
+    use ctsm_HistFile     , only : hist_addfld1d
 !
 ! !ARGUMENTS:
     class(humanindex_type)        :: this
@@ -498,12 +498,12 @@ end subroutine InitHistory
 !       
 ! !USES:
     use shr_mpi_mod   , only : shr_mpi_bcast
-    use abortutils    , only : endrun
-    use spmdMod       , only : masterproc, mpicom
-    use fileutils     , only : getavu, relavu, opnfil
+    use ctsm_AbortUtils    , only : endrun
+    use ctsm_Spmd       , only : masterproc, mpicom
+    use ctsm_FileUtils     , only : getavu, relavu, opnfil
     use shr_nl_mod    , only : shr_nl_find_group_name
     use shr_mpi_mod   , only : shr_mpi_bcast
-    use clm_varctl    , only : iulog
+    use ctsm_VarCtl    , only : iulog
     use shr_log_mod   , only : errMsg => shr_log_errMsg
 !
 ! !ARGUMENTS:
@@ -572,10 +572,10 @@ end subroutine InitHistory
     real(r8), intent(out) :: app_temp ! Apparent Temperature (C)
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -613,10 +613,10 @@ end subroutine InitHistory
 
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -653,10 +653,10 @@ end subroutine InitHistory
 
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -691,10 +691,10 @@ end subroutine InitHistory
 
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -730,10 +730,10 @@ end subroutine InitHistory
 
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -812,12 +812,12 @@ end subroutine InitHistory
 !                             Modification makes all moisture calculations
 !                             internal to Wet_Bulb.  External input of RH used,
 !                             Not external Q due to differences in QSat_2 and
-!                             QSatMod at high RH and T>45C.
+!                             ctsm_QSat at high RH and T>45C.
 !
 ! !USES:
     use shr_kind_mod , only: r8 => shr_kind_r8
     use shr_const_mod, only: SHR_CONST_TKFRZ
-    use clm_varctl   , only: iulog
+    use ctsm_VarCtl   , only: iulog
 !
 ! !ARGUMENTS:
     implicit none
@@ -833,10 +833,10 @@ end subroutine InitHistory
 
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -1004,10 +1004,10 @@ end subroutine InitHistory
     real(r8), intent(out) :: wbt ! Wet Bulb Temperature (C)
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -1055,10 +1055,10 @@ end subroutine InitHistory
     real(r8), intent(out) :: hi       ! Heat Index (C)
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -1117,10 +1117,10 @@ end subroutine InitHistory
 
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -1167,10 +1167,10 @@ end subroutine InitHistory
 
 !
 ! !CALLED FROM:
-! subroutine LakeFluxes in module LakeFluxesMod
-! subroutine CanopyFluxes in module CanopyFluxesMod
-! subroutine UrbanFluxes in module UrbanFluxesMod
-! subroutine BareGroundFluxes in module BareGroundFluxesMod
+! subroutine LakeFluxes in module ctsm_LakeFluxes
+! subroutine CanopyFluxes in module ctsm_CanopyFluxes
+! subroutine UrbanFluxes in module ctsm_UrbanFluxes
+! subroutine BareGroundFluxes in module ctsm_BareGroundFluxes
 !
 ! !LOCAL VARIABLES:
 !EOP
@@ -1374,5 +1374,5 @@ end subroutine InitHistory
 !EOP
 !-----------------------------------------------------------------------
 
-end module HumanIndexMod
+end module ctsm_HumanIndices
 

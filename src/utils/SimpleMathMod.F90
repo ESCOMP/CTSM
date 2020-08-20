@@ -1,4 +1,4 @@
-module SimpleMathMod
+module ctsm_SimpleMath
 
 #include "shr_assert.h"
   !------------------------------------------------------------------------------
@@ -224,4 +224,4 @@ contains
   return
   end subroutine array_div_vector_nofilter
   
-end module SimpleMathMod
+end module ctsm_SimpleMath

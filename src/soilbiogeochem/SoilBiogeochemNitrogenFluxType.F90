@@ -1,18 +1,18 @@
-module SoilBiogeochemNitrogenFluxType
+module ctsm_SoilBiogeochemNitrogenFluxType
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
-  use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use decompMod                          , only : bounds_type
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
-  use CNSharedParamsMod                  , only : use_fun
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use abortutils                         , only : endrun
-  use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, ndecomp_pools
+  use ctsm_VarPar                         , only : nlevdecomp_full, nlevdecomp
+  use ctsm_VarCon                         , only : spval, ispval, dzsoi_decomp
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_VarCtl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
+  use ctsm_CNSharedParamsMod                  , only : use_fun
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_LandunitType                       , only : lun                
+  use ctsm_ColumnType                         , only : col                
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -282,7 +282,7 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d, hist_addfld_decomp
+    use ctsm_HistFile    , only : hist_addfld1d, hist_addfld_decomp
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_nitrogenflux_type) :: this
@@ -847,7 +847,7 @@ contains
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
     !
     ! !USES:
-    use landunit_varcon , only : istsoil, istcrop
+    use ctsm_LandunitVarCon , only : istsoil, istcrop
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_nitrogenflux_type) :: this
@@ -1040,8 +1040,8 @@ contains
   subroutine Summary(this, bounds, num_soilc, filter_soilc)
     !
     ! !USES:
-    use clm_varpar , only: nlevdecomp, ndecomp_cascade_transitions,ndecomp_pools
-    use clm_varctl , only: use_nitrif_denitrif
+    use ctsm_VarPar , only: nlevdecomp, ndecomp_cascade_transitions,ndecomp_pools
+    use ctsm_VarCtl , only: use_nitrif_denitrif
     !
     ! !ARGUMENTS:
     class (soilbiogeochem_nitrogenflux_type) :: this
@@ -1210,5 +1210,4 @@ contains
 
   end subroutine Summary
 
-end module soilbiogeochemNitrogenFluxType
-
+end module ctsm_SoilBiogeochemNitrogenFluxType

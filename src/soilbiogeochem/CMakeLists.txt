@@ -2,7 +2,7 @@
 # source files that are currently used in unit tests
 
 list(APPEND clm_sources 
-  SoilBiogeochemStateType.F90
+  ctsm_SoilBiogeochemStateType.F90
   )
 
 sourcelist_to_parent(clm_sources)

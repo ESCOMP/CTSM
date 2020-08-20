@@ -1,4 +1,4 @@
-module dynTimeInfoMod
+module ctsm_DynTimeInfo
 
 #include "shr_assert.h"
 
@@ -9,9 +9,9 @@ module dynTimeInfoMod
   ! single time sample per year.
   !
   ! !USES:
-  use clm_varctl     , only : iulog
+  use ctsm_VarCtl     , only : iulog
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use abortutils     , only : endrun
+  use ctsm_AbortUtils     , only : endrun
   use shr_kind_mod, only: r8 => shr_kind_r8
   !
   implicit none
@@ -117,7 +117,7 @@ contains
     ! Should be called every time step
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_prev_date
+    use ctsm_TimeManager , only : get_curr_date, get_prev_date
     !
     ! !ARGUMENTS:
     class(time_info_type), intent(inout) :: this      ! this object
@@ -184,7 +184,7 @@ contains
     ! of the current timestep.
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_yearfrac, get_prev_yearfrac
+    use ctsm_TimeManager, only : get_curr_yearfrac, get_prev_yearfrac
     !
     ! !ARGUMENTS:
     class(time_info_type), intent(in) :: this
@@ -372,4 +372,4 @@ contains
 
   end subroutine set_info_from_year
 
-end module dynTimeInfoMod
+end module ctsm_DynTimeInfo

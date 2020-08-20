@@ -1,12 +1,12 @@
-module initInterpMindistTestUtils
+module ctsm_InitInterpMindistTestUtils
 
-  ! Utilities to aid the testing of initInterpMindist
+  ! Utilities to aid the testing of ctsm_InitInterpMindist
 
   use pfunit_mod
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use initInterpMindist, only : subgrid_type, subgrid_special_indices_type
-  use glcBehaviorMod, only: glc_behavior_type
-  use unittestSubgridMod, only : bounds
+  use ctsm_InitInterpMindist, only : subgrid_type, subgrid_special_indices_type
+  use ctsm_GlacierBehavior, only: glc_behavior_type
+  use ctsm_UnitTestSubgrid, only : bounds
   use unittestArrayMod, only: grc_array
 
   implicit none
@@ -133,4 +133,4 @@ contains
 
   end function create_glc_behavior
 
-end module initInterpMindistTestUtils
+end module ctsm_InitInterpMindistTestUtils

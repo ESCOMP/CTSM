@@ -117,7 +117,7 @@ subroutine mkurban(ldomain, mapfname, datfname, ndiag, zero_out, &
 ! urban-specific code.
 !
 ! !USES:
-   use mkdomainMod , only : domain_type, domain_clean, domain_read
+   use mkctsm_Domain , only : domain_type, domain_clean, domain_read
    use mkgridmapMod
    use mkindexmapMod, only : get_dominant_indices
    use mkurbanparCommonMod, only : mkurban_pct, mkurban_pct_diagnostics, MIN_DENS
@@ -407,7 +407,7 @@ subroutine mkurbanpar(datfname, ncido, region_o, urbn_classes_gcell_o, urban_ski
 ! has nodata for the given region/density combination in the input lookup table.
 !
 ! !USES:
-   use mkdomainMod  , only : domain_type, domain_clean, domain_read
+   use mkctsm_Domain  , only : domain_type, domain_clean, domain_read
    use mkindexmapMod, only : dim_slice_type, lookup_2d_netcdf
    use mkvarpar
    use mkncdio

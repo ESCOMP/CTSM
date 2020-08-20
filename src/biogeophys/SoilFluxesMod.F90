@@ -1,4 +1,4 @@
-module SoilFluxesMod
+module ctsm_SoilFluxes
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,22 +7,22 @@ module SoilFluxesMod
   ! !USES:
   use shr_kind_mod	, only : r8 => shr_kind_r8
   use shr_log_mod	, only : errMsg => shr_log_errMsg
-  use decompMod		, only : bounds_type
-  use abortutils	, only : endrun
+  use ctsm_Decomp		, only : bounds_type
+  use ctsm_AbortUtils	, only : endrun
   use perf_mod		, only : t_startf, t_stopf
-  use clm_varctl	, only : iulog
-  use clm_varpar	, only : nlevsno, nlevgrnd, nlevurb, max_patch_per_col
-  use atm2lndType	, only : atm2lnd_type
-  use CanopyStateType   , only : canopystate_type
-  use EnergyFluxType    , only : energyflux_type
-  use SolarAbsorbedType , only : solarabs_type
-  use TemperatureType   , only : temperature_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use WaterFluxBulkType     , only : waterfluxbulk_type
-  use LandunitType	, only : lun                
-  use ColumnType	, only : col                
-  use PatchType		, only : patch                
+  use ctsm_VarCtl	, only : iulog
+  use ctsm_VarPar	, only : nlevsno, nlevgrnd, nlevurb, max_patch_per_col
+  use ctsm_Atm2LndType	, only : atm2lnd_type
+  use ctsm_CanopyStateType   , only : canopystate_type
+  use ctsm_EnergyFluxType    , only : energyflux_type
+  use ctsm_SolarAbsorbedType , only : solarabs_type
+  use ctsm_TemperatureType   , only : temperature_type
+  use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use ctsm_WaterFluxBulkType     , only : waterfluxbulk_type
+  use ctsm_LandunitType	, only : lun                
+  use ctsm_ColumnType	, only : col                
+  use ctsm_PatchType		, only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -45,11 +45,11 @@ contains
     ! Update surface fluxes based on the new ground temperature
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size_real
-    use clm_varcon       , only : hvap, cpair, grav, vkc, tfrz, sb 
-    use landunit_varcon  , only : istsoil, istcrop
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
-    use subgridAveMod    , only : p2c
+    use ctsm_TimeManager , only : get_step_size_real
+    use ctsm_VarCon       , only : hvap, cpair, grav, vkc, tfrz, sb 
+    use ctsm_LandunitVarCon  , only : istsoil, istcrop
+    use ctsm_ColumnVarCon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
+    use ctsm_SubgridAve    , only : p2c
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -340,7 +340,7 @@ contains
          ! In the case of no snow, qflx_ev_snow has already been set equal to qflx_ev_soil (the evaporation 
          ! from the subgrid soil patch) and the partitioned variables will then represent evaporation from the 
          ! subgrid soil patch.
-         ! In the case of urban columns (and lake columns - see LakeHydrologyMod), there are no subgrid 
+         ! In the case of urban columns (and lake columns - see ctsm_LakeHydrology), there are no subgrid 
          ! patches and qflx_evap_soi is used. qflx_evap_soi = qflx_liqevap_from_top_layer + qflx_solidevap_from_top_layer 
          ! - qflx_liqdew_to_top_layer - qflx_soliddew_to_top_layer.
          if (.not. lun%urbpoi(l)) then
@@ -497,5 +497,5 @@ contains
 
   end subroutine SoilFluxes
 
-end module SoilFluxesMod
+end module ctsm_SoilFluxes
 

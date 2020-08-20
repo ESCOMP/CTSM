@@ -1,4 +1,4 @@
-module dynPriorWeightsMod
+module ctsm_DynPriorWeights
 
 #include "shr_assert.h"
 
@@ -8,16 +8,16 @@ module dynPriorWeightsMod
   ! (i.e., before the weight updates of this time step)
   !
   ! TODO(wjs, 2015-07-04) See if I can combine some functionality here with
-  ! dynColumnStateUpdaterMod, and/or change some of this to be more similar to the
-  ! implementation of dynColumnStateUpdaterMod (i.e., an active class rather than a
+  ! ctsm_DynColumnStateUpdater, and/or change some of this to be more similar to the
+  ! implementation of ctsm_DynColumnStateUpdater (i.e., an active class rather than a
   ! passive data-holder).
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use decompMod      , only : bounds_type, BOUNDS_LEVEL_PROC
-  use ColumnType     , only : col
-  use PatchType      , only : patch                
+  use ctsm_Decomp      , only : bounds_type, BOUNDS_LEVEL_PROC
+  use ctsm_ColumnType     , only : col
+  use ctsm_PatchType      , only : patch                
   !
   implicit none
   private
@@ -92,4 +92,4 @@ contains
     end do
   end subroutine set_prior_weights
 
-end module dynPriorWeightsMod
+end module ctsm_DynPriorWeights

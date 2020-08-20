@@ -1,4 +1,4 @@
-module GridcellType
+module ctsm_GridcellType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,8 +10,8 @@ module GridcellType
   !
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use landunit_varcon, only : max_lunit
-  use clm_varcon     , only : ispval
+  use ctsm_LandunitVarCon, only : max_lunit
+  use ctsm_VarCon     , only : ispval
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -103,4 +103,4 @@ contains
 
   end subroutine Clean
 
-end module GridcellType
+end module ctsm_GridcellType

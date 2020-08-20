@@ -1,4 +1,4 @@
-module SoilWaterRetentionCurveMod
+module ctsm_SoilWaterRetentionCurve
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -50,7 +50,7 @@ module SoilWaterRetentionCurveMod
        !
        ! !USES:
        use shr_kind_mod   , only : r8 => shr_kind_r8
-       use SoilStateType  , only : soilstate_type
+       use ctsm_SoilStateType  , only : soilstate_type
        import :: soil_water_retention_curve_type
        !
        ! !ARGUMENTS:
@@ -73,7 +73,7 @@ module SoilWaterRetentionCurveMod
        !
        ! !USES:
        use shr_kind_mod   , only : r8 => shr_kind_r8
-       use SoilStateType  , only : soilstate_type
+       use ctsm_SoilStateType  , only : soilstate_type
        import :: soil_water_retention_curve_type
        !
        ! !ARGUMENTS:
@@ -94,7 +94,7 @@ module SoilWaterRetentionCurveMod
        !
        ! !USES:
        use shr_kind_mod   , only : r8 => shr_kind_r8
-       use SoilStateType  , only : soilstate_type
+       use ctsm_SoilStateType  , only : soilstate_type
        import :: soil_water_retention_curve_type
        !
        ! !ARGUMENTS:
@@ -108,4 +108,4 @@ module SoilWaterRetentionCurveMod
 
   end interface
 
-end module SoilWaterRetentionCurveMod
+end module ctsm_SoilWaterRetentionCurve

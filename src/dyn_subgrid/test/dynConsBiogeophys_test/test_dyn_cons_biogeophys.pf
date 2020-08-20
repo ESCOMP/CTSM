@@ -1,26 +1,26 @@
 module test_dyn_cons_biogeophys
 
-  ! Tests of dynConsBiogeophysMod
+  ! Tests of ctsm_DynConsBiogeophys
 
   use pfunit_mod
-  use dynConsBiogeophysMod
+  use ctsm_DynConsBiogeophys
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
+  use ctsm_UnitTestSubgrid
   use unittestArrayMod, only : col_array
-  use unittestFilterBuilderMod, only : filter_from_range
-  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
-  use clm_varpar, only : nlevgrnd, nlevsno, maxpatch_glcmec
-  use column_varcon, only : icemec_class_to_col_itype
-  use landunit_varcon, only : istsoil, istice_mec, istdlak
-  use ColumnType, only : col
-  use LandunitType, only : lun
-  use PatchType, only : patch
-  use SoilStateType, only : soilstate_type
-  use TemperatureType, only : temperature_type
-  use UrbanParamsType, only : urbanparams_type
-  use WaterType, only : water_type
-  use TotalWaterAndHeatMod, only : AccumulateSoilLiqIceMassNonLake
-  use TotalWaterAndHeatMod, only : AccumulateSoilHeatNonLake
+  use ctsm_UnitTestFilterBuilder, only : filter_from_range
+  use ctsm_UnitTestctsm_WaterTypeFactory, only : unittest_water_type_factory_type
+  use ctsm_VarPar, only : nlevgrnd, nlevsno, maxpatch_glcmec
+  use ctsm_ColumnVarCon, only : icemec_class_to_col_itype
+  use ctsm_LandunitVarCon, only : istsoil, istice_mec, istdlak
+  use ctsm_ColumnType, only : col
+  use ctsm_LandunitType, only : lun
+  use ctsm_PatchType, only : patch
+  use ctsm_SoilStateType, only : soilstate_type
+  use ctsm_TemperatureType, only : temperature_type
+  use ctsm_UrbanParamsType, only : urbanparams_type
+  use ctsm_WaterType, only : water_type
+  use ctsm_TotalWaterAndHeat, only : AccumulateSoilLiqIceMassNonLake
+  use ctsm_TotalWaterAndHeat, only : AccumulateSoilHeatNonLake
 
   implicit none
 
@@ -85,8 +85,8 @@ contains
   subroutine test_setBaselines(this)
     ! A basic test of dyn_hwcontent_set_baselines
     !
-    ! This covers the relevant logic in dynConsBiogeophysMod, but NOT the logic invoked
-    ! in TotalWaterAndHeatMod (we take the latter as a given). This particularly covers
+    ! This covers the relevant logic in ctsm_DynConsBiogeophys, but NOT the logic invoked
+    ! in ctsm_TotalWaterAndHeat (we take the latter as a given). This particularly covers
     ! the setting of baselines for a glacier column based on the average value from the
     ! vegetated landunit. This includes coverage of some particular points that would not
     ! currently be covered in system tests (which was part of the motivation for creating
@@ -181,7 +181,7 @@ contains
           this%temperature_inst%t_soisno_col(c,:) = 275._r8 + (c - bounds%begc)
        end if
 
-       ! mimic initialization done in TemperatureType: InitCold
+       ! mimic initialization done in ctsm_TemperatureType: InitCold
        this%temperature_inst%dynbal_baseline_heat_col(c) = 0._r8
     end do
 

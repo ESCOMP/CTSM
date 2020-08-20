@@ -1,4 +1,4 @@
-module SoilBiogeochemNLeachingMod
+module ctsm_SoilBiogeochemNLeaching
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,14 +7,14 @@ module SoilBiogeochemNLeachingMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use decompMod                       , only : bounds_type
-  use clm_varcon                      , only : dzsoi_decomp, zisoi
-  use clm_varctl                      , only : use_nitrif_denitrif, use_vertsoilc
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use WaterStateBulkType                  , only : waterstatebulk_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
-  use ColumnType                      , only : col                
+  use ctsm_Decomp                       , only : bounds_type
+  use ctsm_VarCon                      , only : dzsoi_decomp, zisoi
+  use ctsm_VarCtl                      , only : use_nitrif_denitrif, use_vertsoilc
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_WaterStateBulkType                  , only : waterstatebulk_type
+  use ctsm_WaterFluxBulkType                   , only : waterfluxbulk_type
+  use ctsm_ColumnType                      , only : col                
   !
   implicit none
   private
@@ -45,14 +45,14 @@ contains
     !
     ! !USES:
     use ncdio_pio   , only : file_desc_t,ncd_io
-    use abortutils  , only : endrun
+    use ctsm_AbortUtils  , only : endrun
     use shr_log_mod , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNNDynamicsParamsType'
+    character(len=32)  :: subname = 'ctsm_CNNDynamicsParamsType'
     character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
@@ -81,8 +81,8 @@ contains
     ! as a function of soluble mineral N and total soil water outflow.
     !
     ! !USES:
-    use clm_varpar       , only : nlevdecomp, nlevsoi
-    use clm_time_manager , only : get_step_size_real
+    use ctsm_VarPar       , only : nlevdecomp, nlevsoi
+    use ctsm_TimeManager , only : get_step_size_real
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -286,4 +286,4 @@ contains
 
   end subroutine SoilBiogeochemNLeaching
 
-end module SoilBiogeochemNLeachingMod
+end module ctsm_SoilBiogeochemNLeaching

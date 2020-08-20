@@ -1,4 +1,4 @@
-module fileutils
+module ctsm_FileUtils
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,8 +6,8 @@ module fileutils
   !
   ! !USES:
   use shr_sys_mod , only : shr_sys_abort
-  use clm_varctl  , only : iulog
-  use spmdMod     , only : masterproc
+  use ctsm_VarCtl  , only : iulog
+  use ctsm_Spmd     , only : masterproc
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -176,4 +176,4 @@ contains
 
   end subroutine relavu
 
-end module fileutils
+end module ctsm_FileUtils

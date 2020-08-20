@@ -1,4 +1,4 @@
-module CNCStateUpdate2Mod
+module ctsm_CNCStateUpdate2Mod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,12 +7,12 @@ module CNCStateUpdate2Mod
   ! !USES:
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
-  use abortutils                     , only : endrun
-  use clm_time_manager               , only : get_step_size_real
-  use clm_varpar                     , only : nlevdecomp, i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use CNvegCarbonStateType           , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
-  use SoilBiogeochemCarbonStatetype  , only : soilbiogeochem_carbonstate_type
+  use ctsm_AbortUtils                     , only : endrun
+  use ctsm_TimeManager               , only : get_step_size_real
+  use ctsm_VarPar                     , only : nlevdecomp, i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use ctsm_CNVegCarbonStateType           , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType            , only : cnveg_carbonflux_type
+  use ctsm_SoilBiogeochemCarbonStateType  , only : soilbiogeochem_carbonstate_type
   !
   implicit none
   private
@@ -179,7 +179,7 @@ contains
             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%harvest_c_to_cwdc_col(c,j)  * dt
 
-            ! wood to product pools - states updated in CNProducts
+            ! wood to product pools - states updated in ctsm_CNProducts
          end do
       end do
 
@@ -244,4 +244,4 @@ contains
 
   end subroutine CStateUpdate2h
 
-end module CNCStateUpdate2Mod
+end module ctsm_CNCStateUpdate2Mod

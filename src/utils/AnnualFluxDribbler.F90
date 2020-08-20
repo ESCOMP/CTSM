@@ -1,4 +1,4 @@
-module AnnualFluxDribbler
+module ctsm_AnnualFluxDribbler
 
 #include "shr_assert.h"
 
@@ -57,16 +57,16 @@ module AnnualFluxDribbler
   !  
   !
   ! !USES:
-  use clm_varctl       , only : iulog
+  use ctsm_VarCtl       , only : iulog
   use shr_log_mod      , only : errMsg => shr_log_errMsg
-  use abortutils       , only : endrun
+  use ctsm_AbortUtils       , only : endrun
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use decompMod        , only : bounds_type, get_beg, get_end
-  use decompMod        , only : BOUNDS_SUBGRID_GRIDCELL, BOUNDS_SUBGRID_PATCH
-  use clm_varcon       , only : secspday, nameg, namep
-  use clm_time_manager , only : get_days_per_year, get_step_size_real, is_beg_curr_year
-  use clm_time_manager , only : get_curr_yearfrac, get_prev_yearfrac, get_prev_date
-  use clm_time_manager , only : is_first_step
+  use ctsm_Decomp        , only : bounds_type, get_beg, get_end
+  use ctsm_Decomp        , only : BOUNDS_SUBGRID_GRIDCELL, BOUNDS_SUBGRID_PATCH
+  use ctsm_VarCon       , only : secspday, nameg, namep
+  use ctsm_TimeManager , only : get_days_per_year, get_step_size_real, is_beg_curr_year
+  use ctsm_TimeManager , only : get_curr_yearfrac, get_prev_yearfrac, get_prev_date
+  use ctsm_TimeManager , only : is_first_step
   !
   implicit none
   private
@@ -612,4 +612,4 @@ contains
   end subroutine get_amount_left_to_dribble
 
 
-end module AnnualFluxDribbler
+end module ctsm_AnnualFluxDribbler

@@ -1,4 +1,4 @@
-module CLMFatesParamInterfaceMod
+module ctsm_FatesParamInterface
   ! NOTE(bja, 2017-01) this code can not go into the main clm-fates
   ! interface module because of circular dependancies with pftvarcon.
 
@@ -26,8 +26,8 @@ contains
  !-----------------------------------------------------------------------
  subroutine FatesReadParameters()
 
-   use clm_varctl, only : use_fates, paramfile, fates_paramfile
-   use spmdMod, only : masterproc
+   use ctsm_VarCtl, only : use_fates, paramfile, fates_paramfile
+   use ctsm_Spmd, only : masterproc
 
    use FatesParametersInterface, only : fates_parameters_type
 
@@ -71,13 +71,13 @@ contains
  !-----------------------------------------------------------------------
  subroutine FatesReadPFTs()
 
-   use clm_varctl, only : use_fates, paramfile, fates_paramfile
-   use spmdMod, only : masterproc
+   use ctsm_VarCtl, only : use_fates, paramfile, fates_paramfile
+   use ctsm_Spmd, only : masterproc
 
    use FatesParametersInterface, only : fates_parameters_type
    use EDPftvarcon , only : EDPftvarcon_inst
 
-   use fileutils  , only : getfil
+   use ctsm_FileUtils  , only : getfil
    use ncdio_pio  , only : file_desc_t, ncd_pio_closefile, ncd_pio_openfile
 
    implicit none
@@ -173,11 +173,11 @@ contains
  !-----------------------------------------------------------------------
  subroutine ParametersFromNetCDF(filename, is_host_file, fates_params)
 
-   use abortutils   , only : endrun
-   use fileutils    , only : getfil
+   use ctsm_AbortUtils   , only : endrun
+   use ctsm_FileUtils    , only : getfil
    use ncdio_pio    , only : file_desc_t , ncd_pio_closefile , ncd_pio_openfile
-   use paramUtilMod , only : readNcdio
-   use spmdMod      , only : masterproc
+   use ctsm_ParamUtil , only : readNcdio
+   use ctsm_Spmd      , only : masterproc
 
    use FatesParametersInterface, only : fates_parameters_type
    use FatesParametersInterface, only : param_string_length, max_dimensions, max_used_dimensions
@@ -240,4 +240,4 @@ contains
  end subroutine ParametersFromNetCDF
  !-----------------------------------------------------------------------
 
-end module CLMFatesParamInterfaceMod
+end module ctsm_FatesParamInterface

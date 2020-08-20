@@ -1,6 +1,6 @@
 ! Run unit tests for mksurfdata_map
 program mksurfdata_map_unit_tester
-   use test_mkdomainMod
+   use test_mkctsm_Domain
    use test_mkutilsMod
    use test_mkgridmapMod
    use test_mkindexmapMod
@@ -12,7 +12,7 @@ program mksurfdata_map_unit_tester
 
    call test_init
 
-   ! Test mkdomainMod
+   ! Test mkctsm_Domain
    call test_domain_read_dims
 
    ! Test mkutilsMod

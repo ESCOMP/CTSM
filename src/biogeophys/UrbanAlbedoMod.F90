@@ -1,4 +1,4 @@
-module UrbanAlbedoMod
+module ctsm_UrbanAlbedo
 
 #include "shr_assert.h"
 
@@ -10,19 +10,19 @@ module UrbanAlbedoMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod       , only : shr_sys_flush 
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use decompMod         , only : bounds_type
-  use clm_varpar        , only : numrad
-  use clm_varcon        , only : isecspday, degpsec, namel
-  use clm_varctl        , only : iulog
-  use abortutils        , only : endrun  
-  use UrbanParamsType   , only : urbanparams_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use SolarAbsorbedType , only : solarabs_type
-  use SurfaceAlbedoType , only : surfalb_type
-  use LandunitType      , only : lun                
-  use ColumnType        , only : col                
-  use PatchType         , only : patch                
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_VarPar        , only : numrad
+  use ctsm_VarCon        , only : isecspday, degpsec, namel
+  use ctsm_VarCtl        , only : iulog
+  use ctsm_AbortUtils        , only : endrun  
+  use ctsm_UrbanParamsType   , only : urbanparams_type
+  use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use ctsm_SolarAbsorbedType , only : solarabs_type
+  use ctsm_SurfaceAlbedoType , only : surfalb_type
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_ColumnType        , only : col                
+  use ctsm_PatchType         , only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -59,9 +59,9 @@ contains
     !
     ! !USES:
     use shr_orb_mod   , only : shr_orb_decl, shr_orb_cosz
-    use clm_varcon    , only : sb
-    use column_varcon , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon , only : icol_road_perv, icol_road_imperv
+    use ctsm_VarCon    , only : sb
+    use ctsm_ColumnVarCon , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_ColumnVarCon , only : icol_road_perv, icol_road_imperv
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -442,7 +442,7 @@ contains
     ! Determine urban snow albedos
     !
     ! !USES:
-    use column_varcon, only : icol_roof, icol_road_perv, icol_road_imperv
+    use ctsm_ColumnVarCon, only : icol_roof, icol_road_perv, icol_road_imperv
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds                     
@@ -476,7 +476,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(albsn_perroad) == (/bounds%endl, numrad/)), sourcefile, __LINE__)
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_urbanc, filter_urbanc, &
-         caller = 'UrbanAlbedoMod:SnowAlbedo', &
+         caller = 'ctsm_UrbanAlbedo:SnowAlbedo', &
          h2osno_total = h2osno_total(bounds%begc:bounds%endc))
 
     do fc = 1,num_urbanc
@@ -545,7 +545,7 @@ contains
     ! and all solar zenith angles from 1 to 90 deg by 1
     !
     ! !USES:
-    use clm_varcon, only : rpi
+    use ctsm_VarCon, only : rpi
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds                      
@@ -1283,5 +1283,5 @@ contains
 
   end subroutine net_solar
 
-end module UrbanAlbedoMod
+end module ctsm_UrbanAlbedo
 

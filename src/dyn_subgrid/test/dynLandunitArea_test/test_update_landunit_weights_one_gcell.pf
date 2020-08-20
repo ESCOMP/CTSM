@@ -3,8 +3,8 @@ module test_update_landunit_weights_one_gcell
   ! Tests of the update_landunit_weights_one_gcell routine in the dynLandunitArea module
 
   use pfunit_mod
-  use dynLandunitAreaMod
-  use landunit_varcon, only : istsoil, istcrop, isturb_md, istice_mec, istdlak, max_lunit
+  use ctsm_DynLandunitArea
+  use ctsm_LandunitVarCon, only : istsoil, istcrop, isturb_md, istice_mec, istdlak, max_lunit
   use shr_kind_mod   , only : r8 => shr_kind_r8
   
 

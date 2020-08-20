@@ -1,4 +1,4 @@
-module restFileMod
+module ctsm_RestFile
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,24 +7,24 @@ module restFileMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use decompMod        , only : bounds_type, get_proc_clumps, get_clump_bounds
-  use decompMod        , only : BOUNDS_LEVEL_PROC
-  use spmdMod          , only : masterproc, mpicom
-  use abortutils       , only : endrun
+  use ctsm_Decomp        , only : bounds_type, get_proc_clumps, get_clump_bounds
+  use ctsm_Decomp        , only : BOUNDS_LEVEL_PROC
+  use ctsm_Spmd          , only : masterproc, mpicom
+  use ctsm_AbortUtils       , only : endrun
   use shr_log_mod      , only : errMsg => shr_log_errMsg
-  use clm_time_manager , only : timemgr_restart_io, get_nstep
-  use subgridRestMod   , only : subgridRestWrite, subgridRestRead, subgridRest_read_cleanup
-  use accumulMod       , only : accumulRest
-  use clm_instMod      , only : clm_instRest
-  use histFileMod      , only : hist_restart_ncd
-  use clm_varctl       , only : iulog, use_fates, use_hydrstress
-  use clm_varctl       , only : create_crop_landunit, irrigate
-  use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
+  use ctsm_TimeManager , only : timemgr_restart_io, get_nstep
+  use ctsm_SubgridRest   , only : subgridRestWrite, subgridRestRead, subgridRest_read_cleanup
+  use ctsm_Accumulators       , only : accumulRest
+  use ctsm_Inst      , only : clm_instRest
+  use ctsm_HistFile      , only : hist_restart_ncd
+  use ctsm_VarCtl       , only : iulog, use_fates, use_hydrstress
+  use ctsm_VarCtl       , only : create_crop_landunit, irrigate
+  use ctsm_VarCon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
   use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
   use ncdio_pio        , only : check_att, ncd_getatt
-  use glcBehaviorMod   , only : glc_behavior_type
-  use reweightMod      , only : reweight_wrapup
+  use ctsm_GlacierBehavior   , only : glc_behavior_type
+  use ctsm_Reweight      , only : reweight_wrapup
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -180,7 +180,7 @@ contains
     ! Now that we have updated subgrid information, update the filters, active flags,
     ! etc. accordingly. We do these updates as soon as possible so that the updated
     ! filters and active flags are available to other restart routines - e.g., for the
-    ! sake of subgridAveMod calls like c2g.
+    ! sake of ctsm_SubgridAve calls like c2g.
     !
     ! The reweight_wrapup call needs to be done inside a clump loop, so we set that up
     ! here.
@@ -227,9 +227,9 @@ contains
     ! Determine and obtain netcdf restart file
     !
     ! !USES:
-    use clm_varctl, only : caseid, nrevsn, nsrest, brnch_retain_casename
-    use clm_varctl, only : nsrContinue, nsrBranch
-    use fileutils , only : getfil
+    use ctsm_VarCtl, only : caseid, nrevsn, nsrest, brnch_retain_casename
+    use ctsm_VarCtl, only : nsrContinue, nsrBranch
+    use ctsm_FileUtils , only : getfil
     !
     ! !ARGUMENTS:
     character(len=*), intent(out) :: file  ! name of netcdf restart file
@@ -295,7 +295,7 @@ contains
     !
     ! NOTE(wjs, 2016-04-05) Is it an architectural violation to use topo_inst directly
     ! here? I can't see a good way around it.
-    use clm_instMod, only : topo_inst
+    use ctsm_Inst, only : topo_inst
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -317,8 +317,8 @@ contains
     ! Setup restart file and perform necessary consistency checks
     !
     ! !USES:
-    use fileutils , only : opnfil, getavu, relavu
-    use clm_varctl, only : rpntfil, rpntdir, inst_suffix
+    use ctsm_FileUtils , only : opnfil, getavu, relavu
+    use ctsm_VarCtl, only : rpntfil, rpntdir, inst_suffix
     !
     ! !ARGUMENTS:
     character(len=*), intent(out) :: pnamer ! full path of restart file
@@ -391,9 +391,9 @@ contains
     ! Open restart pointer file. Write names of current netcdf restart file.
     !
     ! !USES:
-    use clm_varctl, only : rpntdir, rpntfil, inst_suffix
-    use fileutils , only : relavu
-    use fileutils , only : getavu, opnfil
+    use ctsm_VarCtl, only : rpntdir, rpntfil, inst_suffix
+    use ctsm_FileUtils , only : relavu
+    use ctsm_FileUtils , only : getavu, opnfil
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: fnamer
@@ -419,7 +419,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine restFile_open( flag, file, ncid )
 
-    use clm_time_manager, only : get_nstep
+    use ctsm_TimeManager, only : get_nstep
 
     character(len=*),  intent(in) :: flag ! flag to specify read or write
     character(len=*),  intent(in) :: file ! filename
@@ -460,7 +460,7 @@ contains
     ! !DESCRIPTION:
     !
     ! !USES:
-    use clm_varctl, only : caseid, inst_suffix
+    use ctsm_VarCtl, only : caseid, inst_suffix
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: rdate   ! input date for restart file name 
@@ -481,13 +481,13 @@ contains
     ! Read/Write initial data from/to netCDF instantaneous initial data file
     !
     ! !USES:
-    use clm_time_manager     , only : get_nstep
-    use clm_varctl           , only : caseid, ctitle, version, username, hostname, fsurdat
-    use clm_varctl           , only : conventions, source
-    use dynSubgridControlMod , only : get_flanduse_timeseries
-    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevcan
-    use clm_varpar           , only : maxpatch_glcmec, nvegwcs
-    use decompMod            , only : get_proc_global
+    use ctsm_TimeManager     , only : get_nstep
+    use ctsm_VarCtl           , only : caseid, ctitle, version, username, hostname, fsurdat
+    use ctsm_VarCtl           , only : conventions, source
+    use ctsm_DynSubgridControl , only : get_flanduse_timeseries
+    use ctsm_VarPar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevcan
+    use ctsm_VarPar           , only : maxpatch_glcmec, nvegwcs
+    use ctsm_Decomp            , only : get_proc_global
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid
@@ -533,14 +533,14 @@ contains
     ! Define global attributes
 
     call ncd_putatt(ncid, NCD_GLOBAL, 'Conventions', trim(conventions))
-    call getdatetime(curdate, curtime)
+    call ctsm_GetDateTime(curdate, curtime)
     str = 'created on ' // curdate // ' ' // curtime
     call ncd_putatt(ncid, NCD_GLOBAL, 'history' , trim(str))
     call ncd_putatt(ncid, NCD_GLOBAL, 'username', trim(username))
     call ncd_putatt(ncid, NCD_GLOBAL, 'host'    , trim(hostname))
     call ncd_putatt(ncid, NCD_GLOBAL, 'version' , trim(version))
     call ncd_putatt(ncid, NCD_GLOBAL, 'source'  , trim(source))
-    str = '$Id: restFileMod.F90 41292 2012-10-26 13:51:45Z erik $'
+    str = '$Id: ctsm_RestFile.F90 41292 2012-10-26 13:51:45Z erik $'
     call ncd_putatt(ncid, NCD_GLOBAL, 'revision_id'    , trim(str))
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_title'     , trim(ctitle))
     call ncd_putatt(ncid, NCD_GLOBAL, 'case_id'        , trim(caseid))
@@ -597,7 +597,7 @@ contains
     ! Add global metadata defining landunit types
     !
     ! !USES:
-    use landunit_varcon, only : max_lunit, landunit_names, landunit_name_length
+    use ctsm_LandunitVarCon, only : max_lunit, landunit_names, landunit_name_length
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid ! local file id
@@ -624,7 +624,7 @@ contains
     ! Add global metadata defining column types
     !
     ! !USES:
-    use column_varcon, only : write_coltype_metadata
+    use ctsm_ColumnVarCon, only : write_coltype_metadata
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid ! local file id
@@ -646,8 +646,8 @@ contains
     ! Add global metadata defining patch types
     !
     ! !USES:
-    use clm_varpar, only : natpft_lb, mxpft, cft_lb, cft_ub
-    use pftconMod , only : pftname_len, pftname
+    use ctsm_VarPar, only : natpft_lb, mxpft, cft_lb, cft_ub
+    use ctsm_PftCon , only : pftname_len, pftname
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid ! local file id
@@ -677,9 +677,9 @@ contains
     ! Check dimensions of restart file
     !
     ! !USES:
-    use decompMod,  only : get_proc_global
-    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd
-    use clm_varctl, only : single_column, nsrest, nsrStartup
+    use ctsm_Decomp,  only : get_proc_global
+    use ctsm_VarPar, only : nlevsno, nlevlak, nlevgrnd
+    use ctsm_VarCtl, only : single_column, nsrest, nsrStartup
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid
@@ -758,7 +758,7 @@ contains
     ! Perform some consistency checks on the restart file
     !
     ! !USES:
-    use subgridRestMod, only : subgridRest_check_consistency
+    use ctsm_SubgridRest, only : subgridRest_check_consistency
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds  ! bounds
@@ -795,9 +795,9 @@ contains
     ! Read namelist settings related to finidat consistency checks
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use controlMod     , only : NLFilename
+    use ctsm_FileUtils      , only : getavu, relavu
+    use ctsm_NlUtils , only : find_nlgroup_name
+    use ctsm_Control     , only : NLFilename
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -855,9 +855,9 @@ contains
     ! Make sure year on the restart file is consistent with the current model year
     !
     ! !USES:
-    use clm_time_manager     , only : get_curr_date, get_rest_date
-    use clm_varctl           , only : fname_len
-    use dynSubgridControlMod , only : get_flanduse_timeseries
+    use ctsm_TimeManager     , only : get_curr_date, get_rest_date
+    use ctsm_VarCtl           , only : fname_len
+    use ctsm_DynSubgridControl , only : get_flanduse_timeseries
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid    ! netcdf id
@@ -925,7 +925,7 @@ contains
 
   end subroutine restFile_check_year
 
-end module restFileMod
+end module ctsm_RestFile
 
 
 

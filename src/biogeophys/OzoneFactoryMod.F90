@@ -1,4 +1,4 @@
-module OzoneFactoryMod
+module ctsm_OzoneFactory
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,7 +6,7 @@ module OzoneFactoryMod
   ! particular type to return.
   !
   ! !USES:
-  use decompMod   , only : bounds_type
+  use ctsm_Decomp   , only : bounds_type
 
   implicit none
   save
@@ -26,10 +26,10 @@ contains
     ! particular type is determined based on the use_ozone namelist parameter.
     !
     ! !USES:
-    use clm_varctl   , only : use_ozone
-    use OzoneBaseMod , only : ozone_base_type
-    use OzoneOffMod  , only : ozone_off_type
-    use OzoneMod     , only : ozone_type
+    use ctsm_VarCtl   , only : use_ozone
+    use ctsm_OzoneBase , only : ozone_base_type
+    use ctsm_OzoneOff  , only : ozone_off_type
+    use ctsm_Ozone     , only : ozone_type
     !
     ! !ARGUMENTS:
     class(ozone_base_type), allocatable :: ozone  ! function result
@@ -50,4 +50,4 @@ contains
     
   end function create_and_init_ozone_type
 
-end module OzoneFactoryMod
+end module ctsm_OzoneFactory

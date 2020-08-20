@@ -1,4 +1,4 @@
-module initInterpMultilevelContainer
+module ctsm_InitInterpMultilevelContainer
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -13,19 +13,19 @@ module initInterpMultilevelContainer
   ! !USES:
 #include "shr_assert.h" 
   use shr_kind_mod               , only : r8 => shr_kind_r8
-  use initInterpBounds           , only : interp_bounds_type
-  use initInterpMultilevelBase   , only : interp_multilevel_type
-  use initInterpMultilevelCopy   , only : interp_multilevel_copy_type
-  use initInterpMultilevelInterp , only : interp_multilevel_interp_type
-  use initInterpMultilevelSnow   , only : interp_multilevel_snow_type
-  use initInterpMultilevelSplit  , only : interp_multilevel_split_type, create_interp_multilevel_split_type
-  use initInterp2dvar            , only : interp_2dvar_type
-  use initInterp1dData           , only : interp_1d_data
+  use ctsm_InitInterpBounds           , only : interp_bounds_type
+  use ctsm_InitInterpMultilevelBase   , only : interp_multilevel_type
+  use ctsm_InitInterpMultilevelCopy   , only : interp_multilevel_copy_type
+  use ctsm_InitInterpMultilevelInterp , only : interp_multilevel_interp_type
+  use ctsm_InitInterpMultilevelSnow   , only : interp_multilevel_snow_type
+  use ctsm_InitInterpMultilevelSplit  , only : interp_multilevel_split_type, create_interp_multilevel_split_type
+  use ctsm_InitInterp2dvar            , only : interp_2dvar_type
+  use ctsm_InitInterp1dData           , only : interp_1d_data
   use ncdio_pio                  , only : file_desc_t, var_desc_t, check_var, ncd_io
-  use clm_varctl                 , only : iulog
-  use abortutils                 , only : endrun
+  use ctsm_VarCtl                 , only : iulog
+  use ctsm_AbortUtils                 , only : endrun
   use shr_log_mod                , only : errMsg => shr_log_errMsg
-  use spmdMod                    , only : masterproc
+  use ctsm_Spmd                    , only : masterproc
   use array_utils                , only : transpose_wrapper
 
   implicit none
@@ -509,4 +509,4 @@ contains
   end subroutine destroy_interp_multilevel_container_type
 
 
-end module initInterpMultilevelContainer
+end module ctsm_InitInterpMultilevelContainer

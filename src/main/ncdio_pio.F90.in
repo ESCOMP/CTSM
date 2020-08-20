@@ -15,14 +15,14 @@ module ncdio_pio
   use shr_file_mod   , only : shr_file_getunit, shr_file_freeunit
   use shr_string_mod , only : shr_string_toUpper
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use spmdMod        , only : masterproc, mpicom, iam, npes
-  use spmdMod        , only : MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
-  use clm_varcon     , only : spval,ispval, grlnd, nameg, namel, namec, namep
-  use clm_varctl     , only : single_column, iulog
+  use ctsm_Spmd        , only : masterproc, mpicom, iam, npes
+  use ctsm_Spmd        , only : MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
+  use ctsm_VarCon     , only : spval,ispval, grlnd, nameg, namel, namec, namep
+  use ctsm_VarCtl     , only : single_column, iulog
   use shr_sys_mod    , only : shr_sys_flush
-  use decompMod      , only : get_clmlevel_gsize,get_clmlevel_gsmap
+  use ctsm_Decomp      , only : get_clmlevel_gsize,get_clmlevel_gsmap
   use perf_mod       , only : t_startf, t_stopf
-  use fileutils      , only : getavu, relavu
+  use ctsm_FileUtils      , only : getavu, relavu
   use mct_mod        , only : mct_gsMap, mct_gsMap_lsize, mct_gsMap_gsize, mct_gsMap_orderedPoints
   use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t
   use pio            , only : pio_bcast_error, pio_char, pio_clobber, pio_closefile, pio_createfile, pio_def_dim
@@ -176,7 +176,7 @@ contains
     !
     ! !USES:
     use shr_pio_mod     , only : shr_pio_getiosys, shr_pio_getiotype, shr_pio_getioformat
-    use clm_varctl      , only : inst_name
+    use ctsm_VarCtl      , only : inst_name
     !-----------------------------------------------------------------------
 
     PIO_subsystem => shr_pio_getiosys(inst_name)
@@ -2159,7 +2159,7 @@ contains
     ! Read/Write initial data from/to netCDF instantaneous initial data file
     !
     ! !USES:
-    use clm_varctl,     only: scmlon,scmlat,single_column
+    use ctsm_VarCtl,     only: scmlon,scmlat,single_column
     use shr_scam_mod,   only: shr_scam_getCloseLatLon
     use shr_string_mod, only: shr_string_toLower
     !

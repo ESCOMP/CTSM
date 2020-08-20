@@ -1,9 +1,9 @@
-module test_ncdio_utils
+module test_ctsm_NcdIoUtils
   
-  ! Tests of ncdio_utils
+  ! Tests of ctsm_NcdIoUtils
   
   use pfunit_mod
-  use ncdio_utils
+  use ctsm_NcdIoUtils
   use ncdio_pio   ! use the fake version of this module
   use shr_kind_mod, only : r8 => shr_kind_r8
 
@@ -128,4 +128,4 @@ contains
     @assertEqual('foo', actual)
   end subroutine test_find_var_on_file_3Elements_noneFound
 
-end module test_ncdio_utils
+end module test_ctsm_NcdIoUtils

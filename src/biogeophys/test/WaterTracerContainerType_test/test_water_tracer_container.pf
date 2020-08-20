@@ -1,12 +1,12 @@
 module test_water_tracer_container
 
-  ! Tests of WaterTracerContainerType
+  ! Tests of ctsm_WaterTracerContainerType
 
   use pfunit_mod
-  use WaterTracerContainerType
+  use ctsm_WaterTracerContainerType
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod, only : BOUNDS_SUBGRID_GRIDCELL
-  use unittestUtils, only : endrun_msg
+  use ctsm_Decomp, only : BOUNDS_SUBGRID_GRIDCELL
+  use ctsm_UnitTestUtils, only : endrun_msg
 
   implicit none
 

@@ -1,4 +1,4 @@
-module UrbanTimeVarType
+module ctsm_UrbanTimeVarType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,13 +7,13 @@ module UrbanTimeVarType
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use abortutils      , only : endrun
-  use decompMod       , only : bounds_type
-  use clm_varctl      , only : iulog
-  use landunit_varcon , only : isturb_MIN, isturb_MAX
-  use clm_varcon      , only : spval
-  use LandunitType    , only : lun                
-  use GridcellType    , only : grc
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_VarCtl      , only : iulog
+  use ctsm_LandunitVarCon , only : isturb_MIN, isturb_MAX
+  use ctsm_VarCon      , only : spval
+  use ctsm_LandunitType    , only : lun                
+  use ctsm_GridcellType    , only : grc
   use mct_mod
   use shr_strdata_mod , only : shr_strdata_type
   !
@@ -52,7 +52,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
-    use histFileMod     , only : hist_addfld1d
+    use ctsm_HistFile     , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(urbantv_type) :: this
@@ -90,21 +90,21 @@ contains
    ! Initialize data stream information for urban time varying data
    !
    ! !USES:
-   use clm_varctl       , only : inst_name
-   use clm_time_manager , only : get_calendar
+   use ctsm_VarCtl       , only : inst_name
+   use ctsm_TimeManager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
-   use clm_nlUtilsMod   , only : find_nlgroup_name
-   use ndepStreamMod    , only : clm_domain_mct
-   use spmdMod          , only : masterproc, mpicom, comp_id
-   use fileutils        , only : getavu, relavu
+   use ctsm_NlUtils   , only : find_nlgroup_name
+   use ctsm_NDepStream    , only : clm_domain_mct
+   use ctsm_Spmd          , only : masterproc, mpicom, comp_id
+   use ctsm_FileUtils        , only : getavu, relavu
    use shr_mpi_mod      , only : shr_mpi_bcast
    use shr_string_mod   , only : shr_string_listAppend
    use shr_strdata_mod  , only : shr_strdata_create, shr_strdata_print
-   use decompMod        , only : gsmap_lnd_gdc2glo
-   use domainMod        , only : ldomain
+   use ctsm_Decomp        , only : gsmap_lnd_gdc2glo
+   use ctsm_Domain        , only : ldomain
    use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
-   use landunit_varcon  , only : isturb_TBD, isturb_HD, isturb_MD
+   use ctsm_LandunitVarCon  , only : isturb_TBD, isturb_HD, isturb_MD
    !
    ! !ARGUMENTS:
    implicit none
@@ -232,10 +232,10 @@ contains
   ! Interpolate data stream information for urban time varying data.
   !
   ! !USES:
-  use clm_time_manager, only : get_curr_date
-  use spmdMod         , only : mpicom
+  use ctsm_TimeManager, only : get_curr_date
+  use ctsm_Spmd         , only : mpicom
   use shr_strdata_mod , only : shr_strdata_advance
-  use clm_instur      , only : urban_valid
+  use ctsm_VarSur      , only : urban_valid
   !
   ! !ARGUMENTS:
   class(urbantv_type)           :: this
@@ -311,4 +311,4 @@ contains
 
   !-----------------------------------------------------------------------
 
-end module UrbanTimeVarType
+end module ctsm_UrbanTimeVarType

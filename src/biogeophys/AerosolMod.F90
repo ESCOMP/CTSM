@@ -1,4 +1,4 @@
-module AerosolMod
+module ctsm_Aerosols
 
 #include "shr_assert.h"
 
@@ -6,15 +6,15 @@ module AerosolMod
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod        , only : bounds_type
-  use clm_varpar       , only : nlevsno, nlevgrnd 
-  use clm_time_manager , only : get_step_size_real
-  use atm2lndType      , only : atm2lnd_type
-  use WaterFluxBulkType    , only : waterfluxbulk_type
-  use WaterStateBulkType   , only : waterstatebulk_type
-  use WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
-  use ColumnType       , only : col               
-  use abortutils       , only : endrun
+  use ctsm_Decomp        , only : bounds_type
+  use ctsm_VarPar       , only : nlevsno, nlevgrnd 
+  use ctsm_TimeManager , only : get_step_size_real
+  use ctsm_Atm2LndType      , only : atm2lnd_type
+  use ctsm_WaterFluxBulkType    , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType   , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
+  use ctsm_ColumnType       , only : col               
+  use ctsm_AbortUtils       , only : endrun
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -189,10 +189,10 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    use clm_varcon    , only: spval
-    use clm_varpar    , only: nlevsno 
-    use histFileMod   , only: hist_addfld1d, hist_addfld2d
-    use histFileMod   , only: no_snow_normal, no_snow_zero
+    use ctsm_VarCon    , only: spval
+    use ctsm_VarPar    , only: nlevsno 
+    use ctsm_HistFile   , only: hist_addfld1d, hist_addfld2d
+    use ctsm_HistFile   , only: no_snow_normal, no_snow_zero
     !
     ! !ARGUMENTS:
     class(aerosol_type) :: this
@@ -297,11 +297,11 @@ contains
     !
     ! !USES:
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     !
     ! !ARGUMENTS:
     class(aerosol_type) :: this
@@ -352,11 +352,11 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varpar , only : nlevsno, nlevsoi
-    use clm_varcon , only : spval
-    use clm_varctl , only : iulog  
-    use clm_varpar , only : nlevsno
-    use spmdMod    , only : masterproc
+    use ctsm_VarPar , only : nlevsno, nlevsoi
+    use ctsm_VarCon , only : spval
+    use ctsm_VarCtl , only : iulog  
+    use ctsm_VarPar , only : nlevsno
+    use ctsm_Spmd    , only : masterproc
     use ncdio_pio  , only : file_desc_t, ncd_double
     use restUtilMod
     !
@@ -822,4 +822,4 @@ contains
 
   end subroutine AerosolFluxes
 
-end module AerosolMod
+end module ctsm_Aerosols

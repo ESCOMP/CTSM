@@ -1,12 +1,12 @@
-module initInterpBounds
+module ctsm_InitInterpBounds
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! This module defines a class for storing and querying bounds information for initInterp
+  ! This module defines a class for storing and querying bounds information for ctsm_InitInterp
   !
   ! !USES:
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use abortutils      , only : endrun
+  use ctsm_AbortUtils      , only : endrun
 
   implicit none
   private
@@ -195,4 +195,4 @@ contains
 
   end function get_end
 
-end module initInterpBounds
+end module ctsm_InitInterpBounds

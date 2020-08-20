@@ -1,5 +1,5 @@
 ! -*- mode: f90; indent-tabs-mode: nil; f90-do-indent:3; f90-if-indent:3; f90-type-indent:3; f90-program-indent:2; f90-associate-indent:0; f90-continuation-indent:5  -*-
-module SnowHydrologyMod
+module ctsm_SnowHydrology
 
 #include "shr_assert.h"
 
@@ -18,30 +18,30 @@ module SnowHydrologyMod
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : bounds_type
-  use abortutils      , only : endrun
-  use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-  use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
-  use clm_varctl      , only : iulog, use_subgrid_fluxes
-  use clm_varcon      , only : namec, h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz
-  use clm_varcon      , only : cpice, cpliq
-  use atm2lndType     , only : atm2lnd_type
-  use AerosolMod      , only : aerosol_type, AerosolFluxes
-  use TemperatureType , only : temperature_type
-  use WaterType       , only : water_type
-  use WaterFluxBulkType   , only : waterfluxbulk_type
-  use WaterStateBulkType  , only : waterstatebulk_type
-  use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
-  use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
-  use LandunitType    , only : landunit_type, lun
-  use TopoMod, only : topo_type
-  use ColumnType      , only : column_type, col
-  use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
-  use clm_time_manager, only : get_step_size_real, get_nstep
-  use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
-  use LakeCon         , only : lsadz
-  use NumericsMod     , only : truncate_small_values_one_lev
-  use WaterTracerUtils, only : CalcTracerFromBulk, CalcTracerFromBulkMasked
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_ColumnVarCon   , only : icol_roof, icol_sunwall, icol_shadewall
+  use ctsm_VarPar      , only : nlevsno, nlevsoi, nlevgrnd
+  use ctsm_VarCtl      , only : iulog, use_subgrid_fluxes
+  use ctsm_VarCon      , only : namec, h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz
+  use ctsm_VarCon      , only : cpice, cpliq
+  use ctsm_Atm2LndType     , only : atm2lnd_type
+  use ctsm_Aerosols      , only : aerosol_type, AerosolFluxes
+  use ctsm_TemperatureType , only : temperature_type
+  use ctsm_WaterType       , only : water_type
+  use ctsm_WaterFluxBulkType   , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType  , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use ctsm_SnowCoverFractionBase, only : snow_cover_fraction_base_type
+  use ctsm_LandunitType    , only : landunit_type, lun
+  use ctsm_Topo, only : topo_type
+  use ctsm_ColumnType      , only : column_type, col
+  use ctsm_LandunitVarCon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
+  use ctsm_TimeManager, only : get_step_size_real, get_nstep
+  use ctsm_FilterCol    , only : filter_col_type, col_filter_from_filter_and_logical_array
+  use ctsm_LakeConstants         , only : lsadz
+  use ctsm_Numerics     , only : truncate_small_values_one_lev
+  use ctsm_WaterTracerUtils, only : CalcTracerFromBulk, CalcTracerFromBulkMasked
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -186,9 +186,9 @@ contains
     ! Read the namelist for SnowHydrology
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     !
@@ -285,7 +285,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -473,7 +473,7 @@ contains
        end do
 
        ! all snow falls on ground, no snow on h2osfc (note that qflx_snow_h2osfc is
-       ! currently set to 0 always in CanopyHydrologyMod)
+       ! currently set to 0 always in ctsm_CanopyHydrology)
        newsnow(c) = qflx_snow_grnd(c) * dtime
 
        ! update int_snow
@@ -857,7 +857,7 @@ contains
 
        if (lun_itype_col(c) == istdlak) then
           ! NOTE(wjs, 2019-08-23) Note two differences from the standard case: (1)
-          ! addition of lsadz (see notes in LakeCon.F90, where this is defined, for
+          ! addition of lsadz (see notes in ctsm_LakeConstants.F90, where this is defined, for
           ! details); (2) inclusion of a qflx_snow_grnd(c) > 0 criteria. I'm not sure why
           ! (2) is needed here and not for other landunits, but I'm keeping it here to
           ! maintain answers as before.
@@ -1601,7 +1601,7 @@ contains
              end if
              qin_oc_pho(c) = qout_oc_pho(c)
 
-             ! DUST 1:
+             ! ctsm_Dust 1:
              ! 1. flux with meltwater:
              qout_dst1(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst1*(mss_dst1(c,j)/mss_liqice)
              if (qout_dst1(c)*dtime > mss_dst1(c,j)) then
@@ -1612,7 +1612,7 @@ contains
              end if
              qin_dst1(c) = qout_dst1(c)
 
-             ! DUST 2:
+             ! ctsm_Dust 2:
              ! 1. flux with meltwater:
              qout_dst2(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst2*(mss_dst2(c,j)/mss_liqice)
              if (qout_dst2(c)*dtime > mss_dst2(c,j)) then
@@ -1623,7 +1623,7 @@ contains
              end if
              qin_dst2(c) = qout_dst2(c)
 
-             ! DUST 3:
+             ! ctsm_Dust 3:
              ! 1. flux with meltwater:
              qout_dst3(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst3*(mss_dst3(c,j)/mss_liqice)
              if (qout_dst3(c)*dtime > mss_dst3(c,j)) then
@@ -1634,7 +1634,7 @@ contains
              end if
              qin_dst3(c) = qout_dst3(c)
 
-             ! DUST 4:
+             ! ctsm_Dust 4:
              ! 1. flux with meltwater:
              qout_dst4(c) = qflx_snow_percolation(c,j)*scvng_fct_mlt_dst4*(mss_dst4(c,j)/mss_liqice)
              if (qout_dst4(c)*dtime > mss_dst4(c,j)) then
@@ -2907,7 +2907,7 @@ contains
     ! !DESCRIPTION:
     ! Initialize snow layer depth from specified total depth.
     !
-    use spmdMod, only : masterproc
+    use ctsm_Spmd, only : masterproc
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
     real(r8)               , intent(in)    :: snow_depth(bounds%begc:)
@@ -3006,7 +3006,7 @@ contains
           cycle
        end if
 
-       ! LvK 9-JUN-2015: in CanopyHydrologyMod , snow_depth is scaled with frac_sno
+       ! LvK 9-JUN-2015: in ctsm_CanopyHydrology , snow_depth is scaled with frac_sno
        ! Here we do not apply scaling to snow_depth, so inconsistent? TODO
 
        ! Special case: too little snow for snowpack existence
@@ -3900,8 +3900,8 @@ contains
     ! Calculate the mass weighted snow radius when two layers are combined
     !
     ! !USES:
-    use AerosolMod   , only : snw_rds_min
-    use SnowSnicarMod, only : snw_rds_max
+    use ctsm_Aerosols   , only : snw_rds_min
+    use ctsm_SnowSnicar, only : snw_rds_max
     implicit none
     ! !ARGUMENTS:
     real(r8), intent(IN) :: rds1         ! Layer 1 radius
@@ -3962,7 +3962,7 @@ contains
        set_reset_snow, set_reset_snow_glc, set_reset_snow_glc_ela)
     !
     ! !DESCRIPTION:
-    ! Sets some of the control settings for SnowHydrologyMod
+    ! Sets some of the control settings for ctsm_SnowHydrology
     ! NOTE: THIS IS JUST HERE AS AN INTERFACE FOR UNIT TESTING.
     !
     ! !USES:
@@ -4014,4 +4014,4 @@ contains
 
   end subroutine SnowHydrologyClean
 
-end module SnowHydrologyMod
+end module ctsm_SnowHydrology

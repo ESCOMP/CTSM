@@ -1,4 +1,4 @@
-module OzoneBaseMod
+module ctsm_OzoneBase
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,7 +8,7 @@ module OzoneBaseMod
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use decompMod   , only : bounds_type
+  use ctsm_Decomp   , only : bounds_type
 
   implicit none
   save
@@ -42,7 +42,7 @@ module OzoneBaseMod
   abstract interface
 
      subroutine Init_interface(this, bounds)
-       use decompMod, only : bounds_type
+       use ctsm_Decomp, only : bounds_type
        import :: ozone_base_type
 
        class(ozone_base_type), intent(inout) :: this
@@ -50,7 +50,7 @@ module OzoneBaseMod
      end subroutine Init_interface
   
      subroutine Restart_interface(this, bounds, ncid, flag)
-       use decompMod , only : bounds_type
+       use ctsm_Decomp , only : bounds_type
        use ncdio_pio , only : file_desc_t       
        import :: ozone_base_type
 
@@ -62,7 +62,7 @@ module OzoneBaseMod
        
      subroutine CalcOzoneStress_interface(this, bounds, num_exposedvegp, filter_exposedvegp, &
           forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
-       use decompMod    , only : bounds_type
+       use ctsm_Decomp    , only : bounds_type
        use shr_kind_mod , only : r8 => shr_kind_r8
        import :: ozone_base_type
 
@@ -143,4 +143,4 @@ contains
 
   end subroutine InitColdBase
 
-end module OzoneBaseMod
+end module ctsm_OzoneBase

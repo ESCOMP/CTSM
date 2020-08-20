@@ -1,19 +1,19 @@
 module test_downscale_forcings
 
-  ! Tests of atm2lndMod: downscale_forcings
+  ! Tests of ctsm_Atm2Lnd: downscale_forcings
 
   use pfunit_mod
-  use atm2lndMod
+  use ctsm_Atm2Lnd
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
   use unittestArrayMod
-  use atm2lndType, only : atm2lnd_type, atm2lnd_params_type
-  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
-  use WaterInfoBulkType, only : water_info_bulk_type
-  use TopoMod, only : topo_type
-  use decompMod, only : bounds_type
-  use filterColMod
+  use ctsm_Atm2LndType, only : atm2lnd_type, atm2lnd_params_type
+  use ctsm_WaterAtm2LndBulkType, only : wateratm2lndbulk_type
+  use ctsm_WaterInfoBulkType, only : water_info_bulk_type
+  use ctsm_Topo, only : topo_type
+  use ctsm_Decomp, only : bounds_type
+  use ctsm_FilterCol
 
   implicit none
 

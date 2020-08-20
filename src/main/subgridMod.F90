@@ -1,23 +1,23 @@
-module subgridMod
+module ctsm_Subgrid
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! sub-grid data and mapping types and modules
   !
   ! TODO(wjs, 2015-12-08) Much of the logic here duplicates (in some sense) logic in
-  ! initGridCellsMod. The duplication should probably be extracted into routines shared
+  ! ctsm_InitGridCells. The duplication should probably be extracted into routines shared
   ! between these modules (or the two modules should be combined into one).
   !
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use spmdMod        , only : masterproc
-  use abortutils     , only : endrun
-  use clm_varctl     , only : iulog
-  use clm_instur     , only : wt_lunit, wt_nat_patch, urban_valid, wt_cft
-  use landunit_varcon, only : istcrop, istdlak, istwet, isturb_tbd, isturb_hd, isturb_md
-  use glcBehaviorMod , only : glc_behavior_type
-  use FatesInterfaceMod, only : fates_maxElementsPerSite
+  use ctsm_Spmd        , only : masterproc
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_VarSur     , only : wt_lunit, wt_nat_patch, urban_valid, wt_cft
+  use ctsm_LandunitVarCon, only : istcrop, istdlak, istwet, isturb_tbd, isturb_hd, isturb_md
+  use ctsm_GlacierBehavior , only : glc_behavior_type
+  use ctsm_FatesInterfaceMod, only : fates_maxElementsPerSite
 
   implicit none
   private   
@@ -128,7 +128,7 @@ contains
     ! Obtain properties for natural vegetated landunit in this grid cell
     !
     ! !USES
-    use clm_varpar, only : natpft_lb, natpft_ub
+    use ctsm_VarPar, only : natpft_lb, natpft_ub
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -173,9 +173,9 @@ contains
     ! in this grid cell.
     !
     ! !USES:
-    use clm_varpar, only : natpft_lb, natpft_ub
-    use clm_varctl, only : use_cndv, use_fates
-    use dynSubgridControlMod, only : get_do_transient_pfts
+    use ctsm_VarPar, only : natpft_lb, natpft_ub
+    use ctsm_VarCtl, only : use_cndv, use_fates
+    use ctsm_DynSubgridControl, only : get_do_transient_pfts
     !
     ! !ARGUMENTS:
     logical :: exists  ! function result
@@ -223,7 +223,7 @@ contains
     ! Obtain cohort counts per each gridcell.
     !
     ! !USES
-    use clm_varpar, only : natpft_size
+    use ctsm_VarPar, only : natpft_size
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -322,8 +322,8 @@ contains
     ! This is shared for all urban landunits, because currently they are all treated the same.
     !
     ! !USES
-    use clm_varpar, only : maxpatch_urb
-    use clm_varctl, only : run_zero_weight_urban
+    use ctsm_VarPar, only : maxpatch_urb
+    use ctsm_VarCtl, only : run_zero_weight_urban
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -469,7 +469,7 @@ contains
     ! Obtain properties for crop landunit in this grid cell
     !
     ! !USES:
-    use clm_varpar, only : cft_lb, cft_ub
+    use ctsm_VarPar, only : cft_lb, cft_ub
     !
     ! !ARGUMENTS:
     integer, intent(in)  :: gi        ! grid cell index
@@ -512,10 +512,10 @@ contains
     ! create_crop_landunit is .false.
     !
     ! !USES:
-    use clm_varpar           , only : cft_lb, cft_ub
-    use clm_varctl           , only : create_crop_landunit
-    use pftconmod            , only : pftcon
-    use dynSubgridControlMod , only : get_do_transient_crops
+    use ctsm_VarPar           , only : cft_lb, cft_ub
+    use ctsm_VarCtl           , only : create_crop_landunit
+    use ctsm_PftCon           , only : pftcon
+    use ctsm_DynSubgridControl , only : get_do_transient_crops
     !
     ! !ARGUMENTS:
     logical :: exists  ! function result
@@ -560,4 +560,4 @@ contains
 
 
 
-end module subgridMod
+end module ctsm_Subgrid

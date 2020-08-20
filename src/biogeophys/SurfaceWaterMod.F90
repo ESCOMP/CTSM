@@ -1,4 +1,4 @@
-module SurfaceWaterMod
+module ctsm_SurfaceWater
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,21 +9,21 @@ module SurfaceWaterMod
   use shr_kind_mod                , only : r8 => shr_kind_r8
   use shr_const_mod               , only : shr_const_pi
   use shr_spfn_mod                , only : erf => shr_spfn_erf
-  use clm_varcon                  , only : denh2o, denice, roverg, tfrz, pc, mu, rpi
-  use clm_varpar                  , only : nlevsno, nlevgrnd
-  use clm_time_manager            , only : get_step_size_real
-  use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
-  use decompMod                   , only : bounds_type
-  use ColumnType                  , only : col
-  use NumericsMod                 , only : truncate_small_values
-  use InfiltrationExcessRunoffMod , only : infiltration_excess_runoff_type
-  use EnergyFluxType              , only : energyflux_type
-  use SoilHydrologyType           , only : soilhydrology_type
-  use WaterType                   , only : water_type
-  use WaterFluxBulkType           , only : waterfluxbulk_type
-  use WaterStateBulkType          , only : waterstatebulk_type
-  use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
-  use WaterTracerUtils            , only : CalcTracerFromBulk
+  use ctsm_VarCon                  , only : denh2o, denice, roverg, tfrz, pc, mu, rpi
+  use ctsm_VarPar                  , only : nlevsno, nlevgrnd
+  use ctsm_TimeManager            , only : get_step_size_real
+  use ctsm_ColumnVarCon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
+  use ctsm_Decomp                   , only : bounds_type
+  use ctsm_ColumnType                  , only : col
+  use ctsm_Numerics                 , only : truncate_small_values
+  use ctsm_InfiltrationExcessRunoff , only : infiltration_excess_runoff_type
+  use ctsm_EnergyFluxType              , only : energyflux_type
+  use ctsm_SoilHydrologyType           , only : soilhydrology_type
+  use ctsm_WaterType                   , only : water_type
+  use ctsm_WaterFluxBulkType           , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType          , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
+  use ctsm_WaterTracerUtils            , only : CalcTracerFromBulk
 
   implicit none
   save
@@ -254,7 +254,7 @@ contains
           endif
           ! NOTE(wjs, 2019-07-16) The following line should possibly be in a
           ! use_subgrid_fluxes conditional (if false, set frac_sno_eff to 1, as is done
-          ! in SnowHydrologyMod). However, if we're running with surface water enabled,
+          ! in ctsm_SnowHydrology). However, if we're running with surface water enabled,
           ! then subgrid fluxes must also be enabled, so for now we're not bothering to
           ! explicitly check use_subgrid_fluxes here.
           frac_sno_eff(c)=frac_sno(c)
@@ -521,4 +521,4 @@ contains
 
   end subroutine QflxH2osfcDrain
 
-end module SurfaceWaterMod
+end module ctsm_SurfaceWater

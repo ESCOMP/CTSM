@@ -1,4 +1,4 @@
-module NutrientCompetitionFactoryMod
+module ctsm_NutrientCompetitionFactoryMod
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,9 +6,9 @@ module NutrientCompetitionFactoryMod
   ! out the particular type to return.
   !
   ! !USES:
-  use abortutils          , only : endrun
+  use ctsm_AbortUtils          , only : endrun
   use shr_log_mod         , only : errMsg => shr_log_errMsg
-  use clm_varctl          , only : iulog
+  use ctsm_VarCtl          , only : iulog
 
   implicit none
   save
@@ -31,14 +31,14 @@ contains
     !
     ! !USES:
     use shr_kind_mod                      , only : SHR_KIND_CL
-    use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
-    use NutrientCompetitionCLM45defaultMod, only : nutrient_competition_clm45default_type
-    use NutrientCompetitionFlexibleCNMod  , only : nutrient_competition_FlexibleCN_type
-    use decompMod                         , only : bounds_type
+    use ctsm_NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
+    use ctsm_NutrientCompetitionPhys45Mod, only : nutrient_competition_clm45default_type
+    use ctsm_NutrientCompetitionFlexibleCNMod  , only : nutrient_competition_FlexibleCN_type
+    use ctsm_Decomp                         , only : bounds_type
 
     ! FIXME(bja, 2015-06) need to pass method control in as a parameter
     ! instead of relying on a global!
-    use clm_varctl, only : use_flexibleCN   
+    use ctsm_VarCtl, only : use_flexibleCN   
 
     !
     ! !ARGUMENTS:
@@ -84,4 +84,4 @@ contains
 
   end function create_nutrient_competition_method
 
-end module NutrientCompetitionFactoryMod
+end module ctsm_NutrientCompetitionFactoryMod

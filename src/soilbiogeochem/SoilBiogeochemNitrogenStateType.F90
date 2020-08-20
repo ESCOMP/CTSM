@@ -1,24 +1,24 @@
-module SoilBiogeochemNitrogenStateType
+module ctsm_SoilBiogeochemNitrogenStateType
 
 #include "shr_assert.h"
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use decompMod                          , only : bounds_type
-  use abortutils                         , only : endrun
-  use spmdMod                            , only : masterproc 
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
-  use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
-  use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
-  use landunit_varcon                    , only : istcrop, istsoil 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
-  use GridcellType                       , only : grc
-  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_Spmd                            , only : masterproc 
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
+  use ctsm_VarPar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
+  use ctsm_VarCon                         , only : spval, dzsoi_decomp, zisoi
+  use ctsm_VarCtl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+  use ctsm_VarCtl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
+  use ctsm_LandunitVarCon                    , only : istcrop, istsoil 
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_LandunitType                       , only : lun                
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_GridcellType                       , only : grc
+  use ctsm_SoilBiogeochemStateType            , only : get_spinup_latitude_term
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -142,10 +142,10 @@ contains
     ! add history fields for all CN variables, always set as default='inactive'
     !
     ! !USES:
-    use clm_varpar , only : ndecomp_cascade_transitions, ndecomp_pools
-    use clm_varpar , only : nlevdecomp, nlevdecomp_full, nlevgrnd
-    use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
-    use decompMod  , only : bounds_type
+    use ctsm_VarPar , only : ndecomp_cascade_transitions, ndecomp_pools
+    use ctsm_VarPar , only : nlevdecomp, nlevdecomp_full, nlevgrnd
+    use ctsm_HistFile, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
+    use ctsm_Decomp  , only : bounds_type
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_nitrogenstate_type) :: this
@@ -311,7 +311,7 @@ contains
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
     !
     ! !USES:
-    use decompMod      , only : bounds_type
+    use ctsm_Decomp      , only : bounds_type
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_nitrogenstate_type)      :: this
@@ -398,7 +398,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-    use clm_time_manager     , only : is_restart, get_nstep
+    use ctsm_TimeManager     , only : is_restart, get_nstep
     use restUtilMod
     use ncdio_pio
     !
@@ -948,7 +948,7 @@ contains
    ! Adjust state variables when column areas change due to dynamic landuse
    !
    ! !USES:
-   use dynColumnStateUpdaterMod, only : column_state_updater_type
+   use ctsm_DynColumnStateUpdater, only : column_state_updater_type
    !
    ! !ARGUMENTS:
    class(soilbiogeochem_nitrogenstate_type) , intent(inout) :: this
@@ -1052,4 +1052,4 @@ contains
 
   end subroutine SetTotVgCThresh
 
-end module SoilBiogeochemNitrogenStateType
+end module ctsm_SoilBiogeochemNitrogenStateType

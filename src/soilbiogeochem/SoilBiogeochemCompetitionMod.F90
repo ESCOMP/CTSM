@@ -1,4 +1,4 @@
-module SoilBiogeochemCompetitionMod
+module ctsm_SoilBiogeochemCompetition
   
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,29 +7,29 @@ module SoilBiogeochemCompetitionMod
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use clm_varcon                      , only : dzsoi_decomp
-  use clm_varctl                      , only : use_nitrif_denitrif
-  use abortutils                      , only : endrun
-  use decompMod                       , only : bounds_type
-  use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemNitrogenUptakeMod , only : SoilBiogeochemNitrogenUptake
-  use ColumnType                      , only : col                
-  use CNVegstateType                  , only : cnveg_state_type
-  use CNVegCarbonStateType            , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
-  use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
-  use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
-  !use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use WaterStateBulkType                  , only : waterstatebulk_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
-  use TemperatureType                 , only : temperature_type
-  use SoilStateType                   , only : soilstate_type
-  use CanopyStateType                 , only : CanopyState_type
+  use ctsm_VarCon                      , only : dzsoi_decomp
+  use ctsm_VarCtl                      , only : use_nitrif_denitrif
+  use ctsm_AbortUtils                      , only : endrun
+  use ctsm_Decomp                       , only : bounds_type
+  use ctsm_SoilBiogeochemStateType         , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_SoilBiogeochemNitrogenUptake , only : SoilBiogeochemNitrogenUptake
+  use ctsm_ColumnType                      , only : col                
+  use ctsm_CNVegStateType                  , only : cnveg_state_type
+  use ctsm_CNVegCarbonStateType            , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType             , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  !use ctsm_SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use ctsm_WaterStateBulkType                  , only : waterstatebulk_type
+  use ctsm_WaterFluxBulkType                   , only : waterfluxbulk_type
+  use ctsm_TemperatureType                 , only : temperature_type
+  use ctsm_SoilStateType                   , only : soilstate_type
+  use ctsm_CanopyStateType                 , only : CanopyState_type
   !
   implicit none
   private
@@ -49,7 +49,7 @@ module SoilBiogeochemCompetitionMod
      real(r8) :: compet_nit        ! (unitless) relative competitiveness of nitrifiers for NH4
   end type params_type
   !
-  type(params_type), private :: params_inst  ! params_inst is populated in readParamsMod  
+  type(params_type), private :: params_inst  ! params_inst is populated in ctsm_ReadParams  
   !
   ! !PUBLIC DATA MEMBERS:
   character(len=* ), public, parameter :: suplnAll='ALL'       ! Supplemental Nitrogen for all PFT's
@@ -128,9 +128,9 @@ contains
     ! !DESCRIPTION:
     !
     ! !USES:
-    use clm_varcon      , only: secspday
-    use clm_time_manager, only: get_step_size_real
-    use clm_varctl      , only: iulog, cnallocate_carbon_only_set
+    use ctsm_VarCon      , only: secspday
+    use ctsm_TimeManager, only: get_step_size_real
+    use ctsm_VarCtl      , only: iulog, cnallocate_carbon_only_set
     use shr_infnan_mod  , only: nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
@@ -174,12 +174,12 @@ contains
                                          soilbiogeochem_nitrogenflux_inst,canopystate_inst)
     !
     ! !USES:
-    use clm_varctl       , only: cnallocate_carbon_only, iulog
-    use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
-    use clm_varcon       , only: nitrif_n2o_loss_frac
-    use CNSharedParamsMod, only: use_fun
-    use CNFUNMod         , only: CNFUN
-    use subgridAveMod    , only: p2c
+    use ctsm_VarCtl       , only: cnallocate_carbon_only, iulog
+    use ctsm_VarPar       , only: nlevdecomp, ndecomp_cascade_transitions
+    use ctsm_VarCon       , only: nitrif_n2o_loss_frac
+    use ctsm_CNSharedParamsMod, only: use_fun
+    use ctsm_CNFunMod         , only: ctsm_CNFun
+    use ctsm_SubgridAve    , only: p2c
     use perf_mod         , only : t_startf, t_stopf
     !
     ! !ARGUMENTS:
@@ -365,8 +365,8 @@ contains
          end do
 
          if ( local_use_fun ) then
-            call t_startf( 'CNFUN' )
-            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst, &
+            call t_startf( 'ctsm_CNFun' )
+            call ctsm_CNFun(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst, &
                       waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
@@ -375,7 +375,7 @@ contains
                       cnveg_nitrogenflux_inst%sminn_to_plant_fun_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                       soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_vr_col(bounds%begc:bounds%endc,1:nlevdecomp), &
                       'unity')
-            call t_stopf( 'CNFUN' )
+            call t_stopf( 'ctsm_CNFun' )
          end if
 
          ! sum up N fluxes to plant
@@ -733,8 +733,8 @@ contains
          end do
 
          if ( local_use_fun ) then
-            call t_startf( 'CNFUN' )
-            call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst,&
+            call t_startf( 'ctsm_CNFun' )
+            call ctsm_CNFun(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst,&
                       waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,cnveg_carbonstate_inst,&
                       cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst                ,&
                       soilbiogeochem_nitrogenflux_inst,soilbiogeochem_carbonflux_inst,canopystate_inst,      &
@@ -750,7 +750,7 @@ contains
                        cnveg_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_patch(bounds%begp:bounds%endp,1:nlevdecomp),&
                        soilbiogeochem_nitrogenflux_inst%sminn_to_plant_fun_nh4_vr_col(bounds%begc:bounds%endc,1:nlevdecomp),&
                        'unity')
-            call t_stopf( 'CNFUN' )
+            call t_stopf( 'ctsm_CNFun' )
          end if
 
 
@@ -945,4 +945,4 @@ contains
 
   end subroutine SoilBiogeochemCompetition
 
-end module SoilBiogeochemCompetitionMod
+end module ctsm_SoilBiogeochemCompetition

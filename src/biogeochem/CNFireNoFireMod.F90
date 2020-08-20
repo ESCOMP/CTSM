@@ -1,4 +1,4 @@
-module CNFireNoFireMod
+module ctsm_CNFireNoFireMod
 
 #include "shr_assert.h"
 
@@ -8,19 +8,19 @@ module CNFireNoFireMod
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
-  use decompMod                          , only : bounds_type
-  use atm2lndType                        , only : atm2lnd_type
-  use CNVegStateType                     , only : cnveg_state_type
-  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
-  use EnergyFluxType                     , only : energyflux_type
-  use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
-  use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
-  use FireMethodType                     , only : fire_method_type
-  use CNFireBaseMod                      , only : cnfire_base_type
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_Atm2LndType                        , only : atm2lnd_type
+  use ctsm_CNVegStateType                     , only : cnveg_state_type
+  use ctsm_CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType                , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
+  use ctsm_EnergyFluxType                     , only : energyflux_type
+  use ctsm_SaturatedExcessRunoff           , only : saturated_excess_runoff_type
+  use ctsm_WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
+  use ctsm_WaterAtm2LndBulkType                     , only : wateratm2lndbulk_type
+  use ctsm_FireMethodType                     , only : fire_method_type
+  use ctsm_CNFireBaseMod                      , only : cnfire_base_type
   !
   implicit none
   private
@@ -63,7 +63,7 @@ contains
     ! Computes column-level burned area 
     !
     ! !USES:
-    use subgridAveMod                      , only : p2c
+    use ctsm_SubgridAve                      , only : p2c
     !
     ! !ARGUMENTS:
     class(cnfire_nofire_type)                             :: this
@@ -126,4 +126,4 @@ contains
 
  end subroutine CNFireArea
 
-end module CNFireNoFireMod
+end module ctsm_CNFireNoFireMod

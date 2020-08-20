@@ -1,4 +1,4 @@
-module CNFireLi2014Mod
+module ctsm_CNFireLi2014Mod
 
 #include "shr_assert.h"
 
@@ -17,30 +17,30 @@ module CNFireLi2014Mod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
-  use clm_varctl                         , only : iulog, spinup_state
-  use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
-  use clm_varcon                         , only : dzsoi_decomp
-  use pftconMod                          , only : noveg, pftcon
-  use abortutils                         , only : endrun
-  use decompMod                          , only : bounds_type
-  use subgridAveMod                      , only : p2c
-  use atm2lndType                        , only : atm2lnd_type
-  use CNDVType                           , only : dgvs_type
-  use CNVegStateType                     , only : cnveg_state_type
-  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use EnergyFluxType                     , only : energyflux_type
-  use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
-  use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
-  use GridcellType                       , only : grc                
-  use ColumnType                         , only : col                
-  use PatchType                          , only : patch                
-  use FireMethodType                     , only : fire_method_type
-  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
+  use ctsm_VarCtl                         , only : iulog, spinup_state
+  use ctsm_VarPar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
+  use ctsm_VarCon                         , only : dzsoi_decomp
+  use ctsm_PftCon                          , only : noveg, pftcon
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_SubgridAve                      , only : p2c
+  use ctsm_Atm2LndType                        , only : atm2lnd_type
+  use ctsm_CNDVType                           , only : dgvs_type
+  use ctsm_CNVegStateType                     , only : cnveg_state_type
+  use ctsm_CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType                , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_EnergyFluxType                     , only : energyflux_type
+  use ctsm_SaturatedExcessRunoff           , only : saturated_excess_runoff_type
+  use ctsm_WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
+  use ctsm_WaterAtm2LndBulkType                     , only : wateratm2lndbulk_type
+  use ctsm_GridcellType                       , only : grc                
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_PatchType                          , only : patch                
+  use ctsm_FireMethodType                     , only : fire_method_type
+  use ctsm_CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
   !
   implicit none
   private
@@ -86,12 +86,12 @@ contains
     ! Computes column-level burned area 
     !
     ! !USES:
-    use clm_time_manager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
-    use clm_varpar           , only: max_patch_per_col
-    use clm_varcon           , only: secspday, secsphr
-    use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
-    use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
-    use dynSubgridControlMod , only: run_has_transient_landcover
+    use ctsm_TimeManager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
+    use ctsm_VarPar           , only: max_patch_per_col
+    use ctsm_VarCon           , only: secspday, secsphr
+    use ctsm_PftCon            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
+    use ctsm_PftCon            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
+    use ctsm_DynSubgridControl , only: run_has_transient_landcover
     !
     ! !ARGUMENTS:
     class(cnfire_li2014_type)                             :: this
@@ -641,12 +641,12 @@ contains
    ! seconds_per_year is the number of seconds in a year.
    !
    ! !USES:
-   use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
-   use clm_varpar           , only: max_patch_per_col
-   use clm_varctl           , only: use_cndv
-   use clm_varcon           , only: secspday
-   use pftconMod            , only: nc3crop
-   use dynSubgridControlMod , only: run_has_transient_landcover
+   use ctsm_TimeManager     , only: get_step_size_real,get_days_per_year,get_curr_date
+   use ctsm_VarPar           , only: max_patch_per_col
+   use ctsm_VarCtl           , only: use_cndv
+   use ctsm_VarCon           , only: secspday
+   use ctsm_PftCon            , only: nc3crop
+   use ctsm_DynSubgridControl , only: run_has_transient_landcover
    !
    ! !ARGUMENTS:
    class(cnfire_li2014_type)                      :: this
@@ -1264,4 +1264,4 @@ contains
 
  end subroutine CNFireFluxes
 
-end module CNFireLi2014Mod
+end module ctsm_CNFireLi2014Mod

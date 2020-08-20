@@ -9,8 +9,8 @@ module ncdio_pio
   use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
   use shr_assert_mod , only : shr_assert
   use ncdio_var, only : ncdio_var_type
-  use ncdio_dim, only : ncdio_dim_type
-  use abortutils,only : endrun
+  use ctsm_NcdIoDim, only : ctsm_NcdIoDim_type
+  use ctsm_AbortUtils,only : endrun
 
   ! !PUBLIC TYPES:
   implicit none
@@ -29,7 +29,7 @@ module ncdio_pio
      type(ncdio_var_type), allocatable :: vars(:)
 
      ! all of the dimensions in the file
-     type(ncdio_dim_type), allocatable :: dims(:)
+     type(ctsm_NcdIoDim_type), allocatable :: dims(:)
   end type file_desc_t
 
   ! Stub replacement for var_desc_t, to satisfy interfaces that need it
@@ -901,8 +901,8 @@ contains
     integer            , intent(in)    :: dimlen        ! dimension length
     !
     ! !LOCAL VARIABLES:
-    type(ncdio_dim_type) :: newdim  ! the new dimension
-    type(ncdio_dim_type), allocatable :: new_dim_list(:)
+    type(ctsm_NcdIoDim_type) :: newdim  ! the new dimension
+    type(ctsm_NcdIoDim_type), allocatable :: new_dim_list(:)
 
     character(len=*), parameter :: subname = 'ncd_set_dim'
     !-----------------------------------------------------------------------
@@ -911,7 +911,7 @@ contains
     call shr_assert(ncd_get_dimension_index(ncid, dimname) == var_not_found, &
        subname//' ERROR: cannot set a dimension already on file - '//trim(dimname))
 
-    newdim = ncdio_dim_type(dimname, dimlen)
+    newdim = ctsm_NcdIoDim_type(dimname, dimlen)
 
     ! Add newdim to the list.
     !

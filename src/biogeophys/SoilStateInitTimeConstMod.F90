@@ -1,4 +1,4 @@
-module SoilStateInitTimeConstMod
+module ctsm_SoilStateInitTimeConst
 
   !------------------------------------------------------------------------------
   ! DESCRIPTION:
@@ -6,10 +6,10 @@ module SoilStateInitTimeConstMod
   !
   ! !USES
   use shr_kind_mod  , only : r8 => shr_kind_r8
-  use SoilStateType , only : soilstate_type
-  use LandunitType  , only : lun                
-  use ColumnType    , only : col                
-  use PatchType     , only : patch                
+  use ctsm_SoilStateType , only : soilstate_type
+  use ctsm_LandunitType  , only : lun                
+  use ctsm_ColumnType    , only : col                
+  use ctsm_PatchType     , only : patch                
   !
   implicit none
   private
@@ -54,16 +54,16 @@ contains
   subroutine ReadNL( nlfilename )
     !
     ! !DESCRIPTION:
-    ! Read namelist for SoilStateType
+    ! Read namelist for ctsm_SoilStateType
     !
     ! !USES:
     use shr_mpi_mod    , only : shr_mpi_bcast
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use fileutils      , only : getavu, relavu, opnfil
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use clm_varctl     , only : iulog
-    use spmdMod        , only : mpicom, masterproc
-    use abortUtils     , only : endrun    
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
+    use ctsm_NlUtils , only : find_nlgroup_name
+    use ctsm_VarCtl     , only : iulog
+    use ctsm_Spmd        , only : mpicom, masterproc
+    use ctsm_AbortUtils     , only : endrun    
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: nlfilename ! Namelist filename
@@ -109,7 +109,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -152,24 +152,24 @@ contains
     ! !USES:
     use shr_log_mod         , only : errMsg => shr_log_errMsg
     use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
-    use decompMod           , only : bounds_type
-    use abortutils          , only : endrun
-    use spmdMod             , only : masterproc
+    use ctsm_Decomp           , only : bounds_type
+    use ctsm_AbortUtils          , only : endrun
+    use ctsm_Spmd             , only : masterproc
     use ncdio_pio           , only : file_desc_t, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use ncdio_pio           , only : ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen
-    use clm_varpar          , only : numrad
-    use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevurb, nlevsno
-    use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
-    use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
-    use clm_varctl          , only : use_cn, use_lch4, use_fates
-    use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
-    use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
-    use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
-    use fileutils           , only : getfil
-    use organicFileMod      , only : organicrd 
-    use FuncPedotransferMod , only : pedotransf, get_ipedof
-    use RootBiophysMod      , only : init_vegrootfr
-    use GridcellType     , only : grc                
+    use ctsm_VarPar          , only : numrad
+    use ctsm_VarPar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevurb, nlevsno
+    use ctsm_VarCon          , only : zsoi, dzsoi, zisoi, spval
+    use ctsm_VarCon          , only : secspday, pc, mu, denh2o, denice, grlnd
+    use ctsm_VarCtl          , only : use_cn, use_lch4, use_fates
+    use ctsm_VarCtl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
+    use ctsm_LandunitVarCon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
+    use ctsm_ColumnVarCon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
+    use ctsm_FileUtils           , only : getfil
+    use ctsm_OrganicFile      , only : organicrd 
+    use ctsm_FuncPedotransfer , only : pedotransf, get_ipedof
+    use ctsm_RootBiophys      , only : init_vegrootfr
+    use ctsm_GridcellType     , only : grc                
     !
     ! !ARGUMENTS:
     type(bounds_type)    , intent(in)    :: bounds  
@@ -484,7 +484,7 @@ contains
              if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
 
                 ! Note that the following properties are overwritten for urban impervious road 
-                ! layers that are not soil in SoilThermProp.F90 within SoilTemperatureMod.F90
+                ! layers that are not soil in SoilThermProp.F90 within ctsm_SoilTemperature.F90
 
                 !determine the type of pedotransfer function to be used based on soil order
                 !I will use the following implementation to further explore the ET problem, now
@@ -677,4 +677,4 @@ contains
 
   end subroutine SoilStateInitTimeConst
 
-end module SoilStateInitTimeConstMod
+end module ctsm_SoilStateInitTimeConst

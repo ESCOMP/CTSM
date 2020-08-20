@@ -1,4 +1,4 @@
-module initInterpMultilevelInterp
+module ctsm_InitInterpMultilevelInterp
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -61,10 +61,10 @@ module initInterpMultilevelInterp
 
   use shr_kind_mod             , only : r8 => shr_kind_r8
   use shr_log_mod              , only : errMsg => shr_log_errMsg
-  use abortutils               , only : endrun
-  use clm_varctl               , only : iulog
-  use clm_varcon               , only : spval, ispval
-  use initInterpMultilevelBase , only : interp_multilevel_type
+  use ctsm_AbortUtils               , only : endrun
+  use ctsm_VarCtl               , only : iulog
+  use ctsm_VarCon               , only : spval, ispval
+  use ctsm_InitInterpMultilevelBase , only : interp_multilevel_type
   use array_utils              , only : pack_wrapper
 
   implicit none
@@ -596,4 +596,4 @@ contains
   end function is_missing
 
 
-end module initInterpMultilevelInterp
+end module ctsm_InitInterpMultilevelInterp

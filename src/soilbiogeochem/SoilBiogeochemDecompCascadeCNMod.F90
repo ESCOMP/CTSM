@@ -1,4 +1,4 @@
-module SoilBiogeochemDecompCascadeCNMod
+module ctsm_SoilBiogeochemDecompCascadeCN
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,20 +9,20 @@ module SoilBiogeochemDecompCascadeCNMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
-  use clm_varcon                         , only : zsoi
-  use decompMod                          , only : bounds_type
-  use abortutils                         , only : endrun
-  use CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
-  use SoilStateType                      , only : soilstate_type
-  use TemperatureType                    , only : temperature_type 
-  use ch4Mod                             , only : ch4_type
-  use ColumnType                         , only : col                
+  use ctsm_VarPar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+  use ctsm_VarPar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use ctsm_VarCtl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
+  use ctsm_VarCon                         , only : zsoi
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_SoilBiogeochemStateType            , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilStateType                      , only : soilstate_type
+  use ctsm_TemperatureType                    , only : temperature_type 
+  use ctsm_Methane                             , only : ch4_type
+  use ctsm_ColumnType                         , only : col                
 
   !
   implicit none
@@ -84,7 +84,7 @@ contains
     implicit none
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
-    ! !CALLED FROM:   readParamsMod.F90::CNParamsReadFile
+    ! !CALLED FROM:   ctsm_ReadParams.F90::CNParamsReadFile
     !
     ! !REVISION HISTORY:
     !  Dec 3 2012 : Created by S. Muszala
@@ -224,7 +224,7 @@ contains
     !  written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
     !
     ! !USES:
-    use SoilBiogeochemDecompCascadeConType, only : i_atm
+    use ctsm_SoilBiogeochemDecompCascadeConType, only : i_atm
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
     type(soilbiogeochem_state_type) , intent(inout) :: soilbiogeochem_state_inst
@@ -547,9 +547,9 @@ contains
      ! written by C. Koven based on original CLM4 decomposition cascade by P. Thornton
      !
      ! !USES:
-     use clm_time_manager, only : get_step_size_real
-     use clm_varcon      , only : secspday
-     use clm_varpar      , only : i_cwd
+     use ctsm_TimeManager, only : get_step_size_real
+     use ctsm_VarCon      , only : secspday
+     use ctsm_VarPar      , only : i_cwd
      !
      ! !ARGUMENTS:
      type(bounds_type)                    , intent(in)    :: bounds          
@@ -768,7 +768,7 @@ contains
           if (use_lch4) then
              ! Calculate ANOXIA
              if (anoxia) then
-                ! Check for anoxia w/o LCH4 now done in controlMod.
+                ! Check for anoxia w/o LCH4 now done in ctsm_Control.
 
                 do j = 1,nlev_soildecomp_standard
                    do fc = 1,num_soilc
@@ -838,7 +838,7 @@ contains
 
        if (use_lch4) then
           ! Calculate ANOXIA
-          ! Check for anoxia w/o LCH4 now done in controlMod.
+          ! Check for anoxia w/o LCH4 now done in ctsm_Control.
 
           if (anoxia) then
              do j = 1,nlevdecomp
@@ -918,4 +918,4 @@ contains
 
    end subroutine decomp_rate_constants_cn
 
- end module SoilBiogeochemDecompCascadeCNMod
+ end module ctsm_SoilBiogeochemDecompCascadeCN

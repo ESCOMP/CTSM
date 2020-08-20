@@ -1,4 +1,4 @@
-module SpeciesNonIsotopeType
+module ctsm_SpeciesNonIsotopeType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,10 +9,10 @@ module SpeciesNonIsotopeType
   !
   ! !USES:
   !
-  use SpeciesBaseType, only : species_base_type
-  use abortutils, only : endrun
+  use ctsm_SpeciesBaseType, only : species_base_type
+  use ctsm_AbortUtils, only : endrun
   use shr_log_mod, only : errMsg => shr_log_errMsg
-  use clm_varctl, only : iulog
+  use ctsm_VarCtl, only : iulog
 
   implicit none
   save
@@ -133,4 +133,4 @@ contains
     is_isotope = .false.
   end function is_isotope
 
-end module SpeciesNonIsotopeType
+end module ctsm_SpeciesNonIsotopeType

@@ -1,18 +1,18 @@
-module CanopyStateType
+module ctsm_CanopyStateType
 
   !------------------------------------------------------------------------------
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_infnan_mod  , only : nan => shr_infnan_nan, shr_infnan_isnan, assignment(=)
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use abortutils      , only : endrun
-  use decompMod       , only : bounds_type
-  use landunit_varcon , only : istsoil, istcrop
-  use clm_varpar      , only : nlevcan, nvegwcs
-  use clm_varcon      , only : spval  
-  use clm_varctl      , only : iulog, use_cn, use_fates, use_hydrstress
-  use LandunitType    , only : lun                
-  use PatchType       , only : patch                
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_LandunitVarCon , only : istsoil, istcrop
+  use ctsm_VarPar      , only : nlevcan, nvegwcs
+  use ctsm_VarCon      , only : spval  
+  use ctsm_VarCtl      , only : iulog, use_cn, use_fates, use_hydrstress
+  use ctsm_LandunitType    , only : lun                
+  use ctsm_PatchType       , only : patch                
   !
   implicit none
   save
@@ -138,7 +138,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod   , only: hist_addfld1d, hist_addfld2d
+    use ctsm_HistFile   , only: hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
@@ -256,7 +256,7 @@ contains
     ! restart file for restart or branch runs
     !
     ! !USES 
-    use accumulMod  , only : init_accum_field
+    use ctsm_Accumulators  , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
@@ -290,8 +290,8 @@ contains
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES 
-    use accumulMod       , only : extract_accum_field
-    use clm_time_manager , only : get_nstep
+    use ctsm_Accumulators       , only : extract_accum_field
+    use ctsm_TimeManager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
@@ -340,12 +340,12 @@ contains
     !       
     ! USES:
     use shr_mpi_mod   , only : shr_mpi_bcast
-    use abortutils    , only : endrun
-    use spmdMod       , only : masterproc, mpicom
-    use fileutils     , only : getavu, relavu, opnfil
+    use ctsm_AbortUtils    , only : endrun
+    use ctsm_Spmd       , only : masterproc, mpicom
+    use ctsm_FileUtils     , only : getavu, relavu, opnfil
     use shr_nl_mod    , only : shr_nl_find_group_name
     use shr_mpi_mod   , only : shr_mpi_bcast
-    use clm_varctl    , only : iulog
+    use ctsm_VarCtl    , only : iulog
     use shr_log_mod   , only : errMsg => shr_log_errMsg
     !
     ! ARGUMENTS:
@@ -356,7 +356,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
     real(r8) :: leaf_mr_vcm         ! Scalar of leaf respiration to vcmax
-    character(len=32) :: subname = 'CanopyStateType::ReadNML'  ! subroutine name
+    character(len=32) :: subname = 'ctsm_CanopyStateType::ReadNML'  ! subroutine name
     !-----------------------------------------------------------------------
     namelist / clm_canopy_inparm / leaf_mr_vcm
 
@@ -392,9 +392,9 @@ contains
   subroutine UpdateAccVars (this, bounds)
     !
     ! USES
-    use clm_time_manager, only : get_nstep
-    use accumulMod      , only : update_accum_field, extract_accum_field
-    use abortutils      , only : endrun
+    use ctsm_TimeManager, only : get_nstep
+    use ctsm_Accumulators      , only : update_accum_field, extract_accum_field
+    use ctsm_AbortUtils      , only : endrun
     !
     ! !ARGUMENTS:
     class(canopystate_type)             :: this
@@ -551,4 +551,4 @@ contains
 
   end subroutine Restart
 
-end module CanopyStateType
+end module ctsm_CanopyStateType

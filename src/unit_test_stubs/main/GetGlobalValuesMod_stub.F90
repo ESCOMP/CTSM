@@ -1,6 +1,6 @@
-module GetGlobalValuesMod
+module ctsm_GetGlobalValues
 
-  ! Stub of GetGlobalValuesMod, which satisfies routine signatures with minimal
+  ! Stub of ctsm_GetGlobalValues, which satisfies routine signatures with minimal
   ! dependencies
 
   implicit none
@@ -34,4 +34,4 @@ contains
     GetGlobalIndex = -1
   end function GetGlobalIndex
 
-end module GetGlobalValuesMod
+end module ctsm_GetGlobalValues

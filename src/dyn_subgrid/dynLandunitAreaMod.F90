@@ -1,4 +1,4 @@
-module dynLandunitAreaMod
+module ctsm_DynLandunitArea
 
 #include "shr_assert.h"
 
@@ -10,14 +10,14 @@ module dynLandunitAreaMod
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use clm_varctl     , only : iulog
-  use clm_varcon     , only : ispval, namel
-  use landunit_varcon, only : isturb_hd, isturb_md, isturb_tbd
-  use landunit_varcon, only : istsoil, istcrop, istdlak, istwet, max_lunit 
-  use decompMod      , only : bounds_type
-  use abortutils     , only : endrun
-  use GridcellType   , only : grc
-  use LandunitType   , only : lun                
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_VarCon     , only : ispval, namel
+  use ctsm_LandunitVarCon, only : isturb_hd, isturb_md, isturb_tbd
+  use ctsm_LandunitVarCon, only : istsoil, istcrop, istdlak, istwet, max_lunit 
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_GridcellType   , only : grc
+  use ctsm_LandunitType   , only : lun                
   !
   implicit none
   private
@@ -47,7 +47,7 @@ contains
     ! specified, e.g., if there are conflicts between glacier area and crop area).
     !
     ! !USES:
-    use subgridWeightsMod, only : get_landunit_weight, set_landunit_weight
+    use ctsm_SubgridWeights, only : get_landunit_weight, set_landunit_weight
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -163,4 +163,4 @@ contains
     
   end subroutine update_landunit_weights_one_gcell
 
-end module dynLandunitAreaMod
+end module ctsm_DynLandunitArea

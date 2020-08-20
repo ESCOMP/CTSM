@@ -1,9 +1,9 @@
 module test_surfrdUtils
 
-  ! Tests of surfrdUtilsMod
+  ! Tests of ctsm_SurfReadUtils
 
   use pfunit_mod
-  use surfrdUtilsMod
+  use ctsm_SurfReadUtils
   use shr_kind_mod, only : r8 => shr_kind_r8
 
   implicit none
@@ -15,8 +15,8 @@ contains
   
   subroutine setup_test_collapse_routines(cftsize)
      ! called during setup of all subroutines test_collapse_crop_types_*
-     use pftconMod, only : pftcon, nc3crop, nc3irrig
-     use clm_varpar, only : maxveg, cft_lb, cft_ub, natpft_size, natpft_lb, natpft_ub
+     use ctsm_PftCon, only : pftcon, nc3crop, nc3irrig
+     use ctsm_VarPar, only : maxveg, cft_lb, cft_ub, natpft_size, natpft_lb, natpft_ub
 
      implicit none
      integer, intent(in) :: cftsize
@@ -48,9 +48,9 @@ contains
      ! Tests subroutine collapse_to_dominant when called first with
      ! collapse_urban = .true. and then with n_dom_landunits.
      ! The same test subsequently calls collapse_individual_lunits.
-     use pftconMod, only: pftcon
-     use clm_instur, only: wt_lunit
-     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+     use ctsm_PftCon, only: pftcon
+     use ctsm_VarSur, only: wt_lunit
+     use ctsm_LandunitVarCon, only: max_lunit, istsoil, istcrop, istice_mec, &
                                 istdlak, istwet, isturb_tbd, isturb_hd, &
                                 isturb_md
 
@@ -151,9 +151,9 @@ contains
      ! - toosmall_* = 8._r8 ... Rm landunits with <= 8% of the gridcell area
      ! - toosmall_* = 39._r8 .. Rm landunits with <= 39% of the gridcell area
      ! - toosmall_* = 100._r8 . Keep only the dominant landunit per gridcell
-     use pftconMod, only: pftcon
-     use clm_instur, only: wt_lunit
-     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+     use ctsm_PftCon, only: pftcon
+     use ctsm_VarSur, only: wt_lunit
+     use ctsm_LandunitVarCon, only: max_lunit, istsoil, istcrop, istice_mec, &
                                 istdlak, istwet, isturb_tbd, isturb_hd, &
                                 isturb_md
 
@@ -270,9 +270,9 @@ contains
      ! 1) Three urban landunits sum to 100%
      ! 2) Three urban landunits sum to < 100%
      ! 3) Same as (2) and third urban landunit = 0%
-     use pftconMod, only: pftcon
-     use clm_instur, only: wt_lunit
-     use landunit_varcon, only: isturb_MIN, isturb_MAX, isturb_tbd, isturb_hd, isturb_md
+     use ctsm_PftCon, only: pftcon
+     use ctsm_VarSur, only: wt_lunit
+     use ctsm_LandunitVarCon, only: isturb_MIN, isturb_MAX, isturb_tbd, isturb_hd, isturb_md
 
      implicit none
      integer, parameter :: begg = 2, endg = 4, n_dom_urban = 1
@@ -342,9 +342,9 @@ contains
      !
      ! For each value of n_dom_landunits, we test three configurations that
      ! need to be collapsed.
-     use pftconMod, only: pftcon
-     use clm_instur, only: wt_lunit
-     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+     use ctsm_PftCon, only: pftcon
+     use ctsm_VarSur, only: wt_lunit
+     use ctsm_LandunitVarCon, only: max_lunit, istsoil, istcrop, istice_mec, &
                                 istdlak, istwet, isturb_tbd, isturb_hd, &
                                 isturb_md
 
@@ -470,9 +470,9 @@ contains
      !
      ! For each value of n_dom_pfts, we test three pft configurations that
      ! need to be collapsed.
-     use pftconMod, only: pftcon
-     use clm_instur, only: wt_nat_patch
-     use clm_varpar, only: natpft_lb, natpft_ub
+     use ctsm_PftCon, only: pftcon
+     use ctsm_VarSur, only: wt_nat_patch
+     use ctsm_VarPar, only: natpft_lb, natpft_ub
 
      implicit none
      integer :: test  ! test number in loop of tests
@@ -574,7 +574,7 @@ contains
   subroutine test_collapse_crop_types_none()
      ! This test sets cftsize = 0, ie crops are lumped together with unmanaged
      ! pfts. This means that the test returns from having collapsed no crops.
-     use pftconMod, only : pftcon
+     use ctsm_PftCon, only : pftcon
 
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 0
@@ -608,8 +608,8 @@ contains
   subroutine test_collapse_crop_types_16_to_15()
      ! This test collapses the nc3irrig generic crop into the nc3crop
      ! because irrigate = .false. and use_crop = .false.
-     use pftconMod, only : pftcon
-     use clm_varctl, only : irrigate, use_crop
+     use ctsm_PftCon, only : pftcon
+     use ctsm_VarCtl, only : irrigate, use_crop
 
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 2
@@ -658,8 +658,8 @@ contains
   subroutine test_collapse_crop_types_16_to_16()
      ! This test calls collapse_crop_types but ends up with the same generic
      ! crops as it started with becase irrigate = .true. and use_crop = .false.
-     use pftconMod, only : pftcon
-     use clm_varctl, only : irrigate, use_crop
+     use ctsm_PftCon, only : pftcon
+     use ctsm_VarCtl, only : irrigate, use_crop
 
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 2
@@ -705,8 +705,8 @@ contains
      ! This test starts with two non-generic and two generic crops in the data
      ! but ends up with only two generic crops because use_crop = .false. and
      ! irrigate = .true.
-     use pftconMod, only : pftcon, nc3crop, nc3irrig
-     use clm_varctl, only : irrigate, use_crop
+     use ctsm_PftCon, only : pftcon, nc3crop, nc3irrig
+     use ctsm_VarCtl, only : irrigate, use_crop
 
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 4
@@ -761,8 +761,8 @@ contains
      ! This test starts with two non-generic and two generic crops in the data
      ! and ends up with only one generic crop because use_crop = .false. and
      ! irrigate = .false.
-     use pftconMod, only : pftcon, nc3crop, nc3irrig
-     use clm_varctl, only : irrigate, use_crop
+     use ctsm_PftCon, only : pftcon, nc3crop, nc3irrig
+     use ctsm_VarCtl, only : irrigate, use_crop
 
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 4
@@ -817,8 +817,8 @@ contains
      ! This test starts with 2 non-generic and 2 generic crops in the data
      ! and ends up with the same because use_crop = .true. and irrigate = .true.
      ! and mergetoclmpft does not lead to collapsing pfts
-     use pftconMod, only : pftcon
-     use clm_varctl, only : irrigate, use_crop
+     use ctsm_PftCon, only : pftcon
+     use ctsm_VarCtl, only : irrigate, use_crop
 
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 4
@@ -866,8 +866,8 @@ contains
      ! This test starts with 4 non-generic and 2 generic crops in the data
      ! and ends up with 2 of each because use_crop = .true. & irrigate = .true.
      ! and mergetoclmpft does lead to some collapsing pfts
-     use pftconMod, only : pftcon
-     use clm_varctl, only : irrigate, use_crop
+     use ctsm_PftCon, only : pftcon
+     use ctsm_VarCtl, only : irrigate, use_crop
 
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 6
@@ -922,11 +922,11 @@ contains
 
   @Test
   subroutine test_convert_cft_to_pft_with_zerocft()
-     use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
-     use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
-     use pftconMod       , only : nbrdlf_evr_shrub, nc4_grass, noveg
-     use landunit_varcon , only : istsoil, istcrop, max_lunit
-     use clm_varpar      , only : natpft_size, cft_size
+     use ctsm_VarSur      , only : wt_lunit, wt_nat_patch, fert_cft
+     use ctsm_PftCon       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
+     use ctsm_PftCon       , only : nbrdlf_evr_shrub, nc4_grass, noveg
+     use ctsm_LandunitVarCon , only : istsoil, istcrop, max_lunit
+     use ctsm_VarPar      , only : natpft_size, cft_size
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 2, numveg = 16
      real(r8) :: wt_cft(begg:endg,cftsize)
@@ -981,10 +981,10 @@ contains
 
   @Test
   subroutine test_convert_cft_to_pft()
-     use clm_instur      , only : wt_lunit, wt_nat_patch, fert_cft
-     use pftconMod       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
-     use landunit_varcon , only : istsoil, istcrop, max_lunit
-     use clm_varpar      , only : natpft_size, cft_size
+     use ctsm_VarSur      , only : wt_lunit, wt_nat_patch, fert_cft
+     use ctsm_PftCon       , only : pftcon, nc3crop, ndllf_evr_tmp_tree, nc3irrig
+     use ctsm_LandunitVarCon , only : istsoil, istcrop, max_lunit
+     use ctsm_VarPar      , only : natpft_size, cft_size
 
      implicit none
      integer, parameter :: begg = 2, endg = 3, cftsize = 2, numveg = 16

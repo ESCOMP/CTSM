@@ -1,4 +1,4 @@
-module decompInitMod
+module ctsm_DecompInit
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,18 +9,18 @@ module decompInitMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use spmdMod         , only : masterproc, iam, npes, mpicom, comp_id
-  use abortutils      , only : endrun
-  use clm_varctl      , only : iulog, use_fates
-  use clm_varcon      , only : grlnd
-  use GridcellType    , only : grc
-  use LandunitType    , only : lun
-  use ColumnType      , only : col
-  use PatchType       , only : patch
-  use glcBehaviorMod  , only : glc_behavior_type
-  use decompMod
+  use ctsm_Spmd         , only : masterproc, iam, npes, mpicom, comp_id
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_VarCtl      , only : iulog, use_fates
+  use ctsm_VarCon      , only : grlnd
+  use ctsm_GridcellType    , only : grc
+  use ctsm_LandunitType    , only : lun
+  use ctsm_ColumnType      , only : col
+  use ctsm_PatchType       , only : patch
+  use ctsm_GlacierBehavior  , only : glc_behavior_type
+  use ctsm_Decomp
   use mct_mod         , only : mct_gsMap_init, mct_gsMap_ngseg, mct_gsMap_nlseg, mct_gsmap_gsize
-  use FatesInterfaceMod, only : fates_maxElementsPerSite
+  use ctsm_FatesInterfaceMod, only : fates_maxElementsPerSite
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -51,7 +51,7 @@ contains
     ! set by clump_pproc
     !
     ! !USES:
-    use clm_varctl, only : nsegspc
+    use ctsm_VarCtl, only : nsegspc
     !
     ! !ARGUMENTS:
     implicit none
@@ -379,7 +379,7 @@ contains
     ! calculate a decomposition of only ocn points (needed for the nuopc interface)
 
     ! !USES:
-    use spmdMod  , only : npes, iam
+    use ctsm_Spmd  , only : npes, iam
 
     ! !ARGUMENTS:
     integer , intent(in) :: amask(:)
@@ -436,8 +436,8 @@ contains
     ! set by clump_pproc
     !
     ! !USES:
-    use subgridMod, only : subgrid_get_gcellinfo
-    use spmdMod
+    use ctsm_Subgrid, only : subgrid_get_gcellinfo
+    use ctsm_Spmd
     !
     ! !ARGUMENTS:
     implicit none
@@ -596,9 +596,9 @@ contains
     ! Determine gsMaps for landunits, columns, patches and cohorts
     !
     ! !USES:
-    use spmdMod
-    use spmdGathScatMod
-    use subgridMod,       only : subgrid_get_gcellinfo
+    use ctsm_Spmd
+    use ctsm_SpmdGathScat
+    use ctsm_Subgrid,       only : subgrid_get_gcellinfo
     !
     ! !ARGUMENTS:
     implicit none
@@ -1000,4 +1000,4 @@ contains
 
   end subroutine decompInit_glcp
 
-end module decompInitMod
+end module ctsm_DecompInit

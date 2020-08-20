@@ -1,4 +1,4 @@
-module SoilBiogeochemDecompMod
+module ctsm_SoilBiogeochemDecomp
 
 #include "shr_assert.h"
 
@@ -9,16 +9,16 @@ module SoilBiogeochemDecompMod
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use decompMod                          , only : bounds_type
-  use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates
-  use clm_varcon                         , only : dzsoi_decomp
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_VarPar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+  use ctsm_VarCtl                         , only : use_nitrif_denitrif, use_lch4, use_fates
+  use ctsm_VarCon                         , only : dzsoi_decomp
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_SoilBiogeochemStateType            , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
   !
   implicit none
   private
@@ -47,7 +47,7 @@ contains
     !
     ! !USES:
     use ncdio_pio    , only: file_desc_t,ncd_io
-    use abortutils   , only: endrun
+    use ctsm_AbortUtils   , only: endrun
     !
     ! !ARGUMENTS:
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
@@ -73,7 +73,7 @@ contains
        cn_decomp_pools, p_decomp_cpool_loss, pmnf_decomp_cascade)
     !
     ! !USES:
-    use SoilBiogeochemDecompCascadeConType, only : i_atm
+    use ctsm_SoilBiogeochemDecompCascadeConType, only : i_atm
     !
     ! !ARGUMENT:
     type(bounds_type)                       , intent(in)    :: bounds   
@@ -274,4 +274,4 @@ contains
 
   end subroutine SoilBiogeochemDecomp
  
-end module SoilBiogeochemDecompMod
+end module ctsm_SoilBiogeochemDecomp

@@ -14,7 +14,7 @@ module mkagfirepkmonthMod
 !!USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use mkdomainMod , only : domain_checksame
+  use mkctsm_Domain , only : domain_checksame
   implicit none
 
   SAVE
@@ -53,7 +53,7 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
 ! Make agricultural fire peak month data from higher resolution data
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkindexmapMod, only : get_dominant_indices
   use mkvarpar, only : re

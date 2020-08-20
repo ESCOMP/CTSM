@@ -1,4 +1,4 @@
-module CNDVEstablishmentMod
+module ctsm_CNDVEstablishmentMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,16 +7,15 @@ module CNDVEstablishmentMod
   !
   ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
-  use decompMod            , only : bounds_type
-  use pftconMod            , only : pftcon
-  use atm2lndType          , only : atm2lnd_type
-  use CNDVType             , only : dgvs_type, dgv_ecophyscon
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType  , only : cnveg_carbonflux_type
-  use CNVegcarbonfluxType  , only : cnveg_carbonflux_type
-  use LandunitType         , only : lun                
-  use PatchType            , only : patch                
-  use Wateratm2lndBulkType , only : wateratm2lndbulk_type
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_PftCon            , only : pftcon
+  use ctsm_Atm2LndType          , only : atm2lnd_type
+  use ctsm_CNDVType             , only : dgvs_type, dgv_ecophyscon
+  use ctsm_CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType  , only : cnveg_carbonflux_type
+  use ctsm_LandunitType         , only : lun                
+  use ctsm_PatchType            , only : patch                
+  use ctsm_WaterAtm2LndBulkType , only : wateratm2lndbulk_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -40,10 +39,10 @@ contains
     ! !USES:
     use shr_const_mod   , only : SHR_CONST_CDAY, SHR_CONST_PI, SHR_CONST_TKFRZ
     use shr_log_mod     , only : errMsg => shr_log_errMsg
-    use landunit_varcon , only : istsoil
-    use clm_varctl      , only : iulog
-    use pftconMod       , only : noveg, nc3_arctic_grass
-    use abortutils      , only : endrun
+    use ctsm_LandunitVarCon , only : istsoil
+    use ctsm_VarCtl      , only : iulog
+    use ctsm_PftCon       , only : noveg, nc3_arctic_grass
+    use ctsm_AbortUtils      , only : endrun
     !
     ! !ARGUMENTS:
     type(bounds_type)            , intent(in)    :: bounds  
@@ -179,7 +178,7 @@ contains
             end if
             survive(p) = .true.
             ! seasonal decid. patches that would have occurred in regions without
-            ! short winter day lengths (see CNPhenology)
+            ! short winter day lengths (see ctsm_CNPhenology)
             if (.not. pftmayexist(p)) then
                survive(p) = .false.
                estab(p) = .false.
@@ -285,7 +284,7 @@ contains
             if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
                stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                ! stemdiam derived here from cn's formula for htop found in
-               ! CNVegStructUpdate and cn's assumption stemdiam=2*htop/taper
+               ! ctsm_CNVegStructUpdate and cn's assumption stemdiam=2*htop/taper
                ! this derivation neglects upper htop limit enforced elsewhere
                stemdiam = (24._r8 * dstemc(p) / (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8)
             else
@@ -450,4 +449,4 @@ contains
 
   end subroutine Establishment
 
-end module CNDVEstablishmentMod
+end module ctsm_CNDVEstablishmentMod

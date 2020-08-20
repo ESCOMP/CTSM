@@ -1,4 +1,4 @@
-module NutrientCompetitionCLM45defaultMod
+module ctsm_NutrientCompetitionPhys45Mod
 
 #include "shr_assert.h"
 
@@ -11,13 +11,13 @@ module NutrientCompetitionCLM45defaultMod
   !
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
-  use decompMod           , only : bounds_type
-  use LandunitType        , only : lun                
-  use ColumnType          , only : col                
-  use PatchType           , only : patch                
-  use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
-  use NutrientCompetitionMethodMod, only : params_inst
-  !use clm_varctl          , only : iulog  
+  use ctsm_Decomp           , only : bounds_type
+  use ctsm_LandunitType        , only : lun                
+  use ctsm_ColumnType          , only : col                
+  use ctsm_PatchType           , only : patch                
+  use ctsm_NutrientCompetitionMethodMod, only : nutrient_competition_method_type
+  use ctsm_NutrientCompetitionMethodMod, only : params_inst
+  !use ctsm_VarCtl          , only : iulog  
   !
   implicit none
   private
@@ -81,15 +81,15 @@ contains
           aroot, arepr, fpg_col)
     !
     ! !USES:
-    use CNVegStateType        , only : cnveg_state_type
-    use CropType              , only : crop_type
-    use CanopyStateType        , only : canopystate_type
-    use CNVegCarbonStateType  , only : cnveg_carbonstate_type
-    use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
-    use CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
-    use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
-    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-    use CNSharedParamsMod     , only : use_fun
+    use ctsm_CNVegStateType        , only : cnveg_state_type
+    use ctsm_CropType              , only : crop_type
+    use ctsm_CanopyStateType        , only : canopystate_type
+    use ctsm_CNVegCarbonStateType  , only : cnveg_carbonstate_type
+    use ctsm_CNVegCarbonFluxType   , only : cnveg_carbonflux_type
+    use ctsm_CNVegNitrogenStateType, only : cnveg_nitrogenstate_type
+    use ctsm_CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
+    use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+    use ctsm_CNSharedParamsMod     , only : use_fun
     !
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(inout) :: this
@@ -128,15 +128,15 @@ contains
        aroot, arepr, fpg_col)                                              
     !
     ! !USES:
-    use pftconMod             , only : pftcon, npcropmin
-    use clm_varctl            , only : use_c13, use_c14
-    use CNVegStateType        , only : cnveg_state_type
-    use CropType              , only : crop_type
-    use CanopyStateType        , only : canopystate_type
-    use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
-    use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
-    use CNSharedParamsMod     , only : use_fun
+    use ctsm_PftCon             , only : pftcon, npcropmin
+    use ctsm_VarCtl            , only : use_c13, use_c14
+    use ctsm_CNVegStateType        , only : cnveg_state_type
+    use ctsm_CropType              , only : crop_type
+    use ctsm_CanopyStateType        , only : canopystate_type
+    use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+    use ctsm_CNVegCarbonFluxType   , only : cnveg_carbonflux_type
+    use ctsm_CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
+    use ctsm_CNSharedParamsMod     , only : use_fun
     use shr_infnan_mod        , only : shr_infnan_isnan
 
     !
@@ -441,18 +441,18 @@ contains
        aroot, arepr)
     !
     ! !USES:
-    use CanopyStateType        , only : canopystate_type
-    use PhotosynthesisMod      , only : photosyns_type
-    use CropType               , only : crop_type
-    use CNVegStateType         , only : cnveg_state_type
-    use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
-    use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
-    use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
-    use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
-    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-    use EnergyFluxType         , only : energyflux_type
-    use CNSharedParamsMod      , only : use_fun
+    use ctsm_CanopyStateType        , only : canopystate_type
+    use ctsm_Photosynthesis      , only : photosyns_type
+    use ctsm_CropType               , only : crop_type
+    use ctsm_CNVegStateType         , only : cnveg_state_type
+    use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+    use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+    use ctsm_CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+    use ctsm_CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
+    use ctsm_SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
+    use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+    use ctsm_EnergyFluxType         , only : energyflux_type
+    use ctsm_CNSharedParamsMod      , only : use_fun
     !
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(inout) :: this
@@ -495,21 +495,21 @@ contains
        aroot, arepr)
     !
     ! !USES:
-    use pftconMod              , only : npcropmin, pftcon
-    use pftconMod              , only : ntmp_soybean, nirrig_tmp_soybean
-    use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
-    use clm_varcon             , only : secspday
-    use clm_varctl             , only : use_c13, use_c14
-    use clm_time_manager       , only : get_step_size_real
-    use CanopyStateType        , only : canopystate_type
-    use PhotosynthesisMod      , only : photosyns_type
-    use CropType               , only : crop_type
-    use CNVegStateType         , only : cnveg_state_type
-    use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
-    use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
-    use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
-    use CNSharedParamsMod      , only : use_fun
+    use ctsm_PftCon              , only : npcropmin, pftcon
+    use ctsm_PftCon              , only : ntmp_soybean, nirrig_tmp_soybean
+    use ctsm_PftCon              , only : ntrp_soybean, nirrig_trp_soybean
+    use ctsm_VarCon             , only : secspday
+    use ctsm_VarCtl             , only : use_c13, use_c14
+    use ctsm_TimeManager       , only : get_step_size_real
+    use ctsm_CanopyStateType        , only : canopystate_type
+    use ctsm_Photosynthesis      , only : photosyns_type
+    use ctsm_CropType               , only : crop_type
+    use ctsm_CNVegStateType         , only : cnveg_state_type
+    use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+    use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+    use ctsm_CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+    use ctsm_CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
+    use ctsm_CNSharedParamsMod      , only : use_fun
     !
     ! !ARGUMENTS:
     class(nutrient_competition_clm45default_type), intent(in) :: this
@@ -988,4 +988,4 @@ contains
 
   end subroutine calc_plant_nitrogen_demand
   
-end module NutrientCompetitionCLM45defaultMod
+end module ctsm_NutrientCompetitionPhys45Mod

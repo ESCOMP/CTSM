@@ -1,4 +1,4 @@
-module Waterlnd2atmBulkType
+module ctsm_WaterLnd2AtmBulkType
 
 #include "shr_assert.h"
 
@@ -11,11 +11,11 @@ module Waterlnd2atmBulkType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use clm_varpar     , only : nlevgrnd
-  use WaterLnd2atmType , only : waterlnd2atm_type
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_VarPar     , only : nlevgrnd
+  use ctsm_WaterLnd2AtmType , only : waterlnd2atm_type
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   save
@@ -116,4 +116,4 @@ contains
 
   end subroutine InitBulkCold
 
-end module Waterlnd2atmBulkType
+end module ctsm_WaterLnd2AtmBulkType

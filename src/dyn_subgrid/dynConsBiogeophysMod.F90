@@ -1,4 +1,4 @@
-module dynConsBiogeophysMod
+module ctsm_DynConsBiogeophys
 
 #include "shr_assert.h"
 
@@ -11,34 +11,34 @@ module dynConsBiogeophysMod
   ! !USES:
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use decompMod               , only : bounds_type
-  use UrbanParamsType         , only : urbanparams_type
-  use EnergyFluxType          , only : energyflux_type
-  use SoilHydrologyType       , only : soilhydrology_type
-  use SoilStateType           , only : soilstate_type
-  use TemperatureType         , only : temperature_type
-  use WaterFluxType           , only : waterflux_type
-  use WaterStateBulkType      , only : waterstatebulk_type
-  use WaterStateType          , only : waterstate_type
-  use WaterDiagnosticType     , only : waterdiagnostic_type
-  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
-  use WaterBalanceType        , only : waterbalance_type
-  use WaterType               , only : water_type
-  use TotalWaterAndHeatMod    , only : AccumulateSoilLiqIceMassNonLake
-  use TotalWaterAndHeatMod    , only : AccumulateSoilHeatNonLake
-  use TotalWaterAndHeatMod    , only : ComputeLiqIceMassNonLake, ComputeLiqIceMassLake
-  use TotalWaterAndHeatMod    , only : ComputeHeatNonLake, ComputeHeatLake
-  use TotalWaterAndHeatMod    , only : AdjustDeltaHeatForDeltaLiq
-  use TotalWaterAndHeatMod    , only : heat_base_temp
-  use subgridAveMod           , only : p2c, c2g, c2l
-  use GridcellType            , only : grc
-  use LandunitType            , only : lun
-  use ColumnType              , only : col
-  use PatchType               , only : patch
-  use clm_varcon              , only : tfrz, cpliq, hfus, ispval
-  use landunit_varcon         , only : istsoil, istice_mec
-  use dynSubgridControlMod    , only : get_for_testing_zero_dynbal_fluxes
-  use filterColMod            , only : filter_col_type, col_filter_from_ltypes
+  use ctsm_Decomp               , only : bounds_type
+  use ctsm_UrbanParamsType         , only : urbanparams_type
+  use ctsm_EnergyFluxType          , only : energyflux_type
+  use ctsm_SoilHydrologyType       , only : soilhydrology_type
+  use ctsm_SoilStateType           , only : soilstate_type
+  use ctsm_TemperatureType         , only : temperature_type
+  use ctsm_WaterFluxType           , only : waterflux_type
+  use ctsm_WaterStateBulkType      , only : waterstatebulk_type
+  use ctsm_WaterStateType          , only : waterstate_type
+  use ctsm_WaterDiagnosticType     , only : waterdiagnostic_type
+  use ctsm_WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+  use ctsm_WaterBalanceType        , only : waterbalance_type
+  use ctsm_WaterType               , only : water_type
+  use ctsm_TotalWaterAndHeat    , only : AccumulateSoilLiqIceMassNonLake
+  use ctsm_TotalWaterAndHeat    , only : AccumulateSoilHeatNonLake
+  use ctsm_TotalWaterAndHeat    , only : ComputeLiqIceMassNonLake, ComputeLiqIceMassLake
+  use ctsm_TotalWaterAndHeat    , only : ComputeHeatNonLake, ComputeHeatLake
+  use ctsm_TotalWaterAndHeat    , only : AdjustDeltaHeatForDeltaLiq
+  use ctsm_TotalWaterAndHeat    , only : heat_base_temp
+  use ctsm_SubgridAve           , only : p2c, c2g, c2l
+  use ctsm_GridcellType            , only : grc
+  use ctsm_LandunitType            , only : lun
+  use ctsm_ColumnType              , only : col
+  use ctsm_PatchType               , only : patch
+  use ctsm_VarCon              , only : tfrz, cpliq, hfus, ispval
+  use ctsm_LandunitVarCon         , only : istsoil, istice_mec
+  use ctsm_DynSubgridControl    , only : get_for_testing_zero_dynbal_fluxes
+  use ctsm_FilterCol            , only : filter_col_type, col_filter_from_ltypes
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -694,4 +694,4 @@ contains
 
   end subroutine dyn_heat_content
 
-end module dynConsBiogeophysMod
+end module ctsm_DynConsBiogeophys

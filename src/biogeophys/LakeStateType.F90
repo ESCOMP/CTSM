@@ -1,4 +1,4 @@
-module LakeStateType
+module ctsm_LakeStateType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,12 +7,12 @@ module LakeStateType
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
-  use clm_varcon   , only : spval, grlnd
-  use decompMod    , only : bounds_type
-  use spmdMod      , only : masterproc
-  use abortUtils   , only : endrun
-  use LandunitType , only : lun                
-  use ColumnType   , only : col                
+  use ctsm_VarCon   , only : spval, grlnd
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_Spmd      , only : masterproc
+  use ctsm_AbortUtils   , only : endrun
+  use ctsm_LandunitType , only : lun                
+  use ctsm_ColumnType   , only : col                
   !
   implicit none
   save
@@ -70,7 +70,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    use clm_varpar    , only: nlevlak, nlevsno
+    use ctsm_VarPar    , only: nlevlak, nlevsno
     !
     ! !ARGUMENTS:
     class(lakestate_type) :: this
@@ -112,7 +112,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    use histFileMod   , only: hist_addfld1d, hist_addfld2d
+    use ctsm_HistFile   , only: hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(lakestate_type) :: this
@@ -165,11 +165,11 @@ contains
     ! Initialize time constant and time varying module variables
     !
     ! !USES:
-    use clm_varctl , only : fsurdat
-    use clm_varctl , only : iulog
-    use clm_varpar , only : nlevlak
-    use clm_varcon , only : tkwat 
-    use fileutils  , only : getfil
+    use ctsm_VarCtl , only : fsurdat
+    use ctsm_VarCtl , only : iulog
+    use ctsm_VarPar , only : nlevlak
+    use ctsm_VarCon , only : tkwat 
+    use ctsm_FileUtils  , only : getfil
     use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use ncdio_pio  , only : ncd_pio_openfile, ncd_inqfdims, ncd_pio_closefile, ncd_inqdid, ncd_inqdlen
     !
@@ -292,5 +292,5 @@ contains
 
   end subroutine Restart
 
-end module LakeStateType
+end module ctsm_LakeStateType
 

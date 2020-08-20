@@ -6,7 +6,7 @@ subroutine mkmap(filei, fileo, fmap, ftemplate)
 
   use netcdf
   use shr_kind_mod, only : r8 => shr_kind_r8, r4=>shr_kind_r4
-  use fileutils
+  use ctsm_FileUtils
   use gridmapMod
 
   implicit none

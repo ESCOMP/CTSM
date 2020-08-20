@@ -1,4 +1,4 @@
-module SoilTemperatureMod
+module ctsm_SoilTemperature
 
 #include "shr_assert.h"
 
@@ -9,24 +9,24 @@ module SoilTemperatureMod
   ! !USES:
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_infnan_mod          , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod               , only : bounds_type
-  use abortutils              , only : endrun
+  use ctsm_Decomp               , only : bounds_type
+  use ctsm_AbortUtils              , only : endrun
   use perf_mod                , only : t_startf, t_stopf
-  use clm_varctl              , only : iulog
-  use UrbanParamsType         , only : urbanparams_type
-  use UrbanTimeVarType        , only : urbantv_type
-  use atm2lndType             , only : atm2lnd_type
-  use CanopyStateType         , only : canopystate_type
-  use WaterFluxBulkType       , only : waterfluxbulk_type
-  use WaterStateBulkType      , only : waterstatebulk_type
-  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
-  use SolarAbsorbedType       , only : solarabs_type
-  use SoilStateType           , only : soilstate_type
-  use EnergyFluxType          , only : energyflux_type
-  use TemperatureType         , only : temperature_type
-  use LandunitType            , only : lun
-  use ColumnType              , only : col
-  use PatchType               , only : patch
+  use ctsm_VarCtl              , only : iulog
+  use ctsm_UrbanParamsType         , only : urbanparams_type
+  use ctsm_UrbanTimeVarType        , only : urbantv_type
+  use ctsm_Atm2LndType             , only : atm2lnd_type
+  use ctsm_CanopyStateType         , only : canopystate_type
+  use ctsm_WaterFluxBulkType       , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType      , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+  use ctsm_SolarAbsorbedType       , only : solarabs_type
+  use ctsm_SoilStateType           , only : soilstate_type
+  use ctsm_EnergyFluxType          , only : energyflux_type
+  use ctsm_TemperatureType         , only : temperature_type
+  use ctsm_LandunitType            , only : lun
+  use ctsm_ColumnType              , only : col
+  use ctsm_PatchType               , only : patch
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -112,15 +112,15 @@ contains
     !   results in a tridiagonal system equation.
     !
     ! !USES:
-    use clm_time_manager         , only : get_step_size_real
-    use clm_varpar               , only : nlevsno, nlevgrnd, nlevurb
-    use clm_varctl               , only : iulog
-    use clm_varcon               , only : cnfac, cpice, cpliq, denh2o
-    use landunit_varcon          , only : istsoil, istcrop
-    use column_varcon            , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
-    use BandDiagonalMod          , only : BandDiagonal
-    use UrbanParamsType          , only : IsSimpleBuildTemp, IsProgBuildTemp
-    use UrbBuildTempOleson2015Mod, only : BuildingTemperature
+    use ctsm_TimeManager         , only : get_step_size_real
+    use ctsm_VarPar               , only : nlevsno, nlevgrnd, nlevurb
+    use ctsm_VarCtl               , only : iulog
+    use ctsm_VarCon               , only : cnfac, cpice, cpliq, denh2o
+    use ctsm_LandunitVarCon          , only : istsoil, istcrop
+    use ctsm_ColumnVarCon            , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
+    use ctsm_BandDiagonalSolver          , only : BandDiagonal
+    use ctsm_UrbanParamsType          , only : IsSimpleBuildTemp, IsProgBuildTemp
+    use ctsm_UrbanBuildTempOleson2015, only : BuildingTemperature
     !
     ! !ARGUMENTS:
     type(bounds_type)              ,  intent(in)    :: bounds
@@ -566,11 +566,11 @@ contains
     ! flux from the interface to the node j+1.
     !
     ! !USES:
-    use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi
-    use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
-    use landunit_varcon , only : istice_mec, istwet
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
-    use clm_varctl      , only : iulog
+    use ctsm_VarPar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi
+    use ctsm_VarCon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
+    use ctsm_LandunitVarCon , only : istice_mec, istwet
+    use ctsm_ColumnVarCon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
+    use ctsm_VarCtl      , only : iulog
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds 
@@ -794,10 +794,10 @@ contains
     ! Only freezing is considered.  When water freezes, move ice to bottom snow layer.
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size_real
-    use clm_varcon       , only : tfrz, hfus, grav, denice, cnfac, cpice, cpliq
-    use clm_varpar       , only : nlevsno, nlevgrnd
-    use clm_varctl       , only : iulog
+    use ctsm_TimeManager , only : get_step_size_real
+    use ctsm_VarCon       , only : tfrz, hfus, grav, denice, cnfac, cpice, cpliq
+    use ctsm_VarPar       , only : nlevsno, nlevgrnd
+    use ctsm_VarCtl       , only : iulog
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                         
@@ -1032,12 +1032,12 @@ contains
     ! (3) Re-adjust the ice and liquid mass, and the layer temperature
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size_real
-    use clm_varpar       , only : nlevsno, nlevgrnd,nlevurb
-    use clm_varctl       , only : iulog
-    use clm_varcon       , only : tfrz, hfus, grav
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
-    use landunit_varcon  , only : istsoil, istcrop, istice_mec
+    use ctsm_TimeManager , only : get_step_size_real
+    use ctsm_VarPar       , only : nlevsno, nlevgrnd,nlevurb
+    use ctsm_VarCtl       , only : iulog
+    use ctsm_VarCon       , only : tfrz, hfus, grav
+    use ctsm_ColumnVarCon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
+    use ctsm_LandunitVarCon  , only : istsoil, istcrop, istice_mec
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                      
@@ -1407,10 +1407,10 @@ contains
     ! Additionally, derivative of ground heat flux w.r.t to temeprature
     !
     ! !USES:
-    use clm_varcon     , only : sb, hvap
-    use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, max_patch_per_col
-    use UrbanParamsType, only : IsSimpleBuildTemp
+    use ctsm_VarCon     , only : sb, hvap
+    use ctsm_ColumnVarCon  , only : icol_road_perv, icol_road_imperv
+    use ctsm_VarPar     , only : nlevsno, max_patch_per_col
+    use ctsm_UrbanParamsType, only : IsSimpleBuildTemp
     !
     ! !ARGUMENTS:
     implicit none
@@ -1659,10 +1659,10 @@ contains
     ! (2) Factor used in computing tridiagonal matrix
     !
     ! !USES:
-    use clm_varcon     , only : capr, cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
-    use UrbanParamsType, only : IsSimpleBuildTemp
+    use ctsm_VarCon     , only : capr, cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevurb
+    use ctsm_UrbanParamsType, only : IsSimpleBuildTemp
     !
     ! !ARGUMENTS:
     implicit none
@@ -1782,9 +1782,9 @@ contains
     !           !===========|
     !
     ! !USES:
-    use clm_varcon      , only : cnfac, cpliq
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb
+    use ctsm_VarCon      , only : cnfac, cpliq
+    use ctsm_ColumnVarCon   , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarPar      , only : nlevsno, nlevgrnd, nlevurb
     !
     ! !ARGUMENTS:
     implicit none
@@ -1913,10 +1913,10 @@ contains
     ! Sets up RHS vector corresponding to snow layers for all columns.
     !
     ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use ctsm_VarCon     , only : cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_ColumnVarCon  , only : icol_road_perv, icol_road_imperv
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2009,9 +2009,9 @@ contains
     ! Sets up RHS vector corresponding to all standing surface water
     !
     ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use ctsm_VarCon     , only : cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2075,10 +2075,10 @@ contains
     ! Sets up RHS vector corresponding to all soil layers
     !
     ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use ctsm_VarCon     , only : cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_ColumnVarCon  , only : icol_road_perv, icol_road_imperv
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevurb
     !
     ! !ARGUMENTS:
     implicit none
@@ -2225,9 +2225,9 @@ contains
     !
     !
     ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use ctsm_VarCon     , only : cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevurb
     !
     ! !ARGUMENTS:
     implicit none
@@ -2371,9 +2371,9 @@ contains
     !
     !
     ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use ctsm_VarCon     , only : cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevurb
     !
     ! !ARGUMENTS:
     implicit none
@@ -2448,10 +2448,10 @@ contains
     ! Setup the matrix entries corresponding to internal snow layers
     !
     ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use ctsm_VarCon     , only : cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_ColumnVarCon  , only : icol_road_perv, icol_road_imperv
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevurb
     !
     ! !ARGUMENTS:
     implicit none
@@ -2545,10 +2545,10 @@ end subroutine SetMatrix_Snow
     ! and soil-snow interaction layer. 
     !
     ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon  , only : icol_road_perv, icol_road_imperv
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevurb
+    use ctsm_VarCon     , only : cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_ColumnVarCon  , only : icol_road_perv, icol_road_imperv
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevurb
     !
     ! !ARGUMENTS:
     implicit none
@@ -2712,9 +2712,9 @@ end subroutine SetMatrix_Snow
     ! soil_standing surface water and standing surface water-soil interaction layers
     !
     ! !USES:
-    use clm_varcon     , only : cnfac
-    use column_varcon  , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varpar     , only : nlevsno, nlevgrnd
+    use ctsm_VarCon     , only : cnfac
+    use ctsm_ColumnVarCon  , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd
     !
     ! !ARGUMENTS:
     implicit none
@@ -2843,4 +2843,4 @@ end subroutine SetMatrix_Snow
 
   !-----------------------------------------------------------------------
 
-end module SoilTemperatureMod
+end module ctsm_SoilTemperature

@@ -1,4 +1,4 @@
-module WaterDiagnosticType
+module ctsm_WaterDiagnosticType
 
 #include "shr_assert.h"
 
@@ -11,16 +11,16 @@ module WaterDiagnosticType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varctl     , only : use_vancouver, use_mexicocity
-  use clm_varcon     , only : spval
-  use LandunitType   , only : lun                
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : AllocateVar1d
-  use WaterStateType, only : waterstate_type
-  use WaterFluxType, only : waterflux_type
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_Decomp      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
+  use ctsm_VarCtl     , only : use_vancouver, use_mexicocity
+  use ctsm_VarCon     , only : spval
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_WaterTracerUtils, only : AllocateVar1d
+  use ctsm_WaterStateType, only : waterstate_type
+  use ctsm_WaterFluxType, only : waterflux_type
   !
   implicit none
   save
@@ -148,7 +148,7 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_HistFile    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(in) :: this
@@ -294,7 +294,7 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon       , only : nameg
+    use ctsm_VarCon       , only : nameg
     use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
@@ -364,4 +364,4 @@ contains
   end subroutine Summary
 
 
-end module WaterDiagnosticType
+end module ctsm_WaterDiagnosticType

@@ -1,4 +1,4 @@
-module DUSTMod
+module ctsm_DustMod
 
   !----------------------------------------------------------------------- 
   ! !DESCRIPTION: 
@@ -15,21 +15,21 @@ module DUSTMod
   use shr_kind_mod         , only : r8 => shr_kind_r8 
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr
-  use clm_varcon           , only : grav, spval
-  use landunit_varcon      , only : istcrop, istsoil
-  use clm_varctl           , only : iulog
-  use abortutils           , only : endrun
-  use decompMod            , only : bounds_type
-  use atm2lndType          , only : atm2lnd_type
-  use SoilStateType        , only : soilstate_type
-  use CanopyStateType      , only : canopystate_type
-  use WaterStateBulkType       , only : waterstatebulk_type
-  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-  use FrictionVelocityMod  , only : frictionvel_type
-  use LandunitType         , only : lun
-  use ColumnType           , only : col
-  use PatchType            , only : patch
+  use ctsm_VarPar           , only : dst_src_nbr, ndst, sz_nbr
+  use ctsm_VarCon           , only : grav, spval
+  use ctsm_LandunitVarCon      , only : istcrop, istsoil
+  use ctsm_VarCtl           , only : iulog
+  use ctsm_AbortUtils           , only : endrun
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_Atm2LndType          , only : atm2lnd_type
+  use ctsm_SoilStateType        , only : soilstate_type
+  use ctsm_CanopyStateType      , only : canopystate_type
+  use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use ctsm_FrictionVelocity  , only : frictionvel_type
+  use ctsm_LandunitType         , only : lun
+  use ctsm_ColumnType           , only : col
+  use ctsm_PatchType            , only : patch
   !  
   ! !PUBLIC TYPES
   implicit none
@@ -120,7 +120,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod, only : hist_addfld1d
+    use ctsm_HistFile, only : hist_addfld1d
     !
     !
     ! !ARGUMENTS:
@@ -198,7 +198,7 @@ contains
     !
     ! !USES
     use shr_const_mod, only : SHR_CONST_RHOFW
-    use subgridaveMod, only : p2g
+    use ctsm_SubgridAve, only : p2g
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                      
@@ -241,7 +241,7 @@ contains
     real(r8), parameter :: cst_slt = 2.61_r8           ! [frc] Saltation constant
     real(r8), parameter :: flx_mss_fdg_fct = 5.0e-4_r8 ! [frc] Empir. mass flx tuning eflx_lh_vegt
     real(r8), parameter :: vai_mbl_thr = 0.3_r8        ! [m2 m-2] VAI threshold quenching dust mobilization
-    character(len=*),parameter :: subname = 'DUSTEmission'
+    character(len=*),parameter :: subname = 'ctsm_DustEmission'
     !------------------------------------------------------------------------
 
     associate(                                                         & 
@@ -623,7 +623,7 @@ contains
      ! !USES
      use shr_const_mod , only: SHR_CONST_PI, SHR_CONST_RDAIR
      use shr_spfn_mod  , only: erf => shr_spfn_erf
-     use decompMod     , only : get_proc_bounds
+     use ctsm_Decomp     , only : get_proc_bounds
      !
      ! !ARGUMENTS:
      class(dust_type)  :: this
@@ -924,4 +924,4 @@ contains
 
   end subroutine InitDustVars
 
-end module DUSTMod
+end module ctsm_DustMod

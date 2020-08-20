@@ -8,25 +8,25 @@ module dynConsBiogeochemMod
   ! !USES:
   use shr_kind_mod                 , only : r8 => shr_kind_r8
   use shr_log_mod                  , only : errMsg => shr_log_errMsg
-  use decompMod                    , only : bounds_type
-  use abortutils                   , only : endrun
-  use clm_varctl                   , only : iulog, use_c13, use_c14, use_lch4
-  use pftconMod                    , only : pftcon
-  use CanopyStateType              , only : canopystate_type
-  use PhotosynthesisMod            , only : photosyns_type
-  use CNVegStateType               , only : cnveg_state_type
-  use CNVegCarbonStateType         , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType          , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType       , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType        , only : cnveg_nitrogenflux_type
-  use SoilBiogeochemStateType      , only : soilBiogeochem_state_type
-  use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
-  use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-  use ch4Mod                       , only : ch4_type
-  use LandunitType                 , only : lun                
-  use ColumnType                   , only : col                
-  use PatchType                    , only : patch                
+  use ctsm_Decomp                    , only : bounds_type
+  use ctsm_AbortUtils                   , only : endrun
+  use ctsm_VarCtl                   , only : iulog, use_c13, use_c14, use_lch4
+  use ctsm_PftCon                    , only : pftcon
+  use ctsm_CanopyStateType              , only : canopystate_type
+  use ctsm_Photosynthesis            , only : photosyns_type
+  use ctsm_CNVegStateType               , only : cnveg_state_type
+  use ctsm_CNVegCarbonStateType         , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType          , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType       , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType        , only : cnveg_nitrogenflux_type
+  use ctsm_SoilBiogeochemStateType      , only : soilBiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+  use ctsm_Methane                       , only : ch4_type
+  use ctsm_LandunitType                 , only : lun                
+  use ctsm_ColumnType                   , only : col                
+  use ctsm_PatchType                    , only : patch                
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -57,12 +57,12 @@ contains
     !
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_PDB
-    use landunit_varcon    , only : istsoil, istcrop
-    use clm_varpar         , only : nlevdecomp
-    use clm_varcon         , only : c13ratio, c14ratio, c3_r2, c4_r2
-    use clm_time_manager   , only : get_step_size_real
-    use dynPriorWeightsMod , only : prior_weights_type
-    use dynPatchStateUpdaterMod, only : patch_state_updater_type
+    use ctsm_LandunitVarCon    , only : istsoil, istcrop
+    use ctsm_VarPar         , only : nlevdecomp
+    use ctsm_VarCon         , only : c13ratio, c14ratio, c3_r2, c4_r2
+    use ctsm_TimeManager   , only : get_step_size_real
+    use ctsm_DynPriorWeights , only : prior_weights_type
+    use ctsm_DynPatchStateUpdater, only : patch_state_updater_type
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds        
@@ -851,7 +851,7 @@ contains
      ! dynamic column weights.
      !
      ! !USES:
-     use dynColumnStateUpdaterMod, only : column_state_updater_type
+     use ctsm_DynColumnStateUpdater, only : column_state_updater_type
      !
      ! !ARGUMENTS:
      type(bounds_type)                       , intent(in)    :: bounds        

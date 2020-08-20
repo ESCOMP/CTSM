@@ -1,16 +1,16 @@
-Module SoilHydrologyType
+Module ctsm_SoilHydrologyType
 
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
-  use abortutils            , only : endrun
-  use decompMod             , only : bounds_type
-  use clm_varpar            , only : nlevgrnd, nlayer, nlayert, nlevsoi 
-  use clm_varcon            , only : spval
-  use clm_varctl            , only : iulog
-  use LandunitType          , only : lun                
-  use ColumnType            , only : col                
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use column_varcon         , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
+  use ctsm_AbortUtils            , only : endrun
+  use ctsm_Decomp             , only : bounds_type
+  use ctsm_VarPar            , only : nlevgrnd, nlayer, nlayert, nlevsoi 
+  use ctsm_VarCon            , only : spval
+  use ctsm_VarCtl            , only : iulog
+  use ctsm_LandunitType          , only : lun                
+  use ctsm_ColumnType            , only : col                
+  use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+  use ctsm_ColumnVarCon         , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -153,7 +153,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_HistFile    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(soilhydrology_type) :: this
@@ -324,11 +324,11 @@ contains
      ! !USES:
      use shr_mpi_mod    , only : shr_mpi_bcast
      use shr_log_mod    , only : errMsg => shr_log_errMsg
-     use spmdMod        , only : masterproc, mpicom
-     use fileutils      , only : getavu, relavu, opnfil
-     use clm_nlUtilsMod , only : find_nlgroup_name
-     use clm_varctl     , only : iulog 
-     use abortutils     , only : endrun
+     use ctsm_Spmd        , only : masterproc, mpicom
+     use ctsm_FileUtils      , only : getavu, relavu, opnfil
+     use ctsm_NlUtils , only : find_nlgroup_name
+     use ctsm_VarCtl     , only : iulog 
+     use ctsm_AbortUtils     , only : endrun
      !
      ! !ARGUMENTS:
      class(soilhydrology_type) :: this
@@ -375,4 +375,4 @@ contains
 
    end subroutine ReadNL
 
-end Module SoilHydrologyType
+end Module ctsm_SoilHydrologyType

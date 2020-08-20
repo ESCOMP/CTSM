@@ -1,4 +1,4 @@
-module CNFireEmissionsMod
+module ctsm_CNFireEmissionsMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,9 +7,9 @@ module CNFireEmissionsMod
   ! Created by F. Vitt, and revised by F. Li
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use abortutils,   only : endrun
-  use PatchType,    only : patch                
-  use decompMod,    only : bounds_type
+  use ctsm_AbortUtils,   only : endrun
+  use ctsm_PatchType,    only : patch                
+  use ctsm_Decomp,    only : bounds_type
   use shr_fire_emis_mod,  only : shr_fire_emis_comps_n, shr_fire_emis_comp_t, shr_fire_emis_linkedlist
   use shr_fire_emis_mod,  only : shr_fire_emis_mechcomps_n, shr_fire_emis_mechcomps
   !
@@ -43,8 +43,8 @@ contains
   subroutine Init(this, bounds)
 
     use shr_fire_emis_mod,  only : shr_fire_emis_factors_file
-    use FireEmisFactorsMod, only : fire_emis_factors_init, fire_emis_factors_get
-    use clm_varpar,         only : maxveg
+    use ctsm_FireEmisFactorsMod, only : fire_emis_factors_init, fire_emis_factors_get
+    use ctsm_VarPar,         only : maxveg
 
     implicit none
 
@@ -81,7 +81,7 @@ contains
     !
     ! Allocate memory for module datatypes
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varcon      , only : spval
+    use ctsm_VarCon      , only : spval
 
     ! !ARGUMENTS:
     class(fireemis_type) :: this
@@ -123,8 +123,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine InitHistory(this, bounds)
-    use clm_varcon  , only : spval
-    use histFileMod , only : hist_addfld1d
+    use ctsm_VarCon  , only : spval
+    use ctsm_HistFile , only : hist_addfld1d
 
     ! !ARGUMENTS:
     class(fireemis_type) :: this
@@ -176,10 +176,10 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNFireEmisUpdate(bounds, num_soilp, filter_soilp, cnveg_cf_inst, cnveg_cs_inst, fireemis_inst )
 
-    use CNVegcarbonfluxType,  only : cnveg_carbonflux_type
-    use CNVegCarbonStateType, only : cnveg_carbonstate_type 
-    use clm_varpar,           only : ndecomp_pools, nlevdecomp
-    use clm_varcon,           only : dzsoi_decomp
+    use ctsm_CNVegCarbonFluxType,  only : cnveg_carbonflux_type
+    use ctsm_CNVegCarbonStateType, only : cnveg_carbonstate_type 
+    use ctsm_VarPar,           only : ndecomp_pools, nlevdecomp
+    use ctsm_VarCon,           only : dzsoi_decomp
 
     !ARGUMENTS:
     type(bounds_type),           intent(in)    :: bounds                  
@@ -329,14 +329,14 @@ contains
 
   function vert_dist_top( veg_type ) result(ztop)
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
-    use pftconMod       , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree
-    use pftconMod       , only : ndllf_dcd_brl_tree, nbrdlf_evr_tmp_tree
-    use pftconMod       , only : nbrdlf_dcd_tmp_tree, nbrdlf_dcd_brl_tree
-    use pftconMod       , only : nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree
-    use pftconMod       , only : nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
-    use pftconMod       , only : nc3_arctic_grass, nc3_nonarctic_grass
-    use pftconMod       , only : nc3crop, nc3irrig
-    use pftconMod       , only : npcropmin, npcropmax
+    use ctsm_PftCon       , only : noveg, ndllf_evr_tmp_tree, ndllf_evr_brl_tree
+    use ctsm_PftCon       , only : ndllf_dcd_brl_tree, nbrdlf_evr_tmp_tree
+    use ctsm_PftCon       , only : nbrdlf_dcd_tmp_tree, nbrdlf_dcd_brl_tree
+    use ctsm_PftCon       , only : nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree
+    use ctsm_PftCon       , only : nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
+    use ctsm_PftCon       , only : nc3_arctic_grass, nc3_nonarctic_grass
+    use ctsm_PftCon       , only : nc3crop, nc3irrig
+    use ctsm_PftCon       , only : npcropmin, npcropmax
     implicit none
     integer, intent(in) :: veg_type
 
@@ -373,5 +373,5 @@ contains
 
   end function vert_dist_top
 
-end module CNFireEmissionsMod
+end module ctsm_CNFireEmissionsMod
 

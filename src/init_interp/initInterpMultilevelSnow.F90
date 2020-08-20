@@ -1,4 +1,4 @@
-module initInterpMultilevelSnow
+module ctsm_InitInterpMultilevelSnow
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,9 +9,9 @@ module initInterpMultilevelSnow
 
   use shr_kind_mod             , only : r8 => shr_kind_r8
   use shr_log_mod              , only : errMsg => shr_log_errMsg
-  use abortutils               , only : endrun
-  use clm_varctl               , only : iulog
-  use initInterpMultilevelBase , only : interp_multilevel_type
+  use ctsm_AbortUtils               , only : endrun
+  use ctsm_VarCtl               , only : iulog
+  use ctsm_InitInterpMultilevelBase , only : interp_multilevel_type
 
   implicit none
   private
@@ -224,4 +224,4 @@ contains
 
   end function get_description
 
-end module initInterpMultilevelSnow
+end module ctsm_InitInterpMultilevelSnow

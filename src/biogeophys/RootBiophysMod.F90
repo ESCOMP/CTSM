@@ -1,4 +1,4 @@
-module RootBiophysMod
+module ctsm_RootBiophys
 
 #include "shr_assert.h"
 
@@ -37,12 +37,12 @@ contains
     ! initialize methods for root profile calculation
 
     ! !USES:
-    use abortutils      , only : endrun   
-    use fileutils       , only : getavu, relavu
-    use spmdMod         , only : mpicom, masterproc
+    use ctsm_AbortUtils      , only : endrun   
+    use ctsm_FileUtils       , only : getavu, relavu
+    use ctsm_Spmd         , only : mpicom, masterproc
     use shr_mpi_mod     , only : shr_mpi_bcast
-    use clm_varctl      , only : iulog
-    use clm_nlUtilsMod  , only : find_nlgroup_name
+    use ctsm_VarCtl      , only : iulog
+    use ctsm_NlUtils  , only : find_nlgroup_name
 
     ! !ARGUMENTS:
     !------------------------------------------------------------------------------
@@ -115,10 +115,10 @@ contains
     ! USES
     use shr_kind_mod   , only : r8 => shr_kind_r8   
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use decompMod      , only : bounds_type
-    use abortutils     , only : endrun         
-    use ColumnType            , only : col                
-    use PatchType             , only : patch                
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_AbortUtils     , only : endrun         
+    use ctsm_ColumnType            , only : col                
+    use ctsm_PatchType             , only : patch                
         !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds                     ! bounds
@@ -180,10 +180,10 @@ contains
     ! USES
     use shr_kind_mod   , only : r8 => shr_kind_r8   
     use shr_log_mod    , only : errMsg => shr_log_errMsg   
-    use decompMod      , only : bounds_type
-    use pftconMod      , only : pftcon
-    use PatchType      , only : patch
-    use ColumnType     , only : col
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_PftCon      , only : pftcon
+    use ctsm_PatchType      , only : patch
+    use ctsm_ColumnType     , only : col
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds                  ! bounds
@@ -235,10 +235,10 @@ contains
     ! USES
     use shr_kind_mod   , only : r8 => shr_kind_r8   
     use shr_log_mod    , only : errMsg => shr_log_errMsg   
-    use decompMod      , only : bounds_type
-    use pftconMod      , only : pftcon
-    use PatchType      , only : patch
-    use ColumnType     , only : col
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_PftCon      , only : pftcon
+    use ctsm_PatchType      , only : patch
+    use ctsm_ColumnType     , only : col
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds                  ! bounds
@@ -287,10 +287,10 @@ contains
     ! USES
     use shr_kind_mod   , only : r8 => shr_kind_r8   
     use shr_log_mod    , only : errMsg => shr_log_errMsg   
-    use decompMod      , only : bounds_type
-    use pftconMod      , only : pftcon
-    use PatchType      , only : patch
-    use ColumnType     , only : col
+    use ctsm_Decomp      , only : bounds_type
+    use ctsm_PftCon      , only : pftcon
+    use ctsm_PatchType      , only : patch
+    use ctsm_ColumnType     , only : col
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds                  ! bounds
@@ -325,4 +325,4 @@ contains
 
   end function exponential_rootfr
   
-end module RootBiophysMod
+end module ctsm_RootBiophys

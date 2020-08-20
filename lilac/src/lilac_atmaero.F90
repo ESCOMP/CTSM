@@ -25,8 +25,8 @@ module lilac_atmaero
 
   ! ctsm uses
   use ncdio_pio        , only : pio_subsystem
-  use domainMod        , only : ldomain
-  use clm_time_manager , only : get_calendar
+  use ctsm_Domain        , only : ldomain
+  use ctsm_TimeManager , only : get_calendar
 
   ! lilac uses
   use lilac_atmcap     , only : gindex_atm

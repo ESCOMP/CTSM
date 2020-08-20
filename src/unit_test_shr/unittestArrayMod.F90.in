@@ -4,11 +4,11 @@ module unittestArrayMod
   ! subroutines.
   !
   ! The routines here assume that the subgrid structure has been set up via
-  ! unittestSubgridMod.
+  ! ctsm_UnitTestSubgrid.
 
   use shr_kind_mod, only : r8 => shr_kind_r8, i4 => shr_kind_i4
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-  use unittestSubgridMod, only : bounds
+  use ctsm_UnitTestSubgrid, only : bounds
 
   implicit none
   private

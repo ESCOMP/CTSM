@@ -1,4 +1,4 @@
-module ncdio_utils
+module ctsm_NcdIoUtils
 
   !-----------------------------------------------------------------------
   ! This module provides higher-level netcdf i/o utilities, which build on ncdio_pio.
@@ -67,4 +67,4 @@ contains
 
   end subroutine find_var_on_file
 
-end module ncdio_utils
+end module ctsm_NcdIoUtils

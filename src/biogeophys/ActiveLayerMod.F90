@@ -1,4 +1,4 @@
-module ActiveLayerMod
+module ctsm_ActiveLayer
   
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,15 +6,15 @@ module ActiveLayerMod
   !
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
-  use decompMod       , only : bounds_type
+  use ctsm_Decomp       , only : bounds_type
   use shr_const_mod   , only : SHR_CONST_TKFRZ
-  use clm_varctl      , only : iulog, use_cn
-  use clm_varcon      , only : spval  
-  use landunit_varcon , only : istsoil, istcrop
-  use TemperatureType , only : temperature_type
-  use GridcellType    , only : grc
-  use LandunitType    , only : lun
-  use ColumnType      , only : col
+  use ctsm_VarCtl      , only : iulog, use_cn
+  use ctsm_VarCon      , only : spval  
+  use ctsm_LandunitVarCon , only : istsoil, istcrop
+  use ctsm_TemperatureType , only : temperature_type
+  use ctsm_GridcellType    , only : grc
+  use ctsm_LandunitType    , only : lun
+  use ctsm_ColumnType      , only : col
   !
   implicit none
   save
@@ -73,10 +73,10 @@ contains
     !
     ! !USES:
     use shr_const_mod    , only : SHR_CONST_TKFRZ
-    use clm_varpar       , only : nlevgrnd
-    use clm_time_manager , only : get_curr_date, get_step_size
-    use clm_varctl       , only : iulog
-    use clm_varcon       , only : zsoi
+    use ctsm_VarPar       , only : nlevgrnd
+    use ctsm_TimeManager , only : get_curr_date, get_step_size
+    use ctsm_VarCtl       , only : iulog
+    use ctsm_VarCon       , only : zsoi
     !
     ! !ARGUMENTS:
     class(active_layer_type), intent(inout) :: this
@@ -238,7 +238,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod   , only: hist_addfld1d
+    use ctsm_HistFile   , only: hist_addfld1d
     !
     ! !ARGUMENTS:
     class(active_layer_type), intent(inout) :: this
@@ -347,4 +347,4 @@ contains
 
 
 
-end module ActiveLayerMod
+end module ctsm_ActiveLayer

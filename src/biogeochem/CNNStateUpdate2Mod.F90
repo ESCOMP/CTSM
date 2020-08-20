@@ -1,4 +1,4 @@
-module CNNStateUpdate2Mod
+module ctsm_CNNStateUpdate2Mod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,13 +6,13 @@ module CNNStateUpdate2Mod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_time_manager                , only : get_step_size_real
-  use clm_varpar                      , only : nlevsoi, nlevdecomp
-  use clm_varpar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varctl                      , only : iulog
-  use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_TimeManager                , only : get_step_size_real
+  use ctsm_VarPar                      , only : nlevsoi, nlevdecomp
+  use ctsm_VarPar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use ctsm_VarCtl                      , only : iulog
+  use ctsm_CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   !
   implicit none
   private
@@ -235,4 +235,4 @@ contains
 
   end subroutine NStateUpdate2h
 
-end module CNNStateUpdate2Mod
+end module ctsm_CNNStateUpdate2Mod

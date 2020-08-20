@@ -1,4 +1,4 @@
-module SoilBiogeochemPrecisionControlMod
+module ctsm_SoilBiogeochemPrecisionControl
 
   !----------------------------------------------------------------------- 
   ! !DESCRIPTION:
@@ -6,10 +6,10 @@ module SoilBiogeochemPrecisionControlMod
   ! 
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varpar                      , only : ndecomp_pools
-  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use ColumnType                      , only : col
+  use ctsm_VarPar                      , only : ndecomp_pools
+  use ctsm_SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_ColumnType                      , only : col
   !
   implicit none
   private
@@ -34,7 +34,7 @@ contains
     ! Initialization of soil biogeochemistry precision control
     !
     ! !USES:
-    use clm_varctl , only : use_c13, use_c14
+    use ctsm_VarCtl , only : use_c13, use_c14
     !
     ! !ARGUMENTS:
     type(soilbiogeochem_carbonstate_type)   , intent(inout) :: soilbiogeochem_carbonstate_inst
@@ -70,9 +70,9 @@ contains
     ! they get too small.
     !
     ! !USES:
-    use clm_varctl , only : iulog, use_c13, use_c14, use_nitrif_denitrif, use_cn
-    use clm_varpar , only : nlevdecomp
-    use CNSharedParamsMod, only: use_fun
+    use ctsm_VarCtl , only : iulog, use_c13, use_c14, use_nitrif_denitrif, use_cn
+    use ctsm_VarPar , only : nlevdecomp
+    use ctsm_CNSharedParamsMod, only: use_fun
     !
     ! !ARGUMENTS:
     integer                                 , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -193,4 +193,4 @@ contains
 
   end subroutine SoilBiogeochemPrecisionControl
 
-end module SoilBiogeochemPrecisionControlMod
+end module ctsm_SoilBiogeochemPrecisionControl

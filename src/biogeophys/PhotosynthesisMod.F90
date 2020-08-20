@@ -1,4 +1,4 @@
-module  PhotosynthesisMod
+module  ctsm_Photosynthesis
 
 #include "shr_assert.h"
 
@@ -13,27 +13,27 @@ module  PhotosynthesisMod
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use shr_log_mod         , only : errMsg => shr_log_errMsg
   use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
-  use abortutils          , only : endrun
-  use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_fates, use_luna, use_hydrstress
-  use clm_varctl          , only : iulog
-  use clm_varpar          , only : nlevcan, nvegwcs, mxpft
-  use clm_varcon          , only : namep, c14ratio, spval
-  use decompMod           , only : bounds_type
-  use QuadraticMod        , only : quadratic
-  use pftconMod           , only : pftcon
-  use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
-  use atm2lndType         , only : atm2lnd_type
-  use CanopyStateType     , only : canopystate_type
-  use WaterDiagnosticBulkType      , only : waterdiagnosticbulk_type
-  use WaterFluxBulkType       , only : waterfluxbulk_type
-  use SoilStateType       , only : soilstate_type
-  use TemperatureType     , only : temperature_type
-  use SolarAbsorbedType   , only : solarabs_type
-  use SurfaceAlbedoType   , only : surfalb_type
-  use OzoneBaseMod        , only : ozone_base_type
-  use LandunitType        , only : lun
-  use PatchType           , only : patch
-  use GridcellType        , only : grc
+  use ctsm_AbortUtils          , only : endrun
+  use ctsm_VarCtl          , only : use_c13, use_c14, use_cn, use_cndv, use_fates, use_luna, use_hydrstress
+  use ctsm_VarCtl          , only : iulog
+  use ctsm_VarPar          , only : nlevcan, nvegwcs, mxpft
+  use ctsm_VarCon          , only : namep, c14ratio, spval
+  use ctsm_Decomp           , only : bounds_type
+  use ctsm_QuadraticSolver        , only : quadratic
+  use ctsm_PftCon           , only : pftcon
+  use ctsm_CIsoAtmTimeSeriesRead, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
+  use ctsm_Atm2LndType         , only : atm2lnd_type
+  use ctsm_CanopyStateType     , only : canopystate_type
+  use ctsm_WaterDiagnosticBulkType      , only : waterdiagnosticbulk_type
+  use ctsm_WaterFluxBulkType       , only : waterfluxbulk_type
+  use ctsm_SoilStateType       , only : soilstate_type
+  use ctsm_TemperatureType     , only : temperature_type
+  use ctsm_SolarAbsorbedType   , only : solarabs_type
+  use ctsm_SurfaceAlbedoType   , only : surfalb_type
+  use ctsm_OzoneBase        , only : ozone_base_type
+  use ctsm_LandunitType        , only : lun
+  use ctsm_PatchType           , only : patch
+  use ctsm_GridcellType        , only : grc
   !
   implicit none
   private
@@ -112,7 +112,7 @@ module  PhotosynthesisMod
      procedure, private :: allocParams
   end type photo_params_type
   !
-  type(photo_params_type), public, protected :: params_inst  ! params_inst is populated in readParamsMod 
+  type(photo_params_type), public, protected :: params_inst  ! params_inst is populated in ctsm_ReadParams 
 
   type, public :: photosyns_type
 
@@ -359,7 +359,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod   , only: hist_addfld1d, hist_addfld2d
+    use ctsm_HistFile   , only: hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
@@ -651,7 +651,7 @@ contains
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     implicit none
 
     ! !ARGUMENTS:
@@ -754,11 +754,11 @@ contains
     ! Read the namelist for Photosynthesis
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
@@ -935,7 +935,7 @@ contains
     ! Time step initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice_mec, istwet
+    use ctsm_LandunitVarCon, only : istsoil, istcrop, istice_mec, istwet
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
@@ -1035,12 +1035,12 @@ contains
     ! a multi-layer canopy
     !
     ! !USES:
-    use clm_varcon        , only : rgas, tfrz, spval
-    use GridcellType      , only : grc
-    use clm_time_manager  , only : get_step_size_real, is_near_local_noon
-    use clm_varctl     , only : cnallocate_carbon_only
-    use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
-    use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
+    use ctsm_VarCon        , only : rgas, tfrz, spval
+    use ctsm_GridcellType      , only : grc
+    use ctsm_TimeManager  , only : get_step_size_real, is_near_local_noon
+    use ctsm_VarCtl     , only : cnallocate_carbon_only
+    use ctsm_VarCtl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
+    use ctsm_PftCon      , only : nbrdlf_dcd_tmp_shrub, npcropmin
 
     !
     ! !ARGUMENTS:
@@ -1932,7 +1932,7 @@ contains
     ! calculation is consistent with that in the isotope calculation
     !
     !!USES:
-    use clm_varctl     , only : use_hydrstress
+    use ctsm_VarCtl     , only : use_hydrstress
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds
@@ -2256,7 +2256,7 @@ contains
     ! Jinyun Tang separated it out from Photosynthesis, Feb. 07/2013
     !
     !!USES
-    use clm_varcon  , only : rgas, tfrz
+    use ctsm_VarCon  , only : rgas, tfrz
     !
     ! !ARGUMENTS:
     real(r8), intent(in) :: tl  ! leaf temperature in photosynthesis temperature function (K)
@@ -2280,7 +2280,7 @@ contains
     ! !REVISION HISTORY
     ! Jinyun Tang separated it out from Photosynthesis, Feb. 07/2013
     !
-    use clm_varcon  , only : rgas, tfrz
+    use ctsm_VarCon  , only : rgas, tfrz
     !
     ! !ARGUMENTS:
     real(r8), intent(in) :: tl  ! leaf temperature in photosynthesis temperature function (K)
@@ -2307,7 +2307,7 @@ contains
     ! Jinyun Tang separated it out from Photosynthesis, Feb. 07/2013
     !
     !!USES
-    use clm_varcon  , only : rgas, tfrz
+    use ctsm_VarCon  , only : rgas, tfrz
     !
     ! !ARGUMENTS:
     real(r8), intent(in) :: hd    ! deactivation energy in photosynthesis temperature function (J/mol)
@@ -2458,14 +2458,14 @@ contains
     ! method
     !
     ! !USES:
-    use clm_varcon        , only : rgas, tfrz, rpi, spval
-    use GridcellType      , only : grc
-    use clm_time_manager  , only : get_step_size_real, is_near_local_noon
-    use clm_varctl        , only : cnallocate_carbon_only
-    use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
-    use clm_varpar        , only : nlevsoi
-    use pftconMod         , only : nbrdlf_dcd_tmp_shrub, npcropmin
-    use ColumnType        , only : col
+    use ctsm_VarCon        , only : rgas, tfrz, rpi, spval
+    use ctsm_GridcellType      , only : grc
+    use ctsm_TimeManager  , only : get_step_size_real, is_near_local_noon
+    use ctsm_VarCtl        , only : cnallocate_carbon_only
+    use ctsm_VarCtl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
+    use ctsm_VarPar        , only : nlevsoi
+    use ctsm_PftCon         , only : nbrdlf_dcd_tmp_shrub, npcropmin
+    use ctsm_ColumnType        , only : col
     use shr_infnan_mod    , only : shr_infnan_isnan
 
     !
@@ -3946,7 +3946,7 @@ contains
     !
     !
     ! !USES:
-    use clm_varpar        , only : nlevsoi
+    use ctsm_VarPar        , only : nlevsoi
     implicit none
     !
     ! !ARGUMENTS:
@@ -4184,8 +4184,8 @@ contains
     ! calls spacF, spacA, and getvegwp
     !
     ! USES
-    use clm_varpar        , only : nlevsoi
-    use clm_varcon        , only : rgas
+    use ctsm_VarPar        , only : nlevsoi
+    use ctsm_VarCon        , only : rgas
     !!
     ! !ARGUMENTS:
     integer                , intent(in)  :: p               ! pft index
@@ -4405,8 +4405,8 @@ contains
     ! example a LINPACK linear algebra solver.
     !
     ! USES
-    use clm_varpar        , only : nlevsoi
-    use clm_varcon        , only : rgas
+    use ctsm_VarPar        , only : nlevsoi
+    use ctsm_VarCon        , only : rgas
     !
     ! !ARGUMENTS:
     integer                , intent(in)  :: p               ! pft index
@@ -4580,9 +4580,9 @@ contains
     !  calculated for vegwp(p,:) as passed in via x
     !
     ! USES
-    use clm_varpar        , only : nlevsoi
-    use clm_varcon        , only : rgas
-    use ColumnType        , only : col
+    use ctsm_VarPar        , only : nlevsoi
+    use ctsm_VarCon        , only : rgas
+    use ctsm_ColumnType        , only : col
     !
     ! !ARGUMENTS:
     integer                , intent(in)  :: p               ! pft index
@@ -4659,8 +4659,8 @@ contains
     !
     ! !USES:
     ! calls getqflx
-    use clm_varpar  , only : nlevsoi
-    use ColumnType  , only : col
+    use ctsm_VarPar  , only : nlevsoi
+    use ctsm_ColumnType  , only : col
     implicit none
     !
     ! !ARGUMENTS:
@@ -4759,7 +4759,7 @@ contains
     !  calculate sunlit and shaded transpiration using gb_MOL and gs_MOL
     ! !USES:
     !
-    use clm_varcon        , only : rgas
+    use ctsm_VarCon        , only : rgas
     implicit none
     !
     ! !ARGUMENTS:
@@ -4907,4 +4907,4 @@ contains
     
   end function d1plc  
   
-end module PhotosynthesisMod
+end module ctsm_Photosynthesis

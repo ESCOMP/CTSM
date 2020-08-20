@@ -10,7 +10,7 @@ module lnd_comp_mct
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use shr_sys_mod      , only : shr_sys_flush
   use mct_mod          , only : mct_avect, mct_gsmap, mct_gGrid
-  use decompmod        , only : bounds_type, ldecomp
+  use ctsm_Decomp        , only : bounds_type, ldecomp
   use lnd_import_export, only : lnd_import, lnd_export
   !
   ! !public member functions:
@@ -41,16 +41,16 @@ contains
     !
     ! !USES:
     use shr_kind_mod     , only : shr_kind_cl
-    use abortutils       , only : endrun
-    use clm_time_manager , only : get_nstep, set_timemgr_init, set_nextsw_cday
-    use clm_initializeMod, only : initialize1, initialize2
-    use clm_instMod      , only : water_inst, lnd2atm_inst, lnd2glc_inst
-    use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog, noland
-    use clm_varctl       , only : inst_index, inst_suffix, inst_name
-    use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
-    use controlMod       , only : control_setNL
-    use decompMod        , only : get_proc_bounds
-    use domainMod        , only : ldomain
+    use ctsm_AbortUtils       , only : endrun
+    use ctsm_TimeManager , only : get_nstep, set_timemgr_init, set_nextsw_cday
+    use ctsm_Initialize, only : initialize1, initialize2
+    use ctsm_Inst      , only : water_inst, lnd2atm_inst, lnd2glc_inst
+    use ctsm_VarCtl       , only : finidat,single_column, ctsm_VarCtl_set, iulog, noland
+    use ctsm_VarCtl       , only : inst_index, inst_suffix, inst_name
+    use ctsm_VarOrb       , only : eccen, obliqr, lambm0, mvelpp
+    use ctsm_Control       , only : control_setNL
+    use ctsm_Decomp        , only : get_proc_bounds
+    use ctsm_Domain        , only : ldomain
     use shr_file_mod     , only : shr_file_setLogUnit, shr_file_setLogLevel
     use shr_file_mod     , only : shr_file_getLogUnit, shr_file_getLogLevel
     use shr_file_mod     , only : shr_file_getUnit, shr_file_setIO
@@ -61,8 +61,8 @@ contains
                                   seq_infodata_start_type_brnch
     use seq_comm_mct     , only : seq_comm_suffix, seq_comm_inst, seq_comm_name
     use seq_flds_mod     , only : seq_flds_x2l_fields, seq_flds_l2x_fields
-    use spmdMod          , only : masterproc, spmd_init
-    use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
+    use ctsm_Spmd          , only : masterproc, spmd_init
+    use ctsm_VarCtl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set
     use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
     use ESMF
@@ -193,7 +193,7 @@ contains
        call endrun( sub//' ERROR: unknown starttype' )
     end if
 
-    call clm_varctl_set(caseid_in=caseid, ctitle_in=ctitle,                     &
+    call ctsm_VarCtl_set(caseid_in=caseid, ctitle_in=ctitle,                     &
                         brnch_retain_casename_in=brnch_retain_casename,         &
                         single_column_in=single_column, scmlat_in=scmlat,       &
                         scmlon_in=scmlon, nsrest_in=nsrest, version_in=version, &
@@ -277,21 +277,21 @@ contains
     !
     ! !USES:
     use shr_kind_mod    ,  only : r8 => shr_kind_r8
-    use clm_instMod     ,  only : water_inst, lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
-    use clm_driver      ,  only : clm_drv
-    use clm_time_manager,  only : get_curr_date, get_nstep, get_curr_calday, get_step_size
-    use clm_time_manager,  only : advance_timestep, set_nextsw_cday,update_rad_dtime
-    use decompMod       ,  only : get_proc_bounds
-    use abortutils      ,  only : endrun
-    use clm_varctl      ,  only : iulog
-    use clm_varorb      ,  only : eccen, obliqr, lambm0, mvelpp
+    use ctsm_Inst     ,  only : water_inst, lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
+    use ctsm_Driver      ,  only : clm_drv
+    use ctsm_TimeManager,  only : get_curr_date, get_nstep, get_curr_calday, get_step_size
+    use ctsm_TimeManager,  only : advance_timestep, set_nextsw_cday,update_rad_dtime
+    use ctsm_Decomp       ,  only : get_proc_bounds
+    use ctsm_AbortUtils      ,  only : endrun
+    use ctsm_VarCtl      ,  only : iulog
+    use ctsm_VarOrb      ,  only : eccen, obliqr, lambm0, mvelpp
     use shr_file_mod    ,  only : shr_file_setLogUnit, shr_file_setLogLevel
     use shr_file_mod    ,  only : shr_file_getLogUnit, shr_file_getLogLevel
     use seq_cdata_mod   ,  only : seq_cdata, seq_cdata_setptrs
     use seq_timemgr_mod ,  only : seq_timemgr_EClockGetData, seq_timemgr_StopAlarmIsOn
     use seq_timemgr_mod ,  only : seq_timemgr_RestartAlarmIsOn, seq_timemgr_EClockDateInSync
     use seq_infodata_mod,  only : seq_infodata_type, seq_infodata_GetData
-    use spmdMod         ,  only : masterproc, mpicom
+    use ctsm_Spmd         ,  only : masterproc, mpicom
     use perf_mod        ,  only : t_startf, t_stopf, t_barrierf
     use shr_orb_mod     ,  only : shr_orb_decl
     use ESMF
@@ -531,7 +531,7 @@ contains
     !
     ! !USES:
     use shr_kind_mod , only : r8 => shr_kind_r8
-    use domainMod    , only : ldomain
+    use ctsm_Domain    , only : ldomain
     use mct_mod      , only : mct_gsMap, mct_gsMap_init
     implicit none
     !
@@ -576,9 +576,9 @@ contains
     ! Send the land model domain information to the coupler
     !
     ! !USES:
-    use clm_varcon  , only: re
-    use domainMod   , only: ldomain
-    use spmdMod     , only: iam
+    use ctsm_VarCon  , only: re
+    use ctsm_Domain   , only: ldomain
+    use ctsm_Spmd     , only: iam
     use mct_mod     , only: mct_gGrid_importIAttr
     use mct_mod     , only: mct_gGrid_importRAttr, mct_gGrid_init, mct_gsMap_orderedPoints
     use seq_flds_mod, only: seq_flds_dom_coord, seq_flds_dom_other
@@ -668,7 +668,7 @@ contains
     ! Handle resume signals for Data Assimilation (DA)
     !
     ! !USES:
-    use clm_time_manager , only : update_DA_nstep
+    use ctsm_TimeManager , only : update_DA_nstep
     use seq_cdata_mod    , only : seq_cdata, seq_cdata_setptrs
     implicit none
     ! !ARGUMENTS:

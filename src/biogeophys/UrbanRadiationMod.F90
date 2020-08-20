@@ -1,4 +1,4 @@
-module UrbanRadiationMod
+module ctsm_UrbanRadiation
 
 #include "shr_assert.h"
 
@@ -10,22 +10,22 @@ module UrbanRadiationMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_sys_mod       , only : shr_sys_flush 
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use decompMod         , only : bounds_type
-  use clm_varpar        , only : numrad
-  use clm_varcon        , only : namel
-  use clm_varctl        , only : iulog
-  use abortutils        , only : endrun  
-  use UrbanParamsType   , only : urbanparams_type
-  use atm2lndType       , only : atm2lnd_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use TemperatureType   , only : temperature_type
-  use SolarAbsorbedType , only : solarabs_type 
-  use SurfaceAlbedoType , only : surfalb_type
-  use UrbanParamsType   , only : urbanparams_type
-  use EnergyFluxType    , only : energyflux_type
-  use LandunitType      , only : lun                
-  use ColumnType        , only : col                
-  use PatchType         , only : patch                
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_VarPar        , only : numrad
+  use ctsm_VarCon        , only : namel
+  use ctsm_VarCtl        , only : iulog
+  use ctsm_AbortUtils        , only : endrun  
+  use ctsm_UrbanParamsType   , only : urbanparams_type
+  use ctsm_Atm2LndType       , only : atm2lnd_type
+  use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use ctsm_TemperatureType   , only : temperature_type
+  use ctsm_SolarAbsorbedType , only : solarabs_type 
+  use ctsm_SurfaceAlbedoType , only : surfalb_type
+  use ctsm_UrbanParamsType   , only : urbanparams_type
+  use ctsm_EnergyFluxType    , only : energyflux_type
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_ColumnType        , only : col                
+  use ctsm_PatchType         , only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -58,10 +58,10 @@ contains
     ! Also net and upward longwave fluxes.
 
     ! !USES:
-    use clm_varcon          , only : spval, sb, tfrz
-    use column_varcon       , only : icol_road_perv, icol_road_imperv
-    use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager    , only : get_step_size_real
+    use ctsm_VarCon          , only : spval, sb, tfrz
+    use ctsm_ColumnVarCon       , only : icol_road_perv, icol_road_imperv
+    use ctsm_ColumnVarCon       , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_TimeManager    , only : get_step_size_real
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -331,7 +331,7 @@ contains
     ! multiple reflection. Also net longwave radiation for urban roof. 
     !
     ! !USES:
-    use clm_varcon , only : sb
+    use ctsm_VarCon , only : sb
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds                  
@@ -713,4 +713,4 @@ contains
 
   end subroutine net_longwave
 
-end module UrbanRadiationMod
+end module ctsm_UrbanRadiation

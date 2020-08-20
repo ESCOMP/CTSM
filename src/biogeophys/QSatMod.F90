@@ -1,4 +1,4 @@
-module QSatMod
+module ctsm_QSat
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -129,7 +129,7 @@ contains
   subroutine rhoSat(T, rho, rhodT)
   ! compute the saturated vapor pressure density and its derivative against the temperature
   ! jyt
-  use clm_varcon,    only: rwat
+  use ctsm_VarCon,    only: rwat
   use shr_const_mod, only: SHR_CONST_TKFRZ
 
   implicit none
@@ -164,4 +164,4 @@ contains
   rho   = es/(rwat*T)                !kg  m^-3
   if(present(rhodT))rhodT= esdT/(rwat*T)-rho/T         !kg  m^-3 K^-1
   end subroutine rhoSat  
-end module QSatMod
+end module ctsm_QSat

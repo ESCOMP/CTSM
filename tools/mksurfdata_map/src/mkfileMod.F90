@@ -7,7 +7,7 @@ contains
 
     use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_sys_mod  , only : shr_sys_getenv
-    use fileutils    , only : get_filename
+    use ctsm_FileUtils    , only : get_filename
     use mkvarpar     , only : nlevsoi, nlevurb, numrad, numstdpft
     use mkvarctl
     use mkurbanparMod, only : numurbl
@@ -17,7 +17,7 @@ contains
     use mkharvestMod , only : mkharvest_fieldname, mkharvest_numtypes, mkharvest_longname
     use mkharvestMod , only : mkharvest_units, harvestDataType
     use mkncdio      , only : check_ret, ncd_defvar, ncd_def_spatial_var
-    use mkdomainMod  
+    use mkctsm_Domain  
 
     implicit none
     include 'netcdf.inc'

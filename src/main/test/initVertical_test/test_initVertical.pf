@@ -1,13 +1,13 @@
 module test_initVertical
 
-  ! Tests of initVerticalMod
+  ! Tests of ctsm_InitVertical
 
   use pfunit_mod
-  use initVerticalMod
+  use ctsm_InitVertical
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varpar, only : nlevlak, nlevgrnd, nlevdecomp_full, nlayer
-  use clm_varcon, only : clm_varcon_init, clm_varcon_clean, zisoi
-  use unittestUtils, only : endrun_msg
+  use ctsm_VarPar, only : nlevlak, nlevgrnd, nlevdecomp_full, nlayer
+  use ctsm_VarCon, only : ctsm_VarCon_init, ctsm_VarCon_clean, zisoi
+  use ctsm_UnitTestUtils, only : endrun_msg
 
   implicit none
 
@@ -33,14 +33,14 @@ contains
   subroutine tearDown(this)
     class(TestInitVertical), intent(inout) :: this
 
-    call clm_varcon_clean()
+    call ctsm_VarCon_clean()
   end subroutine tearDown
 
   !-----------------------------------------------------------------------
-  subroutine call_clm_varcon_init(my_nlevgrnd)
+  subroutine call_ctsm_VarCon_init(my_nlevgrnd)
     !
     ! !DESCRIPTION:
-    ! Set clm_varpar variables needed by clm_varcon_init, then call clm_varcon_init.
+    ! Set ctsm_VarPar variables needed by ctsm_VarCon_init, then call ctsm_VarCon_init.
     !
     ! This should be called at the start of every unit test defined here.
     !
@@ -49,7 +49,7 @@ contains
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'call_clm_varcon_init'
+    character(len=*), parameter :: subname = 'call_ctsm_VarCon_init'
     !-----------------------------------------------------------------------
 
     nlevgrnd = my_nlevgrnd
@@ -58,14 +58,14 @@ contains
     nlevlak = 10
     nlevdecomp_full = nlevgrnd
 
-    call clm_varcon_init(is_simple_buildtemp = .true.)
-  end subroutine call_clm_varcon_init
+    call ctsm_VarCon_init(is_simple_buildtemp = .true.)
+  end subroutine call_ctsm_VarCon_init
 
   !-----------------------------------------------------------------------
   subroutine set_zisoi(my_zisoi)
     !
     ! !DESCRIPTION:
-    ! Set zisoi values in clm_varcon based on passed-in array
+    ! Set zisoi values in ctsm_VarCon based on passed-in array
     !
     ! !ARGUMENTS:
     ! Interface values at the BOTTOM of each layer; should NOT contain the top (0) value,
@@ -94,7 +94,7 @@ contains
     real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
     integer :: layer
 
-    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call call_ctsm_VarCon_init(my_nlevgrnd = size(my_zisoi))
     call set_zisoi(my_zisoi)
 
     call find_soil_layer_containing_depth(1._r8, layer)
@@ -108,7 +108,7 @@ contains
     real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
     integer :: layer
 
-    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call call_ctsm_VarCon_init(my_nlevgrnd = size(my_zisoi))
     call set_zisoi(my_zisoi)
 
     call find_soil_layer_containing_depth(5._r8, layer)
@@ -122,7 +122,7 @@ contains
     real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
     integer :: layer
 
-    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call call_ctsm_VarCon_init(my_nlevgrnd = size(my_zisoi))
     call set_zisoi(my_zisoi)
 
     call find_soil_layer_containing_depth(3._r8, layer)
@@ -136,7 +136,7 @@ contains
     real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
     integer :: layer
 
-    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call call_ctsm_VarCon_init(my_nlevgrnd = size(my_zisoi))
     call set_zisoi(my_zisoi)
 
     call find_soil_layer_containing_depth(-1._r8, layer)
@@ -150,7 +150,7 @@ contains
     real(r8), parameter :: my_zisoi(3) = [2._r8, 4._r8, 6._r8]
     integer :: layer
 
-    call call_clm_varcon_init(my_nlevgrnd = size(my_zisoi))
+    call call_ctsm_VarCon_init(my_nlevgrnd = size(my_zisoi))
     call set_zisoi(my_zisoi)
 
     call find_soil_layer_containing_depth(7._r8, layer)

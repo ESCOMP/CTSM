@@ -1,37 +1,37 @@
-module EDBGCDynMod
+module ctsm_FatesBiogeochemDynMod
 
 ! This module creates a pathway to call the belowground biogeochemistry code as driven by the fates vegetation model 
-! but bypassing the aboveground CN vegetation code.  It is modeled after the CNDriverMod in its call sequence and 
+! but bypassing the aboveground CN vegetation code.  It is modeled after the ctsm_CNDriverMod in its call sequence and 
 ! functionality.
 
   use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use clm_varctl                      , only : use_c13, use_c14, use_fates
-  use decompMod                       , only : bounds_type
+  use ctsm_VarCtl                      , only : use_c13, use_c14, use_fates
+  use ctsm_Decomp                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use abortutils                      , only : endrun
-  use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif
-  use CNVegCarbonStateType	      , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType	      , only : cnveg_carbonflux_type
-  use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use CanopyStateType                 , only : canopystate_type
-  use SoilStateType                   , only : soilstate_type
-  use SoilHydrologyType               , only : soilhydrology_type
-  use TemperatureType                 , only : temperature_type
-  use WaterFluxBulkType                   , only : waterfluxbulk_type
-  use ActiveLayerMod                  , only : active_layer_type
-  use atm2lndType                     , only : atm2lnd_type
-  use SoilStateType                   , only : soilstate_type
-  use ch4Mod                          , only : ch4_type
+  use ctsm_AbortUtils                      , only : endrun
+  use ctsm_VarCtl                      , only : use_century_decomp, use_nitrif_denitrif
+  use ctsm_CNVegCarbonStateType	      , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType	      , only : cnveg_carbonflux_type
+  use ctsm_SoilBiogeochemStateType         , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_CanopyStateType                 , only : canopystate_type
+  use ctsm_SoilStateType                   , only : soilstate_type
+  use ctsm_SoilHydrologyType               , only : soilhydrology_type
+  use ctsm_TemperatureType                 , only : temperature_type
+  use ctsm_WaterFluxBulkType                   , only : waterfluxbulk_type
+  use ctsm_ActiveLayer                  , only : active_layer_type
+  use ctsm_Atm2LndType                     , only : atm2lnd_type
+  use ctsm_SoilStateType                   , only : soilstate_type
+  use ctsm_Methane                          , only : ch4_type
 
 
-  ! public :: EDBGCDynInit         ! BGC dynamics: initialization
-  public :: EDBGCDyn             ! BGC Dynamics
-  public :: EDBGCDynSummary      ! BGC dynamics: summary
+  ! public :: ctsm_FatesBiogeochemDynInit         ! BGC dynamics: initialization
+  public :: ctsm_FatesBiogeochemDyn             ! BGC Dynamics
+  public :: ctsm_FatesBiogeochemDynSummary      ! BGC dynamics: summary
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -40,7 +40,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine EDBGCDyn(bounds,                                                    &
+  subroutine ctsm_FatesBiogeochemDyn(bounds,                                                    &
        num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp, doalb, &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,                    &
@@ -55,32 +55,32 @@ contains
 
     !
     ! !USES:
-    use clm_varpar                        , only: nlevgrnd, nlevdecomp_full 
-    use clm_varpar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-    use subgridAveMod                     , only: p2c
-    use CropType                          , only: crop_type
-    use CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix
-    use CNMRespMod                        , only: CNMResp
-    use CNPhenologyMod                    , only: CNPhenology
-    use CNGRespMod                        , only: CNGResp
-    use CNCIsoFluxMod                     , only: CIsoFlux1, CIsoFlux2, CIsoFlux2h, CIsoFlux3
-    use CNC14DecayMod                     , only: C14Decay
-    use CNCStateUpdate1Mod                , only: CStateUpdate1,CStateUpdate0
-    use CNCStateUpdate2Mod                , only: CStateUpdate2, CStateUpdate2h
-    use CNCStateUpdate3Mod                , only: CStateUpdate3
-    use CNNStateUpdate1Mod                , only: NStateUpdate1
-    use CNNStateUpdate2Mod                , only: NStateUpdate2, NStateUpdate2h
-    use CNGapMortalityMod                 , only: CNGapMortality
+    use ctsm_VarPar                        , only: nlevgrnd, nlevdecomp_full 
+    use ctsm_VarPar                        , only: nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+    use ctsm_SubgridAve                     , only: p2c
+    use ctsm_CropType                          , only: crop_type
+    use ctsm_CNNDynamicsMod                    , only: CNNDeposition,CNNFixation, CNNFert, CNSoyfix
+    use ctsm_CNMaintRespMod                        , only: ctsm_CNMaintResp
+    use ctsm_CNPhenologyMod                    , only: ctsm_CNPhenology
+    use ctsm_CNGrowthRespMod                        , only: ctsm_CNGrowthResp
+    use ctsm_CNCIsoFluxes                     , only: CIsoFlux1, CIsoFlux2, CIsoFlux2h, CIsoFlux3
+    use ctsm_CNC14DecayMod                     , only: C14Decay
+    use ctsm_CNCStateUpdate1Mod                , only: CStateUpdate1,CStateUpdate0
+    use ctsm_CNCStateUpdate2Mod                , only: CStateUpdate2, CStateUpdate2h
+    use ctsm_CNCStateUpdate3Mod                , only: CStateUpdate3
+    use ctsm_CNNStateUpdate1Mod                , only: NStateUpdate1
+    use ctsm_CNNStateUpdate2Mod                , only: NStateUpdate2, NStateUpdate2h
+    use ctsm_CNGapMortalityMod                 , only: ctsm_CNGapMortality
     use dynHarvestMod                     , only: CNHarvest
-    use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
-    use SoilBiogeochemDecompCascadeCNMod  , only: decomp_rate_constants_cn
-    use SoilBiogeochemCompetitionMod      , only: SoilBiogeochemCompetition
-    use SoilBiogeochemDecompMod           , only: SoilBiogeochemDecomp
-    use SoilBiogeochemLittVertTranspMod   , only: SoilBiogeochemLittVertTransp
-    use SoilBiogeochemPotentialMod        , only: SoilBiogeochemPotential 
-    use SoilBiogeochemVerticalProfileMod  , only: SoilBiogeochemVerticalProfile
-    use SoilBiogeochemNitrifDenitrifMod   , only: SoilBiogeochemNitrifDenitrif
-    use SoilBiogeochemNStateUpdate1Mod    , only: SoilBiogeochemNStateUpdate1
+    use ctsm_SoilBiogeochemDecompCascadeBGC , only: decomp_rate_constants_bgc
+    use ctsm_SoilBiogeochemDecompCascadeCN  , only: decomp_rate_constants_cn
+    use ctsm_SoilBiogeochemCompetition      , only: SoilBiogeochemCompetition
+    use ctsm_SoilBiogeochemDecomp           , only: SoilBiogeochemDecomp
+    use ctsm_SoilBiogeochemLittVertTransp   , only: SoilBiogeochemLittVertTransp
+    use ctsm_SoilBiogeochemPotential        , only: SoilBiogeochemPotential 
+    use ctsm_SoilBiogeochemVerticalProfile  , only: SoilBiogeochemVerticalProfile
+    use ctsm_SoilBiogeochemNitrifDenitrif   , only: SoilBiogeochemNitrifDenitrif
+    use ctsm_SoilBiogeochemNStateUpdate1    , only: SoilBiogeochemNStateUpdate1
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -253,11 +253,11 @@ contains
 
     end associate
 
-  end subroutine EDBGCDyn
+  end subroutine ctsm_FatesBiogeochemDyn
 
 
   !-----------------------------------------------------------------------
-  subroutine EDBGCDynSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine ctsm_FatesBiogeochemDynSummary(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
        c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -269,10 +269,10 @@ contains
     ! also aggregate production and decomposition fluxes to whole-ecosystem balance fluxes
     !
     ! !USES:
-    use clm_varpar                        , only: ndecomp_cascade_transitions
-    use CNPrecisionControlMod             , only: CNPrecisionControl
-    use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
-    use CLMFatesInterfaceMod              , only: hlm_fates_interface_type
+    use ctsm_VarPar                        , only: ndecomp_cascade_transitions
+    use ctsm_CNPrecisionControlMod             , only: ctsm_CNPrecisionControl
+    use ctsm_SoilBiogeochemPrecisionControl , only: SoilBiogeochemPrecisionControl
+    use ctsm_FatesInterface              , only: hlm_fates_interface_type
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -352,6 +352,6 @@ contains
 
     call t_stopf('BGCsum')
 
-  end subroutine EDBGCDynSummary
+  end subroutine ctsm_FatesBiogeochemDynSummary
 
-end  module EDBGCDynMod
+end  module ctsm_FatesBiogeochemDynMod

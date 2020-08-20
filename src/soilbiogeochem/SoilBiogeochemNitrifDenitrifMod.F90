@@ -1,4 +1,4 @@
-module SoilBiogeochemNitrifDenitrifMod
+module ctsm_SoilBiogeochemNitrifDenitrif
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,20 +9,20 @@ module SoilBiogeochemNitrifDenitrifMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use shr_const_mod                   , only : SHR_CONST_TKFRZ
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use clm_varpar                      , only : nlevdecomp
-  use clm_varcon                      , only : rpi, grav
-  use clm_varcon                      , only : d_con_g, d_con_w, secspday
-  use clm_varctl                      , only : use_lch4
-  use abortutils                      , only : endrun
-  use decompMod                       , only : bounds_type
-  use SoilStatetype                   , only : soilstate_type
-  use WaterStateBulkType                  , only : waterstatebulk_type
-  use TemperatureType                 , only : temperature_type
-  use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use ch4Mod                          , only : ch4_type
-  use ColumnType                      , only : col                
+  use ctsm_VarPar                      , only : nlevdecomp
+  use ctsm_VarCon                      , only : rpi, grav
+  use ctsm_VarCon                      , only : d_con_g, d_con_w, secspday
+  use ctsm_VarCtl                      , only : use_lch4
+  use ctsm_AbortUtils                      , only : endrun
+  use ctsm_Decomp                       , only : bounds_type
+  use ctsm_SoilStateType                   , only : soilstate_type
+  use ctsm_WaterStateBulkType                  , only : waterstatebulk_type
+  use ctsm_TemperatureType                 , only : temperature_type
+  use ctsm_SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_Methane                          , only : ch4_type
+  use ctsm_ColumnType                      , only : col                
   !
   implicit none
   private
@@ -139,8 +139,8 @@ contains
     !  calculate nitrification and denitrification rates
     !
     ! !USES:
-    use clm_time_manager  , only : get_curr_date
-    use CNSharedParamsMod , only : CNParamsShareInst
+    use ctsm_TimeManager  , only : get_curr_date
+    use ctsm_CNSharedParamsMod , only : CNParamsShareInst
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds  
@@ -393,4 +393,4 @@ contains
 
   end subroutine SoilBiogeochemNitrifDenitrif
 
-end module SoilBiogeochemNitrifDenitrifMod
+end module ctsm_SoilBiogeochemNitrifDenitrif

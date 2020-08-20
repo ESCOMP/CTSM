@@ -1,11 +1,11 @@
 module test_humanstress
 
-  ! Tests of the humanstress functions in HumanIndexMod
+  ! Tests of the humanstress functions in ctsm_HumanIndices
 
   use pfunit_mod
 
   use shr_kind_mod  , only : r8 => shr_kind_r8
-  use HumanIndexMod
+  use ctsm_HumanIndices
   use shr_infnan_mod, only : shr_infnan_isnan
   use shr_const_mod , only: SHR_CONST_TKFRZ
 
@@ -41,7 +41,7 @@ contains
 
   @Test
   subroutine test_WetBulb()
-    use QSatMod, only : QSat
+    use ctsm_QSat, only : QSat
     implicit none
     real(r8) :: temp   ! Temperature
     real(r8) :: rh     ! relative humidity
@@ -100,7 +100,7 @@ contains
 
   @Test
   subroutine test_WetBulb_extremeTemps()
-    use QSatMod, only : QSat
+    use ctsm_QSat, only : QSat
     implicit none
     real(r8) :: temp   ! Temperature
     real(r8) :: rh     ! relative humidity

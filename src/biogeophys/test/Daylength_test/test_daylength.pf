@@ -1,12 +1,12 @@
 module test_daylength
 
-  ! Tests of the daylength function in DaylengthMod
+  ! Tests of the daylength function in ctsm_DayLength
 
   use pfunit_mod
 
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_const_mod, only : SHR_CONST_PI
-  use DaylengthMod , only : daylength
+  use ctsm_DayLength , only : daylength
 
   implicit none
   save

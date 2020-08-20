@@ -1,4 +1,4 @@
-module BareGroundFluxesMod
+module ctsm_BareGroundFluxes
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,22 +7,22 @@ module BareGroundFluxesMod
   !
   ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
-  use decompMod            , only : bounds_type
-  use ch4Mod               , only : ch4_type
-  use atm2lndType          , only : atm2lnd_type
-  use EnergyFluxType       , only : energyflux_type
-  use FrictionVelocityMod  , only : frictionvel_type
-  use SoilStateType        , only : soilstate_type
-  use TemperatureType      , only : temperature_type
-  use PhotosynthesisMod    , only : photosyns_type
-  use WaterFluxBulkType        , only : waterfluxbulk_type
-  use WaterStateBulkType       , only : waterstatebulk_type
-  use WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType       , only : wateratm2lndbulk_type
-  use HumanIndexMod        , only : humanindex_type
-  use LandunitType         , only : lun                
-  use ColumnType           , only : col                
-  use PatchType            , only : patch                
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_Methane               , only : ch4_type
+  use ctsm_Atm2LndType          , only : atm2lnd_type
+  use ctsm_EnergyFluxType       , only : energyflux_type
+  use ctsm_FrictionVelocity  , only : frictionvel_type
+  use ctsm_SoilStateType        , only : soilstate_type
+  use ctsm_TemperatureType      , only : temperature_type
+  use ctsm_Photosynthesis    , only : photosyns_type
+  use ctsm_WaterFluxBulkType        , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType       , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType       , only : waterdiagnosticbulk_type
+  use ctsm_WaterAtm2LndBulkType       , only : wateratm2lndbulk_type
+  use ctsm_HumanIndices        , only : humanindex_type
+  use ctsm_LandunitType         , only : lun                
+  use ctsm_ColumnType           , only : col                
+  use ctsm_PatchType            , only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -47,7 +47,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -79,13 +79,13 @@ contains
     !
     ! !USES:
     use shr_const_mod        , only : SHR_CONST_RGAS
-    use clm_varpar           , only : nlevgrnd
-    use clm_varcon           , only : cpair, vkc, grav, denice, denh2o
-    use clm_varctl           , only : use_lch4
-    use landunit_varcon      , only : istsoil, istcrop
-    use QSatMod              , only : QSat
-    use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
-    use HumanIndexMod        , only : all_human_stress_indices, fast_human_stress_indices, &
+    use ctsm_VarPar           , only : nlevgrnd
+    use ctsm_VarCon           , only : cpair, vkc, grav, denice, denh2o
+    use ctsm_VarCtl           , only : use_lch4
+    use ctsm_LandunitVarCon      , only : istsoil, istcrop
+    use ctsm_QSat              , only : QSat
+    use ctsm_SurfaceResistance , only : do_soilevap_beta,do_soil_resistance_sl14
+    use ctsm_HumanIndices        , only : all_human_stress_indices, fast_human_stress_indices, &
                                       Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
@@ -472,4 +472,4 @@ contains
 
   end subroutine BareGroundFluxes
 
-end module BareGroundFluxesMod
+end module ctsm_BareGroundFluxes

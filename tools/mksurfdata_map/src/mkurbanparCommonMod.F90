@@ -55,7 +55,7 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
 !
 !
 ! !USES:
-   use mkdomainMod , only : domain_type, domain_checksame
+   use mkctsm_Domain , only : domain_type, domain_checksame
    use mkgridmapMod
    use mkvarctl    , only : mksrf_gridtype
 !
@@ -163,7 +163,7 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
 ! this can't always be applied inline in mkurban_pct).
 !
 ! !USES:
-   use mkdomainMod , only : domain_type
+   use mkctsm_Domain , only : domain_type
    use mkgridmapMod, only : gridmap_type
    use mkvarpar
 !
@@ -258,7 +258,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
 ! Make elevation data
 !
 ! !USES:
-  use mkdomainMod  , only : domain_type, domain_clean, domain_read, domain_checksame
+  use mkctsm_Domain  , only : domain_type, domain_clean, domain_read, domain_checksame
   use mkgridmapMod
   use mkvarpar	
   use mkvarctl    

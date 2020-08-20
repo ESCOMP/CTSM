@@ -1,9 +1,9 @@
 module test_init_interp_multilevel_snow
 
-  ! Tests of initInterpMultilevelSnow
+  ! Tests of ctsm_InitInterpMultilevelSnow
 
   use pfunit_mod
-  use initInterpMultilevelSnow
+  use ctsm_InitInterpMultilevelSnow
   use shr_kind_mod , only : r8 => shr_kind_r8
 
   implicit none

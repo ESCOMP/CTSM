@@ -1,16 +1,16 @@
 !-----------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: getdatetime
+! !ROUTINE: ctsm_GetDateTime
 !
 ! !INTERFACE:
-subroutine getdatetime (cdate, ctime)
+subroutine ctsm_GetDateTime (cdate, ctime)
 !
 ! !DESCRIPTION:
 ! A generic Date and Time routine
 !
 ! !USES:
-  use spmdMod      , only : mpicom, masterproc, MPI_CHARACTER
+  use ctsm_Spmd      , only : mpicom, masterproc, MPI_CHARACTER
 ! !ARGUMENTS:
   implicit none
   character(len=8), intent(out) :: cdate  !current date
@@ -50,4 +50,4 @@ subroutine getdatetime (cdate, ctime)
   call mpi_bcast (ctime,len(ctime),MPI_CHARACTER, 0, mpicom, ier)
 
   return
-end subroutine getdatetime
+end subroutine ctsm_GetDateTime

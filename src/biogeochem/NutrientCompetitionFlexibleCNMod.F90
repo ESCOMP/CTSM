@@ -1,4 +1,4 @@
-module NutrientCompetitionFlexibleCNMod
+module ctsm_NutrientCompetitionFlexibleCNMod
 
 #include "shr_assert.h"
 
@@ -7,7 +7,7 @@ module NutrientCompetitionFlexibleCNMod
   ! module contains different subroutines to do soil nutrient competition dynamics
   !
   ! FIXME(bja, 2015-08) This module was copied from
-  ! NutrientCompetitionCLM45default then flexible cn modifications
+  ! ctsm_NutrientCompetitionPhys45 then flexible cn modifications
   ! were added for the clm50 nitrogen science changes (r120). There is
   ! a significant amount of duplicate code between the two
   ! modules. They need to be reexamined and the common code pulled out
@@ -18,13 +18,13 @@ module NutrientCompetitionFlexibleCNMod
   !
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
-  use decompMod           , only : bounds_type
-  use LandunitType        , only : lun
-  use ColumnType          , only : col
-  use PatchType           , only : patch
-  use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
-  use NutrientCompetitionMethodMod, only : params_inst
-  use clm_varctl          , only : iulog
+  use ctsm_Decomp           , only : bounds_type
+  use ctsm_LandunitType        , only : lun
+  use ctsm_ColumnType          , only : col
+  use ctsm_PatchType           , only : patch
+  use ctsm_NutrientCompetitionMethodMod, only : nutrient_competition_method_type
+  use ctsm_NutrientCompetitionMethodMod, only : params_inst
+  use ctsm_VarCtl          , only : iulog
   !
   implicit none
   private
@@ -107,8 +107,8 @@ contains
     ! Send data to history file
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
-    use clm_varcon     , only : spval
+    use ctsm_HistFile    , only : hist_addfld1d
+    use ctsm_VarCon     , only : spval
     !
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(in) :: this
@@ -142,14 +142,14 @@ contains
        aroot, arepr, fpg_col)
     !
     ! !USES:
-    use CNVegStateType        , only : cnveg_state_type
-    use CropType              , only : crop_type
-    use CanopyStateType        , only : canopystate_type
-    use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
-    use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
-    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+    use ctsm_CNVegStateType        , only : cnveg_state_type
+    use ctsm_CropType              , only : crop_type
+    use ctsm_CanopyStateType        , only : canopystate_type
+    use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+    use ctsm_CNVegCarbonFluxType   , only : cnveg_carbonflux_type
+    use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+    use ctsm_CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
+    use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
     !
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type) , intent(inout) :: this
@@ -190,23 +190,23 @@ contains
        aroot, arepr, fpg_col)
     !
     ! !USES:
-    use pftconMod             , only : pftcon, npcropmin
-    use clm_varctl            , only : use_c13, use_c14, carbon_resp_opt
-    use clm_varctl            , only : downreg_opt
-    use clm_varctl            , only : CN_residual_opt
-    use clm_varctl            , only : CN_partition_opt
-    use clm_time_manager       , only : get_step_size_real
-    use CNVegStateType        , only : cnveg_state_type
-    use CropType              , only : crop_type
-    use CanopyStateType        , only : canopystate_type
-    use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegCarbonFluxType   , only : cnveg_carbonflux_type
-    use CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
-    use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-    use CNSharedParamsMod     , only : use_fun
-    use CNPrecisionControlMod , only : n_min
-    use clm_varcon            , only : spval
+    use ctsm_PftCon             , only : pftcon, npcropmin
+    use ctsm_VarCtl            , only : use_c13, use_c14, carbon_resp_opt
+    use ctsm_VarCtl            , only : downreg_opt
+    use ctsm_VarCtl            , only : CN_residual_opt
+    use ctsm_VarCtl            , only : CN_partition_opt
+    use ctsm_TimeManager       , only : get_step_size_real
+    use ctsm_CNVegStateType        , only : cnveg_state_type
+    use ctsm_CropType              , only : crop_type
+    use ctsm_CanopyStateType        , only : canopystate_type
+    use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+    use ctsm_CNVegCarbonFluxType   , only : cnveg_carbonflux_type
+    use ctsm_CNVegNitrogenFluxType , only : cnveg_nitrogenflux_type
+    use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+    use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+    use ctsm_CNSharedParamsMod     , only : use_fun
+    use ctsm_CNPrecisionControlMod , only : n_min
+    use ctsm_VarCon            , only : spval
     
     !
     ! !ARGUMENTS:
@@ -1129,17 +1129,17 @@ contains
        aroot, arepr)
     !
     ! !USES:
-    use CanopyStateType        , only : canopystate_type
-    use PhotosynthesisMod      , only : photosyns_type
-    use CropType               , only : crop_type
-    use CNVegStateType         , only : cnveg_state_type
-    use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
-    use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
-    use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
-    use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
-    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-    use EnergyFluxType         , only : energyflux_type     !
+    use ctsm_CanopyStateType        , only : canopystate_type
+    use ctsm_Photosynthesis      , only : photosyns_type
+    use ctsm_CropType               , only : crop_type
+    use ctsm_CNVegStateType         , only : cnveg_state_type
+    use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+    use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+    use ctsm_CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+    use ctsm_CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
+    use ctsm_SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
+    use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+    use ctsm_EnergyFluxType         , only : energyflux_type     !
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
@@ -1185,28 +1185,28 @@ contains
        aroot, arepr)
     !
     ! !USES:
-    use pftconMod              , only : npcropmin, pftcon
-    use pftconMod              , only : ntmp_soybean, nirrig_tmp_soybean
-    use pftconMod              , only : ntrp_soybean, nirrig_trp_soybean
-    use clm_varcon             , only : secspday, dzsoi_decomp
-    use clm_varctl             , only : use_c13, use_c14
-    use clm_varctl             , only : nscalar_opt, plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
-    use clm_varpar             , only : nlevdecomp
-    use clm_time_manager       , only : get_step_size_real
-    use CanopyStateType        , only : canopystate_type
-    use PhotosynthesisMod      , only : photosyns_type
-    use CropType               , only : crop_type
-    use CNVegStateType         , only : cnveg_state_type
-    use CNVegCarbonStateType   , only : cnveg_carbonstate_type
-    use CNVegCarbonFluxType    , only : cnveg_carbonflux_type
-    use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
-    use CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
-    use SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
-    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-    use EnergyFluxType         , only : energyflux_type     !
-    use CNSharedParamsMod      , only : use_fun
-    use CNPrecisionControlMod  , only : n_min
-    use clm_varcon             , only : spval
+    use ctsm_PftCon              , only : npcropmin, pftcon
+    use ctsm_PftCon              , only : ntmp_soybean, nirrig_tmp_soybean
+    use ctsm_PftCon              , only : ntrp_soybean, nirrig_trp_soybean
+    use ctsm_VarCon             , only : secspday, dzsoi_decomp
+    use ctsm_VarCtl             , only : use_c13, use_c14
+    use ctsm_VarCtl             , only : nscalar_opt, plant_ndemand_opt, substrate_term_opt, temp_scalar_opt
+    use ctsm_VarPar             , only : nlevdecomp
+    use ctsm_TimeManager       , only : get_step_size_real
+    use ctsm_CanopyStateType        , only : canopystate_type
+    use ctsm_Photosynthesis      , only : photosyns_type
+    use ctsm_CropType               , only : crop_type
+    use ctsm_CNVegStateType         , only : cnveg_state_type
+    use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type
+    use ctsm_CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+    use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+    use ctsm_CNVegNitrogenFluxType  , only : cnveg_nitrogenflux_type
+    use ctsm_SoilBiogeochemCarbonFluxType, only : soilbiogeochem_carbonflux_type
+    use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+    use ctsm_EnergyFluxType         , only : energyflux_type     !
+    use ctsm_CNSharedParamsMod      , only : use_fun
+    use ctsm_CNPrecisionControlMod  , only : n_min
+    use ctsm_VarCon             , only : spval
     ! !ARGUMENTS:
     class(nutrient_competition_FlexibleCN_type), intent(inout) :: this
     type(bounds_type)               , intent(in)    :: bounds
@@ -1769,4 +1769,4 @@ contains
 
   end subroutine calc_plant_nitrogen_demand
 
-end module NutrientCompetitionFlexibleCNMod
+end module ctsm_NutrientCompetitionFlexibleCNMod

@@ -13,7 +13,7 @@ module array_utils
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
-  use abortutils  , only : endrun
+  use ctsm_AbortUtils  , only : endrun
 
   implicit none
   private

@@ -1,4 +1,4 @@
-module TotalWaterAndHeatMod
+module ctsm_TotalWaterAndHeat
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,23 +7,23 @@ module TotalWaterAndHeatMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
-  use decompMod          , only : bounds_type
-  use clm_varcon         , only : cpice, cpliq, denh2o, tfrz, hfus
-  use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb
-  use ColumnType         , only : col
-  use LandunitType       , only : lun
-  use subgridAveMod      , only : p2c
-  use SoilHydrologyType  , only : soilhydrology_type  
-  use WaterStateBulkType , only : waterstatebulk_type
-  use WaterStateType     , only : waterstate_type
-  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
-  use WaterDiagnosticType, only : waterdiagnostic_type
-  use UrbanParamsType    , only : urbanparams_type
-  use SoilStateType      , only : soilstate_type
-  use TemperatureType    , only : temperature_type
-  use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
-  use column_varcon      , only : icol_road_perv, icol_road_imperv
-  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
+  use ctsm_Decomp          , only : bounds_type
+  use ctsm_VarCon         , only : cpice, cpliq, denh2o, tfrz, hfus
+  use ctsm_VarPar         , only : nlevgrnd, nlevsoi, nlevurb
+  use ctsm_ColumnType         , only : col
+  use ctsm_LandunitType       , only : lun
+  use ctsm_SubgridAve      , only : p2c
+  use ctsm_SoilHydrologyType  , only : soilhydrology_type  
+  use ctsm_WaterStateBulkType , only : waterstatebulk_type
+  use ctsm_WaterStateType     , only : waterstate_type
+  use ctsm_WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
+  use ctsm_WaterDiagnosticType, only : waterdiagnostic_type
+  use ctsm_UrbanParamsType    , only : urbanparams_type
+  use ctsm_SoilStateType      , only : soilstate_type
+  use ctsm_TemperatureType    , only : temperature_type
+  use ctsm_ColumnVarCon      , only : icol_roof, icol_sunwall, icol_shadewall
+  use ctsm_ColumnVarCon      , only : icol_road_perv, icol_road_imperv
+  use ctsm_LandunitVarCon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1103,4 +1103,4 @@ contains
 
   end function TempToHeat
 
-end module TotalWaterAndHeatMod
+end module ctsm_TotalWaterAndHeat

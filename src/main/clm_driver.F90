@@ -1,4 +1,4 @@
-module clm_driver
+module ctsm_Driver
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,80 +9,80 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : wrtdia, iulog, use_fates
-  use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
-  use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
-  use clm_varctl             , only : use_soil_moisture_streams
-  use clm_time_manager       , only : get_nstep, is_beg_curr_day
-  use clm_time_manager       , only : get_prev_date, is_first_step
-  use clm_varpar             , only : nlevsno, nlevgrnd
-  use clm_varorb             , only : obliqr
-  use spmdMod                , only : masterproc, mpicom
-  use decompMod              , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
-  use filterMod              , only : filter, filter_inactive_and_active
-  use filterMod              , only : setExposedvegpFilter
-  use histFileMod            , only : hist_update_hbuf, hist_htapes_wrapup
-  use restFileMod            , only : restFile_write, restFile_filename
-  use abortutils             , only : endrun
+  use ctsm_VarCtl             , only : wrtdia, iulog, use_fates
+  use ctsm_VarCtl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
+  use ctsm_VarCtl             , only : use_crop, irrigate, ndep_from_cpl
+  use ctsm_VarCtl             , only : use_soil_moisture_streams
+  use ctsm_TimeManager       , only : get_nstep, is_beg_curr_day
+  use ctsm_TimeManager       , only : get_prev_date, is_first_step
+  use ctsm_VarPar             , only : nlevsno, nlevgrnd
+  use ctsm_VarOrb             , only : obliqr
+  use ctsm_Spmd                , only : masterproc, mpicom
+  use ctsm_Decomp              , only : get_proc_clumps, get_clump_bounds, get_proc_bounds, bounds_type
+  use ctsm_Filters              , only : filter, filter_inactive_and_active
+  use ctsm_Filters              , only : setExposedvegpFilter
+  use ctsm_HistFile            , only : hist_update_hbuf, hist_htapes_wrapup
+  use ctsm_RestFile            , only : restFile_write, restFile_filename
+  use ctsm_AbortUtils             , only : endrun
   !
-  use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
-  use BalanceCheckMod        , only : BeginWaterBalance, BalanceCheck
+  use ctsm_DynSubgridDriver    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
+  use ctsm_BalanceCheck        , only : BeginWaterBalance, BalanceCheck
   !
-  use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
-  use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
-  use UrbanTimeVarType       , only : urbantv_type
-  use SoilTemperatureMod     , only : SoilTemperature
-  use LakeTemperatureMod     , only : LakeTemperature
+  use ctsm_BiogeophysPreFluxCalcs  , only : BiogeophysPreFluxCalcs
+  use ctsm_SurfaceHumidity     , only : CalculateSurfaceHumidity
+  use ctsm_UrbanTimeVarType       , only : urbantv_type
+  use ctsm_SoilTemperature     , only : SoilTemperature
+  use ctsm_LakeTemperature     , only : LakeTemperature
   !
-  use BareGroundFluxesMod    , only : BareGroundFluxes
-  use CanopyFluxesMod        , only : CanopyFluxes
-  use SoilFluxesMod          , only : SoilFluxes ! (formerly Biogeophysics2Mod)
-  use UrbanFluxesMod         , only : UrbanFluxes
-  use LakeFluxesMod          , only : LakeFluxes
+  use ctsm_BareGroundFluxes    , only : BareGroundFluxes
+  use ctsm_CanopyFluxes        , only : CanopyFluxes
+  use ctsm_SoilFluxes          , only : SoilFluxes ! (formerly Biogeophysics2Mod)
+  use ctsm_UrbanFluxes         , only : UrbanFluxes
+  use ctsm_LakeFluxes          , only : LakeFluxes
   !
-  use HydrologyNoDrainageMod , only : CalcAndWithdrawIrrigationFluxes, HandleNewSnow, HydrologyNoDrainage ! (formerly Hydrology2Mod)
-  use HydrologyDrainageMod   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
-  use CanopyHydrologyMod     , only : CanopyInterceptionAndThroughfall
-  use SurfaceWaterMod        , only : UpdateFracH2oSfc
-  use LakeHydrologyMod       , only : LakeHydrology
-  use SoilWaterMovementMod   , only : use_aquifer_layer
+  use ctsm_HydrologyNoDrainage , only : CalcAndWithdrawIrrigationFluxes, HandleNewSnow, HydrologyNoDrainage ! (formerly Hydrology2Mod)
+  use ctsm_HydrologyDrainage   , only : HydrologyDrainage   ! (formerly Hydrology2Mod)
+  use ctsm_CanopyHydrology     , only : CanopyInterceptionAndThroughfall
+  use ctsm_SurfaceWater        , only : UpdateFracH2oSfc
+  use ctsm_LakeHydrology       , only : LakeHydrology
+  use ctsm_SoilWaterMovement   , only : use_aquifer_layer
   !
-  use AerosolMod             , only : AerosolMasses
-  use SnowSnicarMod          , only : SnowAge_grain
-  use SurfaceAlbedoMod       , only : SurfaceAlbedo
-  use UrbanAlbedoMod         , only : UrbanAlbedo
+  use ctsm_Aerosols             , only : AerosolMasses
+  use ctsm_SnowSnicar          , only : SnowAge_grain
+  use ctsm_SurfaceAlbedo       , only : SurfaceAlbedo
+  use ctsm_UrbanAlbedo         , only : UrbanAlbedo
   !
-  use SurfaceRadiationMod    , only : SurfaceRadiation, CanopySunShadeFracs
-  use UrbanRadiationMod      , only : UrbanRadiation
+  use ctsm_SurfaceRadiation    , only : SurfaceRadiation, CanopySunShadeFracs
+  use ctsm_UrbanRadiation      , only : UrbanRadiation
   !
-  use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
-  use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
-  use ndepStreamMod          , only : ndep_interp
-  use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
-  use DUSTMod                , only : DustDryDep, DustEmission
-  use VOCEmissionMod         , only : VOCEmission
+  use ctsm_SoilBiogeochemVerticalProfile   , only : SoilBiogeochemVerticalProfile
+  use ctsm_SatellitePhenologyMod  , only : ctsm_SatellitePhenology, interpMonthlyVeg
+  use ctsm_NDepStream          , only : ndep_interp
+  use ctsm_Methane                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
+  use ctsm_DustMod                , only : DustDryDep, DustEmission
+  use ctsm_VocEmissionMod         , only : ctsm_VocEmission
   !
-  use filterMod              , only : setFilters
+  use ctsm_Filters              , only : setFilters
   !
-  use atm2lndMod             , only : downscale_forcings, set_atm2lnd_water_tracers
-  use lnd2atmMod             , only : lnd2atm
-  use lnd2glcMod             , only : lnd2glc_type
+  use ctsm_Atm2Lnd             , only : downscale_forcings, set_atm2lnd_water_tracers
+  use ctsm_Lnd2Atm             , only : lnd2atm
+  use ctsm_Lnd2Glc             , only : lnd2glc_type
   !
   use seq_drydep_mod         , only : n_drydep, drydep_method, DD_XLND
-  use DryDepVelocity         , only : depvel_compute
+  use ctsm_DryDepVelocity         , only : depvel_compute
   !
-  use DaylengthMod           , only : UpdateDaylength
+  use ctsm_DayLength           , only : UpdateDaylength
   use perf_mod
   !
-  use clm_instMod            , only : nutrient_competition_method
-  use GridcellType           , only : grc
-  use LandunitType           , only : lun
-  use ColumnType             , only : col
-  use PatchType              , only : patch
-  use clm_instMod
-  use clm_instMod            , only : soil_water_retention_curve
-  use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
-  use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
+  use ctsm_Inst            , only : nutrient_competition_method
+  use ctsm_GridcellType           , only : grc
+  use ctsm_LandunitType           , only : lun
+  use ctsm_ColumnType             , only : col
+  use ctsm_PatchType              , only : patch
+  use ctsm_Inst
+  use ctsm_Inst            , only : soil_water_retention_curve
+  use ctsm_FatesBiogeochemDynMod            , only : ctsm_FatesBiogeochemDyn, ctsm_FatesBiogeochemDynSummary
+  use ctsm_SoilMoistureStream  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -110,9 +110,9 @@ contains
     ! the calling tree is given in the description of this module.
     !
     ! !USES:
-    use clm_time_manager     , only : get_curr_date
-    use clm_varctl           , only : use_lai_streams
-    use SatellitePhenologyMod, only : lai_advance
+    use ctsm_TimeManager     , only : get_curr_date
+    use ctsm_VarCtl           , only : use_lai_streams
+    use ctsm_SatellitePhenologyMod, only : lai_advance
     !
     ! !ARGUMENTS:
     implicit none
@@ -236,7 +236,7 @@ contains
        ! This also determines whether it is time to read new monthly vegetation and
        ! obtain updated leaf area index [mlai1,mlai2], stem area index [msai1,msai2],
        ! vegetation top [mhvt1,mhvt2] and vegetation bottom [mhvb1,mhvb2]. The
-       ! weights obtained here are used in subroutine SatellitePhenology to obtain time
+       ! weights obtained here are used in subroutine ctsm_SatellitePhenology to obtain time
        ! interpolated values.
        if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND )) then
           call t_startf('interpMonthlyVeg')
@@ -752,7 +752,7 @@ contains
        end if
 
        ! ============================================================================
-       ! DUST and VOC emissions
+       ! ctsm_Dust and VOC emissions
        ! ============================================================================
 
        call t_startf('bgc')
@@ -769,7 +769,7 @@ contains
             atm2lnd_inst, frictionvel_inst, dust_inst)
 
        ! VOC emission (A. Guenther's MEGAN (2006) model)
-       call VOCEmission(bounds_clump,                                         &
+       call ctsm_VocEmission(bounds_clump,                                         &
                filter(nc)%num_soilp, filter(nc)%soilp,                           &
                atm2lnd_inst, canopystate_inst, photosyns_inst, temperature_inst, &
                vocemis_inst)
@@ -960,7 +960,7 @@ contains
 
              ! fully prognostic canopy structure and C-N biogeochemistry
              ! - CNDV defined: prognostic biogeography; else prescribed
-       ! - crop model:  crop algorithms called from within CNDriver
+       ! - crop model:  crop algorithms called from within ctsm_CNDriver
 
        if (use_cn) then
           call t_startf('ecosysdyn')
@@ -987,10 +987,10 @@ contains
                 ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
        if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb)) then
-          call t_startf('SatellitePhenology')
-          call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+          call t_startf('ctsm_SatellitePhenology')
+          call ctsm_SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
-          call t_stopf('SatellitePhenology')
+          call t_stopf('ctsm_SatellitePhenology')
        end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
@@ -1059,7 +1059,7 @@ contains
 
        if ( use_fates ) then
 
-          call EDBGCDyn(bounds_clump,                                                              &
+          call ctsm_FatesBiogeochemDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
                filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,                                    &
@@ -1073,7 +1073,7 @@ contains
                active_layer_inst, atm2lnd_inst, water_inst%waterfluxbulk_inst,                     &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
 
-          call EDBGCDynSummary(bounds_clump,                                             &
+          call ctsm_FatesBiogeochemDynSummary(bounds_clump,                                             &
                 filter(nc)%num_soilc, filter(nc)%soilc,                                  &
                 filter(nc)%num_soilp, filter(nc)%soilp,                                  &
                 soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
@@ -1400,13 +1400,13 @@ contains
     ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use shr_infnan_mod     , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar         , only : nlevsno
-    use CanopyStateType    , only : canopystate_type
-    use WaterBalanceType   , only : waterbalance_type
-    use WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
-    use WaterFluxBulkType      , only : waterfluxbulk_type
-    use WaterStateBulkType , only : waterstatebulk_type
-    use EnergyFluxType     , only : energyflux_type
+    use ctsm_VarPar         , only : nlevsno
+    use ctsm_CanopyStateType    , only : canopystate_type
+    use ctsm_WaterBalanceType   , only : waterbalance_type
+    use ctsm_WaterDiagnosticBulkType     , only : waterdiagnosticbulk_type
+    use ctsm_WaterFluxBulkType      , only : waterfluxbulk_type
+    use ctsm_WaterStateBulkType , only : waterstatebulk_type
+    use ctsm_EnergyFluxType     , only : energyflux_type
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds
@@ -1443,7 +1443,7 @@ contains
          cisha_z            => photosyns_inst%cisha_z_patch                & ! Output: [real(r8) (:)   ]  intracellular shaded leaf CO2 (Pa)
          )
 
-      ! Initialize intracellular CO2 (Pa) parameters each timestep for use in VOCEmission
+      ! Initialize intracellular CO2 (Pa) parameters each timestep for use in ctsm_VocEmission
       do p = bounds%begp,bounds%endp
          cisun_z(p,:) = -999._r8
          cisha_z(p,:) = -999._r8
@@ -1490,9 +1490,9 @@ contains
     ! the column-level averages of flux variables defined at the patch level.
     !
     ! !USES:
-    use WaterFluxBulkType  , only : waterfluxbulk_type
-    use EnergyFluxType , only : energyflux_type
-    use subgridAveMod  , only : p2c
+    use ctsm_WaterFluxBulkType  , only : waterfluxbulk_type
+    use ctsm_EnergyFluxType , only : energyflux_type
+    use ctsm_SubgridAve  , only : p2c
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
@@ -1511,11 +1511,11 @@ contains
     ! Note: lake points are excluded from many of the following
     ! averages. For some fields, this is because the field doesn't
     ! apply over lakes. However, for many others, this is because the
-    ! field is computed in LakeHydrologyMod, which is called after
+    ! field is computed in ctsm_LakeHydrology, which is called after
     ! this routine; thus, for lakes, the column-level values of these
-    ! fields are explicitly set in LakeHydrologyMod. (The fields that
+    ! fields are explicitly set in ctsm_LakeHydrology. (The fields that
     ! are included here for lakes are computed elsewhere, e.g., in
-    ! LakeFluxesMod.)
+    ! ctsm_LakeFluxes.)
 
     ! Averaging for patch evaporative flux variables
 
@@ -1576,13 +1576,13 @@ contains
     ! timestep.
     !
     ! !USES:
-    use decompMod  , only : get_proc_global
-    use spmdMod    , only : masterproc, npes, MPI_REAL8
-    use spmdMod    , only : MPI_STATUS_SIZE, mpicom, MPI_SUM
+    use ctsm_Decomp  , only : get_proc_global
+    use ctsm_Spmd    , only : masterproc, npes, MPI_REAL8
+    use ctsm_Spmd    , only : MPI_STATUS_SIZE, mpicom, MPI_SUM
     use shr_sys_mod, only : shr_sys_flush
-    use abortutils , only : endrun
+    use ctsm_AbortUtils , only : endrun
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use lnd2atmType, only : lnd2atm_type
+    use ctsm_Lnd2AtmType, only : lnd2atm_type
     !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in) :: bounds
@@ -1633,4 +1633,4 @@ contains
 
   end subroutine write_diagnostic
 
-end module clm_driver
+end module ctsm_Driver

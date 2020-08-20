@@ -1,4 +1,4 @@
-module SaturatedExcessRunoffMod
+module ctsm_SaturatedExcessRunoff
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,16 +10,16 @@ module SaturatedExcessRunoffMod
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
-  use decompMod    , only : bounds_type
-  use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, use_vichydro, crop_fsat_equals_zero
-  use clm_varcon   , only : spval
-  use LandunitType , only : landunit_type
-  use landunit_varcon  , only : istcrop
-  use ColumnType   , only : column_type
-  use SoilHydrologyType, only : soilhydrology_type
-  use SoilStateType, only : soilstate_type
-  use WaterFluxBulkType, only : waterfluxbulk_type
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_AbortUtils   , only : endrun
+  use ctsm_VarCtl   , only : iulog, use_vichydro, crop_fsat_equals_zero
+  use ctsm_VarCon   , only : spval
+  use ctsm_LandunitType , only : landunit_type
+  use ctsm_LandunitVarCon  , only : istcrop
+  use ctsm_ColumnType   , only : column_type
+  use ctsm_SoilHydrologyType, only : soilhydrology_type
+  use ctsm_SoilStateType, only : soilstate_type
+  use ctsm_WaterFluxBulkType, only : waterfluxbulk_type
 
   implicit none
   save
@@ -125,7 +125,7 @@ contains
     ! Initialize saturated_excess_runoff_type history variables
     !
     ! !USES:
-    use histFileMod , only : hist_addfld1d
+    use ctsm_HistFile , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(saturated_excess_runoff_type), intent(inout) :: this
@@ -180,7 +180,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -411,4 +411,4 @@ contains
   end subroutine ComputeFsatVic
 
 
-end module SaturatedExcessRunoffMod
+end module ctsm_SaturatedExcessRunoff

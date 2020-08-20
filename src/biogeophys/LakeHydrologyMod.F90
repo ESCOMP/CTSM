@@ -1,4 +1,4 @@
-module LakeHydrologyMod
+module ctsm_LakeHydrology
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -19,19 +19,19 @@ module LakeHydrologyMod
   ! ! USES
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
-  use decompMod            , only : bounds_type
-  use clm_varpar           , only : nlevsno, nlevgrnd, nlevsoi
-  use ColumnType           , only : col                
-  use PatchType            , only : patch                
-  use atm2lndType          , only : atm2lnd_type
-  use AerosolMod           , only : aerosol_type
-  use EnergyFluxType       , only : energyflux_type
-  use FrictionVelocityMod  , only : frictionvel_type
-  use LakeStateType        , only : lakestate_type
-  use SoilStateType        , only : soilstate_type
-  use TemperatureType      , only : temperature_type
-  use WaterType            , only : water_type
-  use TotalWaterAndHeatMod , only : ComputeWaterMassLake
+  use ctsm_Decomp            , only : bounds_type
+  use ctsm_VarPar           , only : nlevsno, nlevgrnd, nlevsoi
+  use ctsm_ColumnType           , only : col                
+  use ctsm_PatchType            , only : patch                
+  use ctsm_Atm2LndType          , only : atm2lnd_type
+  use ctsm_Aerosols           , only : aerosol_type
+  use ctsm_EnergyFluxType       , only : energyflux_type
+  use ctsm_FrictionVelocity  , only : frictionvel_type
+  use ctsm_LakeStateType        , only : lakestate_type
+  use ctsm_SoilStateType        , only : soilstate_type
+  use ctsm_TemperatureType      , only : temperature_type
+  use ctsm_WaterType            , only : water_type
+  use ctsm_TotalWaterAndHeat , only : ComputeWaterMassLake
   use perf_mod             , only : t_startf, t_stopf
   !
   ! !PUBLIC TYPES:
@@ -77,15 +77,15 @@ contains
     !    Cleanup and do water balance.
     !
     ! !USES:
-    use clm_varcon      , only : denh2o, denice, spval, hfus, tfrz, cpliq, cpice
-    use clm_varctl      , only : iulog
-    use clm_time_manager, only : get_step_size_real
-    use SnowHydrologyMod, only : UpdateQuantitiesForNewSnow, InitializeExplicitSnowPack
-    use SnowHydrologyMod, only : SnowCompaction, CombineSnowLayers, SnowWater
-    use SnowHydrologyMod, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
-    use SnowHydrologyMod, only : DivideSnowLayers
-    use TopoMod         , only : topo_type
-    use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
+    use ctsm_VarCon      , only : denh2o, denice, spval, hfus, tfrz, cpliq, cpice
+    use ctsm_VarCtl      , only : iulog
+    use ctsm_TimeManager, only : get_step_size_real
+    use ctsm_SnowHydrology, only : UpdateQuantitiesForNewSnow, InitializeExplicitSnowPack
+    use ctsm_SnowHydrology, only : SnowCompaction, CombineSnowLayers, SnowWater
+    use ctsm_SnowHydrology, only : ZeroEmptySnowLayers, BuildSnowFilter, SnowCapping
+    use ctsm_SnowHydrology, only : DivideSnowLayers
+    use ctsm_Topo         , only : topo_type
+    use ctsm_SnowCoverFractionBase, only : snow_cover_fraction_base_type
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds  
@@ -238,7 +238,7 @@ contains
 
     ! Compute "summed" (really just copies here) fluxes onto "ground" (really the lake
     ! surface here), for bulk water and each tracer. (Subroutine name mimics the one in
-    ! CanopyHydrologyMod.)
+    ! ctsm_CanopyHydrology.)
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(w => water_inst%bulk_and_tracers(i))
        call SumFlux_FluxesOntoGround(bounds, &
@@ -629,7 +629,7 @@ contains
     end do
 
     ! Snow internal temperature
-    ! See description in HydrologyNoDrainageMod
+    ! See description in ctsm_HydrologyNoDrainage
 
     do fc = 1, num_lakec
        c = filter_lakec(fc)
@@ -720,7 +720,7 @@ contains
     ! Compute "summed" (really just copies here) fluxes onto "ground" (really the lake
     ! surface here), for bulk or one tracer.
     !
-    ! (Subroutine name mimics the one in CanopyHydrologyMod.)
+    ! (Subroutine name mimics the one in ctsm_CanopyHydrology.)
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -753,4 +753,4 @@ contains
 
   end subroutine SumFlux_FluxesOntoGround
 
-end module LakeHydrologyMod
+end module ctsm_LakeHydrology

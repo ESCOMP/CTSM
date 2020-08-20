@@ -3,7 +3,7 @@ module test_filterBuilder
   ! Tests of unittestFilterBuilder
 
   use pfunit_mod
-  use unittestFilterBuilderMod
+  use ctsm_UnitTestFilterBuilder
 
   implicit none
   save

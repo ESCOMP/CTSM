@@ -1,16 +1,16 @@
-module CIsoAtmTimeseriesMod
+module ctsm_CIsoAtmTimeSeriesRead
 
   !-----------------------------------------------------------------------
   ! Module for transient atmospheric boundary to the c13 and c14 codes
   !
   ! !USES:
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use clm_time_manager , only : get_curr_date,get_days_per_year, get_curr_yearfrac
-  use clm_varcon       , only : c14ratio, secspday
+  use ctsm_TimeManager , only : get_curr_date,get_days_per_year, get_curr_yearfrac
+  use ctsm_VarCon       , only : c14ratio, secspday
   use shr_const_mod    , only : SHR_CONST_PDB                    ! Ratio of C13/C12
-  use clm_varctl       , only : iulog
-  use abortutils       , only : endrun
-  use spmdMod          , only : masterproc
+  use ctsm_VarCtl       , only : iulog
+  use ctsm_AbortUtils       , only : endrun
+  use ctsm_Spmd          , only : masterproc
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   !
   implicit none
@@ -108,7 +108,7 @@ contains
     !
     ! !USES:
     use ncdio_pio   , only : ncd_pio_openfile, ncd_pio_closefile, file_desc_t, ncd_inqdlen, ncd_io
-    use fileutils   , only : getfil
+    use ctsm_FileUtils   , only : getfil
     !
     ! !LOCAL VARIABLES:
     implicit none
@@ -228,7 +228,7 @@ contains
     !
     ! !USES:
     use ncdio_pio   , only : ncd_pio_openfile, ncd_pio_closefile, file_desc_t, ncd_inqdlen, ncd_io
-    use fileutils   , only : getfil
+    use ctsm_FileUtils   , only : getfil
     !
     ! !LOCAL VARIABLES:
     implicit none
@@ -316,4 +316,4 @@ contains
   end subroutine check_units
 
 
-end module CIsoAtmTimeseriesMod
+end module ctsm_CIsoAtmTimeSeriesRead

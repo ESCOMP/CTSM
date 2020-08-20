@@ -1,4 +1,4 @@
-module CNMRespMod
+module ctsm_CNMaintRespMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,28 +8,28 @@ module CNMRespMod
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
   use shr_const_mod          , only : SHR_CONST_TKFRZ
-  use clm_varpar             , only : nlevgrnd
-  use clm_varcon             , only : spval
-  use decompMod              , only : bounds_type
-  use abortutils             , only : endrun
+  use ctsm_VarPar             , only : nlevgrnd
+  use ctsm_VarCon             , only : spval
+  use ctsm_Decomp              , only : bounds_type
+  use ctsm_AbortUtils             , only : endrun
   use shr_log_mod            , only : errMsg => shr_log_errMsg
-  use pftconMod              , only : npcropmin, pftcon
-  use SoilStateType          , only : soilstate_type
-  use CanopyStateType        , only : canopystate_type
-  use TemperatureType        , only : temperature_type
-  use PhotosynthesisMod      , only : photosyns_type
-  use CNVegcarbonfluxType    , only : cnveg_carbonflux_type
-  use CNVegnitrogenstateType , only : cnveg_nitrogenstate_type
-  use CNSharedParamsMod      , only : CNParamsShareInst
-  use PatchType              , only : patch                
+  use ctsm_PftCon              , only : npcropmin, pftcon
+  use ctsm_SoilStateType          , only : soilstate_type
+  use ctsm_CanopyStateType        , only : canopystate_type
+  use ctsm_TemperatureType        , only : temperature_type
+  use ctsm_Photosynthesis      , only : photosyns_type
+  use ctsm_CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
+  use ctsm_CNSharedParamsMod      , only : CNParamsShareInst
+  use ctsm_PatchType              , only : patch                
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNMRespReadNML       ! Read in namelist (CALL FIRST!)
+  public :: ctsm_CNMaintRespReadNML       ! Read in namelist (CALL FIRST!)
   public :: readParams           ! Read in parameters from file
-  public :: CNMResp              ! Apply maintenance respiration
+  public :: ctsm_CNMaintResp              ! Apply maintenance respiration
 
   type, private :: params_type
      real(r8) :: br      = spval ! base rate for maintenance respiration (gC/gN/s)
@@ -45,17 +45,17 @@ module CNMRespMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNMRespReadNML( NLFilename )
+  subroutine ctsm_CNMaintRespReadNML( NLFilename )
     !
     ! !DESCRIPTION:
-    ! Read the namelist for CNMResp (MUST BE CALLED BEFORE readParams!!!)
+    ! Read the namelist for ctsm_CNMaintResp (MUST BE CALLED BEFORE readParams!!!)
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -64,7 +64,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'CNMRespReadNML'
+    character(len=*), parameter :: subname = 'ctsm_CNMaintRespReadNML'
     character(len=*), parameter :: nmlname = 'cnmresp_inparm'
     real(r8) :: br_root = spval ! base rate for maintenance respiration for roots (gC/gN/s)
     !-----------------------------------------------------------------------
@@ -101,14 +101,14 @@ contains
        write(iulog,*) ' '
     end if
 
-  end subroutine CNMRespReadNML
+  end subroutine ctsm_CNMaintRespReadNML
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
     !
     ! !DESCRIPTION:
-    ! Read parameters (call AFTER CNMRespReadNML!)
+    ! Read parameters (call AFTER ctsm_CNMaintRespReadNML!)
     !
     ! !USES:
     use ncdio_pio , only : file_desc_t,ncd_io
@@ -118,7 +118,7 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNMRespParamsType'
+    character(len=32)  :: subname = 'ctsm_CNMaintRespParamsType'
     character(len=100) :: errCode = '-Error reading in parameters file:'
     logical            :: readv ! has variable been read in or not
     real(r8)           :: tempr ! temporary to read in constant
@@ -139,14 +139,14 @@ contains
   !-----------------------------------------------------------------------
   ! FIX(SPM,032414) this shouldn't even be called with fates on.
   !
-  subroutine CNMResp(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine ctsm_CNMaintResp(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        canopystate_inst, soilstate_inst, temperature_inst, photosyns_inst, &
        cnveg_carbonflux_inst, cnveg_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
     !
     ! !ARGUMENTS:
-    use clm_varcon  , only : tfrz
+    use ctsm_VarCon  , only : tfrz
     
     type(bounds_type)              , intent(in)    :: bounds          
     integer                        , intent(in)    :: num_soilc       ! number of soil points in column filter
@@ -293,6 +293,6 @@ contains
 
     end associate
 
-  end subroutine CNMResp
+  end subroutine ctsm_CNMaintResp
 
-end module CNMRespMod
+end module ctsm_CNMaintRespMod

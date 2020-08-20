@@ -1,9 +1,9 @@
 module test_SpeciesIsotope
 
-  ! Tests of SpeciesIsotopeType
+  ! Tests of ctsm_SpeciesIsotopeType
 
   use pfunit_mod
-  use SpeciesIsotopeType
+  use ctsm_SpeciesIsotopeType
   use shr_kind_mod , only : r8 => shr_kind_r8
 
   implicit none

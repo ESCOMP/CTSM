@@ -1,7 +1,7 @@
-module multilevel_interp_factory
+module ctsm_MultilevelInterpFactory
   ! Factory module for creating instances of interp_multilevel_type
 
-  use initInterpMultilevelInterp, only : interp_multilevel_interp_type
+  use ctsm_InitInterpMultilevelInterp, only : interp_multilevel_interp_type
   use shr_kind_mod             , only : r8 => shr_kind_r8
 
   implicit none
@@ -176,4 +176,4 @@ contains
 
   end subroutine create_class_arrays
 
-end module multilevel_interp_factory
+end module ctsm_MultilevelInterpFactory

@@ -14,15 +14,15 @@ sourcelist_to_parent(clm_genf90_sources)
 list(APPEND clm_sources "${clm_genf90_sources}")
 
 list(APPEND clm_sources
-  dynColumnStateUpdaterMod.F90
-  dynColumnTemplateMod.F90
-  dynConsBiogeophysMod.F90
-  dynPatchStateUpdaterMod.F90
-  dynPriorWeightsMod.F90
-  dynSubgridControlMod.F90
-  dynTimeInfoMod.F90
-  dynLandunitAreaMod.F90
-  dynInitColumnsMod.F90
+  ctsm_DynColumnStateUpdater.F90
+  ctsm_DynColumnTemplate.F90
+  ctsm_DynConsBiogeophys.F90
+  ctsm_DynPatchStateUpdater.F90
+  ctsm_DynPriorWeights.F90
+  ctsm_DynSubgridControl.F90
+  ctsm_DynTimeInfo.F90
+  ctsm_DynLandunitArea.F90
+  ctsm_DynInitColumns.F90
   )
 
 sourcelist_to_parent(clm_sources)

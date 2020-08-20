@@ -1,4 +1,4 @@
-module ColumnType
+module ctsm_ColumnType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -20,12 +20,12 @@ module ColumnType
   !
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
-  use clm_varcon     , only : spval, ispval
+  use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevlak
+  use ctsm_VarCon     , only : spval, ispval
   use shr_sys_mod    , only : shr_sys_abort
-  use clm_varctl     , only : iulog
-  use column_varcon  , only : is_hydrologically_active
-  use LandunitType   , only : lun
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_ColumnVarCon  , only : is_hydrologically_active
+  use ctsm_LandunitType   , only : lun
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -102,7 +102,7 @@ contains
     integer, intent(in) :: begc,endc
     !------------------------------------------------------------------------
 
-    ! The following is set in initGridCellsMod
+    ! The following is set in ctsm_InitGridCells
     allocate(this%gridcell    (begc:endc))                     ; this%gridcell    (:)   = ispval
     allocate(this%wtgcell     (begc:endc))                     ; this%wtgcell     (:)   = nan
     allocate(this%landunit    (begc:endc))                     ; this%landunit    (:)   = ispval
@@ -115,7 +115,7 @@ contains
     allocate(this%active      (begc:endc))                     ; this%active      (:)   = .false.
     allocate(this%type_is_dynamic(begc:endc))                  ; this%type_is_dynamic(:) = .false.
 
-    ! The following is set in initVerticalMod
+    ! The following is set in ctsm_InitVertical
     allocate(this%snl         (begc:endc))                     ; this%snl         (:)   = ispval  !* cannot be averaged up
     allocate(this%dz          (begc:endc,-nlevsno+1:nlevgrnd)) ; this%dz          (:,:) = nan
     allocate(this%z           (begc:endc,-nlevsno+1:nlevgrnd)) ; this%z           (:,:) = nan
@@ -210,4 +210,4 @@ contains
 
 
 
-end module ColumnType
+end module ctsm_ColumnType

@@ -1,20 +1,20 @@
-module CNVegStateType
+module ctsm_CNVegStateType
 
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod      , only : bounds_type
-  use abortutils     , only : endrun
-  use spmdMod        , only : masterproc
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoi
-  use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv
-  use clm_varcon     , only : spval, ispval, grlnd
-  use landunit_varcon, only : istsoil, istcrop
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch                
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
-  use dynSubgridControlMod, only : get_for_testing_allow_non_annual_changes
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_Spmd        , only : masterproc
+  use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoi
+  use ctsm_VarCtl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv
+  use ctsm_VarCon     , only : spval, ispval, grlnd
+  use ctsm_LandunitVarCon, only : istsoil, istcrop
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_PatchType      , only : patch                
+  use ctsm_AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
+  use ctsm_DynSubgridControl, only : get_for_testing_allow_non_annual_changes
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -30,7 +30,7 @@ module CNVegStateType
      ! Prognostic crop model
      !
      ! TODO(wjs, 2016-02-22) Most / all of these crop-specific state variables should be
-     ! moved to CropType
+     ! moved to ctsm_CropType
      real(r8) , pointer :: hdidx_patch                 (:)     ! patch cold hardening index?
      real(r8) , pointer :: cumvd_patch                 (:)     ! patch cumulative vernalization d?ependence?
      real(r8) , pointer :: gddmaturity_patch           (:)     ! patch growing degree days (gdd) needed to harvest (ddays)
@@ -276,7 +276,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp, no_snow_normal
+    use ctsm_HistFile    , only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp, no_snow_normal
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
@@ -470,9 +470,9 @@ contains
   subroutine initCold(this, bounds)
     !
     ! !USES:
-    use spmdMod    , only : masterproc
-    use fileutils  , only : getfil
-    use clm_varctl , only : nsrest, nsrStartup
+    use ctsm_Spmd    , only : masterproc
+    use ctsm_FileUtils  , only : getfil
+    use ctsm_VarCtl , only : nsrest, nsrStartup
     use ncdio_pio
     !
     ! !ARGUMENTS:
@@ -560,7 +560,7 @@ contains
     
     ! --------------------------------------------------------------------
     ! Initialize terms needed for dust model
-    ! TODO - move these terms to DUSTMod module variables 
+    ! TODO - move these terms to ctsm_DustMod module variables 
     ! --------------------------------------------------------------------
        
     do c = bounds%begc, bounds%endc
@@ -674,13 +674,13 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use spmdMod    , only : masterproc
-    use abortutils , only : endrun
-    use CNVegNitrogenStateType, only: cnveg_nitrogenstate_type
-    use CNVegCarbonStateType  , only: cnveg_carbonstate_type
+    use ctsm_Spmd    , only : masterproc
+    use ctsm_AbortUtils , only : endrun
+    use ctsm_CNVegNitrogenStateType, only: cnveg_nitrogenstate_type
+    use ctsm_CNVegCarbonStateType  , only: cnveg_carbonstate_type
     use restUtilMod
     use ncdio_pio
-    use pftconMod , only : pftcon
+    use ctsm_PftCon , only : pftcon
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
@@ -945,4 +945,4 @@ contains
 
   end subroutine Restart
 
-end module CNVegStateType
+end module ctsm_CNVegStateType

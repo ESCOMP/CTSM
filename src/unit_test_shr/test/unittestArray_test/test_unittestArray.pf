@@ -4,8 +4,8 @@ module test_unittestArray
 
   use pfunit_mod
   use unittestArrayMod
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
   use shr_kind_mod , only : r8 => shr_kind_r8
 
   implicit none

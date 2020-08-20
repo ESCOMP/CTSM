@@ -1,21 +1,21 @@
-module SoilBiogeochemCarbonStateType
+module ctsm_SoilBiogeochemCarbonStateType
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use decompMod                          , only : bounds_type
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
-  use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
-  use clm_varctl                         , only : iulog, use_vertsoilc, spinup_state, use_fates 
-  use landunit_varcon                    , only : istcrop, istsoil
-  use abortutils                         , only : endrun
-  use spmdMod                            , only : masterproc 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
-  use GridcellType                       , only : grc
-  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
+  use ctsm_VarPar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
+  use ctsm_VarCon                         , only : spval, ispval, dzsoi_decomp, zisoi, zsoi, c3_r2
+  use ctsm_VarCtl                         , only : iulog, use_vertsoilc, spinup_state, use_fates 
+  use ctsm_LandunitVarCon                    , only : istcrop, istsoil
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_Spmd                            , only : masterproc 
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_LandunitType                       , only : lun                
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_GridcellType                       , only : grc
+  use ctsm_SoilBiogeochemStateType            , only : get_spinup_latitude_term
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -124,7 +124,7 @@ contains
   subroutine InitHistory(this, bounds, carbon_type) 
     !
     ! !USES:
-    use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
+    use ctsm_HistFile, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     !
     ! !ARGUMENTS:
     class (soilbiogeochem_carbonstate_type) :: this
@@ -483,9 +483,9 @@ contains
     !
     ! !USES:
     use shr_infnan_mod       , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-    use clm_time_manager     , only : is_restart, get_nstep
+    use ctsm_TimeManager     , only : is_restart, get_nstep
     use shr_const_mod        , only : SHR_CONST_PDB
-    use clm_varcon           , only : c14ratio
+    use ctsm_VarCon           , only : c14ratio
     use restUtilMod
     use ncdio_pio
     !
@@ -993,7 +993,7 @@ contains
     ! Adjust state variables when column areas change due to dynamic landuse
     !
     ! !USES:
-    use dynColumnStateUpdaterMod, only : column_state_updater_type
+    use ctsm_DynColumnStateUpdater, only : column_state_updater_type
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonstate_type) , intent(inout) :: this
@@ -1046,4 +1046,4 @@ contains
   end subroutine DynamicColumnAdjustments
 
 
-end module SoilBiogeochemCarbonStateType
+end module ctsm_SoilBiogeochemCarbonStateType

@@ -1,4 +1,4 @@
-module CLMFatesInterfaceMod
+module ctsm_FatesInterface
    
    ! -------------------------------------------------------------------------------------
    ! This module contains various functions and definitions to aid in the
@@ -33,86 +33,86 @@ module CLMFatesInterfaceMod
    
    ! Used CLM Modules
 #include "shr_assert.h"
-   use PatchType         , only : patch
+   use ctsm_PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
-   use decompMod         , only : bounds_type
-   use WaterStateBulkType    , only : waterstatebulk_type
-   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-   use WaterFluxBulkType     , only : waterfluxbulk_type
-   use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
-   use ActiveLayerMod    , only : active_layer_type
-   use CanopyStateType   , only : canopystate_type
-   use TemperatureType   , only : temperature_type
-   use EnergyFluxType    , only : energyflux_type
+   use ctsm_Decomp         , only : bounds_type
+   use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+   use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+   use ctsm_WaterFluxBulkType     , only : waterfluxbulk_type
+   use ctsm_WaterAtm2LndBulkType     , only : wateratm2lndbulk_type
+   use ctsm_ActiveLayer    , only : active_layer_type
+   use ctsm_CanopyStateType   , only : canopystate_type
+   use ctsm_TemperatureType   , only : temperature_type
+   use ctsm_EnergyFluxType    , only : energyflux_type
 
-   use SoilStateType     , only : soilstate_type 
-   use clm_varctl        , only : iulog
-   use clm_varctl        , only : use_vertsoilc
-   use clm_varctl        , only : fates_parteh_mode
-   use clm_varctl        , only : use_fates_spitfire
-   use clm_varctl        , only : use_fates_planthydro
-   use clm_varctl        , only : use_fates_ed_st3
-   use clm_varctl        , only : use_fates_ed_prescribed_phys
-   use clm_varctl        , only : use_fates_logging
-   use clm_varctl        , only : use_fates_inventory_init
-   use clm_varctl        , only : fates_inventory_ctrl_filename
+   use ctsm_SoilStateType     , only : soilstate_type 
+   use ctsm_VarCtl        , only : iulog
+   use ctsm_VarCtl        , only : use_vertsoilc
+   use ctsm_VarCtl        , only : fates_parteh_mode
+   use ctsm_VarCtl        , only : use_fates_spitfire
+   use ctsm_VarCtl        , only : use_fates_planthydro
+   use ctsm_VarCtl        , only : use_fates_ed_st3
+   use ctsm_VarCtl        , only : use_fates_ed_prescribed_phys
+   use ctsm_VarCtl        , only : use_fates_logging
+   use ctsm_VarCtl        , only : use_fates_inventory_init
+   use ctsm_VarCtl        , only : fates_inventory_ctrl_filename
  
-   use clm_varcon        , only : tfrz
-   use clm_varcon        , only : spval 
-   use clm_varcon        , only : denice
-   use clm_varcon        , only : ispval
+   use ctsm_VarCon        , only : tfrz
+   use ctsm_VarCon        , only : spval 
+   use ctsm_VarCon        , only : denice
+   use ctsm_VarCon        , only : ispval
 
-   use clm_varpar        , only : natpft_size
-   use clm_varpar        , only : numrad
-   use clm_varpar        , only : ivis
-   use clm_varpar        , only : inir
-   use clm_varpar        , only : nlevgrnd
-   use clm_varpar        , only : nlevdecomp
-   use clm_varpar        , only : nlevdecomp_full
-   use PhotosynthesisMod , only : photosyns_type
-   use atm2lndType       , only : atm2lnd_type
-   use SurfaceAlbedoType , only : surfalb_type
-   use SolarAbsorbedType , only : solarabs_type
-   use SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
-   use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
-   use clm_time_manager  , only : is_restart
+   use ctsm_VarPar        , only : natpft_size
+   use ctsm_VarPar        , only : numrad
+   use ctsm_VarPar        , only : ivis
+   use ctsm_VarPar        , only : inir
+   use ctsm_VarPar        , only : nlevgrnd
+   use ctsm_VarPar        , only : nlevdecomp
+   use ctsm_VarPar        , only : nlevdecomp_full
+   use ctsm_Photosynthesis , only : photosyns_type
+   use ctsm_Atm2LndType       , only : atm2lnd_type
+   use ctsm_SurfaceAlbedoType , only : surfalb_type
+   use ctsm_SolarAbsorbedType , only : solarabs_type
+   use ctsm_SoilBiogeochemCarbonFluxType, only :  soilbiogeochem_carbonflux_type
+   use ctsm_SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
+   use ctsm_TimeManager  , only : is_restart
    use ncdio_pio         , only : file_desc_t, ncd_int, ncd_double
    use restUtilMod,        only : restartvar
-   use clm_time_manager  , only : get_days_per_year, &
+   use ctsm_TimeManager  , only : get_days_per_year, &
                                   get_curr_date,     &
                                   get_ref_date,      &
                                   timemgr_datediff,  &
                                   is_beg_curr_day,   &
                                   get_step_size_real,&
                                   get_nstep
-   use spmdMod           , only : masterproc
-   use decompMod         , only : get_proc_bounds,   &
+   use ctsm_Spmd           , only : masterproc
+   use ctsm_Decomp         , only : get_proc_bounds,   &
                                   get_proc_clumps,   &
                                   get_clump_bounds
-   use GridCellType      , only : grc
-   use ColumnType        , only : col
-   use LandunitType      , only : lun
-   use landunit_varcon   , only : istsoil
-   use abortutils        , only : endrun
+   use ctsm_GridcellType      , only : grc
+   use ctsm_ColumnType        , only : col
+   use ctsm_LandunitType      , only : lun
+   use ctsm_LandunitVarCon   , only : istsoil
+   use ctsm_AbortUtils        , only : endrun
    use shr_log_mod       , only : errMsg => shr_log_errMsg    
-   use clm_varcon        , only : dzsoi_decomp
-   use FuncPedotransferMod, only: get_ipedof
-!   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
+   use ctsm_VarCon        , only : dzsoi_decomp
+   use ctsm_FuncPedotransfer, only: get_ipedof
+!   use ctsm_SoilWaterPlantSink, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
-   use FatesInterfaceMod     , only : fates_interface_type
-   use FatesInterfaceMod     , only : allocate_bcin
-   use FatesInterfaceMod     , only : allocate_bcout
-   use FatesInterfaceMod     , only : SetFatesTime
-   use FatesInterfaceMod     , only : set_fates_ctrlparms
-   use FatesInterfaceMod     , only : InitPARTEHGlobals
+   use ctsm_FatesInterfaceMod     , only : fates_interface_type
+   use ctsm_FatesInterfaceMod     , only : allocate_bcin
+   use ctsm_FatesInterfaceMod     , only : allocate_bcout
+   use ctsm_FatesInterfaceMod     , only : SetFatesTime
+   use ctsm_FatesInterfaceMod     , only : set_fates_ctrlparms
+   use ctsm_FatesInterfaceMod     , only : InitPARTEHGlobals
 
    use FatesHistoryInterfaceMod, only : fates_history_interface_type
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
    use EDTypesMod            , only : num_elements
-   use FatesInterfaceMod     , only : hlm_numlevgrnd
+   use ctsm_FatesInterfaceMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -227,8 +227,8 @@ contains
       ! is not turned on
       ! ---------------------------------------------------------------------------------
      
-      use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
-      use FatesInterfaceMod, only : maxveg_ed => numpft
+      use ctsm_FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
+      use ctsm_FatesInterfaceMod, only : maxveg_ed => numpft
       use FatesParameterDerivedMod, only : param_derived
 
       implicit none
@@ -559,7 +559,7 @@ contains
          active_layer_inst, &
          waterstatebulk_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
     
-      ! This wrapper is called daily from clm_driver
+      ! This wrapper is called daily from ctsm_Driver
       ! This wrapper calls ed_driver, which is the daily dynamics component of FATES
       ! ed_driver is not a hlm_fates_inst_type procedure because we need an extra step 
       ! to process array bounding information 
@@ -934,7 +934,7 @@ contains
      use FatesIODimensionsMod, only: fates_bounds_type
      use FatesIOVariableKindMod, only : site_r8, site_int, cohort_r8, cohort_int
      use EDMainMod, only :        ed_update_site
-     use FatesInterfaceMod, only:  fates_maxElementsPerSite
+     use ctsm_FatesInterfaceMod, only:  fates_maxElementsPerSite
      use FatesPlantHydraulicsMod, only : RestartHydrStates
 
       implicit none
@@ -1438,7 +1438,7 @@ contains
       ! 
       ! ---------------------------------------------------------------------------------
 
-      use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+      use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
 
       implicit none
       
@@ -1602,14 +1602,14 @@ contains
          atm2lnd_inst, temperature_inst, canopystate_inst, photosyns_inst)
    
     use shr_log_mod       , only : errMsg => shr_log_errMsg
-    use abortutils        , only : endrun
-    use decompMod         , only : bounds_type
-    use clm_varcon        , only : rgas, tfrz, namep  
-    use clm_varctl        , only : iulog
-    use pftconMod         , only : pftcon
+    use ctsm_AbortUtils        , only : endrun
+    use ctsm_Decomp         , only : bounds_type
+    use ctsm_VarCon        , only : rgas, tfrz, namep  
+    use ctsm_VarCtl        , only : iulog
+    use ctsm_PftCon         , only : pftcon
     use perf_mod          , only : t_startf, t_stopf
-    use PatchType         , only : patch
-    use quadraticMod      , only : quadratic
+    use ctsm_PatchType         , only : patch
+    use ctsm_QuadraticSolver      , only : quadratic
     use EDTypesMod        , only : dinc_ed
     use EDtypesMod        , only : ed_patch_type, ed_cohort_type, ed_site_type
    
@@ -1934,7 +1934,7 @@ contains
 
  subroutine init_history_io(this,bounds_proc)
 
-   use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
+   use ctsm_HistFile, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
 
    use FatesConstantsMod, only : fates_short_string_length, fates_long_string_length
    use FatesIOVariableKindMod, only : patch_r8, patch_ground_r8, patch_size_pft_r8
@@ -2331,13 +2331,13 @@ contains
  subroutine hlm_bounds_to_fates_bounds(hlm, fates)
 
    use FatesIODimensionsMod, only : fates_bounds_type
-   use FatesInterfaceMod, only : nlevsclass, nlevage
-   use FatesInterfaceMod, only : nlevheight
+   use ctsm_FatesInterfaceMod, only : nlevsclass, nlevage
+   use ctsm_FatesInterfaceMod, only : nlevheight
    use EDtypesMod,        only : nfsc
    use FatesLitterMod,    only : ncwd
    use EDtypesMod,        only : nlevleaf, nclmax
-   use FatesInterfaceMod, only : maxveg_ed => numpft
-   use clm_varpar,        only : nlevgrnd
+   use ctsm_FatesInterfaceMod, only : maxveg_ed => numpft
+   use ctsm_VarPar,        only : nlevgrnd
 
    implicit none
 
@@ -2410,4 +2410,4 @@ contains
    
  end subroutine hlm_bounds_to_fates_bounds
 
-end module CLMFatesInterfaceMod
+end module ctsm_FatesInterface

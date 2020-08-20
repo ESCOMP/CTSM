@@ -1,4 +1,4 @@
-module FireMethodType
+module ctsm_FireMethodType
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -58,7 +58,7 @@ module FireMethodType
     ! Initialize Fire datasets
     !
     ! USES
-    use decompMod              , only : bounds_type
+    use ctsm_Decomp              , only : bounds_type
     import :: fire_method_type
     ! !ARGUMENTS:
     class(fire_method_type)     :: this
@@ -88,7 +88,7 @@ module FireMethodType
     ! Interpolate Fire datasets
     !
     ! USES
-    use decompMod              , only : bounds_type
+    use ctsm_Decomp              , only : bounds_type
     import :: fire_method_type
     ! !ARGUMENTS:
     class(fire_method_type)     :: this
@@ -124,14 +124,14 @@ module FireMethodType
     !
     ! !USES:
     use shr_kind_mod                       , only : r8 => shr_kind_r8
-    use decompMod                          , only : bounds_type
-    use atm2lndType                        , only : atm2lnd_type
-    use EnergyFluxType                     , only : energyflux_type
-    use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
-    use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
-    use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
-    use CNVegStateType                     , only : cnveg_state_type
-    use CNVegCarbonStateType               , only : cnveg_carbonstate_type
+    use ctsm_Decomp                          , only : bounds_type
+    use ctsm_Atm2LndType                        , only : atm2lnd_type
+    use ctsm_EnergyFluxType                     , only : energyflux_type
+    use ctsm_SaturatedExcessRunoff           , only : saturated_excess_runoff_type
+    use ctsm_WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
+    use ctsm_WaterAtm2LndBulkType                     , only : wateratm2lndbulk_type
+    use ctsm_CNVegStateType                     , only : cnveg_state_type
+    use ctsm_CNVegCarbonStateType               , only : cnveg_carbonstate_type
     import :: fire_method_type
     !
     ! !ARGUMENTS:
@@ -173,13 +173,13 @@ module FireMethodType
    !
    ! !USES:
    use shr_kind_mod                       , only : r8 => shr_kind_r8
-   use decompMod                          , only : bounds_type
-   use CNDVType                           , only : dgvs_type
-   use CNVegStateType                     , only : cnveg_state_type
-   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
-   use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
-   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
+   use ctsm_Decomp                          , only : bounds_type
+   use ctsm_CNDVType                           , only : dgvs_type
+   use ctsm_CNVegStateType                     , only : cnveg_state_type
+   use ctsm_CNVegCarbonStateType               , only : cnveg_carbonstate_type
+   use ctsm_CNVegCarbonFluxType                , only : cnveg_carbonflux_type
+   use ctsm_CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
+   use ctsm_CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
    import :: fire_method_type
    !
    ! !ARGUMENTS:
@@ -210,4 +210,4 @@ module FireMethodType
 
   end interface
 
-end module FireMethodType
+end module ctsm_FireMethodType

@@ -1,4 +1,4 @@
-module subgridWeightsMod
+module ctsm_SubgridWeights
 
 #include "shr_assert.h"
 
@@ -91,15 +91,15 @@ module subgridWeightsMod
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
-  use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, all_active, run_zero_weight_urban, use_fates
-  use clm_varcon   , only : nameg, namel, namec, namep
-  use decompMod    , only : bounds_type
-  use GridcellType , only : grc                
-  use LandunitType , only : lun                
-  use ColumnType   , only : col                
-  use PatchType    , only : patch                
-  use glcBehaviorMod , only : glc_behavior_type
+  use ctsm_AbortUtils   , only : endrun
+  use ctsm_VarCtl   , only : iulog, all_active, run_zero_weight_urban, use_fates
+  use ctsm_VarCon   , only : nameg, namel, namec, namep
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_GridcellType , only : grc                
+  use ctsm_LandunitType , only : lun                
+  use ctsm_ColumnType   , only : col                
+  use ctsm_PatchType    , only : patch                
+  use ctsm_GlacierBehavior , only : glc_behavior_type
   !
   ! PUBLIC TYPES:
   implicit none
@@ -154,11 +154,11 @@ contains
     ! Initialize stuff in this module
     !
     ! !USES:
-    use landunit_varcon, only : max_lunit
-    use clm_varpar     , only : maxpatch_glcmec, natpft_size, cft_size
+    use ctsm_LandunitVarCon, only : max_lunit
+    use ctsm_VarPar     , only : maxpatch_glcmec, natpft_size, cft_size
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use decompMod      , only : BOUNDS_LEVEL_PROC
-    use histFileMod    , only : hist_addfld2d
+    use ctsm_Decomp      , only : BOUNDS_LEVEL_PROC
+    use ctsm_HistFile    , only : hist_addfld2d
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc bounds
@@ -301,7 +301,7 @@ contains
     ! Determine whether the given landunit is active
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istice_mec, isturb_MIN, isturb_MAX
+    use ctsm_LandunitVarCon, only : istsoil, istice_mec, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     implicit none
@@ -344,7 +344,7 @@ contains
        ! initialization of a new landunit; and for runs that are coupled to CISM, this
        ! provides bare land SMB forcing even if there is no vegetated area.
        !
-       ! Also (echoing the similar comment in glcBehaviorMod): We need all glacier and
+       ! Also (echoing the similar comment in ctsm_GlacierBehavior): We need all glacier and
        ! vegetated points to be active in the icemask region for the sake of init_interp -
        ! since we only interpolate onto active points, and we don't know which points will
        ! have non-zero area until after initialization (as long as we can't send
@@ -373,7 +373,7 @@ contains
     ! Determine whether the given column is active
     !
     ! !USES:
-    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
+    use ctsm_LandunitVarCon, only : istice_mec, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     implicit none
@@ -463,7 +463,7 @@ contains
     ! Get the subgrid weight of a given landunit type on a single grid cell
     !
     ! !USES:
-    use clm_varcon, only : ispval
+    use ctsm_VarCon, only : ispval
     !
     ! !ARGUMENTS:
     real(r8) :: weight  ! function result
@@ -492,7 +492,7 @@ contains
     ! Set the subgrid weight of a given landunit type on a single grid cell
     !
     ! !USES:
-    use clm_varcon, only : ispval
+    use ctsm_VarCon, only : ispval
     !
     ! !ARGUMENTS:
     integer , intent(in) :: g      ! grid cell index
@@ -799,8 +799,8 @@ contains
     ! that has a 0-weight (i.e., virtual) glc_mec landunit.
     !
     ! !USES:
-    use landunit_varcon, only : istice_mec
-    use column_varcon, only : col_itype_to_icemec_class
+    use ctsm_LandunitVarCon, only : istice_mec
+    use ctsm_ColumnVarCon, only : col_itype_to_icemec_class
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -832,8 +832,8 @@ contains
     ! Set pct_nat_pft & pct_cft diagnostic fields: % of PFTs on their landunit
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop
-    use clm_varpar, only : natpft_lb, cft_lb
+    use ctsm_LandunitVarCon, only : istsoil, istcrop
+    use ctsm_VarPar, only : natpft_lb, cft_lb
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -869,4 +869,4 @@ contains
 
   end subroutine set_pct_pft_diagnostics
 
-end module subgridWeightsMod
+end module ctsm_SubgridWeights

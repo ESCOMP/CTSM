@@ -1,12 +1,12 @@
-module unittestSimpleSubgridSetupsMod
+module ctsm_UnitTestSimpleSubgridSetups
 
-  ! This module provides wrappers to unittestSubgridMod, which give you a variety of
+  ! This module provides wrappers to ctsm_UnitTestSubgrid, which give you a variety of
   ! simple subgrid setups.
 #include "shr_assert.h"
-  use unittestSubgridMod
+  use ctsm_UnitTestSubgrid
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use landunit_varcon, only : istsoil
-  use pftconMod, only : noveg
+  use ctsm_LandunitVarCon, only : istsoil
+  use ctsm_PftCon, only : noveg
 
   implicit none
   private
@@ -310,4 +310,4 @@ contains
 
 
 
-end module unittestSimpleSubgridSetupsMod
+end module ctsm_UnitTestSimpleSubgridSetups

@@ -1,10 +1,10 @@
-module dynFileMod
+module ctsm_DynFile
 
-  ! This is a stub replacement for dynFileMod. It bypasses all of the netcdf-related
+  ! This is a stub replacement for ctsm_DynFile. It bypasses all of the netcdf-related
   ! stuff, instead allowing direct specification of the possible set of years and the
   ! current year. Thus, it is essentially just a wrapper to a dyn_time_info variable.
 
-  use dynTimeInfoMod, only : time_info_type, YEAR_POSITION_END_OF_TIMESTEP
+  use ctsm_DynTimeInfo, only : time_info_type, YEAR_POSITION_END_OF_TIMESTEP
   use ncdio_pio, only : file_desc_t
   implicit none
   save
@@ -44,4 +44,4 @@ contains
     constructor%time_info = time_info_type(my_years, YEAR_POSITION_END_OF_TIMESTEP)
   end function constructor
 
-end module dynFileMod
+end module ctsm_DynFile

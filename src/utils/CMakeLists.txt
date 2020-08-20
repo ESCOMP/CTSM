@@ -12,14 +12,14 @@ sourcelist_to_parent(clm_genf90_sources)
 list(APPEND clm_sources "${clm_genf90_sources}")
 
 list(APPEND clm_sources
-  AnnualFluxDribbler.F90
-  domainMod.F90
-  clm_nlUtilsMod.F90
-  clm_time_manager.F90
-  quadraticMod.F90
-  fileutils.F90
-  IssueFixedMetadataHandler.F90
-  NumericsMod.F90
+  ctsm_AnnualFluxDribbler.F90
+  ctsm_Domain.F90
+  ctsm_NlUtils.F90
+  ctsm_TimeManager.F90
+  ctsm_QuadraticSolver.F90
+  ctsm_FileUtils.F90
+  ctsm_IssueFixedMetadataHandler.F90
+  ctsm_Numerics.F90
   )
 
 sourcelist_to_parent(clm_sources)

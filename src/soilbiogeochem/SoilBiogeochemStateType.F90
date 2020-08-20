@@ -1,20 +1,20 @@
-module SoilBiogeochemStateType
+module ctsm_SoilBiogeochemStateType
 
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod      , only : bounds_type
-  use abortutils     , only : endrun
-  use spmdMod        , only : masterproc
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi
-  use clm_varpar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full
-  use clm_varcon     , only : spval, ispval, c14ratio, grlnd
-  use landunit_varcon, only : istsoil, istcrop
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
-  use clm_varctl     , only : use_vertsoilc, use_cn 
-  use clm_varctl     , only : iulog
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_Spmd        , only : masterproc
+  use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevlak, nlevsoifl, nlevsoi
+  use ctsm_VarPar     , only : ndecomp_cascade_transitions, nlevdecomp, nlevdecomp_full
+  use ctsm_VarCon     , only : spval, ispval, c14ratio, grlnd
+  use ctsm_LandunitVarCon, only : istsoil, istcrop
+  use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevlak
+  use ctsm_VarCtl     , only : use_vertsoilc, use_cn 
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
   ! 
   ! !PUBLIC TYPES:
   implicit none
@@ -118,8 +118,8 @@ contains
     !
     ! !USES:
     use shr_infnan_mod    , only : nan => shr_infnan_nan, assignment(=)
-    use histFileMod       , only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp, no_snow_normal
-    use CNSharedParamsMod , only : use_fun
+    use ctsm_HistFile       , only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp, no_snow_normal
+    use ctsm_CNSharedParamsMod , only : use_fun
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_state_type) :: this
@@ -206,8 +206,8 @@ contains
   subroutine initCold(this, bounds)
     !
     ! !USES:
-    use spmdMod    , only : masterproc
-    use fileutils  , only : getfil
+    use ctsm_Spmd    , only : masterproc
+    use ctsm_FileUtils  , only : getfil
     use ncdio_pio
     !
     ! !ARGUMENTS:
@@ -297,4 +297,4 @@ contains
     return
   end function get_spinup_latitude_term
 
-end module SoilBiogeochemStateType
+end module ctsm_SoilBiogeochemStateType

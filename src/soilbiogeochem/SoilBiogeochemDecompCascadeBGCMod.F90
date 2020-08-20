@@ -1,4 +1,4 @@
-module SoilBiogeochemDecompCascadeBGCMod
+module ctsm_SoilBiogeochemDecompCascadeBGC
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,23 +9,23 @@ module SoilBiogeochemDecompCascadeBGCMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
-  use clm_varcon                         , only : zsoi
-  use decompMod                          , only : bounds_type
-  use spmdMod                            , only : masterproc
-  use abortutils                         , only : endrun
-  use CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
-  use SoilStateType                      , only : soilstate_type
-  use TemperatureType                    , only : temperature_type 
-  use ch4Mod                             , only : ch4_type
-  use ColumnType                         , only : col                
-  use GridcellType                       , only : grc
-  use SoilBiogeochemStateType            , only : get_spinup_latitude_term
+  use ctsm_VarPar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+  use ctsm_VarPar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use ctsm_VarCtl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
+  use ctsm_VarCon                         , only : zsoi
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_Spmd                            , only : masterproc
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_CNSharedParamsMod                  , only : CNParamsShareInst, nlev_soildecomp_standard 
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_SoilBiogeochemStateType            , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilStateType                      , only : soilstate_type
+  use ctsm_TemperatureType                    , only : temperature_type 
+  use ctsm_Methane                             , only : ch4_type
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_GridcellType                       , only : grc
+  use ctsm_SoilBiogeochemStateType            , only : get_spinup_latitude_term
 
   !
   implicit none
@@ -103,13 +103,13 @@ contains
     ! Read the namelist for soil BGC Decomposition Cascade
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
+    use ctsm_AbortUtils     , only : endrun
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -644,9 +644,9 @@ contains
     !  written by C. Koven based on original CLM4 decomposition cascade
     !
     ! !USES:
-    use clm_time_manager , only : get_days_per_year
+    use ctsm_TimeManager , only : get_days_per_year
     use shr_const_mod    , only : SHR_CONST_PI
-    use clm_varcon       , only : secspday
+    use ctsm_VarCon       , only : secspday
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -879,7 +879,7 @@ contains
          if (use_lch4) then
             ! Calculate ANOXIA
             if (anoxia) then
-               ! Check for anoxia w/o LCH4 now done in controlMod.
+               ! Check for anoxia w/o LCH4 now done in ctsm_Control.
 
                do j = 1,nlev_soildecomp_standard
                   do fc = 1,num_soilc
@@ -956,7 +956,7 @@ contains
 
          if (use_lch4) then
             ! Calculate ANOXIA
-            ! Check for anoxia w/o LCH4 now done in controlMod.
+            ! Check for anoxia w/o LCH4 now done in ctsm_Control.
 
             if (anoxia) then
                do j = 1,nlevdecomp
@@ -1055,4 +1055,4 @@ contains
 
  end subroutine decomp_rate_constants_bgc
 
-end module SoilBiogeochemDecompCascadeBGCMod
+end module ctsm_SoilBiogeochemDecompCascadeBGC

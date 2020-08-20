@@ -23,20 +23,20 @@ module lnd_comp_esmf
   use glc_elevclass_mod , only : glc_elevclass_init
 
   ! ctsm code
-  use spmdMod           , only : masterproc, spmd_init, mpicom
-  use decompMod         , only : bounds_type, ldecomp, get_proc_bounds
-  use domainMod         , only : ldomain
-  use controlMod        , only : control_setNL
-  use clm_varorb        , only : eccen, obliqr, lambm0, mvelpp
-  use clm_varctl        , only : clm_varctl_set, iulog, finidat
-  use clm_varctl        , only : nsrStartup, nsrContinue
-  use clm_varctl        , only : inst_index, inst_suffix, inst_name
-  use clm_time_manager  , only : set_timemgr_init, advance_timestep
-  use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
-  use clm_time_manager  , only : get_nstep, get_step_size
-  use clm_time_manager  , only : get_curr_date, get_curr_calday
-  use clm_initializeMod , only : initialize1, initialize2
-  use clm_driver        , only : clm_drv
+  use ctsm_Spmd           , only : masterproc, spmd_init, mpicom
+  use ctsm_Decomp         , only : bounds_type, ldecomp, get_proc_bounds
+  use ctsm_Domain         , only : ldomain
+  use ctsm_Control        , only : control_setNL
+  use ctsm_VarOrb        , only : eccen, obliqr, lambm0, mvelpp
+  use ctsm_VarCtl        , only : ctsm_VarCtl_set, iulog, finidat
+  use ctsm_VarCtl        , only : nsrStartup, nsrContinue
+  use ctsm_VarCtl        , only : inst_index, inst_suffix, inst_name
+  use ctsm_TimeManager  , only : set_timemgr_init, advance_timestep
+  use ctsm_TimeManager  , only : set_nextsw_cday, update_rad_dtime
+  use ctsm_TimeManager  , only : get_nstep, get_step_size
+  use ctsm_TimeManager  , only : get_curr_date, get_curr_calday
+  use ctsm_Initialize , only : initialize1, initialize2
+  use ctsm_Driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
 
@@ -188,7 +188,7 @@ contains
     ! Initialize output log file
     !------------------------------------------------------------------------
 
-    ! TODO: by default iulog = 6 in clm_varctl - this should be generalized so that we
+    ! TODO: by default iulog = 6 in ctsm_VarCtl - this should be generalized so that we
     ! can control the output log file for ctsm running with a lilac driver
     !
     ! See also https://github.com/ESCOMP/CTSM/issues/861
@@ -326,7 +326,7 @@ contains
     !----------------------
 
     ! set default values for run control variables
-    call clm_varctl_set(caseid_in=caseid, nsrest_in=nsrest)
+    call ctsm_VarCtl_set(caseid_in=caseid, nsrest_in=nsrest)
     call ESMF_LogWrite(subname//"default values for run control variables are set...", ESMF_LOGMSG_INFO)
 
     !----------------------

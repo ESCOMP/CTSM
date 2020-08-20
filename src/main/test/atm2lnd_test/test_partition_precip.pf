@@ -1,20 +1,20 @@
 module test_partition_precip
 
-  ! Tests of atm2lndMod: partition_precip
+  ! Tests of ctsm_Atm2Lnd: partition_precip
 
   use pfunit_mod
-  use atm2lndMod
-  use atm2lndType
+  use ctsm_Atm2Lnd
+  use ctsm_Atm2LndType
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
   use unittestArrayMod
-  use landunit_varcon, only : istice_mec
-  use clm_varcon, only : hfus   ! latent heat of fusion for ice [J/kg]
-  use clm_varcon, only : denh2o ! density of liquid water [kg/m3]
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_VarCon, only : hfus   ! latent heat of fusion for ice [J/kg]
+  use ctsm_VarCon, only : denh2o ! density of liquid water [kg/m3]
   use shr_const_mod, only : SHR_CONST_TKFRZ
-  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
-  use WaterInfoBulkType, only : water_info_bulk_type
+  use ctsm_WaterAtm2LndBulkType, only : wateratm2lndbulk_type
+  use ctsm_WaterInfoBulkType, only : water_info_bulk_type
 
   implicit none
 

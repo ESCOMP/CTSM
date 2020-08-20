@@ -1,4 +1,4 @@
-module lnd2atmType
+module ctsm_Lnd2AtmType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,11 +8,11 @@ module lnd2atmType
   use shr_kind_mod  , only : r8 => shr_kind_r8
   use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod   , only : errMsg => shr_log_errMsg
-  use abortutils    , only : endrun
-  use decompMod     , only : bounds_type
-  use clm_varpar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
-  use clm_varcon    , only : spval
-  use clm_varctl    , only : iulog, use_lch4
+  use ctsm_AbortUtils    , only : endrun
+  use ctsm_Decomp     , only : bounds_type
+  use ctsm_VarPar    , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
+  use ctsm_VarCon    , only : spval
+  use ctsm_VarCtl    , only : iulog, use_lch4
   use shr_megan_mod , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod,only : shr_fire_emis_mechcomps_n
   use seq_drydep_mod, only : n_drydep, drydep_method, DD_XLND
@@ -176,9 +176,9 @@ contains
     ! Read the lnd2atm namelist
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -236,7 +236,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod, only : hist_addfld1d
+    use ctsm_HistFile, only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(lnd2atm_type) :: this
@@ -292,4 +292,4 @@ contains
 
   end subroutine InitHistory
 
-end module lnd2atmType
+end module ctsm_Lnd2AtmType

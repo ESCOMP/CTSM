@@ -1,5 +1,5 @@
-module spmdMod
-  ! Stub of spmdMod
+module ctsm_Spmd
+  ! Stub of ctsm_Spmd
 
   implicit none
   save
@@ -12,4 +12,4 @@ module spmdMod
   integer, parameter, public :: mpi_logical = 0
   integer, parameter, public :: MPI_REAL8 = 1275070505
 
-end module spmdMod
+end module ctsm_Spmd

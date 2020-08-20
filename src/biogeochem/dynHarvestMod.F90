@@ -10,19 +10,19 @@ module dynHarvestMod
   ! !USES:
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use decompMod               , only : bounds_type, BOUNDS_LEVEL_PROC
-  use abortutils              , only : endrun
-  use dynFileMod              , only : dyn_file_type
+  use ctsm_Decomp               , only : bounds_type, BOUNDS_LEVEL_PROC
+  use ctsm_AbortUtils              , only : endrun
+  use ctsm_DynFile              , only : dyn_file_type
   use dynVarTimeUninterpMod   , only : dyn_var_time_uninterp_type
-  use CNVegCarbonStateType    , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType     , only : cnveg_carbonflux_type
-  use CNVegNitrogenStateType  , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType   , only : cnveg_nitrogenflux_type
-  use SoilBiogeochemStateType , only : soilbiogeochem_state_type
-  use pftconMod               , only : pftcon
-  use clm_varcon              , only : grlnd
-  use ColumnType              , only : col                
-  use PatchType               , only : patch                
+  use ctsm_CNVegCarbonStateType    , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType     , only : cnveg_carbonflux_type
+  use ctsm_CNVegNitrogenStateType  , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType   , only : cnveg_nitrogenflux_type
+  use ctsm_SoilBiogeochemStateType , only : soilbiogeochem_state_type
+  use ctsm_PftCon               , only : pftcon
+  use ctsm_VarCon              , only : grlnd
+  use ctsm_ColumnType              , only : col                
+  use ctsm_PatchType               , only : patch                
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -68,7 +68,7 @@ contains
     ! 
     ! !USES:
     use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
-    use dynTimeInfoMod        , only : YEAR_POSITION_START_OF_TIMESTEP
+    use ctsm_DynTimeInfo        , only : YEAR_POSITION_START_OF_TIMESTEP
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds           ! proc-level bounds
@@ -134,7 +134,7 @@ contains
     ! year, with abrupt changes in the rate at annual boundaries.
     !
     ! !USES:
-    use dynTimeInfoMod , only : time_info_type
+    use ctsm_DynTimeInfo , only : time_info_type
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  ! proc-level bounds
@@ -182,9 +182,9 @@ contains
     ! Harvest mortality routine for coupled carbon-nitrogen code (CN)
     !
     ! !USES:
-    use pftconMod       , only : noveg, nbrdlf_evr_shrub
-    use clm_varcon      , only : secspday
-    use clm_time_manager, only : get_step_size_real, is_beg_curr_year
+    use ctsm_PftCon       , only : noveg, nbrdlf_evr_shrub
+    use ctsm_VarCon      , only : secspday
+    use ctsm_TimeManager, only : get_step_size_real, is_beg_curr_year
     !
     ! !ARGUMENTS:
     integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -408,7 +408,7 @@ contains
    ! to the column level and assign them to the three litter pools
    !
    ! !USES:
-   use clm_varpar , only : nlevdecomp, maxsoil_patches
+   use ctsm_VarPar , only : nlevdecomp, maxsoil_patches
    !
    ! !ARGUMENTS:
    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter

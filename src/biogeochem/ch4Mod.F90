@@ -1,4 +1,4 @@
-module ch4Mod
+module ctsm_Methane
 
 #include "shr_assert.h"
 
@@ -12,33 +12,33 @@ module ch4Mod
   use shr_kind_mod                   , only : r8 => shr_kind_r8
   use shr_infnan_mod                 , only : nan => shr_infnan_nan, assignment(=), shr_infnan_isnan
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
-  use clm_varpar                     , only : nlevsoi, ngases, nlevsno, nlevdecomp
-  use clm_varcon                     , only : denh2o, denice, tfrz, grav, spval, rgas, grlnd
-  use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
-  use landunit_varcon                , only : istsoil, istcrop, istdlak
-  use clm_time_manager               , only : get_step_size_real, get_nstep
-  use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4
-  use abortutils                     , only : endrun
-  use decompMod                      , only : bounds_type
-  use atm2lndType                    , only : atm2lnd_type
-  use CanopyStateType                , only : canopystate_type
-  use CNSharedParamsMod              , only : CNParamsShareInst
-  use SoilBiogeochemCarbonFluxType   , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
-  use EnergyFluxType                 , only : energyflux_type
-  use LakeStateType                  , only : lakestate_type
-  use lnd2atmType                    , only : lnd2atm_type
-  use SoilHydrologyType              , only : soilhydrology_type  
-  use SoilStateType                  , only : soilstate_type
-  use TemperatureType                , only : temperature_type
-  use WaterFluxBulkType                  , only : waterfluxbulk_type
-  use WaterStateBulkType                 , only : waterstatebulk_type
-  use WaterDiagnosticBulkType                 , only : waterdiagnosticbulk_type
-  use GridcellType                   , only : grc                
-  use LandunitType                   , only : lun                
-  use ColumnType                     , only : col                
-  use PatchType                      , only : patch                
-  use ch4FInundatedStreamType        , only : ch4finundatedstream_type
+  use ctsm_VarPar                     , only : nlevsoi, ngases, nlevsno, nlevdecomp
+  use ctsm_VarCon                     , only : denh2o, denice, tfrz, grav, spval, rgas, grlnd
+  use ctsm_VarCon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
+  use ctsm_LandunitVarCon                , only : istsoil, istcrop, istdlak
+  use ctsm_TimeManager               , only : get_step_size_real, get_nstep
+  use ctsm_VarCtl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4
+  use ctsm_AbortUtils                     , only : endrun
+  use ctsm_Decomp                      , only : bounds_type
+  use ctsm_Atm2LndType                    , only : atm2lnd_type
+  use ctsm_CanopyStateType                , only : canopystate_type
+  use ctsm_CNSharedParamsMod              , only : CNParamsShareInst
+  use ctsm_SoilBiogeochemCarbonFluxType   , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_EnergyFluxType                 , only : energyflux_type
+  use ctsm_LakeStateType                  , only : lakestate_type
+  use ctsm_Lnd2AtmType                    , only : lnd2atm_type
+  use ctsm_SoilHydrologyType              , only : soilhydrology_type  
+  use ctsm_SoilStateType                  , only : soilstate_type
+  use ctsm_TemperatureType                , only : temperature_type
+  use ctsm_WaterFluxBulkType                  , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType                 , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType                 , only : waterdiagnosticbulk_type
+  use ctsm_GridcellType                   , only : grc                
+  use ctsm_LandunitType                   , only : lun                
+  use ctsm_ColumnType                     , only : col                
+  use ctsm_PatchType                      , only : patch                
+  use ctsm_MethaneFInundatedStreamType        , only : ch4finundatedstream_type
   !
   implicit none
   private
@@ -249,7 +249,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    use clm_varpar    , only: nlevgrnd
+    use ctsm_VarPar    , only: nlevgrnd
     !
     ! !ARGUMENTS:
     class(ch4_type) :: this
@@ -352,9 +352,9 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use clm_varpar , only : nlevgrnd, nlevdecomp
-    use clm_varctl , only : hist_wrtch4diag
-    use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp
+    use ctsm_VarPar , only : nlevgrnd, nlevdecomp
+    use ctsm_VarCtl , only : hist_wrtch4diag
+    use ctsm_HistFile, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp
     use ch4varcon  , only : allowlakeprod
     !
     ! !ARGUMENTS:
@@ -734,13 +734,13 @@ contains
     !
     ! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevdecomp
-    use landunit_varcon , only : istsoil, istdlak, istcrop
-    use clm_varctl      , only : iulog
+    use ctsm_VarPar      , only : nlevsoi, nlevgrnd, nlevdecomp
+    use ctsm_LandunitVarCon , only : istsoil, istdlak, istcrop
+    use ctsm_VarCtl      , only : iulog
     use ch4varcon       , only : allowlakeprod, usephfact, finundation_mtd
     use ch4varcon       , only : finundation_mtd_ZWT_inversion
-    use spmdMod         , only : masterproc
-    use fileutils       , only : getfil
+    use ctsm_Spmd         , only : masterproc
+    use ctsm_FileUtils       , only : getfil
     use ncdio_pio       
     !
     ! !ARGUMENTS:
@@ -999,9 +999,9 @@ contains
     ! !USES:
     use ncdio_pio , only : ncd_double 
     use pio       , only : file_desc_t
-    use decompMod , only : bounds_type
+    use ctsm_Decomp , only : bounds_type
     use restUtilMod
-    use filterColMod, only : filter_col_type
+    use ctsm_FilterCol, only : filter_col_type
     !
     ! !ARGUMENTS:
     class(ch4_type) :: this
@@ -1228,7 +1228,7 @@ contains
     ! Adjust state variables when column areas change due to dynamic landuse
     !
     ! !USES:
-    use dynColumnStateUpdaterMod, only : column_state_updater_type
+    use ctsm_DynColumnStateUpdater, only : column_state_updater_type
     !
     ! !ARGUMENTS:
     class(ch4_type)                 , intent(inout) :: this
@@ -1571,7 +1571,7 @@ contains
     ! associated filter updates
     !
     ! !USES:
-    use subgridAveMod, only: c2g
+    use ctsm_SubgridAve, only: c2g
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds
@@ -1661,11 +1661,11 @@ contains
     ! Driver for the methane emissions model
     !
     ! !USES:
-    use subgridAveMod , only : p2c, c2g
-    use clm_varpar    , only : nlevgrnd, nlevdecomp
-    use pftconMod     , only : noveg
+    use ctsm_SubgridAve , only : p2c, c2g
+    use ctsm_VarPar    , only : nlevgrnd, nlevdecomp
+    use ctsm_PftCon     , only : noveg
     use ch4varcon     , only : replenishlakec, allowlakeprod, ch4offline
-    use clm_varcon    , only : secspday
+    use ctsm_VarCon    , only : secspday
     use ch4varcon     , only : finundation_mtd, finundation_mtd_h2osfc
     !
     ! !ARGUMENTS:
@@ -2326,10 +2326,10 @@ contains
     !
     ! !USES:
     use ch4varcon          , only: usephfact, anoxicmicrosites, ch4rmcnlim
-    use clm_varctl         , only: anoxia
-    use clm_varpar         , only: nlevdecomp, nlevdecomp_full
-    use CNSharedParamsMod  , only: nlev_soildecomp_standard
-    use pftconMod          , only: noveg
+    use ctsm_VarCtl         , only: anoxia
+    use ctsm_VarPar         , only: nlevdecomp, nlevdecomp_full
+    use ctsm_CNSharedParamsMod  , only: nlev_soildecomp_standard
+    use ctsm_PftCon          , only: noveg
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds              
@@ -2659,7 +2659,7 @@ contains
     ! Oxidation will be limited by available oxygen in ch4_tran.
     
     ! !USES:
-    use clm_time_manager, only : get_step_size_real
+    use ctsm_TimeManager, only : get_step_size_real
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in) :: bounds    
@@ -2815,9 +2815,9 @@ contains
     ! By default upland veg. has small 5% porosity but this can be switched to be equal to inundated porosity.
 
     ! !USES:
-    use clm_varcon       , only : rpi
-    use clm_time_manager , only : get_step_size_real
-    use pftconMod        , only : nc3_arctic_grass, nc3_nonarctic_grass, nc4_grass, noveg, pftcon
+    use ctsm_VarCon       , only : rpi
+    use ctsm_TimeManager , only : get_step_size_real
+    use ctsm_PftCon        , only : nc3_arctic_grass, nc3_nonarctic_grass, nc4_grass, noveg, pftcon
     use ch4varcon        , only : transpirationloss, use_aereoxid_prog
     !
     ! !ARGUMENTS:
@@ -3067,8 +3067,8 @@ contains
     ! Bubbles are released to the water table surface in ch4_tran.
 
     ! !USES:
-    use clm_time_manager   , only : get_step_size_real
-    use LakeCon           
+    use ctsm_TimeManager   , only : get_step_size_real
+    use ctsm_LakeConstants           
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds    
@@ -3212,8 +3212,8 @@ contains
     ! Then CH4 diffusive flux is calculated and consistency is checked.
 
     ! !USES:
-    use clm_time_manager   , only : get_step_size_real, get_nstep
-    use TridiagonalMod     , only : Tridiagonal
+    use ctsm_TimeManager   , only : get_step_size_real, get_nstep
+    use ctsm_TridiagonalSolver     , only : Tridiagonal
     use ch4varcon          , only : ch4frzout, use_aereoxid_prog
     !
     ! !ARGUMENTS:
@@ -4076,8 +4076,8 @@ contains
     ! !DESCRIPTION: Annual mean fields.
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size_real, get_days_per_year, get_nstep
-    use clm_varcon      , only: secspday
+    use ctsm_TimeManager, only: get_step_size_real, get_days_per_year, get_nstep
+    use ctsm_VarCon      , only: secspday
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds  
@@ -4243,5 +4243,5 @@ contains
   end subroutine ch4_totcolch4
 
 
-end module ch4Mod
+end module ctsm_Methane
 

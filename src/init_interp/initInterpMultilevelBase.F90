@@ -1,4 +1,4 @@
-module initInterpMultilevelBase
+module ctsm_InitInterpMultilevelBase
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -88,4 +88,4 @@ module initInterpMultilevelBase
      end function get_description_interface
   end interface
 
-end module initInterpMultilevelBase
+end module ctsm_InitInterpMultilevelBase

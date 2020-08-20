@@ -1,7 +1,7 @@
-module abortutils
+module ctsm_AbortUtils
 
   !-----------------------------------------------------------------------
-  ! !MODULE: abortutils
+  ! !MODULE: ctsm_AbortUtils
   !
   ! !DESCRIPTION:
   ! Abort the model for abnormal termination
@@ -27,7 +27,7 @@ CONTAINS
     ! Abort the model for abnormal termination
     !
     use shr_sys_mod , only: shr_sys_abort
-    use clm_varctl  , only: iulog
+    use ctsm_VarCtl  , only: iulog
     !
     ! !ARGUMENTS:
     implicit none
@@ -59,8 +59,8 @@ CONTAINS
     ! Abort the model for abnormal termination
     !
     use shr_sys_mod       , only: shr_sys_abort
-    use clm_varctl        , only: iulog
-    use GetGlobalValuesMod, only: GetGlobalWrite
+    use ctsm_VarCtl        , only: iulog
+    use ctsm_GetGlobalValues, only: GetGlobalWrite
     !
     ! Arguments:
     implicit none
@@ -92,4 +92,4 @@ CONTAINS
 
   end subroutine endrun_globalindex
 
-end module abortutils
+end module ctsm_AbortUtils

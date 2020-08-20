@@ -1,3 +1,3 @@
-add_subdirectory(initInterpMindist_test)
-add_subdirectory(initInterpMultilevel_test)
-add_subdirectory(initInterpUtils_test)
+add_subdirectory(ctsm_InitInterpMindist_test)
+add_subdirectory(ctsm_InitInterpMultilevel_test)
+add_subdirectory(ctsm_InitInterpUtils_test)

@@ -1,4 +1,4 @@
-module surfrdMod
+module ctsm_SurfRead
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,17 +9,17 @@ module surfrdMod
 #include "shr_assert.h"
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use abortutils      , only : endrun
-  use clm_varpar      , only : nlevsoifl
-  use landunit_varcon , only : numurbl
-  use clm_varcon      , only : grlnd
-  use clm_varctl      , only : iulog
-  use clm_varctl      , only : use_cndv, use_crop
-  use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_VarPar      , only : nlevsoifl
+  use ctsm_LandunitVarCon , only : numurbl
+  use ctsm_VarCon      , only : grlnd
+  use ctsm_VarCtl      , only : iulog
+  use ctsm_VarCtl      , only : use_cndv, use_crop
+  use ctsm_SurfReadUtils  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
   use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
   use pio
-  use spmdMod                         
+  use ctsm_Spmd                         
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -57,7 +57,7 @@ contains
     ! NO DOMAIN DECOMPOSITION  HAS BEEN SET YET
     !
     ! !USES:
-    use fileutils , only : getfil
+    use ctsm_FileUtils , only : getfil
     !
     ! !ARGUMENTS:
     character(len=*), intent(in)    :: filename  ! grid filename
@@ -142,9 +142,9 @@ contains
     ! o real longitude of grid cell (degrees)
     !
     ! !USES:
-    use clm_varcon, only : spval, re
-    use domainMod , only : domain_type, domain_init, domain_clean, lon1d, lat1d
-    use fileutils , only : getfil
+    use ctsm_VarCon, only : spval, re
+    use ctsm_Domain , only : domain_type, domain_init, domain_clean, lon1d, lat1d
+    use ctsm_FileUtils , only : getfil
     !
     ! !ARGUMENTS:
     integer          ,intent(in)    :: begg, endg 
@@ -285,14 +285,14 @@ contains
     !    o real % abundance PFTs (as a percent of vegetated area)
     !
     ! !USES:
-    use clm_varctl  , only : create_crop_landunit, collapse_urban, &
+    use ctsm_VarCtl  , only : create_crop_landunit, collapse_urban, &
                              toosmall_soil, toosmall_crop, toosmall_glacier, &
                              toosmall_lake, toosmall_wetland, toosmall_urban, &
                              n_dom_landunits
-    use fileutils   , only : getfil
-    use domainMod   , only : domain_type, domain_init, domain_clean
-    use clm_instur  , only : wt_lunit, topo_glc_mec
-    use landunit_varcon, only: max_lunit, istsoil, isturb_MIN, isturb_MAX
+    use ctsm_FileUtils   , only : getfil
+    use ctsm_Domain   , only : domain_type, domain_init, domain_clean
+    use ctsm_VarSur  , only : wt_lunit, topo_glc_mec
+    use ctsm_LandunitVarCon, only: max_lunit, istsoil, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     integer,          intent(in) :: begg, endg, actual_numcft      
@@ -455,7 +455,7 @@ contains
     ! Read maxsoil_patches and numcft from the surface dataset
     !
     ! !USES:
-    use fileutils   , only : getfil
+    use ctsm_FileUtils   , only : getfil
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: lfsurdat  ! surface dataset filename
@@ -506,10 +506,10 @@ contains
     ! as soil color and percent sand and clay
     !
     ! !USES:
-    use clm_varpar      , only : maxpatch_glcmec, nlevurb
-    use landunit_varcon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice_mec
-    use clm_instur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
-    use UrbanParamsType , only : CheckUrban
+    use ctsm_VarPar      , only : maxpatch_glcmec, nlevurb
+    use ctsm_LandunitVarCon , only : isturb_MIN, isturb_MAX, istdlak, istwet, istice_mec
+    use ctsm_VarSur      , only : wt_lunit, urban_valid, wt_glc_mec, topo_glc_mec
+    use ctsm_UrbanParamsType , only : CheckUrban
     !
     ! !ARGUMENTS:
     integer          , intent(in)    :: begg, endg 
@@ -660,9 +660,9 @@ contains
     !     Handle generic crop types for file format where they are on their own
     !     crop landunit and read in as Crop Function Types.
     ! !USES:
-    use clm_instur      , only : wt_nat_patch, irrig_method
-    use clm_varpar      , only : cft_size, cft_lb, natpft_lb
-    use IrrigationMod   , only : irrig_method_unset
+    use ctsm_VarSur      , only : wt_nat_patch, irrig_method
+    use ctsm_VarPar      , only : cft_size, cft_lb, natpft_lb
+    use ctsm_Irrigation   , only : irrig_method_unset
     ! !ARGUMENTS:
     implicit none
     type(file_desc_t), intent(inout) :: ncid         ! netcdf id
@@ -732,9 +732,9 @@ contains
     !     Handle generic crop types for file format where they are part of the
     !     natural vegetation landunit.
     ! !USES:
-    use clm_instur      , only : fert_cft, irrig_method, wt_nat_patch
-    use clm_varpar      , only : natpft_size, cft_size, natpft_lb
-    use IrrigationMod   , only : irrig_method_unset
+    use ctsm_VarSur      , only : fert_cft, irrig_method, wt_nat_patch
+    use ctsm_VarPar      , only : natpft_size, cft_size, natpft_lb
+    use ctsm_Irrigation   , only : irrig_method_unset
     ! !ARGUMENTS:
     implicit none
     integer, intent(in) :: begg, endg
@@ -794,11 +794,11 @@ contains
     ! Determine weight arrays for non-dynamic landuse mode
     !
     ! !USES:
-    use clm_varctl      , only : create_crop_landunit, use_fates, n_dom_pfts
-    use clm_varpar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
-    use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
-    use landunit_varcon , only : istsoil, istcrop
-    use surfrdUtilsMod  , only : convert_cft_to_pft
+    use ctsm_VarCtl      , only : create_crop_landunit, use_fates, n_dom_pfts
+    use ctsm_VarPar      , only : natpft_lb, natpft_ub, natpft_size, cft_size, cft_lb, cft_ub
+    use ctsm_VarSur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
+    use ctsm_LandunitVarCon , only : istsoil, istcrop
+    use ctsm_SurfReadUtils  , only : convert_cft_to_pft
     !
     ! !ARGUMENTS:
     implicit none
@@ -928,8 +928,8 @@ contains
     ! Determine weights for CNDV mode.
     !
     ! !USES:
-    use pftconMod , only : noveg
-    use clm_instur, only : wt_nat_patch
+    use ctsm_PftCon , only : noveg
+    use ctsm_VarSur, only : wt_nat_patch
     !
     ! !ARGUMENTS:
     integer, intent(in) :: begg, endg  
@@ -946,4 +946,4 @@ contains
 
   end subroutine surfrd_veg_dgvm
 
-end module surfrdMod
+end module ctsm_SurfRead

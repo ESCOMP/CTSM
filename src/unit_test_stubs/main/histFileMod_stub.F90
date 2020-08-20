@@ -1,6 +1,6 @@
-module histFileMod
+module ctsm_HistFile
 
-  ! This is a stub for histFileMod. Currently all it does is provide empty
+  ! This is a stub for ctsm_HistFile. Currently all it does is provide empty
   ! implementations for hist_addfld calls, to satisfy the interface that is expected
   ! throughout the CLM code.
 
@@ -88,9 +88,9 @@ contains
 
     !
     ! !USES:
-    use clm_varpar  , only : nlevdecomp_full
-    use clm_varctl  , only : iulog
-    use abortutils  , only : endrun
+    use ctsm_VarPar  , only : nlevdecomp_full
+    use ctsm_VarCtl  , only : iulog
+    use ctsm_AbortUtils  , only : endrun
     use shr_log_mod , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
@@ -108,4 +108,4 @@ contains
 
   end subroutine hist_addfld_decomp
 
-end module histFileMod
+end module ctsm_HistFile

@@ -1,4 +1,4 @@
-module CNCIsoFluxMod
+module ctsm_CNCIsoFluxes
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module for carbon isotopic flux variable update, non-mortality fluxes.
@@ -6,20 +6,20 @@ module CNCIsoFluxMod
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
-  use clm_varpar                         , only : max_patch_per_col, maxsoil_patches
-  use abortutils                         , only : endrun
-  use pftconMod                          , only : pftcon
-  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
-  use ColumnType                         , only : col                
-  use PatchType                          , only : patch                
-  use clm_varctl                         , only : use_crop
-  use clm_varctl                         , only : use_grainproduct
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
+  use ctsm_VarPar                         , only : max_patch_per_col, maxsoil_patches
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_PftCon                          , only : pftcon
+  use ctsm_CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType                , only : cnveg_carbonflux_type
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_SoilBiogeochemStateType            , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_PatchType                          , only : patch                
+  use ctsm_VarCtl                         , only : use_crop
+  use ctsm_VarCtl                         , only : use_grainproduct
   !
   implicit none
   private
@@ -486,7 +486,7 @@ contains
       end if
 
       ! call routine to shift patch-level litterfall fluxes to column, for isotopes
-      ! the non-isotope version of this routine is called in CNPhenologyMod.F90
+      ! the non-isotope version of this routine is called in ctsm_CNPhenologyMod.F90
       ! For later clean-up, it would be possible to generalize this function to operate on a single 
       ! patch-to-column flux.
 
@@ -666,7 +666,7 @@ contains
            num_soilp                                                     , filter_soilp, 1._r8, 0, isotope)
 
       ! call routine to shift patch-level gap mortality fluxes to column , for isotopes
-      ! the non-isotope version of this routine is in CNGapMortalityMod.F90.
+      ! the non-isotope version of this routine is in ctsm_CNGapMortalityMod.F90.
 
       call CNCIsoGapPftToColumn(num_soilc, filter_soilc, soilbiogeochem_state_inst, iso_cnveg_carbonflux_inst)
 
@@ -812,7 +812,7 @@ contains
            num_soilp                                           , filter_soilp, 1._r8, 0, isotope)
 
       ! call routine to shift patch-level gap mortality fluxes to column, 
-      ! for isotopes the non-isotope version of this routine is in CNGapMortalityMod.F90.
+      ! for isotopes the non-isotope version of this routine is in ctsm_CNGapMortalityMod.F90.
 
       call CNCIsoHarvestPftToColumn(num_soilc, filter_soilc, soilbiogeochem_state_inst, iso_cnveg_carbonflux_inst)
 
@@ -1177,8 +1177,8 @@ contains
     !
     ! !USES:
 !DML
-    use pftconMod  , only : npcropmin
-    use clm_varctl , only : use_grainproduct
+    use ctsm_PftCon  , only : npcropmin
+    use ctsm_VarCtl , only : use_grainproduct
 !DML
 
     ! !ARGUMENTS:
@@ -1601,7 +1601,7 @@ contains
      case ('c13')
         frax = frax_c13
      case default
-        call endrun(msg='CNCIsoFluxMod: iso must be either c13 or c14'//errMsg(sourcefile, __LINE__))
+        call endrun(msg='ctsm_CNCIsoFluxes: iso must be either c13 or c14'//errMsg(sourcefile, __LINE__))
      end select
 
      ! loop over the supplied filter
@@ -1620,4 +1620,4 @@ contains
 
    end subroutine CIsoFluxCalc
 
-end module CNCIsoFluxMod
+end module ctsm_CNCIsoFluxes

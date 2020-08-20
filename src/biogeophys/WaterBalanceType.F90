@@ -1,4 +1,4 @@
-module WaterBalanceType
+module ctsm_WaterBalanceType
 
 #include "shr_assert.h"
 
@@ -9,12 +9,12 @@ module WaterBalanceType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varcon     , only : spval
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
-  use WaterTracerUtils, only : AllocateVar1d
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_Decomp      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use ctsm_VarCon     , only : spval
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_WaterTracerUtils, only : AllocateVar1d
   !
   implicit none
   save
@@ -137,7 +137,7 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_HistFile    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(waterbalance_type), intent(in) :: this
@@ -225,4 +225,4 @@ contains
          ptr_col=this%errh2osno_col, c2l_scale_type='urbanf')
   end subroutine InitHistory
 
-end module WaterBalanceType
+end module ctsm_WaterBalanceType

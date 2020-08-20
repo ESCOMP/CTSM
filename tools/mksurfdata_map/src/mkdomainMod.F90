@@ -1,4 +1,4 @@
-module mkdomainMod
+module mkctsm_Domain
 !-----------------------------------------------------------------------
 !BOP
 !
@@ -54,7 +54,7 @@ module mkdomainMod
 !
 ! !REVISION HISTORY:
 ! Originally clm_varsur by Mariana Vertenstein
-! Migrated from clm_varsur to domainMod by T Craig
+! Migrated from clm_varsur to ctsm_Domain by T Craig
 !
   character*16,parameter :: set   = 'domain_set      '
   character*16,parameter :: unset = 'NOdomain_unsetNO'
@@ -959,4 +959,4 @@ end subroutine domain_check
 
   end subroutine for_test_create_domain
 
-end module mkdomainMod
+end module mkctsm_Domain

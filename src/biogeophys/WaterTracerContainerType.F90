@@ -1,4 +1,4 @@
-module WaterTracerContainerType
+module ctsm_WaterTracerContainerType
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -22,9 +22,9 @@ module WaterTracerContainerType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : OOBMsg => shr_log_OOBMsg
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use abortutils     , only : endrun
-  use decompMod      , only : bounds_type, get_beg, get_end
-  use clm_varctl     , only : iulog
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_Decomp      , only : bounds_type, get_beg, get_end
+  use ctsm_VarCtl     , only : iulog
   !
   implicit none
   private
@@ -38,7 +38,7 @@ module WaterTracerContainerType
      private
      real(r8), pointer :: data(:)
      character(len=:), allocatable :: description  ! description of the variable (typically, the variable name, and optionally some other information like the level index)
-     integer :: subgrid_level  ! one of the level codes defined in decompMod
+     integer :: subgrid_level  ! one of the level codes defined in ctsm_Decomp
   end type water_tracer_type
 
   ! Define a dynamic vector for water_tracer_type
@@ -86,7 +86,7 @@ contains
     integer, intent(in)          :: begi           ! beginning index of data array
     real(r8), target, intent(in) :: data(begi:)
     character(len=*), intent(in) :: description
-    integer         , intent(in) :: subgrid_level  ! one of the levels defined in decompMod  
+    integer         , intent(in) :: subgrid_level  ! one of the levels defined in ctsm_Decomp  
     !
     ! !LOCAL VARIABLES:
 
@@ -128,7 +128,7 @@ contains
     integer, intent(in)          :: begi           ! beginning index of var array
     real(r8), target, intent(in) :: var(begi:)
     character(len=*), intent(in) :: description
-    integer         , intent(in) :: subgrid_level  ! one of the levels defined in decompMod
+    integer         , intent(in) :: subgrid_level  ! one of the levels defined in ctsm_Decomp
     !
     ! !LOCAL VARIABLES:
     type(water_tracer_type) :: one_tracer
@@ -273,4 +273,4 @@ contains
 
   end subroutine get_data
 
-end module WaterTracerContainerType
+end module ctsm_WaterTracerContainerType

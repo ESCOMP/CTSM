@@ -1,4 +1,4 @@
-module CNFireFactoryMod
+module ctsm_CNFireFactoryMod
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,9 +6,9 @@ module CNFireFactoryMod
   ! out the particular type to return.
   !
   ! !USES:
-  use abortutils          , only : endrun
+  use ctsm_AbortUtils          , only : endrun
   use shr_log_mod         , only : errMsg => shr_log_errMsg
-  use clm_varctl          , only : iulog
+  use ctsm_VarCtl          , only : iulog
 
   implicit none
   save
@@ -33,9 +33,9 @@ contains
     ! Read the namelist for cnfire
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     !
     ! !ARGUMENTS:
@@ -90,11 +90,11 @@ contains
     !
     ! !USES:
     use shr_kind_mod     , only : SHR_KIND_CL
-    use FireMethodType   , only : fire_method_type
-    use CNFireNoFireMod  , only : cnfire_nofire_type
-    use CNFireLi2014Mod  , only : cnfire_li2014_type
-    use CNFireLi2016Mod  , only : cnfire_li2016_type
-    use decompMod        , only : bounds_type
+    use ctsm_FireMethodType   , only : fire_method_type
+    use ctsm_CNFireNoFireMod  , only : cnfire_nofire_type
+    use ctsm_CNFireLi2014Mod  , only : cnfire_li2014_type
+    use ctsm_CNFireLi2016Mod  , only : cnfire_li2016_type
+    use ctsm_Decomp        , only : bounds_type
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
@@ -122,4 +122,4 @@ contains
 
   end subroutine create_cnfire_method
 
-end module CNFireFactoryMod
+end module ctsm_CNFireFactoryMod

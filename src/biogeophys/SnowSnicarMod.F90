@@ -1,4 +1,4 @@
-module SnowSnicarMod
+module ctsm_SnowSnicar
 
 #include "shr_assert.h"
 
@@ -11,20 +11,20 @@ module SnowSnicarMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use clm_varctl      , only : iulog
-  use clm_varcon      , only : namec , tfrz
+  use ctsm_VarCtl      , only : iulog
+  use ctsm_VarCon      , only : namec , tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
-  use abortutils      , only : endrun
-  use decompMod       , only : bounds_type
-  use AerosolMod      , only : snw_rds_min
-  use atm2lndType     , only : atm2lnd_type
-  use WaterStateBulkType  , only : waterstatebulk_type
-  use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
-  use WaterFluxBulkType   , only : waterfluxbulk_type
-  use TemperatureType , only : temperature_type
-  use GridcellType    , only : grc       
-  use LandunitType    , only : lun       
-  use ColumnType      , only : col       
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_Aerosols      , only : snw_rds_min
+  use ctsm_Atm2LndType     , only : atm2lnd_type
+  use ctsm_WaterStateBulkType  , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
+  use ctsm_WaterFluxBulkType   , only : waterfluxbulk_type
+  use ctsm_TemperatureType , only : temperature_type
+  use ctsm_GridcellType    , only : grc       
+  use ctsm_LandunitType    , only : lun       
+  use ctsm_ColumnType      , only : col       
   !
   implicit none
   save
@@ -177,8 +177,8 @@ contains
     ! J. Geophys. Res., 112, D11202, doi: 10.1029/2006JD008003
     !
     ! !USES:
-    use clm_varpar       , only : nlevsno, numrad
-    use clm_time_manager , only : get_nstep
+    use ctsm_VarPar       , only : nlevsno, numrad
+    use ctsm_TimeManager , only : get_nstep
     use shr_const_mod    , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -1026,9 +1026,9 @@ contains
     !   I am aware.
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size_real, get_nstep
-    use clm_varpar       , only : nlevsno
-    use clm_varcon       , only : spval
+    use ctsm_TimeManager , only : get_step_size_real, get_nstep
+    use ctsm_VarPar       , only : nlevsno
+    use ctsm_VarCon       , only : spval
     use shr_const_mod    , only : SHR_CONST_RHOICE, SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -1292,7 +1292,7 @@ contains
     ! Author: Leo VanKampenhout
     !
     ! !USES:
-    use AerosolMod      , only : fresh_snw_rds_max
+    use ctsm_Aerosols      , only : fresh_snw_rds_max
     ! !ARGUMENTS:
     integer, intent(in)                :: c_idx         ! column index
     type(atm2lnd_type) , intent(in)    :: atm2lnd_inst  ! Forcing from atmosphere
@@ -1331,9 +1331,9 @@ contains
   !-----------------------------------------------------------------------
    subroutine SnowOptics_init( )
      
-     use fileutils  , only : getfil
-     use CLM_varctl , only : fsnowoptics
-     use spmdMod    , only : masterproc
+     use ctsm_FileUtils  , only : getfil
+     use ctsm_VarCtl , only : fsnowoptics
+     use ctsm_Spmd    , only : masterproc
      use ncdio_pio  , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
 
      type(file_desc_t)  :: ncid                        ! netCDF file id
@@ -1440,9 +1440,9 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine SnowAge_init( )
-     use CLM_varctl      , only : fsnowaging
-     use fileutils       , only : getfil
-     use spmdMod         , only : masterproc
+     use ctsm_VarCtl      , only : fsnowaging
+     use ctsm_FileUtils       , only : getfil
+     use ctsm_Spmd         , only : masterproc
      use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
 
      type(file_desc_t)  :: ncid                        ! netCDF file id
@@ -1480,4 +1480,4 @@ contains
 
    end subroutine SnowAge_init
    
- end module SnowSnicarMod
+ end module ctsm_SnowSnicar

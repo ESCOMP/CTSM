@@ -1,8 +1,8 @@
-module test_dynVarShared
+module ctsm_TestDynVarShared
   ! Shared code to set up tests of dyn_var_type and its extensions
 
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use dynFileMod, only : dyn_file_type
+  use ctsm_DynFile, only : dyn_file_type
   use ncdio_pio, only : ncd_set_var
 
   implicit none
@@ -15,7 +15,7 @@ contains
   
   function create_dyn_file() result(dyn_file)
     ! Set up a dyn_file variable for tests. Assumes we're using the mock version of
-    ! dynFileMod.
+    ! ctsm_DynFile.
     !
     ! The years in the mock "file" go from 11 - 14. 
 
@@ -46,4 +46,4 @@ contains
 
   end function create_dyn_file
     
-end module test_dynVarShared
+end module ctsm_TestDynVarShared

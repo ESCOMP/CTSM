@@ -14,7 +14,7 @@ module mklaiMod
 !-----------------------------------------------------------------------
   use shr_kind_mod, only : r8 => shr_kind_r8
   use shr_sys_mod , only : shr_sys_flush
-  use mkdomainMod , only : domain_checksame
+  use mkctsm_Domain , only : domain_checksame
   use mkvarctl    
 
   implicit none
@@ -40,7 +40,7 @@ subroutine mklai(ldomain, mapfname, datfname, ndiag, ncido)
 ! for improved efficiency
 !
 ! !USES:
-  use mkdomainMod, only : domain_type, domain_clean, domain_read
+  use mkctsm_Domain, only : domain_type, domain_clean, domain_read
   use mkgridmapMod
   use mkvarpar    , only : re
   use mkvarctl    

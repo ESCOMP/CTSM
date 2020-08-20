@@ -1,13 +1,13 @@
 module test_truncate_small_values
 
-  ! Tests of NumericsMod: truncate_small_values
+  ! Tests of ctsm_Numerics: truncate_small_values
 
   use pfunit_mod
-  use NumericsMod
+  use ctsm_Numerics
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSimpleSubgridSetupsMod
-  use unittestSubgridMod
-  use unittestFilterBuilderMod, only : filter_from_range
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestFilterBuilder, only : filter_from_range
 
   implicit none
 

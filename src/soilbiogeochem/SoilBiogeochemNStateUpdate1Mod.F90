@@ -1,4 +1,4 @@
-module SoilBiogeochemNStateUpdate1Mod
+module ctsm_SoilBiogeochemNStateUpdate1
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,17 +6,17 @@ module SoilBiogeochemNStateUpdate1Mod
   !
   ! !USES:
   use shr_kind_mod                       , only: r8 => shr_kind_r8
-  use clm_time_manager                   , only : get_step_size_real
-  use clm_varpar                         , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
-  use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop
-  use clm_varcon                         , only : nitrif_n2o_loss_frac, dzsoi_decomp
-  use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
-  use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenfluxType     , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use CNSharedParamsMod                  , only : use_fun
-  use ColumnType                         , only : col 
+  use ctsm_TimeManager                   , only : get_step_size_real
+  use ctsm_VarPar                         , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
+  use ctsm_VarPar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use ctsm_VarCtl                         , only : iulog, use_nitrif_denitrif, use_crop
+  use ctsm_VarCon                         , only : nitrif_n2o_loss_frac, dzsoi_decomp
+  use ctsm_SoilBiogeochemStateType            , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_CNSharedParamsMod                  , only : use_fun
+  use ctsm_ColumnType                         , only : col 
   !
   implicit none
   private
@@ -264,4 +264,4 @@ contains
 
   end subroutine SoilBiogeochemNStateUpdate1
 
-end module SoilBiogeochemNStateUpdate1Mod
+end module ctsm_SoilBiogeochemNStateUpdate1

@@ -1,4 +1,4 @@
-module WaterStateBulkType
+module ctsm_WaterStateBulkType
 
 #include "shr_assert.h"
 
@@ -11,12 +11,12 @@ module WaterStateBulkType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use decompMod      , only : bounds_type
-  use clm_varpar     , only : nlevgrnd, nlevsno   
-  use clm_varcon     , only : spval
-  use WaterStateType , only : waterstate_type
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_VarPar     , only : nlevgrnd, nlevsno   
+  use ctsm_VarCon     , only : spval
+  use ctsm_WaterStateType , only : waterstate_type
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   save
@@ -116,7 +116,7 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_HistFile    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(waterstatebulk_type), intent(in) :: this
@@ -242,4 +242,4 @@ contains
   end subroutine RestartBulk
 
 
-end module WaterStateBulkType
+end module ctsm_WaterStateBulkType

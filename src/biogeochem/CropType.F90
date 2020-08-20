@@ -1,4 +1,4 @@
-module CropType
+module ctsm_CropType
 
 #include "shr_assert.h"
 
@@ -7,16 +7,16 @@ module CropType
   ! Module containing variables needed for the crop model
   !
   ! TODO(wjs, 2014-08-05) Move more crop-specific variables into here - many are
-  ! currently in CNVegStateType
+  ! currently in ctsm_CNVegStateType
   !
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
   use shr_log_mod         , only : errMsg => shr_log_errMsg
-  use spmdMod             , only : masterproc
-  use abortutils          , only : endrun
-  use decompMod           , only : bounds_type
-  use clm_varcon          , only : spval
-  use clm_varctl          , only : iulog, use_crop
+  use ctsm_Spmd             , only : masterproc
+  use ctsm_AbortUtils          , only : endrun
+  use ctsm_Decomp           , only : bounds_type
+  use ctsm_VarCon          , only : spval
+  use ctsm_VarCtl          , only : iulog, use_crop
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -100,14 +100,14 @@ contains
   subroutine ReadNML(this, NLFilename )
     !
     ! !DESCRIPTION:
-    ! Read the namelist for CropType
+    ! Read the namelist for ctsm_CropType
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
@@ -206,7 +206,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_HistFile    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(crop_type),  intent(inout) :: this
@@ -251,12 +251,12 @@ contains
 
   subroutine InitCold(this, bounds)
     ! !USES:
-    use LandunitType, only : lun                
-    use landunit_varcon, only : istcrop
-    use PatchType, only : patch
-    use clm_instur, only : fert_cft
-    use pftconMod        , only : pftcon 
-    use GridcellType     , only : grc
+    use ctsm_LandunitType, only : lun                
+    use ctsm_LandunitVarCon, only : istcrop
+    use ctsm_PatchType, only : patch
+    use ctsm_VarSur, only : fert_cft
+    use ctsm_PftCon        , only : pftcon 
+    use ctsm_GridcellType     , only : grc
     use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
     ! !ARGUMENTS:
     class(crop_type),  intent(inout) :: this
@@ -323,7 +323,7 @@ contains
     ! Should only be called if use_crop is true
     !
     ! !USES 
-    use accumulMod       , only : init_accum_field
+    use ctsm_Accumulators       , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(in) :: this
@@ -355,8 +355,8 @@ contains
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES:
-    use accumulMod       , only : extract_accum_field
-    use clm_time_manager , only : get_nstep
+    use ctsm_Accumulators       , only : extract_accum_field
+    use ctsm_TimeManager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(crop_type),  intent(inout) :: this
@@ -399,8 +399,8 @@ contains
     ! !USES:
     use restUtilMod
     use ncdio_pio
-    use PatchType, only : patch
-    use pftconMod, only : npcropmin, npcropmax
+    use ctsm_PatchType, only : patch
+    use ctsm_PftCon, only : npcropmin, npcropmax
     !
     ! !ARGUMENTS:
     class(crop_type), intent(inout)  :: this
@@ -523,15 +523,15 @@ contains
     ! Should only be called if use_crop is true.
     !
     ! !USES:
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use ctsm_Accumulators       , only : update_accum_field, extract_accum_field, accumResetVal
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
-    use clm_time_manager , only : get_step_size, get_nstep
-    use clm_varpar       , only : nlevsno, nlevgrnd
-    use pftconMod        , only : nswheat, nirrig_swheat, pftcon
-    use pftconMod        , only : nwwheat, nirrig_wwheat
-    use pftconMod        , only : nsugarcane, nirrig_sugarcane
-    use ColumnType       , only : col
-    use PatchType        , only : patch
+    use ctsm_TimeManager , only : get_step_size, get_nstep
+    use ctsm_VarPar       , only : nlevsno, nlevgrnd
+    use ctsm_PftCon        , only : nswheat, nirrig_swheat, pftcon
+    use ctsm_PftCon        , only : nwwheat, nirrig_wwheat
+    use ctsm_PftCon        , only : nsugarcane, nirrig_sugarcane
+    use ctsm_ColumnType       , only : col
+    use ctsm_PatchType        , only : patch
     !
     ! !ARGUMENTS:
     implicit none
@@ -636,7 +636,7 @@ contains
     ! This routine should be called every time step
     !
     ! !USES:
-    use clm_time_manager , only : get_curr_date, is_first_step
+    use ctsm_TimeManager , only : get_curr_date, is_first_step
     !
     ! !ARGUMENTS:
     class(crop_type) :: this
@@ -680,9 +680,9 @@ contains
     ! messes up these bits of saved information.
     !
     ! !ARGUMENTS:
-    use clm_time_manager, only : get_driver_start_ymd, get_start_date
-    use clm_varctl      , only : iulog
-    use clm_varctl      , only : nsrest, nsrBranch, nsrStartup
+    use ctsm_TimeManager, only : get_driver_start_ymd, get_start_date
+    use ctsm_VarCtl      , only : iulog
+    use ctsm_VarCtl      , only : nsrest, nsrBranch, nsrStartup
     !
     ! !LOCAL VARIABLES:
     integer :: stymd       ! Start date YYYYMMDD from driver
@@ -719,5 +719,5 @@ contains
 
   end subroutine checkDates
 
-end module CropType
+end module ctsm_CropType
 

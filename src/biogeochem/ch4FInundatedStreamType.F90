@@ -1,5 +1,5 @@
 
-module ch4FInundatedStreamType
+module ctsm_MethaneFInundatedStreamType
 
 #include "shr_assert.h"
 
@@ -9,10 +9,10 @@ module ch4FInundatedStreamType
   !
   ! !USES
   use shr_kind_mod   , only: r8 => shr_kind_r8, CL => shr_kind_cl
-  use spmdMod        , only: mpicom, masterproc
-  use clm_varctl     , only: iulog
-  use abortutils     , only: endrun
-  use decompMod      , only: bounds_type
+  use ctsm_Spmd        , only: mpicom, masterproc
+  use ctsm_VarCtl     , only: iulog
+  use ctsm_AbortUtils     , only: endrun
+  use ctsm_Decomp      , only: bounds_type
   use ch4varcon      , only: finundation_mtd
 
   ! !PUBLIC TYPES:
@@ -64,19 +64,19 @@ contains
    ! Initialize the ch4 finundated stream object
    !
    ! Uses:
-   use clm_varctl       , only : inst_name
-   use clm_time_manager , only : get_calendar, get_curr_date
+   use ctsm_VarCtl       , only : inst_name
+   use ctsm_TimeManager , only : get_calendar, get_curr_date
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_mpi_mod      , only : shr_mpi_bcast
-   use ndepStreamMod    , only : clm_domain_mct
-   use domainMod        , only : ldomain
-   use decompMod        , only : bounds_type, gsmap_lnd_gdc2glo
+   use ctsm_NDepStream    , only : clm_domain_mct
+   use ctsm_Domain        , only : ldomain
+   use ctsm_Decomp        , only : bounds_type, gsmap_lnd_gdc2glo
    use mct_mod          , only : mct_ggrid, mct_avect_indexra
    use shr_strdata_mod  , only : shr_strdata_type, shr_strdata_create
    use shr_strdata_mod  , only : shr_strdata_print, shr_strdata_advance
-   use spmdMod          , only : comp_id, iam
+   use ctsm_Spmd          , only : comp_id, iam
    use ch4varcon        , only : finundation_mtd_h2osfc
    use ch4varcon        , only : finundation_mtd_ZWT_inversion, finundation_mtd_TWS_inversion
    !
@@ -250,12 +250,12 @@ contains
     ! Calculate finundated according to the appropriate methodology
     !
     ! !USES:
-    use ColumnType       , only : col
+    use ctsm_ColumnType       , only : col
     use ch4varcon        , only : finundation_mtd_h2osfc, finundation_mtd_ZWT_inversion
     use ch4varcon        , only : finundation_mtd_TWS_inversion
-    use clm_varpar       , only : nlevsoi
-    use SoilHydrologyType, only : soilhydrology_type
-    use WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
+    use ctsm_VarPar       , only : nlevsoi
+    use ctsm_SoilHydrologyType, only : soilhydrology_type
+    use ctsm_WaterDiagnosticBulkType   , only : waterdiagnosticbulk_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -316,14 +316,14 @@ contains
    ! Read the namelist data stream information.  
    !
    ! Uses:
-   use clm_varctl       , only : inst_name
-   use clm_time_manager , only : get_calendar
+   use ctsm_VarCtl       , only : inst_name
+   use ctsm_TimeManager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
-   use fileutils        , only : getavu, relavu
+   use ctsm_FileUtils        , only : getavu, relavu
    use ch4varcon        , only : finundation_mtd_ZWT_inversion, finundation_mtd_TWS_inversion
    !
    ! arguments
@@ -388,4 +388,4 @@ contains
 
  end subroutine ReadNML
 
-end module ch4FInundatedStreamType
+end module ctsm_MethaneFInundatedStreamType

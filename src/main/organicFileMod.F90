@@ -1,19 +1,19 @@
-module organicFileMod
+module ctsm_OrganicFile
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: organicFileMod
+! !MODULE: ctsm_OrganicFile
 !
 ! !DESCRIPTION:
 ! Contains methods for reading in organic matter data file which has 
 ! organic matter density for each grid point and soil level 
 !
 ! !USES
-  use abortutils   , only : endrun
-  use clm_varctl   , only : iulog
+  use ctsm_AbortUtils   , only : endrun
+  use ctsm_VarCtl   , only : iulog
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varcon   , only : grlnd
+  use ctsm_VarCon   , only : grlnd
 !
 ! !PUBLIC TYPES:
   implicit none
@@ -46,10 +46,10 @@ contains
 ! Read the organic matter dataset.
 !
 ! !USES:
-    use clm_varctl  , only : fsurdat, single_column
-    use fileutils   , only : getfil
-    use spmdMod     , only : masterproc
-    use domainMod   , only : ldomain
+    use ctsm_VarCtl  , only : fsurdat, single_column
+    use ctsm_FileUtils   , only : getfil
+    use ctsm_Spmd     , only : masterproc
+    use ctsm_Domain   , only : ldomain
     use ncdio_pio
 !
 ! !ARGUMENTS:
@@ -110,4 +110,4 @@ contains
 
   end subroutine organicrd
 
-end module organicFileMod
+end module ctsm_OrganicFile

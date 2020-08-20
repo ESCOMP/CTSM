@@ -1,4 +1,4 @@
-module SoilWaterRetentionCurveVanGenuchten1980Mod
+module ctsm_SoilWaterRetentionCurveVanGenuchten1980
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,7 +7,7 @@ module SoilWaterRetentionCurveVanGenuchten1980Mod
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+  use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
   implicit none
   save
   private
@@ -48,7 +48,7 @@ contains
     ! Compute hydraulic conductivity
     !
     ! !USES:
-    use SoilStateType  , only : soilstate_type
+    use ctsm_SoilStateType  , only : soilstate_type
     !
     ! !ARGUMENTS:
     class(soil_water_retention_curve_vangenuchten_1980_type), intent(in) :: this
@@ -90,7 +90,7 @@ contains
     ! Compute soil suction potential
     !
     ! !USES:
-    use SoilStateType  , only : soilstate_type
+    use ctsm_SoilStateType  , only : soilstate_type
     !
     ! !ARGUMENTS:
     class(soil_water_retention_curve_vangenuchten_1980_type), intent(in) :: this
@@ -131,7 +131,7 @@ contains
     ! This is done by inverting the soil_suction equation to solve for s.
     !
     ! !USES:
-    use SoilStateType  , only : soilstate_type
+    use ctsm_SoilStateType  , only : soilstate_type
     !
     ! !ARGUMENTS:
     class(soil_water_retention_curve_vangenuchten_1980_type), intent(in) :: this
@@ -157,6 +157,6 @@ contains
 
   end subroutine soil_suction_inverse
 
-end module SoilWaterRetentionCurveVanGenuchten1980Mod
+end module ctsm_SoilWaterRetentionCurveVanGenuchten1980
 
 

@@ -1,4 +1,4 @@
-module SnowCoverFractionFactoryMod
+module ctsm_SnowCoverFractionFactory
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,15 +7,15 @@ module SnowCoverFractionFactoryMod
   !
   ! !USES:
   use shr_log_mod                             , only : errMsg => shr_log_errMsg
-  use decompMod                               , only : bounds_type
-  use ColumnType                              , only : column_type
-  use glcBehaviorMod                          , only : glc_behavior_type
+  use ctsm_Decomp                               , only : bounds_type
+  use ctsm_ColumnType                              , only : column_type
+  use ctsm_GlacierBehavior                          , only : glc_behavior_type
   use ncdio_pio                               , only : file_desc_t
-  use clm_varctl                              , only : iulog, use_subgrid_fluxes
-  use abortutils                              , only : endrun
-  use SnowCoverFractionBaseMod                , only : snow_cover_fraction_base_type
-  use SnowCoverFractionNiuYang2007Mod         , only : snow_cover_fraction_niu_yang_2007_type
-  use SnowCoverFractionSwensonLawrence2012Mod , only : snow_cover_fraction_swenson_lawrence_2012_type
+  use ctsm_VarCtl                              , only : iulog, use_subgrid_fluxes
+  use ctsm_AbortUtils                              , only : endrun
+  use ctsm_SnowCoverFractionBase                , only : snow_cover_fraction_base_type
+  use ctsm_SnowCoverFractionNiuYang2007         , only : snow_cover_fraction_niu_yang_2007_type
+  use ctsm_SnowCoverFractionSwensonLawrence2012 , only : snow_cover_fraction_swenson_lawrence_2012_type
   implicit none
   save
   private
@@ -101,4 +101,4 @@ contains
 
   end function CreateAndInitSnowCoverFraction
 
-end module SnowCoverFractionFactoryMod
+end module ctsm_SnowCoverFractionFactory

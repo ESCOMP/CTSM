@@ -1,4 +1,4 @@
-module glc2lndMod
+module ctsm_Glc2Lnd
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,19 +6,19 @@ module glc2lndMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use decompMod      , only : bounds_type
+  use ctsm_Decomp      , only : bounds_type
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : maxpatch_glcmec
-  use clm_varctl     , only : iulog, glc_do_dynglacier
-  use clm_varcon     , only : nameg, spval, ispval
-  use abortutils     , only : endrun
-  use GridcellType   , only : grc
-  use LandunitType   , only : lun
-  use ColumnType     , only : col
-  use landunit_varcon, only : istice_mec
-  use glcBehaviorMod , only : glc_behavior_type
+  use ctsm_VarPar     , only : maxpatch_glcmec
+  use ctsm_VarCtl     , only : iulog, glc_do_dynglacier
+  use ctsm_VarCon     , only : nameg, spval, ispval
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_GridcellType   , only : grc
+  use ctsm_LandunitType   , only : lun
+  use ctsm_ColumnType     , only : col
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_GlacierBehavior , only : glc_behavior_type
   !
   ! !REVISION HISTORY:
   ! Created by William Lipscomb, Dec. 2007, based on clm_atmlnd.F90.
@@ -157,7 +157,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod, only : hist_addfld1d
+    use ctsm_HistFile, only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(glc2lnd_type) :: this
@@ -183,7 +183,7 @@ contains
   subroutine InitCold(this, bounds, glc_behavior)
     !
     ! !USES:
-    use domainMod      , only : ldomain
+    use ctsm_Domain      , only : ldomain
     !
     ! !ARGUMENTS:
     class(glc2lnd_type) :: this
@@ -423,7 +423,7 @@ contains
     ! Do a sanity check on the icemask received from CISM via coupler.
     !
     ! !USES:
-    use domainMod , only : ldomain
+    use ctsm_Domain , only : ldomain
     !
     ! !ARGUMENTS:
     class(glc2lnd_type), intent(in) :: this
@@ -513,7 +513,7 @@ contains
     ! Update glc_dyn_runoff_routing field based on updated icemask_coupled_fluxes field
     !
     ! !USES:
-    use domainMod , only : ldomain
+    use ctsm_Domain , only : ldomain
     !
     ! !ARGUMENTS:
     class(glc2lnd_type), intent(inout) :: this
@@ -614,8 +614,8 @@ contains
     ! If glc_do_dynglacier is false, nothing is changed
     !
     ! !USES:
-    use column_varcon     , only : col_itype_to_icemec_class
-    use subgridWeightsMod , only : set_landunit_weight
+    use ctsm_ColumnVarCon     , only : col_itype_to_icemec_class
+    use ctsm_SubgridWeights , only : set_landunit_weight
     !
     ! !ARGUMENTS:
     class(glc2lnd_type), intent(in) :: this
@@ -697,8 +697,8 @@ contains
     ! needs_downscaling_col are left unchanged.
     !
     ! !USES:
-    use landunit_varcon , only : istice_mec
-    use column_varcon   , only : col_itype_to_icemec_class
+    use ctsm_LandunitVarCon , only : istice_mec
+    use ctsm_ColumnVarCon   , only : col_itype_to_icemec_class
     !
     ! !ARGUMENTS:
     class(glc2lnd_type) , intent(in)    :: this
@@ -747,4 +747,4 @@ contains
 
   end subroutine update_glc2lnd_topo
 
-end module glc2lndMod
+end module ctsm_Glc2Lnd

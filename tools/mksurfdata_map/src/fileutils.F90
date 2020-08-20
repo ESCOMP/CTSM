@@ -1,10 +1,10 @@
 
-module fileutils
+module ctsm_FileUtils
 
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: fileutils
+! !MODULE: ctsm_FileUtils
 !
 ! !DESCRIPTION:
 ! Module containing file I/O utilities
@@ -251,4 +251,4 @@ contains
 
   end subroutine relavu
 
-end module fileutils
+end module ctsm_FileUtils

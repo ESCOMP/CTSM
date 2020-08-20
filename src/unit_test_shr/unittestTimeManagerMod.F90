@@ -1,6 +1,6 @@
-module unittestTimeManagerMod
+module ctsm_UnitTestTimeManager
 
-  ! This module provides wrappers to the clm_time_manager, which facilitate configuring
+  ! This module provides wrappers to the ctsm_TimeManager, which facilitate configuring
   ! the time manager as desired for each unit test.
   !
   ! In the setup for a test, the following should be done:
@@ -19,11 +19,11 @@ module unittestTimeManagerMod
   ! (1) call unittest_timemgr_teardown
   !
   !
-  ! Note that there are still some test-specific routines in clm_time_manager. Those
+  ! Note that there are still some test-specific routines in ctsm_TimeManager. Those
   ! include (a) routines that have info that is closely tied to info already in
-  ! clm_time_manager (e.g., timemgr_reset, which needs to reset all module data
-  ! defined in clm_time_manager), and/or (b) routines that modify data that are private to
-  ! clm_time_manager. The routines in this unittest-specific file, in contrast, tend to be
+  ! ctsm_TimeManager (e.g., timemgr_reset, which needs to reset all module data
+  ! defined in ctsm_TimeManager), and/or (b) routines that modify data that are private to
+  ! ctsm_TimeManager. The routines in this unittest-specific file, in contrast, tend to be
   ! higher-level wrappers.
 
   implicit none
@@ -49,7 +49,7 @@ contains
     !
     ! !USES:
     use ESMF, only : ESMF_Initialize, ESMF_SUCCESS
-    use clm_time_manager, only : set_timemgr_init, timemgr_init, NO_LEAP_C
+    use ctsm_TimeManager, only : set_timemgr_init, timemgr_init, NO_LEAP_C
     !
     ! !ARGUMENTS:
     integer, intent(in), optional :: dtime  ! time step (seconds)
@@ -113,7 +113,7 @@ contains
     ! time step.
     !
     ! !USES:
-    use clm_time_manager, only : for_test_set_curr_date
+    use ctsm_TimeManager, only : for_test_set_curr_date
     !
     ! !ARGUMENTS:
     integer, intent(in) :: yr  ! year
@@ -137,7 +137,7 @@ contains
     ! Set the current model year, keeping other date components unchanged
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date
+    use ctsm_TimeManager, only : get_curr_date
     !
     ! !ARGUMENTS:
     integer, intent(in) :: yr ! new year
@@ -166,7 +166,7 @@ contains
     ! advances the time step beyond the starting time step.
     !
     ! !USES:
-    use clm_time_manager, only : advance_timestep
+    use ctsm_TimeManager, only : advance_timestep
     !
     ! !ARGUMENTS:
     integer, intent(in) :: nstep
@@ -195,7 +195,7 @@ contains
     !
     ! !USES:
     use ESMF, only : ESMF_Finalize, ESMF_SUCCESS
-    use clm_time_manager, only : timemgr_reset
+    use ctsm_TimeManager, only : timemgr_reset
     !
     ! !ARGUMENTS:
     !
@@ -215,4 +215,4 @@ contains
   end subroutine unittest_timemgr_teardown
 
 
-end module unittestTimeManagerMod
+end module ctsm_UnitTestTimeManager

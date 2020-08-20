@@ -1,4 +1,4 @@
-Module HydrologyNoDrainageMod
+Module ctsm_HydrologyNoDrainage
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -6,32 +6,32 @@ Module HydrologyNoDrainageMod
   !
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use decompMod         , only : bounds_type
-  use clm_varctl        , only : iulog, use_vichydro, use_fates
-  use clm_varcon        , only : denh2o, denice, rpi, spval
-  use CLMFatesInterfaceMod, only : hlm_fates_interface_type
-  use atm2lndType       , only : atm2lnd_type
-  use AerosolMod        , only : aerosol_type
-  use EnergyFluxType    , only : energyflux_type
-  use TemperatureType   , only : temperature_type
-  use SoilHydrologyType , only : soilhydrology_type
-  use SoilStateType     , only : soilstate_type
-  use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
-  use InfiltrationExcessRunoffMod, only : infiltration_excess_runoff_type
-  use IrrigationMod, only : irrigation_type
-  use SnowHydrologyMod     , only : UpdateQuantitiesForNewSnow, RemoveSnowFromThawedWetlands, InitializeExplicitSnowPack
-  use SnowHydrologyMod     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
-  use SnowHydrologyMod     , only : SnowWater, ZeroEmptySnowLayers, BuildSnowFilter 
-  use SnowCoverFractionBaseMod , only : snow_cover_fraction_base_type
-  use WaterType , only : water_type
-  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
-  use WaterFluxBulkType     , only : waterfluxbulk_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use CanopyStateType   , only : canopystate_type
-  use LandunitType      , only : lun                
-  use ColumnType        , only : col                
-  use TopoMod, only : topo_type
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_VarCtl        , only : iulog, use_vichydro, use_fates
+  use ctsm_VarCon        , only : denh2o, denice, rpi, spval
+  use ctsm_FatesInterface, only : hlm_fates_interface_type
+  use ctsm_Atm2LndType       , only : atm2lnd_type
+  use ctsm_Aerosols        , only : aerosol_type
+  use ctsm_EnergyFluxType    , only : energyflux_type
+  use ctsm_TemperatureType   , only : temperature_type
+  use ctsm_SoilHydrologyType , only : soilhydrology_type
+  use ctsm_SoilStateType     , only : soilstate_type
+  use ctsm_SaturatedExcessRunoff, only : saturated_excess_runoff_type
+  use ctsm_InfiltrationExcessRunoff, only : infiltration_excess_runoff_type
+  use ctsm_Irrigation, only : irrigation_type
+  use ctsm_SnowHydrology     , only : UpdateQuantitiesForNewSnow, RemoveSnowFromThawedWetlands, InitializeExplicitSnowPack
+  use ctsm_SnowHydrology     , only : SnowCompaction, CombineSnowLayers, DivideSnowLayers, SnowCapping
+  use ctsm_SnowHydrology     , only : SnowWater, ZeroEmptySnowLayers, BuildSnowFilter 
+  use ctsm_SnowCoverFractionBase , only : snow_cover_fraction_base_type
+  use ctsm_WaterType , only : water_type
+  use ctsm_WaterAtm2LndBulkType, only : wateratm2lndbulk_type
+  use ctsm_WaterFluxBulkType     , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use ctsm_CanopyStateType   , only : canopystate_type
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_ColumnType        , only : col                
+  use ctsm_Topo, only : topo_type
   use perf_mod          , only : t_startf, t_stopf
   !
   ! !PUBLIC TYPES:
@@ -58,7 +58,7 @@ contains
     ! Calculates irrigation withdrawal fluxes and withdraws from groundwater
     !
     ! !USES:
-    use SoilHydrologyMod       , only : WithdrawGroundwaterIrrigation
+    use ctsm_SoilHydrology       , only : WithdrawGroundwaterIrrigation
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
@@ -148,24 +148,24 @@ contains
     ! hydrology
     !
     ! !USES:
-    use clm_varcon           , only : denh2o, denice, hfus, grav, tfrz
-    use landunit_varcon      , only : istwet, istsoil, istcrop, istdlak 
-    use column_varcon        , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall
-    use column_varcon        , only : icol_shadewall
-    use clm_varctl           , only : use_cn
-    use clm_varpar           , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
-    use clm_time_manager     , only : get_step_size_real, get_nstep
-    use SoilHydrologyMod     , only : CLMVICMap, SetSoilWaterFractions, SetFloodc
-    use SoilHydrologyMod     , only : SetQflxInputs, RouteInfiltrationExcess
-    use SoilHydrologyMod     , only : Infiltration, TotalSurfaceRunoff
-    use SoilHydrologyMod     , only : UpdateUrbanPonding
-    use SoilHydrologyMod     , only : WaterTable, PerchedWaterTable
-    use SoilHydrologyMod     , only : ThetaBasedWaterTable, RenewCondensation
-    use SoilWaterMovementMod , only : SoilWater
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use SoilWaterMovementMod , only : use_aquifer_layer
-    use SoilWaterPlantSinkMod , only : Compute_EffecRootFrac_And_VertTranSink
-    use SurfaceWaterMod      , only : UpdateH2osfc
+    use ctsm_VarCon           , only : denh2o, denice, hfus, grav, tfrz
+    use ctsm_LandunitVarCon      , only : istwet, istsoil, istcrop, istdlak 
+    use ctsm_ColumnVarCon        , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall
+    use ctsm_ColumnVarCon        , only : icol_shadewall
+    use ctsm_VarCtl           , only : use_cn
+    use ctsm_VarPar           , only : nlevgrnd, nlevsno, nlevsoi, nlevurb
+    use ctsm_TimeManager     , only : get_step_size_real, get_nstep
+    use ctsm_SoilHydrology     , only : CLMVICMap, SetSoilWaterFractions, SetFloodc
+    use ctsm_SoilHydrology     , only : SetQflxInputs, RouteInfiltrationExcess
+    use ctsm_SoilHydrology     , only : Infiltration, TotalSurfaceRunoff
+    use ctsm_SoilHydrology     , only : UpdateUrbanPonding
+    use ctsm_SoilHydrology     , only : WaterTable, PerchedWaterTable
+    use ctsm_SoilHydrology     , only : ThetaBasedWaterTable, RenewCondensation
+    use ctsm_SoilWaterMovement , only : SoilWater
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+    use ctsm_SoilWaterMovement , only : use_aquifer_layer
+    use ctsm_SoilWaterPlantSink , only : Compute_EffecRootFrac_And_VertTranSink
+    use ctsm_SurfaceWater      , only : UpdateH2osfc
 
     !
     ! !ARGUMENTS:
@@ -624,9 +624,9 @@ contains
          end do
 !      end if
 
-      ! Update smp_l for history and for ch4Mod.
+      ! Update smp_l for history and for ctsm_Methane.
       ! ZMS: Note, this form, which seems to be the same as used in SoilWater, DOES NOT distinguish between
-      ! ice and water volume, in contrast to the soilpsi calculation above. It won't be used in ch4Mod if
+      ! ice and water volume, in contrast to the soilpsi calculation above. It won't be used in ctsm_Methane if
       ! t_soisno <= tfrz, though.
       do j = 1, nlevgrnd
          do fc = 1, num_hydrologyc
@@ -730,4 +730,4 @@ contains
 
   end subroutine HydrologyNoDrainage
 
-end Module HydrologyNoDrainageMod
+end Module ctsm_HydrologyNoDrainage

@@ -1,4 +1,4 @@
-module CLMFatesParamInterfaceMod
+module ctsm_FatesParamInterface
 
   implicit none
 
@@ -8,4 +8,4 @@ contains
   subroutine FatesReadPFTs()
     implicit none
   end subroutine FatesReadPFTs
-end module CLMFatesParamInterfaceMod
+end module ctsm_FatesParamInterface

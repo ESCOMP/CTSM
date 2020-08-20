@@ -1,13 +1,13 @@
 module test_compute_max_daylength
 
-  ! Tests of DaylengthMod: ComputeMaxDaylength
+  ! Tests of ctsm_DayLength: ComputeMaxDaylength
 
   use pfunit_mod
-  use DaylengthMod, only: ComputeMaxDaylength, daylength
+  use ctsm_DayLength, only: ComputeMaxDaylength, daylength
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod, only : unittest_subgrid_teardown, bounds
-  use unittestSimpleSubgridSetupsMod, only : setup_ncells_single_veg_patch
-  use GridcellType, only : grc
+  use ctsm_UnitTestSubgrid, only : unittest_subgrid_teardown, bounds
+  use ctsm_UnitTestSimpleSubgridSetups, only : setup_ncells_single_veg_patch
+  use ctsm_GridcellType, only : grc
 
   implicit none
 

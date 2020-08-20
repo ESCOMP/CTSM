@@ -1,4 +1,4 @@
-module UrbBuildTempOleson2015Mod
+module ctsm_UrbanBuildTempOleson2015
 
 #include "shr_assert.h"
 
@@ -8,16 +8,16 @@ module UrbBuildTempOleson2015Mod
   !
   ! !USES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
-  use decompMod         , only : bounds_type
-  use abortutils        , only : endrun
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_AbortUtils        , only : endrun
   use perf_mod          , only : t_startf, t_stopf
-  use clm_varctl        , only : iulog
-  use UrbanParamsType   , only : urbanparams_type
-  use UrbanTimeVarType  , only : urbantv_type  
-  use EnergyFluxType    , only : energyflux_type
-  use TemperatureType   , only : temperature_type
-  use LandunitType      , only : lun                
-  use ColumnType        , only : col                
+  use ctsm_VarCtl        , only : iulog
+  use ctsm_UrbanParamsType   , only : urbanparams_type
+  use ctsm_UrbanTimeVarType  , only : urbantv_type  
+  use ctsm_EnergyFluxType    , only : energyflux_type
+  use ctsm_TemperatureType   , only : temperature_type
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_ColumnType        , only : col                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -201,16 +201,16 @@ contains
 !
 ! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
-    use clm_time_manager, only : get_step_size_real
-    use clm_varcon      , only : rair, pstd, cpair, sb, hcv_roof, hcv_roof_enhanced, &
+    use ctsm_TimeManager, only : get_step_size_real
+    use ctsm_VarCon      , only : rair, pstd, cpair, sb, hcv_roof, hcv_roof_enhanced, &
                                  hcv_floor, hcv_floor_enhanced, hcv_sunw, hcv_shdw, &
                                  em_roof_int, em_floor_int, em_sunw_int, em_shdw_int, &
                                  dz_floor, dens_floor, cp_floor, vent_ach
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_varctl      , only : iulog
-    use abortutils      , only : endrun
-    use clm_varpar      , only : nlevurb, nlevsno, nlevgrnd
-    use UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on
+    use ctsm_ColumnVarCon   , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_VarCtl      , only : iulog
+    use ctsm_AbortUtils      , only : endrun
+    use ctsm_VarPar      , only : nlevurb, nlevsno, nlevgrnd
+    use ctsm_UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on
 !
 ! !ARGUMENTS:
     implicit none
@@ -339,7 +339,7 @@ contains
     ! 1. Save t_* at previous time step
     ! 2. Set convective heat transfer coefficients (Bueno et al. 2012, GMD).
     !    An alternative is Salamanca et al. 2010, TAC, where they are all set to 8 W m-2 K-1.
-    !    See clm_varcon.F90
+    !    See ctsm_VarCon.F90
     ! 3. Set inner surface emissivities (Bueno et al. 2012, GMD).
     ! 4. Set concrete floor properties (Salamanca et al. 2010, TAC).
     ! 5. Calculate building height to building width ratio
@@ -938,4 +938,4 @@ contains
 
   !-----------------------------------------------------------------------
 
-end module UrbBuildTempOleson2015Mod
+end module ctsm_UrbanBuildTempOleson2015

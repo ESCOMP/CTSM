@@ -1,4 +1,4 @@
-module VOCEmissionMod
+module ctsm_VocEmissionMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,35 +7,35 @@ module VOCEmissionMod
   ! !USES:
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
-  use clm_varctl         , only : iulog
-  use clm_varpar         , only : maxveg, nlevcan
-  use pftconMod          , only : ndllf_evr_tmp_tree,  ndllf_evr_brl_tree
-  use pftconMod          , only : ndllf_dcd_brl_tree,  nbrdlf_evr_trp_tree
-  use pftconMod          , only : nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub
-  use pftconMod          , only : nbrdlf_dcd_trp_tree, nbrdlf_dcd_tmp_tree
-  use pftconMod          , only : nbrdlf_dcd_brl_tree, nbrdlf_evr_shrub
-  use pftconMod          , only : nc3_arctic_grass   , nc3crop
-  use pftconMod          , only : nc4_grass,           noveg
+  use ctsm_VarCtl         , only : iulog
+  use ctsm_VarPar         , only : maxveg, nlevcan
+  use ctsm_PftCon          , only : ndllf_evr_tmp_tree,  ndllf_evr_brl_tree
+  use ctsm_PftCon          , only : ndllf_dcd_brl_tree,  nbrdlf_evr_trp_tree
+  use ctsm_PftCon          , only : nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub
+  use ctsm_PftCon          , only : nbrdlf_dcd_trp_tree, nbrdlf_dcd_tmp_tree
+  use ctsm_PftCon          , only : nbrdlf_dcd_brl_tree, nbrdlf_evr_shrub
+  use ctsm_PftCon          , only : nc3_arctic_grass   , nc3crop
+  use ctsm_PftCon          , only : nc4_grass,           noveg
   use shr_megan_mod      , only : shr_megan_megcomps_n, shr_megan_megcomp_t, shr_megan_linkedlist
   use shr_megan_mod      , only : shr_megan_mechcomps_n, shr_megan_mechcomps, shr_megan_mapped_emisfctrs
-  use MEGANFactorsMod    , only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
-  use decompMod          , only : bounds_type
-  use abortutils         , only : endrun
-  use fileutils          , only : getfil
-  use clm_varcon         , only : grlnd
-  use atm2lndType        , only : atm2lnd_type
-  use CanopyStateType    , only : canopystate_type
-  use PhotosynthesisMod  , only : photosyns_type
-  use SoilStateType      , only : soilstate_type
-  use SolarAbsorbedType  , only : solarabs_type
-  use TemperatureType    , only : temperature_type
-  use PatchType          , only : patch                
+  use ctsm_MeganFactorsMod    , only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
+  use ctsm_Decomp          , only : bounds_type
+  use ctsm_AbortUtils         , only : endrun
+  use ctsm_FileUtils          , only : getfil
+  use ctsm_VarCon         , only : grlnd
+  use ctsm_Atm2LndType        , only : atm2lnd_type
+  use ctsm_CanopyStateType    , only : canopystate_type
+  use ctsm_Photosynthesis  , only : photosyns_type
+  use ctsm_SoilStateType      , only : soilstate_type
+  use ctsm_SolarAbsorbedType  , only : solarabs_type
+  use ctsm_TemperatureType    , only : temperature_type
+  use ctsm_PatchType          , only : patch                
   !
   implicit none
   private 
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: VOCEmission
+  public :: ctsm_VocEmission
   !
   ! !PUBLIC TYPES:
   type, public :: vocemis_type
@@ -101,8 +101,8 @@ contains
     ! Allocate memory for module datatypes
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
     use shr_megan_mod   , only : shr_megan_factors_file
-    use MEGANFactorsMod , only : megan_factors_init, megan_factors_get
-    use clm_varpar      , only : mxpft
+    use ctsm_MeganFactorsMod , only : megan_factors_init, megan_factors_get
+    use ctsm_VarPar      , only : mxpft
     !
     ! !ARGUMENTS:
     class(vocemis_type) :: this
@@ -174,8 +174,8 @@ contains
     ! Initialize history output fields for MEGAN emissions diagnositics
     !
     ! !USES 
-    use clm_varcon  , only : spval
-    use histFileMod , only : hist_addfld1d
+    use ctsm_VarCon  , only : spval
+    use ctsm_HistFile , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(vocemis_type) :: this
@@ -305,7 +305,7 @@ contains
     !
     ! !USES
     use ncdio_pio
-    use clm_varctl, only : fsurdat
+    use ctsm_VarCtl, only : fsurdat
     !
     ! !ARGUMENTS:
     class(vocemis_type) :: this
@@ -371,7 +371,7 @@ contains
   end subroutine InitCold
 
   !-----------------------------------------------------------------------
-  subroutine VOCEmission (bounds, num_soilp, filter_soilp, &
+  subroutine ctsm_VocEmission (bounds, num_soilp, filter_soilp, &
        atm2lnd_inst, canopystate_inst, photosyns_inst, temperature_inst, &
        vocemis_inst)
     !
@@ -406,7 +406,7 @@ contains
     ! Output: vocflx(shr_megan_mechcomps_n) !VOC flux [moles/m2/sec]
     !
     ! !USES:
-    use subgridAveMod        , only : p2g
+    use ctsm_SubgridAve        , only : p2g
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                  
@@ -452,7 +452,7 @@ contains
     real(r8), parameter :: megemis_units_factor = 1._r8/3600._r8/1.e6_r8
 
     ! real(r8) :: root_depth(0:maxveg)    ! Root depth [m]
-    character(len=32), parameter :: subname = "VOCEmission"
+    character(len=32), parameter :: subname = "ctsm_VocEmission"
     !-----------------------------------------------------------------------
 
     !    ! root depth (m) (defined based on Zeng et al., 2001, cf Guenther 2006)
@@ -669,7 +669,7 @@ contains
 
 
   end associate
-  end subroutine VOCEmission
+  end subroutine ctsm_VocEmission
 
   !-----------------------------------------------------------------------
   function get_map_EF(ivt_in, g_in, vocemis_inst)
@@ -791,8 +791,8 @@ contains
     ! Guenther et al., 2006 eq 3
     !
     ! !USES:
-    use clm_varcon   , only : denice
-    use clm_varpar   , only : nlevsoi
+    use ctsm_VarCon   , only : denice
+    use ctsm_VarPar   , only : nlevsoi
     !
     ! !ARGUMENTS:
     implicit none
@@ -824,8 +824,8 @@ contains
     ! convert to volumetric soil water using equation 7.118 of the CLM4 Technical Note
     !
     ! !USES:
-    use clm_varcon , only : denice
-    use clm_varpar , only : nlevsoi
+    use ctsm_VarCon , only : denice
+    use ctsm_VarPar , only : nlevsoi
     !
     ! !ARGUMENTS:
     implicit none
@@ -1011,7 +1011,7 @@ contains
     ! With distinction between sunlit and shaded leaves, weight scalings by
     ! fsun and fshade 
     !
-    ! !CALLED FROM: VOCEmission
+    ! !CALLED FROM: ctsm_VocEmission
     !
     ! !REVISION HISTORY:
     ! Author: Colette L. Heald (11/30/11)
@@ -1019,7 +1019,7 @@ contains
     !                                         and use atmosphere CO2 (not nml setting)
     !
     ! !USES:
-    !    use clm_varctl,    only : co2_ppmv      ! corresponds to CCSM_CO2_PPMV set in env_conf.xml
+    !    use ctsm_VarCtl,    only : co2_ppmv      ! corresponds to CCSM_CO2_PPMV set in env_conf.xml
     !
     ! !ARGUMENTS:
     implicit none
@@ -1097,6 +1097,6 @@ contains
 
   end function get_gamma_C
 
-end module VOCEmissionMod
+end module ctsm_VocEmissionMod
 
 

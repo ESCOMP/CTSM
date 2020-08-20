@@ -1,4 +1,4 @@
-module clm_initializeMod
+module ctsm_Initialize
 
   !-----------------------------------------------------------------------
   ! Performs land model initialization
@@ -6,29 +6,29 @@ module clm_initializeMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use spmdMod         , only : masterproc
-  use decompMod       , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
-  use abortutils      , only : endrun
-  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
-  use clm_varctl      , only : is_cold_start, is_interpolated_start
-  use clm_varctl      , only : iulog
-  use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
-  use clm_varctl      , only : use_soil_moisture_streams
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
+  use ctsm_Spmd         , only : masterproc
+  use ctsm_Decomp       , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
+  use ctsm_AbortUtils      , only : endrun
+  use ctsm_VarCtl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use ctsm_VarCtl      , only : is_cold_start, is_interpolated_start
+  use ctsm_VarCtl      , only : iulog
+  use ctsm_VarCtl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use ctsm_VarCtl      , only : use_soil_moisture_streams
+  use ctsm_VarSur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
-  use readParamsMod   , only : readParameters
+  use ctsm_ReadParams   , only : readParameters
   use ncdio_pio       , only : file_desc_t
-  use GridcellType    , only : grc           ! instance
-  use LandunitType    , only : lun           ! instance
-  use ColumnType      , only : col           ! instance
-  use PatchType       , only : patch         ! instance
-  use reweightMod     , only : reweight_wrapup
-  use filterMod       , only : allocFilters, filter, filter_inactive_and_active
-  use FatesInterfaceMod, only : set_fates_global_elements
-  use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
+  use ctsm_GridcellType    , only : grc           ! instance
+  use ctsm_LandunitType    , only : lun           ! instance
+  use ctsm_ColumnType      , only : col           ! instance
+  use ctsm_PatchType       , only : patch         ! instance
+  use ctsm_Reweight     , only : reweight_wrapup
+  use ctsm_Filters       , only : allocFilters, filter, filter_inactive_and_active
+  use ctsm_FatesInterfaceMod, only : set_fates_global_elements
+  use ctsm_DynSubgridControl, only: dynSubgridControl_init, get_reset_dynbal_baselines
 
-  use clm_instMod
-  use SoilMoistureStreamMod, only : PrescribedSoilMoistureInit
+  use ctsm_Inst
+  use ctsm_SoilMoistureStream, only : PrescribedSoilMoistureInit
   ! 
   implicit none
   private  ! By default everything is private
@@ -47,20 +47,20 @@ contains
     ! CLM initialization first phase
     !
     ! !USES:
-    use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec, nlevsoi
-    use clm_varcon       , only: clm_varcon_init
-    use landunit_varcon  , only: landunit_varcon_init, max_lunit
-    use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
-    use pftconMod        , only: pftcon       
-    use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp, decompInit_lnd3D
-    use decompInitMod    , only: decompInit_ocn
-    use domainMod        , only: domain_check, ldomain, domain_init
-    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
-    use controlMod       , only: control_init, control_print, NLFilename
+    use ctsm_VarPar       , only: ctsm_VarPar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec, nlevsoi
+    use ctsm_VarCon       , only: ctsm_VarCon_init
+    use ctsm_LandunitVarCon  , only: ctsm_LandunitVarCon_init, max_lunit
+    use ctsm_VarCtl       , only: fsurdat, fatmlndfrc, noland, version  
+    use ctsm_PftCon        , only: pftcon       
+    use ctsm_DecompInit    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp, decompInit_lnd3D
+    use ctsm_DecompInit    , only: decompInit_ocn
+    use ctsm_Domain        , only: domain_check, ldomain, domain_init
+    use ctsm_SurfRead        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
+    use ctsm_Control       , only: control_init, control_print, NLFilename
     use ncdio_pio        , only: ncd_pio_init
-    use initGridCellsMod , only: initGridCells
+    use ctsm_InitGridCells , only: initGridCells
     use ch4varcon        , only: ch4conrd
-    use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
+    use ctsm_UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -105,9 +105,9 @@ contains
     call control_init(dtime)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
-    call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
-    call clm_varcon_init( IsSimpleBuildTemp() )
-    call landunit_varcon_init()
+    call ctsm_VarPar_init(actual_maxsoil_patches, actual_numcft)
+    call ctsm_VarCon_init( IsSimpleBuildTemp() )
+    call ctsm_LandunitVarCon_init()
 
     if (masterproc) call control_print()
 
@@ -281,36 +281,36 @@ contains
     use shr_orb_mod           , only : shr_orb_decl
     use shr_scam_mod          , only : shr_scam_getCloseLatLon
     use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
-    use accumulMod            , only : print_accum_fields
-    use clm_varpar            , only : nlevsno
-    use clm_varcon            , only : spval
-    use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
-    use clm_varctl            , only : use_crop, ndep_from_cpl
-    use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
-    use clm_time_manager      , only : get_step_size_real, get_curr_calday
-    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep
-    use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
-    use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
-    use DaylengthMod          , only : InitDaylength
-    use dynSubgridDriverMod   , only : dynSubgrid_init
-    use dynConsBiogeophysMod  , only : dyn_hwcontent_set_baselines
-    use fileutils             , only : getfil
-    use initInterpMod         , only : initInterp
-    use subgridWeightsMod     , only : init_subgrid_weights_mod
-    use histFileMod           , only : hist_htapes_build, htapes_fieldlist, hist_printflds
-    use histFileMod           , only : hist_addfld1d, hist_addfld2d, no_snow_normal
-    use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
-    use restFileMod           , only : restFile_read, restFile_write
-    use ndepStreamMod         , only : ndep_init, ndep_interp
-    use LakeCon               , only : LakeConInit
-    use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
-    use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
-    use lnd2atmMod            , only : lnd2atm_minimal
-    use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
-    use controlMod            , only : NLFilename
-    use clm_instMod           , only : clm_fates
-    use BalanceCheckMod       , only : BalanceCheckInit
+    use ctsm_Accumulators            , only : print_accum_fields
+    use ctsm_VarPar            , only : nlevsno
+    use ctsm_VarCon            , only : spval
+    use ctsm_VarCtl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
+    use ctsm_VarCtl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
+    use ctsm_VarCtl            , only : use_crop, ndep_from_cpl
+    use ctsm_VarOrb            , only : eccen, mvelpp, lambm0, obliqr
+    use ctsm_TimeManager      , only : get_step_size_real, get_curr_calday
+    use ctsm_TimeManager      , only : get_curr_date, get_nstep, advance_timestep
+    use ctsm_TimeManager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
+    use ctsm_CIsoAtmTimeSeriesRead  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
+    use ctsm_DayLength          , only : InitDaylength
+    use ctsm_DynSubgridDriver   , only : dynSubgrid_init
+    use ctsm_DynConsBiogeophys  , only : dyn_hwcontent_set_baselines
+    use ctsm_FileUtils             , only : getfil
+    use ctsm_InitInterpMod         , only : ctsm_InitInterp
+    use ctsm_SubgridWeights     , only : init_subgrid_weights_mod
+    use ctsm_HistFile           , only : hist_htapes_build, htapes_fieldlist, hist_printflds
+    use ctsm_HistFile           , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use ctsm_RestFile           , only : restFile_getfile, restFile_open, restFile_close
+    use ctsm_RestFile           , only : restFile_read, restFile_write
+    use ctsm_NDepStream         , only : ndep_init, ndep_interp
+    use ctsm_LakeConstants               , only : ctsm_LakeConstantsInit
+    use ctsm_SatellitePhenologyMod , only : ctsm_SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
+    use ctsm_SnowSnicar         , only : SnowAge_init, SnowOptics_init
+    use ctsm_Lnd2Atm            , only : lnd2atm_minimal
+    use ctsm_NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
+    use ctsm_Control            , only : NLFilename
+    use ctsm_Inst           , only : clm_fates
+    use ctsm_BalanceCheck       , only : BalanceCheckInit
     !
     ! !ARGUMENTS
     !
@@ -503,7 +503,7 @@ contains
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
-          call SatellitePhenologyInit(bounds_proc)
+          call ctsm_SatellitePhenologyInit(bounds_proc)
        end if
 
        if ( use_c14 .and. use_c14_bombspike ) then
@@ -514,7 +514,7 @@ contains
           call C13_init_TimeSeries()
        end if
     else
-       call SatellitePhenologyInit(bounds_proc)
+       call ctsm_SatellitePhenologyInit(bounds_proc)
     end if
 
     if(use_soil_moisture_streams) then 
@@ -582,7 +582,7 @@ contains
 
        ! Check that finidat is not cold start - abort if it is
        if (finidat /= ' ') then
-          call endrun(msg='ERROR clm_initializeMod: '//&
+          call endrun(msg='ERROR ctsm_Initialize: '//&
                'finidat and finidat_interp_source cannot both be non-blank')
        end if
 
@@ -591,7 +591,7 @@ contains
 
        ! Interpolate finidat onto new template file
        call getfil( finidat_interp_source, fnamer,  0 )
-       call initInterp(filei=fnamer, fileo=finidat_interp_dest, bounds=bounds_proc, &
+       call ctsm_InitInterp(filei=fnamer, fileo=finidat_interp_dest, bounds=bounds_proc, &
             glc_behavior=glc_behavior)
 
        ! Read new interpolated conditions file back in
@@ -628,7 +628,7 @@ contains
                   urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
           end do
        else if (nsrest == nsrBranch) then
-          call endrun(msg='ERROR clm_initializeMod: '//&
+          call endrun(msg='ERROR ctsm_Initialize: '//&
                'Cannot set reset_dynbal_baselines in a branch run')
        end if
        ! nsrContinue not explicitly handled: it's okay for reset_dynbal_baselines to
@@ -783,4 +783,4 @@ contains
 
   end subroutine initialize2
 
-end module clm_initializeMod
+end module ctsm_Initialize

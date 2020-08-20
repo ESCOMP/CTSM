@@ -1,12 +1,12 @@
 module test_calc_tracer_from_bulk
 
-  ! Tests of WaterTracerUtils: CalcTracerFromBulk
+  ! Tests of ctsm_WaterTracerUtils: CalcTracerFromBulk
 
   use pfunit_mod
-  use WaterTracerUtils
+  use ctsm_WaterTracerUtils
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestFilterBuilderMod, only : filter_from_range
-  use unittestUtils, only : endrun_msg
+  use ctsm_UnitTestFilterBuilder, only : filter_from_range
+  use ctsm_UnitTestUtils, only : endrun_msg
 
   implicit none
 

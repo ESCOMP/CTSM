@@ -1,4 +1,4 @@
-module SoilBiogeochemPotentialMod
+module ctsm_SoilBiogeochemPotential
 
 #include "shr_assert.h"
 
@@ -8,15 +8,15 @@ module SoilBiogeochemPotentialMod
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
-  use decompMod                          , only : bounds_type
-  use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
-  use clm_varctl                         , only : use_fates, iulog
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_VarPar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_SoilBiogeochemStateType            , only : soilbiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType     , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_VarCtl                         , only : use_fates, iulog
   !
   implicit none
   private
@@ -45,7 +45,7 @@ contains
     !
     ! !USES:
     use ncdio_pio    , only: file_desc_t,ncd_io
-    use abortutils   , only: endrun
+    use ctsm_AbortUtils   , only: endrun
     use shr_log_mod  , only: errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
@@ -74,7 +74,7 @@ contains
     !
     ! !USES:
     use shr_log_mod                       , only : errMsg => shr_log_errMsg
-    use SoilBiogeochemDecompCascadeConType, only : i_atm
+    use ctsm_SoilBiogeochemDecompCascadeConType, only : i_atm
     !
     ! !ARGUMENT:
     type(bounds_type)                       , intent(in)    :: bounds   
@@ -263,4 +263,4 @@ contains
 
   end subroutine SoilBiogeochemPotential
  
-end module SoilBiogeochemPotentialMod
+end module ctsm_SoilBiogeochemPotential

@@ -1,16 +1,16 @@
-module FireEmisFactorsMod
+module ctsm_FireEmisFactorsMod
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: FireEmisFactorsMod
+! !MODULE: ctsm_FireEmisFactorsMod
 !
 ! !DESCRIPTION:
 ! Manages input of fire emissions factors from netCDF file
 !
 ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use abortutils,   only : endrun
-  use clm_varctl,   only : iulog
+  use ctsm_AbortUtils,   only : endrun
+  use ctsm_VarCtl,   only : iulog
 !
   implicit none
   private
@@ -52,7 +52,7 @@ contains
 ! Method for getting FireEmis information for a named compound 
 !
 ! !USES:
-    use pftconMod , only : nc3crop
+    use ctsm_PftCon , only : nc3crop
 ! !ARGUMENTS:
     character(len=*),intent(in)  :: comp_name      ! FireEmis compound name
     real(r8),        intent(out) :: factors(:)     ! vegetation type factors for the compound of interest
@@ -95,8 +95,8 @@ contains
 ! !USES:
     use ncdio_pio, only : ncd_pio_openfile,ncd_inqdlen
     use pio, only : pio_inq_varid,pio_get_var,file_desc_t,pio_closefile
-    use fileutils   , only : getfil
-    use clm_varpar  , only : mxpft
+    use ctsm_FileUtils   , only : getfil
+    use ctsm_VarPar  , only : mxpft
 !
 ! !ARGUMENTS:
     character(len=*),intent(in) :: filename ! FireEmis factors input file
@@ -257,6 +257,6 @@ contains
 
   end function gen_hashkey
 
-end module FireEmisFactorsMod
+end module ctsm_FireEmisFactorsMod
 
 

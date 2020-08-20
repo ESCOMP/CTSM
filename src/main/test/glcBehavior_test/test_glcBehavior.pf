@@ -1,18 +1,18 @@
 module test_glcBehavior
 
-  ! Tests of glcBehaviorMod
+  ! Tests of ctsm_GlacierBehavior
 
   use pfunit_mod
-  use glcBehaviorMod
+  use ctsm_GlacierBehavior
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups
   use unittestArrayMod
-  use column_varcon, only : col_itype_to_icemec_class, icemec_class_to_col_itype
-  use landunit_varcon, only : istice_mec
-  use glcBehaviorMod, only : glc_behavior_type
-  use ColumnType, only : col
-  use unittestGlcMec
+  use ctsm_ColumnVarCon, only : col_itype_to_icemec_class, icemec_class_to_col_itype
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_GlacierBehavior, only : glc_behavior_type
+  use ctsm_ColumnType, only : col
+  use ctsm_UnitTestGlcMec
 
   implicit none
 

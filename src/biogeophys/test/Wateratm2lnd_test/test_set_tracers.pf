@@ -1,16 +1,16 @@
 module test_set_tracers
 
-  ! Tests of Wateratm2lndType: routines that set tracers
+  ! Tests of ctsm_WaterAtm2LndType: routines that set tracers
 
   use pfunit_mod
-  use Wateratm2lndType
-  use WaterInfoBulkType, only : water_info_bulk_type
-  use WaterInfoTracerType, only : water_info_tracer_type
-  use WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_WaterAtm2LndType
+  use ctsm_WaterInfoBulkType, only : water_info_bulk_type
+  use ctsm_WaterInfoTracerType, only : water_info_tracer_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
-  use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
-  use unittestFilterBuilderMod, only : filter_from_range
+  use ctsm_UnitTestSimpleSubgridSetups, only : setup_single_veg_patch
+  use ctsm_UnitTestSubgrid, only : bounds, unittest_subgrid_teardown
+  use ctsm_UnitTestFilterBuilder, only : filter_from_range
 
   implicit none
 

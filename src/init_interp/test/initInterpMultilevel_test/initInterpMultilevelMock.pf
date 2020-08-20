@@ -1,4 +1,4 @@
-module initInterpMultilevelMock
+module ctsm_InitInterpMultilevelMock
 
   ! ------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,7 +8,7 @@ module initInterpMultilevelMock
   ! !USES:
   use pfunit_mod
   use shr_kind_mod             , only : r8 => shr_kind_r8
-  use initInterpMultilevelBase , only : interp_multilevel_type
+  use ctsm_InitInterpMultilevelBase , only : interp_multilevel_type
 
   implicit none
   private
@@ -109,4 +109,4 @@ contains
     description = ' '
   end function get_description
 
-end module initInterpMultilevelMock
+end module ctsm_InitInterpMultilevelMock

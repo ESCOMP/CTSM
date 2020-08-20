@@ -1,4 +1,4 @@
-module CNGRespMod
+module ctsm_CNGrowthRespMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,25 +7,25 @@ module CNGRespMod
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use pftconMod              , only : npcropmin, pftcon
-  use CNVegcarbonfluxType    , only : cnveg_carbonflux_type
-  use PatchType              , only : patch    
-  use CanopyStateType        , only : canopystate_type              
-  use CNVegCarbonStateType   , only : cnveg_carbonstate_type       
-  use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type     
+  use ctsm_PftCon              , only : npcropmin, pftcon
+  use ctsm_CNVegCarbonFluxType    , only : cnveg_carbonflux_type
+  use ctsm_PatchType              , only : patch    
+  use ctsm_CanopyStateType        , only : canopystate_type              
+  use ctsm_CNVegCarbonStateType   , only : cnveg_carbonstate_type       
+  use ctsm_CNVegNitrogenStateType , only : cnveg_nitrogenstate_type     
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNGResp
+  public :: ctsm_CNGrowthResp
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  ! subroutine CNGResp(num_soilp, filter_soilp, cnveg_carbonflux_inst)   
-  subroutine CNGResp(num_soilp, filter_soilp, cnveg_carbonflux_inst, canopystate_inst, cnveg_carbonstate_inst, &
+  ! subroutine ctsm_CNGrowthResp(num_soilp, filter_soilp, cnveg_carbonflux_inst)   
+  subroutine ctsm_CNGrowthResp(num_soilp, filter_soilp, cnveg_carbonflux_inst, canopystate_inst, cnveg_carbonstate_inst, &
        cnveg_nitrogenstate_inst)  
     !
     ! !DESCRIPTION:
@@ -209,6 +209,6 @@ respfact_livecroot_storage
 
     end associate
 
-  end subroutine CNGResp
+  end subroutine ctsm_CNGrowthResp
 
-end module CNGRespMod
+end module ctsm_CNGrowthRespMod

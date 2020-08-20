@@ -1,4 +1,4 @@
-module filterColMod
+module ctsm_FilterCol
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -13,12 +13,12 @@ module filterColMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use decompMod    , only : bounds_type
-  use GridcellType , only : grc
-  use LandunitType , only : lun
-  use ColumnType   , only : col
-  use clm_varcon   , only : ispval
-  use clm_varctl   , only : iulog
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_GridcellType , only : grc
+  use ctsm_LandunitType , only : lun
+  use ctsm_ColumnType   , only : col
+  use ctsm_VarCon   , only : ispval
+  use ctsm_VarCtl   , only : iulog
 
   ! !PUBLIC TYPES:
   implicit none
@@ -440,4 +440,4 @@ contains
   end function equals_filter
 
 
-end module filterColMod
+end module ctsm_FilterCol

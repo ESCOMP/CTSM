@@ -1,4 +1,4 @@
-module InfiltrationExcessRunoffMod
+module ctsm_InfiltrationExcessRunoff
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,15 +8,15 @@ module InfiltrationExcessRunoffMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use decompMod        , only : bounds_type
-  use abortutils       , only : endrun
-  use clm_varctl       , only : iulog, use_vichydro
-  use clm_varcon       , only : spval
-  use SoilHydrologyType, only : soilhydrology_type
-  use SoilStateType    , only : soilstate_type
-  use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
-  use WaterFluxBulkType    , only : waterfluxbulk_type
-  use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
+  use ctsm_Decomp        , only : bounds_type
+  use ctsm_AbortUtils       , only : endrun
+  use ctsm_VarCtl       , only : iulog, use_vichydro
+  use ctsm_VarCon       , only : spval
+  use ctsm_SoilHydrologyType, only : soilhydrology_type
+  use ctsm_SoilStateType    , only : soilstate_type
+  use ctsm_SaturatedExcessRunoff, only : saturated_excess_runoff_type
+  use ctsm_WaterFluxBulkType    , only : waterfluxbulk_type
+  use ctsm_WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
 
   implicit none
   save
@@ -82,7 +82,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -149,7 +149,7 @@ contains
     ! Initialize infiltration_excess_runoff_type history variables
     !
     ! !USES:
-    use histFileMod , only : hist_addfld1d
+    use ctsm_HistFile , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(infiltration_excess_runoff_type), intent(inout) :: this
@@ -303,4 +303,4 @@ contains
 
   end subroutine ComputeQinmaxHksat
 
-end module InfiltrationExcessRunoffMod
+end module ctsm_InfiltrationExcessRunoff

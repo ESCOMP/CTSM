@@ -1,4 +1,4 @@
-module FrictionVelocityMod
+module ctsm_FrictionVelocity
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,18 +10,18 @@ module FrictionVelocityMod
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
   use shr_const_mod           , only : SHR_CONST_PI
-  use decompMod               , only : bounds_type
-  use clm_varcon              , only : spval
-  use clm_varctl              , only : use_cn, use_luna
-  use LandunitType            , only : lun
-  use ColumnType              , only : col
-  use PatchType               , only : patch
-  use landunit_varcon         , only : istsoil, istcrop, istice_mec, istwet
+  use ctsm_Decomp               , only : bounds_type
+  use ctsm_VarCon              , only : spval
+  use ctsm_VarCtl              , only : use_cn, use_luna
+  use ctsm_LandunitType            , only : lun
+  use ctsm_ColumnType              , only : col
+  use ctsm_PatchType               , only : patch
+  use ctsm_LandunitVarCon         , only : istsoil, istcrop, istice_mec, istwet
   use ncdio_pio               , only : file_desc_t
-  use paramUtilMod            , only : readNcdioScalar
-  use atm2lndType             , only : atm2lnd_type
-  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
-  use CanopyStateType         , only : canopystate_type
+  use ctsm_ParamUtil            , only : readNcdioScalar
+  use ctsm_Atm2LndType             , only : atm2lnd_type
+  use ctsm_WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+  use ctsm_CanopyStateType         , only : canopystate_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -149,7 +149,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only: nan => shr_infnan_nan, assignment(=)
-    use histFileMod   , only: hist_addfld1d, hist_addfld2d
+    use ctsm_HistFile   , only: hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(frictionvel_type) :: this
@@ -193,7 +193,7 @@ contains
          ptr_patch=this%u10_clm_patch, l2g_scale_type='ice', default='inactive')
 
     this%u10_patch(begp:endp) = spval
-    call hist_addfld1d (fname='U10_DUST', units='m/s', &
+    call hist_addfld1d (fname='U10_ctsm_Dust', units='m/s', &
          avgflag='A', long_name='10-m wind for dust model', &
          ptr_patch=this%u10_patch)
 
@@ -254,7 +254,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Added 5/4/04, PET: initialize forc_hgt_u (gridcell-level),
-    ! since this is not initialized before first call to CNVegStructUpdate,
+    ! since this is not initialized before first call to ctsm_CNVegStructUpdate,
     ! and it is required to set the upper bound for canopy top height.
     ! Changed 3/21/08, KO: still needed but don't have sufficient information 
     ! to set this properly (e.g., patch-level displacement height and roughness 
@@ -300,7 +300,7 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod    , only : masterproc
+    use ctsm_Spmd    , only : masterproc
     use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
     use restUtilMod
     !
@@ -335,13 +335,13 @@ contains
     ! Read the namelist for Friction Velocity
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
+    use ctsm_AbortUtils     , only : endrun
     !
     ! !ARGUMENTS:
     class(frictionvel_type), intent(inout) :: this
@@ -577,8 +577,8 @@ contains
     ! Vol. 11, 2628-2644.
     !
     ! !USES:
-    use clm_varcon, only : vkc
-    use clm_varctl, only : iulog
+    use ctsm_VarCon, only : vkc
+    use ctsm_VarCtl, only : iulog
     !
     ! !ARGUMENTS:
     class(frictionvel_type), intent(inout) :: this
@@ -598,7 +598,7 @@ contains
     real(r8) , intent(out)   :: temp12m ( lbn: )         ! relation for potential temperature profile applied at 2-m [lbn:ubn]
     real(r8) , intent(out)   :: temp2   ( lbn: )         ! relation for specific humidity profile [lbn:ubn]
     real(r8) , intent(out)   :: temp22m ( lbn: )         ! relation for specific humidity profile applied at 2-m [lbn:ubn]
-    real(r8) , intent(inout) :: fm      ( lbn: )         ! diagnose 10m wind (DUST only) [lbn:ubn]
+    real(r8) , intent(inout) :: fm      ( lbn: )         ! diagnose 10m wind (ctsm_Dust only) [lbn:ubn]
     logical  , intent(in), optional :: landunit_index   ! optional argument that defines landunit or pft level
     !
     ! !LOCAL VARIABLES:
@@ -974,7 +974,7 @@ contains
     ! Vol. 11, 2628-2644.
     !
     ! !USES:
-    use clm_varcon, only : grav
+    use ctsm_VarCon, only : grav
     !
     ! !ARGUMENTS:
     class(frictionvel_type), intent(in) :: this
@@ -1017,4 +1017,4 @@ contains
 
   end subroutine MoninObukIni
 
-end module FrictionVelocityMod
+end module ctsm_FrictionVelocity

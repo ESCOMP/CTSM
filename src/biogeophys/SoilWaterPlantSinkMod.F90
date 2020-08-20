@@ -1,13 +1,13 @@
-module SoilWaterPlantSinkMod
+module ctsm_SoilWaterPlantSink
 
-   use clm_varctl       , only : use_hydrstress
-   use decompMod        , only : bounds_type
+   use ctsm_VarCtl       , only : use_hydrstress
+   use ctsm_Decomp        , only : bounds_type
    use shr_kind_mod          , only : r8 => shr_kind_r8
    use shr_log_mod           , only : errMsg => shr_log_errMsg
-   use abortutils            , only : endrun
-   use clm_varctl            , only : iulog
-   use landunit_varcon       , only : istsoil,istcrop
-   use column_varcon         , only : icol_road_perv
+   use ctsm_AbortUtils            , only : endrun
+   use ctsm_VarCtl            , only : iulog
+   use ctsm_LandunitVarCon       , only : istsoil,istcrop
+   use ctsm_ColumnVarCon         , only : icol_road_perv
    implicit none
 
    character(len=*), parameter, private :: sourcefile = &
@@ -38,12 +38,12 @@ contains
       !
       ! ---------------------------------------------------------------------------------
 
-      use SoilStateType       , only : soilstate_type
-      use WaterFluxBulkType       , only : waterfluxbulk_type
-      use CanopyStateType     , only : canopystate_type
-      use EnergyFluxType      , only : energyflux_type
-      use ColumnType          , only : col 
-      use LandunitType        , only : lun
+      use ctsm_SoilStateType       , only : soilstate_type
+      use ctsm_WaterFluxBulkType       , only : waterfluxbulk_type
+      use ctsm_CanopyStateType     , only : canopystate_type
+      use ctsm_EnergyFluxType      , only : energyflux_type
+      use ctsm_ColumnType          , only : col 
+      use ctsm_LandunitType        , only : lun
 
       ! Arguments
       type(bounds_type)       , intent(in)    :: bounds               ! bounds
@@ -146,12 +146,12 @@ contains
    subroutine Compute_EffecRootFrac_And_VertTranSink_HydStress_Roads(bounds, &
          num_filterc,filterc, soilstate_inst, waterfluxbulk_inst)
       
-      use SoilStateType    , only : soilstate_type
-      use WaterFluxBulkType    , only : waterfluxbulk_type
-      use clm_varpar       , only : nlevsoi
-      use clm_varpar       , only : max_patch_per_col
-      use PatchType        , only : patch
-      use ColumnType       , only : col
+      use ctsm_SoilStateType    , only : soilstate_type
+      use ctsm_WaterFluxBulkType    , only : waterfluxbulk_type
+      use ctsm_VarPar       , only : nlevsoi
+      use ctsm_VarPar       , only : max_patch_per_col
+      use ctsm_PatchType        , only : patch
+      use ctsm_ColumnType       , only : col
 
       ! Arguments
       type(bounds_type)       , intent(in)    :: bounds      
@@ -246,19 +246,19 @@ contains
 
         !
         !USES:
-        use decompMod        , only : bounds_type
-        use clm_varpar       , only : nlevsoi
-        use clm_varpar       , only : max_patch_per_col
-        use SoilStateType    , only : soilstate_type
-        use WaterFluxBulkType    , only : waterfluxbulk_type
-        use CanopyStateType  , only : canopystate_type
-        use PatchType        , only : patch
-        use ColumnType       , only : col
-        use clm_varctl       , only : iulog
-        use PhotosynthesisMod, only : plc, params_inst
-        use column_varcon    , only : icol_road_perv
+        use ctsm_Decomp        , only : bounds_type
+        use ctsm_VarPar       , only : nlevsoi
+        use ctsm_VarPar       , only : max_patch_per_col
+        use ctsm_SoilStateType    , only : soilstate_type
+        use ctsm_WaterFluxBulkType    , only : waterfluxbulk_type
+        use ctsm_CanopyStateType  , only : canopystate_type
+        use ctsm_PatchType        , only : patch
+        use ctsm_ColumnType       , only : col
+        use ctsm_VarCtl       , only : iulog
+        use ctsm_Photosynthesis, only : plc, params_inst
+        use ctsm_ColumnVarCon    , only : icol_road_perv
         use shr_infnan_mod   , only : isnan => shr_infnan_isnan
-        use EnergyFluxType   , only : energyflux_type
+        use ctsm_EnergyFluxType   , only : energyflux_type
         !
         ! !ARGUMENTS:
         type(bounds_type)    , intent(in)    :: bounds          ! bounds
@@ -340,15 +340,15 @@ contains
     ! hydraulics.
     !
     !USES:
-    use decompMod        , only : bounds_type
+    use ctsm_Decomp        , only : bounds_type
     use shr_kind_mod     , only : r8 => shr_kind_r8
-    use clm_varpar       , only : nlevsoi, max_patch_per_col
-    use SoilStateType    , only : soilstate_type
-    use WaterFluxBulkType    , only : waterfluxbulk_type
-    use PatchType        , only : patch
-    use ColumnType       , only : col
-    use clm_varctl       , only : use_hydrstress
-    use column_varcon    , only : icol_road_perv
+    use ctsm_VarPar       , only : nlevsoi, max_patch_per_col
+    use ctsm_SoilStateType    , only : soilstate_type
+    use ctsm_WaterFluxBulkType    , only : waterfluxbulk_type
+    use ctsm_PatchType        , only : patch
+    use ctsm_ColumnType       , only : col
+    use ctsm_VarCtl       , only : use_hydrstress
+    use ctsm_ColumnVarCon    , only : icol_road_perv
     !
     ! !ARGUMENTS:
     type(bounds_type)    , intent(in)    :: bounds                          ! bounds
@@ -428,5 +428,5 @@ contains
     return
  end subroutine Compute_EffecRootFrac_And_VertTranSink_Default
 
-end module SoilWaterPlantSinkMod
+end module ctsm_SoilWaterPlantSink
 

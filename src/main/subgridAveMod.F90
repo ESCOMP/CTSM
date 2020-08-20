@@ -1,4 +1,4 @@
-module subgridAveMod
+module ctsm_SubgridAve
 
 #include "shr_assert.h"
 
@@ -9,15 +9,15 @@ module subgridAveMod
   ! !USES:
   use shr_kind_mod  , only : r8 => shr_kind_r8
   use shr_log_mod   , only : errMsg => shr_log_errMsg
-  use column_varcon , only : icol_roof, icol_sunwall, icol_shadewall
-  use column_varcon , only : icol_road_perv , icol_road_imperv
-  use clm_varcon    , only : grlnd, nameg, namel, namec, namep,spval 
-  use clm_varctl    , only : iulog
-  use abortutils    , only : endrun
-  use decompMod     , only : bounds_type
-  use LandunitType  , only : lun                
-  use ColumnType    , only : col                
-  use PatchType     , only : patch                
+  use ctsm_ColumnVarCon , only : icol_roof, icol_sunwall, icol_shadewall
+  use ctsm_ColumnVarCon , only : icol_road_perv , icol_road_imperv
+  use ctsm_VarCon    , only : grlnd, nameg, namel, namec, namep,spval 
+  use ctsm_VarCtl    , only : iulog
+  use ctsm_AbortUtils    , only : endrun
+  use ctsm_Decomp     , only : bounds_type
+  use ctsm_LandunitType  , only : lun                
+  use ctsm_ColumnType    , only : col                
+  use ctsm_PatchType     , only : patch                
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1266,7 +1266,7 @@ contains
     ! This array can later be used to scale each landunit in forming grid cell averages.
     !
     ! !USES:
-    use landunit_varcon, only : max_lunit
+    use ctsm_LandunitVarCon, only : max_lunit
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds                    
@@ -1301,8 +1301,8 @@ contains
     ! each landunit type depending on l2g_scale_type
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice_mec, istdlak
-    use landunit_varcon, only : isturb_MIN, isturb_MAX, max_lunit
+    use ctsm_LandunitVarCon, only : istsoil, istcrop, istice_mec, istdlak
+    use ctsm_LandunitVarCon, only : isturb_MIN, isturb_MAX, max_lunit
     !
     ! !ARGUMENTS:
     character(len=*), intent(in)  :: l2g_scale_type           ! scale factor type for averaging
@@ -1359,4 +1359,4 @@ contains
 
   end subroutine create_scale_l2g_lookup
 
-end module subgridAveMod
+end module ctsm_SubgridAve

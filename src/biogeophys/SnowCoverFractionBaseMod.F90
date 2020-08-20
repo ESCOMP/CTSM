@@ -1,4 +1,4 @@
-module SnowCoverFractionBaseMod
+module ctsm_SnowCoverFractionBase
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,9 +7,9 @@ module SnowCoverFractionBaseMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod    , only : r8 => shr_kind_r8
-  use decompMod       , only : bounds_type
-  use clm_varctl      , only : use_subgrid_fluxes
-  use landunit_varcon , only : istdlak
+  use ctsm_Decomp       , only : bounds_type
+  use ctsm_VarCtl      , only : use_subgrid_fluxes
+  use ctsm_LandunitVarCon , only : istdlak
 
   implicit none
   save
@@ -48,7 +48,7 @@ module SnowCoverFractionBaseMod
           lun_itype_col, urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
           snow_depth, frac_sno, frac_sno_eff)
        ! Update snow depth and snow fraction
-       use decompMod, only : bounds_type
+       use ctsm_Decomp, only : bounds_type
        use shr_kind_mod   , only : r8 => shr_kind_r8
        import :: snow_cover_fraction_base_type
 
@@ -74,7 +74,7 @@ module SnowCoverFractionBaseMod
           newsnow, h2osno_total, frac_sno, &
           int_snow)
        ! Add new snow to integrated snow fall
-       use decompMod, only : bounds_type
+       use ctsm_Decomp, only : bounds_type
        use shr_kind_mod   , only : r8 => shr_kind_r8
        import :: snow_cover_fraction_base_type
 
@@ -160,4 +160,4 @@ contains
 
   end subroutine CalcFracSnoEff
 
-end module SnowCoverFractionBaseMod
+end module ctsm_SnowCoverFractionBase

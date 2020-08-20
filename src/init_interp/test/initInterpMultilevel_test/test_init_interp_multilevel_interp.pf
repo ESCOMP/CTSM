@@ -1,12 +1,12 @@
 module test_init_interp_multilevel_interp
 
-  ! Tests of initInterpMultilevelInterp
+  ! Tests of ctsm_InitInterpMultilevelInterp
 
   use pfunit_mod
-  use initInterpMultilevelInterp
-  use multilevel_interp_factory
+  use ctsm_InitInterpMultilevelInterp
+  use ctsm_MultilevelInterpFactory
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varcon, only : spval, ispval
+  use ctsm_VarCon, only : spval, ispval
 
   implicit none
 

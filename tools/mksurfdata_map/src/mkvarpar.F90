@@ -3,7 +3,7 @@ module mkvarpar
 !-----------------------------------------------------------------------
 !BOP
 !
-! !MODULE: clm_varpar
+! !MODULE: ctsm_VarPar
 !
 ! !DESCRIPTION:
 ! Module containing CLM parameters

@@ -1,16 +1,16 @@
 module test_set_single_match
 
-  ! Tests of initInterpMindist: set_single_match
+  ! Tests of ctsm_InitInterpMindist: set_single_match
 
   use pfunit_mod
-  use initInterpMindist
-  use initInterpMindistTestUtils, only : create_subgrid_info, create_glc_behavior
-  use initInterpMindistTestUtils, only : subgrid_special_indices, ilun_special
+  use ctsm_InitInterpMindist
+  use ctsm_InitInterpMindistTestUtils, only : create_subgrid_info, create_glc_behavior
+  use ctsm_InitInterpMindistTestUtils, only : subgrid_special_indices, ilun_special
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestSimpleSubgridSetupsMod
-  use unittestSubgridMod
-  use unittestUtils, only : endrun_msg
-  use glcBehaviorMod, only: glc_behavior_type
+  use ctsm_UnitTestSimpleSubgridSetups
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestUtils, only : endrun_msg
+  use ctsm_GlacierBehavior, only: glc_behavior_type
 
   implicit none
 

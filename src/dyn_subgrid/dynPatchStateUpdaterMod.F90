@@ -1,4 +1,4 @@
-module dynPatchStateUpdaterMod
+module ctsm_DynPatchStateUpdater
 
   !---------------------------------------------------------------------------
   !
@@ -20,11 +20,11 @@ module dynPatchStateUpdaterMod
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod            , only : bounds_type, BOUNDS_LEVEL_PROC
-  use PatchType            , only : patch
-  use ColumnType           , only : col
-  use clm_varpar           , only : mxpft
-  use abortutils           , only : endrun
+  use ctsm_Decomp            , only : bounds_type, BOUNDS_LEVEL_PROC
+  use ctsm_PatchType            , only : patch
+  use ctsm_ColumnType           , only : col
+  use ctsm_VarPar           , only : mxpft
+  use ctsm_AbortUtils           , only : endrun
   !
   implicit none
   private
@@ -451,4 +451,4 @@ contains
   end function patch_initiating
 
 
-end module dynPatchStateUpdaterMod
+end module ctsm_DynPatchStateUpdater

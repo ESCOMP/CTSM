@@ -14,7 +14,7 @@ list(APPEND mksurfdat_sources
   shr_log_mod.F90
   nanMod.F90
   shr_string_mod.F90
-  fileutils.F90
+  ctsm_FileUtils.F90
   shr_timer_mod.F90
   shr_file_mod.F90
   mkgridmapMod.F90
@@ -22,7 +22,7 @@ list(APPEND mksurfdat_sources
   mkpftConstantsMod.F90
   mkpctPftTypeMod.F90
   mkpftMod.F90
-  mkdomainMod.F90
+  mkctsm_Domain.F90
   mkgridmapMod.F90
   mkutilsMod.F90
   mkpftUtilsMod.F90

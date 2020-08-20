@@ -1,28 +1,28 @@
-module CNVegNitrogenStateType
+module ctsm_CNVegNitrogenStateType
 
 #include "shr_assert.h"
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
-  use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
-  use landunit_varcon                    , only : istcrop, istsoil 
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
-  use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump
-  use clm_varctl                         , only : use_crop
-  use CNSharedParamsMod                  , only : use_fun
-  use decompMod                          , only : bounds_type
-  use pftconMod                          , only : npcropmin, noveg, pftcon
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use abortutils                         , only : endrun
-  use spmdMod                            , only : masterproc 
-  use LandunitType                       , only : lun                
-  use ColumnType                         , only : col                
-  use PatchType                          , only : patch                
-  use dynPatchStateUpdaterMod, only : patch_state_updater_type
-  use CNSpeciesMod   , only : CN_SPECIES_N
-  use CNVegComputeSeedMod, only : ComputeSeedAmounts
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
+  use ctsm_VarPar                         , only : nlevdecomp_full, nlevdecomp
+  use ctsm_VarCon                         , only : spval, ispval, dzsoi_decomp, zisoi
+  use ctsm_LandunitVarCon                    , only : istcrop, istsoil 
+  use ctsm_VarCtl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+  use ctsm_VarCtl                         , only : iulog, override_bgc_restart_mismatch_dump
+  use ctsm_VarCtl                         , only : use_crop
+  use ctsm_CNSharedParamsMod                  , only : use_fun
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_PftCon                          , only : npcropmin, noveg, pftcon
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_AbortUtils                         , only : endrun
+  use ctsm_Spmd                            , only : masterproc 
+  use ctsm_LandunitType                       , only : lun                
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_PatchType                          , only : patch                
+  use ctsm_DynPatchStateUpdater, only : patch_state_updater_type
+  use ctsm_CNSpeciesMod   , only : CN_SPECIES_N
+  use ctsm_CNVegComputeSeedMod, only : ComputeSeedAmounts
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -178,7 +178,7 @@ contains
     ! add history fields for all CN variables, always set as default='inactive'
     !
     ! !USES:
-    use histFileMod, only : hist_addfld1d
+    use ctsm_HistFile, only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(cnveg_nitrogenstate_type) :: this
@@ -377,7 +377,7 @@ contains
     ! !DESCRIPTION:
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
     !
-    use clm_varctl     , only : MM_Nuptake_opt   
+    use ctsm_VarCtl     , only : MM_Nuptake_opt   
     ! !ARGUMENTS:
     class(cnveg_nitrogenstate_type) :: this
     type(bounds_type) , intent(in) :: bounds  
@@ -537,9 +537,9 @@ contains
     ! !USES:
     use restUtilMod
     use ncdio_pio
-    use clm_varctl             , only : spinup_state, use_cndv
-    use clm_time_manager       , only : get_nstep, is_restart
-    use clm_varctl             , only : MM_Nuptake_opt   
+    use ctsm_VarCtl             , only : spinup_state, use_cndv
+    use ctsm_TimeManager       , only : get_nstep, is_restart
+    use ctsm_VarCtl             , only : MM_Nuptake_opt   
 
     !
     ! !ARGUMENTS:
@@ -943,8 +943,8 @@ contains
        soilbiogeochem_nitrogenstate_inst)
     !
     ! !USES:
-    use subgridAveMod, only : p2c
-    use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+    use ctsm_SubgridAve, only : p2c
+    use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
     !
     ! !ARGUMENTS:
     class(cnveg_nitrogenstate_type)                      :: this
@@ -1282,4 +1282,4 @@ contains
 
   end subroutine DynamicPatchAdjustments
 
-end module CNVegNitrogenStateType
+end module ctsm_CNVegNitrogenStateType

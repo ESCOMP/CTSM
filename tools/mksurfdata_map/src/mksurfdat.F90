@@ -13,7 +13,7 @@ program mksurfdat
 !
 ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8, r4 => shr_kind_r4
-    use fileutils          , only : opnfil, getavu
+    use ctsm_FileUtils          , only : opnfil, getavu
     use mklaiMod           , only : mklai
     use mkpctPftTypeMod    , only : pct_pft_type, get_pct_p2l_array, get_pct_l2g_array, update_max_array
     use mkpftConstantsMod  , only : natpft_lb, natpft_ub, cft_lb, cft_ub, num_cft
@@ -36,7 +36,7 @@ program mksurfdat
     use mkvarctl
     use nanMod             , only : nan, bigint
     use mkncdio            , only : check_ret, ncd_put_time_slice
-    use mkdomainMod        , only : domain_type, domain_read_map, domain_read, &
+    use mkctsm_Domain        , only : domain_type, domain_read_map, domain_read, &
                                     domain_write
     use mkgdpMod           , only : mkgdp
     use mkpeatMod          , only : mkpeat

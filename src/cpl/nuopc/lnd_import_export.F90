@@ -11,15 +11,15 @@ module lnd_import_export
   use shr_infnan_mod        , only : isnan => shr_infnan_isnan
   use shr_string_mod        , only : shr_string_listGetName, shr_string_listGetNum
   use shr_sys_mod           , only : shr_sys_abort
-  use clm_varctl            , only : iulog
-  use clm_time_manager      , only : get_nstep
+  use ctsm_VarCtl            , only : iulog
+  use ctsm_TimeManager      , only : get_nstep
   use decompmod             , only : bounds_type
-  use lnd2atmType           , only : lnd2atm_type
-  use lnd2glcMod            , only : lnd2glc_type
-  use atm2lndType           , only : atm2lnd_type
-  use glc2lndMod            , only : glc2lnd_type
-  use domainMod             , only : ldomain
-  use spmdMod               , only : masterproc
+  use ctsm_Lnd2AtmType           , only : lnd2atm_type
+  use ctsm_Lnd2Glc            , only : lnd2glc_type
+  use ctsm_Atm2LndType           , only : atm2lnd_type
+  use ctsm_Glc2Lnd            , only : glc2lnd_type
+  use ctsm_Domain             , only : ldomain
+  use ctsm_Spmd               , only : masterproc
   use seq_drydep_mod        , only : seq_drydep_readnl, n_drydep, seq_drydep_init
   use shr_megan_mod         , only : shr_megan_readnl, shr_megan_mechcomps_n
   use shr_fire_emis_mod     , only : shr_fire_emis_readnl
@@ -80,7 +80,7 @@ contains
 
   subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, rc)
 
-    use clm_varctl, only : ndep_from_cpl
+    use ctsm_VarCtl, only : ndep_from_cpl
 
     ! input/output variables
     type(ESMF_GridComp)            :: gcomp
@@ -273,7 +273,7 @@ contains
     call shr_ndep_readnl("drv_flds_in", ndep_nflds)
     if (ndep_nflds > 0) then
        call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_ndep', ungridded_lbound=1, ungridded_ubound=ndep_nflds)
-       ! This sets a variable in clm_varctl
+       ! This sets a variable in ctsm_VarCtl
        ndep_from_cpl = .true.
     end if
 
@@ -365,10 +365,10 @@ contains
     ! Convert the input data from the mediator to the land model
     !---------------------------------------------------------------------------
 
-    use clm_varctl           , only: co2_type, co2_ppmv, use_c13, ndep_from_cpl
-    use clm_varcon           , only: rair, o2_molar_const, c13ratio
+    use ctsm_VarCtl           , only: co2_type, co2_ppmv, use_c13, ndep_from_cpl
+    use ctsm_VarCon           , only: rair, o2_molar_const, c13ratio
     use shr_const_mod        , only: SHR_CONST_TKFRZ
-    use Wateratm2lndBulkType , only: wateratm2lndbulk_type
+    use ctsm_WaterAtm2LndBulkType , only: wateratm2lndbulk_type
 
     ! input/output variabes
     type(ESMF_GridComp)                         :: gcomp
@@ -762,7 +762,7 @@ contains
     ! Pack the export state
     !-------------------------------
 
-    use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
+    use ctsm_WaterLnd2AtmBulkType , only: waterlnd2atmbulk_type
 
     ! input/output variables
     type(ESMF_GridComp)                         :: gcomp

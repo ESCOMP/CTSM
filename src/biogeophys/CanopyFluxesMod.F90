@@ -1,4 +1,4 @@
-module CanopyFluxesMod
+module ctsm_CanopyFluxes
 
 #include "shr_assert.h"
 
@@ -12,42 +12,42 @@ module CanopyFluxesMod
   use shr_sys_mod           , only : shr_sys_flush
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
-  use abortutils            , only : endrun
-  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
+  use ctsm_AbortUtils            , only : endrun
+  use ctsm_VarCtl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
                                      use_luna, use_hydrstress
-  use clm_varpar            , only : nlevgrnd, nlevsno
-  use clm_varcon            , only : namep 
-  use pftconMod             , only : pftcon
-  use decompMod             , only : bounds_type
-  use ActiveLayerMod        , only : active_layer_type
-  use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
+  use ctsm_VarPar            , only : nlevgrnd, nlevsno
+  use ctsm_VarCon            , only : namep 
+  use ctsm_PftCon             , only : pftcon
+  use ctsm_Decomp             , only : bounds_type
+  use ctsm_ActiveLayer        , only : active_layer_type
+  use ctsm_Photosynthesis     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-  use SoilMoistStressMod    , only : calc_effective_soilporosity, calc_volumetric_h2oliq
-  use SoilMoistStressMod    , only : calc_root_moist_stress, set_perchroot_opt
-  use SimpleMathMod         , only : array_div_vector
-  use SurfaceResistanceMod  , only : do_soilevap_beta,do_soil_resistance_sl14
-  use atm2lndType           , only : atm2lnd_type
-  use CanopyStateType       , only : canopystate_type
-  use EnergyFluxType        , only : energyflux_type
-  use FrictionvelocityMod   , only : frictionvel_type
-  use OzoneBaseMod          , only : ozone_base_type
-  use SoilStateType         , only : soilstate_type
-  use SolarAbsorbedType     , only : solarabs_type
-  use SurfaceAlbedoType     , only : surfalb_type
-  use TemperatureType       , only : temperature_type
-  use WaterFluxBulkType         , only : waterfluxbulk_type
-  use WaterStateBulkType        , only : waterstatebulk_type
-  use WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType        , only : wateratm2lndbulk_type
-  use HumanIndexMod         , only : humanindex_type
-  use ch4Mod                , only : ch4_type
-  use PhotosynthesisMod     , only : photosyns_type
-  use GridcellType          , only : grc                
-  use ColumnType            , only : col                
-  use PatchType             , only : patch                
+  use ctsm_SoilMoistStress    , only : calc_effective_soilporosity, calc_volumetric_h2oliq
+  use ctsm_SoilMoistStress    , only : calc_root_moist_stress, set_perchroot_opt
+  use ctsm_SimpleMath         , only : array_div_vector
+  use ctsm_SurfaceResistance  , only : do_soilevap_beta,do_soil_resistance_sl14
+  use ctsm_Atm2LndType           , only : atm2lnd_type
+  use ctsm_CanopyStateType       , only : canopystate_type
+  use ctsm_EnergyFluxType        , only : energyflux_type
+  use ctsm_FrictionVelocity   , only : frictionvel_type
+  use ctsm_OzoneBase          , only : ozone_base_type
+  use ctsm_SoilStateType         , only : soilstate_type
+  use ctsm_SolarAbsorbedType     , only : solarabs_type
+  use ctsm_SurfaceAlbedoType     , only : surfalb_type
+  use ctsm_TemperatureType       , only : temperature_type
+  use ctsm_WaterFluxBulkType         , only : waterfluxbulk_type
+  use ctsm_WaterStateBulkType        , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType        , only : waterdiagnosticbulk_type
+  use ctsm_WaterAtm2LndBulkType        , only : wateratm2lndbulk_type
+  use ctsm_HumanIndices         , only : humanindex_type
+  use ctsm_Methane                , only : ch4_type
+  use ctsm_Photosynthesis     , only : photosyns_type
+  use ctsm_GridcellType          , only : grc                
+  use ctsm_ColumnType            , only : col                
+  use ctsm_PatchType             , only : patch                
   use EDTypesMod            , only : ed_site_type
-  use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-  use LunaMod               , only : Update_Photosynthesis_Capacity, Acc24_Climate_LUNA,Acc240_Climate_LUNA,Clear24_Climate_LUNA
+  use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+  use ctsm_Luna               , only : Update_Photosynthesis_Capacity, Acc24_Climate_LUNA,Acc240_Climate_LUNA,Clear24_Climate_LUNA
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -93,11 +93,11 @@ contains
     ! Read the namelist for Canopy Fluxes
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
+    use ctsm_VarCtl     , only : iulog
     !
     ! !ARGUMENTS:
     character(len=*), intent(IN) :: NLFilename ! Namelist filename
@@ -155,7 +155,7 @@ contains
     !
     ! !USES:
     use ncdio_pio, only: file_desc_t
-    use paramUtilMod, only: readNcdioScalar
+    use ctsm_ParamUtil, only: readNcdioScalar
     !
     ! !ARGUMENTS:
     implicit none
@@ -221,18 +221,18 @@ contains
     !
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_RGAS
-    use clm_time_manager   , only : get_step_size_real, get_prev_date,is_end_curr_day
-    use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice
-    use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
-    use clm_varcon         , only : c14ratio
+    use ctsm_TimeManager   , only : get_step_size_real, get_prev_date,is_end_curr_day
+    use ctsm_VarCon         , only : sb, cpair, hvap, vkc, grav, denice
+    use ctsm_VarCon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
+    use ctsm_VarCon         , only : c14ratio
     use perf_mod           , only : t_startf, t_stopf
-    use QSatMod            , only : QSat
-    use CLMFatesInterfaceMod, only : hlm_fates_interface_type
-    use HumanIndexMod      , only : all_human_stress_indices, fast_human_stress_indices, &
+    use ctsm_QSat            , only : QSat
+    use ctsm_FatesInterface, only : hlm_fates_interface_type
+    use ctsm_HumanIndices      , only : all_human_stress_indices, fast_human_stress_indices, &
                                     Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)            :: bounds 
@@ -596,7 +596,7 @@ contains
       ! 1a) for CN: 
       !             clm_drv() -> 
       !             bgc_vegetation_inst%EcosystemDynamicsPostDrainage() ->
-      !             CNVegStructUpdate()
+      !             ctsm_CNVegStructUpdate()
       !    if(elai(p)+esai(p)>0) frac_veg_nosno_alb(p) = 1
       !    
       ! 1b) for FATES:
@@ -1407,5 +1407,5 @@ contains
 
   end subroutine CanopyFluxes
 
-end module CanopyFluxesMod
+end module ctsm_CanopyFluxes
 

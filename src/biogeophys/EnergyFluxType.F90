@@ -1,4 +1,4 @@
-module EnergyFluxType
+module ctsm_EnergyFluxType
 
 #include "shr_assert.h"
 
@@ -7,12 +7,12 @@ module EnergyFluxType
   !
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use clm_varcon     , only : spval
-  use decompMod      , only : bounds_type
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch                
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
+  use ctsm_VarCon     , only : spval
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_PatchType      , only : patch                
+  use ctsm_AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   !
   implicit none
   save
@@ -164,7 +164,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd, nlevlak
     implicit none
     !
     ! !ARGUMENTS:
@@ -277,9 +277,9 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : nlevsno, nlevgrnd
-    use clm_varctl     , only : use_cn, use_hydrstress
-    use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use ctsm_VarPar     , only : nlevsno, nlevgrnd
+    use ctsm_VarCtl     , only : use_cn, use_hydrstress
+    use ctsm_HistFile    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use ncdio_pio      , only : ncd_inqvdlen
     implicit none
     !
@@ -678,12 +678,12 @@ contains
     ! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use clm_varcon      , only : denice, denh2o, sb
-    use landunit_varcon , only : istwet, istsoil, istdlak
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use clm_varctl      , only : iulog, use_vancouver, use_mexicocity
+    use ctsm_VarPar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
+    use ctsm_VarCon      , only : denice, denh2o, sb
+    use ctsm_LandunitVarCon , only : istwet, istsoil, istdlak
+    use ctsm_ColumnVarCon   , only : icol_road_imperv, icol_roof, icol_sunwall
+    use ctsm_ColumnVarCon   , only : icol_shadewall, icol_road_perv
+    use ctsm_VarCtl      , only : iulog, use_vancouver, use_mexicocity
     implicit none
     !
     ! !ARGUMENTS:
@@ -777,12 +777,12 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use spmdMod    , only : masterproc
-    use abortutils , only : endrun
+    use ctsm_Spmd    , only : masterproc
+    use ctsm_AbortUtils , only : endrun
     use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_double, ncd_int, &
                             ncd_inqvdlen
     use restUtilMod
-    use decompMod      , only : get_proc_global
+    use ctsm_Decomp      , only : get_proc_global
     implicit none
     !
     ! !ARGUMENTS:
@@ -903,8 +903,8 @@ contains
     ! The trigger value "-99999." resets the accumulation to zero.
     !
     ! !USES 
-    use accumulMod       , only : init_accum_field
-    use clm_time_manager , only : get_step_size_real
+    use ctsm_Accumulators       , only : init_accum_field
+    use ctsm_TimeManager , only : get_step_size_real
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     !
     ! !ARGUMENTS:
@@ -933,10 +933,10 @@ contains
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES 
-    use accumulMod       , only : init_accum_field, extract_accum_field
-    use clm_time_manager , only : get_nstep
-    use clm_varctl       , only : nsrest, nsrStartup
-    use abortutils       , only : endrun
+    use ctsm_Accumulators       , only : init_accum_field, extract_accum_field
+    use ctsm_TimeManager , only : get_nstep
+    use ctsm_VarCtl       , only : nsrest, nsrStartup
+    use ctsm_AbortUtils       , only : endrun
     !
     ! !ARGUMENTS:
     class(energyflux_type) :: this
@@ -964,10 +964,10 @@ contains
     !
     ! USES
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
-    use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
-    use clm_varctl       , only : iulog
-    use abortutils       , only : endrun
+    use ctsm_TimeManager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
+    use ctsm_Accumulators       , only : update_accum_field, extract_accum_field, accumResetVal
+    use ctsm_VarCtl       , only : iulog
+    use ctsm_AbortUtils       , only : endrun
     !
     ! !ARGUMENTS:
     class(energyflux_type)                :: this
@@ -1028,4 +1028,4 @@ contains
 
   end subroutine UpdateAccVars
 
-end module EnergyFluxType
+end module ctsm_EnergyFluxType

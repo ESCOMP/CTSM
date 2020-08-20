@@ -1,22 +1,22 @@
-module initInterpMindist
+module ctsm_InitInterpMindist
 
   ! ------------------------------------------------------------------------
-  ! This module contains most of the "interesting" logic of initInterp, in terms of
+  ! This module contains most of the "interesting" logic of ctsm_InitInterp, in terms of
   ! finding the input column (or landunit, patch, etc.) to use as a template for each
   ! output column (etc.).
   !
-  ! This is in a separate module to facilitate unit testing, since the full initInterp
+  ! This is in a separate module to facilitate unit testing, since the full ctsm_InitInterp
   ! involves some awkward dependencies.
   ! ------------------------------------------------------------------------
 
 #include "shr_assert.h"
   use shr_kind_mod   , only: r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use clm_varctl     , only: iulog
-  use abortutils     , only: endrun
-  use spmdMod        , only: masterproc
-  use clm_varcon     , only: spval, re
-  use glcBehaviorMod , only: glc_behavior_type
+  use ctsm_VarCtl     , only: iulog
+  use ctsm_AbortUtils     , only: endrun
+  use ctsm_Spmd        , only: masterproc
+  use ctsm_VarCon     , only: spval, re
+  use ctsm_GlacierBehavior , only: glc_behavior_type
 
   implicit none
   private
@@ -283,7 +283,7 @@ contains
 
           ! Error conditions
           if ( distmin == spval )then
-             write(iulog,*) 'ERROR initInterp set_mindist: &
+             write(iulog,*) 'ERROR ctsm_InitInterp set_mindist: &
                   &Cannot find any input points matching output point:'
              call subgrido%print_point(no, iulog)
              write(iulog,*) ' '
@@ -740,4 +740,4 @@ contains
   end function is_vegetated_landunit
 
 
-end module initInterpMindist
+end module ctsm_InitInterpMindist

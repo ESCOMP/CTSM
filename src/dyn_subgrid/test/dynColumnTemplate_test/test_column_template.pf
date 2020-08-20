@@ -1,15 +1,15 @@
 module test_column_template
 
-  ! Tests of dynColumnTemplateMod
+  ! Tests of ctsm_DynColumnTemplate
 
   use pfunit_mod
-  use dynColumnTemplateMod
-  use unittestSubgridMod
+  use ctsm_DynColumnTemplate
+  use ctsm_UnitTestSubgrid
   use shr_kind_mod    , only : r8 => shr_kind_r8
-  use clm_varcon      , only : ispval
-  use ColumnType      , only : col
-  use LandunitType    , only : lun
-  use GridcellType    , only : grc 
+  use ctsm_VarCon      , only : ispval
+  use ctsm_ColumnType      , only : col
+  use ctsm_LandunitType    , only : lun
+  use ctsm_GridcellType    , only : grc 
 
   implicit none
 

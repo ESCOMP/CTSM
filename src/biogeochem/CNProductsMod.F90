@@ -1,4 +1,4 @@
-module CNProductsMod
+module ctsm_CNProductsMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Calculate loss fluxes from wood products pools, and update product pool state variables
@@ -8,11 +8,11 @@ module CNProductsMod
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_infnan_mod          , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use decompMod               , only : bounds_type
-  use abortutils              , only : endrun
-  use clm_time_manager        , only : get_step_size_real
-  use SpeciesBaseType         , only : species_base_type
-  use PatchType               , only : patch
+  use ctsm_Decomp               , only : bounds_type
+  use ctsm_AbortUtils              , only : endrun
+  use ctsm_TimeManager        , only : get_step_size_real
+  use ctsm_SpeciesBaseType         , only : species_base_type
+  use ctsm_PatchType               , only : patch
   !
   implicit none
   private
@@ -153,8 +153,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine InitHistory(this, bounds)
     ! !USES:
-    use histFileMod, only : hist_addfld1d
-    use clm_varcon , only : spval
+    use ctsm_HistFile, only : hist_addfld1d
+    use ctsm_VarCon , only : spval
     !
     ! !ARGUMENTS:
     class(cn_products_type), intent(inout) :: this
@@ -541,8 +541,8 @@ contains
     ! Partition input wood fluxes into 10 and 100 year product pools
     !
     ! !USES:
-    use pftconMod    , only : pftcon
-    use subgridAveMod, only : p2g
+    use ctsm_PftCon    , only : pftcon
+    use ctsm_SubgridAve, only : p2g
     !
     ! !ARGUMENTS:
     class(cn_products_type) , intent(inout) :: this
@@ -647,7 +647,7 @@ contains
     ! symmetry with the wood fluxes.
     !
     ! !USES:
-    use subgridAveMod, only : p2g
+    use ctsm_SubgridAve, only : p2g
     !
     ! !ARGUMENTS:
     class(cn_products_type) , intent(inout) :: this
@@ -749,4 +749,4 @@ contains
   end subroutine ComputeSummaryVars
 
 
-end module CNProductsMod
+end module ctsm_CNProductsMod

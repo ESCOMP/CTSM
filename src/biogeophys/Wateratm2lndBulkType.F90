@@ -1,4 +1,4 @@
-module Wateratm2lndBulkType
+module ctsm_WaterAtm2LndBulkType
 
 #include "shr_assert.h"
 
@@ -12,14 +12,14 @@ module Wateratm2lndBulkType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use decompMod      , only : bounds_type
-  use abortutils     , only : endrun
-  use PatchType      , only : patch
-  use clm_varctl     , only : iulog, use_fates, use_cn, use_cndv
-  use clm_varcon     , only : spval
-  use WaterAtm2lndType , only : wateratm2lnd_type
-  use WaterInfoBaseType, only : water_info_base_type
-  use WaterTracerContainerType, only : water_tracer_container_type
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_PatchType      , only : patch
+  use ctsm_VarCtl     , only : iulog, use_fates, use_cn, use_cndv
+  use ctsm_VarCon     , only : spval
+  use ctsm_WaterAtm2LndType, only : wateratm2lnd_type
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterTracerContainerType, only : water_tracer_container_type
   !
   implicit none
   save
@@ -140,7 +140,7 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use histFileMod    , only : hist_addfld1d
+    use ctsm_HistFile    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(inout) :: this
@@ -215,8 +215,8 @@ contains
     ! restart file for restart or branch runs
     !
     ! !USES
-    use clm_varcon  , only : spval
-    use accumulMod  , only : init_accum_field
+    use ctsm_VarCon  , only : spval
+    use ctsm_Accumulators  , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
@@ -267,8 +267,8 @@ contains
     ! is read in and the accumulation buffer is obtained)
     !
     ! !USES
-    use accumulMod       , only : extract_accum_field
-    use clm_time_manager , only : get_nstep
+    use ctsm_Accumulators       , only : extract_accum_field
+    use ctsm_TimeManager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
@@ -336,8 +336,8 @@ contains
   subroutine UpdateAccVars (this, bounds)
     !
     ! USES
-    use clm_time_manager, only : get_nstep
-    use accumulMod      , only : update_accum_field, extract_accum_field
+    use ctsm_TimeManager, only : get_nstep
+    use ctsm_Accumulators      , only : update_accum_field, extract_accum_field
     !
     ! !ARGUMENTS:
     class(wateratm2lndbulk_type), intent(in) :: this
@@ -476,4 +476,4 @@ contains
 
   end subroutine Clean
 
-end module Wateratm2lndBulkType
+end module ctsm_WaterAtm2LndBulkType

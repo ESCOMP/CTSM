@@ -1,4 +1,4 @@
-module CNSharedParamsMod
+module ctsm_CNSharedParamsMod
 
   !-----------------------------------------------------------------------
   !
@@ -50,7 +50,7 @@ contains
   subroutine CNParamsReadShared_netcdf(ncid)
     !
     use ncdio_pio   , only : file_desc_t, ncd_io
-    use abortutils  , only : endrun
+    use ctsm_AbortUtils  , only : endrun
     use shr_log_mod , only : errMsg => shr_log_errMsg
     !
     implicit none
@@ -110,12 +110,12 @@ contains
     ! Read and initialize CN Shared parameteres from the namelist.
     !
     ! !USES:
-    use fileutils   , only : relavu, getavu
-    use spmdMod     , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL
+    use ctsm_FileUtils   , only : relavu, getavu
+    use ctsm_Spmd     , only : masterproc, mpicom, MPI_REAL8, MPI_LOGICAL
     use shr_nl_mod  , only : shr_nl_find_group_name
     use shr_log_mod , only : errMsg => shr_log_errMsg
-    use clm_varctl  , only : iulog
-    use abortutils  , only : endrun
+    use ctsm_VarCtl  , only : iulog
+    use ctsm_AbortUtils  , only : endrun
     use shr_mpi_mod , only : shr_mpi_bcast
     
     !
@@ -188,4 +188,4 @@ contains
 
   end subroutine CNParamsReadShared_namelist
 
-end module CNSharedParamsMod
+end module ctsm_CNSharedParamsMod

@@ -3,11 +3,11 @@ module test_dynTimeInfo
   ! Tests of the dynTimeInfo class
 
   use pfunit_mod
-  use dynTimeInfoMod
+  use ctsm_DynTimeInfo
   use shr_kind_mod, only: r8 => shr_kind_r8
-  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
-  use unittestTimeManagerMod, only : set_date => unittest_timemgr_set_curr_date
-  use unittestTimeManagerMod, only : set_year => unittest_timemgr_set_curr_year
+  use ctsm_UnitTestTimeManager, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use ctsm_UnitTestTimeManager, only : set_date => unittest_timemgr_set_curr_date
+  use ctsm_UnitTestTimeManager, only : set_year => unittest_timemgr_set_curr_year
 
   implicit none
   save

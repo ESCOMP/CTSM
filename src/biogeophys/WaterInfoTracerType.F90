@@ -1,4 +1,4 @@
-module WaterInfoTracerType
+module ctsm_WaterInfoTracerType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,7 +10,7 @@ module WaterInfoTracerType
   ! !USES:
   !
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use WaterInfoBaseType, only : water_info_base_type
+  use ctsm_WaterInfoBaseType, only : water_info_base_type
   !
   implicit none
   private
@@ -154,4 +154,4 @@ contains
   end function is_included_in_consistency_check
 
 
-end module WaterInfoTracerType
+end module ctsm_WaterInfoTracerType

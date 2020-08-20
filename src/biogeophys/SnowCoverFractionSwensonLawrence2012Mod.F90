@@ -1,4 +1,4 @@
-module SnowCoverFractionSwensonLawrence2012Mod
+module ctsm_SnowCoverFractionSwensonLawrence2012
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -12,18 +12,18 @@ module SnowCoverFractionSwensonLawrence2012Mod
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_nl_mod     , only : shr_nl_find_group_name
   use shr_mpi_mod    , only : shr_mpi_bcast
-  use abortutils     , only : endrun
-  use decompMod      , only : bounds_type
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_Decomp      , only : bounds_type
   use ncdio_pio      , only : file_desc_t
-  use clm_varctl     , only : iulog
-  use spmdMod        , only : masterproc, mpicom
-  use fileutils      , only : getavu, relavu, opnfil
-  use clm_varcon     , only : rpi
-  use ColumnType     , only : column_type
-  use glcBehaviorMod , only : glc_behavior_type
-  use landunit_varcon, only : istice_mec
-  use paramUtilMod   , only : readNcdioScalar
-  use SnowCoverFractionBaseMod, only : snow_cover_fraction_base_type
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_Spmd        , only : masterproc, mpicom
+  use ctsm_FileUtils      , only : getavu, relavu, opnfil
+  use ctsm_VarCon     , only : rpi
+  use ctsm_ColumnType     , only : column_type
+  use ctsm_GlacierBehavior , only : glc_behavior_type
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_ParamUtil   , only : readNcdioScalar
+  use ctsm_SnowCoverFractionBase, only : snow_cover_fraction_base_type
 
   implicit none
   save
@@ -467,4 +467,4 @@ contains
 
   end subroutine SetDerivedParameters
 
-end module SnowCoverFractionSwensonLawrence2012Mod
+end module ctsm_SnowCoverFractionSwensonLawrence2012

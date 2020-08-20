@@ -1,31 +1,31 @@
-module initGridCellsMod
+module ctsm_InitGridCells
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Initializes sub-grid mapping for each land grid cell. This module handles the high-
   ! level logic that determines how the subgrid structure is set up in a CLM run. It
-  ! makes use of lower-level routines in initSubgridMod.
+  ! makes use of lower-level routines in ctsm_InitSubgrid.
   !
   ! TODO(wjs, 2015-12-08) Much of the logic here duplicates (in some sense) logic in
-  ! subgridMod. The duplication should probably be extracted into routines shared between
+  ! ctsm_Subgrid. The duplication should probably be extracted into routines shared between
   ! these modules (or the two modules should be combined into one).
   !
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use spmdMod        , only : masterproc,iam
-  use abortutils     , only : endrun
-  use clm_varctl     , only : iulog
-  use clm_varcon     , only : namep, namec, namel, nameg
-  use decompMod      , only : bounds_type, ldecomp
-  use GridcellType   , only : grc                
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch                
-  use initSubgridMod , only : clm_ptrs_compdown, clm_ptrs_check
-  use initSubgridMod , only : add_landunit, add_column, add_patch
-  use glcBehaviorMod , only : glc_behavior_type
+  use ctsm_Spmd        , only : masterproc,iam
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_VarCtl     , only : iulog
+  use ctsm_VarCon     , only : namep, namec, namel, nameg
+  use ctsm_Decomp      , only : bounds_type, ldecomp
+  use ctsm_GridcellType   , only : grc                
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_PatchType      , only : patch                
+  use ctsm_InitSubgrid , only : clm_ptrs_compdown, clm_ptrs_check
+  use ctsm_InitSubgrid , only : add_landunit, add_column, add_patch
+  use ctsm_GlacierBehavior , only : glc_behavior_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -55,12 +55,12 @@ contains
     ! For each land gridcell determine landunit, column and patch properties.
     !
     ! !USES
-    use domainMod         , only : ldomain
-    use decompMod         , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
-    use subgridWeightsMod , only : compute_higher_order_weights
-    use landunit_varcon   , only : istsoil, istwet, istdlak, istice_mec
-    use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md, istcrop
-    use clm_varctl        , only : use_fates
+    use ctsm_Domain         , only : ldomain
+    use ctsm_Decomp         , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
+    use ctsm_SubgridWeights , only : compute_higher_order_weights
+    use ctsm_LandunitVarCon   , only : istsoil, istwet, istdlak, istice_mec
+    use ctsm_LandunitVarCon   , only : isturb_tbd, isturb_hd, isturb_md, istcrop
+    use ctsm_VarCtl        , only : use_fates
     use shr_const_mod     , only : SHR_CONST_PI
     !
     ! !ARGUMENTS:
@@ -219,9 +219,9 @@ contains
     ! Initialize vegetated landunit with competition
     !
     ! !USES
-    use clm_instur, only : wt_lunit, wt_nat_patch
-    use subgridMod, only : subgrid_get_info_natveg, natveg_patch_exists
-    use clm_varpar, only : natpft_lb, natpft_ub
+    use ctsm_VarSur, only : wt_lunit, wt_nat_patch
+    use ctsm_Subgrid, only : subgrid_get_info_natveg, natveg_patch_exists
+    use ctsm_VarPar, only : natpft_lb, natpft_ub
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -280,10 +280,10 @@ contains
     ! Initialize wetland and lake landunits
     !
     ! !USES
-    use clm_instur      , only : wt_lunit
-    use landunit_varcon , only : istwet, istdlak
-    use subgridMod      , only : subgrid_get_info_wetland, subgrid_get_info_lake
-    use pftconMod       , only : noveg
+    use ctsm_VarSur      , only : wt_lunit
+    use ctsm_LandunitVarCon , only : istwet, istdlak
+    use ctsm_Subgrid      , only : subgrid_get_info_wetland, subgrid_get_info_lake
+    use ctsm_PftCon       , only : noveg
 
     !
     ! !ARGUMENTS:
@@ -343,12 +343,12 @@ contains
     ! Initialize glacier_mec landunits
     !
     ! !USES:
-    use clm_varpar      , only : maxpatch_glcmec
-    use clm_instur      , only : wt_lunit, wt_glc_mec
-    use landunit_varcon , only : istice_mec
-    use column_varcon   , only : icemec_class_to_col_itype
-    use subgridMod      , only : subgrid_get_info_glacier_mec
-    use pftconMod       , only : noveg
+    use ctsm_VarPar      , only : maxpatch_glcmec
+    use ctsm_VarSur      , only : wt_lunit, wt_glc_mec
+    use ctsm_LandunitVarCon , only : istice_mec
+    use ctsm_ColumnVarCon   , only : icemec_class_to_col_itype
+    use ctsm_Subgrid      , only : subgrid_get_info_glacier_mec
+    use ctsm_PftCon       , only : noveg
     !
     ! !ARGUMENTS:
     type(glc_behavior_type), intent(in) :: glc_behavior
@@ -425,11 +425,11 @@ contains
     ! an older surface dataset that 
     !
     ! !USES
-    use clm_instur      , only : wt_lunit, wt_cft
-    use landunit_varcon , only : istcrop, istsoil
-    use subgridMod      , only : subgrid_get_info_crop, crop_patch_exists
-    use clm_varpar      , only : cft_lb, cft_ub
-    use clm_varctl      , only : create_crop_landunit
+    use ctsm_VarSur      , only : wt_lunit, wt_cft
+    use ctsm_LandunitVarCon , only : istcrop, istsoil
+    use ctsm_Subgrid      , only : subgrid_get_info_crop, crop_patch_exists
+    use ctsm_VarPar      , only : cft_lb, cft_ub
+    use ctsm_VarCtl      , only : create_crop_landunit
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -505,16 +505,16 @@ contains
     ! Initialize urban landunits
     !
     ! !USES
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon   , only : icol_road_perv, icol_road_imperv
-    use landunit_varcon , only : isturb_tbd, isturb_hd, isturb_md, isturb_MIN
-    use clm_varpar      , only : maxpatch_urb
-    use clm_instur      , only : wt_lunit
-    use subgridMod      , only : subgrid_get_info_urban_tbd, subgrid_get_info_urban_hd
-    use subgridMod      , only : subgrid_get_info_urban_md
-    use UrbanParamsType , only : urbinp
-    use decompMod       , only : ldecomp
-    use pftconMod       , only : noveg
+    use ctsm_ColumnVarCon   , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_ColumnVarCon   , only : icol_road_perv, icol_road_imperv
+    use ctsm_LandunitVarCon , only : isturb_tbd, isturb_hd, isturb_md, isturb_MIN
+    use ctsm_VarPar      , only : maxpatch_urb
+    use ctsm_VarSur      , only : wt_lunit
+    use ctsm_Subgrid      , only : subgrid_get_info_urban_tbd, subgrid_get_info_urban_hd
+    use ctsm_Subgrid      , only : subgrid_get_info_urban_md
+    use ctsm_UrbanParamsType , only : urbinp
+    use ctsm_Decomp       , only : ldecomp
+    use ctsm_PftCon       , only : noveg
     !
     ! !ARGUMENTS:
     integer , intent(in)    :: ltype             ! landunit type
@@ -595,4 +595,4 @@ contains
 
   end subroutine set_landunit_urban
 
-end module initGridCellsMod
+end module ctsm_InitGridCells

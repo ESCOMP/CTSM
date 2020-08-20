@@ -1,14 +1,14 @@
 module lnd_import_export
 
   use shr_kind_mod , only: r8 => shr_kind_r8, cl=>shr_kind_cl
-  use abortutils   , only: endrun
-  use decompmod    , only: bounds_type
-  use lnd2atmType  , only: lnd2atm_type
-  use lnd2glcMod   , only: lnd2glc_type
-  use atm2lndType  , only: atm2lnd_type
-  use glc2lndMod   , only: glc2lnd_type 
-  use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
-  use Wateratm2lndBulkType , only: wateratm2lndbulk_type
+  use ctsm_AbortUtils   , only: endrun
+  use ctsm_Decomp    , only: bounds_type
+  use ctsm_Lnd2AtmType  , only: lnd2atm_type
+  use ctsm_Lnd2Glc   , only: lnd2glc_type
+  use ctsm_Atm2LndType  , only: atm2lnd_type
+  use ctsm_Glc2Lnd   , only: glc2lnd_type 
+  use ctsm_WaterLnd2AtmBulkType , only: waterlnd2atmbulk_type
+  use ctsm_WaterAtm2LndBulkType , only: wateratm2lndbulk_type
   use clm_cpl_indices
   !
   implicit none
@@ -25,12 +25,12 @@ contains
     !
     ! !USES:
     use seq_flds_mod    , only: seq_flds_x2l_fields
-    use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
-    use clm_varctl      , only: ndep_from_cpl 
-    use clm_varcon      , only: rair, o2_molar_const, c13ratio
+    use ctsm_VarCtl      , only: co2_type, co2_ppmv, iulog, use_c13
+    use ctsm_VarCtl      , only: ndep_from_cpl 
+    use ctsm_VarCon      , only: rair, o2_molar_const, c13ratio
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     use shr_string_mod  , only: shr_string_listGetName
-    use domainMod       , only: ldomain
+    use ctsm_Domain       , only: ldomain
     use shr_infnan_mod  , only : isnan => shr_infnan_isnan
     !
     ! !ARGUMENTS:
@@ -293,12 +293,12 @@ contains
     ! !USES:
     use shr_kind_mod       , only : r8 => shr_kind_r8
     use seq_flds_mod       , only : seq_flds_l2x_fields
-    use clm_varctl         , only : iulog
-    use clm_time_manager   , only : get_nstep
+    use ctsm_VarCtl         , only : iulog
+    use ctsm_TimeManager   , only : get_nstep
     use seq_drydep_mod     , only : n_drydep
     use shr_megan_mod      , only : shr_megan_mechcomps_n
     use shr_fire_emis_mod  , only : shr_fire_emis_mechcomps_n
-    use domainMod          , only : ldomain
+    use ctsm_Domain          , only : ldomain
     use shr_string_mod     , only : shr_string_listGetName
     use shr_infnan_mod     , only : isnan => shr_infnan_isnan
     !
@@ -346,7 +346,7 @@ contains
           l2x(index_l2x_Fall_fco2_lnd,i) = -lnd2atm_inst%net_carbon_exchange_grc(g)  
        end if
 
-       ! Additional fields for DUST, PROGSSLT, dry-deposition and VOC
+       ! Additional fields for ctsm_Dust, PROGSSLT, dry-deposition and VOC
        ! These are now standard fields, but the check on the index makes sure the driver handles them
        if (index_l2x_Sl_ram1      /= 0 )  l2x(index_l2x_Sl_ram1,i)     =  lnd2atm_inst%ram1_grc(g)
        if (index_l2x_Sl_fv        /= 0 )  l2x(index_l2x_Sl_fv,i)       =  lnd2atm_inst%fv_grc(g)

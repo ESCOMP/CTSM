@@ -1,4 +1,4 @@
-module BiogeophysPreFluxCalcsMod
+module ctsm_BiogeophysPreFluxCalcs
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,28 +10,28 @@ module BiogeophysPreFluxCalcsMod
 #include "shr_assert.h"
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use decompMod               , only : bounds_type
-  use PatchType               , only : patch
-  use ColumnType              , only : col
-  use LandunitType            , only : lun
-  use clm_varcon              , only : spval
-  use clm_varpar              , only : nlevgrnd, nlevsno, nlevurb
-  use clm_varctl              , only : use_fates
-  use pftconMod               , only : pftcon
-  use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
-  use landunit_varcon         , only : istsoil, istcrop, istice_mec
-  use clm_varcon              , only : hvap, hsub
-  use CLMFatesInterfaceMod    , only : hlm_fates_interface_type
-  use atm2lndType             , only : atm2lnd_type
-  use CanopyStateType         , only : canopystate_type
-  use FrictionVelocityMod     , only : frictionvel_type
-  use EnergyFluxType          , only : energyflux_type
-  use SoilStateType           , only : soilstate_type
-  use TemperatureType         , only : temperature_type
-  use Wateratm2lndBulkType    , only : wateratm2lndbulk_type
-  use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
-  use WaterStateBulkType      , only : waterstatebulk_type
-  use SurfaceResistanceMod    , only : calc_soilevap_resis
+  use ctsm_Decomp               , only : bounds_type
+  use ctsm_PatchType               , only : patch
+  use ctsm_ColumnType              , only : col
+  use ctsm_LandunitType            , only : lun
+  use ctsm_VarCon              , only : spval
+  use ctsm_VarPar              , only : nlevgrnd, nlevsno, nlevurb
+  use ctsm_VarCtl              , only : use_fates
+  use ctsm_PftCon               , only : pftcon
+  use ctsm_ColumnVarCon           , only : icol_roof, icol_sunwall, icol_shadewall
+  use ctsm_LandunitVarCon         , only : istsoil, istcrop, istice_mec
+  use ctsm_VarCon              , only : hvap, hsub
+  use ctsm_FatesInterface    , only : hlm_fates_interface_type
+  use ctsm_Atm2LndType             , only : atm2lnd_type
+  use ctsm_CanopyStateType         , only : canopystate_type
+  use ctsm_FrictionVelocity     , only : frictionvel_type
+  use ctsm_EnergyFluxType          , only : energyflux_type
+  use ctsm_SoilStateType           , only : soilstate_type
+  use ctsm_TemperatureType         , only : temperature_type
+  use ctsm_WaterAtm2LndBulkType    , only : wateratm2lndbulk_type
+  use ctsm_WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
+  use ctsm_WaterStateBulkType      , only : waterstatebulk_type
+  use ctsm_SurfaceResistance    , only : calc_soilevap_resis
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -327,4 +327,4 @@ contains
 
   end subroutine CalcInitialTemperatureAndEnergyVars
 
-end module BiogeophysPreFluxCalcsMod
+end module ctsm_BiogeophysPreFluxCalcs

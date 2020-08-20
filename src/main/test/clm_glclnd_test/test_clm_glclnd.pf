@@ -3,10 +3,10 @@ module test_clm_glclnd
   ! Tests of clm_glclnd
 
   use pfunit_mod
-  use unittestSubgridMod
+  use ctsm_UnitTestSubgrid
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use lnd2glcMod
-  use landunit_varcon, only : istsoil, istice_mec
+  use ctsm_Lnd2Glc
+  use ctsm_LandunitVarCon, only : istsoil, istice_mec
   
   implicit none
   save

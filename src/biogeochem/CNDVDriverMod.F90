@@ -1,4 +1,4 @@
-module CNDVDriverMod
+module ctsm_CNDVDriverMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -8,23 +8,23 @@ module CNDVDriverMod
   ! !USES:
   use shr_kind_mod             , only : r8 => shr_kind_r8
   use shr_log_mod              , only : errMsg => shr_log_errMsg
-  use abortutils               , only : endrun
-  use decompMod                , only : bounds_type
-  use atm2lndType              , only : atm2lnd_type
-  use CNDVType                 , only : dgvs_type
-  use CNVegCarbonStateType     , only : cnveg_carbonstate_type
-  use CNVegCarbonFluxType      , only : cnveg_carbonflux_type
-  use clm_varcon               , only : grlnd
-  use LandunitType             , only : lun                
-  use PatchType                , only : patch                
-  use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
+  use ctsm_AbortUtils               , only : endrun
+  use ctsm_Decomp                , only : bounds_type
+  use ctsm_Atm2LndType              , only : atm2lnd_type
+  use ctsm_CNDVType                 , only : dgvs_type
+  use ctsm_CNVegCarbonStateType     , only : cnveg_carbonstate_type
+  use ctsm_CNVegCarbonFluxType      , only : cnveg_carbonflux_type
+  use ctsm_VarCon               , only : grlnd
+  use ctsm_LandunitType             , only : lun                
+  use ctsm_PatchType                , only : patch                
+  use ctsm_WaterAtm2LndBulkType     , only : wateratm2lndbulk_type
   !
   ! !PUBLIC TYPES:
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: CNDVDriver
+  public :: ctsm_CNDVDriver
   public :: CNDVHist
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -37,7 +37,7 @@ module CNDVDriverMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNDVDriver(bounds, &
+  subroutine ctsm_CNDVDriver(bounds, &
        num_natvegp, filter_natvegp, kyr, &
        atm2lnd_inst, wateratm2lndbulk_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, dgvs_inst)
     !
@@ -45,8 +45,8 @@ contains
     ! Drives the annual dynamic vegetation that works with CN
     !
     ! !USES:
-    use CNDVLightMod         , only : Light
-    use CNDVEstablishmentMod , only : Establishment
+    use ctsm_CNDVLightMod         , only : Light
+    use ctsm_CNDVEstablishmentMod , only : Establishment
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds                  
@@ -120,7 +120,7 @@ contains
 
     end associate 
 
-  end subroutine CNDVDriver
+  end subroutine ctsm_CNDVDriver
 
   !-----------------------------------------------------------------------
   subroutine CNDVHist(bounds, dgvs_inst) 
@@ -131,13 +131,13 @@ contains
     ! !USES:
     use shr_const_mod   , only : SHR_CONST_CDAY
     use shr_sys_mod     , only : shr_sys_getenv
-    use clm_varpar      , only : maxsoil_patches
-    use clm_varctl      , only : caseid, ctitle, finidat, fsurdat, paramfile, iulog
-    use clm_varcon      , only : spval
-    use clm_time_manager, only : get_ref_date, get_nstep, get_curr_date, get_curr_time
-    use domainMod       , only : ldomain
-    use fileutils       , only : get_filename
-    use spmdMod         , only : masterproc
+    use ctsm_VarPar      , only : maxsoil_patches
+    use ctsm_VarCtl      , only : caseid, ctitle, finidat, fsurdat, paramfile, iulog
+    use ctsm_VarCon      , only : spval
+    use ctsm_TimeManager, only : get_ref_date, get_nstep, get_curr_date, get_curr_time
+    use ctsm_Domain       , only : ldomain
+    use ctsm_FileUtils       , only : get_filename
+    use ctsm_Spmd         , only : masterproc
     use ncdio_pio
     !
     ! !ARGUMENTS:
@@ -192,7 +192,7 @@ contains
       str = 'CF1.0'
       call ncd_putatt (ncid, ncd_global, 'conventions', trim(str))
 
-      call getdatetime(curdate, curtime)
+      call ctsm_GetDateTime(curdate, curtime)
       str = 'created on ' // curdate // ' ' // curtime
       call ncd_putatt(ncid, ncd_global,'history', trim(str))
 
@@ -419,8 +419,8 @@ contains
     ! Determine initial dataset filenames
     !
     ! !USES:
-    use clm_varctl       , only : caseid, inst_suffix
-    use clm_time_manager , only : get_curr_date
+    use ctsm_VarCtl       , only : caseid, inst_suffix
+    use ctsm_TimeManager , only : get_curr_date
     !
     ! !ARGUMENTS:
     implicit none
@@ -466,4 +466,4 @@ contains
 
   end subroutine BuildNatVegFilter
 
-end module CNDVDriverMod
+end module ctsm_CNDVDriverMod

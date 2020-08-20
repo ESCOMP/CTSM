@@ -1,4 +1,4 @@
-module SurfaceAlbedoMod
+module ctsm_SurfaceAlbedo
 
 #include "shr_assert.h"
 
@@ -9,25 +9,25 @@ module SurfaceAlbedoMod
   ! !PUBLIC TYPES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use decompMod         , only : bounds_type
-  use abortutils        , only : endrun
-  use landunit_varcon   , only : istsoil, istcrop, istdlak
-  use clm_varcon        , only : grlnd, namep
-  use clm_varpar        , only : numrad, nlevcan, nlevsno, nlevcan
-  use clm_varctl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE
-  use pftconMod         , only : pftcon
-  use SnowSnicarMod     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
-  use AerosolMod        , only : aerosol_type
-  use CanopyStateType   , only : canopystate_type
-  use LakeStateType     , only : lakestate_type
-  use SurfaceAlbedoType , only : surfalb_type
-  use TemperatureType   , only : temperature_type
-  use WaterStateBulkType    , only : waterstatebulk_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use GridcellType      , only : grc                
-  use LandunitType      , only : lun                
-  use ColumnType        , only : col                
-  use PatchType         , only : patch                
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_AbortUtils        , only : endrun
+  use ctsm_LandunitVarCon   , only : istsoil, istcrop, istdlak
+  use ctsm_VarCon        , only : grlnd, namep
+  use ctsm_VarPar        , only : numrad, nlevcan, nlevsno, nlevcan
+  use ctsm_VarCtl        , only : fsurdat, iulog, use_snicar_frc, use_SSRE
+  use ctsm_PftCon         , only : pftcon
+  use ctsm_SnowSnicar     , only : sno_nbr_aer, SNICAR_RT, DO_SNO_AER, DO_SNO_OC
+  use ctsm_Aerosols        , only : aerosol_type
+  use ctsm_CanopyStateType   , only : canopystate_type
+  use ctsm_LakeStateType     , only : lakestate_type
+  use ctsm_SurfaceAlbedoType , only : surfalb_type
+  use ctsm_TemperatureType   , only : temperature_type
+  use ctsm_WaterStateBulkType    , only : waterstatebulk_type
+  use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use ctsm_GridcellType      , only : grc                
+  use ctsm_LandunitType      , only : lun                
+  use ctsm_ColumnType        , only : col                
+  use ctsm_PatchType         , only : patch                
   !
   implicit none
   !
@@ -88,8 +88,8 @@ contains
     ! Read the namelist for SurfaceAlbedo
     !
     ! !USES:
-    use spmdMod       , only : masterproc, mpicom
-    use fileutils     , only : getavu, relavu, opnfil
+    use ctsm_Spmd       , only : masterproc, mpicom
+    use ctsm_FileUtils     , only : getavu, relavu, opnfil
     use shr_nl_mod    , only : shr_nl_find_group_name
     use shr_mpi_mod   , only : shr_mpi_bcast
     !
@@ -142,10 +142,10 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use fileutils  , only : getfil
-    use abortutils , only : endrun
+    use ctsm_FileUtils  , only : getfil
+    use ctsm_AbortUtils , only : endrun
     use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_pio_openfile, ncd_pio_closefile
-    use spmdMod    , only : masterproc
+    use ctsm_Spmd    , only : masterproc
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds  
@@ -257,10 +257,10 @@ contains
     !
     ! !USES:
     use shr_orb_mod
-    use clm_time_manager   , only : get_nstep
-    use abortutils         , only : endrun
-    use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
-    use CLMFatesInterfaceMod, only : hlm_fates_interface_type
+    use ctsm_TimeManager   , only : get_nstep
+    use ctsm_AbortUtils         , only : endrun
+    use ctsm_VarCtl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
+    use ctsm_FatesInterface, only : hlm_fates_interface_type
 
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)            :: bounds             ! bounds
@@ -619,7 +619,7 @@ contains
                   waterdiagnosticbulk_inst)
        endif
 
-       ! 3. DUST input array:
+       ! 3. ctsm_Dust input array:
        ! set BC and OC concentrations, so DST_FRC=[(BC+OC+dust)-(BC+OC)]
        mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc,:,1) = mss_cnc_bcphi(bounds%begc:bounds%endc,:)
        mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc,:,2) = mss_cnc_bcpho(bounds%begc:bounds%endc,:)
@@ -628,7 +628,7 @@ contains
           mss_cnc_aer_in_frc_dst(bounds%begc:bounds%endc,:,4) = mss_cnc_ocpho(bounds%begc:bounds%endc,:)
        endif
 
-       ! DUST FORCING CALCULATIONS
+       ! ctsm_Dust FORCING CALCULATIONS
           flg_slr = 1; ! direct-beam
        call SNICAR_RT(flg_snw_ice, bounds, num_nourbanc, filter_nourbanc,    &
                       coszen_col(bounds%begc:bounds%endc), &
@@ -1060,10 +1060,10 @@ contains
      ! Determine ground surface albedo, accounting for snow
      !
      ! !USES:
-    use clm_varpar      , only : numrad
-    use clm_varcon      , only : tfrz
-    use landunit_varcon , only : istice_mec, istdlak
-    use LakeCon         , only : lakepuddling
+    use ctsm_VarPar      , only : numrad
+    use ctsm_VarCon      , only : tfrz
+    use ctsm_LandunitVarCon , only : istice_mec, istdlak
+    use ctsm_LakeConstants         , only : lakepuddling
     !
     ! !ARGUMENTS:
      type(bounds_type)      , intent(in)    :: bounds             
@@ -1200,9 +1200,9 @@ contains
      ! a multi-layer canopy to calculate APAR profile
      !
      ! !USES:
-     use clm_varpar, only : numrad, nlevcan
-     use clm_varcon, only : omegas, tfrz, betads, betais
-     use clm_varctl, only : iulog
+     use ctsm_VarPar, only : numrad, nlevcan
+     use ctsm_VarCon, only : omegas, tfrz, betads, betais
+     use ctsm_VarCtl, only : iulog
      !
      ! !ARGUMENTS:
      type(bounds_type)      , intent(in)    :: bounds           
@@ -1696,4 +1696,4 @@ contains
 
 end subroutine TwoStream
 
-end module SurfaceAlbedoMod
+end module ctsm_SurfaceAlbedo

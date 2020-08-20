@@ -1,23 +1,23 @@
-module initSubgridMod
+module ctsm_InitSubgrid
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Lower-level routines for initializing the subgrid structure. This module is shared
-  ! between both the production code (via initGridCellsMod) and unit testing code.
+  ! between both the production code (via ctsm_InitGridCells) and unit testing code.
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use spmdMod        , only : masterproc
-  use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_fates
-  use clm_varcon     , only : namep, namec, namel
-  use decompMod      , only : bounds_type
-  use GridcellType   , only : grc                
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch                
-  use column_varcon  , only : is_hydrologically_active
+  use ctsm_Spmd        , only : masterproc
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_VarCtl     , only : iulog, use_fates
+  use ctsm_VarCon     , only : namep, namec, namel
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_GridcellType   , only : grc                
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col                
+  use ctsm_PatchType      , only : patch                
+  use ctsm_ColumnVarCon  , only : is_hydrologically_active
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -61,7 +61,7 @@ contains
     ! subroutine will set c_pi(1) = 1, c_pf(1) = 4, c_pi(2) = 5, c_pf(2) = 12.
     !
     ! !USES
-    use clm_varcon, only : ispval
+    use ctsm_VarCon, only : ispval
     !
     ! !ARGUMENTS
     implicit none
@@ -154,8 +154,8 @@ contains
     ! Checks and writes out a summary of subgrid data
     !
     ! !USES
-    use clm_varcon, only : ispval
-    use landunit_varcon, only : max_lunit
+    use ctsm_VarCon, only : ispval
+    use ctsm_LandunitVarCon, only : max_lunit
     !
     ! !ARGUMENTS
     implicit none
@@ -337,7 +337,7 @@ contains
     ! accordingly.
     !
     ! !USES:
-    use landunit_varcon , only : istice_mec, istdlak, isturb_MIN, isturb_MAX, landunit_is_special
+    use ctsm_LandunitVarCon , only : istice_mec, istdlak, isturb_MIN, isturb_MAX, landunit_is_special
     !
     ! !ARGUMENTS:
     integer  , intent(inout) :: li      ! input value is index of last landunit added; output value is index of this newly-added landunit
@@ -429,9 +429,9 @@ contains
     ! new patch is added at pi+1, and the pi argument is incremented accordingly.
     !
     ! !USES:
-    use clm_varcon      , only : ispval
-    use landunit_varcon , only : istsoil, istcrop
-    use clm_varpar      , only : natpft_lb
+    use ctsm_VarCon      , only : ispval
+    use ctsm_LandunitVarCon , only : istsoil, istcrop
+    use ctsm_VarPar      , only : natpft_lb
     !
     ! !ARGUMENTS:
     integer  , intent(inout) :: pi    ! input value is index of last patch added; output value is index of this newly-added patch
@@ -474,4 +474,4 @@ contains
   end subroutine add_patch
 
 
-end module initSubgridMod
+end module ctsm_InitSubgrid

@@ -1,4 +1,4 @@
-module atm2lndMod
+module ctsm_Atm2Lnd
 
 #include "shr_assert.h"
 
@@ -10,20 +10,20 @@ module atm2lndMod
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use clm_varpar     , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
-  use clm_varcon     , only : rair, grav, cpair, hfus, tfrz, denh2o, spval
-  use clm_varcon     , only : wv_to_dair_weight_ratio
-  use clm_varctl     , only : iulog, use_c13, use_cn, use_lch4, iulog
-  use abortutils     , only : endrun
-  use decompMod      , only : bounds_type
-  use atm2lndType    , only : atm2lnd_type
-  use TopoMod        , only : topo_type
-  use filterColMod   , only : filter_col_type
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col
-  use landunit_varcon, only : istice_mec
-  use WaterType      , only : water_type
-  use Wateratm2lndBulkType, only : wateratm2lndbulk_type
+  use ctsm_VarPar     , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
+  use ctsm_VarCon     , only : rair, grav, cpair, hfus, tfrz, denh2o, spval
+  use ctsm_VarCon     , only : wv_to_dair_weight_ratio
+  use ctsm_VarCtl     , only : iulog, use_c13, use_cn, use_lch4, iulog
+  use ctsm_AbortUtils     , only : endrun
+  use ctsm_Decomp      , only : bounds_type
+  use ctsm_Atm2LndType    , only : atm2lnd_type
+  use ctsm_Topo        , only : topo_type
+  use ctsm_FilterCol   , only : filter_col_type
+  use ctsm_LandunitType   , only : lun                
+  use ctsm_ColumnType     , only : col
+  use ctsm_LandunitVarCon, only : istice_mec
+  use ctsm_WaterType      , only : water_type
+  use ctsm_WaterAtm2LndBulkType, only : wateratm2lndbulk_type
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -110,8 +110,8 @@ contains
     ! (rain vs. snow partitioning) is adjusted everywhere.
     !
     ! !USES:
-    use clm_varcon      , only : rair, cpair, grav
-    use QsatMod         , only : Qsat
+    use ctsm_VarCon      , only : rair, cpair, grav
+    use ctsm_QSat        , only : Qsat
     !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds  
@@ -718,4 +718,4 @@ contains
 
   end subroutine check_downscale_consistency
 
-end module atm2lndMod
+end module ctsm_Atm2Lnd

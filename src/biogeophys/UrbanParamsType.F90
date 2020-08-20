@@ -1,4 +1,4 @@
-module UrbanParamsType
+module ctsm_UrbanParamsType
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,11 +7,11 @@ module UrbanParamsType
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
-  use abortutils   , only : endrun
-  use decompMod    , only : bounds_type
-  use clm_varctl   , only : iulog, fsurdat
-  use clm_varcon   , only : namel, grlnd, spval
-  use LandunitType , only : lun                
+  use ctsm_AbortUtils   , only : endrun
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_VarCtl   , only : iulog, fsurdat
+  use ctsm_VarCon   , only : namel, grlnd, spval
+  use ctsm_LandunitType , only : lun                
   !
   implicit none
   save
@@ -122,13 +122,13 @@ contains
     !
     ! !USES:
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar      , only : nlevcan, nlevcan, numrad, nlevgrnd, nlevurb
-    use clm_varpar      , only : nlevsoi, nlevgrnd
-    use clm_varctl      , only : use_vancouver, use_mexicocity
-    use clm_varcon      , only : vkc
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-    use column_varcon   , only : icol_road_perv, icol_road_imperv, icol_road_perv
-    use landunit_varcon , only : isturb_MIN
+    use ctsm_VarPar      , only : nlevcan, nlevcan, numrad, nlevgrnd, nlevurb
+    use ctsm_VarPar      , only : nlevsoi, nlevgrnd
+    use ctsm_VarCtl      , only : use_vancouver, use_mexicocity
+    use ctsm_VarCon      , only : vkc
+    use ctsm_ColumnVarCon   , only : icol_roof, icol_sunwall, icol_shadewall
+    use ctsm_ColumnVarCon   , only : icol_road_perv, icol_road_imperv, icol_road_perv
+    use ctsm_LandunitVarCon , only : isturb_MIN
     !
     ! !ARGUMENTS:
     class(urbanparams_type) :: this
@@ -372,11 +372,11 @@ contains
     ! Allocate memory and read in urban input data
     !
     ! !USES:
-    use clm_varpar      , only : numrad, nlevurb
-    use landunit_varcon , only : numurbl
-    use fileutils       , only : getavu, relavu, getfil, opnfil
-    use spmdMod         , only : masterproc
-    use domainMod       , only : ldomain
+    use ctsm_VarPar      , only : numrad, nlevurb
+    use ctsm_LandunitVarCon , only : numurbl
+    use ctsm_FileUtils       , only : getavu, relavu, getfil, opnfil
+    use ctsm_Spmd         , only : masterproc
+    use ctsm_Domain       , only : ldomain
     use ncdio_pio       , only : file_desc_t, ncd_io, ncd_inqvdlen, ncd_inqfdims 
     use ncdio_pio       , only : ncd_pio_openfile, ncd_pio_closefile, ncd_inqdid, ncd_inqdlen
     !
@@ -712,8 +712,8 @@ contains
     ! true, abort with a message.
     !
     ! !USES:
-    use clm_instur      , only : urban_valid
-    use landunit_varcon , only : numurbl
+    use ctsm_VarSur      , only : urban_valid
+    use ctsm_LandunitVarCon , only : numurbl
     !
     ! !ARGUMENTS:
     implicit none
@@ -835,9 +835,9 @@ contains
     !
     ! !USES:
     use shr_mpi_mod   , only : shr_mpi_bcast
-    use abortutils    , only : endrun
-    use spmdMod       , only : masterproc, mpicom
-    use fileutils     , only : getavu, relavu, opnfil
+    use ctsm_AbortUtils    , only : endrun
+    use ctsm_Spmd       , only : masterproc, mpicom
+    use ctsm_FileUtils     , only : getavu, relavu, opnfil
     use shr_nl_mod    , only : shr_nl_find_group_name
     use shr_mpi_mod   , only : shr_mpi_bcast
     implicit none
@@ -954,7 +954,7 @@ contains
 
   !-----------------------------------------------------------------------
 
-end module UrbanParamsType
+end module ctsm_UrbanParamsType
 
 
 

@@ -1,14 +1,14 @@
 module test_accumul
 
-  ! Tests of accumulMod
+  ! Tests of ctsm_Accumulators
 
   use pfunit_mod
-  use accumulMod
-  use unittestSubgridMod
-  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
+  use ctsm_Accumulators
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestSimpleSubgridSetups, only : setup_single_veg_patch
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varcon, only : spval
-  use PatchType, only : patch
+  use ctsm_VarCon, only : spval
+  use ctsm_PatchType, only : patch
 
   implicit none
 

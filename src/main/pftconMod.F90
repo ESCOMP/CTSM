@@ -1,4 +1,4 @@
-module pftconMod
+module ctsm_PftCon
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,9 +7,9 @@ module pftconMod
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use abortutils  , only : endrun
-  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub
-  use clm_varctl  , only : iulog, use_cndv, use_vertsoilc, use_crop
+  use ctsm_AbortUtils  , only : endrun
+  use ctsm_VarPar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub
+  use ctsm_VarCtl  , only : iulog, use_cndv, use_vertsoilc, use_crop
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -170,13 +170,13 @@ module pftconMod
      real(r8), allocatable :: fleafi        (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: allconsl      (:)   ! parameter used in CNAllocation
      real(r8), allocatable :: allconss      (:)   ! parameter used in CNAllocation
-     real(r8), allocatable :: ztopmx        (:)   ! parameter used in CNVegStructUpdate
-     real(r8), allocatable :: laimx         (:)   ! parameter used in CNVegStructUpdate
-     real(r8), allocatable :: gddmin        (:)   ! parameter used in CNPhenology
-     real(r8), allocatable :: hybgdd        (:)   ! parameter used in CNPhenology
-     real(r8), allocatable :: lfemerg       (:)   ! parameter used in CNPhenology
-     real(r8), allocatable :: grnfill       (:)   ! parameter used in CNPhenology
-     integer , allocatable :: mxmat         (:)   ! parameter used in CNPhenology
+     real(r8), allocatable :: ztopmx        (:)   ! parameter used in ctsm_CNVegStructUpdate
+     real(r8), allocatable :: laimx         (:)   ! parameter used in ctsm_CNVegStructUpdate
+     real(r8), allocatable :: gddmin        (:)   ! parameter used in ctsm_CNPhenology
+     real(r8), allocatable :: hybgdd        (:)   ! parameter used in ctsm_CNPhenology
+     real(r8), allocatable :: lfemerg       (:)   ! parameter used in ctsm_CNPhenology
+     real(r8), allocatable :: grnfill       (:)   ! parameter used in ctsm_CNPhenology
+     integer , allocatable :: mxmat         (:)   ! parameter used in ctsm_CNPhenology
      real(r8), allocatable :: mbbopt        (:)   ! Ball-Berry equation slope used in Photosynthesis
      real(r8), allocatable :: medlynslope   (:)   ! Medlyn equation slope used in Photosynthesis
      real(r8), allocatable :: medlynintercept(:)  ! Medlyn equation intercept used in Photosynthesis
@@ -184,8 +184,8 @@ module pftconMod
      integer , allocatable :: mxNHplantdate (:)   ! maximum planting date for NorthHemisphere (YYYYMMDD)
      integer , allocatable :: mnSHplantdate (:)   ! minimum planting date for SouthHemisphere (YYYYMMDD)
      integer , allocatable :: mxSHplantdate (:)   ! maximum planting date for SouthHemisphere (YYYYMMDD)
-     real(r8), allocatable :: planttemp     (:)   ! planting temperature used in CNPhenology (K)
-     real(r8), allocatable :: minplanttemp  (:)   ! mininum planting temperature used in CNPhenology (K)
+     real(r8), allocatable :: planttemp     (:)   ! planting temperature used in ctsm_CNPhenology (K)
+     real(r8), allocatable :: minplanttemp  (:)   ! mininum planting temperature used in ctsm_CNPhenology (K)
      real(r8), allocatable :: froot_leaf    (:)   ! allocation parameter: new fine root C per new leaf C (gC/gC) 
      real(r8), allocatable :: stem_leaf     (:)   ! allocation parameter: new stem c per new leaf C (gC/gC)
      real(r8), allocatable :: croot_stem    (:)   ! allocation parameter: new coarse root C per new stem C (gC/gC)
@@ -327,7 +327,7 @@ contains
     ! Read and initialize vegetation (PFT) constants
     !
     ! !USES:
-    use clm_varpar  ,  only: nvariants
+    use ctsm_VarPar  ,  only: nvariants
     implicit none
     !
     ! !ARGUMENTS:
@@ -474,12 +474,12 @@ contains
     !
     ! !USES:
     use shr_log_mod , only : errMsg => shr_log_errMsg
-    use fileutils   , only : getfil
+    use ctsm_FileUtils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot
-    use spmdMod     , only : masterproc
-    use CLMFatesParamInterfaceMod, only : FatesReadPFTs
+    use ctsm_VarCtl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot
+    use ctsm_Spmd     , only : masterproc
+    use ctsm_FatesParamInterface, only : FatesReadPFTs
     !
     ! !ARGUMENTS:
     class(pftcon_type) :: this
@@ -1398,5 +1398,5 @@ contains
     
   end subroutine Clean
 
-end module pftconMod
+end module ctsm_PftCon
 

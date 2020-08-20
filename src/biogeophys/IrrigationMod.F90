@@ -1,4 +1,4 @@
-module IrrigationMod
+module ctsm_Irrigation
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -72,30 +72,30 @@ module IrrigationMod
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
-  use decompMod        , only : bounds_type, get_proc_global
+  use ctsm_Decomp        , only : bounds_type, get_proc_global
   use shr_log_mod      , only : errMsg => shr_log_errMsg
-  use abortutils       , only : endrun
-  use clm_instur       , only : irrig_method
-  use pftconMod        , only : pftcon
-  use clm_varctl       , only : iulog
-  use clm_varcon       , only : isecspday, denh2o, spval, ispval, namep, namec, nameg
-  use clm_varpar       , only : nlevsoi, nlevgrnd
-  use clm_time_manager , only : get_step_size
-  use SoilHydrologyMod , only : CalcIrrigWithdrawals
-  use SoilHydrologyType, only : soilhydrology_type
-  use SoilStateType    , only : soilstate_type
-  use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-  use WaterType        , only : water_type
-  use WaterFluxBulkType, only : waterfluxbulk_type
-  use WaterFluxType    , only : waterflux_type
-  use WaterStateBulkType, only : waterstatebulk_type
-  use WaterStateType   , only : waterstate_type
-  use WaterTracerUtils , only : CalcTracerFromBulk, CalcTracerFromBulkFixedRatio
-  use GridcellType     , only : grc
-  use ColumnType       , only : col                
-  use PatchType        , only : patch                
-  use subgridAveMod    , only : p2c, c2g
-  use filterColMod     , only : filter_col_type, col_filter_from_logical_array
+  use ctsm_AbortUtils       , only : endrun
+  use ctsm_VarSur       , only : irrig_method
+  use ctsm_PftCon        , only : pftcon
+  use ctsm_VarCtl       , only : iulog
+  use ctsm_VarCon       , only : isecspday, denh2o, spval, ispval, namep, namec, nameg
+  use ctsm_VarPar       , only : nlevsoi, nlevgrnd
+  use ctsm_TimeManager , only : get_step_size
+  use ctsm_SoilHydrology , only : CalcIrrigWithdrawals
+  use ctsm_SoilHydrologyType, only : soilhydrology_type
+  use ctsm_SoilStateType    , only : soilstate_type
+  use ctsm_SoilWaterRetentionCurve, only : soil_water_retention_curve_type
+  use ctsm_WaterType        , only : water_type
+  use ctsm_WaterFluxBulkType, only : waterfluxbulk_type
+  use ctsm_WaterFluxType    , only : waterflux_type
+  use ctsm_WaterStateBulkType, only : waterstatebulk_type
+  use ctsm_WaterStateType   , only : waterstate_type
+  use ctsm_WaterTracerUtils , only : CalcTracerFromBulk, CalcTracerFromBulkFixedRatio
+  use ctsm_GridcellType     , only : grc
+  use ctsm_ColumnType       , only : col                
+  use ctsm_PatchType        , only : patch                
+  use ctsm_SubgridAve    , only : p2c, c2g
+  use ctsm_FilterCol     , only : filter_col_type, col_filter_from_logical_array
   !
   implicit none
   private
@@ -182,7 +182,7 @@ module IrrigationMod
    contains
      ! Public routines
      ! COMPILER_BUG(wjs, 2014-10-15, pgi 14.7) Add an "Irrigation" prefix to some  generic routines like "Init"
-     ! (without this workaround, pgi compilation fails in restFileMod)
+     ! (without this workaround, pgi compilation fails in ctsm_RestFile)
      procedure, public :: Init => IrrigationInit
      procedure, public :: Restart
      procedure, public :: CalcIrrigationFluxes
@@ -221,8 +221,8 @@ module IrrigationMod
   ! (the trigger for irrigation) can be tuned via other parameters.
   !
   ! TODO(wjs, 2016-09-08) It looks like there is other code in CLM that also uses an
-  ! assumed wilting point (CNRootDynMod, maybe others). We should probably make this a
-  ! shared parameter, e.g., in clm_varcon.
+  ! assumed wilting point (ctsm_CNRootDynMod, maybe others). We should probably make this a
+  ! shared parameter, e.g., in ctsm_VarCon.
   real(r8), parameter, private :: wilting_point_smp = -150000._r8
 
   ! Conversion factors
@@ -298,7 +298,7 @@ contains
   subroutine IrrigationInit(this, bounds, NLFilename, &
        soilstate_inst, soil_water_retention_curve, &
        use_aquifer_layer)
-    use SoilStateType , only : soilstate_type
+    use ctsm_SoilStateType , only : soilstate_type
 
     class(irrigation_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
@@ -356,9 +356,9 @@ contains
     ! Read the irrigation namelist
     !
     ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
+    use ctsm_FileUtils      , only : getavu, relavu, opnfil
     use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
+    use ctsm_Spmd        , only : masterproc, mpicom
     use shr_mpi_mod    , only : shr_mpi_bcast
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
@@ -627,7 +627,7 @@ contains
     ! Initialize irrigation history fields
     !
     ! !USES:
-    use histFileMod  , only : hist_addfld1d
+    use ctsm_HistFile  , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
@@ -655,7 +655,7 @@ contains
     ! Do cold-start initialization for irrigation data structure
     !
     ! !USES:
-    use SoilStateType , only : soilstate_type
+    use ctsm_SoilStateType , only : soilstate_type
     !
     ! !ARGUMENTS:
     class(irrigation_type) , intent(inout) :: this
@@ -1604,8 +1604,8 @@ contains
     ! Determine whether a given patch needs to be checked for irrigation now.
     !
     ! !USES:
-    use clm_time_manager, only : get_local_time
-    use pftconMod       , only : pftcon
+    use ctsm_TimeManager, only : get_local_time
+    use ctsm_PftCon       , only : pftcon
     !
     ! !ARGUMENTS:
     logical :: check_for_irrig  ! function result
@@ -1780,4 +1780,4 @@ contains
     
   end function UseGroundwaterIrrigation
   
-end module IrrigationMod
+end module ctsm_Irrigation

@@ -1,4 +1,4 @@
-create_pFUnit_test(ncdio_utils test_ncdio_utils_exe
-  "test_ncdio_utils.pf" "")
+create_pFUnit_test(ctsm_NcdIoUtils test_ctsm_NcdIoUtils_exe
+  "test_ctsm_NcdIoUtils.pf" "")
 
-target_link_libraries(test_ncdio_utils_exe clm csm_share)
+target_link_libraries(test_ctsm_NcdIoUtils_exe clm csm_share)

@@ -1,4 +1,4 @@
-module LakeCon
+module ctsm_LakeConstants
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -9,9 +9,9 @@ module LakeCon
   !
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod    , only : bounds_type
-  use clm_varctl   , only : iulog
-  use spmdMod      , only : masterproc
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_VarCtl   , only : iulog
+  use ctsm_Spmd      , only : masterproc
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -19,7 +19,7 @@ module LakeCon
   private   ! By default make everything private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: LakeConInit
+  public :: ctsm_LakeConstantsInit
   !-----------------------------------------------------------------------
 
   !------------------------------------------------------------------
@@ -131,7 +131,7 @@ module LakeCon
 contains
 
   !-----------------------------------------------------------------------
-  subroutine LakeConInit()
+  subroutine ctsm_LakeConstantsInit()
     !
     ! !DESCRIPTION:
     ! Initialize time invariant variables for S Lake code 
@@ -139,7 +139,7 @@ contains
 
     if (masterproc) write (iulog,*) 'Attempting to initialize time invariant variables for lakes'
 
-    ! Set LakeCon constants according to namelist fields
+    ! Set ctsm_LakeConstants constants according to namelist fields
     if (lake_use_old_fcrit_minz0) then
        ! critical dimensionless fetch for Charnock parameter. From Vickers & Mahrt 1997
        ! but converted to use u instead of u* (Form used in Subin et al. 2011)
@@ -174,6 +174,6 @@ contains
 
     if (masterproc) write (iulog,*) 'Successfully initialized time invariant variables for lakes'
 
-  end subroutine LakeConInit
+  end subroutine ctsm_LakeConstantsInit
 
-end module LakeCon
+end module ctsm_LakeConstants

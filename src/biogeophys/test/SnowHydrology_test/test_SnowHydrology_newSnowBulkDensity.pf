@@ -1,12 +1,12 @@
 module test_SnowHydrology_newSnowBulkDensity
   
-  ! Tests of SnowHydrologyMod: newSnowBulkDensity
+  ! Tests of ctsm_SnowHydrology: newSnowBulkDensity
   
   use pfunit_mod
-  use unittestSubgridMod
-  use SnowHydrologyMod
-  use atm2lndType , only : atm2lnd_type
-  use clm_varcon  , only : tfrz
+  use ctsm_UnitTestSubgrid
+  use ctsm_SnowHydrology
+  use ctsm_Atm2LndType , only : atm2lnd_type
+  use ctsm_VarCon  , only : tfrz
   use shr_kind_mod, only : r8 => shr_kind_r8
 
   implicit none
@@ -33,8 +33,8 @@ module test_SnowHydrology_newSnowBulkDensity
 contains
   
   subroutine setUp(this)
-    use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
-    use unittestFilterBuilderMod, only : filter_from_range
+    use ctsm_UnitTestSimpleSubgridSetups, only : setup_single_veg_patch
+    use ctsm_UnitTestFilterBuilder, only : filter_from_range
     class(TestSnowHydrology), intent(inout) :: this
 
     call setup_single_veg_patch(pft_type=1)

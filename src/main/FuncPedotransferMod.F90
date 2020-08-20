@@ -1,4 +1,4 @@
-module FuncPedotransferMod
+module ctsm_FuncPedotransfer
 !
 !DESCRIPTIONS:
 !module contains different pedotransfer functions to
@@ -33,7 +33,7 @@ contains
    !based on input soil texture
    
    use shr_kind_mod         , only : r8 => shr_kind_r8
-   use abortutils    , only : endrun         
+   use ctsm_AbortUtils    , only : endrun         
    implicit none
    integer,  intent(in) :: ipedof !type of pedotransfer function, use the default pedotransfer function  
    real(r8), intent(in) :: sand   !% sand
@@ -138,4 +138,4 @@ contains
    endif
    
    end function get_ipedof   
-end module FuncpedotransferMod
+end module ctsm_FuncPedotransfer

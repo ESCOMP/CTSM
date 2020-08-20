@@ -1,30 +1,30 @@
 module test_irrigation
 
-  ! Tests of IrrigationMod
+  ! Tests of ctsm_Irrigation
 
   use pfunit_mod
-  use unittestSubgridMod
-  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
-  use unittestTimeManagerMod, only : unittest_timemgr_set_curr_date
-  use clm_time_manager, only: advance_timestep
-  use IrrigationMod, only : irrigation_type, irrigation_params_type
-  use IrrigationMod, only : irrig_method_drip, irrig_method_sprinkler
+  use ctsm_UnitTestSubgrid
+  use ctsm_UnitTestTimeManager, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use ctsm_UnitTestTimeManager, only : unittest_timemgr_set_curr_date
+  use ctsm_TimeManager, only: advance_timestep
+  use ctsm_Irrigation, only : irrigation_type, irrigation_params_type
+  use ctsm_Irrigation, only : irrig_method_drip, irrig_method_sprinkler
   use shr_kind_mod, only : r8 => shr_kind_r8
-  use clm_instur, only : irrig_method
-  use clm_varpar, only : nlevsoi, nlevgrnd
-  use landunit_varcon, only : istsoil
-  use decompMod, only : bounds_type
-  use SoilHydrologyType, only : soilhydrology_type
-  use SoilStateType, only : soilstate_type
-  use WaterFluxBulkType, only : waterfluxbulk_type
-  use WaterType, only : water_type
-  use PatchType     , only : patch
-  use ColumnType    , only : col
-  use GridcellType  , only : grc
-  use pftconMod , only : pftcon
-  use unittestWaterTypeFactory, only : unittest_water_type_factory_type
-  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
-  use unittestFilterBuilderMod, only : filter_from_range
+  use ctsm_VarSur, only : irrig_method
+  use ctsm_VarPar, only : nlevsoi, nlevgrnd
+  use ctsm_LandunitVarCon, only : istsoil
+  use ctsm_Decomp, only : bounds_type
+  use ctsm_SoilHydrologyType, only : soilhydrology_type
+  use ctsm_SoilStateType, only : soilstate_type
+  use ctsm_WaterFluxBulkType, only : waterfluxbulk_type
+  use ctsm_WaterType, only : water_type
+  use ctsm_PatchType     , only : patch
+  use ctsm_ColumnType    , only : col
+  use ctsm_GridcellType  , only : grc
+  use ctsm_PftCon , only : pftcon
+  use ctsm_UnitTestctsm_WaterTypeFactory, only : unittest_water_type_factory_type
+  use ctsm_UnitTestSimpleSubgridSetups, only : setup_single_veg_patch, setup_n_veg_patches
+  use ctsm_UnitTestFilterBuilder, only : filter_from_range
 
   implicit none
   save
@@ -463,7 +463,7 @@ contains
        col%nbedrock(c) = nlevsoi
     end do
 
-    ! Use longitude along Greenich so don't have to calculate offsets for longitudes (that's calculated in clm_time_manager)
+    ! Use longitude along Greenich so don't have to calculate offsets for longitudes (that's calculated in ctsm_TimeManager)
     grc%londeg(:) = 0.0_r8
 
     grc%area(:) = 10.0_r8
@@ -506,7 +506,7 @@ contains
     ! Irrigation deficit for this grid cell (kg m-2) (i.e., mm)
     real(r8), intent(in) :: irrig_deficit
 
-    ! Parameter used in IrrigationMod (fraction)
+    ! Parameter used in ctsm_Irrigation (fraction)
     real(r8), intent(in) :: irrig_river_volume_threshold
 
     ! Amount above (positive) or below (negative) the threshold point to set volr (m^3)
@@ -1010,7 +1010,7 @@ contains
 
   @Test
   subroutine no_irrigation_for_unirrigated_pfts(this)
-    use PatchType, only : patch
+    use ctsm_PatchType, only : patch
     class(TestIrrigation), intent(inout) :: this
 
     ! Setup
@@ -1090,7 +1090,7 @@ contains
 
   @Test
   subroutine unlimited_irrigation_for_non_limiting_volr(this)
-    use GridcellType, only : grc
+    use ctsm_GridcellType, only : grc
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
     real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
@@ -1127,7 +1127,7 @@ contains
   @Test
   subroutine limited_irrigation_for_limiting_volr_no_groundwater(this)
     ! liming volr with no groundwater irrigation
-    use GridcellType, only : grc
+    use ctsm_GridcellType, only : grc
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
     real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
@@ -1162,7 +1162,7 @@ contains
   @Test
   subroutine limiting_volr_with_groundwater_uncon(this)
     ! limiting volr, with the difference made up by groundwater from the unconfined aquifer
-    use GridcellType, only : grc
+    use ctsm_GridcellType, only : grc
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
     real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
@@ -1206,7 +1206,7 @@ contains
   subroutine limiting_volr_with_groundwater_uncon_and_con(this)
     ! limiting volr, with the difference made up by groundwater from both the unconfined
     ! and confined aquifer
-    use GridcellType, only : grc
+    use ctsm_GridcellType, only : grc
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
     real(r8), parameter :: irrig_river_volume_threshold = 0.1_r8
@@ -1435,7 +1435,7 @@ contains
 
   @Test
   subroutine irrigation_flux_is_correct_for_multiple_cols(this)
-    use unittestFilterBuilderMod, only : filter_from_range
+    use ctsm_UnitTestFilterBuilder, only : filter_from_range
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
     real(r8) :: expected1, expected2
@@ -1803,7 +1803,7 @@ contains
     ! frozen soil across multiple patches, due to the nesting of the p loop inside the
     ! nlevsoi loop (rather than the other way around).
 
-    use unittestFilterBuilderMod, only : filter_from_range
+    use ctsm_UnitTestFilterBuilder, only : filter_from_range
     class(TestIrrigation), intent(inout) :: this
     real(r8), allocatable :: deficits(:,:)
     real(r8) :: expected
@@ -1854,8 +1854,8 @@ contains
   subroutine volr_limiting_with_multiple_columns(this)
     ! Make sure that volr limiting is applied correctly when there are multiple columns
     ! on the grid cell - including one that is unirrigated.
-    use unittestFilterBuilderMod, only : filter_from_range
-    use GridcellType, only : grc
+    use ctsm_UnitTestFilterBuilder, only : filter_from_range
+    use ctsm_GridcellType, only : grc
     class(TestIrrigation), intent(inout) :: this
     real(r8), parameter :: wt1 = 0.1_r8
     real(r8), parameter :: wt2 = 0.4_r8

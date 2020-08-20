@@ -1,4 +1,4 @@
-module CNDVType
+module ctsm_CNDVType
 
 #include "shr_assert.h"
 
@@ -11,9 +11,9 @@ module CNDVType
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
-  use abortutils   , only : endrun
-  use decompMod    , only : bounds_type
-  use clm_varctl   , only : use_cndv, iulog
+  use ctsm_AbortUtils   , only : endrun
+  use ctsm_Decomp    , only : bounds_type
+  use ctsm_VarCtl   , only : use_cndv, iulog
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -95,10 +95,10 @@ contains
     !
     ! !USES:
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use clm_varpar     , only : maxveg
-    use pftconMod      , only : allom1s, allom2s, allom1, allom2, allom3, reinickerp
-    use pftconMod      , only : ntree, nbrdlf_dcd_brl_shrub
-    use pftconMod      , only : pftcon
+    use ctsm_VarPar     , only : maxveg
+    use ctsm_PftCon      , only : allom1s, allom2s, allom1, allom2, allom3, reinickerp
+    use ctsm_PftCon      , only : ntree, nbrdlf_dcd_brl_shrub
+    use ctsm_PftCon      , only : pftcon
     !
     ! !ARGUMENTS:
     class(dgvs_type) :: this
@@ -162,7 +162,7 @@ contains
     ! !USES:
     use shr_kind_mod  , only : r8 => shr_kind_r8
     use shr_const_mod , only : SHR_CONST_TKFRZ
-    use decompMod     , only : bounds_type
+    use ctsm_Decomp     , only : bounds_type
     !
     ! !ARGUMENTS:
     class(dgvs_type) :: this 
@@ -189,7 +189,7 @@ contains
     ! Initialize history variables
     !
     ! !USES:
-    use histFileMod, only : hist_addfld1d
+    use ctsm_HistFile, only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(dgvs_type) :: this
@@ -214,9 +214,9 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon , only : spval  
-    use spmdMod    , only : masterproc
-    use decompMod  , only : get_proc_global
+    use ctsm_VarCon , only : spval  
+    use ctsm_Spmd    , only : masterproc
+    use ctsm_Decomp  , only : get_proc_global
     use restUtilMod
     use ncdio_pio
     use pio
@@ -352,7 +352,7 @@ contains
     ! This should only be called if use_cndv is true.
     !
     ! !USES 
-    use accumulMod       , only : init_accum_field
+    use ctsm_Accumulators       , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(dgvs_type) :: this
@@ -391,8 +391,8 @@ contains
     ! This should only be called if use_cndv is true.
     !
     ! !USES 
-    use accumulMod       , only : extract_accum_field
-    use clm_time_manager , only : get_nstep
+    use ctsm_Accumulators       , only : extract_accum_field
+    use ctsm_TimeManager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(dgvs_type) :: this
@@ -438,9 +438,9 @@ contains
     !
     ! !USES:
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
-    use clm_time_manager , only : get_step_size, get_nstep, get_curr_date
-    use pftconMod        , only : ndllf_dcd_brl_tree
-    use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use ctsm_TimeManager , only : get_step_size, get_nstep, get_curr_date
+    use ctsm_PftCon        , only : ndllf_dcd_brl_tree
+    use ctsm_Accumulators       , only : update_accum_field, extract_accum_field, accumResetVal
     !
     ! !ARGUMENTS:
     class(dgvs_type)  , intent(inout) :: this
@@ -516,4 +516,4 @@ contains
 
   end subroutine UpdateAccVars
 
-end module CNDVType
+end module ctsm_CNDVType

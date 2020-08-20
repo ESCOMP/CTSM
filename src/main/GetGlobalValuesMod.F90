@@ -1,4 +1,4 @@
-module GetGlobalValuesMod
+module ctsm_GetGlobalValues
 
   !-----------------------------------------------------------------------
   ! Obtain and Write Global Index information
@@ -27,10 +27,10 @@ contains
     !
     ! Uses:
     use shr_log_mod, only: errMsg => shr_log_errMsg
-    use decompMod  , only: bounds_type, get_clmlevel_gsmap, get_proc_bounds
-    use spmdMod    , only: iam
-    use clm_varcon , only: nameg, namel, namec, namep
-    use clm_varctl , only: iulog
+    use ctsm_Decomp  , only: bounds_type, get_clmlevel_gsmap, get_proc_bounds
+    use ctsm_Spmd    , only: iam
+    use ctsm_VarCon , only: nameg, namel, namec, namep
+    use ctsm_VarCtl , only: iulog
     use mct_mod    , only: mct_gsMap, mct_gsMap_orderedPoints
     use shr_sys_mod, only: shr_sys_abort
     !
@@ -74,7 +74,7 @@ contains
     ! Description
     ! Determine global index space value for target array at given clmlevel
     !
-    ! Example from histFileMod.F90:
+    ! Example from ctsm_HistFile.F90:
     ! ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
     ! Note that the last argument (clmlevel) is set to nameg, which corresponds
     ! to the "gridcell" not the "lun" of the first argument.
@@ -82,10 +82,10 @@ contains
     ! Uses:
 #include "shr_assert.h"
     use shr_log_mod, only: errMsg => shr_log_errMsg
-    use decompMod  , only: bounds_type, get_clmlevel_gsmap, get_proc_bounds
-    use spmdMod    , only: iam
-    use clm_varcon , only: nameg, namel, namec, namep
-    use clm_varctl , only: iulog
+    use ctsm_Decomp  , only: bounds_type, get_clmlevel_gsmap, get_proc_bounds
+    use ctsm_Spmd    , only: iam
+    use ctsm_VarCon , only: nameg, namel, namec, namep
+    use ctsm_VarCtl , only: iulog
     use mct_mod
     !
     ! Arguments 
@@ -138,12 +138,12 @@ contains
     use shr_sys_mod  , only : shr_sys_flush
     use shr_sys_mod  , only : shr_sys_abort
     use shr_log_mod  , only : errMsg => shr_log_errMsg
-    use clm_varctl   , only : iulog
-    use clm_varcon   , only : nameg, namel, namec, namep
-    use GridcellType , only : grc                
-    use LandunitType , only : lun                
-    use ColumnType   , only : col                
-    use PatchType    , only : patch                
+    use ctsm_VarCtl   , only : iulog
+    use ctsm_VarCon   , only : nameg, namel, namec, namep
+    use ctsm_GridcellType , only : grc                
+    use ctsm_LandunitType , only : lun                
+    use ctsm_ColumnType   , only : col                
+    use ctsm_PatchType    , only : patch                
     !
     ! Arguments:
     integer          , intent(in) :: decomp_index
@@ -212,4 +212,4 @@ contains
 
   end subroutine GetGlobalWrite
 
-end module GetGlobalValuesMod
+end module ctsm_GetGlobalValues

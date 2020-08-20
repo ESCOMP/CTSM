@@ -1,4 +1,4 @@
-module clm_varctl
+module ctsm_VarCtl
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -10,7 +10,7 @@ module clm_varctl
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
-  public :: clm_varctl_set    ! Set variables
+  public :: ctsm_VarCtl_set    ! Set variables
   public :: cnallocate_carbon_only_set
   public :: cnallocate_carbon_only
   !
@@ -162,7 +162,7 @@ module clm_varctl
   integer, public :: spinup_state = 0 
 
   ! true => anoxia is applied to heterotrophic respiration also considered in CH4 model
-  ! default value reset in controlMod
+  ! default value reset in ctsm_Control
   logical, public :: anoxia  = .true. 
 
   ! used to override an error check on reading in restart files
@@ -171,7 +171,7 @@ module clm_varctl
   ! Set in CNAllocationInit (TODO - had to move it here to avoid circular dependency)
   logical, private:: carbon_only      
 
-  ! Set in CNNDynamicsInit 
+  ! Set in ctsm_CNNDynamicsInit 
   ! NOTE (mvertens, 2014-9 had to move it here to avoid confusion when carbon data types
   ! wehre split - TODO - should move it our of this module) 
   ! NOTE(bandre, 2013-10) according to Charlie Koven, nfix_timeconst
@@ -270,7 +270,7 @@ module clm_varctl
   ! lai streams switch for Sat. Phenology
   !----------------------------------------------------------
 
-  logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
+  logical, public :: use_lai_streams = .false. ! true => use lai streams in ctsm_SatellitePhenologyMod.F90
 
   !----------------------------------------------------------
   ! bedrock / soil depth switch
@@ -337,7 +337,7 @@ module clm_varctl
   ! file name for local restart pointer file
   character(len=256), public :: rpntfil = 'rpointer.lnd' 
 
-  ! moved hist_wrtch4diag from histFileMod.F90 to here - caused compiler error with intel
+  ! moved hist_wrtch4diag from ctsm_HistFile.F90 to here - caused compiler error with intel
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
 
@@ -383,7 +383,7 @@ module clm_varctl
 contains
 
   !---------------------------------------------------------------------------
-  subroutine clm_varctl_set( caseid_in, ctitle_in, brnch_retain_casename_in,    &
+  subroutine ctsm_VarCtl_set( caseid_in, ctitle_in, brnch_retain_casename_in,    &
        single_column_in, scmlat_in, scmlon_in, nsrest_in, &
        version_in, hostname_in, username_in)
     !
@@ -419,7 +419,7 @@ contains
     if ( present(username_in     ) ) username      = username_in
     if ( present(hostname_in     ) ) hostname      = hostname_in
 
-  end subroutine clm_varctl_set
+  end subroutine ctsm_VarCtl_set
 
   ! Set module carbon_only flag
   subroutine cnallocate_carbon_only_set(carbon_only_in)
@@ -432,4 +432,4 @@ contains
     cnallocate_carbon_only = carbon_only
   end function CNAllocate_Carbon_only
 
-end module clm_varctl
+end module ctsm_VarCtl

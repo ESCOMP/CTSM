@@ -1,36 +1,36 @@
-module CNAnnualUpdateMod
+module ctsm_CNAnnualUpdateMod
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module for updating annual summation variables
   !
   ! !USES:
   use shr_kind_mod        , only : r8 => shr_kind_r8
-  use decompMod           , only : bounds_type
-  use CNVegCarbonFluxType , only : cnveg_carbonflux_type
-  use CNvegStateType      , only : cnveg_state_type
-  use PatchType           , only : patch
-  use filterColMod        , only : filter_col_type, col_filter_from_filter_and_logical_array
+  use ctsm_Decomp           , only : bounds_type
+  use ctsm_CNVegCarbonFluxType , only : cnveg_carbonflux_type
+  use ctsm_CNVegStateType      , only : cnveg_state_type
+  use ctsm_PatchType           , only : patch
+  use ctsm_FilterCol        , only : filter_col_type, col_filter_from_filter_and_logical_array
   !
   implicit none
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public:: CNAnnualUpdate
+  public:: ctsm_CNAnnualUpdate
   !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNAnnualUpdate(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+  subroutine ctsm_CNAnnualUpdate(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        cnveg_state_inst, cnveg_carbonflux_inst)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update annual summation variables
     !
     ! !USES:
-    use clm_time_manager, only: get_step_size_real, get_days_per_year
-    use clm_varcon      , only: secspday
-    use SubgridAveMod   , only: p2c
+    use ctsm_TimeManager, only: get_step_size_real, get_days_per_year
+    use ctsm_VarCon      , only: secspday
+    use ctsm_SubgridAve  , only: p2c
     !
     ! !ARGUMENTS:
     type(bounds_type)           , intent(in)    :: bounds  
@@ -108,6 +108,6 @@ contains
          cnveg_state_inst%annavg_t2m_patch(bounds%begp:bounds%endp), &
          cnveg_state_inst%annavg_t2m_col(bounds%begc:bounds%endc))
 
- end subroutine CNAnnualUpdate
+ end subroutine ctsm_CNAnnualUpdate
 
-end module CNAnnualUpdateMod
+end module ctsm_CNAnnualUpdateMod

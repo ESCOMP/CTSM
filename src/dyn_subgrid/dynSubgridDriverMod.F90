@@ -1,4 +1,4 @@
-module dynSubgridDriverMod
+module ctsm_DynSubgridDriver
 
 #include "shr_assert.h"
 
@@ -9,38 +9,38 @@ module dynSubgridDriverMod
   ! dynamic landunits).
   !
   ! !USES:
-  use decompMod                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
-  use decompMod                    , only : get_proc_clumps, get_clump_bounds
-  use dynSubgridControlMod         , only : get_flanduse_timeseries
-  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
-  use dynSubgridControlMod         , only : get_do_harvest
-  use dynPriorWeightsMod           , only : prior_weights_type
-  use dynPatchStateUpdaterMod      , only : patch_state_updater_type
-  use dynColumnStateUpdaterMod     , only : column_state_updater_type
-  use dynpftFileMod                , only : dynpft_init, dynpft_interp
-  use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
+  use ctsm_Decomp                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
+  use ctsm_Decomp                    , only : get_proc_clumps, get_clump_bounds
+  use ctsm_DynSubgridControl         , only : get_flanduse_timeseries
+  use ctsm_DynSubgridControl         , only : get_do_transient_pfts, get_do_transient_crops
+  use ctsm_DynSubgridControl         , only : get_do_harvest
+  use ctsm_DynPriorWeights           , only : prior_weights_type
+  use ctsm_DynPatchStateUpdater      , only : patch_state_updater_type
+  use ctsm_DynColumnStateUpdater     , only : column_state_updater_type
+  use ctsm_DynPftFile                , only : dynpft_init, dynpft_interp
+  use ctsm_DynCropFile               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
-  use dynLandunitAreaMod           , only : update_landunit_weights
-  use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
-  use reweightMod                  , only : reweight_wrapup
-  use glcBehaviorMod               , only : glc_behavior_type
-  use UrbanParamsType              , only : urbanparams_type
-  use CanopyStateType              , only : canopystate_type
-  use CNVegetationFacade           , only : cn_vegetation_type
-  use SoilBiogeochemStateType      , only : soilBiogeochem_state_type
-  use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
-  use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
-  use ch4Mod,                        only : ch4_type
-  use EnergyFluxType               , only : energyflux_type
-  use PhotosynthesisMod            , only : photosyns_type
-  use SoilHydrologyType            , only : soilhydrology_type  
-  use SoilStateType                , only : soilstate_type
-  use WaterType                    , only : water_type
-  use TemperatureType              , only : temperature_type
-  use CropType                     , only : crop_type
-  use glc2lndMod                   , only : glc2lnd_type
-  use filterMod                    , only : filter, filter_inactive_and_active
+  use ctsm_DynLandunitArea           , only : update_landunit_weights
+  use ctsm_SubgridWeights            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
+  use ctsm_Reweight                  , only : reweight_wrapup
+  use ctsm_GlacierBehavior               , only : glc_behavior_type
+  use ctsm_UrbanParamsType              , only : urbanparams_type
+  use ctsm_CanopyStateType              , only : canopystate_type
+  use ctsm_CNVegetationFacade           , only : cn_vegetation_type
+  use ctsm_SoilBiogeochemStateType      , only : soilBiogeochem_state_type
+  use ctsm_SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
+  use ctsm_SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
+  use ctsm_SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+  use ctsm_Methane,                        only : ch4_type
+  use ctsm_EnergyFluxType               , only : energyflux_type
+  use ctsm_Photosynthesis            , only : photosyns_type
+  use ctsm_SoilHydrologyType            , only : soilhydrology_type  
+  use ctsm_SoilStateType                , only : soilstate_type
+  use ctsm_WaterType                    , only : water_type
+  use ctsm_TemperatureType              , only : temperature_type
+  use ctsm_CropType                     , only : crop_type
+  use ctsm_Glc2Lnd                   , only : glc2lnd_type
+  use ctsm_Filters                    , only : filter, filter_inactive_and_active
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -171,10 +171,10 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl           , only : use_cn, use_fates
-    use dynInitColumnsMod    , only : initialize_new_columns
-    use dynConsBiogeophysMod , only : dyn_hwcontent_init, dyn_hwcontent_final
-    use dynEDMod             , only : dyn_ED
+    use ctsm_VarCtl           , only : use_cn, use_fates
+    use ctsm_DynInitColumns    , only : initialize_new_columns
+    use ctsm_DynConsBiogeophys , only : dyn_hwcontent_init, dyn_hwcontent_final
+    use ctsm_DynFates             , only : dyn_ED
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
@@ -342,4 +342,4 @@ contains
   end subroutine dynSubgrid_wrapup_weight_changes
 
 
-end module dynSubgridDriverMod
+end module ctsm_DynSubgridDriver

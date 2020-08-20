@@ -1,4 +1,4 @@
-module unittestFilterBuilderMod
+module ctsm_UnitTestFilterBuilder
 
   ! This module builds simple filters that can be used as inputs to routines that require
   ! a filter.
@@ -68,4 +68,4 @@ contains
     
   end subroutine filter_from_range
 
-end module unittestFilterBuilderMod
+end module ctsm_UnitTestFilterBuilder

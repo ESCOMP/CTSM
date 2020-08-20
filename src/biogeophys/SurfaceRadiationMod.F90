@@ -1,4 +1,4 @@
-module SurfaceRadiationMod
+module ctsm_SurfaceRadiation
 
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,19 +7,19 @@ module SurfaceRadiationMod
   ! !USES:
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
-  use clm_varctl        , only : use_snicar_frc, use_fates
-  use decompMod         , only : bounds_type
-  use clm_varcon        , only : namec
-  use atm2lndType       , only : atm2lnd_type
-  use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
-  use CanopyStateType   , only : canopystate_type
-  use SurfaceAlbedoType , only : surfalb_type
-  use SolarAbsorbedType , only : solarabs_type
-  use GridcellType      , only : grc
-  use LandunitType      , only : lun
-  use ColumnType        , only : col
-  use PatchType         , only : patch
-  use landunit_varcon   , only : istdlak
+  use ctsm_VarCtl        , only : use_snicar_frc, use_fates
+  use ctsm_Decomp         , only : bounds_type
+  use ctsm_VarCon        , only : namec
+  use ctsm_Atm2LndType       , only : atm2lnd_type
+  use ctsm_WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use ctsm_CanopyStateType   , only : canopystate_type
+  use ctsm_SurfaceAlbedoType , only : surfalb_type
+  use ctsm_SolarAbsorbedType , only : solarabs_type
+  use ctsm_GridcellType      , only : grc
+  use ctsm_LandunitType      , only : lun
+  use ctsm_ColumnType        , only : col
+  use ctsm_PatchType         , only : patch
+  use ctsm_LandunitVarCon   , only : istdlak
 
   ! !PRIVATE TYPES:
   implicit none
@@ -157,9 +157,9 @@ contains
     !
     ! !USES:
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
-    use clm_varcon    , only : spval
-    use histFileMod   , only : hist_addfld1d, hist_addfld2d
-    use clm_varctl    , only : use_SSRE
+    use ctsm_VarCon    , only : spval
+    use ctsm_HistFile   , only : hist_addfld1d, hist_addfld2d
+    use ctsm_VarCtl    , only : use_SSRE
     !
     ! !ARGUMENTS:
     class(surfrad_type) :: this
@@ -475,13 +475,13 @@ contains
      ! Output variables are parsun,parsha,sabv,sabg,fsa,fsr,ndvi
      !
      ! !USES:
-     use clm_varpar       , only : numrad, nlevsno
-     use clm_varcon       , only : spval
-     use landunit_varcon  , only : istsoil, istcrop 
-     use clm_varctl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE
-     use clm_time_manager , only : get_step_size_real, is_near_local_noon
-     use SnowSnicarMod    , only : DO_SNO_OC
-     use abortutils       , only : endrun
+     use ctsm_VarPar       , only : numrad, nlevsno
+     use ctsm_VarCon       , only : spval
+     use ctsm_LandunitVarCon  , only : istsoil, istcrop 
+     use ctsm_VarCtl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE
+     use ctsm_TimeManager , only : get_step_size_real, is_near_local_noon
+     use ctsm_SnowSnicar    , only : DO_SNO_OC
+     use ctsm_AbortUtils       , only : endrun
      !
      ! !ARGUMENTS:
      type(bounds_type)      , intent(in)            :: bounds
@@ -1022,4 +1022,4 @@ contains
 
    end subroutine SurfaceRadiation
 
-end module SurfaceRadiationMod
+end module ctsm_SurfaceRadiation

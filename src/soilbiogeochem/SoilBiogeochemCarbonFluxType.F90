@@ -1,17 +1,17 @@
-module SoilBiogeochemCarbonFluxType
+module ctsm_SoilBiogeochemCarbonFluxType
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod                          , only : bounds_type
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi
-  use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use landunit_varcon                    , only : istsoil, istcrop, istdlak 
+  use ctsm_Decomp                          , only : bounds_type
+  use ctsm_VarPar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
+  use ctsm_VarPar                         , only : nlevdecomp_full, nlevgrnd, nlevdecomp, nlevsoi
+  use ctsm_VarCon                         , only : spval, ispval, dzsoi_decomp
+  use ctsm_LandunitVarCon                    , only : istsoil, istcrop, istdlak 
   use ch4varcon                          , only : allowlakeprod
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
-  use ColumnType                         , only : col                
-  use LandunitType                       , only : lun
-  use clm_varctl                         , only : use_fates
+  use ctsm_SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use ctsm_ColumnType                         , only : col                
+  use ctsm_LandunitType                       , only : lun
+  use ctsm_VarCtl                         , only : use_fates
   
   ! 
   ! !PUBLIC TYPES:
@@ -156,10 +156,10 @@ contains
      ! add history fields for all CN variables, always set as default='inactive'
      !
      ! !USES:
-     use clm_varpar , only : ndecomp_cascade_transitions, ndecomp_pools
-     use clm_varpar , only : nlevdecomp, nlevdecomp_full
-     use clm_varctl , only : hist_wrtch4diag
-     use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
+     use ctsm_VarPar , only : ndecomp_cascade_transitions, ndecomp_pools
+     use ctsm_VarPar , only : nlevdecomp, nlevdecomp_full
+     use ctsm_VarCtl , only : hist_wrtch4diag
+     use ctsm_HistFile, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
      !
      ! !ARGUMENTS:
      class(soilbiogeochem_carbonflux_type) :: this    
@@ -518,7 +518,7 @@ contains
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
 
-       this%fphr_col(c,nlevdecomp+1:nlevgrnd) = 0._r8 !used to be in ch4Mod
+       this%fphr_col(c,nlevdecomp+1:nlevgrnd) = 0._r8 !used to be in ctsm_Methane
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%fphr_col(c,nlevdecomp+1:nlevgrnd) = 0._r8 
        else if (lun%itype(l) == istdlak .and. allowlakeprod) then
@@ -585,7 +585,7 @@ contains
     ! !USES:
     use restUtilMod
     use ncdio_pio
-    use clm_varctl, only : use_vertsoilc
+    use ctsm_VarCtl, only : use_vertsoilc
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type) :: this
@@ -823,6 +823,6 @@ contains
 
   end subroutine Summary
 
-end module SoilBiogeochemCarbonFluxType
+end module ctsm_SoilBiogeochemCarbonFluxType
 
 

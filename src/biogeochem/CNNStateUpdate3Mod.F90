@@ -1,4 +1,4 @@
-module CNNStateUpdate3Mod
+module ctsm_CNNStateUpdate3Mod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
@@ -7,14 +7,14 @@ module CNNStateUpdate3Mod
   !
   ! !USES:
   use shr_kind_mod                    , only: r8 => shr_kind_r8
-  use clm_varpar                      , only: nlevdecomp, ndecomp_pools
-  use clm_time_manager                , only : get_step_size_real
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif
-  use clm_varpar                      , only : i_cwd, i_met_lit, i_cel_lit, i_lig_lit
-  use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
-  use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
+  use ctsm_VarPar                      , only: nlevdecomp, ndecomp_pools
+  use ctsm_TimeManager                , only : get_step_size_real
+  use ctsm_VarCtl                      , only : iulog, use_nitrif_denitrif
+  use ctsm_VarPar                      , only : i_cwd, i_met_lit, i_cel_lit, i_lig_lit
+  use ctsm_CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
+  use ctsm_CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
+  use ctsm_SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
+  use ctsm_SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   !
   implicit none
   private
@@ -207,4 +207,4 @@ contains
 
   end subroutine NStateUpdate3
 
-end module CNNStateUpdate3Mod
+end module ctsm_CNNStateUpdate3Mod
