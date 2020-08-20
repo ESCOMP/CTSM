@@ -123,4 +123,11 @@
     </phase>
   </test>
 
+  <test name="ERS_Ln9.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.IHistClm50SpGs.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>CTSM/#1117</issue>
+    </phase>
+  </test>
+
 </expectedFails> 
