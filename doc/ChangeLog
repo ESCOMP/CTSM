@@ -84,7 +84,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: YES
 
 
 
@@ -92,9 +92,10 @@ Changes answers relative to baseline:
   following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
-    - what code configurations:
-    - what platforms/compilers:
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - what code configurations: ???
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new
+	climate): larger than roundoff/same climate??? 
 
    If bitwise differences were observed, how did you show they were no worse
    than roundoff?
@@ -103,7 +104,154 @@ Changes answers relative to baseline:
    climate (put details of the simulations in the experiment database)
        - casename: 
 
-   URL for LMWG diagnostics output used to validate new climate:
+   Answer changes appeared for the following tests on Cheyenne:
+   0819-233327ch_gnu: 46 tests
+    FAIL ERI_D_Ld9.f10_f10_musgs.I1850Clm50Bgc.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_D_Ld9.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_Ld9.f10_f10_musgs.I1850Clm50Bgc.cheyenne_gnu.clm-drydepnomegan BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_Ld9.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D.f10_f10_musgs.IHistClm50Bgc.cheyenne_gnu.clm-decStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld3_P36x2.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-ciso_flexCN_FUN BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-snowveg_norad BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5.f10_f10_musgs.I1850Clm50Bgc.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P36x2_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-extra_outputs BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Clm50Cn.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P36x2_Lm13.f10_f10_musgs.IHistClm50Bgc.cheyenne_gnu.clm-monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_Lm40_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRsGs.cheyenne_gnu.clm-monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL LWISO_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_gnu.clm-coldStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_gnu.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld5.f10_f10_musgs.ISSP245Clm50BgcCrop.cheyenne_gnu.clm-ciso_dec2050Start BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld5.f10_f10_musgs.ISSP370Clm50BgcCrop.cheyenne_gnu.clm-ciso_dec2050Start BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Lm1.f10_f10_musgs.I1850Clm50BgcCropCmip6waccm.cheyenne_gnu.clm-basic BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ly1_Mmpi-serial.1x1_brazil.IHistClm50BgcQianRsGs.cheyenne_gnu.clm-output_bgc_highfreq BASELINE ctsm1.0.dev108: DIFF
+
+
+   0819-233327ch_int: 163 tests
+    FAIL DAE_N2_D_Lh12.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-DA_multidrv BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_D_Ld9.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_D_Ld9.ne30_g17.I2000Clm50BgcCruGs.cheyenne_intel.clm-vrtlay BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_Ld9.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_Ld9.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-drydepnomegan BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_Ld9.f45_g37.I2000Clm50BgcCruGs.cheyenne_intel.clm-nofire BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERI_N2_Ld9.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-decStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld10_P36x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_decStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld3_P36x2.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5.C96_C96_mg17.IHistClm50BgcCrop.cheyenne_intel.clm-allActive BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-NoVSNoNI BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-rootlit BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-allActive BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5.f19_g17_gl4.I1850Clm50BgcCrop.cheyenne_intel.clm-glcMEC_changeFlags BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5.f19_g17.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5.f19_g17.I2000Clm50BgcCruGs.cheyenne_intel.clm-fire_emis BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld9.f19_g17.I2000Clm50Cn.cheyenne_intel.clm-drydepnomegan BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld30.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-coldStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-cn_conly BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-flexCN_FUN BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-luna BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-noFUN_flexCN BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld5.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-irrig_spunup BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P36x2_Ld5.f10_f10_musgs.I2000Clm50BgcCropRtm.cheyenne_intel.clm-irrig_spunup BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld3.f09_g17.I1850Clm50BgcCropCru.cheyenne_intel.clm-ciso BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5.f10_f10_musgs.I1850Clm50Bgc.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5.f10_f10_musgs.I1850Clm50Bgc.cheyenne_intel.clm-drydepnomegan BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5.f19_g17.I1850Clm50Bgc.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5.f19_g17.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ly3_P72x2.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P180x2_D_Ld5.f19_g17_gl4.I1850Clm50BgcCropG.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P180x2_D_Ld5.f19_g17_gl4.I1850Clm50BgcCropG.cheyenne_intel.clm-glcMEC_increase BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P36x2_D_Ld5.f10_f10_musgs.I1850Clm50Bgc.cheyenne_intel.clm-ciso BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Clm50Cn.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P36x2_D_Ld5.f10_f10_musgs.I2000Ctsm50NwpBgcCropGswpGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P36x2_Lm13.f10_f10_musgs.IHistClm50Bgc.cheyenne_intel.clm-monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P72x2_Lm25.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P72x2_Lm36.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-clm50cropIrrigMonth_interp BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P72x2_Lm7.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-irrig_alternate_monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_P72x2_Ly3.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-irrig_o3_reduceOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-reseedresetsnow BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld12.f10_f10_musgs.I1850Clm50BgcCropG.cheyenne_intel.clm-glcMEC_spunup_inc_dec_bgc BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-deepsoil_bedrock BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld3.f19_g17_gl4.I1850Clm50BgcCrop.cheyenne_intel.clm-clm50dynroots BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld5.f10_f10_musgs.I2000Clm50BgcCropRtm.cheyenne_intel.rtm-rtmOnFloodOnEffvelOn BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld5.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_D_Ld5.f10_f10_musgs.IHistClm50BgcQianGs.cheyenne_intel.clm-ciso_bombspike1963DecStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_Ld3.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-rad_hrly_light_res_half BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_Lm54_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRsGs.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_Ln9.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.IHistClm50SpGs.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start COMPARE_base_rest
+    FAIL ERS_Ly20_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRsGs.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_Ly3.f10_f10_musgs.I1850Clm50BgcCropCmip6.cheyenne_intel.clm-basic BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_Ly3_P72x2.f10_f10_musgs.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_Ly5_P144x1.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL LCISO_Lm13.f10_f10_musgs.IHistClm50BgcCrop.cheyenne_intel.clm-ciso_monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL LII2FINIDATAREAS_D_P360x2_Ld1.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL LII_D_Ld3.f19_g17_gl4.I2000Clm50BgcCrop.cheyenne_intel.clm-glcMEC_spunup_1way BASELINE ctsm1.0.dev108: DIFF
+    FAIL LVG_Ld5_D.f10_f10_musgs.I1850Clm50Bgc.cheyenne_intel.clm-no_vector_output BASELINE ctsm1.0.dev108: DIFF
+    FAIL PEM_D_Ld5.ne30_g17.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL PET_P36x2_D.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld1.f09_g17.I1850Clm50BgcSpinup.cheyenne_intel.clm-cplhist BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld3.f10_f10_musgs.I2000Clm50BgcCruGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld5_Vnuopc.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld9.f09_g17_gl4.I1850Clm50BgcNoAnthro.cheyenne_intel.clm-decStart1851_noinitial BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS.f19_g17.I2000Clm50Cn.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld1.f09_g17.I1850Clm50Bgc.cheyenne_intel.clm-drydepnomegan BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld1.f09_g17.I2000Clm50BgcCruGs.cheyenne_intel.clm-af_bias_v7 BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld2_D.f09_g17.I1850Clm50BgcCropCmip6.cheyenne_intel.clm-basic_interp BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld5.f10_f10_musgs.ISSP585Clm50BgcCrop.cheyenne_intel.clm-ciso_dec2050Start BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld5.f19_g17.IHistClm50Bgc.cheyenne_intel.clm-decStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Lm13.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Lm1_D.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_intel.clm-output_crop_highfreq BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Lm1_D.f10_f10_musgs.I2000Clm50BgcCrop.cheyenne_intel.clm-snowlayers_3_monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Lm1.f19_g17_gl4.I1850Clm50Bgc.cheyenne_intel.clm-clm50dynroots BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Lm1.f19_g17.I1850Clm50BgcCropCmip6waccm.cheyenne_intel.clm-basic BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ln9.ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12.ISSP585Clm50BgcCrop.cheyenne_intel.clm-clm50cam6LndTuningMode BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ln9.ne30pg2_ne30pg2_mg17.I2000Clm50BgcCrop.cheyenne_intel.clm-clm50cam6LndTuningMode BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ly3_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRsGs.cheyenne_intel.clm-clm50dynroots BASELINE ctsm1.0.dev108: DIFF
+    FAIL SOILSTRUCTUD_Ld5.f10_f10_musgs.I2000Clm50BgcCropGs.cheyenne_intel.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL SSP_D_Ld10.f19_g17.I1850Clm50Bgc.cheyenne_intel.clm-rtmColdSSP BASELINE ctsm1.0.dev108: DIFF
+    FAIL SSP_D_Ld4.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-ciso_rtmColdSSP BASELINE ctsm1.0.dev108: DIFF
+    FAIL SSP_Ld10.f19_g17.I1850Clm50Bgc.cheyenne_intel.clm-rtmColdSSP BASELINE ctsm1.0.dev108: DIFF
+
+   Answer changes appeared for the following tests on Izumi:
+
+	FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_gnu.clm-crop BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_gnu.clm-crop BASELINE ctsm1.0.dev108: DIFF
+    FAIL PEM_Ld1.f10_f10_musgs.I2000Clm50BgcCropGs.izumi_intel.clm-crop BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_intel.clm-crop BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld10.f10_f10_musgs.I2000Clm50BgcCropGs.izumi_intel.clm-tracer_consistency BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_intel.clm-crop BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5_P48x1.f10_f10_musgs.I1850Clm50Bgc.izumi_nag.clm-ciso BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_Ld5_P48x1.f10_f10_musgs.I2000Clm50BgcCruGs.izumi_nag.clm-reduceOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_D_P48x1.f10_f10_musgs.IHistClm50Bgc.izumi_nag.clm-decStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5_P48x1.f10_f10_musgs.I1850Clm50Bgc.izumi_nag.clm-ciso BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5_P48x1.f10_f10_musgs.I1850Clm50Bgc.izumi_nag.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5_P48x1.f10_f10_musgs.I2000Clm50BgcCruGs.izumi_nag.clm-flexCN_FUN BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5_P48x1.f10_f10_musgs.I2000Clm50BgcCruGs.izumi_nag.clm-luna BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5_P48x1.f10_f10_musgs.I2000Clm50BgcCruGs.izumi_nag.clm-noFUN_flexCN BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERP_Ld5_P48x1.f10_f10_musgs.I2000Clm50BgcCruGs.izumi_nag.clm-reduceOutput BASELINE ctsm1.0.dev108: DIFF
+    FAIL ERS_Ly5_Mmpi-serial.1x1_numaIA.I2000Clm50BgcCropQianRsGs.izumi_nag.clm-monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld1_P48x1.f10_f10_musgs.I2000Clm50BgcCruGs.izumi_nag.clm-af_bias_v7 BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_Ld5.f10_f10_musgs.I2000Clm50BgcCrop.izumi_nag.clm-irrig_alternate BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D_P48x1_Ld5.f10_f10_musgs.I2000Clm50BgcCrop.izumi_nag.clm-irrig_spunup BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld5_D_P48x1.f10_f10_musgs.IHistClm50Bgc.izumi_nag.clm-decStart BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_Ld5_D_P48x1.f10_f10_musgs.IHistClm50Bgc.izumi_nag.clm-monthly BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_P48x1_D_Ld5.f10_f10_musgs.I2000Clm50Cn.izumi_nag.clm-default BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop BASELINE ctsm1.0.dev108: DIFF
+    FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop BASELINE ctsm1.0.dev108: DIFF
+
+
+
+   URL for LMWG diagnostics output used to validate new climate: ???
 	
 
 Detailed list of changes
