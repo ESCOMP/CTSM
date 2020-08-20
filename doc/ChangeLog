@@ -1,4 +1,118 @@
 ===============================================================
+Tag name:  ctsm1.0.dev108
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Aug 19 17:23:47 MDT 2020
+One-line Summary:  Update default PE layouts for new SE/FV3 grids
+
+Purpose of changes
+------------------
+
+Change PE layouts for new high resolution SE/FV3 grids. Have a version for cheyenne and a default one
+as well.
+
+Update externals: cime, cism, CMEPS, CDEPS
+Change single point tests to use stub ROF
+Change tests to use gx1v7 rather than gx1v6
+Update waccmx_offline to use START=1979
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 
+  Fixes #1108 Change single point tests to use stub ROF
+  Fixes #1098 ARCTICGRIS PE layout is very slow
+  Fixes #1105 Default new FV3/SE grid PE layouts are problematic
+  Fixes #1103 Some changes to prevent missing file for WACCMX testing
+  Fixes #1113 ARCTIC test is failing
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Some tests were chagned to use stub ROF and one to stub GLC. @billsacks suggest we should also change
+   other tests in this same way.
+
+Changes to tests or testing: Yes
+
+Code reviewed by: self
+
+
+CTSM testing: regular, tools
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  tools-tests (test/tools):
+
+    cheyenne - PASS
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - OK
+
+  python testing (see instructions in python/README.md; document testing done):
+
+   cheyenne -- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (except for waccmx_offline test)
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cism, CDEPS, CMEPS
+   cism to cism2_1_69
+   cime to cime5.8.30
+   Update hash for CDEPS and CMEPS (so that nuopc test will run)
+
+Pull Requests that document the changes (include PR ids): #1111
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1111 -- Adjust FV3/SE PE layouts
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev107
 Originator(s):  erik (Erik Kluzek)
 Date: Mon Aug 10 02:21:12 MDT 2020
