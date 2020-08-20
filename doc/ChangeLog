@@ -94,17 +94,20 @@ Changes answers relative to baseline: YES
     - what code configurations: Clm50 with Bgc or Cn
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new
-	climate): larger than roundoff/same climate??? 
+	climate): larger than roundoff/same climate
 
    If bitwise differences were observed, how did you show they were no worse
    than roundoff?
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
-       - casename: 
+   
+   Will Wieder thought the changes were small enough that we didn't need to do
+   a long simulation. Erik Kluzek thinks the changes were verified with single
+   point simulations. 
 
 
-   URL for LMWG diagnostics output used to validate new climate: ???
+   URL for LMWG diagnostics output used to validate new climate:
 	
 
 Detailed list of changes
