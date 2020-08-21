@@ -3076,124 +3076,124 @@ contains
           ! Define gridcell info
 
           call ncd_defvar(varname='grid1d_lon', xtype=ncd_double, dim1name=nameg, &
-               long_name='gridcell longitude', units='degrees_east', ncid=ncid)
+               long_name='gridcell longitude', units='degrees_east', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='grid1d_lat', xtype=ncd_double,  dim1name=nameg, &
-               long_name='gridcell latitude', units='degrees_north', ncid=ncid)
+               long_name='gridcell latitude', units='degrees_north', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='grid1d_ixy', xtype=ncd_int, dim1name=nameg, &
-               long_name='2d longitude index of corresponding gridcell', ncid=ncid)
+               long_name='2d longitude index of corresponding gridcell', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='grid1d_jxy', xtype=ncd_int, dim1name=nameg, &
-               long_name='2d latitude index of corresponding gridcell', ncid=ncid)
+               long_name='2d latitude index of corresponding gridcell', ifill_value=ispval, ncid=ncid)
 
           ! Define landunit info
 
           call ncd_defvar(varname='land1d_lon', xtype=ncd_double, dim1name=namel, &
-               long_name='landunit longitude', units='degrees_east', ncid=ncid)
+               long_name='landunit longitude', units='degrees_east', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='land1d_lat', xtype=ncd_double, dim1name=namel, &
-               long_name='landunit latitude', units='degrees_north', ncid=ncid)
+               long_name='landunit latitude', units='degrees_north', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='land1d_ixy', xtype=ncd_int, dim1name=namel, &
-               long_name='2d longitude index of corresponding landunit', ncid=ncid)
+               long_name='2d longitude index of corresponding landunit', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='land1d_jxy', xtype=ncd_int, dim1name=namel, &
-               long_name='2d latitude index of corresponding landunit', ncid=ncid)
+               long_name='2d latitude index of corresponding landunit', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='land1d_gi', xtype=ncd_int, dim1name=namel, &
-               long_name='1d grid index of corresponding landunit', ncid=ncid)
+               long_name='1d grid index of corresponding landunit', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='land1d_wtgcell', xtype=ncd_double, dim1name=namel, &
-               long_name='landunit weight relative to corresponding gridcell', ncid=ncid)
+               long_name='landunit weight relative to corresponding gridcell', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='land1d_ityplunit', xtype=ncd_int, dim1name=namel, &
                long_name='landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
-                  ncid=ncid)
+                  ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='land1d_active', xtype=ncd_log, dim1name=namel, &
-               long_name='true => do computations on this landunit', ncid=ncid)
+               long_name='true => do computations on this landunit', ifill_value=0, ncid=ncid)
 
           ! Define column info
 
           call ncd_defvar(varname='cols1d_lon', xtype=ncd_double, dim1name=namec, &
-               long_name='column longitude', units='degrees_east', ncid=ncid)
+               long_name='column longitude', units='degrees_east', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_lat', xtype=ncd_double, dim1name=namec, &
-               long_name='column latitude', units='degrees_north', ncid=ncid)
+               long_name='column latitude', units='degrees_north', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_ixy', xtype=ncd_int, dim1name=namec, &
-               long_name='2d longitude index of corresponding column', ncid=ncid)
+               long_name='2d longitude index of corresponding column', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_jxy', xtype=ncd_int, dim1name=namec, &
-               long_name='2d latitude index of corresponding column', ncid=ncid)
+               long_name='2d latitude index of corresponding column', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_gi', xtype=ncd_int, dim1name=namec, &
-               long_name='1d grid index of corresponding column', ncid=ncid)
+               long_name='1d grid index of corresponding column', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_li', xtype=ncd_int, dim1name=namec, &
-               long_name='1d landunit index of corresponding column', ncid=ncid)
+               long_name='1d landunit index of corresponding column', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_wtgcell', xtype=ncd_double, dim1name=namec, &
-               long_name='column weight relative to corresponding gridcell', ncid=ncid)
+               long_name='column weight relative to corresponding gridcell', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_wtlunit', xtype=ncd_double, dim1name=namec, &
-               long_name='column weight relative to corresponding landunit', ncid=ncid)
+               long_name='column weight relative to corresponding landunit', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_itype_col', xtype=ncd_int, dim1name=namec, &
-               long_name='column type (see global attributes)', ncid=ncid)
+               long_name='column type (see global attributes)', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_itype_lunit', xtype=ncd_int, dim1name=namec, &
                long_name='column landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)', &
-                  ncid=ncid)
+                  ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='cols1d_active', xtype=ncd_log, dim1name=namec, &
-               long_name='true => do computations on this column', ncid=ncid)
+               long_name='true => do computations on this column', ifill_value=0, ncid=ncid)
 
           ! Define patch info
 
           call ncd_defvar(varname='pfts1d_lon', xtype=ncd_double, dim1name=namep, &
-               long_name='pft longitude', units='degrees_east', ncid=ncid)
+               long_name='pft longitude', units='degrees_east', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_lat', xtype=ncd_double, dim1name=namep, &
-               long_name='pft latitude', units='degrees_north', ncid=ncid)
+               long_name='pft latitude', units='degrees_north', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_ixy', xtype=ncd_int, dim1name=namep, &
-               long_name='2d longitude index of corresponding pft', ncid=ncid)
+               long_name='2d longitude index of corresponding pft', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_jxy', xtype=ncd_int, dim1name=namep, &
-               long_name='2d latitude index of corresponding pft', ncid=ncid)
+               long_name='2d latitude index of corresponding pft', ifill_value=ispval,  ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_gi', xtype=ncd_int, dim1name=namep, &
-               long_name='1d grid index of corresponding pft', ncid=ncid)
+               long_name='1d grid index of corresponding pft', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_li', xtype=ncd_int, dim1name=namep, &
-               long_name='1d landunit index of corresponding pft', ncid=ncid)
+               long_name='1d landunit index of corresponding pft', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_ci', xtype=ncd_int, dim1name=namep, &
-               long_name='1d column index of corresponding pft', ncid=ncid)
+               long_name='1d column index of corresponding pft', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_wtgcell', xtype=ncd_double, dim1name=namep, &
-               long_name='pft weight relative to corresponding gridcell', ncid=ncid)
+               long_name='pft weight relative to corresponding gridcell', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_wtlunit', xtype=ncd_double, dim1name=namep, &
-               long_name='pft weight relative to corresponding landunit', ncid=ncid)
+               long_name='pft weight relative to corresponding landunit', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_wtcol', xtype=ncd_double, dim1name=namep, &
-               long_name='pft weight relative to corresponding column', ncid=ncid)
+               long_name='pft weight relative to corresponding column', fill_value=spval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_itype_veg', xtype=ncd_int, dim1name=namep, &
-               long_name='pft vegetation type', ncid=ncid)
+               long_name='pft vegetation type', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_itype_col', xtype=ncd_int, dim1name=namep, &
-               long_name='pft column type (see global attributes)', ncid=ncid)
+               long_name='pft column type (see global attributes)', ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_itype_lunit', xtype=ncd_int, dim1name=namep, &
                long_name='pft landunit type (vegetated,urban,lake,wetland,glacier or glacier_mec)',  &
-                  ncid=ncid)
+                  ifill_value=ispval, ncid=ncid)
 
           call ncd_defvar(varname='pfts1d_active', xtype=ncd_log, dim1name=namep, &
-               long_name='true => do computations on this pft', ncid=ncid)
+               ifill_value=0, long_name='true => do computations on this pft', ncid=ncid)
 
     else if (mode == 'write') then
 
