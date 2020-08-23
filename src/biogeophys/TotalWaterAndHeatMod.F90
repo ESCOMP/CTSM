@@ -881,9 +881,7 @@ contains
     !
     ! Note: Changes to this routine - for anything involving liquid or ice - should
     ! generally be accompanied by similar changes to ComputeLiqIceMassLake
-     
-
-
+    !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)  :: bounds
     integer                  , intent(in)  :: num_lakec
@@ -974,13 +972,14 @@ contains
        end do
     end do
     
-        do fc = 1, num_lakec
+    do fc = 1, num_lakec
        c = filter_lakec(fc)
        heat(c) = heat_dry_mass(c) + heat_ice(c) + heat_liquid(c) + latent_heat_liquid(c)
     end do
     
     ! Lake water heat content
-    ! Note that we do NOT accumulate heat_liquid and cv_liquid in this call. See the comments at the top of AccumulateHeatLake for rationale.
+    ! Note that we do NOT accumulate heat_liquid and cv_liquid in this call. See the
+    ! comments at the top of AccumulateHeatLake for rationale.
     call AccumulateHeatLake(bounds, num_lakec, filter_lakec, temperature_inst, lakestate_inst, &
        heat)
 
@@ -1079,8 +1078,8 @@ contains
     ! calculate heat content of lake itself  
     do j = 1, nlevlak
         do fc = 1, num_c
-            c = filter_c(fc)
-           ! liquid heat 
+           c = filter_c(fc)
+           ! liquid heat
            h2olak_liq = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
            call AccumulateLiquidWaterHeat( &
                 temp = t_lake(c,j), &
@@ -1264,7 +1263,6 @@ contains
     heat_liquid = heat_liquid + TempToHeat(temp = temp, cv = cv)
     latent_heat_liquid = latent_heat_liquid + h2o*hfus
   end subroutine AccumulateLiquidWaterHeat
-
 
   !-----------------------------------------------------------------------
   pure function TempToHeat(temp, cv) result(heat)
