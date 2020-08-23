@@ -248,6 +248,13 @@ contains
        end if
     end if
 
+    ! NOTE(wjs, 2020-08-23) In the following error checks, I'm treating do_transient_lakes
+    ! similar to do_transient_pfts and do_transient_crops. I'm not sure if all of these
+    ! checks are truly important for transient lakes (in particular, my guess is that
+    ! collapse_urban could probably be done with transient lakes - as well as transient
+    ! pfts and transient crops for that matter), but some of the checks probably are
+    ! needed, and it seems best to keep transient lakes consistent with other transient
+    ! areas in this respect.
     if (dyn_subgrid_control_inst%do_transient_pfts .or. &
          dyn_subgrid_control_inst%do_transient_crops .or. &
          dyn_subgrid_control_inst%do_transient_lakes) then

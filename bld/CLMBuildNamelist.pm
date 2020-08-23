@@ -2546,6 +2546,12 @@ sub setup_logic_do_transient_lakes {
    # for them to be unset if that will be their final state):
    # - flanduse_timeseries
    #
+   # NOTE(wjs, 2020-08-23) I based this function on setup_logic_do_transient_crops. I'm
+   # not sure if all of the checks here are truly important for transient lakes (in
+   # particular, my guess is that collapse_urban could probably be done with transient
+   # lakes - as well as transient pfts and transient crops for that matter), but some of
+   # the checks probably are needed, and it seems best to keep transient lakes consistent
+   # with other transient areas in this respect.
    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
    my $var = 'do_transient_lakes';
