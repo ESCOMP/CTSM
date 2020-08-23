@@ -6,8 +6,6 @@ module dynlakeFileMod
   !
   ! !USES:
   
-  ! check this still on unneccesary parts. 
-  
 #include "shr_assert.h"
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use shr_kind_mod          , only : r8 => shr_kind_r8
@@ -15,12 +13,9 @@ module dynlakeFileMod
   use dynFileMod            , only : dyn_file_type
   use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
   use clm_varctl            , only : iulog
-  use clm_varcon            , only : grlnd, namec
+  use clm_varcon            , only : grlnd
   use abortutils            , only : endrun
-  use spmdMod               , only : masterproc, mpicom
-  use LandunitType          , only : lun                
-  use ColumnType            , only : col                
-  use PatchType             , only : patch  
+  use spmdMod               , only : masterproc
   
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -35,8 +30,6 @@ module dynlakeFileMod
 
   ! Names of variables on file
   character(len=*), parameter :: lake_varname = 'PCT_LAKE'
-   
-
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -75,8 +68,8 @@ contains
 
     ! Get the year from the START of the timestep; this way, we'll update lake areas
     ! starting after the year boundary. This is consistent with the timing of glacier
-    ! updates, and will likely be consistent with the timing of crop updates determined
-    ! prognostically, if crop areas are ever determined prognostically rather than
+    ! updates, and will likely be consistent with the timing of lake updates determined
+    ! prognostically, if lake areas are ever determined prognostically rather than
     ! prescribed ahead of time.
     dynlake_file = dyn_file_type(dynlake_filename, YEAR_POSITION_START_OF_TIMESTEP)
 
@@ -92,7 +85,6 @@ contains
          dyn_file = dynlake_file, varname=lake_varname, &
          dim1name=grlnd, conversion_factor=100._r8, &
          do_check_sums_equal_1=.false., data_shape=[num_points])
-
  
   end subroutine dynlake_init
   
@@ -135,9 +127,6 @@ contains
        call set_landunit_weight(g, istdlak, wtlake_cur(g))
     end do
     deallocate(wtlake_cur)
-
-! also account for landunits, patches and columns? 
-
 
   end subroutine dynlake_interp
 

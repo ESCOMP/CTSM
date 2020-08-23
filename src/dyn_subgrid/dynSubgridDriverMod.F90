@@ -20,7 +20,6 @@ module dynSubgridDriverMod
   use dynpftFileMod                , only : dynpft_init, dynpft_interp
   use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
-  ! use new lake file module
   use dynlakeFileMod               , only : dynlake_init, dynlake_interp
   use dynLandunitAreaMod           , only : update_landunit_weights
   use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
@@ -44,10 +43,7 @@ module dynSubgridDriverMod
   use CropType                     , only : crop_type
   use glc2lndMod                   , only : glc2lnd_type
   use filterMod                    , only : filter, filter_inactive_and_active
- 
-
-
-  
+  !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   private
@@ -128,7 +124,6 @@ contains
 
     
     ! Initialize stuff for prescribed transient lakes
-	! error if keyword argument like for dynamical land units above: dynlake_filename=get_flanduse_timeseries()
     if (get_do_transient_lakes()) then
         call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
     end if
