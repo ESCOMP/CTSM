@@ -6,11 +6,13 @@ module lnd_import_export_utils
   use clm_varctl            , only : iulog
   use decompmod             , only : bounds_type
   use atm2lndType           , only : atm2lnd_type
+  use Wateratm2lndBulkType  , only : wateratm2lndbulk_type
 
   implicit none
   private ! except
 
   public :: derive_quantities
+  public :: check_for_errors
   public :: check_for_nans
 
 !=============================================================================
@@ -19,7 +21,8 @@ contains
 
   !===========================================================================
 
-  subroutine derive_quantities( bounds, atm2lnd_inst, wateratm2lndbulk_inst )
+  subroutine derive_quantities( bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
+    forc_rainc, forc_rainl, forc_snowc, forc_snowl )
 
     !-------------------------------------------------------------------------
     ! Convert the input data from the mediator to the land model
@@ -27,13 +30,16 @@ contains
 
     use clm_varctl, only: co2_ppmv
     use clm_varcon, only: rair, o2_molar_const
-    use Wateratm2lndBulkType, only: wateratm2lndbulk_type
     use QSatMod, only: QSat
 
     ! input/output variabes
     type(bounds_type), intent(in) :: bounds  ! bounds
     type(atm2lnd_type), intent(inout) :: atm2lnd_inst ! clm internal input data type
-    type(Wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst
+    type(wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst
+    real(r8), intent(in) :: forc_rainc(bounds%begg:bounds%endg)  ! convective rain (mm/s)
+    real(r8), intent(in) :: forc_rainl(bounds%begg:bounds%endg)  ! large scale rain (mm/s)
+    real(r8), intent(in) :: forc_snowc(bounds%begg:bounds%endg)  ! convective snow (mm/s)
+    real(r8), intent(in) :: forc_snowl(bounds%begg:bounds%endg)  ! large scale snow (mm/s)
 
     ! local variables
     integer :: g  ! indices
@@ -42,7 +48,7 @@ contains
     real(r8) :: forc_t  ! atmospheric temperature (Kelvin)
     real(r8) :: forc_q  ! atmospheric specific humidity (kg/kg)
     real(r8) :: forc_pbot  ! atmospheric pressure (Pa)
-    character(len=*), parameter :: subname='(utils:lnd_import_export_utils)'
+    character(len=*), parameter :: subname='(cpl:utils:derive_quantities)'
 
     !-------------------------------------------------------------------------
 
@@ -75,14 +81,14 @@ contains
        atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
                                         atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
 
-       wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = atm2lnd_inst%forc_rainc_grc(g) + atm2lnd_inst%forc_rainl_grc(g)
-       wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = atm2lnd_inst%forc_snowc_grc(g) + atm2lnd_inst%forc_snowl_grc(g)
+       wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
+       wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
 
        call QSat(forc_t, forc_pbot, qsat_kg_kg)
 
        ! modify specific humidity if precip occurs
        if (1==2) then
-          if ((atm2lnd_inst%forc_rainc_grc(g)+atm2lnd_inst%forc_rainl_grc(g)) > 0._r8) then
+          if ((forc_rainc(g) + forc_rainl(g)) > 0._r8) then
              forc_q = 0.95_r8 * qsat_kg_kg
             !forc_q = qsat_kg_kg
              wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
@@ -91,6 +97,29 @@ contains
 
        wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat_kg_kg)
     end do
+
+    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst )
+
+  end subroutine derive_quantities
+
+  !===========================================================================
+
+  subroutine check_for_errors( bounds, atm2lnd_inst, wateratm2lndbulk_inst )
+
+    ! input/output variabes
+    type(bounds_type), intent(in) :: bounds  ! bounds
+    type(atm2lnd_type), intent(inout) :: atm2lnd_inst ! clm internal input data type
+    type(wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst
+
+    ! local variables
+    integer :: g  ! indices
+    integer :: begg, endg  ! bounds
+    character(len=*), parameter :: subname='(cpl:utils:check_for_errors)'
+
+    !-------------------------------------------------------------------------
+
+    ! Set bounds
+    begg = bounds%begg; endg=bounds%endg
 
     !--------------------------
     ! Error checks
@@ -120,7 +149,7 @@ contains
     ! atm2lnd_inst%forc_rh_grc(g) = min( 100.0_r8, atm2lnd_inst%forc_rh_grc(g) )
     ! atm2lnd_inst%forc_rh_grc(g) = max(   0.0_r8, atm2lnd_inst%forc_rh_grc(g) )
 
-  end subroutine derive_quantities
+  end subroutine check_for_errors
 
   !=============================================================================
 

@@ -63,6 +63,10 @@ contains
     integer                   :: num
     integer                   :: begg, endg                             ! bounds
     integer                   :: g,i,k                                  ! indices
+    real(r8)                  :: forc_rainc(bounds%begg:bounds%endg)    ! rainxy Atm flux mm/s
+    real(r8)                  :: forc_rainl(bounds%begg:bounds%endg)    ! rainxy Atm flux mm/s
+    real(r8)                  :: forc_snowc(bounds%begg:bounds%endg)    ! snowfxy Atm flux  mm/s
+    real(r8)                  :: forc_snowl(bounds%begg:bounds%endg)    ! snowfxl Atm flux  mm/s
     real(r8)                  :: qsat_kg_kg                             ! saturation specific humidity (kg/kg)
     real(r8)                  :: forc_noy(bounds%begg:bounds%endg)
     real(r8)                  :: forc_nhx(bounds%begg:bounds%endg)
@@ -130,19 +134,19 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_rainc', bounds, &
-         output=atm2lnd_inst%forc_rainc_grc, rc=rc )
+         output=forc_rainc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_rainl', bounds, &
-         output=atm2lnd_inst%forc_rainl_grc, rc=rc )
+         output=forc_rainl, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_snowc', bounds, &
-         output=atm2lnd_inst%forc_snowc_grc, rc=rc )
+         output=forc_snowc, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_snowl', bounds, &
-         output=atm2lnd_inst%forc_snowl_grc, rc=rc )
+         output=forc_snowl, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_getimport(importState, 'c2l_fb_atm', 'Faxa_lwdn', bounds, &
@@ -240,7 +244,7 @@ contains
     ! Derived quantities for required fields
     !--------------------------
 
-    call derive_quantities(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst)
+    call derive_quantities(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, forc_rainc, forc_rainl, forc_snowc, forc_snowl)
 
   end subroutine import_fields
 

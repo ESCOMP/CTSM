@@ -44,6 +44,10 @@ contains
     integer  :: g,i,k,nstep,ier      ! indices, number of steps, and error code
     real(r8) :: qsat_kg_kg           ! saturation specific humidity (kg/kg)
     real(r8) :: forc_pbot            ! atmospheric pressure (Pa)
+    real(r8) :: forc_rainc(bounds%begg:bounds%endg)  ! rainxy Atm flux mm/s
+    real(r8) :: forc_rainl(bounds%begg:bounds%endg)  ! rainxy Atm flux mm/s
+    real(r8) :: forc_snowc(bounds%begg:bounds%endg)  ! snowfxy Atm flux  mm/s
+    real(r8) :: forc_snowl(bounds%begg:bounds%endg)  ! snowfxl Atm flux  mm/s
     real(r8) :: co2_ppmv_diag        ! temporary
     real(r8) :: co2_ppmv_prog        ! temporary
     real(r8) :: co2_ppmv_val         ! temporary
@@ -103,10 +107,10 @@ contains
        atm2lnd_inst%forc_t_not_downscaled_grc(g)     = x2l(index_x2l_Sa_tbot,i)      ! forc_txy  Atm state K
        atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) = x2l(index_x2l_Faxa_lwdn,i)    ! flwdsxy Atm flux  W/m^2
 
-       atm2lnd_inst%forc_rainc_grc(g)                = x2l(index_x2l_Faxa_rainc,i)   ! mm/s
-       atm2lnd_inst%forc_rainl_grc(g)                = x2l(index_x2l_Faxa_rainl,i)   ! mm/s
-       atm2lnd_inst%forc_snowc_grc(g)                = x2l(index_x2l_Faxa_snowc,i)   ! mm/s
-       atm2lnd_inst%forc_snowl_grc(g)                = x2l(index_x2l_Faxa_snowl,i)   ! mm/s
+       forc_rainc(g)                                 = x2l(index_x2l_Faxa_rainc,i)   ! mm/s
+       forc_rainl(g)                                 = x2l(index_x2l_Faxa_rainl,i)   ! mm/s
+       forc_snowc(g)                                 = x2l(index_x2l_Faxa_snowc,i)   ! mm/s
+       forc_snowl(g)                                 = x2l(index_x2l_Faxa_snowl,i)   ! mm/s
 
        ! atmosphere coupling, for prognostic/prescribed aerosols
        atm2lnd_inst%forc_aer_grc(g,1)                = x2l(index_x2l_Faxa_bcphidry,i)
@@ -154,7 +158,8 @@ contains
     ! Derived quantities for required fields
     !--------------------------
 
-    call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
+    call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
+       forc_rainc, forc_rainl, forc_snowc, forc_snowl)
 
     ! Determine derived quantities for optional fields
     ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
