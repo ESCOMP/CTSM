@@ -70,7 +70,7 @@ program mksurfdat
     integer  :: varid                       ! netCDF variable id
     integer  :: ret                         ! netCDF return status
     integer  :: ntim                        ! time sample for dynamic land use
-    integer  :: year,yearlak                ! year for dynamic land use
+    integer  :: year                        ! year for dynamic land use
     integer  :: year2                       ! year for dynamic land use for harvest file
     logical  :: all_veg                     ! if gridcell will be 100% vegetated land-cover
     real(r8) :: suma                        ! sum for error check
@@ -81,7 +81,7 @@ program mksurfdat
     character(len=256) :: fname             ! generic filename
     character(len=256) :: fhrvname          ! generic harvest filename
     character(len=256) :: flakname          ! generic lake filename
-    character(len=256) :: string, stringlak ! string read in
+    character(len=256) :: string            ! string read in
     integer  :: t1                          ! timer
     real(r8),parameter :: p5  = 0.5_r8      ! constant
     real(r8),parameter :: p25 = 0.25_r8     ! constant
@@ -1131,7 +1131,7 @@ program mksurfdat
 
        nfdyn = getavu(); call opnfil (mksrf_fdynuse, nfdyn, 'f')
        
-       ! IV read in dynamic lake dataset
+       ! Read in dynamic lake dataset
        nfdynlak = getavu(); call opnfil (mksrf_fdynlak, nfdynlak, 'f')
 
        pctnatpft_max = pctnatpft
@@ -1167,7 +1167,7 @@ program mksurfdat
           end if
           
           
-          ! IV Read input lake pct data
+          ! Read input lake pct data
           read(nfdynlak, '(A195,1x,I4)', iostat=ier) string, year
           if (ier /= 0) exit
         
@@ -1204,7 +1204,7 @@ program mksurfdat
           end do
           
 
-          ! IV: Create pctlak data at model resolution (use original mapping file from lake data)
+          ! Create pctlak data at model resolution (use original mapping file from lake data)
           call mklakwat (ldomain, mapfname=map_flakwat, datfname=flakname, &
                ndiag=ndiag, zero_out=all_urban.or.all_veg, lake_o=pctlak)                    
           
@@ -1227,7 +1227,6 @@ program mksurfdat
              call ncd_put_time_slice(ncid, varid, ntim, get_pct_p2l_array(pctcft))
           end if
 
-          ! IV add ncd_put_time_slice for pct lake
           call check_ret(nf_inq_varid(ncid, 'PCT_LAKE', varid), subname)
           call ncd_put_time_slice(ncid, varid, ntim, pctlak)
           

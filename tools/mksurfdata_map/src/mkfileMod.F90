@@ -554,7 +554,6 @@ contains
        end do
        deallocate(ind1D, ind2D)
        
-       ! IV: add lake field in here? 
        call ncd_def_spatial_var(ncid=ncid, varname='PCT_LAKE', xtype=xtype, &
             lev1name="time", long_name='percent lake', units='unitless')       
 
