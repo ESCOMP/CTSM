@@ -279,7 +279,6 @@ contains
     allocate(this%fact_col                 (begc:endc, -nlevsno+1:nlevgrnd)) ; this%fact_col                 (:,:) = nan
     allocate(this%c_h2osfc_col             (begc:endc))                      ; this%c_h2osfc_col             (:)   = nan
 
-    allocate(this%lake_heat                (begc:endc))                      ; this%lake_heat                (:)   = nan
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -620,12 +619,6 @@ contains
             avgflag='A', long_name='10 day running mean of patch night-time vegetation temperature', &
             ptr_patch=this%t_veg10_night_patch, default='inactive')
     endif
-
-    ! add lake heat history field here
-    this%lake_heat(begc:endc) = spval
-    call hist_addfld1d (fname='LAKE_HEAT', units='J/m^2', &
-            avgflag='A', long_name='Heat content of gridcell lake water', &
-            ptr_col=this%lake_heat, default='active')
 
   end subroutine InitHistory
 
