@@ -292,9 +292,10 @@ contains
     use fileutils           , only : getfil
     use domainMod           , only : domain_type, domain_init, domain_clean
     use clm_instur          , only : wt_lunit, topo_glc_mec
-    use landunit_varcon, only: max_lunit, istsoil, isturb_MIN, isturb_MAX
+    use landunit_varcon     , only : max_lunit, istsoil, isturb_MIN, isturb_MAX
     use dynSubgridControlMod, only : get_flanduse_timeseries
-    use clm_varctl          , only : fname_len
+    use dynSubgridControlMod, only : get_do_transient_lakes
+
     !
     ! !ARGUMENTS:
     integer,          intent(in) :: begg, endg, actual_numcft      
@@ -312,10 +313,8 @@ contains
     logical           :: readvar              ! true => variable is on dataset
     real(r8)          :: rmaxlon,rmaxlat      ! local min/max vars
     type(file_desc_t) :: ncid                 ! netcdf id
-    type(file_desc_t) :: ncid_dynuse          ! netcdf id for landuse timeseries file
     logical           :: istype_domain        ! true => input file is of type domain
     logical           :: isgrid2d             ! true => intut grid is 2d 
-    character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
 
     character(len=32) :: subname = 'surfrd_get_data'    ! subroutine name
     !-----------------------------------------------------------------------
@@ -450,33 +449,11 @@ contains
        write(iulog,*)
     end if
     
+    ! read the lakemask (necessary for initialisation of dynamical lakes)
+    if (get_do_transient_lakes()) then
+        call surfrd_lakemask(begg, endg)
+    end if
     
-    ! IV: add here call to subroutine to read in lake mask (necessary for initialisation of dynamical lakes)
-    ! First open landuse.timeseries file for this. 
-    
-     if (masterproc) then
-       write(iulog,*) 'Attempting to read landuse.timeseries data .....'
-       if (lfsurdat == ' ') then
-          write(iulog,*)'fdynuse must be specified'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       endif
-    endif   
-    
-    
-    ! open landuse_timeseries file 
-    fdynuse = get_flanduse_timeseries()
-    
-    call getfil(fdynuse, locfn, 0 )
-
-    call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)    
-
-    ! read the lakemask
-    call surfrd_lakemask(begg, endg, ncid_dynuse)
-    
-    ! close landuse_timeseries file again 
-    call ncd_pio_closefile(ncid_dynuse)
-
-
   end subroutine surfrd_get_data
 
 !-----------------------------------------------------------------------
@@ -979,7 +956,7 @@ contains
   end subroutine surfrd_veg_dgvm
 
   !-----------------------------------------------------------------------
-  subroutine surfrd_lakemask(begg, endg, ncid)
+  subroutine surfrd_lakemask(begg, endg)
     !
     ! !DESCRIPTION:
     ! Reads the lake mask, indicating where lakes are and will grow
@@ -987,25 +964,47 @@ contains
     ! Necessary for the initialisation of the lake land units
     !
     ! !USES:
-     use clm_instur      , only : haslake
+     use clm_instur           , only : haslake
+     use dynSubgridControlMod , only : get_flanduse_timeseries
+     use clm_varctl           , only : fname_len
+     use fileutils            , only : getfil
+    !
     ! !ARGUMENTS:
     integer,           intent(in)    :: begg, endg  
-    type(file_desc_t), intent(inout) :: ncid 
     ! 
     !
     ! !LOCAL VARIABLES:
-    logical          :: readvar
-    real(r8),pointer :: haslake_id(:)
-    !
+    type(file_desc_t)         :: ncid_dynuse          ! netcdf id for landuse timeseries file
+    character(len=256)        :: locfn                ! local file name
+    character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
+    logical                   :: readvar
+    real(r8),pointer          :: haslake_id(:)
     !
     character(len=*), parameter :: subname = 'surfrd_lakemask'
     !
     !-----------------------------------------------------------------------
 
+    ! get filename of landuse_timeseries file 
+    fdynuse = get_flanduse_timeseries()
+
+    if (masterproc) then
+       write(iulog,*) 'Attempting to read landuse.timeseries data .....'
+       if (fdynuse == ' ') then
+          write(iulog,*)'fdynuse must be specified'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+    end if   
+    
+    call getfil(fdynuse, locfn, 0 )
+
+   ! open landuse_timeseries file 
+    call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)    
+    
     
     allocate(haslake_id(begg:endg))
     
-    call ncd_io(ncid=ncid, varname='HASLAKE'  , flag='read', data=haslake_id, &
+    ! read the lakemask
+    call ncd_io(ncid=ncid_dynuse, varname='HASLAKE'  , flag='read', data=haslake_id, &
            dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: HASLAKE is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
 
@@ -1015,6 +1014,8 @@ contains
         haslake = .false.
     end where
 
+    ! close landuse_timeseries file again 
+    call ncd_pio_closefile(ncid_dynuse)
     
     deallocate(haslake_id)
 

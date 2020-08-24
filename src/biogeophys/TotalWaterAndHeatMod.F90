@@ -919,7 +919,6 @@ contains
          csol         => soilstate_inst%csol_col, & ! heat capacity, soil solids (J/m**3/Kelvin)
          t_soisno     => temperature_inst%t_soisno_col, & ! soil temperature (Kelvin)
          dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Input:  [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
-         lake_heat    => temperature_inst%lake_heat, & ! total heat of lake water (J/m²)
          h2osoi_liq   => waterstatebulk_inst%h2osoi_liq_col, & ! liquid water (kg/m2)
          h2osoi_ice   => waterstatebulk_inst%h2osoi_ice_col & ! frozen water (kg/m2)
          )
@@ -1093,7 +1092,7 @@ contains
         end do
     end do 
 
-   ! add ice heat and liquid heat together (look at this part)
+   ! add ice heat and liquid heat together
     do fc = 1, num_c
        c = filter_c(fc)
        heat(c) = heat(c) + lake_heat_ice(c) + &
@@ -1130,11 +1129,15 @@ contains
     ! ice runoff is at heat_base_temp (which is reasonable as long as heat_base_temp =
     ! tfrz).
     !
+    ! With dynamical lakes, the adjusted delta_heat does not account for the added lake 
+    ! water content due to growing lakes. This is because lake depth is constant, the 
+    ! total lake water content (kg/m^2) does not change. The change in water content of 
+    ! the snow and soil in the lake column are accounted for.    
+    !
     ! Eventually, if we begin to explicitly account for the temperature / heat content of
     ! liquid and ice runoff in CLM, then this routine should be reworked to use the true
     ! heat contents of both liquid and ice runoff.
     !
-    ! ADD HERE NOTES ABOUT LAKES!!! lake water not accounted. because baselines 
     !
     ! Sign convention: delta_liq and delta_heat are positive if the post-landcover change
     ! value is greater than the pre-landcover change value.
