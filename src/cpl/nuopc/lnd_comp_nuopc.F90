@@ -656,13 +656,11 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! create the mesh from the grid
-       gridmesh =  ESMF_MeshCreate(lgrid, rc=rc)
+       mesh =  ESMF_MeshCreate(lgrid, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-       ! Now redistribute the mesh to use the internal distrid
-       mesh = ESMF_MeshCreate(gridmesh, elementDistgrid=Distgrid, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
+
        ! read in the mesh from the file
        mesh = ESMF_MeshCreate(filename=trim(model_meshfile), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
             elementDistgrid=Distgrid, rc=rc)
@@ -670,15 +668,16 @@ contains
        if (masterproc) then
           write(iulog,*)'mesh file for domain is ',trim(model_meshfile)
        end if
-    end if
 
-    ! Determine the areas on the mesh
-    areaField = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name='mesh_areas', meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldRegridGetArea(areaField, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_FieldGet(areaField, farrayPtr=areaPtr, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! Determine the areas on the mesh
+       areaField = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, name='mesh_areas', meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldRegridGetArea(areaField, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldGet(areaField, farrayPtr=areaPtr, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    end if
 
     ! realize the actively coupled fields
     call realize_fields(gcomp,  mesh, flds_scalar_name, flds_scalar_num, rc)
@@ -695,33 +694,35 @@ contains
     ! obtain mesh lats and lons
     !--------------------------------
 
-    call ESMF_MeshGet(mesh, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    allocate(ownedElemCoords(spatialDim*numOwnedElements))
-    call ESMF_MeshGet(mesh, ownedElemCoords=ownedElemCoords)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    do g = bounds%begg,bounds%endg
-       n = 1 + (g - bounds%begg)
-       mesh_lon = ownedElemCoords(2*n-1)
-       mesh_lat = ownedElemCoords(2*n)
-       mesh_area = areaPtr(n)
-       if (abs(mesh_lon - ldomain%lonc(g)) > tolerance_latlon) then
-          write(6,100)'ERROR: clm_lon, mesh_lon, diff_lon = ',&
-               ldomain%lonc(g), mesh_lon, abs(mesh_lon - ldomain%lonc(g))
-          !call shr_sys_abort()
-       end if
-       if (abs(mesh_lat - ldomain%latc(g)) > tolerance_latlon) then
-          write(6,100)'ERROR: clm_lat, mesh_lat, diff_lat = ',&
-               ldomain%latc(g), mesh_lat, abs(mesh_lat - ldomain%latc(g))
-          !call shr_sys_abort()
-       end if
-       if (abs(mesh_area - ldomain%area(g)/(re*re)) > tolerance_area) then
-          write(6,100)'ERROR: clm_area, mesh_area, diff_area = ',&
-               ldomain%area(g)/(re*re), mesh_area, abs(mesh_area - ldomain%area(g)/(re*re))
-          !call shr_sys_abort()
-       end if
-    end do
-100 format(a,3(d13.5,2x))
+    if (trim(model_meshfile) /= 'create_mesh') then
+       call ESMF_MeshGet(mesh, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       allocate(ownedElemCoords(spatialDim*numOwnedElements))
+       call ESMF_MeshGet(mesh, ownedElemCoords=ownedElemCoords)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       do g = bounds%begg,bounds%endg
+          n = 1 + (g - bounds%begg)
+          mesh_lon = ownedElemCoords(2*n-1)
+          mesh_lat = ownedElemCoords(2*n)
+          mesh_area = areaPtr(n)
+          if (abs(mesh_lon - ldomain%lonc(g)) > tolerance_latlon) then
+             write(6,100)'ERROR: clm_lon, mesh_lon, diff_lon = ',&
+                  ldomain%lonc(g), mesh_lon, abs(mesh_lon - ldomain%lonc(g))
+             !call shr_sys_abort()
+          end if
+          if (abs(mesh_lat - ldomain%latc(g)) > tolerance_latlon) then
+             write(6,100)'ERROR: clm_lat, mesh_lat, diff_lat = ',&
+                  ldomain%latc(g), mesh_lat, abs(mesh_lat - ldomain%latc(g))
+             !call shr_sys_abort()
+          end if
+          if (abs(mesh_area - ldomain%area(g)/(re*re)) > tolerance_area) then
+             write(6,100)'ERROR: clm_area, mesh_area, diff_area = ',&
+                  ldomain%area(g)/(re*re), mesh_area, abs(mesh_area - ldomain%area(g)/(re*re))
+             !call shr_sys_abort()
+          end if
+       end do
+100    format(a,3(d13.5,2x))
+    end if
 
     !--------------------------------
     ! Create land export state
