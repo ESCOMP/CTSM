@@ -116,9 +116,6 @@ module TemperatureType
      real(r8), pointer    :: xmf_h2osfc_col        (:)   ! latent heat of phase change of surface water
      real(r8), pointer    :: fact_col              (:,:) ! used in computing tridiagonal matrix
      real(r8), pointer    :: c_h2osfc_col          (:)   ! heat capacity of surface water
-
-     ! lake heat
-     real(r8), pointer    :: lake_heat              (:)  ! total heat of lake water (J/m²)
      
    contains
 

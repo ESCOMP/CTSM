@@ -248,7 +248,6 @@ contains
          t_grnd          =>   temperature_inst%t_grnd_col          , & ! Input:  [real(r8) (:)   ]  ground temperature (Kelvin)             
          t_soisno        =>   temperature_inst%t_soisno_col        , & ! Output: [real(r8) (:,:) ]  soil (or snow) temperature (Kelvin)   
          t_lake          =>   temperature_inst%t_lake_col          , & ! Output: [real(r8) (:,:) ]  col lake temperature (Kelvin)             
-         lake_heat       =>   temperature_inst%lake_heat           , & ! Output: [real(r8) (:) ]    col lake heat (J/m²) 
         
          beta            =>   lakestate_inst%betaprime_col         , & ! Output: [real(r8) (:)   ]  col effective beta: sabg_lyr(p,jtop) for snow layers, beta otherwise
          lake_icefrac    =>   lakestate_inst%lake_icefrac_col      , & ! Output: [real(r8) (:,:) ]  col mass fraction of lake layer that is frozen
@@ -1004,10 +1003,7 @@ contains
 
        end do
     end do
-	! write(iulog,*)'Energy content of lake after calculating lake temperature (J/m²)', ncvts
-
-	! IV: currently commented out: caused crash. To do: look at this part of the code!!!
-    ! lake_heat(c) = ncvts(c) 
+    
 
     call waterstatebulk_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
          caller = 'LakeTemperature-2', &
