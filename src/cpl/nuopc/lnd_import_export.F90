@@ -24,7 +24,7 @@ module lnd_import_export
   use shr_carma_mod         , only : shr_carma_readnl
   use shr_ndep_mod          , only : shr_ndep_readnl
   use lnd_shr_methods       , only : chkerr
-  use lnd_import_export_utils, only : derive_quantities, check_for_nans
+  use lnd_import_export_utils, only : derive_quantities, check_for_errors, check_for_nans
 
   implicit none
   private ! except
@@ -654,10 +654,13 @@ contains
 
     !--------------------------
     ! Derived quantities for required fields
+    ! and corresponding error checks
     !--------------------------
 
     call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
        forc_rainc, forc_rainl, forc_snowc, forc_snowl)
+
+    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
 
   end subroutine import_fields
 

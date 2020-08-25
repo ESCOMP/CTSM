@@ -15,7 +15,7 @@ module lnd_import_export
   use atm2lndType           , only : atm2lnd_type
   use lnd_shr_methods       , only : chkerr
   use shr_megan_mod         , only : shr_megan_mechcomps_n  ! TODO: need to add a namelist read here (see https://github.com/ESCOMP/CTSM/issues/926)
-  use lnd_import_export_utils, only : derive_quantities, check_for_nans
+  use lnd_import_export_utils, only : derive_quantities, check_for_errors, check_for_nans
 
   implicit none
   private ! except
@@ -242,9 +242,12 @@ contains
 
     !--------------------------
     ! Derived quantities for required fields
+    ! and corresponding error checks
     !--------------------------
 
     call derive_quantities(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, forc_rainc, forc_rainl, forc_snowc, forc_snowl)
+
+    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
 
   end subroutine import_fields
 

@@ -29,7 +29,7 @@ contains
     use clm_varctl      , only: ndep_from_cpl 
     use clm_varcon      , only: c13ratio
     use domainMod       , only: ldomain
-    use lnd_import_export_utils, only : derive_quantities, check_for_nans
+    use lnd_import_export_utils, only : derive_quantities, check_for_errors, check_for_nans
     !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in)    :: bounds   ! bounds
@@ -156,10 +156,13 @@ contains
 
     !--------------------------
     ! Derived quantities for required fields
+    ! and corresponding error checks
     !--------------------------
 
     call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
        forc_rainc, forc_rainl, forc_snowc, forc_snowl)
+
+    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
 
     ! Determine derived quantities for optional fields
     ! Note that the following does unit conversions from ppmv to partial pressures (Pa)

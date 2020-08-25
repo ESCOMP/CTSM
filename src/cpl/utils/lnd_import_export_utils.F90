@@ -98,8 +98,6 @@ contains
        wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat_kg_kg)
     end do
 
-    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst )
-
   end subroutine derive_quantities
 
   !===========================================================================
