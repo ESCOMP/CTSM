@@ -132,7 +132,7 @@ contains
     end select
     call cnfire_method%CNFireReadNML( NLFilename )
 
-  end function create_cnfire_method
+  end subroutine create_cnfire_method
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
