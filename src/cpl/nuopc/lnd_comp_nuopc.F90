@@ -300,7 +300,13 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (isPresent .and. isSet) then
           call ESMF_LogWrite(trim(subname)//' cism_evolve = '//trim(cvalue), ESMF_LOGMSG_INFO)
-          write (cism_evolve,*) cvalue
+          if (trim(cvalue) .eq. '.true.') then
+             cism_evolve = .true.
+          else if (trim(cvalue) .eq. '.false.') then
+             cism_evolve = .false.
+          else
+             call shr_sys_abort(subname//'Could not determine cism_evolve value '//trim(cvalue))
+          endif
        else
           call shr_sys_abort(subname//'Need to set cism_evolve if glc is present')
        endif
@@ -549,7 +555,7 @@ contains
     !----------------------------------------------------------------------------
 
     model_clock = clock
-    
+
     !----------------------
     ! Read namelist, grid and surface data
     !----------------------
@@ -909,7 +915,7 @@ contains
        caldayp1 = get_curr_calday(offset=dtime)
 
        if (nstep == 0) then
-	  doalb = .false.
+          doalb = .false.
        else if (nstep == 1) then
           doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
        else
