@@ -25,6 +25,7 @@ module FATESFireDataMod
       real(r8), private, pointer :: lnfm24(:)  ! Daily avg lightning by grid cell (#/km2/hr)
     contains
       ! !PUBLIC MEMBER FUNCTIONS:
+      procedure, public :: need_lightning_and_popdens
       procedure, public :: GetLight24     ! Return 24-hour averaged lightning data
       procedure, public :: InitAccBuffer  ! Initialize accumulation processes
       procedure, public :: InitAccVars  ! Initialize accumulation variables
@@ -33,26 +34,22 @@ module FATESFireDataMod
   end type fates_fire_data_type
 
   character(len=*), parameter, private :: sourcefile = __FILE__
-  !
-  ! !PRIVATE MEMBER DATA:
-  !-----------------------------------------------------------------------
-
-  interface fates_fire_data_type
-     ! initialize a new cnfire_base object
-     module procedure constructor
-  end interface fates_fire_data_type
-  !-----------------------------------------------------------------------
 
 contains
 
   !------------------------------------------------------------------------
-  type(fates_fire_data_type) function constructor()
-    !
-    ! !DESCRIPTION:
-    ! Creates an object of type fates_fire_data_type
+  function need_lightning_and_popdens(this)
     ! !ARGUMENTS:
-    constructor%need_lightning_and_popdens = .true.
-  end function constructor
+    class(fates_fire_data_type), intent(in) :: this
+    logical :: need_lightning_and_popdens  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'need_lightning_and_popdens'
+    !-----------------------------------------------------------------------
+
+    need_lightning_and_popdens = .true.
+  end function need_lightning_and_popdens
 
   !-----------------------------------------------------------------------
   function GetLight24( this ) result(lnfm24)
