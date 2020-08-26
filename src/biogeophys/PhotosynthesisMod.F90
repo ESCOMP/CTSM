@@ -200,6 +200,8 @@ module  PhotosynthesisMod
      ! LUNA specific variables
      real(r8), pointer, public  :: vcmx25_z_patch    (:,:) ! patch  leaf Vc,max25 (umol CO2/m**2/s) for canopy layer 
      real(r8), pointer, public  :: jmx25_z_patch     (:,:) ! patch  leaf Jmax25 (umol electron/m**2/s) for canopy layer 
+     real(r8), pointer, public  :: vcmx_prevyr       (:,:) ! patch  leaf Vc,max25 previous year running avg
+     real(r8), pointer, public  :: jmx_prevyr       (:,:) ! patch  leaf Jmax25 previous year running avg
      real(r8), pointer, public  :: pnlc_z_patch      (:,:) ! patch proportion of leaf nitrogen allocated for light capture for canopy layer
      real(r8), pointer, public  :: enzs_z_patch      (:,:) ! enzyme decay status 1.0-fully active; 0-all decayed during stress
      real(r8), pointer, public  :: fpsn24_patch      (:)   ! 24 hour mean patch photosynthesis (umol CO2/m**2 ground/day)
@@ -344,6 +346,8 @@ contains
       ! statements.
       allocate(this%vcmx25_z_patch  (begp:endp,1:nlevcan)) ; this%vcmx25_z_patch    (:,:) = 30._r8
       allocate(this%jmx25_z_patch   (begp:endp,1:nlevcan)) ; this%jmx25_z_patch     (:,:) = 60._r8 
+      allocate(this%vcmx_prevyr     (begp:endp,1:nlevcan)) ; this%vcmx_prevyr       (:,:) = 85._r8
+      allocate(this%jmx_prevyr      (begp:endp,1:nlevcan)) ; this%jmx_prevyr        (:,:) = 50._r8
       allocate(this%pnlc_z_patch    (begp:endp,1:nlevcan)) ; this%pnlc_z_patch      (:,:) = 0.01_r8
       allocate(this%fpsn24_patch    (begp:endp))           ; this%fpsn24_patch      (:)   = nan
       allocate(this%enzs_z_patch    (begp:endp,1:nlevcan)) ; this%enzs_z_patch      (:,:) = 1._r8
@@ -888,6 +892,14 @@ contains
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Maximum carboxylation rate at 25 celcius for canopy layers', units='umol CO2/m**2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_patch)
+      call restartvar(ncid=ncid, flag=flag, varname='vcmx_prevyr', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='avg carboxylation rate at 25 celsius for canopy layers', units='umol CO2/m**2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%vcmx_prevyr)
+      call restartvar(ncid=ncid, flag=flag, varname='jmx_prevyr', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levcan', switchdim=.true., &
+         long_name='avg carboxylation rate at 25 celsius for canopy layers', units='umol CO2/m**2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%jmx_prevyr)
       call restartvar(ncid=ncid, flag=flag, varname='pnlc_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='proportion of leaf nitrogen allocated for light capture', units='unitless', &

@@ -46,6 +46,15 @@
     <desc>Name of land component</desc>
   </entry>
 
+  <entry id="LILAC_MODE">
+    <type>char</type>
+    <valid_values>on,off</valid_values>
+    <default_value>off</default_value>
+    <group>build_component_clm</group>
+    <file>env_build.xml</file>
+    <desc>Flag to enable building the LILAC cap and coupling code</desc>
+  </entry>
+
   <entry id="LND_TUNING_MODE">
     <type>char</type>
     <group>run_component_clm</group>

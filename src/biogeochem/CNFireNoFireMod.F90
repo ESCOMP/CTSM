@@ -19,7 +19,7 @@ module CNFireNoFireMod
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
   use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
-  use CNFireMethodMod                    , only : cnfire_method_type
+  use FireMethodType                     , only : fire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type
   !
   implicit none

@@ -1,12 +1,12 @@
 .. _rst_Crops and Irrigation:
 
 Crops and Irrigation
-========================
+====================
 
 .. _Summary of CLM5.0 updates relative to the CLM4.5:
 
 Summary of CLM5.0 updates relative to the CLM4.5
------------------------------------------------------
+------------------------------------------------
 
 We describe here the complete crop and irrigation parameterizations that
 appear in CLM5.0. Corresponding information for CLM4.5 appeared in the
@@ -42,7 +42,7 @@ These updates appear in detail in the sections below. Many also appear in
 
 
 Available new features since the CLM5 release
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - Addition of bioenergy crops
 
 
@@ -51,10 +51,10 @@ Available new features since the CLM5 release
 .. _The crop model:
 
 The crop model: cash and bioenergy crops
--------------------
+----------------------------------------
 
 Introduction
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
 
 Groups developing Earth System Models generally account for the human
 footprint on the landscape in simulations of historical and future
@@ -93,7 +93,7 @@ phenology, and allocation, as well as fertilizer and irrigation management.
 .. _Crop plant functional types:
 
 Crop plant functional types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To allow crops to coexist with natural vegetation in a grid cell, the 
 vegetated land unit is separated into a naturally vegetated land unit and
@@ -230,7 +230,7 @@ managed crop types that are using the same parameter set.
 .. _Phenology:
 
 Phenology
-^^^^^^^^^^^^^^^^
+^^^^^^^^^
 
 CLM5-BGC includes evergreen, seasonally deciduous (responding to changes
 in day length), and stress deciduous (responding to changes in
@@ -246,7 +246,7 @@ maturity and harvest.
 .. _Planting:
 
 Planting
-'''''''''''''''''
+''''''''
 
 All crops must meet the following requirements between the minimum planting date and the maximum
 planting date (for the northern hemisphere) in :numref:`Table Crop phenology parameters`:
@@ -318,7 +318,7 @@ the range for that day. :math:`{T}_{f}` is the freezing temperature of water and
 .. _Leaf emergence:
 
 Leaf emergence
-'''''''''''''''''''''''
+''''''''''''''
 
 According to AgroIBIS, leaves may emerge when the growing degree-days of
 soil temperature to 0.05 m depth (:math:`GDD_{T_{soi} }` ), which is tracked since planting,
@@ -335,7 +335,7 @@ the carbon allocation algorithm in section :numref:`Leaf emergence to grain fill
 .. _Grain fill:
 
 Grain fill
-'''''''''''''''''''
+''''''''''
 
 The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since
 planting, similar to :math:`GDD_{T_{soi} }`  but for 2-m air temperature,
@@ -352,7 +352,7 @@ leaf longevity for the pft as done in the BGC part of the model.
 .. _Harvest:
 
 Harvest
-''''''''''''''''
+'''''''
 
 Harvest is assumed to occur as soon as the crop reaches maturity. When
 :math:`GDD_{T_{{\rm 2m}} }` reaches 100% of :math:`{GDD}_{mat}` or
@@ -407,7 +407,7 @@ fcur is the fraction of allocation that goes to currently displayed growth.
 .. _Allocation:
 
 Allocation
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^
 
 Allocation changes based on the crop phenology phases phenology (section :numref:`Phenology`).
 Simulated C assimilation begins every year upon leaf emergence in phase
@@ -447,8 +447,8 @@ respiration had not taken place.
 
 .. _Leaf emergence to grain fill:
 
-Leaf emergence 
-'''''''''''''''''''''''''''''''''''''
+Leaf emergence
+''''''''''''''
 
 During phase 2, the allocation coefficients (fraction of available C) to
 each C pool are defined as:
@@ -467,8 +467,8 @@ exclusively to the fine roots.
 
 .. _Grain fill to harvest:
 
-Grain fill 
-''''''''''''''''''''''''''''''
+Grain fill
+''''''''''
 
 The calculation of :math:`a_{froot}`  remains the same from phase 2 to
 phase 3. During grain fill (phase 3), other allocation coefficients change to:
@@ -497,7 +497,7 @@ coefficients (:numref:`Table Crop allocation parameters`).
 .. _Nitrogen retranslocation for crops:
 
 Nitrogen retranslocation for crops
-''''''''''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''
 
 Nitrogen retranslocation in crops occurs when nitrogen that was used for
 tissue growth of leaves, stems, and fine roots during the early growth
@@ -551,7 +551,7 @@ fulfill plant nitrogen demands.
 .. _Harvest to food and seed:
 
 Harvest
-''''''''''''''''''''''''''''''
+'''''''
 
 Variables track the flow of grain C and N to food and of all other plant pools, including live stem C and N, to litter, and to biofuel feedstock.
 A fraction (determined by the :math:`biofuel\_harvfrac`, defined in 
@@ -712,12 +712,12 @@ the target C:N ratios used during the leaf emergence phase (phase 2).
 .. _Other Features:
 
 Other Features
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 .. _Physical Crop Characteristics:
 
 Physical Crop Characteristics
-''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''
 Leaf area index (*L*) is calculated as a function of specific leaf area  
 (SLA, :numref:`Table Crop phenology parameters`) and leaf C. 
 Stem area index (*S*) is equal to 0.1\ *L* for temperate and tropical corn, sugarcane, switchgrass, and miscanthus and 0.2\ *L* for
@@ -742,8 +742,8 @@ and :math:`L_{\max }` is the maximum leaf area index (:numref:`Table Crop alloca
 
 .. _Interactive fertilization:
 
-Interactive Fertilization 
-''''''''''''''''''''''''''''''
+Interactive Fertilization
+'''''''''''''''''''''''''
 CLM simulates fertilization by adding nitrogen directly to the soil mineral nitrogen pool to meet
 crop nitrogen demands using both industrial fertilizer and manure application. CLM’s separate crop land unit ensures that
 natural vegetation will not access the fertilizer applied to crops.
@@ -790,7 +790,7 @@ the counter is reached.
 .. _Biological nitrogen fixation for soybeans:
 
 Biological nitrogen fixation for soybeans
-''''''''''''''''''''''''''''''''''''''''''
+'''''''''''''''''''''''''''''''''''''''''
 Biological N fixation for soybeans is calculated by the fixation and uptake of
 nitrogen module (Chapter :numref:`rst_FUN`) and is the same as N fixation in natural vegetation. Unlike natural
 vegetation, where a fraction of each pft are N fixers, all soybeans
@@ -798,8 +798,8 @@ are treated as N fixers.
 
 .. _Latitude vary base tempereature for growing degree days:
 
-Latitudinal variation in base growth tempereature 
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Latitudinal variation in base growth tempereature
+'''''''''''''''''''''''''''''''''''''''''''''''''
 For most crops, :math:`GDD_{T_{{\rm 2m}} }` (growing degree days since planting) 
 is the same in all locations. However,
 the for both rainfed and irrigated spring wheat and sugarcane, the calculation of 
@@ -822,7 +822,7 @@ and sugarcane.
 .. _Separate reproductive pool:
 
 Separate reproductive pool
-''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''
 One notable difference between natural vegetation and crops is the
 presence of reproductive carbon and nitrogen pools. Accounting
 for the reproductive pools helps determine whether crops are performing
@@ -839,7 +839,7 @@ nitrogen are available for grain development.
 .. _The irrigation model:
 
 The irrigation model
--------------------------
+--------------------
 
 The CLM includes the option to irrigate cropland areas that are equipped
 for irrigation. The application of irrigation responds dynamically to
