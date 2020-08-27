@@ -3563,7 +3563,7 @@ contains
     !
     !
     !!USES:
-    use clm_time_manager  , only : is_near_local_noon, get_local_time
+    use clm_time_manager  , only : is_near_local_noon
     !
     !! ARGUMENTS:
     implicit none
@@ -3633,8 +3633,7 @@ contains
     associate(                                                    &
          qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          vegwp         => canopystate_inst%vegwp_patch           ,& ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
-         vegwp_ln      => canopystate_inst%vegwp_ln_patch        ,& ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) at local noon
-         vegwp_pd      => canopystate_inst%vegwp_ln_patch         & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) between midnight and 2am local time
+         vegwp_ln      => canopystate_inst%vegwp_ln_patch         & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) at local noon
     )
 
     
@@ -3790,14 +3789,6 @@ contains
     else
        vegwp_ln(p,:) = spval
     end if
-
-    !write out predawn vwp (averaged over midnight to 2am)
-    if ( get_local_time( grc%londeg(g)) <= 7200._r8 )then
-       vegwp_pd(p,:) = vegwp(p,:)
-    else
-       vegwp_pd(p,:) = spval
-    end if
-
 
     if (soilflux<0._r8) soilflux = 0._r8
     qflx_tran_veg(p) = soilflux
@@ -4273,6 +4264,7 @@ contains
          tgcm          => temperature_inst%thm_patch            , & ! Input:  [real(r8) (:)   ]  air temperature at agcm reference height (kelvin)
          bsw           => soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"
          qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         vegwp_pd      => canopystate_inst%vegwp_pd_patch       , & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) at local noon
          sucsat        => soilstate_inst%sucsat_col               & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)
          )
 
@@ -4411,6 +4403,9 @@ contains
             atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
        if (soilflux<0._r8) soilflux = 0._r8
        qflx_tran_veg(p) = soilflux
+       vegwp_pd(p,:) = x
+    else
+       vegwp_pd(p,:) = spval
     endif
     
     
