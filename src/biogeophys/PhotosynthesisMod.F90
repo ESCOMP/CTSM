@@ -148,7 +148,7 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: gs_mol_patch      (:,:) ! patch leaf stomatal conductance       (umol H2O/m**2/s)
      real(r8), pointer, private :: gb_mol_patch      (:)   ! patch leaf boundary layer conductance (umol H2O/m**2/s)
      real(r8), pointer, private :: rh_leaf_patch     (:)   ! patch fractional humidity at leaf surface (dimensionless)
-
+     real(r8), pointer, private :: vpd_can_patch     (:)   ! patch canopy vapor pressure deficit (kPa)
      real(r8), pointer, private :: alphapsnsun_patch (:)   ! patch sunlit 13c fractionation ([])
      real(r8), pointer, private :: alphapsnsha_patch (:)   ! patch shaded 13c fractionation ([])
 
@@ -293,7 +293,7 @@ contains
     allocate(this%mbb_patch         (begp:endp))           ; this%mbb_patch         (:)   = nan
     allocate(this%gb_mol_patch      (begp:endp))           ; this%gb_mol_patch      (:)   = nan
     allocate(this%rh_leaf_patch     (begp:endp))           ; this%rh_leaf_patch     (:)   = nan
-
+    allocate(this%vpd_can_patch     (begp:endp))           ; this%vpd_can_patch     (:)   = nan
     allocate(this%psnsun_patch      (begp:endp))           ; this%psnsun_patch      (:)   = nan
     allocate(this%psnsha_patch      (begp:endp))           ; this%psnsha_patch      (:)   = nan
     allocate(this%c13_psnsun_patch  (begp:endp))           ; this%c13_psnsun_patch  (:)   = nan
@@ -376,6 +376,14 @@ contains
     call hist_addfld1d (fname='RH_LEAF', units='fraction', &
          avgflag='A', long_name='fractional humidity at leaf surface', &
          ptr_patch=this%rh_leaf_patch, set_spec=spval, default='inactive')
+
+    this%vpd_can_patch(begp:endp) = spval
+    call hist_addfld1d (fname='VPD_CAN', units='kPa', &
+         avgflag='A', long_name='canopy vapor pressure deficit', &
+         ptr_patch=this%vpd_can_patch, set_spec=spval, default='inactive')
+
+
+
     this%lnca_patch(begp:endp) = spval
     call hist_addfld1d (fname='LNC', units='gN leaf/m^2', &
          avgflag='A', long_name='leaf N concentration', &
@@ -1224,6 +1232,7 @@ contains
          bbb        => photosyns_inst%bbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
          mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
+         vpd_can    => photosyns_inst%vpd_can_patch          , & ! Output: [real(r8) (:)   ]  canopy vapor pressure deficit (kPa)
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
          light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
          leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
@@ -1646,6 +1655,7 @@ contains
                else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   ! Put some constraints on RH in the canopy when Medlyn stomatal conductance is being used
                   rh_can = max((esat_tv(p) - ceair), 50._r8) * 0.001_r8
+                  vpd_can(p) = rh_can
                end if
 
                ! Electron transport rate for C3 plants. Convert par from W/m2 to
@@ -3310,7 +3320,7 @@ contains
                end if
 
                !find ci and stomatal conductance
-               call hybrid_PHS(ci_z_sun(p,iv), ci_z_sha(p,iv), p, iv, c, gb_mol(p), bsun(p),bsha(p), je_sun, &
+               call hybrid_PHS(ci_z_sun(p,iv), ci_z_sha(p,iv), p, iv, c, g, gb_mol(p), bsun(p),bsha(p), je_sun, &
                                je_sha, cair(p), oair(p), lmr_z_sun(p,iv), lmr_z_sha(p,iv), &
                                par_z_sun(p,iv), par_z_sha(p,iv), rh_can, gs_mol_sun(p,iv), gs_mol_sha(p,iv), &
                                qsatl(p), qaf(p), iter1, iter2, atm2lnd_inst, photosyns_inst, &
@@ -3534,7 +3544,7 @@ contains
   !------------------------------------------------------------------------------
 
   !--------------------------------------------------------------------------------
-  subroutine hybrid_PHS(x0sun, x0sha, p, iv, c, gb_mol, bsun, bsha, jesun, jesha, &
+  subroutine hybrid_PHS(x0sun, x0sha, p, iv, c, g, gb_mol, bsun, bsha, jesun, jesha, &
        cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
        gs_mol_sun, gs_mol_sha, qsatl, qaf, iter1, iter2, atm2lnd_inst, photosyns_inst, &
        canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst, waterfluxbulk_inst)
@@ -3551,6 +3561,7 @@ contains
     !
     !
     !!USES:
+    use clm_time_manager  , only : is_near_local_noon, get_local_time
     !
     !! ARGUMENTS:
     implicit none
@@ -3558,6 +3569,7 @@ contains
     integer , intent(in)    :: p                        ! pft index
     integer , intent(in)    :: iv                       ! radiation canopy layer index
     integer , intent(in)    :: c                        ! column index
+    integer , intent(in)    :: g                        ! gridcell index
     real(r8), intent(in)    :: gb_mol                   ! leaf boundary layer conductance (umol H2O/m**2/s)
     real(r8), intent(out)   :: bsun                     ! sunlit canopy transpiration wetness factor (0 to 1)
     real(r8), intent(out)   :: bsha                     ! shaded canopy transpiration wetness factor (0 to 1)
@@ -3618,7 +3630,9 @@ contains
     
     associate(                                                    &
          qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         vegwp         => canopystate_inst%vegwp_patch            & ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
+         vegwp         => canopystate_inst%vegwp_patch           ,& ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
+         vegwp_ln      => canopystate_inst%vegwp_ln_patch         & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) at local noon
+         vegwp_pd      => canopystate_inst%vegwp_ln_patch         & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) between midnight and 2am local time
     )
 
     
@@ -3767,6 +3781,22 @@ contains
     call getvegwp(p, c, x, gb_mol, gs_mol_sun, gs_mol_sha, qsatl, qaf, soilflux, &
          atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
     vegwp(p,:)=x
+
+    !write out local noon vwp (within +/- 1hr)
+    if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
+       vegwp_ln(p,:) = vegwp(p,:)
+    else
+       vegwp_ln(p,:) = spval
+    end if
+
+    !write out predawn vwp (averaged over midnight to 2am)
+    if ( get_local_time( grc%londeg(g)) <= 7200._r8 )then
+       vegwp_pd(p,:) = vegwp(p,:)
+    else
+       vegwp_pd(p,:) = spval
+    end if
+
+
     if (soilflux<0._r8) soilflux = 0._r8
     qflx_tran_veg(p) = soilflux
     
