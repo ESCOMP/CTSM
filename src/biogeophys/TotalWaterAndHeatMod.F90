@@ -518,7 +518,7 @@ contains
           c = filter_c(fc)
           ! calculate lake liq and ice content per lake layer first
           h2olak_liq = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
-          h2olak_ice = dz_lake(c,j) * denice * lake_icefrac(c,j)
+          h2olak_ice = dz_lake(c,j) * denh2o * lake_icefrac(c,j) ! use water density of liquid water as layer depth is not adjusted
           
           liquid_mass(c) = liquid_mass(c) + h2olak_liq
           ice_mass(c) = ice_mass(c) + h2olak_ice
