@@ -17,7 +17,7 @@ module  PhotosynthesisMod
   use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_fates, use_luna, use_hydrstress
   use clm_varctl          , only : iulog
   use clm_varpar          , only : nlevcan, nvegwcs, mxpft
-  use clm_varcon          , only : namep, c14ratio, spval
+  use clm_varcon          , only : namep, c14ratio, spval, isecspday
   use decompMod           , only : bounds_type
   use QuadraticMod        , only : quadratic
   use pftconMod           , only : pftcon
@@ -4209,6 +4209,7 @@ contains
     ! USES
     use clm_varpar        , only : nlevsoi
     use clm_varcon        , only : rgas
+    use clm_time_manager  , only : get_local_time
     !!
     ! !ARGUMENTS:
     integer                , intent(in)  :: p               ! pft index
@@ -4241,6 +4242,7 @@ contains
     real(r8) :: gs0sun,gs0sha         ! local gs_mol copies
     real(r8) :: qsun,qsha             ! attenuated transpiration fluxes
     integer  :: j                     ! index
+    integer  :: g                     ! gridcell index
     real(r8) :: cf                    ! s m**2/umol -> s/m
     integer  :: iter                  ! newton's method iteration number
     logical  :: flag                  ! signal that matrix was not invertible
@@ -4264,7 +4266,7 @@ contains
          tgcm          => temperature_inst%thm_patch            , & ! Input:  [real(r8) (:)   ]  air temperature at agcm reference height (kelvin)
          bsw           => soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"
          qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         vegwp_pd      => canopystate_inst%vegwp_pd_patch       , & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) at local noon
+         vegwp_pd      => canopystate_inst%vegwp_pd_patch       , & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) predawn
          sucsat        => soilstate_inst%sucsat_col               & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)
          )
 
@@ -4403,10 +4405,15 @@ contains
             atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
        if (soilflux<0._r8) soilflux = 0._r8
        qflx_tran_veg(p) = soilflux
+    endif
+
+    !save predawn vegwp
+    g = patch%gridcell(p)
+    if (night .and. get_local_time(grc%londeg(g))<(isecspday/2)) then
        vegwp_pd(p,:) = x
     else
        vegwp_pd(p,:) = spval
-    endif
+    end if
     
     
     end associate

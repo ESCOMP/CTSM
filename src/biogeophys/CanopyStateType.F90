@@ -49,7 +49,7 @@ module CanopyStateType
 
      real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
      real(r8) , pointer :: vegwp_ln_patch           (:,:) ! patch vegetation water matric potential at local noon (mm)
-     real(r8) , pointer :: vegwp_pd_patch           (:,:) ! patch vegetation water matric potential from 12am-2am (mm)
+     real(r8) , pointer :: vegwp_pd_patch           (:,:) ! patch predawn vegetation water matric potential (mm)
 
      real(r8)           :: leaf_mr_vcm = spval            ! Scalar constant of leaf respiration with Vcmax
 
@@ -252,7 +252,7 @@ contains
             ptr_patch=this%vegwp_ln_patch)
        this%vegwp_pd_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='VEGWPPD',  units='mm', type2d='nvegwcs', avgflag='A', &
-            long_name='vegetation water matric potential for sun/sha canopy,xyl,root for predawn (b/w 12 and 2am)', &
+            long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', &
             ptr_patch=this%vegwp_pd_patch)
     end if
 
