@@ -2740,6 +2740,7 @@ contains
          bbb        => photosyns_inst%bbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
          mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
+         vpd_can    => photosyns_inst%vpd_can_patch          , & ! Output: [real(r8) (:)   ]  canopy vapor pressure deficit (kPa)
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
          light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
          leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
@@ -3288,6 +3289,7 @@ contains
                else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   ! Put some constraints on RH in the canopy when Medlyn stomatal conductance is being used
                   rh_can = max((esat_tv(p) - ceair), 50._r8) * 0.001_r8
+                  vpd_can(p) = rh_can
                end if
 
                ! Electron transport rate for C3 plants. Convert par from W/m2 to
@@ -3631,7 +3633,7 @@ contains
     associate(                                                    &
          qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
          vegwp         => canopystate_inst%vegwp_patch           ,& ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
-         vegwp_ln      => canopystate_inst%vegwp_ln_patch         & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) at local noon
+         vegwp_ln      => canopystate_inst%vegwp_ln_patch        ,& ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) at local noon
          vegwp_pd      => canopystate_inst%vegwp_ln_patch         & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) between midnight and 2am local time
     )
 
