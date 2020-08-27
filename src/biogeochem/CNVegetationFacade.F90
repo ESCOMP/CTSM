@@ -272,8 +272,7 @@ contains
        call this%dgvs_inst%Init(bounds)
     end if
 
-    allocate(this%cnfire_method, &
-         source=create_cnfire_method(NLFilename))
+    call create_cnfire_method(NLFilename, this%cnfire_method)
 
   end subroutine Init
 
