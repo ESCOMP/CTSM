@@ -1206,9 +1206,28 @@ program mksurfdat
 
           ! Create pctlak data at model resolution (use original mapping file from lake data)
           call mklakwat (ldomain, mapfname=map_flakwat, datfname=flakname, &
-               ndiag=ndiag, zero_out=all_urban.or.all_veg, lake_o=pctlak)                    
+               ndiag=ndiag, zero_out=all_urban.or.all_veg, lake_o=pctlak)                            
+        
+          ! Make sure sum of dynamic land use types does not exceed 100. If it does,
+          ! subtract excess from lake pct.
+          do n = 1,ns_o
+           
+            suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
+            if (suma > 250._r4) then
+                write (6,*) subname, ' error: sum of pctlak, pctwet,', &
+                    'pcturb and pctgla is greater than 250%'
+                write (6,*)'n,pctlak,pctwet,pcturb,pctgla= ', &
+                    n,pctlak(n),pctwet(n),pcturb(n),pctgla(n)
+                call abort()
+            else if (suma > 100._r4) then
+                
+                ! calc pct lake as to fill cell
+                pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n))
+                
+            end if         
           
-
+          end do
+          
           call normalizencheck_landuse(ldomain)
 	  
           call update_max_array(pctnatpft_max,pctnatpft)
@@ -1421,29 +1440,14 @@ subroutine normalizencheck_landuse(ldomain)
           write(6,*) 'n, pctgla = ', n, pctgla(n)
           call abort()
        end if
-
-       ! IV: adjust preconditions:
-       ! If pctwet + pcturb + pctgla + pctlak > 100: pct lak is adjusted so that total is 100
-       ! pctwet + pcturb + pctgla cannot be >100
-       ! TO DO: adjust in subroutine description if added. 
        
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-       if ( suma > (100._r8 + tol_loose) ) then
-          
-          ! calc pct lake as to fill cell
-          pctlak(n) = 100._r8 - (pctwet(n) + pcturb(n) + pctgla(n))
-          
-          ! recalculate sum
-          suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
-          
-          if  (suma > (100._r8 + tol_loose)) then
-            write(6,*) subname, ' ERROR: pctwet + pcturb + pctgla must be'
-            write(6,*) '<= 100% before calling this subroutine'
-            write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
-                n, pctwet(n), pcturb(n), pctgla(n)
-            call abort()
-          end if
-          
+       if (suma > (100._r8 + tol_loose)) then
+          write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
+          write(6,*) '<= 100% before calling this subroutine'
+          write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
+               n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
+          call abort()
        end if
 
        ! First normalize vegetated (natural veg + crop) cover so that the total of
