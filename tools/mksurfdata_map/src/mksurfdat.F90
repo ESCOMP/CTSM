@@ -93,6 +93,7 @@ program mksurfdat
     type(pct_pft_type), allocatable :: pctnatpft_max(:) ! % of grid cell maximum PFTs of the time series
     type(pct_pft_type), allocatable :: pctcft(:)        ! % of grid cell that is crop, and breakdown into CFTs
     type(pct_pft_type), allocatable :: pctcft_max(:)    ! % of grid cell maximum CFTs of the time series
+    real(r8)               :: harvest_initval    ! initial value for harvest variables
     real(r8), pointer      :: harvest1D(:)       ! harvest 1D data: normalized harvesting
     real(r8), pointer      :: harvest2D(:,:)     ! harvest 1D data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
@@ -568,7 +569,14 @@ program mksurfdat
          ndiag=ndiag, pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
 
     ! Create harvesting data at model resolution
-    call mkharvest_init( ns_o, spval, harvdata, mksrf_fhrvtyp )
+    if (all_veg) then
+       ! In this case, we don't call mkharvest, so we want the harvest variables to be
+       ! initialized reasonably.
+       harvest_initval = 0._r8
+    else
+       harvest_initval = spval
+    end if
+    call mkharvest_init( ns_o, harvest_initval, harvdata, mksrf_fhrvtyp )
     if ( .not. all_veg )then
 
        call mkharvest( ldomain, mapfname=map_fharvest, datfname=mksrf_fhrvtyp, &

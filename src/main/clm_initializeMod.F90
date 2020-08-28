@@ -41,7 +41,7 @@ module clm_initializeMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine initialize1(gindex_ocn)
+  subroutine initialize1(dtime, gindex_ocn)
     !
     ! !DESCRIPTION:
     ! CLM initialization first phase
@@ -63,7 +63,14 @@ contains
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     !
     ! !ARGUMENTS
-    integer, pointer, optional, intent(out) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
+    integer, intent(in) :: dtime    ! model time step (seconds)
+
+    ! COMPILER_BUG(wjs, 2020-02-20, intel18.0.3) Although gindex_ocn could be
+    ! intent(out), intel18.0.3 generates a runtime segmentation fault in runs that don't
+    ! have this argument present when this is declared intent(out). (It works fine on
+    ! intel 19.0.2 when declared as intent(out).) See also
+    ! https://github.com/ESCOMP/CTSM/issues/930.
+    integer, pointer, optional, intent(inout) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -95,7 +102,7 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    call control_init()
+    call control_init(dtime)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
@@ -283,7 +290,7 @@ contains
     use clm_varctl            , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size_real, get_curr_calday
-    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
+    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength

@@ -11,7 +11,7 @@ module InfiltrationExcessRunoffMod
   use decompMod        , only : bounds_type
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog, use_vichydro
-  use clm_varcon       , only : spval, e_ice
+  use clm_varcon       , only : spval
   use SoilHydrologyType, only : soilhydrology_type
   use SoilStateType    , only : soilstate_type
   use SaturatedExcessRunoffMod, only : saturated_excess_runoff_type
@@ -23,6 +23,13 @@ module InfiltrationExcessRunoffMod
   private
 
   ! !PUBLIC TYPES:
+
+  public :: readParams
+
+  type, private :: params_type
+     real(r8) :: e_ice                   ! Soil ice impedance factor (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
 
   type, public :: infiltration_excess_runoff_type
      private
@@ -69,6 +76,26 @@ contains
   ! ========================================================================
   ! Infrastructure routines
   ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_InfiltrationExcessRunoff'
+    !--------------------------------------------------------------------
+
+    ! Soil ice impedance factor (unitless)
+    call readNcdioScalar(ncid, 'e_ice', subname, params_inst%e_ice)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds)
@@ -269,7 +296,7 @@ contains
 
     do fc = 1, num_hydrologyc
        c = filter_hydrologyc(fc)
-       qinmax_on_unsaturated_area(c) = minval(10._r8**(-e_ice*(icefrac(c,1:3)))*hksat(c,1:3))
+       qinmax_on_unsaturated_area(c) = minval(10._r8**(-params_inst%e_ice*(icefrac(c,1:3)))*hksat(c,1:3))
     end do
 
     end associate

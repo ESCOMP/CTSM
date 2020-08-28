@@ -5281,9 +5281,6 @@ contains
     ! Remove history files unless this is end of run or
     ! history file is not full.
     !
-    ! !USES:
-    use clm_time_manager, only : is_last_step
-    !
     ! !ARGUMENTS:
     integer, intent(in)  :: ntapes              !actual number of history tapes
     integer, intent(in)  :: hist_ntimes(ntapes) !current numbers of time samples on history tape
