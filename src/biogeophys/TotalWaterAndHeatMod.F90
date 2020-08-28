@@ -107,8 +107,8 @@ contains
     class(waterstate_type)   , intent(in)    :: waterstate_inst
     class(waterdiagnostic_type), intent(in)  :: waterdiagnostic_inst
 
-    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
-    ! remove this argument, always assuming it's true.
+    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When https://github.com/ESCOMP/CTSM/issues/658
+    ! is resolved, remove this argument, always assuming it's true.
     logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
 
     real(r8)                 , intent(inout) :: water_mass( bounds%begc: ) ! computed water mass (kg m-2)
@@ -159,8 +159,8 @@ contains
     class(waterstate_type)   , intent(in)    :: waterstate_inst
     type(lakestate_type)     , intent(in)    :: lakestate_inst
 
-    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
-    ! remove this argument, always assuming it's true.
+    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When https://github.com/ESCOMP/CTSM/issues/658
+    ! is resolved, remove this argument, always assuming it's true.
     logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
 
     real(r8)                 , intent(inout) :: water_mass( bounds%begc: ) ! computed water mass (kg m-2)
@@ -215,8 +215,8 @@ contains
     class(waterstate_type)   , intent(in)    :: waterstate_inst
     class(waterdiagnostic_type), intent(in)  :: waterdiagnostic_inst
 
-    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
-    ! remove this argument, always assuming it's true.
+    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When https://github.com/ESCOMP/CTSM/issues/658
+    ! is resolved, remove this argument, always assuming it's true.
     logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
 
     real(r8)                 , intent(inout) :: liquid_mass( bounds%begc: ) ! computed liquid water mass (kg m-2)
@@ -408,8 +408,8 @@ contains
     type(lakestate_type)  , intent(in)    :: lakestate_inst
 
 
-    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When we can accept answer changes to methane,
-    ! remove this argument, always assuming it's true.
+    ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When https://github.com/ESCOMP/CTSM/issues/658
+    ! is resolved, remove this argument, always assuming it's true.
     logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
 
     real(r8)              , intent(inout) :: liquid_mass( bounds%begc: ) ! computed liquid water mass (kg m-2)
