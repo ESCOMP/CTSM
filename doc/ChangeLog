@@ -1,4 +1,116 @@
 ===============================================================
+Tag name:  ctsm1.0.dev111
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri Aug 28 14:08:25 MDT 2020
+One-line Summary: Compsets don't use 2014 for GSWP3 forcing, LUNA prevyr changed back
+
+Purpose of changes
+------------------
+
+Update cime so that default end year for GSWP3 forcing is 2013 because 2014 data is bad. Also update
+the prevyr default for vcmax/jmax to what it was before ctsm1.0.dev102.
+
+Fix some issues for finding initial condition files for Clm45 compsets. Also bring in updated CDEPS/CMEPS
+as they were required with the cime update.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 
+  Fixes #1107 -- Change initial values of LUNA back to previous global values
+  Fixes #1067 -- Stop using PIO2 in the LILAC build
+  Fixes #1121 -- FMOZ test fails
+
+CIME Issues fixed (include issue #): 
+   Fixes ESMCI/cime#3683 -- Avoid artificial limit on string lengths in shr_string_listMerge
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   Last time-step in Dec/2013 for GSWP3 data still has zero humidity
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): 
+   cime is pointing to a branch_tag we should update it to a trunk tag as soon as possible
+
+Changes to tests or testing: build-namelist unit testing improved to find problems like #1121 a #1125
+
+Code reviewed by: self
+
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (all identical to previous tag)
+
+  tools-tests (test/tools):
+
+    cheyenne - PASS
+
+  python testing (see instructions in python/README.md; document testing done):
+
+   cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes 
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: (2010 and SSP compsets) and Clm50 with LUNA on (Bgc or Sp)
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cmeps, cdeps
+   (fox removed as a separate checkout)
+   cime to branch_tags/cime5.8.31_a01
+
+Pull Requests that document the changes (include PR ids):  #1114
+(https://github.com/ESCOMP/ctsm/pull)
+   #1114 -- Update cime so default end year for GSWP3 forcing is 2013 and change prevyr default for vcmax/jmax
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev110
 Originator(s): jedwards (Jim Edwards)
 Date:  Fri Aug 21 10:49:08 MDT 2020
