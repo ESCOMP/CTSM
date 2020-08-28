@@ -1086,7 +1086,8 @@ contains
                 heat_liquid = lake_heat_liquid(c), &
                 latent_heat_liquid = lake_latent_heat_liquid(c))
             ! ice heat
-            h2olak_ice = dz_lake(c,j) * denice * lake_icefrac(c,j)      
+            ! use water density as lake layer does not adjust
+            h2olak_ice = dz_lake(c,j) * denh2o * lake_icefrac(c,j)      
             lake_heat_ice(c) = lake_heat_ice(c) + & 
                 TempToHeat(temp=t_lake(c,j), cv = (h2olak_ice * cpice))
         end do
