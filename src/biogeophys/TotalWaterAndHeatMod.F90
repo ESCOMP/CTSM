@@ -518,7 +518,10 @@ contains
           c = filter_c(fc)
           ! calculate lake liq and ice content per lake layer first
           h2olak_liq = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
-          h2olak_ice = dz_lake(c,j) * denh2o * lake_icefrac(c,j) ! use water density of liquid water as layer depth is not adjusted
+
+          ! use water density rather than ice density because lake layer depths are not
+          ! adjusted when the layer freezes
+          h2olak_ice = dz_lake(c,j) * denh2o * lake_icefrac(c,j)
           
           liquid_mass(c) = liquid_mass(c) + h2olak_liq
           ice_mass(c) = ice_mass(c) + h2olak_ice
@@ -1085,10 +1088,11 @@ contains
                 h2o = h2olak_liq, &
                 heat_liquid = lake_heat_liquid(c), &
                 latent_heat_liquid = lake_latent_heat_liquid(c))
-            ! ice heat
-            ! use water density as lake layer does not adjust
-            h2olak_ice = dz_lake(c,j) * denh2o * lake_icefrac(c,j)      
-            lake_heat_ice(c) = lake_heat_ice(c) + & 
+           ! ice heat
+           ! use water density rather than ice density because lake layer depths are not
+           ! adjusted when the layer freezes
+           h2olak_ice = dz_lake(c,j) * denh2o * lake_icefrac(c,j)
+           lake_heat_ice(c) = lake_heat_ice(c) + &
                 TempToHeat(temp=t_lake(c,j), cv = (h2olak_ice * cpice))
         end do
     end do 
