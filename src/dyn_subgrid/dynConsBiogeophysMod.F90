@@ -645,7 +645,7 @@ contains
     call ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
          waterstate_inst, &
          lakestate_inst, &
-         subtract_dynbal_baselines = .true., &
+         add_lake_water_and_subtract_dynbal_baselines = .true., &
          liquid_mass = liquid_mass_col(bounds%begc:bounds%endc), &
          ice_mass = ice_mass_col(bounds%begc:bounds%endc))
 

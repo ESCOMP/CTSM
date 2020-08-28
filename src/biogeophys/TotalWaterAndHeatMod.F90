@@ -143,7 +143,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
        waterstate_inst, lakestate_inst, &
-       subtract_dynbal_baselines, &
+       add_lake_water_and_subtract_dynbal_baselines, &
        water_mass)
     !
     ! !DESCRIPTION:
@@ -159,9 +159,12 @@ contains
     class(waterstate_type)   , intent(in)    :: waterstate_inst
     type(lakestate_type)     , intent(in)    :: lakestate_inst
 
+    ! Whether to (1) add lake water/ice to total accounting, and (2) subtract
+    ! dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
+    !
     ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When https://github.com/ESCOMP/CTSM/issues/658
     ! is resolved, remove this argument, always assuming it's true.
-    logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
+    logical, intent(in) :: add_lake_water_and_subtract_dynbal_baselines
 
     real(r8)                 , intent(inout) :: water_mass( bounds%begc: ) ! computed water mass (kg m-2)
     !
@@ -181,7 +184,7 @@ contains
          filter_lakec = filter_lakec, &
          waterstate_inst = waterstate_inst, &
          lakestate_inst = lakestate_inst, &         
-         subtract_dynbal_baselines = subtract_dynbal_baselines, &
+         add_lake_water_and_subtract_dynbal_baselines = add_lake_water_and_subtract_dynbal_baselines, &
          liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
          ice_mass = ice_mass(bounds%begc:bounds%endc))
 
@@ -388,7 +391,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
        waterstate_inst, lakestate_inst,&
-       subtract_dynbal_baselines, &
+       add_lake_water_and_subtract_dynbal_baselines, &
        liquid_mass, ice_mass)
     !
     ! !DESCRIPTION:
@@ -408,9 +411,12 @@ contains
     type(lakestate_type)  , intent(in)    :: lakestate_inst
 
 
+    ! Whether to (1) add lake water/ice to total accounting, and (2) subtract
+    ! dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
+    !
     ! BUG(wjs, 2019-03-12, ESCOMP/ctsm#659) When https://github.com/ESCOMP/CTSM/issues/658
     ! is resolved, remove this argument, always assuming it's true.
-    logical, intent(in) :: subtract_dynbal_baselines ! whether to subtract dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
+    logical, intent(in) :: add_lake_water_and_subtract_dynbal_baselines
 
     real(r8)              , intent(inout) :: liquid_mass( bounds%begc: ) ! computed liquid water mass (kg m-2)
     real(r8)              , intent(inout) :: ice_mass( bounds%begc: )    ! computed ice mass (kg m-2)
@@ -449,11 +455,13 @@ contains
           ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
        end do
     end do
-    
-    ! Lake water content
-    call AccumulateLiqIceMassLake(bounds, num_lakec, filter_lakec, &
-       lakestate_inst, liquid_mass, ice_mass)
-    
+
+    if (add_lake_water_and_subtract_dynbal_baselines) then
+       ! Lake water content
+       call AccumulateLiqIceMassLake(bounds, num_lakec, filter_lakec, &
+            lakestate_inst, liquid_mass, ice_mass)
+    end if
+
     ! Soil water content of the soil under the lake
     do j = 1, nlevgrnd
        do fc = 1, num_lakec
@@ -463,7 +471,7 @@ contains
        end do
     end do
 
-    if (subtract_dynbal_baselines) then
+    if (add_lake_water_and_subtract_dynbal_baselines) then
        ! Subtract baselines set in initialization
        do fc = 1, num_lakec
           c = filter_lakec(fc)

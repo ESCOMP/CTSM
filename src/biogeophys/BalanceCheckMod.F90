@@ -216,7 +216,7 @@ contains
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
          waterstate_inst, lakestate_inst, &
-         subtract_dynbal_baselines = .false., &
+         add_lake_water_and_subtract_dynbal_baselines = .false., &
          water_mass = begwb(bounds%begc:bounds%endc))
 
     call waterstate_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
