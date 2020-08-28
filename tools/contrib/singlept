@@ -145,11 +145,12 @@ fdomain  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
 fdomain2 = dir_output + AddTagToFilename( fdomain, tag )
 
 #--  Specify surface data file  --------------------------------
-fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_CMIP6_simyr1850_c170706.nc'
+fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
+
 fsurf2   = dir_output + AddTagToFilename( fsurf, tag )
 
 #--  Specify landuse file  -------------------------------------
-fluse    = dir_inputdata+'lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc'
+fluse    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc'
 fluse2   = dir_output + AddTagToFilename( fluse, tag )
 
 #--  Specify datm domain file  ---------------------------------
