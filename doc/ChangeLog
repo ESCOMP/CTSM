@@ -1,4 +1,127 @@
 ===============================================================
+Tag name:  ctsm1.0.dev112
+Originator(s):  sacks (Bill Sacks), wwieder (Will Wieder)
+Date:  Fri Aug 28 17:10:57 MDT 2020
+One-line Summary: Small changes to mksurfdata_map, singlept tool and run_sys_tests
+
+Purpose of changes
+------------------
+
+(1) Move mksurfdata_map rounding of special landunits to before wetland
+    fill: I think this may be important to avoid errors and/or wrong
+    behavior in some edge cases where we have < 0.5% cover of glacier
+    and/or lake, and other cases. See
+    https://github.com/ESCOMP/CTSM/issues/1118 for detailed
+    thoughts. May change answers in rare cases, but no answer changes
+    observed for present-day surface datasets at standard resolutions
+    (f09, f19, f10, f45).
+
+(2) run_sys_tests: record command-line arguments in SRCROOT_GIT_STATUS
+    file
+
+(3) (From Will Wieder) Updates to current surfdata & landuse files in
+    tools/contrib/singlept
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1118 (mksurfdata_map rounding/truncation of
+  special landunits should happen before wetland filling)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+Code reviewed by: self
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - PASS
+
+    Note: ran tools testing on code based off of ctsm1.0.dev110 (before
+    merging with ctsm1.0.dev111)
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - PASS on mac (bishorn)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- not run
+    izumi ------- not run
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: ctsm1.0.dev110
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+In principle, the changes to mksurfdata_map could change answers for
+rare cases. No answer changes were observed for present-day surface
+datasets at resolutions f09, f19, f10 or f45. Also note that no surface
+datasets were actually updated in this tag, so if any answer changes
+appear from these changes, they would appear the next time we update
+surface datasets.
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1119
+https://github.com/ESCOMP/CTSM/pull/1120
+https://github.com/ESCOMP/CTSM/pull/1122
+
+===============================================================
+===============================================================
 Tag name:  ctsm1.0.dev111
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri Aug 28 14:08:25 MDT 2020
