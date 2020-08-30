@@ -378,7 +378,7 @@ contains
        end if
 
        if (index_l2x_Fall_methane /= 0) then
-          l2x(index_l2x_Fall_methane,i) = -lnd2atm_inst%flux_ch4_grc(g) 
+          l2x(index_l2x_Fall_methane,i) = -lnd2atm_inst%ch4_surf_flux_tot_grc(g)
        endif
 
        ! sign convention is positive downward with 

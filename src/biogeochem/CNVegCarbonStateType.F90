@@ -1205,11 +1205,13 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
-       if (flag == 'read' .and. (.not. readvar) ) then
-           this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+       if (use_crop) then
+          call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+          if (flag == 'read' .and. (.not. readvar) ) then
+              this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+          end if
        end if
 
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc', xtype=ncd_double,  &

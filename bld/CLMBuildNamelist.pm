@@ -35,7 +35,7 @@ use File::Basename qw(dirname);
 use English;
 use Getopt::Long;
 use IO::File;
-use File::Glob ':glob';
+use File::Glob ':bsd_glob';
 
 #-------------------------------------------------------------------------------
 #
@@ -189,7 +189,6 @@ OPTIONS
                                form \$CASEDIR/user_nl_clm/user_nl_clm_????)
      -inputdata "filepath"    Writes out a list containing pathnames for required input datasets in
                               file specified.
-     -l_ncpl "LND_NCPL"       Number of CLM coupling time-steps in a day.
      -lnd_tuning_mode "value" Use the parameters tuned for the given configuration (CLM version and atmospheric forcing)
      -mask "landmask"         Type of land-mask (default, navy, gx3v5, gx1v5 etc.)
                               "-mask list" to list valid land masks.
@@ -255,7 +254,6 @@ sub process_commandline {
                help                  => 0,
                glc_nec               => "default",
                light_res             => "default",
-               l_ncpl                => undef,
                lnd_tuning_mode       => "default",
                lnd_frac              => undef,
                dir                   => "$cwd",
@@ -307,7 +305,6 @@ sub process_commandline {
              "infile=s"                  => \$opts{'infile'},
              "lnd_frac=s"                => \$opts{'lnd_frac'},
              "lnd_tuning_mode=s"         => \$opts{'lnd_tuning_mode'},
-             "l_ncpl=i"                  => \$opts{'l_ncpl'},
              "inputdata=s"               => \$opts{'inputdata'},
              "mask=s"                    => \$opts{'mask'},
              "namelist=s"                => \$opts{'namelist'},
@@ -477,7 +474,7 @@ sub read_envxml_case_files {
   my %envxml = ();
   if ( defined($opts->{'envxml_dir'}) ) {
       (-d $opts->{'envxml_dir'})  or  $log->fatal_error( "envxml_dir is not a directory" );
-      my @files = glob( $opts->{'envxml_dir'}."/env_*xml" );
+      my @files = bsd_glob( $opts->{'envxml_dir'}."/env_*xml" );
       ($#files >= 0)              or  $log->fatal_error( "there are no env_*xml files in the envxml_dir" );
       foreach my $file (@files) {
           $log->verbose_message( "Open env.xml file: $file" );
@@ -1196,12 +1193,22 @@ sub setup_cmdl_run_type {
   my $val;
   my $var = "clm_start_type";
   my $ic_date = $nl->get_value('start_ymd');
-  my $st_year = int( $ic_date / 10000);
+  my $st_year;
+  if ( defined($ic_date) ) {
+     $st_year = int( $ic_date / 10000);
+  } else {
+    $st_year = $nl_flags->{'sim_year'};
+    $ic_date = $st_year *10000 + 101;
+    my $date = 'start_ymd';
+    my $group = $definition->get_group_name($date);
+    $nl->set_variable_value($group, $date, $ic_date );
+  }
   if (defined $opts->{$var}) {
     if ($opts->{$var} eq "default" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
                   'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                  'sim_year'=>$st_year );
+                  'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, 
+                  'bgc_spinup'=>$nl_flags->{'bgc_spinup'} );
     } else {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
@@ -1212,6 +1219,7 @@ sub setup_cmdl_run_type {
                   'sim_year'=>$st_year );
   }
   $nl_flags->{'clm_start_type'} = $nl->get_value($var);
+  $nl_flags->{'st_year'}        = $st_year;
 }
 
 #-------------------------------------------------------------------------------
@@ -1394,9 +1402,6 @@ sub process_namelist_commandline_clm_usr_name {
         $nvars++;
       }
     }
-    if ( $nvars == 0 ) {
-      $log->message("setting clm_usr_name -- but did NOT find any user datasets: $opts->{'clm_usr_name'}", $opts);
-    }
     # Go through all variables and expand any XML env settings in them
     expand_xml_variables_in_namelist( $nl_usrfile, $envxml_ref );
     # Merge input values into namelist.  Previously specified values have higher precedence
@@ -1438,7 +1443,7 @@ sub process_namelist_commandline_use_case {
       my $val = $uc_defaults->get_value($var, \%settings );
 
       if ( defined($val) ) {
-        $log->message("CLM adding use_case $opts->{'use_case'} defaults for var '$var' with val '$val'");
+        $log->verbose_message("CLM adding use_case $opts->{'use_case'} defaults for var '$var' with val '$val'");
 
         add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl_usecase, $var, 'val'=>$val);
       }
@@ -1486,7 +1491,6 @@ sub process_namelist_inline_logic {
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
-  setup_logic_delta_time($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_snow($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref);
@@ -1814,7 +1818,8 @@ sub setup_logic_co2_type {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, $opts->{$var});
     } else {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'} );
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'},
+                  'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
     }
   }
 }
@@ -1857,28 +1862,6 @@ sub setup_logic_start_type {
     if (defined $nl->get_value('nrevsn')) {
       $log->fatal_error("nrevsn should ONLY be set for a branch type.");
     }
-  }
-}
-
-#-------------------------------------------------------------------------------
-
-sub setup_logic_delta_time {
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-
-  if ( defined($opts->{'l_ncpl'}) ) {
-    my $l_ncpl = $opts->{'l_ncpl'};
-    if ( $l_ncpl <= 0 ) {
-      $log->fatal_error("bad value for -l_ncpl option.");
-    }
-    my $val = ( 3600 * 24 ) / $l_ncpl;
-    my $dtime = $nl->get_value('dtime');
-    if ( ! defined($dtime)  ) {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'val'=>$val);
-    } elsif ( $dtime ne $val ) {
-      $log->fatal_error("can NOT set both -l_ncpl option (via LND_NCPL env variable) AND dtime namelist variable.");
-    }
-  } else {
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dtime', 'hgrid'=>$nl_flags->{'res'});
   }
 }
 
@@ -2206,7 +2189,7 @@ sub setup_logic_surface_dataset {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with ecosystem dynamics (use_fates=.true)." );
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
-              'hgrid'=>$nl_flags->{'res'},
+              'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
               'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
               'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
 }
@@ -2247,7 +2230,7 @@ sub setup_logic_initial_conditions {
 
   if (not defined $finidat ) {
     my $ic_date = $nl->get_value('start_ymd');
-    my $st_year = int( $ic_date / 10000);
+    my $st_year = $nl_flags->{'st_year'};
     my $nofail = 1;
     my %settings;
     $settings{'hgrid'}   = $nl_flags->{'res'};
@@ -2263,11 +2246,11 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $nl_flags->{'sim_year'};
        $opts->{'ignore_ic_year'} = 1; 
     } else {
-       delete( $settings{'sim_year'} );
+       $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
                        "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates",
-                       "lnd_tuning_mode"
+                       "lnd_tuning_mode", 
                      ) {
        $settings{$item}    = $nl_flags->{$item};
     }
@@ -2305,47 +2288,65 @@ sub setup_logic_initial_conditions {
           #}
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_sim_years" );
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_how_close" );
+          #
+          # Figure out which sim_year has a usable finidat file that is closest to the desired one
+          #
           my $close = $nl->get_value("init_interp_how_close");
-          foreach my $sim_yr ( split( /,/, $nl->get_value("init_interp_sim_years") )) {
+          my $closest_sim_year = undef;
+          my @sim_years = split( /,/, $nl->get_value("init_interp_sim_years") );
+SIMYR:    foreach my $sim_yr ( @sim_years ) {
              my $how_close = undef;
              if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
                 $how_close = abs(1850 - $sim_yr);
+             } elsif ( $nl_flags->{'flanduse_timeseries'} eq "null" ) {
+                $how_close = abs($nl_flags->{'sim_year'} - $sim_yr);
              } else {
                 $how_close = abs($st_year - $sim_yr);
              }
-             if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
-                $close = $how_close;
+             if ( ($sim_yr == $sim_years[-1]) || (($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close)) ) {
+                my $group = $definition->get_group_name($useinitvar);
                 $settings{'sim_year'} = $sim_yr;
-             }
-          } 
-          add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
-                     'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
-                     'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                     'use_fates'=>$nl_flags->{'use_fates'} );
-          $settings{$useinitvar} = $nl->get_value($useinitvar);
-          if ( $try > 1 ) {
-             my $group = $definition->get_group_name($useinitvar);
-             $nl->set_variable_value($group, $useinitvar, $use_init_interp_default );
-          }
-          if ( &value_is_true($nl->get_value($useinitvar) ) ) {
+                $settings{$useinitvar} = $defaults->get_value($useinitvar, \%settings);
+                if ( ! defined($settings{$useinitvar}) ) {
+                   $settings{$useinitvar} = $use_init_interp_default;
+                }
+                if ( &value_is_true($settings{$useinitvar}) ) {
 
-             add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
-                        'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
-                        'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                        'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},'nofail'=>1 );
-             my $attributes_string = remove_leading_and_trailing_quotes($nl->get_value("init_interp_attributes"));
-             foreach my $pair ( split( /\s/, $attributes_string) ) {
-                if ( $pair =~ /^([a-z_]+)=([a-z._0-9]+)$/ ) {
-                   $settings{$1} = $2;
-                } else {
-                   $log->fatal_error("Problem interpreting init_interp_attributes");
+                   if ( ($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close) ) {
+                      $close = $how_close;
+                      $closest_sim_year = $sim_yr;
+                   }
                 }
              }
-          } else {
+          }    # SIMYR:
+          $settings{'sim_year'} = $closest_sim_year;
+          add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
+                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(), 'hgrid'=>$nl_flags->{'res'},
+                      'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                      'use_fates'=>$nl_flags->{'use_fates'} );
+          $settings{$useinitvar} = $nl->get_value($useinitvar);
+          if ( ! &value_is_true($nl->get_value($useinitvar) ) ) {
              if ( $nl_flags->{'clm_start_type'} =~ /startup/  ) {
                 $log->fatal_error("clm_start_type is startup so an initial conditions ($var) file is required, but can't find one without $useinitvar being set to true");
              }
-             $try = $done;
+          } else {
+             my $stat = add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, "init_interp_attributes",
+                                 'sim_year'=>$settings{'sim_year'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 
+                                 'glc_nec'=>$nl_flags->{'glc_nec'}, 'use_fates'=>$nl_flags->{'use_fates'},
+                                 'hgrid'=>$nl_flags->{'res'}, 
+                                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'}, 'nofail'=>1 );
+             if ( $stat ) {
+                $log->fatal_error("$useinitvar is NOT synchronized with init_interp_attributes");
+             }
+             my $attributes = $nl->get_value("init_interp_attributes");
+             my $attributes_string = remove_leading_and_trailing_quotes($attributes);
+             foreach my $pair ( split( /\s/, $attributes_string) ) {
+                if ( $pair =~ /^([a-z_]+)=([a-zA-Z._0-9]+)$/ ) {
+                   $settings{$1} = $2;
+                } else {
+                   $log->fatal_error("Problem interpreting init_interp_attributes: $pair");
+                }
+             }
           }
        } else {
          $try = $done
@@ -3126,9 +3127,17 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+       # Also check at f19 resolution
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+       # If not found report an error
+       if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+          $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
+                        "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
+                        "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
+                        "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
+       }
     }
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
@@ -3974,7 +3983,7 @@ sub add_default {
         }
       }
       else {
-        return;
+        return( 1 );
       }
     }
 
@@ -4009,6 +4018,7 @@ sub add_default {
     # set the value in the namelist
     $nl->set_variable_value($group, $var, $val);
   }
+  return( 0 );
 
 }
 
@@ -4203,7 +4213,7 @@ sub validate_options {
            # create the @expect array by listing the files in $use_case_dir
            # and strip off the ".xml" part of the filename
            @expect = ();
-           my @files = glob("$opts->{'use_case_dir'}/*.xml");
+           my @files = bsd_glob("$opts->{'use_case_dir'}/*.xml");
            foreach my $file (@files) {
                $file =~ m{.*/(.*)\.xml};
                &check_use_case_name( $1 );
@@ -4217,7 +4227,7 @@ sub validate_options {
         } else {
            print "Use cases are:...\n\n";
            my @ucases;
-           foreach my $file( sort( glob($opts->{'use_case_dir'}."/*.xml") ) ) {
+           foreach my $file( sort( bsd_glob($opts->{'use_case_dir'}."/*.xml") ) ) {
               my $use_case;
               if ( $file =~ /\/([^\/]+)\.xml$/ ) {
                  &check_use_case_name( $1 );

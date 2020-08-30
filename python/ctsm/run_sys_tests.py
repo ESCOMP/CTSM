@@ -4,13 +4,15 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import sys
 import subprocess
 from datetime import datetime
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-from ctsm.machine_utils import get_machine_name, make_link
+from ctsm.machine_utils import get_machine_name
 from ctsm.machine import create_machine, get_possibly_overridden_baseline_dir
 from ctsm.machine_defaults import MACHINE_DEFAULTS
+from ctsm.os_utils import make_link
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_NOBATCH
 
@@ -433,6 +435,7 @@ def _record_git_status(testroot, dry_run):
             now_str = now.strftime("%m%d-%H%M%S")
             git_status_filepath = git_status_filepath + '_' + now_str
         with open(git_status_filepath, 'w') as git_status_file:
+            git_status_file.write(' '.join(sys.argv) + '\n\n')
             git_status_file.write("SRCROOT: {}\n".format(ctsm_root))
             git_status_file.write(output)
 
