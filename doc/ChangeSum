@@ -1,5 +1,9 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+release-cesm2.2.01   erik 08/28/2020 Fix clm4_5 initial conditions
+  ctsm1.0.dev111     erik 08/28/2020 Compsets don't use 2014 for GSWP3 forcing
+  ctsm1.0.dev110 jedwards 08/21/2020 SKIPPED ON RELEASE BRANCH
+  ctsm1.0.dev109   negins 08/20/2020 SKIPPED ON RELEASE BRANCH
   ctsm1.0.dev108     erik 08/19/2020  Update default PE layouts for new SE/FV3 grids
   ctsm1.0.dev107     erik 08/10/2020 Answer changes needed for CESM2.2.0
   ctsm1.0.dev106     erik 08/06/2020 Bit-for-bit updates for the CESM2.2.0 release
