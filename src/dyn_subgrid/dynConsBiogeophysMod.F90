@@ -205,8 +205,9 @@ contains
     
     ! Calculate the total water volume of the lake column
     call AccumulateLiqIceMassLake(bounds, num_lakec, filter_lakec, lakestate_inst, &
-        liquid_mass = lake_liquid_mass_col(bounds%begc:bounds%endc), &
-        ice_mass = lake_ice_mass_col(bounds%begc:bounds%endc))
+         tracer_ratio = waterstate_inst%info%get_ratio(), &
+         liquid_mass = lake_liquid_mass_col(bounds%begc:bounds%endc), &
+         ice_mass = lake_ice_mass_col(bounds%begc:bounds%endc))
      
     do fc = 1, num_lakec
        c = filter_lakec(fc)

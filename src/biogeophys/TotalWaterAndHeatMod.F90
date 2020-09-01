@@ -390,7 +390,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
-       waterstate_inst, lakestate_inst,&
+       waterstate_inst, lakestate_inst, &
        add_lake_water_and_subtract_dynbal_baselines, &
        liquid_mass, ice_mass)
     !
@@ -409,7 +409,6 @@ contains
     integer               , intent(in)    :: filter_lakec(:)             ! column filter for lake points
     class(waterstate_type), intent(in)    :: waterstate_inst
     type(lakestate_type)  , intent(in)    :: lakestate_inst
-
 
     ! Whether to (1) add lake water/ice to total accounting, and (2) subtract
     ! dynbal_baseline_liq and dynbal_baseline_ice from liquid_mass and ice_mass
@@ -459,7 +458,10 @@ contains
     if (add_lake_water_and_subtract_dynbal_baselines) then
        ! Lake water content
        call AccumulateLiqIceMassLake(bounds, num_lakec, filter_lakec, &
-            lakestate_inst, liquid_mass, ice_mass)
+            lakestate_inst, &
+            tracer_ratio = waterstate_inst%info%get_ratio(), &
+            liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
+            ice_mass = ice_mass(bounds%begc:bounds%endc))
     end if
 
     ! Soil water content of the soil under the lake
@@ -486,7 +488,7 @@ contains
 
     !-----------------------------------------------------------------------
   subroutine AccumulateLiqIceMassLake(bounds, num_c, filter_c, &
-       lakestate_inst, liquid_mass, ice_mass)
+       lakestate_inst, tracer_ratio, liquid_mass, ice_mass)
     !
     ! !DESCRIPTION:
     ! Accumulate lake water mass of lake columns, separated into liquid and ice.
@@ -501,6 +503,7 @@ contains
     integer                , intent(in)    :: num_c                       ! number of column points in column filter (should not include lake points; can be a subset of the no-lake filter)
     integer                , intent(in)    :: filter_c(:)                 ! column filter (should not include lake points; can be a subset of the no-lake filter)
     type(lakestate_type)   , intent(in)    :: lakestate_inst
+    real(r8)               , intent(in)    :: tracer_ratio                ! for water tracers, standard ratio of this tracer to bulk water (1 for bulk water)
     real(r8)               , intent(inout) :: liquid_mass( bounds%begc: ) ! accumulated liquid mass (kg m-2)
     real(r8)               , intent(inout) :: ice_mass( bounds%begc: )    ! accumulated ice mass (kg m-2)
     !
@@ -524,12 +527,14 @@ contains
     do j = 1, nlevlak
        do fc = 1, num_c
           c = filter_c(fc)
-          ! calculate lake liq and ice content per lake layer first
-          h2olak_liq = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j))
+          ! Lake water volume isn't tracked explicitly, so we calculate it from lake
+          ! depth. Because it isn't tracked explicitly, we also don't have any water
+          ! tracer information, so we assume a fixed, standard tracer ratio.
+          h2olak_liq = dz_lake(c,j) * denh2o * (1 - lake_icefrac(c,j)) * tracer_ratio
 
           ! use water density rather than ice density because lake layer depths are not
           ! adjusted when the layer freezes
-          h2olak_ice = dz_lake(c,j) * denh2o * lake_icefrac(c,j)
+          h2olak_ice = dz_lake(c,j) * denh2o * lake_icefrac(c,j) * tracer_ratio
           
           liquid_mass(c) = liquid_mass(c) + h2olak_liq
           ice_mass(c) = ice_mass(c) + h2olak_ice
