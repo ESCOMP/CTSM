@@ -342,6 +342,9 @@ case $hostname in
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=36
   fi
+  if [ interactive = "YES" ]; then
+     REGRID_PROC=1
+  fi
   esmfvers=8.0.0
   intelvers=19.0.5
   module purge
@@ -371,6 +374,9 @@ case $hostname in
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=8
+  fi
+  if [ interactive = "YES" ]; then
+     REGRID_PROC=1
   fi
   echo "REGRID_PROC=$REGRID_PROC"
   esmfvers=7.1.0r
