@@ -321,7 +321,7 @@ module LunaMod
     pnlc_z        => photosyns_inst%pnlc_z_patch                      , & ! Output: [real(r8) (:,:) ] patch proportion of leaf nitrogen allocated for light capture for canopy layer 
     enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
     vcmx25_z_last_valid_patch   => photosyns_inst%vcmx25_z_last_valid_patch , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from end of the growing season for the previous year
-    jmx_prevyr    => photosyns_inst%jmx_prevyr                          & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from the end of the growing season for the previous year
+    jmx25_z_last_valid_patch    => photosyns_inst%jmx25_z_last_valid_patch                          & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from the end of the growing season for the previous year
     )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
@@ -430,7 +430,7 @@ module LunaMod
                          chg = jmx25_opt-jmx25_z(p, z)
                          chg_constrn = min(abs(chg),jmx25_z(p, z)*max_daily_pchg)
                          jmx25_z(p, z)  = jmx25_z(p, z)+sign(1.0_r8,chg)*chg_constrn 
-                         jmx_prevyr(p,z) = jmx25_z(p,z)
+                         jmx25_z_last_valid_patch(p,z) = jmx25_z(p,z)
 
                          PNlc_z(p, z)= PNlcopt
 
@@ -489,7 +489,7 @@ module LunaMod
                 endif !if not C3 plants                   
          else
             do z = 1 , nrad(p)
-               jmx25_z(p, z) = jmx_prevyr(p,z)
+               jmx25_z(p, z)  = jmx25_z_last_valid_patch(p,z)
                vcmx25_z(p, z) = vcmx25_z_last_valid_patch(p,z)
             end do
          endif !checking for LAI and LNC
