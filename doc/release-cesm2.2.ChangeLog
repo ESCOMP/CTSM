@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  release-cesm2.2.01
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Fri Aug 28 20:50:32 MDT 2020
+Date: Wed Sep  2 02:44:01 MDT 2020
 One-line Summary: Fix clm4_5 initial conditions
 
 Purpose of this version:
@@ -10,7 +10,8 @@ Purpose of this version:
 Update cime so that default end year for GSWP3 forcing is 2013 because 2014 data is bad.
 
 Fix some issues for finding initial condition files for Clm45 compsets. Also bring in updated CDEPS/CMEPS
-as they were required with the cime update.
+as they were required with the cime update. Also get the CLM offline tools working as well as the tools
+testing.
 
 
 CTSM Master Tag This Corresponds To: ctsm1.0.dev108 (with most changes from ctsm1.0.dev111)
@@ -19,14 +20,21 @@ Summary of changes:
 -------------------
 
 Issues fixed (include CTSM Issue #): 
+  Fixes #1134 mkmapdata.sh is not working
+  Fixes #1129 two FATES tests that fail
+  Fixes #1128 missing compset
   Fixes #1067 -- Stop using PIO2 in the LILAC build
   Fixes #1121 -- FMOZ test fails
 CIME Issues fixed (include issue #): 
    Fixes ESMCI/cime#3683 -- Avoid artificial limit on string lengths in shr_string_listMerge
+PTCLM Issues fixed:
+   Fixes PTCLM#11 -- not running on cheyenne
 
 Science changes since: ctsm1.0.dev108
+   2010 and SSP compsets have forcing end in 2013 rather than 2014
 
 Software changes since: ctsm1.0.dev108
+   Fix issues for finding IC files for clm45
 
 Changes to User Interface since: ctsm1.0.dev108
 
@@ -41,33 +49,20 @@ Testing:
 
   tools-tests (components/clm/test/tools):
 
-    cheyenne - 
-    izumi ----
+    cheyenne - PASS
+    izumi ---- PASS
 
   PTCLM testing (components/clm/tools/shared/PTCLM/test):
 
-     cheyenne - 
-     izumi ----
+     cheyenne - OK
 
   regular tests (aux_clm):
 
-    cheyenne_intel ---- 
-    cheyenne_gnu ------ 
-    izumi_nag --------- 
-    izumi_pgi --------- 
-    izumi_intel ------- 
-
-  regular tests (prealpha):
-
-    cheyenne_intel -
-    cheyenne_gnu ---
-    izumi_nag ------
-
-  regular tests (prebeta):
-
-    cheyenne_intel -
-    cheyenne_gnu ---
-    izumi_nag ------
+    cheyenne_intel ---- OK
+    cheyenne_gnu ------ OK
+    izumi_nag --------- OK
+    izumi_pgi --------- OK
+    izumi_intel ------- OK
 
 Summary of Answer changes:
 -------------------------
@@ -84,11 +79,17 @@ Changes answers relative to baseline: yes
 Detailed list of changes:
 ------------------------
 
-Externals being used:
+Externals being used: cesm2_2_alpha06e versions
+   CISM   at cism2_1_69
+   RTM    at rtm1_0_72
+   MOSART at mosart1_0_37
+   cime   at cime5.8.32
+   FATES  at sci.1.30.0_api.8.0.0
+   PTCLM  at PTCLM2_20200902
 
 CTSM Tag versions pulled over from master development branch: ctsm1.0.dev111
 
-Pull Requests that document the changes (include PR ids):
+Pull Requests that document the changes (include PR ids): N/A
 (https://github.com/ESCOMP/ctsm/pull)
 
 ===============================================================
