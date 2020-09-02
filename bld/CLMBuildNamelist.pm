@@ -2747,8 +2747,7 @@ sub setup_logic_nitrif_params {
   my ($nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( !  &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) {
-    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent",
-                 "denitrif_nitrateconc_exponent" );
+    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent");
     foreach my $var ( @vars ) {
        if ( defined($nl->get_value( $var ) ) ) {
          $log->fatal_error("$var is only used when use_nitrif_denitrif is turned on");
