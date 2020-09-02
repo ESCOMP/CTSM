@@ -320,8 +320,8 @@ module LunaMod
     jmx25_z       => photosyns_inst%jmx25_z_patch                     , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 (umol electron/m**2/s) for canopy layer
     pnlc_z        => photosyns_inst%pnlc_z_patch                      , & ! Output: [real(r8) (:,:) ] patch proportion of leaf nitrogen allocated for light capture for canopy layer 
     enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
-    vcmx_prevyr   => photosyns_inst%vcmx_prevyr                       , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from previous year avg
-    jmx_prevyr    => photosyns_inst%jmx_prevyr                          & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from previous year avg
+    vcmx_prevyr   => photosyns_inst%vcmx_prevyr                       , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from end of the growing season for the previous year
+    jmx_prevyr    => photosyns_inst%jmx_prevyr                          & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from the end of the growing season for the previous year
     )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
