@@ -541,7 +541,7 @@ contains
             ptr_patch=this%vcmx25_z_patch)
  
          call hist_addfld2d (fname='Jmx25Z', units='umol electrons/m2/s', type2d='nlevcan', &
-            avgflag='A', long_name='maximum rate of electron transport at 25 celcius for canopy laters', &
+            avgflag='A', long_name='maximum rate of electron transport at 25 Celcius for canopy layers', &
             ptr_patch=this%jmx25_z_patch)
 
          call hist_addfld2d (fname='PNLCZ', units='unitless', type2d='nlevcan', &
@@ -554,7 +554,7 @@ contains
             ptr_patch=ptr_1d)
          ptr_1d => this%jmx25_z_patch(:,1)
          call hist_addfld1d (fname='Jmx25Z', units='umol/m2/s',&
-            avgflag='A', long_name='maximum rate of electron transport at 25 celcius for canopy laters', &
+            avgflag='A', long_name='maximum rate of electron transport at 25 Celcius for canopy layers', &
             ptr_patch=ptr_1d)
          ptr_1d => this%pnlc_z_patch(:,1)
          call hist_addfld1d (fname='PNLCZ', units='unitless', &
@@ -886,11 +886,11 @@ contains
     if(use_luna) then
       call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
-         long_name='Maximum carboxylation rate at 25 celcius for canopy layers', units='umol CO2/m**2/s', &
+         long_name='Maximum carboxylation rate at 25 Celcius for canopy layers', units='umol CO2/m**2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%vcmx25_z_patch)
       call restartvar(ncid=ncid, flag=flag, varname='jmx25_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
-         long_name='Maximum rate of electron transport at 25 celcius for canopy layers', units='umol electrons/m**2/s', &
+         long_name='Maximum rate of electron transport at 25 Celcius for canopy layers', units='umol electrons/m**2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_patch)
       call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z_last_valid_patch', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
@@ -898,7 +898,7 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%vcmx25_z_last_valid_patch)
       call restartvar(ncid=ncid, flag=flag, varname='jmx25_z_last_valid_patch', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
-         long_name='avg rate of electron transport at 25 celcius for canopy layers', units='umol electrons/m**2/s', &
+         long_name='avg rate of electron transport at 25 Celcius for canopy layers', units='umol electrons/m**2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_last_valid_patch)
       call restartvar(ncid=ncid, flag=flag, varname='pnlc_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
