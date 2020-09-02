@@ -976,12 +976,6 @@ Exponent power for heterotrophic respiration for max denitrification rates
 (ONLY used if use_nitrif_denitrif is enabled)
 </entry>
 
-<entry id="denitrif_nitrateconc_coefficient" type="real" category="bgc"
-       group="nitrif_inparm" valid_values="" >
-Multiplier for nitrate concentration for max denitrification rates
-(ONLY used if use_nitrif_denitrif is enabled)
-</entry>
-
 <entry id="denitrif_nitrateconc_exponent" type="real" category="bgc"
        group="nitrif_inparm" valid_values="" >
 Exponent power for nitrate concentrationfor max denitrification rates
