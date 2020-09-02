@@ -553,7 +553,7 @@ contains
             avgflag='A', long_name='canopy profile of vcmax25 predicted by LUNA model', &
             ptr_patch=ptr_1d)
          ptr_1d => this%jmx25_z_patch(:,1)
-         call hist_addfld1d (fname='Jmx25Z', units='umol/m2/s',&
+         call hist_addfld1d (fname='Jmx25Z', units='umol electrons/m2/s',&
             avgflag='A', long_name='maximum rate of electron transport at 25 Celcius for canopy layers', &
             ptr_patch=ptr_1d)
          ptr_1d => this%pnlc_z_patch(:,1)
@@ -892,11 +892,11 @@ contains
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Maximum rate of electron transport at 25 Celcius for canopy layers', units='umol electrons/m**2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_patch)
-      call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z_last_valid_patch', xtype=ncd_double,  &
+      call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z_last_valid_patch:vcmx_prevyr', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='avg carboxylation rate at 25 celsius for canopy layers', units='umol CO2/m**2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%vcmx25_z_last_valid_patch)
-      call restartvar(ncid=ncid, flag=flag, varname='jmx25_z_last_valid_patch', xtype=ncd_double,  &
+      call restartvar(ncid=ncid, flag=flag, varname='jmx25_z_last_valid_patch:jmx_prevyr', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='avg rate of electron transport at 25 Celcius for canopy layers', units='umol electrons/m**2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_last_valid_patch)
