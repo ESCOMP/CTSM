@@ -497,6 +497,7 @@ contains
             ! reset_lake_baselines is irrelevant since reset_all_baselines is true
             reset_lake_baselines = .false.)
     end do
+    !$OMP END PARALLEL DO
 
     ! ------------------------------------------------------------------------
     ! Initialize modules (after time-manager initialization in most cases)
@@ -663,6 +664,7 @@ contains
             reset_all_baselines = reset_dynbal_baselines_all_columns, &
             reset_lake_baselines = reset_dynbal_baselines_lake_columns)
     end do
+    !$OMP END PARALLEL DO
 
     ! ------------------------------------------------------------------------
     ! Initialize nitrogen deposition
