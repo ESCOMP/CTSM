@@ -12,8 +12,6 @@ module dynConsBiogeophysMod
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
   use decompMod               , only : bounds_type
-  use spmdMod                 , only : masterproc
-  use clm_varctl              , only : iulog
   use UrbanParamsType         , only : urbanparams_type
   use EnergyFluxType          , only : energyflux_type
   use SoilHydrologyType       , only : soilhydrology_type
@@ -69,7 +67,7 @@ contains
   subroutine dyn_hwcontent_set_baselines(bounds, num_icemecc, filter_icemecc, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, lakestate_inst, water_inst, temperature_inst, &
-       reset_all_baselines, reset_lake_baselines, print_resets)
+       reset_all_baselines, reset_lake_baselines)
     !
     ! !DESCRIPTION:
     ! Set start-of-run baseline values for heat and water content in some columns.
@@ -125,9 +123,6 @@ contains
     ! for lakes on older initial conditions files.
     logical, intent(in) :: reset_lake_baselines
 
-    ! Whether to print information about the reset flags
-    logical, intent(in) :: print_resets
-
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -135,18 +130,6 @@ contains
 
     character(len=*), parameter :: subname = 'dyn_hwcontent_set_baselines'
     !-----------------------------------------------------------------------
-
-    if (masterproc .and. print_resets) then
-       if (reset_all_baselines) then
-          write(iulog,*) ' '
-          write(iulog,*) 'Resetting dynbal baselines for all columns'
-          write(iulog,*) ' '
-       else if (reset_lake_baselines) then
-          write(iulog,*) ' '
-          write(iulog,*) 'Resetting dynbal baselines for lake columns'
-          write(iulog,*) ' '
-       end if
-    end if
 
     ! Note that we include inactive points in the following. This could be important if
     ! an inactive point later becomes active, so that we have an appropriate baseline

@@ -339,6 +339,7 @@ contains
     logical               :: lexist
     integer               :: closelatidx,closelonidx
     real(r8)              :: closelat,closelon
+    logical               :: reset_dynbal_baselines_all_columns
     logical               :: reset_dynbal_baselines_lake_columns
     integer               :: begp, endp
     integer               :: begc, endc
@@ -494,10 +495,7 @@ contains
             urbanparams_inst, soilstate_inst, lakestate_inst, water_inst, temperature_inst, &
             reset_all_baselines = .true., &
             ! reset_lake_baselines is irrelevant since reset_all_baselines is true
-            reset_lake_baselines = .false., &
-            ! no need to print information about these resets for this initial resetting,
-            ! which is always done
-            print_resets = .false.)
+            reset_lake_baselines = .false.)
     end do
 
     ! ------------------------------------------------------------------------
@@ -582,12 +580,6 @@ contains
        end if
        call restFile_read(bounds_proc, fnamer, glc_behavior, &
             reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
-       ! But for a continue or branch run, it seems safest to NOT reset lake dynbal
-       ! baselines. In nearly all cases, this will be irrelevant, because the restart
-       ! file will have been a recent one, where reset_dynbal_baselines_lake_columns
-       ! should be false already.
-       reset_dynbal_baselines_lake_columns = .false.
-
     end if
 
     ! ------------------------------------------------------------------------
@@ -629,31 +621,48 @@ contains
     ! interpolated restart file, if applicable).
     ! ------------------------------------------------------------------------
 
-    if (nsrest == nsrStartup) then
-
-       !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-       do nc = 1,nclumps
-          call get_clump_bounds(nc, bounds_clump)
-
-          call dyn_hwcontent_set_baselines(bounds_clump, &
-               filter_inactive_and_active(nc)%num_icemecc, &
-               filter_inactive_and_active(nc)%icemecc, &
-               filter_inactive_and_active(nc)%num_lakec, &
-               filter_inactive_and_active(nc)%lakec, &
-               urbanparams_inst, soilstate_inst, lakestate_inst, &
-               water_inst, temperature_inst, &
-               reset_all_baselines = get_reset_dynbal_baselines(), &
-               reset_lake_baselines = reset_dynbal_baselines_lake_columns, &
-               print_resets = .true.)
-       end do
-    else if (nsrest == nsrBranch) then
-       if (get_reset_dynbal_baselines()) then
+    reset_dynbal_baselines_all_columns = get_reset_dynbal_baselines()
+    if (nsrest == nsrBranch) then
+       if (reset_dynbal_baselines_all_columns) then
           call endrun(msg='ERROR clm_initializeMod: '//&
                'Cannot set reset_dynbal_baselines in a branch run')
        end if
+    else if (nsrest == nsrContinue) then
+       ! It's okay for the reset_dynbal_baselines flag to remain set in a continue
+       ! run, but we'll ignore it. (This way, the user doesn't have to change their
+       ! namelist file for the continue run.)
+       reset_dynbal_baselines_all_columns = .false.
     end if
-    ! nsrContinue not explicitly handled: it's okay for reset_dynbal_baselines to
-    ! remain set in a continue run, but it has no effect
+    ! Note that we will still honor reset_dynbal_baselines_lake_columns even in a branch
+    ! or continue run: even in these runs, we want to reset those baselines if they are
+    ! wrong on the restart file.
+
+    if (masterproc) then
+       if (reset_dynbal_baselines_all_columns) then
+          write(iulog,*) ' '
+          write(iulog,*) 'Resetting dynbal baselines for all columns'
+          write(iulog,*) ' '
+       else if (reset_dynbal_baselines_lake_columns) then
+          write(iulog,*) ' '
+          write(iulog,*) 'Resetting dynbal baselines for lake columns'
+          write(iulog,*) ' '
+       end if
+    end if
+
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       call dyn_hwcontent_set_baselines(bounds_clump, &
+            filter_inactive_and_active(nc)%num_icemecc, &
+            filter_inactive_and_active(nc)%icemecc, &
+            filter_inactive_and_active(nc)%num_lakec, &
+            filter_inactive_and_active(nc)%lakec, &
+            urbanparams_inst, soilstate_inst, lakestate_inst, &
+            water_inst, temperature_inst, &
+            reset_all_baselines = reset_dynbal_baselines_all_columns, &
+            reset_lake_baselines = reset_dynbal_baselines_lake_columns)
+    end do
 
     ! ------------------------------------------------------------------------
     ! Initialize nitrogen deposition
