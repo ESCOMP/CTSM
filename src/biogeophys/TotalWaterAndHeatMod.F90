@@ -444,6 +444,34 @@ contains
        ice_mass(c) = 0._r8
     end do
 
+    ! ------------------------------------------------------------------------
+    ! Start with some large terms that will often cancel (the negative baselines and the
+    ! lake water content): In order to maintain precision in the other terms, it can help if
+    ! we deal with these large, often-canceling terms first. (If we accumulated some
+    ! small terms, then added a big term and then subtracted a big term, we would have
+    ! lost some precision in the small terms.)
+    ! ------------------------------------------------------------------------
+
+    if (add_lake_water_and_subtract_dynbal_baselines) then
+       ! Subtract baselines set in initialization
+       do fc = 1, num_lakec
+          c = filter_lakec(fc)
+          liquid_mass(c) = liquid_mass(c) - dynbal_baseline_liq(c)
+          ice_mass(c) = ice_mass(c) - dynbal_baseline_ice(c)
+       end do
+
+       ! Lake water content
+       call AccumulateLiqIceMassLake(bounds, num_lakec, filter_lakec, &
+            lakestate_inst, &
+            tracer_ratio = waterstate_inst%info%get_ratio(), &
+            liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
+            ice_mass = ice_mass(bounds%begc:bounds%endc))
+    end if
+
+    ! ------------------------------------------------------------------------
+    ! Now add some other terms
+    ! ------------------------------------------------------------------------
+
     ! Snow water content
     do fc = 1, num_lakec
        c = filter_lakec(fc)
@@ -455,15 +483,6 @@ contains
        end do
     end do
 
-    if (add_lake_water_and_subtract_dynbal_baselines) then
-       ! Lake water content
-       call AccumulateLiqIceMassLake(bounds, num_lakec, filter_lakec, &
-            lakestate_inst, &
-            tracer_ratio = waterstate_inst%info%get_ratio(), &
-            liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
-            ice_mass = ice_mass(bounds%begc:bounds%endc))
-    end if
-
     ! Soil water content of the soil under the lake
     do j = 1, nlevgrnd
        do fc = 1, num_lakec
@@ -472,15 +491,6 @@ contains
           ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
        end do
     end do
-
-    if (add_lake_water_and_subtract_dynbal_baselines) then
-       ! Subtract baselines set in initialization
-       do fc = 1, num_lakec
-          c = filter_lakec(fc)
-          liquid_mass(c) = liquid_mass(c) - dynbal_baseline_liq(c)
-          ice_mass(c) = ice_mass(c) - dynbal_baseline_ice(c)
-       end do
-    end if
 
     end associate
 
@@ -949,6 +959,42 @@ contains
        latent_heat_liquid(c) = 0._r8
     end do
 
+    ! ------------------------------------------------------------------------
+    ! Start with some large terms that will often cancel (the negative baselines and the
+    ! lake water content): In order to maintain precision in the other terms, it can help if
+    ! we deal with these large, often-canceling terms first. (If we accumulated some
+    ! small terms, then added a big term and then subtracted a big term, we would have
+    ! lost some precision in the small terms.)
+    ! ------------------------------------------------------------------------
+
+    ! Subtract baselines set in initialization
+    !
+    ! NOTE(wjs, 2019-03-01) I haven't given enough thought to how (if at all) we should
+    ! correct for heat_liquid and cv_liquid, which are used to determine the weighted
+    ! average liquid water temperature. For example, if we're subtracting out a baseline
+    ! water amount because a particular water state is fictitious, we probably shouldn't
+    ! include that particular state when determining the weighted average temperature of
+    ! liquid water. And conversely, if we're adding a state via these baselines, should
+    ! we also add some water temperature of that state? The tricky thing here is what to
+    ! do when we end up subtracting water due to the baselines, so for now I'm simply not
+    ! trying to account for the temperature of these baselines at all. This amounts to
+    ! assuming that the baselines that we add / subtract are at the average temperature
+    ! of the real liquid water in the column.
+    do fc = 1, num_lakec
+       c = filter_lakec(fc)
+       heat(c) = -dynbal_baseline_heat(c)
+    end do
+
+    ! Lake water heat content
+    ! Note that we do NOT accumulate heat_liquid and cv_liquid in this call. See the
+    ! comments at the top of AccumulateHeatLake for rationale.
+    call AccumulateHeatLake(bounds, num_lakec, filter_lakec, temperature_inst, lakestate_inst, &
+       heat)
+
+    ! ------------------------------------------------------------------------
+    ! Now add some other terms
+    ! ------------------------------------------------------------------------
+
     ! Snow heat content
     do fc = 1, num_lakec
        c = filter_lakec(fc)
@@ -989,41 +1035,16 @@ contains
     
     do fc = 1, num_lakec
        c = filter_lakec(fc)
-       heat(c) = heat_dry_mass(c) + heat_ice(c) + heat_liquid(c) + latent_heat_liquid(c)
+       heat(c) = heat(c) + heat_dry_mass(c) + heat_ice(c) + heat_liquid(c) + latent_heat_liquid(c)
     end do
     
-    ! Lake water heat content
-    ! Note that we do NOT accumulate heat_liquid and cv_liquid in this call. See the
-    ! comments at the top of AccumulateHeatLake for rationale.
-    call AccumulateHeatLake(bounds, num_lakec, filter_lakec, temperature_inst, lakestate_inst, &
-       heat)
-
-    ! Subtract baselines set in initialization
-    !
-    !
-    ! NOTE(wjs, 2019-03-01) I haven't given enough thought to how (if at all) we should
-    ! correct for heat_liquid and cv_liquid, which are used to determine the weighted
-    ! average liquid water temperature. For example, if we're subtracting out a baseline
-    ! water amount because a particular water state is fictitious, we probably shouldn't
-    ! include that particular state when determining the weighted average temperature of
-    ! liquid water. And conversely, if we're adding a state via these baselines, should
-    ! we also add some water temperature of that state? The tricky thing here is what to
-    ! do when we end up subtracting water due to the baselines, so for now I'm simply not
-    ! trying to account for the temperature of these baselines at all. This amounts to
-    ! assuming that the baselines that we add / subtract are at the average temperature
-    ! of the real liquid water in the column.
-    do fc = 1, num_lakec
-       c = filter_lakec(fc)
-       heat(c) = heat(c) - dynbal_baseline_heat(c)
-    end do
-
     end associate
 
   end subroutine ComputeHeatLake
 
   !-----------------------------------------------------------------------
   subroutine AccumulateHeatLake(bounds, num_c, filter_c, &
-        temperature_inst, lakestate_inst, &
+       temperature_inst, lakestate_inst, &
        heat)
     !
     ! !DESCRIPTION:
@@ -1110,11 +1131,11 @@ contains
         end do
     end do 
 
-   ! add ice heat and liquid heat together
+    ! add ice heat and liquid heat together
     do fc = 1, num_c
        c = filter_c(fc)
-       heat(c) = heat(c) + lake_heat_ice(c) + &
-            lake_heat_liquid(c) + lake_latent_heat_liquid(c)
+       heat(c) = heat(c) + (lake_heat_ice(c) + &
+            lake_heat_liquid(c) + lake_latent_heat_liquid(c))
     end do
 
     end associate
