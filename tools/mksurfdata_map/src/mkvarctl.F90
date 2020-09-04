@@ -22,7 +22,8 @@ module mkvarctl
   logical, public    :: outnc_double          ! output ALL data in files as 64-bit
   integer, public    :: outnc_dims = 2        ! only applicable to lat/lon grids
   logical, public    :: outnc_1d              ! true => output file is 1d  
-  logical, public    :: outnc_vic             ! true => output file is 1d  
+  logical, public    :: outnc_vic             ! true => output VIC fields
+  logical, public    :: outnc_3dglc           ! true => output 3D glacier fields
 
   character(len= 32), public :: mksrf_gridnm     = ' '  ! name of grid to use on output file
   character(len=256), public :: mksrf_fgrid      = ' '  ! land grid file name to use 

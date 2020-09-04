@@ -1041,12 +1041,22 @@ sub setup_cmdl_maxpft {
     $log->verbose_message("Using $nl_flags->{'maxpft'} for maxpft.");
 
     $var = "maxpatch_pft";
-    $val = $nl_flags->{'maxpft'};
     my $group = $definition->get_group_name($var);
-    $nl->set_variable_value($group, $var, $val);
-    if (  ! $definition->is_valid_value( $var, $val ) ) {
-      my @valid_values   = $definition->get_valid_values( $var );
-      $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
+    if ( ! defined($nl->get_variable_value($group, $var)) ) {
+      $val = $nl_flags->{'maxpft'};
+      $nl->set_variable_value($group, $var, $val);
+    }
+    $val = $nl->get_variable_value($group, $var);
+    my @valid_values   = ($maxpatchpft{'.true.'}, $maxpatchpft{'.false.'}  );
+    my $found = 0;
+    foreach my $valid_val ( @valid_values ) {
+       if ( $val == $valid_val ) {
+         $found = 1;
+         last;
+       }
+    }
+    if ( ! $found ) {
+       $log->warning("$var has a value ($val) that is normally NOT valid. Normal valid values are: @valid_values");
     }
   }
 }
@@ -1637,6 +1647,11 @@ sub process_namelist_inline_logic {
   ###############################
   setup_logic_nitrogen_deposition($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ##########################################
+  # namelist group: soil_moisture_streams  #
+  ##########################################
+  setup_logic_soilm_streams($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+
   ##################################
   # namelist group: cnmresp_inparm #
   ##################################
@@ -1878,7 +1893,8 @@ sub setup_logic_co2_type {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, $opts->{$var});
     } else {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'} );
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'},
+                  'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
     }
   }
 }
@@ -1925,6 +1941,12 @@ sub setup_logic_start_type {
   if ( $my_start_type =~ /branch/ ) {
     if (not defined $nl->get_value('nrevsn')) {
       $log->fatal_error("nrevsn is required for a branch type.");
+    }
+    if (defined $nl->get_value('use_init_interp')) {
+       if ( &value_is_true($nl->get_value('use_init_interp') ) ) {
+         # Always print this warning, but don't stop if it happens
+         print "\nWARNING: use_init_interp will NOT happen for a branch case.\n\n";
+       }
     }
   } else {
     if (defined $nl->get_value('nrevsn')) {
@@ -2316,7 +2338,7 @@ sub setup_logic_surface_dataset {
     }
 
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
-                'hgrid'=>$nl_flags->{'res'},
+                'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrig'=>$nl_flags->{'irrig'},
                 'crop'=>$nl_flags->{'crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
   } else{
@@ -2327,7 +2349,7 @@ sub setup_logic_surface_dataset {
         $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with ecosystem dynamics (use_fates=.true)." );
     }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
-                'hgrid'=>$nl_flags->{'res'},
+                'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
   }
@@ -3256,9 +3278,17 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+       # Also check at f19 resolution
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+       # If not found report an error
+       if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+          $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
+                        "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
+                        "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
+                        "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
+       }
     }
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
@@ -3379,9 +3409,10 @@ sub setup_logic_popd_streams {
       if ( defined($nl->get_value('stream_year_first_popdens')) ||
            defined($nl->get_value('stream_year_last_popdens'))  ||
            defined($nl->get_value('model_year_align_popdens'))  ||
+           defined($nl->get_value('popdens_tintalgo'        ))  ||
            defined($nl->get_value('stream_fldfilename_popdens'))   ) {
         $log->fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_popdens,\n" .
-                    "stream_year_last_popdens, model_year_align_popdens, nor\n" .
+                    "stream_year_last_popdens, model_year_align_popdens, popdens_tintalgo nor\n" .
                     "stream_fldfilename_popdens can be set!");
       }
     }
@@ -3445,9 +3476,10 @@ sub setup_logic_lightning_streams {
       if ( defined($nl->get_value('stream_year_first_lightng')) ||
            defined($nl->get_value('stream_year_last_lightng'))  ||
            defined($nl->get_value('model_year_align_lightng'))  ||
+           defined($nl->get_value('lightng_tintalgo'        ))  ||
            defined($nl->get_value('stream_fldfilename_lightng'))   ) {
         $log->fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_lightng,\n" .
-                    "stream_year_last_lightng, model_year_align_lightng, nor\n" .
+                    "stream_year_last_lightng, model_year_align_lightng, lightng_tintalgo nor\n" .
                     "stream_fldfilename_lightng can be set!");
       }
     }
@@ -3523,6 +3555,55 @@ sub setup_logic_megan {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_soilm_streams {
+  # prescribed soil moisture streams require clm4_5/clm5_0
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+    if ( $physv->as_long() >= $physv->as_long("clm4_5") ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');
+      if ( &value_is_true( $nl->get_value('use_soil_moisture_streams') ) ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_tintalgo',
+                     'hgrid'=>$nl_flags->{'res'} );
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'soilm_offset',
+                     'hgrid'=>$nl_flags->{'res'} );
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_soilm', 'phys'=>$nl_flags->{'phys'},
+                     'sim_year'=>$nl_flags->{'sim_year'},
+                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_soilm', 'phys'=>$nl_flags->{'phys'},
+                     'sim_year'=>$nl_flags->{'sim_year'},
+                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         # Set align year, if first and last years are different
+         if ( $nl->get_value('stream_year_first_soilm') !=
+              $nl->get_value('stream_year_last_soilm') ) {
+              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                          'model_year_align_soilm', 'sim_year'=>$nl_flags->{'sim_year'},
+                          'sim_year_range'=>$nl_flags->{'sim_year_range'});
+         }
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_soilm', 'phys'=>$nl_flags->{'phys'},
+                     'hgrid'=>$nl_flags->{'res'} );
+         if ( ($opts->{'use_case'} =~ /_transient$/) && 
+              (remove_leading_and_trailing_quotes($nl->get_value("soilm_tintalgo")) eq "linear") ) {
+             $log->warning("For a transient case, soil moisture streams, should NOT use soilm_tintalgo='linear'" .
+                           " since vegetated areas could go from missing to not missing or vice versa" );
+         }
+      } else {
+         if ( defined($nl->get_value('stream_year_first_soilm')) ||
+              defined($nl->get_value('model_year_align_soilm')) ||
+              defined($nl->get_value('stream_fldfilename_soilm')) ||
+              defined($nl->get_value('soilm_tintalgo')) ||
+              defined($nl->get_value('soilm_offset')) ||
+              defined($nl->get_value('stream_year_last_soilm')) ) {
+             $log->fatal_error("One of the soilm streams namelist items (stream_year_first_soilm, " . 
+                                " model_year_align_soilm, stream_fldfilename_soilm, stream_fldfilename_soilm)" . 
+                                " soilm_tintalgo soilm_offset" .
+                                " is defined, but use_soil_moisture_streams option NOT set to true");
+         }
+      }
+    }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_lai_streams {
   # lai streams require clm4_5/clm5_0
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
@@ -3560,9 +3641,10 @@ sub setup_logic_lai_streams {
       if ( defined($nl->get_value('stream_year_first_lai')) ||
            defined($nl->get_value('stream_year_last_lai'))  ||
            defined($nl->get_value('model_year_align_lai'))  ||
+           defined($nl->get_value('lai_tintalgo'        ))  ||
            defined($nl->get_value('stream_fldfilename_lai'))   ) {
              $log->fatal_error("When bgc is NOT SP none of the following can be set: stream_year_first_lai,\n" .
-                  "stream_year_last_lai, model_year_align_lai, nor\n" .
+                  "stream_year_last_lai, model_year_align_lai, lai_tintalgo nor\n" .
                   "stream_fldfilename_lai (eg. don't use this option with BGC,CN,CNDV nor BGDCV).");
       }
     }
@@ -3876,7 +3958,7 @@ sub write_output_files {
   } else {
 
     @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
-                 lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
+                 soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
                  clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                  finidat_consistency_checks dynpft_consistency_checks 
                  clm_initinterp_inparm century_soilbgcdecompcascade

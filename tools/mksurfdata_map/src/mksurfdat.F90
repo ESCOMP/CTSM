@@ -93,12 +93,15 @@ program mksurfdat
     type(pct_pft_type), allocatable :: pctnatpft_max(:) ! % of grid cell maximum PFTs of the time series
     type(pct_pft_type), allocatable :: pctcft(:)        ! % of grid cell that is crop, and breakdown into CFTs
     type(pct_pft_type), allocatable :: pctcft_max(:)    ! % of grid cell maximum CFTs of the time series
-    type(pct_pft_type), allocatable :: pctcft_saved(:)  ! version of pctcft saved from the initial call to mkpft
     real(r8), pointer      :: harvest1D(:)       ! harvest 1D data: normalized harvesting
     real(r8), pointer      :: harvest2D(:,:)     ! harvest 1D data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
+    real(r8), allocatable  :: pctglc_gic(:)      ! percent of grid cell that is gic (% of glc landunit)
+    real(r8), allocatable  :: pctglc_icesheet(:) ! percent of grid cell that is ice sheet (% of glc landunit)
     real(r8), allocatable  :: pctglcmec(:,:)     ! glacier_mec pct coverage in each class (% of landunit)
     real(r8), allocatable  :: topoglcmec(:,:)    ! glacier_mec sfc elevation in each gridcell and class
+    real(r8), allocatable  :: pctglcmec_gic(:,:) ! GIC pct coverage in each class (% of landunit)
+    real(r8), allocatable  :: pctglcmec_icesheet(:,:) ! icesheet pct coverage in each class (% of landunit)
     real(r8), allocatable  :: elevclass(:)       ! glacier_mec elevation classes
     integer,  allocatable  :: glacier_region(:)  ! glacier region ID
     real(r8), allocatable  :: pctlak(:)          ! percent of grid cell that is lake
@@ -177,6 +180,7 @@ program mksurfdat
          soil_fmax,                &
          soil_clay,                &
          pft_idx,                  &
+         all_veg,                  &
          pft_frc,                  &
          all_urban,                &
          no_inlandwet,             &
@@ -206,6 +210,7 @@ program mksurfdat
          outnc_double,             &
          outnc_dims,               &
          outnc_vic,                &
+         outnc_3dglc,              &
          fsurdat,                  &
          fdyndat,                  &   
          fsurlog,                  &
@@ -276,12 +281,14 @@ program mksurfdat
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
     !    outnc_vic --------- Output fields needed for VIC
+    !    outnc_3dglc ------- Output 3D glacier fields (normally only needed for comparasion)
     !    nglcec ------------ If you want to change the number of Glacier elevation classes
     !    gitdescribe ------- Description of this version from git
     ! ======================================
     ! Optional settings to change values for entire area
     ! ======================================
     !    all_urban --------- If entire area is urban
+    !    all_veg ----------- If entire area is to be vegetated (pft_idx and pft_frc then required)
     !    no_inlandwet ------ If wetland should be set to 0% over land
     !    soil_color -------- If you want to change the soil_color to this value everywhere
     !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
@@ -303,7 +310,9 @@ program mksurfdat
     outnc_large_files = .false.
     outnc_double      = .true.
     outnc_vic         = .false.
+    outnc_3dglc       = .false.
     all_urban         = .false.
+    all_veg           = .false.
     no_inlandwet      = .true.
 
     ! default value for bug work around
@@ -352,6 +361,9 @@ program mksurfdat
     if ( outnc_vic )then
        write(6,*)'Output VIC fields'
     end if
+    if ( outnc_3dglc )then
+       write(6,*)'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+    end if
     if ( all_urban )then
        write(6,*) 'Output ALL data in file as 100% urban'
     end if
@@ -367,7 +379,7 @@ program mksurfdat
     ! Call module initialization routines
     !
     call mksoilInit( )
-    call mkpftInit( all_urban, all_veg )
+    call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
     allocate ( elevclass(nglcec+1) )
     call mkglcmecInit (elevclass)
     call mkurbanInit (mksrf_furban)
@@ -422,7 +434,6 @@ program mksurfdat
                pctnatpft_max(ns_o)                , &
                pctcft(ns_o)                       , &
                pctcft_max(ns_o)                   , &
-               pctcft_saved(ns_o)                 , &
                pctgla(ns_o)                       , & 
                pctlak(ns_o)                       , & 
                pctwet(ns_o)                       , & 
@@ -551,20 +562,15 @@ program mksurfdat
     ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
 
     call mkpft(ldomain, mapfname=map_fpft, fpft=mksrf_fvegtyp, &
-         ndiag=ndiag, allow_no_crops=.false., &
-         pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
+         ndiag=ndiag, pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
 
     ! Create harvesting data at model resolution
     call mkharvest_init( ns_o, spval, harvdata, mksrf_fhrvtyp )
-    if ( .not. any(pft_frc > 0.0_r8 ) )then
+    if ( .not. all_veg )then
 
        call mkharvest( ldomain, mapfname=map_fharvest, datfname=mksrf_fhrvtyp, &
                        ndiag=ndiag, harvdata=harvdata )
     end if
-
-    ! Save the version of pctcft before any corrections are made. In particular, we want
-    ! to save the version before remove_small_cover is called.
-    pctcft_saved = pctcft
 
     ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
 
@@ -781,13 +787,28 @@ program mksurfdat
 
     allocate (pctglcmec(ns_o,nglcec), &
          topoglcmec(ns_o,nglcec) )
+    if ( outnc_3dglc )then
+       allocate( &
+         pctglcmec_gic(ns_o,nglcec), &
+         pctglcmec_icesheet(ns_o,nglcec))
+       allocate (pctglc_gic(ns_o))
+       allocate (pctglc_icesheet(ns_o))
+    end if
 
     pctglcmec(:,:)          = spval
     topoglcmec(:,:)         = spval
 
-    call mkglcmec (ldomain, mapfname=map_fglacier, &
-         datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
-         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec )
+    if ( outnc_3dglc )then
+       call mkglcmec (ldomain, mapfname=map_fglacier, &
+            datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+            pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
+            pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
+            pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
+    else
+       call mkglcmec (ldomain, mapfname=map_fglacier, &
+            datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+            pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec )
+    end if
 
     ! Determine fractional land from pft dataset
 
@@ -868,6 +889,20 @@ program mksurfdat
 
        call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
+
+       if ( outnc_3dglc )then
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
+       end if
 
        call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, urbn_classes_g), subname)
@@ -1005,6 +1040,7 @@ program mksurfdat
     deallocate ( organic )
     deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
     deallocate ( pctglcmec, topoglcmec)
+    if ( outnc_3dglc ) deallocate ( pctglc_gic, pctglc_icesheet)
     deallocate ( elevclass )
     deallocate ( fmax )
     deallocate ( pctsand, pctclay )
@@ -1079,7 +1115,7 @@ program mksurfdat
           !
           ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
           !
-          if ( any(pft_frc > 0.0_r8 ) )then
+          if ( all_veg )then
              fname = ' '
              fhrvname  = ' '
              call mkpft_parse_oride(string)
@@ -1103,9 +1139,7 @@ program mksurfdat
           ! Create pctpft data at model resolution
           
           call mkpft(ldomain, mapfname=map_fpft, fpft=fname, &
-               ndiag=ndiag, allow_no_crops=.false., &
-               pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, &
-               pctcft_o_saved=pctcft_saved)
+               ndiag=ndiag, pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft )
 
           ! Create harvesting data at model resolution
 

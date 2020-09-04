@@ -4,13 +4,17 @@
   <category name="aux_clm">
     <entry issue="#158"            >FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianGs.cheyenne_gnu.clm-monthly RUN</entry>
     <entry issue="#158"            >FAIL ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianGs.cheyenne_intel.clm-monthly RUN</entry>
-    <entry issue="#384"            >FAIL ERP_D_Ld5.f09_g17.I2000Clm50Vic.cheyenne_intel.clm-vrtlay RUN</entry>
     <entry issue="#442"            >FAIL SMS.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
     <entry issue="#442"            >FAIL SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.hobart_pgi.clm-crop RUN</entry>
+    <entry issue="#840"            >FAIL PEPEM_Ld1.f10_f10_musgs.I2000Clm50BgcCrop.hobart_intel.clm-crop RUN</entry>
   </category>
   <category name="fates">
+    <entry issue="NGEET/fates/#559" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesHydro RUN</entry>
     <entry issue="667"              >FAIL ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesHydro COMPARE_base_rest</entry>
     <entry issue="667"              >FAIL ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.hobart_nag.clm-FatesHydro RUN</entry>
+    <entry issue="667"              >FAIL ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.izumi_nag.clm-FatesHydro RUN</entry>
     <entry issue="NGEET/fates/#510" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.hobart_nag.clm-FatesHydro MEMLEAK</entry>
+    <entry issue="NGEET/fates/#508" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.izumi_nag.clm-FatesHydro RUN</entry>
+    <entry issue="NGEET/fates/#508" >FAIL SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-FatesHydro RUN</entry>
   </category>
 </expectedFails> 

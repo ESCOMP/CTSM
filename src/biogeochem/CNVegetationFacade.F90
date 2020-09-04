@@ -721,6 +721,13 @@ contains
          soilbiogeochem_nitrogenstate_inst)
     call t_stopf('CNUpdateDynPatch')
 
+    ! This call fixes issue #741 by performing precision control on decomp_cpools_vr_col
+    call t_startf('SoilBiogeochemPrecisionControl')
+    call SoilBiogeochemPrecisionControl(num_soilc_with_inactive, filter_soilc_with_inactive,  &
+         soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+         c14_soilbiogeochem_carbonstate_inst,soilbiogeochem_nitrogenstate_inst)
+    call t_stopf('SoilBiogeochemPrecisionControl')
+
     call t_startf('dyn_cnbal_col')
     call dyn_cnbal_col(bounds, clump_index, column_state_updater, &
          soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
