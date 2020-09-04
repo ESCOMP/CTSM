@@ -346,8 +346,8 @@ contains
       ! statements.
       allocate(this%vcmx25_z_patch  (begp:endp,1:nlevcan)) ; this%vcmx25_z_patch    (:,:) = 30._r8
       allocate(this%jmx25_z_patch   (begp:endp,1:nlevcan)) ; this%jmx25_z_patch     (:,:) = 60._r8 
-      allocate(this%vcmx_prevyr     (begp:endp,1:nlevcan)) ; this%vcmx_prevyr       (:,:) = 85._r8
-      allocate(this%jmx_prevyr      (begp:endp,1:nlevcan)) ; this%jmx_prevyr        (:,:) = 50._r8
+      allocate(this%vcmx_prevyr     (begp:endp,1:nlevcan)) ; this%vcmx_prevyr       (:,:) = 30._r8
+      allocate(this%jmx_prevyr      (begp:endp,1:nlevcan)) ; this%jmx_prevyr        (:,:) = 60._r8
       allocate(this%pnlc_z_patch    (begp:endp,1:nlevcan)) ; this%pnlc_z_patch      (:,:) = 0.01_r8
       allocate(this%fpsn24_patch    (begp:endp))           ; this%fpsn24_patch      (:)   = nan
       allocate(this%enzs_z_patch    (begp:endp,1:nlevcan)) ; this%enzs_z_patch      (:,:) = 1._r8

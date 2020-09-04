@@ -617,15 +617,19 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4.ARCTICGRIS.ne30x8">.true.</use_init_interp>
 <!-- 2003 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2003" lnd_tuning_mode="clm5_0_cam6.0"
-                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"             >.true.</use_init_interp>
+                  maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="1.9x2.5"                 >.true.</use_init_interp>
 
 <!-- 2013 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2013" lnd_tuning_mode="clm5_0_cam6.0"
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
-<!-- For an inexact match use either low resolution or high resolution match for SP or BGC mode CLM4.5 and CLM5.0 -->
-<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"                                >.true.</use_init_interp>
+<!-- For an inexact match use either low resolution or high resolution match for SP or BGC mode CLM5.0 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  phys="clm5_0"                     >.true.</use_init_interp>
+<!-- For an inexact match use either low resolution or high resolution match for SP or BGC mode CLM4.5 -->
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  lnd_tuning_mode="clm4_5_GSWP3v1"  >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  lnd_tuning_mode="clm4_5_CRUv7"    >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979"  lnd_tuning_mode="clm4_5_cam6.0"   >.true.</use_init_interp>
 <!-- Default to FALSE if couldn't find a match -->
-<use_init_interp                                                                                        >.false.</use_init_interp>
+<use_init_interp                                                                                            >.false.</use_init_interp>
 <!-- NOTE: if use_init_interp is FALSE that indicates that you can't interpolate from an initial conditions file that's similar 
            Either an existing file is too different, too different in the year, or a configuration that can't interpolate
            initial condition files.
@@ -690,8 +694,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
-<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+<init_interp_attributes sim_year="1979" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
+>hgrid=0.9x1.25 maxpft=17 mask=gx1v7 use_cn=.false. use_nitrif_denitrif=.false. use_vertsoilc=.false. use_crop=.false. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1"
@@ -927,6 +931,13 @@ p
 </finidat>
 
 <!-- Present day no crop spinup f09/f19 grid with irrigation on -->
+<finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+         ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
+         ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
+         lnd_tuning_mode="clm4_5_cam6.0"
+>lnd/clm2/initdata_map/clmi.BHIST.2000-01-01.0.9x1.25_gx1v7_simyr1979_c200806.nc
+</finidat>
+
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
          ic_ymd="19790101" use_nitrif_denitrif=".false." use_vertsoilc=".false." sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
