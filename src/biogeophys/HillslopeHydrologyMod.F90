@@ -61,12 +61,12 @@ contains
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     character(len=*) , intent(in) :: fsurdat    ! surface data file name
-    real(r8), pointer     :: ihillslope_in(:,:) ! read in - integer
-    real(r8), pointer     :: fhillslope_in(:,:) ! read in - float
-    integer,  allocatable :: pct_hillslope(:,:) ! percent of landunit occupied by hillslope
+    integer,  pointer     :: ihillslope_in(:,:) ! read in - integer
     integer,  allocatable :: hill_ndx(:,:)      ! hillslope index
     integer,  allocatable :: col_ndx(:,:)       ! column index
     integer,  allocatable :: col_dndx(:,:)      ! downhill column index
+    real(r8), pointer     :: fhillslope_in(:,:) ! read in - float
+    real(r8), allocatable :: pct_hillslope(:,:) ! percent of landunit occupied by hillslope
     real(r8), allocatable :: hill_slope(:,:)    ! hillslope slope  [m/m]
     real(r8), allocatable :: hill_aspect(:,:)   ! hillslope azimuth [radians]
     real(r8), allocatable :: hill_area(:,:)     ! hillslope area   [m2]
@@ -104,9 +104,9 @@ contains
          hill_height  (bounds%begl:bounds%endl,nmax_col_per_hill), &
          stat=ierr)
     
-    allocate(ihillslope_in(bounds%begg:bounds%endg,nhillslope))
+    allocate(fhillslope_in(bounds%begg:bounds%endg,nhillslope))
     
-    call ncd_io(ncid=ncid, varname='pct_hillslope', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
+    call ncd_io(ncid=ncid, varname='pct_hillslope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
        if (masterproc) then
           call endrun( 'ERROR:: pct_hillslope not found on surface data set.'//errmsg(sourcefile, __LINE__) )
@@ -114,9 +114,9 @@ contains
     end if
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
-       pct_hillslope(l,:) = ihillslope_in(g,:)
+       pct_hillslope(l,:) = fhillslope_in(g,:)
     enddo
-    deallocate(ihillslope_in)
+    deallocate(fhillslope_in)
     
     allocate(ihillslope_in(bounds%begg:bounds%endg,nmax_col_per_hill))
     
@@ -274,8 +274,10 @@ contains
           hillslope_area = 0._r8
           do c = lun%coli(l), lun%colf(l)
              nh = col%hillslope_ndx(c)
-             hillslope_area = hillslope_area &
-                  + col%hill_area(c)*(real(pct_hillslope(l,nh),r8)*0.01_r8)
+             if (nh > 0) then
+                hillslope_area = hillslope_area &
+                     + col%hill_area(c)*(pct_hillslope(l,nh)*0.01_r8)
+             endif
           enddo
           
           ! if missing hillslope information on surface dataset, fill data
@@ -291,15 +293,19 @@ contains
                 nh = col%hillslope_ndx(c)
                 pct_hillslope(l,nh)  = 100/nhillslope
                 hillslope_area = hillslope_area &
-                     + col%hill_area(c)*(real(pct_hillslope(l,nh),r8)*0.01_r8)
+                     + col%hill_area(c)*(pct_hillslope(l,nh)*0.01_r8)
              enddo
           endif
           
           ! Recalculate column weights using input areas
           do c = lun%coli(l), lun%colf(l)
              nh = col%hillslope_ndx(c)
-             col%wtlunit(c) = col%hill_area(c) &
-                  * (pct_hillslope(l,nh)*0.01_r8)/hillslope_area      
+             if (nh > 0) then
+                col%wtlunit(c) = col%hill_area(c) &
+                     * (pct_hillslope(l,nh)*0.01_r8)/hillslope_area
+             else
+                col%wtlunit(c) = 0._r8
+             endif
           enddo
 
        endif
