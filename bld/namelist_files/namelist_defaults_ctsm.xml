@@ -390,8 +390,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_0">/glade/p/cgd/tss/people/oleson/modify_param/clm5_params.c200624_kwo.c200707.nc</paramfile>
-<paramfile phys="clm4_5">/glade/p/cgd/tss/people/oleson/modify_param/clm45_params.c200624_kwo.c200707.nc</paramfile>
+<paramfile phys="clm5_0">/glade/p/cgd/tss/people/oleson/modify_param/clm5_params.c200624_kwo.c200904.nc</paramfile>
+<paramfile phys="clm4_5">/glade/p/cgd/tss/people/oleson/modify_param/clm45_params.c200624_kwo.c200904.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
