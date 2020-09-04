@@ -419,7 +419,7 @@ contains
     ! Determine initial dataset filenames
     !
     ! !USES:
-    use clm_varctl       , only : caseid, inst_suffix
+    use clm_varctl       , only : caseid, inst_suffix, compname
     use clm_time_manager , only : get_curr_date
     !
     ! !ARGUMENTS:
@@ -435,7 +435,7 @@ contains
 
     call get_curr_date (yr, mon, day, sec)
     write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
-    set_dgvm_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
+    set_dgvm_filename = "./"//trim(caseid)//"."//trim(compname)//trim(inst_suffix)//&
                         ".hv."//trim(cdate)//".nc"
 
   end function set_dgvm_filename

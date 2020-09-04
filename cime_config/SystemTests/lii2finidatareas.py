@@ -41,7 +41,7 @@ currently used by this test, but with a new creation date.
 
 (3) Update namelist defaults to point to the new finidat file. If
 updating the out-of-the-box file is not desired, then you could instead
-point to this new finidat file with a user_nl_clm file in this testmod.
+point to this new finidat file with a user_nl_ctsm file in this testmod.
 """
 
 from CIME.XML.standard_module_setup import *
@@ -72,5 +72,5 @@ class LII2FINIDATAREAS(LII):
     def _case_one_setup(self):
         super(LII2FINIDATAREAS, self)._case_one_setup()
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
+                                component = "ctsm",
                                 contents = "init_interp_method = 'use_finidat_areas'")

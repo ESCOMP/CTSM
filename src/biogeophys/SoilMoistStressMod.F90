@@ -369,7 +369,7 @@ contains
          rootr         => soilstate_inst%rootr_patch        , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer (SMS method only)
 
          btran         => energyflux_inst%btran_patch       , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
-         btran2        => energyflux_inst%btran2_patch      , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
+         btran2        => energyflux_inst%btran2_patch      , & ! Output: [real(r8) (:)   ]  root zone soil wetness (0 to 1)
          rresis        => energyflux_inst%rresis_patch      , & ! Output: [real(r8) (:,:) ]  root soil water stress (resistance) by layer (0-1)  (nlevgrnd)                          
 
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
@@ -417,11 +417,9 @@ contains
             end if
             s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
 
-            call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
+ !           call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
 
-            smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf) 
-            btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
-                    (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
+            btran2(p)   = btran2(p) +rootfr(p,j)*s_node
          end do
       end do
 

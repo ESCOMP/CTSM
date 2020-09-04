@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-CLM namelist creator
+CTSM namelist creator
 """
 import sys, os, shutil
 
@@ -23,17 +23,17 @@ _config_cache_template = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0">Specifies clm physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,ctsm5_1">Specifies CTSM physics</entry>
 </config_definition>
 """
 
 ###############################################################################
 def buildnml(case, caseroot, compname):
 ###############################################################################
-    """Build the clm namelist """
+    """Build the CTSM namelist """
 
     # Build the component namelist 
-    if compname != "clm":
+    if compname != "ctsm" and compname != "clm":
         raise AttributeError
 
     lnd_root = case.get_value("COMP_ROOT_DIR_LND")
@@ -63,12 +63,12 @@ def buildnml(case, caseroot, compname):
     mask = case.get_value("MASK_GRID")
 
     # -----------------------------------------------------
-    # Set clmconf
+    # Set ctsmconf
     # -----------------------------------------------------
 
-    clmconf = os.path.join(caseroot, "Buildconf", "clmconf")
-    if not os.path.isdir(clmconf):
-        os.makedirs(clmconf)
+    ctsmconf = os.path.join(caseroot, "Buildconf", "ctsmconf")
+    if not os.path.isdir(ctsmconf):
+        os.makedirs(ctsmconf)
 
     # -----------------------------------------------------
     # Create config_cache.xml file 
@@ -80,7 +80,7 @@ def buildnml(case, caseroot, compname):
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
 
     config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
-    config_cache_path = os.path.join(caseroot, "Buildconf", "clmconf", "config_cache.xml")
+    config_cache_path = os.path.join(caseroot, "Buildconf", "ctsmconf", "config_cache.xml")
     with open(config_cache_path, 'w') as config_cache_file:
         config_cache_file.write(config_cache_text)
 
@@ -148,13 +148,13 @@ def buildnml(case, caseroot, compname):
     
     spinup = "-clm_accelerated_spinup %s "%clm_accelerated_spinup
     
-    infile = os.path.join(clmconf, "namelist")
+    infile = os.path.join(ctsmconf, "namelist")
     
-    inputdata_file = os.path.join(caseroot,"Buildconf","clm.input_data_list")
+    inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")
     
     lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
     
-    config_cache_file = os.path.join(caseroot,"Buildconf","clmconf","config_cache.xml")
+    config_cache_file = os.path.join(caseroot,"Buildconf","ctsmconf","config_cache.xml")
 
     # -----------------------------------------------------
     # Clear out old data
@@ -201,7 +201,7 @@ def buildnml(case, caseroot, compname):
         infile_lines.append(clm_icfile)
 
         user_nl_file = os.path.join(caseroot, "user_nl_clm" + inst_string)
-        namelist_infile = os.path.join(clmconf, "namelist")
+        namelist_infile = os.path.join(ctsmconf, "namelist")
 
         create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
 
@@ -218,7 +218,7 @@ def buildnml(case, caseroot, compname):
                      lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file,
                      clm_bldnml_opts, spinup, tuning, gridmask))
 
-        rc, out, err = run_cmd(command, from_dir=clmconf)
+        rc, out, err = run_cmd(command, from_dir=ctsmconf)
         expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
         if out is not None:
             logger.debug("     %s"%out)
@@ -230,11 +230,11 @@ def buildnml(case, caseroot, compname):
         # -----------------------------------------------------
 
         if os.path.isdir(rundir):
-            file1 = os.path.join(clmconf, "lnd_in")
+            file1 = os.path.join(ctsmconf, "lnd_in")
             file2 = os.path.join(rundir, "lnd_in")
             if ninst > 1:
                 file2 += inst_string
-            logger.debug("CLM namelist copy: file1 %s file2 %s " %(file1, file2))
+            logger.debug("CTSM namelist copy: file1 %s file2 %s " %(file1, file2))
             shutil.copy(file1,file2)
 
 ###############################################################################
@@ -242,7 +242,8 @@ def _main_func():
 
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
-        buildnml(case, caseroot, "clm")
+        compname = case.get_value("COMP_LND")
+        buildnml(case, caseroot, compname)
 
 if __name__ == "__main__":
     _main_func()

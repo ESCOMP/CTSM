@@ -22,18 +22,23 @@ determine default values for namelists.
 
 -->
 
-<clm_start_type phys="clm5_0" use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5" use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5" use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type phys="clm5_0" use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5" sim_year="1850"   >startup</clm_start_type>
-<clm_start_type phys="clm5_0" sim_year="1850"   >startup</clm_start_type>
-<clm_start_type phys="clm4_5" sim_year="2000"   >startup</clm_start_type>
-<clm_start_type phys="clm5_0" sim_year="2000"   >startup</clm_start_type>
-<clm_start_type phys="clm4_5"                   >arb_ic</clm_start_type>
-<clm_start_type phys="clm5_0"                   >arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5" use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type bgc_spinup="on"                 >cold</clm_start_type>
+<clm_start_type phys="ctsm5_1" use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"  use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="ctsm5_1" use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="ctsm5_1" sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm5_0"  sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm4_5"  sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="ctsm5_1" sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm5_0"  sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm4_5"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type bgc_spinup="on"                  >cold</clm_start_type>
 
 <clm_start_type sim_year_range="1850-2100">arb_ic</clm_start_type>
 

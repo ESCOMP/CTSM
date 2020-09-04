@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-build clm library
+build ctsm library
 """
 import sys, os
 
@@ -64,6 +64,8 @@ def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
 # ======================================================================
 # The following settings are meant for internal use, and generally
 # should not be included directly in an atmosphere model's build.
+# NOTE: clm library name and subdirectory will eventually need to
+#       be updated to ctsm.
 # ======================================================================
 
 CTSM_BLD_DIR   = {ctsm_bld_dir}
@@ -103,8 +105,10 @@ def _main_func():
         filepath_file = os.path.join(bldroot,"Filepath")
         if not os.path.isfile(filepath_file):
             caseroot = case.get_value("CASEROOT")
+            compname = case.get_value("COMP_LND")
+            expect( ((compname == "clm") or (compname == "ctsm")), "Unexpected COMP_LND name: %s" % (compname))
 
-            paths = [os.path.join(caseroot,"SourceMods","src.clm"),
+            paths = [os.path.join(caseroot,"SourceMods","src."+compname),
                      os.path.join(lnd_root,"src","main"),
                      os.path.join(lnd_root,"src","biogeophys"),
                      os.path.join(lnd_root,"src","biogeochem"),
@@ -135,10 +139,10 @@ def _main_func():
         # create the library in libroot
         #-------------------------------------------------------
 
-        complib = os.path.join(libroot,"libclm.a")
+        complib = os.path.join(libroot,"lib%s.a"%(compname))
 
-        cmd = "{} complib -j {} MODEL=clm COMPLIB={} -f {} {}" \
-              .format(gmake, gmake_j, complib, makefile, gmake_opts)
+        cmd = "{} complib -j {} MODEL={} COMPLIB={} -f {} {}" \
+              .format(gmake, gmake_j, compname, complib, makefile, gmake_opts)
 
         rc, out, err = run_cmd(cmd)
         logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))

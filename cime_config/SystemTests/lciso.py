@@ -26,11 +26,11 @@ class LCISO(SystemTestsCompareTwo):
 
     def _case_one_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
+                                component = "ctsm",
                                 contents = "use_c13=F, use_c14=F")
 
     def _case_two_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
+                                component = "ctsm",
                                 contents = "use_c13=.true.,use_c14=.true.,use_c13_timeseries=.true.,use_c14_bombspike=.true." )
 

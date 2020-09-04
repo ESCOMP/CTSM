@@ -23,9 +23,9 @@ no_interp test fails.
 
 (2) Copy the finidat_interp_dest.nc file from the 'base' case to the inputdata
 space. Rename this to be similar to the name of the file pointed to in this
-test's user_nl_clm file, but with a new creation date.
+test's user_nl_ctsm file, but with a new creation date.
 
-(3) Update this test's user_nl_clm file (in the appropriate testmods directory)
+(3) Update this test's user_nl_ctsm file (in the appropriate testmods directory)
 to point to the new finidat file.
 """
 
@@ -46,11 +46,11 @@ class LII(SystemTestsCompareTwo):
 
     def _case_one_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
+                                component = "ctsm",
                                 contents = "use_init_interp = .true.")
 
     def _case_two_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
+                                component = "ctsm",
                                 contents = "use_init_interp = .false.")
 
