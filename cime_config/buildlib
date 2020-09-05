@@ -69,7 +69,7 @@ def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
 # ======================================================================
 
 CTSM_BLD_DIR   = {ctsm_bld_dir}
-CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
+CTSM_INC       = $(CTSM_BLD_DIR)/ctsm/obj
 
 # ======================================================================
 # The following settings should be included in an atmosphere model's build.
@@ -102,10 +102,10 @@ def _main_func():
         #-------------------------------------------------------
         # create Filepath file
         #-------------------------------------------------------
+        compname = case.get_value("COMP_LND")
         filepath_file = os.path.join(bldroot,"Filepath")
         if not os.path.isfile(filepath_file):
             caseroot = case.get_value("CASEROOT")
-            compname = case.get_value("COMP_LND")
             expect( ((compname == "clm") or (compname == "ctsm")), "Unexpected COMP_LND name: %s" % (compname))
 
             paths = [os.path.join(caseroot,"SourceMods","src."+compname),
