@@ -49,6 +49,15 @@ Full pathname of master restart file for a branch run. (only used if RUN_TYPE=br
 (Set with RUN_REFCASE and RUN_REFDATE)
 </entry>
 
+<entry id="compname" 
+       type="char*8" 
+       category="datasets"
+       group="clm_inparm" 
+       value="clm2"
+       valid_values="clm2,clm45,clm50,ctsm51" >
+Component name to use in history and restart files
+</entry>
+
 <entry id="fatmlndfrc" 
        type="char*256" 
        category="datasets"
