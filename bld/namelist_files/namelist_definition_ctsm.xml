@@ -54,7 +54,7 @@ Full pathname of master restart file for a branch run. (only used if RUN_TYPE=br
        category="datasets"
        group="clm_inparm" 
        value="clm2"
-       valid_values="clm2,clm45,clm50,ctsm51" >
+       valid_values="clm2,clm4,clm5,ctsm5" >
 Component name to use in history and restart files
 </entry>
 

@@ -39,9 +39,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lnd_tuning_mode phys="ctsm5_1">ctsm5_1_GSWP3v1</lnd_tuning_mode>
 
 <!-- Component name for output files -->
-<compname phys="ctsm5_1">ctsm51</compname>
-<compname phys="clm5_0" >clm50</compname>
-<compname phys="clm4_5" >clm45</compname>
+<compname phys="ctsm5_1">ctsm5</compname>
+<compname phys="clm5_0" >clm5</compname>
+<compname phys="clm4_5" >clm4</compname>
 
 <!-- Accelerated spinup mode -->
 <clm_accelerated_spinup>off</clm_accelerated_spinup>
