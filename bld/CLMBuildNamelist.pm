@@ -1486,7 +1486,7 @@ sub process_namelist_inline_logic {
   ##############################
   # namelist group: clm_inparm #
   ##############################
-  setup_logic_site_specific($nl_flags, $definition, $nl);
+  setup_logic_site_specific($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_lnd_frac($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1710,7 +1710,7 @@ sub process_namelist_inline_logic {
 
 sub setup_logic_site_specific {
   # site specific requirements
-  my ($nl_flags, $definition, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   # res check prevents polluting the namelist with an unnecessary
   # false variable for every run
@@ -1741,6 +1741,9 @@ sub setup_logic_site_specific {
       $log->fatal_error("1x1_numaIA grids must use a compset with CN and CROP turned on.");
     }
   }
+  #  Set compname
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'compname',
+              'phys'=>$nl_flags->{'phys'} );
 }
 
 #-------------------------------------------------------------------------------
