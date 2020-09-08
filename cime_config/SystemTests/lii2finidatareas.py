@@ -72,5 +72,5 @@ class LII2FINIDATAREAS(LII):
     def _case_one_setup(self):
         super(LII2FINIDATAREAS, self)._case_one_setup()
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "ctsm",
+                                component = "clm",
                                 contents = "init_interp_method = 'use_finidat_areas'")

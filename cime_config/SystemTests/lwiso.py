@@ -34,11 +34,11 @@ class LWISO(SystemTestsCompareTwo):
         # eventually, though, we should change this to the latter. (See
         # <https://github.com/ESCOMP/ctsm/issues/495#issuecomment-516619853>.)
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "ctsm",
+                                component = "clm",
                                 contents = "enable_water_tracer_consistency_checks=.true.")
 
     def _case_two_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "ctsm",
+                                component = "clm",
                                 contents = "enable_water_tracer_consistency_checks=.false.")
 

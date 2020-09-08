@@ -27,11 +27,11 @@ class LVG(SystemTestsCompareTwo):
 
     def _case_one_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "ctsm",
+                                component = "clm",
                                 contents = "glacier_region_behavior = 'single_at_atm_topo', 'virtual', 'virtual', 'multiple'")
 
     def _case_two_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "ctsm",
+                                component = "clm",
                                 contents = "glacier_region_behavior = 'single_at_atm_topo', 'virtual', 'virtual', 'virtual'")
 

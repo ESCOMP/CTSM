@@ -46,11 +46,11 @@ class LII(SystemTestsCompareTwo):
 
     def _case_one_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "ctsm",
+                                component = "clm",
                                 contents = "use_init_interp = .true.")
 
     def _case_two_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "ctsm",
+                                component = "clm",
                                 contents = "use_init_interp = .false.")
 
