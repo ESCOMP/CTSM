@@ -59,7 +59,6 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : fates_inventory_ctrl_filename
-   use clm_varctl        , only : nu_com
    use clm_varctl        , only : use_nitrif_denitrif
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
@@ -207,7 +206,6 @@ module CLMFatesInterfaceMod
       procedure, public :: prep_canopyfluxes
       procedure, public :: wrap_canopy_radiation
       procedure, public :: wrap_update_hifrq_hist
-      procedure, public :: wrap_bgc_summary
       procedure, public :: TransferZ0mDisp
       procedure, public :: InterpFileInputs  ! Interpolate inputs from files
       procedure, public :: Init2  ! Initialization after determining subgrid weights
@@ -293,12 +291,10 @@ module CLMFatesInterfaceMod
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
 
-        if((trim(nu_com).eq.'ECA') .or. (trim(nu_com).eq.'MIC')) then
-           call set_fates_ctrlparms('nu_com',cval='ECA')
-        else
-           call set_fates_ctrlparms('nu_com',cval='RD')
-        end if
-        
+        ! CTSM-FATES is not fully coupled (yet)
+        ! So lets tell fates to use the RD competition mechanism
+        ! which has fewer boundary conditions (simpler)
+        call set_fates_ctrlparms('nu_com',cval='RD')
 
         ! These may be in a non-limiting status (ie when supplements)
         ! are added, but they are always allocated and cycled non-the less
@@ -2144,6 +2140,9 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
 
+
+      print*,"LSM BGC rates: ",hr(c),totsomc(c),totlitc(c)
+      
       dtime = get_step_size_real()
       
       ! Update history variables that track these variables
