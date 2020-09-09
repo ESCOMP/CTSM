@@ -233,13 +233,15 @@ contains
           do c = lun%coli(l), lun%colf(l)
              ! ci should span [1:nhillcolumns(l)]
              ci = c-lun%coli(l)+1
-             ! relative separation should be the same
+
              if (col_dndx(l,ci) <= -999) then
                 ! lowermost column of hillslope has no downstream neighbor
                 col%cold(c) = ispval
              else
+                ! relative separation should be the same
                 col%cold(c) = c + (col_dndx(l,ci) - col_ndx(l,ci))
              endif
+
           enddo
           
           do c = lun%coli(l), lun%colf(l)
@@ -267,6 +269,7 @@ contains
              col%hill_area(c) = hill_area(l,ci)
              ! azimuth of column
              col%hill_aspect(c) = hill_aspect(l,ci)
+
           enddo
 
           ! Calculate total (representative) hillslope area on landunit

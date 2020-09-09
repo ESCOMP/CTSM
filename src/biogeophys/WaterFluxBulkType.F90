@@ -179,7 +179,6 @@ contains
          ptr_col=data2dptr, c2l_scale_type='urbanf',no_snow_behavior=no_snow_normal, &
          l2g_scale_type='ice', default='inactive')
 
-
     call hist_addfld2d ( &
          fname=this%info%fname('QROOTSINK'),  &
          units='mm/s', type2d='levsoi', &

@@ -12,6 +12,7 @@ module clm_driver
   use clm_varctl             , only : wrtdia, iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
+  use clm_varctl             , only : use_soil_moisture_streams
   use clm_time_manager       , only : get_nstep, is_beg_curr_day
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -81,6 +82,7 @@ module clm_driver
   use clm_instMod
   use clm_instMod            , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
+  use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -108,7 +110,10 @@ contains
     ! the calling tree is given in the description of this module.
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date
+    use clm_time_manager     , only : get_curr_date
+    use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
+    use SatellitePhenologyMod, only : lai_advance
+    use CNFireFactoryMod     , only : scalar_lightning
     !
     ! !ARGUMENTS:
     implicit none
@@ -316,6 +321,15 @@ contains
     call t_stopf('dyn_subgrid')
 
     ! ============================================================================
+    ! If soil moisture is prescribed from data streams set it here
+    ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe).
+    ! ============================================================================
+    if (use_soil_moisture_streams) then
+       call t_startf('prescribed_sm')
+       call PrescribedSoilMoistureAdvance( bounds_proc )
+       call t_stopf('prescribed_sm')
+    endif
+    ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
     ! For water: Currently, I believe this needs to be done after weights are updated for
@@ -334,6 +348,12 @@ contains
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
 
+       if (use_soil_moisture_streams) then
+          call t_startf('prescribed_sm')
+          call PrescribedSoilMoistureInterp(bounds_clump, soilstate_inst, &
+               water_inst%waterstatebulk_inst)
+          call t_stopf('prescribed_sm')
+       endif
        call t_startf('begwbal')
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
@@ -379,10 +399,20 @@ contains
        end if
        call bgc_vegetation_inst%InterpFileInputs(bounds_proc)
        call t_stopf('bgc_interp')
+    ! fates_spitfire_mode is assigned an integer value in the namelist
+    ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+    else if (fates_spitfire_mode > scalar_lightning) then
+       call clm_fates%InterpFileInputs(bounds_proc)
     end if
 
     ! Get time varying urban data
     call urbantv_inst%urbantv_interp(bounds_proc)
+
+    ! When LAI streams are being used
+    ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
+    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then 
+       call lai_advance( bounds_proc )
+    endif
 
     ! ============================================================================
     ! Initialize variables from previous time step, downscale atm forcings, and
@@ -983,7 +1013,8 @@ contains
           call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst)
+               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
+               frictionvel_inst)
 
           ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
           ! call to reweight_wrapup, if it's needed at all.
@@ -1236,6 +1267,10 @@ contains
        if (use_crop) then
           call crop_inst%CropUpdateAccVars(bounds_proc, &
                temperature_inst%t_ref2m_patch, temperature_inst%t_soisno_col)
+       end if
+
+       if(use_fates) then
+          call clm_fates%UpdateAccVars(bounds_proc)
        end if
 
        call t_stopf('accum')

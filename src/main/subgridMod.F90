@@ -17,7 +17,7 @@ module subgridMod
   use clm_instur     , only : wt_lunit, wt_nat_patch, urban_valid, wt_cft
   use landunit_varcon, only : istcrop, istdlak, istwet, isturb_tbd, isturb_hd, isturb_md
   use glcBehaviorMod , only : glc_behavior_type
-  use FatesInterfaceMod, only : fates_maxElementsPerSite
+  use FatesInterfaceTypesMod, only : fates_maxElementsPerSite
 
   implicit none
   private   

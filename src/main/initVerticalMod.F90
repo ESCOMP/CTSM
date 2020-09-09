@@ -39,6 +39,7 @@ module initVerticalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
+  public :: find_soil_layer_containing_depth
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hasBedrock  ! true if the given column type includes bedrock layers
@@ -687,6 +688,54 @@ contains
     call ncd_pio_closefile(ncid)
 
   end subroutine initVertical
+
+  !-----------------------------------------------------------------------
+  subroutine find_soil_layer_containing_depth(depth, layer)
+    !
+    ! !DESCRIPTION:
+    ! Find the soil layer that contains the given depth
+    !
+    ! Aborts if the given depth doesn't exist in the soil profile
+    !
+    ! We consider the interface between two layers to belong to the layer *above* that
+    ! interface. This implies that the top interface (at exactly 0 m) is not considered
+    ! to be part of the soil profile.
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in)  :: depth  ! target depth, m
+    integer , intent(out) :: layer  ! layer containing target depth
+    !
+    ! !LOCAL VARIABLES:
+    logical :: found
+    integer :: i
+
+    character(len=*), parameter :: subname = 'find_soil_layer_containing_depth'
+    !-----------------------------------------------------------------------
+
+    if (depth <= zisoi(0)) then
+       write(iulog,*) subname, ': ERROR: depth above top of soil'
+       write(iulog,*) 'depth = ', depth
+       write(iulog,*) 'zisoi = ', zisoi
+       call endrun(msg=subname//': depth above top of soil')
+    end if
+
+    found = .false.
+    do i = 1, nlevgrnd
+       if (depth <= zisoi(i)) then
+          layer = i
+          found = .true.
+          exit
+       end if
+    end do
+
+    if (.not. found) then
+       write(iulog,*) subname, ': ERROR: depth below bottom of soil'
+       write(iulog,*) 'depth = ', depth
+       write(iulog,*) 'zisoi = ', zisoi
+       call endrun(msg=subname//': depth below bottom of soil')
+    end if
+
+  end subroutine find_soil_layer_containing_depth
 
   !-----------------------------------------------------------------------
   logical function hasBedrock(col_itype, lun_itype)

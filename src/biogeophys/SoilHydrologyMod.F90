@@ -2768,7 +2768,7 @@ contains
          endif
          ! adjust transmissivity by 'anisotropy factor'
          transmis = k_anisotropic*transmis
-         
+
          ! the qflx_latflow_out_vol calculations use the
          ! transmissivity to determine whether saturated flow
          ! conditions exist, b/c gradients will be nonzero

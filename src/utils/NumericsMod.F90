@@ -47,7 +47,8 @@ module NumericsMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine truncate_small_values(num_f, filter_f, lb, ub, data_baseline, data)
+  subroutine truncate_small_values(num_f, filter_f, lb, ub, data_baseline, data, &
+       custom_rel_epsilon)
     !
     ! !DESCRIPTION:
     ! Truncate relatively small values to 0, within the given filter.
@@ -66,10 +67,15 @@ contains
     integer  , intent(in)    :: ub                 ! upper bound of data
     real(r8) , intent(in)    :: data_baseline(lb:) ! baseline version of data, used to define "relatively close to 0"
     real(r8) , intent(inout) :: data(lb:)          ! data to operate on
+
+    ! If provided, custom_rel_epsilon overrides the module-level default rel_epsilon
+    ! value for the sake of determining if a value is "small".
+    real(r8), intent(in), optional :: custom_rel_epsilon
     !
     ! !LOCAL VARIABLES:
     integer :: fn  ! index into filter
     integer :: n   ! index into data
+    real(r8) :: my_rel_epsilon
 
     character(len=*), parameter :: subname = 'truncate_small_values'
     !-----------------------------------------------------------------------
@@ -77,9 +83,15 @@ contains
     SHR_ASSERT_ALL_FL((ubound(data_baseline) == (/ub/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(data) == (/ub/)), sourcefile, __LINE__)
 
+    if (present(custom_rel_epsilon)) then
+       my_rel_epsilon = custom_rel_epsilon
+    else
+       my_rel_epsilon = rel_epsilon
+    end if
+
     do fn = 1, num_f
        n = filter_f(fn)
-       if (abs(data(n)) < rel_epsilon * abs(data_baseline(n))) then
+       if (abs(data(n)) < my_rel_epsilon * abs(data_baseline(n))) then
           data(n) = 0._r8
        end if
     end do
@@ -87,7 +99,8 @@ contains
   end subroutine truncate_small_values
 
   !-----------------------------------------------------------------------
-  subroutine truncate_small_values_one_lev(num_f, filter_f, lb, ub, lev_lb, lev, data_baseline, data)
+  subroutine truncate_small_values_one_lev(num_f, filter_f, lb, ub, lev_lb, lev, data_baseline, data, &
+       custom_rel_epsilon)
     !
     ! !DESCRIPTION:
     ! Truncate relatively small values to 0, for one level of a multi-level field, within
@@ -113,10 +126,15 @@ contains
     integer  , intent(in)    :: lev(lb:)           ! for each point, which level to work on
     real(r8) , intent(in)    :: data_baseline(lb:) ! baseline version of data, used to define "relatively close to 0" (note that this is only 1-d, giving baselines for the appropriate level for each point)
     real(r8) , intent(inout) :: data(lb:, lev_lb:) ! data to operate on
+
+    ! If provided, custom_rel_epsilon overrides the module-level default rel_epsilon
+    ! value for the sake of determining if a value is "small".
+    real(r8), intent(in), optional :: custom_rel_epsilon
     !
     ! !LOCAL VARIABLES:
     integer :: fn  ! index into filter
     integer :: n   ! index into data
+    real(r8) :: my_rel_epsilon
 
     character(len=*), parameter :: subname = 'truncate_small_values_one_lev'
     !-----------------------------------------------------------------------
@@ -125,9 +143,15 @@ contains
     SHR_ASSERT_FL((ubound(data_baseline, 1) == ub), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(data, 1) == ub), sourcefile, __LINE__)
 
+    if (present(custom_rel_epsilon)) then
+       my_rel_epsilon = custom_rel_epsilon
+    else
+       my_rel_epsilon = rel_epsilon
+    end if
+
     do fn = 1, num_f
        n = filter_f(fn)
-       if (abs(data(n, lev(n))) < rel_epsilon * abs(data_baseline(n))) then
+       if (abs(data(n, lev(n))) < my_rel_epsilon * abs(data_baseline(n))) then
           data(n, lev(n)) = 0._r8
        end if
     end do
