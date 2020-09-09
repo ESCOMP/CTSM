@@ -1345,11 +1345,13 @@ contains
        ! Create history and write history tapes if appropriate
        call t_startf('clm_drv_io_htapes')
 
-       call hist_htapes_wrapup( rstwr, nlend, bounds_proc,                    &
-            soilstate_inst%watsat_col(bounds_proc%begc:bounds_proc%endc, 1:), &
-            soilstate_inst%sucsat_col(bounds_proc%begc:bounds_proc%endc, 1:), &
-            soilstate_inst%bsw_col(bounds_proc%begc:bounds_proc%endc, 1:),    &
-            soilstate_inst%hksat_col(bounds_proc%begc:bounds_proc%endc, 1:))
+       call hist_htapes_wrapup( rstwr, nlend, bounds_proc,                      &
+            soilstate_inst%watsat_col(bounds_proc%begc:bounds_proc%endc, 1:),   &
+            soilstate_inst%sucsat_col(bounds_proc%begc:bounds_proc%endc, 1:),   &
+            soilstate_inst%bsw_col(bounds_proc%begc:bounds_proc%endc, 1:),      &
+            soilstate_inst%hksat_col(bounds_proc%begc:bounds_proc%endc, 1:),    &
+            soilstate_inst%cellsand_col(bounds_proc%begc:bounds_proc%endc, 1:), &
+            soilstate_inst%cellclay_col(bounds_proc%begc:bounds_proc%endc, 1:))
 
        call t_stopf('clm_drv_io_htapes')
 
