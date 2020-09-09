@@ -1571,6 +1571,11 @@ sub process_namelist_inline_logic {
   #################################
   setup_logic_nitrif_params( $nl_flags, $definition, $defaults, $nl );
 
+  #############################################
+  # namelist group: mineral_nitrogen_dynamics #
+  #############################################
+  setup_logic_mineral_nitrogen_dynamics( $opts, $nl_flags, $definition, $defaults, $nl );
+
   ####################################
   # namelist group: photosyns_inparm #
   ####################################
@@ -1979,7 +1984,8 @@ sub setup_logic_cnfire {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my @fire_consts = ( "rh_low", "rh_hgh", "bt_min", "bt_max", "cli_scale", "boreal_peatfire_c", "non_boreal_peatfire_c",
-                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", "cmb_cmplt_fact" );
+                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", 
+                      "cmb_cmplt_fact_litter", "cmb_cmplt_fact_cwd" );
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      foreach my $item ( @fire_consts ) {
         if ( ! &value_is_true($nl_flags->{'cnfireson'} ) ) {
@@ -2741,8 +2747,7 @@ sub setup_logic_nitrif_params {
   my ($nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( !  &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) {
-    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent",
-                 "denitrif_nitrateconc_coefficient", "denitrif_nitrateconc_exponent" );
+    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent");
     foreach my $var ( @vars ) {
        if ( defined($nl->get_value( $var ) ) ) {
          $log->fatal_error("$var is only used when use_nitrif_denitrif is turned on");
@@ -2750,6 +2755,30 @@ sub setup_logic_nitrif_params {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_mineral_nitrogen_dynamics {
+  #
+  # Logic for mineral_nitrogen_dynamics
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept" );
+  if (  &value_is_true($nl_flags->{'use_cn'}) && &value_is_true($nl->get_value('use_fun')) ) {
+    foreach my $var ( @vars ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                'use_cn'=>$nl_flags->{'use_cn'}, 'use_fun'=>$nl->get_value('use_fun') );
+    }
+  } else {
+    foreach my $var ( @vars ) {
+       if ( defined($nl->get_value( $var ) ) ) {
+         $log->fatal_error("$var is only used when use_cn and use_fun are both turned on");
+       }
+    }
+  }
+}
+
 
 #-------------------------------------------------------------------------------
 

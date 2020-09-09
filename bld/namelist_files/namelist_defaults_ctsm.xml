@@ -223,7 +223,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <occur_hi_gdp_tree        fire_method="li2014qianfrc" >0.39d00</occur_hi_gdp_tree>
 <lfuel                    fire_method="li2014qianfrc" >75.d00</lfuel>
 <ufuel                    fire_method="li2014qianfrc" >1050.d00</ufuel>
-<cmb_cmplt_fact           fire_method="li2014qianfrc" >0.5d00, 0.25d00</cmb_cmplt_fact>
+<cmb_cmplt_fact_litter    fire_method="li2014qianfrc" >0.5d00</cmb_cmplt_fact_litter>
+<cmb_cmplt_fact_cwd       fire_method="li2014qianfrc" >0.25d00</cmb_cmplt_fact_cwd>
 
 <rh_low                   fire_method="li2016crufrc" lnd_tuning_mode="clm5_0_GSWP3v1"
 >30.0d00</rh_low>
@@ -247,7 +248,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <occur_hi_gdp_tree        fire_method="li2016crufrc" >0.33d00</occur_hi_gdp_tree>
 <lfuel                    fire_method="li2016crufrc" >105.d00</lfuel>
 <ufuel                    fire_method="li2016crufrc" >1050.d00</ufuel>
-<cmb_cmplt_fact           fire_method="li2016crufrc" >0.5d00, 0.28d00</cmb_cmplt_fact>
+<cmb_cmplt_fact_litter    fire_method="li2016crufrc">0.5d00</cmb_cmplt_fact_litter>
+<cmb_cmplt_fact_cwd       fire_method="li2016crufrc">0.28d00</cmb_cmplt_fact_cwd>
 
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability phys="clm5_0">.false.</use_undercanopy_stability>
@@ -1263,6 +1265,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
 <use_fun phys="clm5_0" use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
 <use_fun                                                           >.false.</use_fun>
+
+<freelivfix_intercept use_fun=".true." use_cn=".true.">0.0117d00</freelivfix_intercept>
+<freelivfix_slope_wet use_fun=".true." use_cn=".true.">0.0006d00</freelivfix_slope_wet>
 
 <br_root>0.83d-06</br_root>
 

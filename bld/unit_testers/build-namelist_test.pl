@@ -29,7 +29,7 @@ OPTIONS
      -compare <directory>          Compare namelists for this version to namelists
                                    created by another version.
      -generate                     Leave the namelists in place to do a later compare.
-     -test                         Use the -test option to make sure datasets exist.
+     -no-test                      Do NOT Use the -test option to make sure datasets exist.
      -csmdata "dir"                Root directory of CESM input data.
 
 EOF
@@ -89,7 +89,7 @@ EOF
 #
 my %opts = ( help     => 0,
              generate => 0,
-             test     => 0,
+             test     => 1,
              compare  => undef,
              csmdata  => undef,
             );
@@ -98,7 +98,7 @@ GetOptions(
     "h|help"     => \$opts{'help'},
     "compare=s"  => \$opts{'compare'},
     "generate"   => \$opts{'generate'},
-    "test"       => \$opts{'test'},
+    "test!"      => \$opts{'test'},
     "csmdata=s"  => \$opts{'csmdata'},
 )  or usage();
 
@@ -637,6 +637,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
+     "freeliv wo fun"            =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"freelivfix_intercept=9.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
+                                   },
      "use_cn=false bgc=cn"       =>{ options=>"-bgc cn -envxml_dir .",
                                      namelst=>"use_cn=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -964,16 +969,6 @@ my %failtest = (
                                    },
      "respexpWOnitrif"           =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_nitrif_denitrif=.false., denitrif_respiration_exponent=1.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "nitrcoefWOnitrif"          =>{ options=>"-envxml_dir . -bgc bgc",
-                                     namelst=>"use_nitrif_denitrif=.false., denitrif_nitrateconc_coefficient=1.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "nitrexpWOnitrif"           =>{ options=>"-envxml_dir . -bgc bgc",
-                                     namelst=>"use_nitrif_denitrif=.false., denitrif_nitrateconc_exponent=1.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
