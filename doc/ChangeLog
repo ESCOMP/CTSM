@@ -7,7 +7,7 @@ One-line Summary: Some bit-for-bit changes needed for the Perturbed Parameter En
 Purpose of changes
 ------------------
 
-Some BFB fixes including bug fixes needed for PPE simulations. 
+Some BFB fixes including bug fixes needed for PPE simulations.
 
 Bugs fixed or introduced
 ------------------------
@@ -36,9 +36,13 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
-cmb_cmplt_fact was a parameter under namelist control which included an array.
-This parameter is now splitted into cmb_cmplt_fact_litter and
-cmb_cmplt_fact_cwd whih are two real values.
+cmb_cmplt_fact was a parameter under namelist control pertaining to the fire
+model (combusion completion factor [unitless]), which previously included an array.
+This parameter is now splitted into two real values i.e. cmb_cmplt_fact_litter and
+cmb_cmplt_fact_cwd.
+If the users have cmb_cmplt_fact in a user_nl_clm file that worked before, it
+won't work anymore since it is now splitted into  cmb_cmplt_fact_litter 
+and cmb_cmplt_fact_cwd.
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): 
 Previously, denitrif_nitrateconc_exponent and denitrif_nitrateconc_coefficient
