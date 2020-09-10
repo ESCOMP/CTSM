@@ -652,6 +652,11 @@ ignitions.
 Toggle to turn on fixed biogeography mode (only relevant if FATES is being used).
 </entry>
 
+<entry id="use_fates_nocomp" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">                                        
+Toggle to turn on no competition mode (only relevant if FATES is being used).                  
+</entry>
+
 <entry id="use_fates_logging" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the logging module (only relevant if FATES is being used).
