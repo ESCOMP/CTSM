@@ -606,6 +606,9 @@ def _create_case(cime_path, build_dir, compiler,
                           '--res', _RES,
                           '--compiler', compiler,
                           '--driver', 'nuopc',
+                          # Project isn't used for anything in the LILAC workflow, but it
+                          # still needs to be specified on machines that expect it.
+                          '--project', 'UNSET',
                           '--run-unsupported']
     create_newcase_cmd.extend(machine_args)
     if inputdata_path:
