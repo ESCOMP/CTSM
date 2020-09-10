@@ -417,9 +417,15 @@ contains
             end if
             s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
 
- !           call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
+            if ( .true. )then
+              call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
 
-            btran2(p)   = btran2(p) +rootfr(p,j)*s_node
+              smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf) 
+              btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
+                      (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
+            else
+              btran2(p)   = btran2(p) +rootfr(p,j)*s_node
+            end if
          end do
       end do
 
