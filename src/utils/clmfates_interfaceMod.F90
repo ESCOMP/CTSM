@@ -272,7 +272,7 @@ module CLMFatesInterfaceMod
 
      if (use_fates) then
 
-        verbose_output = .true.
+        verbose_output = .false.
         call FatesInterfaceInit(iulog, verbose_output)
         
         ! Force FATES parameters that are recieve type, to the unset value
