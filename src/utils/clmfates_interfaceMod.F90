@@ -272,7 +272,7 @@ module CLMFatesInterfaceMod
 
      if (use_fates) then
 
-        verbose_output = .false.
+        verbose_output = .true.
         call FatesInterfaceInit(iulog, verbose_output)
         
         ! Force FATES parameters that are recieve type, to the unset value
@@ -323,7 +323,7 @@ module CLMFatesInterfaceMod
 	   else
            pass_nocomp = 0
 	   end if
-        call set_fates_ctrlparms('use_fixed_nocomp',ival=pass_nocomp)
+        call set_fates_ctrlparms('use_nocomp',ival=pass_nocomp)
 
         if(use_fates_ed_st3) then
            pass_ed_st3 = 1
