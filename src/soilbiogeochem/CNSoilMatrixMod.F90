@@ -372,9 +372,9 @@ contains
             call AKAllsoiln%SetValueCopySM( num_soilc,filter_soilc,AKsoiln )
          else
             call AKallsoilc%SPMP_AB(num_soilc,filter_soilc,AKsoilc,AKfiresoil,list_ready1_fire,list_A=list_AK_AKVfire, &
-                 list_B=list_V_AKVfire, NE_AB=NE_AKallsoilc,RI_AB=RI_AKallsoilc,CI_AB=CI_AKallsoilc)
+                 list_B=list_fire_AKVfire, NE_AB=NE_AKallsoilc,RI_AB=RI_AKallsoilc,CI_AB=CI_AKallsoilc)
             call AKallsoiln%SPMP_AB(num_soilc,filter_soilc,AKsoiln,AKfiresoil,list_ready2_fire,list_A=list_AK_AKVfire, &
-                 list_B=list_V_AKVfire, NE_AB=NE_AKallsoiln,RI_AB=RI_AKallsoiln,CI_AB=CI_AKallsoiln)
+                 list_B=list_fire_AKVfire, NE_AB=NE_AKallsoiln,RI_AB=RI_AKallsoiln,CI_AB=CI_AKallsoiln)
          end if
       end if
 

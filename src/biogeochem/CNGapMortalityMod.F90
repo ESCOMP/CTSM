@@ -29,6 +29,7 @@ module CNGapMortalityMod
                                               ideadstem,ideadstem_st,ideadstem_xf,&
                                               ilivecroot,ilivecroot_st,ilivecroot_xf,&
                                               ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
+  use CNVegMatrixMod                 , only : matrix_update_gmc, matrix_update_gmn
   !
   implicit none
   private
@@ -96,7 +97,7 @@ contains
     ! Gap-phase mortality routine for coupled carbon-nitrogen code (CN)
     !
     ! !USES:
-    use clm_time_manager , only: get_days_per_year, get_step_size_real
+    use clm_time_manager , only: get_days_per_year, get_step_size_real, get_step_size
     use clm_varpar       , only: nlevdecomp_full
     use clm_varcon       , only: secspday
     use clm_varctl       , only: use_cndv, spinup_state
@@ -127,6 +128,8 @@ contains
     real(r8):: m             ! rate for fractional mortality (1/s)
     real(r8):: mort_max      ! asymptotic max mortality rate (/yr)
     real(r8):: k_mort = 0.3  ! coeff of growth efficiency in mortality equation
+    real(r8):: dt
+    logical,parameter :: matrixcheck_gm = .False.
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), errMsg(sourcefile, __LINE__))
@@ -188,6 +191,7 @@ contains
          iretransn_to_iout_gmn    => cnveg_nitrogenflux_inst%iretransn_to_iout_gm     & ! Input: [integer (:)] Index of gap mortality related N transfer from retranslocation pool to outside of vegetation pools
          )
 
+      dt = real( get_step_size(), r8 )
       ! set the mortality rate based on annual rate
       am = params_inst%am
       ! set coeff of growth efficiency in mortality equation 
@@ -233,66 +237,71 @@ contains
          !------------------------------------------------------
 
          ! displayed pools
-         cnveg_carbonflux_inst%m_leafc_to_litter_patch(p)               = cnveg_carbonstate_inst%leafc_patch(p)               * m
-         cnveg_carbonflux_inst%m_frootc_to_litter_patch(p)              = cnveg_carbonstate_inst%frootc_patch(p)              * m
-         cnveg_carbonflux_inst%m_livestemc_to_litter_patch(p)           = cnveg_carbonstate_inst%livestemc_patch(p)           * m
-         cnveg_carbonflux_inst%m_livecrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%livecrootc_patch(p)          * m
-         if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
-           cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * 10._r8
-           cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * 10._r8
-           if (use_matrixcn) then  
-              cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     + m * 10._r8
-              cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    + m * 10._r8
-           end if !use_matrixcn
+         if(.not. use_matrixcn)then
+            cnveg_carbonflux_inst%m_leafc_to_litter_patch(p)               = cnveg_carbonstate_inst%leafc_patch(p)               * m
+            cnveg_carbonflux_inst%m_frootc_to_litter_patch(p)              = cnveg_carbonstate_inst%frootc_patch(p)              * m
+            cnveg_carbonflux_inst%m_livestemc_to_litter_patch(p)           = cnveg_carbonstate_inst%livestemc_patch(p)           * m
+            cnveg_carbonflux_inst%m_livecrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%livecrootc_patch(p)          * m
          else
-           cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)           * m
-           cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)          * m
-           if (use_matrixcn) then
-              cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstem_to_iout_gmc)     + m
-              cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    = cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcroot_to_iout_gmc)    + m
-           end if !use_matrixcn
+            cnveg_carbonflux_inst%m_leafc_to_litter_patch(p)               = cnveg_carbonstate_inst%leafc_patch(p)       * matrix_update_gmc(p,ileaf_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+            cnveg_carbonflux_inst%m_frootc_to_litter_patch(p)              = cnveg_carbonstate_inst%frootc_patch(p)      * matrix_update_gmc(p,ifroot_to_iout_gmc,m,dt,cnveg_carbonflux_inst,.true.)
+            cnveg_carbonflux_inst%m_livestemc_to_litter_patch(p)           = cnveg_carbonstate_inst%livestemc_patch(p)   * matrix_update_gmc(p,ilivestem_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+            cnveg_carbonflux_inst%m_livecrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%livecrootc_patch(p)  * matrix_update_gmc(p,ilivecroot_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+         end if
+         if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
+            if(.not. use_matrixcn)then
+               cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * 10._r8
+               cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * 10._r8
+            else
+               cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)   * matrix_update_gmc(p,ideadstem_to_iout_gmc,m*10._r8,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+               cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)  * matrix_update_gmc(p,ideadcroot_to_iout_gmc,m*10._r8,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+            end if !use_matrixcn
+         else
+            if (.not. use_matrixcn) then
+               cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)           * m
+               cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)          * m
+            else
+               cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)   * matrix_update_gmc(p,ideadstem_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+               cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)  * matrix_update_gmc(p,ideadcroot_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+            end if !use_matrixcn
          end if
 
          ! storage pools
-         cnveg_carbonflux_inst%m_leafc_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%leafc_storage_patch(p)       * m
-         cnveg_carbonflux_inst%m_frootc_storage_to_litter_patch(p)      = cnveg_carbonstate_inst%frootc_storage_patch(p)      * m
-         cnveg_carbonflux_inst%m_livestemc_storage_to_litter_patch(p)   = cnveg_carbonstate_inst%livestemc_storage_patch(p)   * m
-         cnveg_carbonflux_inst%m_deadstemc_storage_to_litter_patch(p)   = cnveg_carbonstate_inst%deadstemc_storage_patch(p)   * m
-         cnveg_carbonflux_inst%m_livecrootc_storage_to_litter_patch(p)  = cnveg_carbonstate_inst%livecrootc_storage_patch(p)  * m
-         cnveg_carbonflux_inst%m_deadcrootc_storage_to_litter_patch(p)  = cnveg_carbonstate_inst%deadcrootc_storage_patch(p)  * m
-         cnveg_carbonflux_inst%m_gresp_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%gresp_storage_patch(p)       * m
+         if(.not. use_matrixcn)then
+            cnveg_carbonflux_inst%m_leafc_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%leafc_storage_patch(p)       * m
+            cnveg_carbonflux_inst%m_frootc_storage_to_litter_patch(p)      = cnveg_carbonstate_inst%frootc_storage_patch(p)      * m
+            cnveg_carbonflux_inst%m_livestemc_storage_to_litter_patch(p)   = cnveg_carbonstate_inst%livestemc_storage_patch(p)   * m
+            cnveg_carbonflux_inst%m_deadstemc_storage_to_litter_patch(p)   = cnveg_carbonstate_inst%deadstemc_storage_patch(p)   * m
+            cnveg_carbonflux_inst%m_livecrootc_storage_to_litter_patch(p)  = cnveg_carbonstate_inst%livecrootc_storage_patch(p)  * m
+            cnveg_carbonflux_inst%m_deadcrootc_storage_to_litter_patch(p)  = cnveg_carbonstate_inst%deadcrootc_storage_patch(p)  * m
+            cnveg_carbonflux_inst%m_gresp_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%gresp_storage_patch(p)       * m
          
          ! transfer pools
-         cnveg_carbonflux_inst%m_leafc_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%leafc_xfer_patch(p)          * m
-         cnveg_carbonflux_inst%m_frootc_xfer_to_litter_patch(p)         = cnveg_carbonstate_inst%frootc_xfer_patch(p)         * m
-         cnveg_carbonflux_inst%m_livestemc_xfer_to_litter_patch(p)      = cnveg_carbonstate_inst%livestemc_xfer_patch(p)      * m
-         cnveg_carbonflux_inst%m_deadstemc_xfer_to_litter_patch(p)      = cnveg_carbonstate_inst%deadstemc_xfer_patch(p)      * m
-         cnveg_carbonflux_inst%m_livecrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%livecrootc_xfer_patch(p)     * m
-         cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)     * m
-         cnveg_carbonflux_inst%m_gresp_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%gresp_xfer_patch(p)          * m
-         if (use_matrixcn) then 
+            cnveg_carbonflux_inst%m_leafc_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%leafc_xfer_patch(p)          * m
+            cnveg_carbonflux_inst%m_frootc_xfer_to_litter_patch(p)         = cnveg_carbonstate_inst%frootc_xfer_patch(p)         * m
+            cnveg_carbonflux_inst%m_livestemc_xfer_to_litter_patch(p)      = cnveg_carbonstate_inst%livestemc_xfer_patch(p)      * m
+            cnveg_carbonflux_inst%m_deadstemc_xfer_to_litter_patch(p)      = cnveg_carbonstate_inst%deadstemc_xfer_patch(p)      * m
+            cnveg_carbonflux_inst%m_livecrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%livecrootc_xfer_patch(p)     * m
+            cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)     * m
+            cnveg_carbonflux_inst%m_gresp_xfer_to_litter_patch(p)          = cnveg_carbonstate_inst%gresp_xfer_patch(p)          * m
+         else
            ! NOTE: The non-matrix version of this is in CNCStateUpdate2Mod CStateUpdate2 (EBK 11/25/2019)
-         ! displayed pools
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileaf_to_iout_gmc)         = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc)        = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestem_to_iout_gmc)     = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecroot_to_iout_gmc)    = m
 
          ! storage pools
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafst_to_iout_gmc)       = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootst_to_iout_gmc)      = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemst_to_iout_gmc)   = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootst_to_iout_gmc)  = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemst_to_iout_gmc)   = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootst_to_iout_gmc)  = m
-
+             cnveg_carbonflux_inst%m_leafc_storage_to_litter_patch(p)         = cnveg_carbonstate_inst%leafc_storage_patch(p)      * matrix_update_gmc(p,ileafst_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_frootc_storage_to_litter_patch(p)        = cnveg_carbonstate_inst%frootc_storage_patch(p)     * matrix_update_gmc(p,ifrootst_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_livestemc_storage_to_litter_patch(p)     = cnveg_carbonstate_inst%livestemc_storage_patch(p)  * matrix_update_gmc(p,ilivestemst_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_deadstemc_storage_to_litter_patch(p)     = cnveg_carbonstate_inst%deadstemc_storage_patch(p)  * matrix_update_gmc(p,ideadstemst_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_livecrootc_storage_to_litter_patch(p)    = cnveg_carbonstate_inst%livecrootc_storage_patch(p) * matrix_update_gmc(p,ilivecrootst_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_deadcrootc_storage_to_litter_patch(p)    = cnveg_carbonstate_inst%deadcrootc_storage_patch(p) * matrix_update_gmc(p,ideadcrootst_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+            
          ! transfer pools
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ileafxf_to_iout_gmc)       = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifrootxf_to_iout_gmc)      = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivestemxf_to_iout_gmc)   = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ilivecrootxf_to_iout_gmc)  = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadstemxf_to_iout_gmc)   = m
-            cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ideadcrootxf_to_iout_gmc)  = m
+             cnveg_carbonflux_inst%m_leafc_xfer_to_litter_patch(p)         = cnveg_carbonstate_inst%leafc_xfer_patch(p)         * matrix_update_gmc(p,ileafxf_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_frootc_xfer_to_litter_patch(p)        = cnveg_carbonstate_inst%frootc_xfer_patch(p)        * matrix_update_gmc(p,ifrootxf_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_livestemc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%livestemc_xfer_patch(p)     * matrix_update_gmc(p,ilivestemxf_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_deadstemc_xfer_to_litter_patch(p)     = cnveg_carbonstate_inst%deadstemc_xfer_patch(p)     * matrix_update_gmc(p,ideadstemxf_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_livecrootc_xfer_to_litter_patch(p)    = cnveg_carbonstate_inst%livecrootc_xfer_patch(p)    * matrix_update_gmc(p,ilivecrootxf_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
+             cnveg_carbonflux_inst%m_deadcrootc_xfer_to_litter_patch(p)    = cnveg_carbonstate_inst%deadcrootc_xfer_patch(p)    * matrix_update_gmc(p,ideadcrootxf_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm)
          end if !use_matrixcn
 
          !------------------------------------------------------
@@ -300,73 +309,76 @@ contains
          !------------------------------------------------------
 
          ! displayed pools
-         cnveg_nitrogenflux_inst%m_leafn_to_litter_patch(p)            = cnveg_nitrogenstate_inst%leafn_patch(p)               * m
-         cnveg_nitrogenflux_inst%m_frootn_to_litter_patch(p)           = cnveg_nitrogenstate_inst%frootn_patch(p)              * m
-         cnveg_nitrogenflux_inst%m_livestemn_to_litter_patch(p)        = cnveg_nitrogenstate_inst%livestemn_patch(p)           * m
-         cnveg_nitrogenflux_inst%m_livecrootn_to_litter_patch(p)       = cnveg_nitrogenstate_inst%livecrootn_patch(p)          * m
+         if(.not. use_matrixcn)then
+            cnveg_nitrogenflux_inst%m_leafn_to_litter_patch(p)            = cnveg_nitrogenstate_inst%leafn_patch(p)               * m
+            cnveg_nitrogenflux_inst%m_frootn_to_litter_patch(p)           = cnveg_nitrogenstate_inst%frootn_patch(p)              * m
+            cnveg_nitrogenflux_inst%m_livestemn_to_litter_patch(p)        = cnveg_nitrogenstate_inst%livestemn_patch(p)           * m
+            cnveg_nitrogenflux_inst%m_livecrootn_to_litter_patch(p)       = cnveg_nitrogenstate_inst%livecrootn_patch(p)          * m
+         else
+            cnveg_nitrogenflux_inst%m_leafn_to_litter_patch(p)            = cnveg_nitrogenstate_inst%leafn_patch(p)       * matrix_update_gmn(p,ileaf_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_frootn_to_litter_patch(p)           = cnveg_nitrogenstate_inst%frootn_patch(p)      * matrix_update_gmn(p,ifroot_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,.true.)
+            cnveg_nitrogenflux_inst%m_livestemn_to_litter_patch(p)        = cnveg_nitrogenstate_inst%livestemn_patch(p)   * matrix_update_gmn(p,ilivestem_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_livecrootn_to_litter_patch(p)       = cnveg_nitrogenstate_inst%livecrootn_patch(p)  * matrix_update_gmn(p,ilivecroot_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+         end if
 
          if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
-           cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * 10._r8
-           cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * 10._r8
-           if (use_matrixcn) then
-             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     + m* 10._r8
-             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    + m*10._r8
-           end if !use_matrixcn
+            if(.not. use_matrixcn)then
+               cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * 10._r8
+               cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * 10._r8
+            else
+               cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * matrix_update_gmn(p,ideadstem_to_iout_gmn ,m*10._r8,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+               cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * matrix_update_gmn(p,ideadcroot_to_iout_gmn,m*10._r8,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            end if !.not. use_matrixcn
          else
-           cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)           * m 
-           cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p)          * m 
-           if (use_matrixcn) then
-             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstem_to_iout_gmn)     + m
-             cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    = cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcroot_to_iout_gmn)    + m
-           end if !use_matrixcn
+            if (.not. use_matrixcn) then
+               cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)           * m 
+               cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p)          * m 
+            else
+               cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * matrix_update_gmn(p,ideadstem_to_iout_gmn ,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+               cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * matrix_update_gmn(p,ideadcroot_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            end if !use_matrixcn
          end if
 
          if (ivt(p) < npcropmin) then
-            cnveg_nitrogenflux_inst%m_retransn_to_litter_patch(p) = cnveg_nitrogenstate_inst%retransn_patch(p) * m
+            if(.not. use_matrixcn)then
+               cnveg_nitrogenflux_inst%m_retransn_to_litter_patch(p) = cnveg_nitrogenstate_inst%retransn_patch(p) * m
+            else
+               cnveg_nitrogenflux_inst%m_retransn_to_litter_patch(p) = cnveg_nitrogenstate_inst%retransn_patch(p) * matrix_update_gmn(p,iretransn_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            end if
          end if
             
+         if(.not. use_matrixcn)then
          ! storage pools
-         cnveg_nitrogenflux_inst%m_leafn_storage_to_litter_patch(p)       = cnveg_nitrogenstate_inst%leafn_storage_patch(p)      * m
-         cnveg_nitrogenflux_inst%m_frootn_storage_to_litter_patch(p)      = cnveg_nitrogenstate_inst%frootn_storage_patch(p)     * m
-         cnveg_nitrogenflux_inst%m_livestemn_storage_to_litter_patch(p)   = cnveg_nitrogenstate_inst%livestemn_storage_patch(p)  * m
-         cnveg_nitrogenflux_inst%m_deadstemn_storage_to_litter_patch(p)   = cnveg_nitrogenstate_inst%deadstemn_storage_patch(p)  * m
-         cnveg_nitrogenflux_inst%m_livecrootn_storage_to_litter_patch(p)  = cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) * m
-         cnveg_nitrogenflux_inst%m_deadcrootn_storage_to_litter_patch(p)  = cnveg_nitrogenstate_inst%deadcrootn_storage_patch(p) * m
+            cnveg_nitrogenflux_inst%m_leafn_storage_to_litter_patch(p)       = cnveg_nitrogenstate_inst%leafn_storage_patch(p)      * m
+            cnveg_nitrogenflux_inst%m_frootn_storage_to_litter_patch(p)      = cnveg_nitrogenstate_inst%frootn_storage_patch(p)     * m
+            cnveg_nitrogenflux_inst%m_livestemn_storage_to_litter_patch(p)   = cnveg_nitrogenstate_inst%livestemn_storage_patch(p)  * m
+            cnveg_nitrogenflux_inst%m_deadstemn_storage_to_litter_patch(p)   = cnveg_nitrogenstate_inst%deadstemn_storage_patch(p)  * m
+            cnveg_nitrogenflux_inst%m_livecrootn_storage_to_litter_patch(p)  = cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) * m
+            cnveg_nitrogenflux_inst%m_deadcrootn_storage_to_litter_patch(p)  = cnveg_nitrogenstate_inst%deadcrootn_storage_patch(p) * m
 
          ! transfer pools
-         cnveg_nitrogenflux_inst%m_leafn_xfer_to_litter_patch(p)          = cnveg_nitrogenstate_inst%leafn_xfer_patch(p)         * m
-         cnveg_nitrogenflux_inst%m_frootn_xfer_to_litter_patch(p)         = cnveg_nitrogenstate_inst%frootn_xfer_patch(p)        * m
-         cnveg_nitrogenflux_inst%m_livestemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%livestemn_xfer_patch(p)     * m
-         cnveg_nitrogenflux_inst%m_deadstemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_xfer_patch(p)     * m
-         cnveg_nitrogenflux_inst%m_livecrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livecrootn_xfer_patch(p)    * m
-         cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_xfer_patch(p)    * m
-         if (use_matrixcn) then	 
-           ! NOTE: The non-matrix version of this is in CNNStateUpdate2Mod NStateUpdate2 (EBK 11/25/2019)
-         ! displayed pools
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileaf_to_iout_gmn)        = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifroot_to_iout_gmn)       = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestem_to_iout_gmn)    = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecroot_to_iout_gmn)   = m
-
+            cnveg_nitrogenflux_inst%m_leafn_xfer_to_litter_patch(p)          = cnveg_nitrogenstate_inst%leafn_xfer_patch(p)         * m
+            cnveg_nitrogenflux_inst%m_frootn_xfer_to_litter_patch(p)         = cnveg_nitrogenstate_inst%frootn_xfer_patch(p)        * m
+            cnveg_nitrogenflux_inst%m_livestemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%livestemn_xfer_patch(p)     * m
+            cnveg_nitrogenflux_inst%m_deadstemn_xfer_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_xfer_patch(p)     * m
+            cnveg_nitrogenflux_inst%m_livecrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livecrootn_xfer_patch(p)    * m
+            cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_xfer_patch(p)    * m
+         else
          ! storage pools
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafst_to_iout_gmn)      = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifrootst_to_iout_gmn)     = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestemst_to_iout_gmn)  = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecrootst_to_iout_gmn) = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstemst_to_iout_gmn)  = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcrootst_to_iout_gmn) = m
-
+            cnveg_nitrogenflux_inst%m_leafn_storage_to_litter_patch(p)         = cnveg_nitrogenstate_inst%leafn_storage_patch(p)      * matrix_update_gmn(p,ileafst_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_frootn_storage_to_litter_patch(p)        = cnveg_nitrogenstate_inst%frootn_storage_patch(p)     * matrix_update_gmn(p,ifrootst_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_livestemn_storage_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livestemn_storage_patch(p)  * matrix_update_gmn(p,ilivestemst_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_deadstemn_storage_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_storage_patch(p)  * matrix_update_gmn(p,ideadstemst_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_livecrootn_storage_to_litter_patch(p)    = cnveg_nitrogenstate_inst%livecrootn_storage_patch(p) * matrix_update_gmn(p,ilivecrootst_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_deadcrootn_storage_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_storage_patch(p) * matrix_update_gmn(p,ideadcrootst_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            
          ! transfer pools
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ileafxf_to_iout_gmn)      = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ifrootxf_to_iout_gmn)     = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivestemxf_to_iout_gmn)  = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ilivecrootxf_to_iout_gmn) = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadstemxf_to_iout_gmn)  = m
-            cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,ideadcrootxf_to_iout_gmn) = m
-
-            if (ivt(p) < npcropmin) then
-               cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch(p,iretransn_to_iout_gmn) = m
-            end if
+            cnveg_nitrogenflux_inst%m_leafn_xfer_to_litter_patch(p)         = cnveg_nitrogenstate_inst%leafn_xfer_patch(p)      * matrix_update_gmn(p,ileafxf_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_frootn_xfer_to_litter_patch(p)        = cnveg_nitrogenstate_inst%frootn_xfer_patch(p)     * matrix_update_gmn(p,ifrootxf_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_livestemn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%livestemn_xfer_patch(p)  * matrix_update_gmn(p,ilivestemxf_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_deadstemn_xfer_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_xfer_patch(p)  * matrix_update_gmn(p,ideadstemxf_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_livecrootn_xfer_to_litter_patch(p)    = cnveg_nitrogenstate_inst%livecrootn_xfer_patch(p) * matrix_update_gmn(p,ilivecrootxf_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
+            cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_xfer_patch(p) * matrix_update_gmn(p,ideadcrootxf_to_iout_gmn,m,dt,cnveg_nitrogenflux_inst,matrixcheck_gm)
          end if !use_matrixcn
 
          ! added by F. Li and S. Levis
@@ -382,16 +394,6 @@ contains
 
       end do ! end of patch loop
 
-      if(use_matrixcn)then
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            if(cnveg_carbonflux_inst%matrix_phtransfer_patch(p,cnveg_carbonflux_inst%ifroot_to_iout_ph) .ge. 1._r8 / get_step_size_real())then
-               cnveg_carbonflux_inst%m_frootc_to_litter_patch(p) = 0._r8
-               cnveg_carbonflux_inst%matrix_gmtransfer_patch(p,ifroot_to_iout_gmc) = 0._r8
-            end if
-         end do
-      end if
-      
       ! gather all patch-level litterfall fluxes to the column
       ! for litter C and N inputs
 

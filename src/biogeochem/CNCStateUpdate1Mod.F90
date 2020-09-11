@@ -21,6 +21,7 @@ module CNCStateUpdate1Mod
   use PatchType                          , only : patch
   use clm_varctl                         , only : use_fates, use_cn, iulog
   use clm_varctl                         , only : use_matrixcn, use_soil_matrixcn
+  use CNVegMatrixMod                     , only : matrix_update_phc
   !
   implicit none
   private
@@ -533,8 +534,7 @@ contains
                   cs_veg%frootc_patch(p)          = 0._r8
                else
                   cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) &
-                    + (1._r8/dt - cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph)) * cs_veg%frootc_patch(p)
-                  cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph) = 1._r8 / dt
+                    + cs_veg%frootc_patch(p) * matrix_update_phc(p,cf_veg%ifroot_to_iout_ph,1._r8/dt,dt,cnveg_carbonflux_inst,.true.,.true.)
                end if !not use_matrixcn
             end if
          end if
