@@ -241,6 +241,11 @@ contains
          p2c_scale_type='unity', c2l_scale_type= 'urbanf', l2g_scale_type='unity')
 
     call p2g(bounds, &
+         frictionvel_inst%z0m_actual_patch (bounds%begp:bounds%endp), &
+         lnd2atm_inst%z0m_grc              (bounds%begg:bounds%endg), &
+         p2c_scale_type='unity', c2l_scale_type= 'urbans', l2g_scale_type='unity')
+
+    call p2g(bounds, &
          frictionvel_inst%fv_patch (bounds%begp:bounds%endp), &
          lnd2atm_inst%fv_grc       (bounds%begg:bounds%endg), &
          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
@@ -327,15 +332,6 @@ contains
          dust_inst%flx_mss_vrt_dst_patch(bounds%begp:bounds%endp, :), &
          lnd2atm_inst%flxdst_grc        (bounds%begg:bounds%endg, :), &
          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
-
-
-    ! ch4 flux
-    if (use_lch4) then
-       call c2g( bounds,     &
-            ch4_inst%ch4_surf_flux_tot_col (bounds%begc:bounds%endc), &
-            lnd2atm_inst%flux_ch4_grc      (bounds%begg:bounds%endg), &
-            c2l_scale_type= 'unity', l2g_scale_type='unity' )
-    end if
 
     !----------------------------------------------------
     ! lnd -> rof

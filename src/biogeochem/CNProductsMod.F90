@@ -25,6 +25,8 @@ module CNProductsMod
      ! ------------------------------------------------------------------------
 
      real(r8), pointer, public :: product_loss_grc(:)   ! (g[C or N]/m2/s) total decomposition loss from ALL product pools
+     real(r8), pointer, public :: cropprod1_grc(:)  ! (g[C or N]/m2) crop product pool (grain + biofuel), 1-year lifespan
+     real(r8), pointer, public :: tot_woodprod_grc(:)  ! (g[C or N]/m2) total wood product pool
 
      ! ------------------------------------------------------------------------
      ! Private instance variables
@@ -33,10 +35,8 @@ module CNProductsMod
      class(species_base_type), allocatable :: species    ! C, N, C13, C14, etc.
 
      ! States
-     real(r8), pointer :: cropprod1_grc(:)    ! (g[C or N]/m2) grain product pool, 1-year lifespan
      real(r8), pointer :: prod10_grc(:)       ! (g[C or N]/m2) wood product pool, 10-year lifespan
      real(r8), pointer :: prod100_grc(:)      ! (g[C or N]/m2) wood product pool, 100-year lifespan
-     real(r8), pointer :: tot_woodprod_grc(:) ! (g[C or N]/m2) total wood product pool
 
      ! Fluxes: gains
      real(r8), pointer :: dwt_prod10_gain_grc(:)  ! (g[C or N]/m2/s) dynamic landcover addition to 10-year wood product pool
@@ -51,7 +51,7 @@ module CNProductsMod
      real(r8), pointer :: grain_to_cropprod1_grc(:) ! (g[C or N]/m2/s) grain to 1-year crop product pool
 
      ! Fluxes: losses
-     real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr grain product pool
+     real(r8), pointer :: cropprod1_loss_grc(:)    ! (g[C or N]/m2/s) decomposition loss from 1-yr crop product pool
      real(r8), pointer :: prod10_loss_grc(:)       ! (g[C or N]/m2/s) decomposition loss from 10-yr wood product pool
      real(r8), pointer :: prod100_loss_grc(:)      ! (g[C or N]/m2/s) decomposition loss from 100-yr wood product pool
      real(r8), pointer :: tot_woodprod_loss_grc(:) ! (g[C or N]/m2/s) decompomposition loss from all wood product pools
@@ -181,7 +181,7 @@ contains
          fname = this%species%hist_fname('CROPPROD1'), &
          units = 'g' // this%species%get_species() // '/m^2', &
          avgflag = 'A', &
-         long_name = '1-yr grain product ' // this%species%get_species(), &
+         long_name = '1-yr crop product (grain+biofuel) ' // this%species%get_species(), &
          ptr_gcell = this%cropprod1_grc, default=active_if_non_isotope)
 
     this%prod10_grc(begg:endg) = spval
@@ -245,7 +245,7 @@ contains
          fname = this%species%hist_fname('CROPPROD1', suffix='_LOSS'), &
          units = 'g' // this%species%get_species() // '/m^2/s', &
          avgflag = 'A', &
-         long_name = 'loss from 1-yr grain product pool', &
+         long_name = 'loss from 1-yr crop product pool', &
          ptr_gcell = this%cropprod1_loss_grc, default=active_if_non_isotope)
 
     this%prod10_loss_grc(begg:endg) = spval
@@ -429,6 +429,10 @@ contains
        end if
     end if
 
+    if (flag == 'read') then
+       call this%ComputeSummaryVars(bounds)
+    end if
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -506,17 +510,17 @@ contains
     ! update product state variables
     do g = bounds%begg, bounds%endg
 
-       ! fluxes into wood & grain product pools, from landcover change
+       ! fluxes into wood & crop product pools, from landcover change
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%dwt_cropprod1_gain_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%dwt_prod10_gain_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%dwt_prod100_gain_grc(g)*dt
 
-       ! fluxes into wood & grain product pools, from harvest
+       ! fluxes into wood & crop product pools, from harvest
        this%cropprod1_grc(g) = this%cropprod1_grc(g) + this%grain_to_cropprod1_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    + this%hrv_deadstem_to_prod10_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   + this%hrv_deadstem_to_prod100_grc(g)*dt
 
-       ! fluxes out of wood & grain product pools, from decomposition
+       ! fluxes out of wood & crop product pools, from decomposition
        this%cropprod1_grc(g) = this%cropprod1_grc(g) - this%cropprod1_loss_grc(g)*dt
        this%prod10_grc(g)    = this%prod10_grc(g)    - this%prod10_loss_grc(g)*dt
        this%prod100_grc(g)   = this%prod100_grc(g)   - this%prod100_loss_grc(g)*dt

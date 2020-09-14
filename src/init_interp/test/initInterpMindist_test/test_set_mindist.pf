@@ -192,7 +192,8 @@ contains
          cweights=[1._r8], &
          ptype=ptype_o)
 
-    subgrido_c = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido_c, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -201,7 +202,8 @@ contains
          lat = [my_lat], &
          lon = [my_lon], &
          topoglc = [topoglc_o])
-    subgrido_p = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido_p, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -223,7 +225,8 @@ contains
     lat_i(:) = my_lat
     lon_i(:) = my_lon
 
-    subgridi_c = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi_c, &
          npts = num_i, &
          name = 'column', &
          ctype = ctype_i, &
@@ -231,7 +234,8 @@ contains
          lat = lat_i, &
          lon = lon_i, &
          topoglc = topoglc_i)
-    subgridi_p = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi_p, &
          npts = num_i, &
          name = 'pft', &
          ptype = ptype_i, &
@@ -278,7 +282,8 @@ contains
          ctypes=[my_ctype], &
          cweights=[1._r8])
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -288,7 +293,8 @@ contains
          lon = [my_lon])
 
     ! Input points differ in either column type or landunit type
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 5, &
          name = 'column', &
          ctype = [my_ctype-1, my_ctype,   my_ctype, my_ctype,   my_ctype + 1], &
@@ -462,7 +468,8 @@ contains
          ctypes=[my_ctype], &
          cweights=[1._r8])
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -472,7 +479,8 @@ contains
          lon = [my_lon], &
          topoglc = [my_topo])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'column', &
          ctype = [my_ctype, my_ctype, my_ctype], &
@@ -516,7 +524,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -528,7 +537,8 @@ contains
 
     ! Input point #2 has the same ptype, but a different ctype and ltype. This one should
     ! be chosen. Other input points differ in ptype.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [my_ptype - 1, my_ptype, my_ptype + 1], &
@@ -569,7 +579,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -583,7 +594,8 @@ contains
 
     ! Input point #2 has the same ptype, but a different ctype and ltype. This one should
     ! be chosen. Other input points differ in ptype.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [my_ptype - 1, my_ptype, my_ptype + 1], &
@@ -623,7 +635,8 @@ contains
          ctypes=[my_ctype], &
          cweights=[1._r8])
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -632,7 +645,8 @@ contains
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'column', &
          ctype = [icol_natveg - 2, icol_natveg, icol_natveg - 1], &
@@ -678,7 +692,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -688,7 +703,8 @@ contains
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [ipft_bare + 1, ipft_bare, ipft_bare + 2], &
@@ -731,7 +747,8 @@ contains
          cweights=[1._r8], &
          ptype=ipft_bare)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -744,7 +761,8 @@ contains
     ! In the inputs, we use icol_veg even for special landunits, to make sure that even a
     ! patch whose pft and column type indicate natural veg is ignored if its landunit
     ! type is wrong.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [ipft_bare, ipft_bare, ipft_bare], &
@@ -787,7 +805,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -800,7 +819,8 @@ contains
     ! None of the input points match the output (in ptype, ctype or ltype). The 2nd point
     ! is a bare ground point, though, and so should be used as the template if we specify
     ! fill_missing_with_natveg.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [ipft_bare, ipft_bare, ipft_bare], &
@@ -828,14 +848,16 @@ contains
 
     call setup_single_veg_patch(pft_type=1)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begg, &
          name = 'gridcell', &
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'gridcell', &
          lat = [my_lat - 10._r8, my_lat - 1._r8, my_lat + 10._r8], &

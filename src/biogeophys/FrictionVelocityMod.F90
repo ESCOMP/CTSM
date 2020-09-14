@@ -69,6 +69,7 @@ module FrictionVelocityMod
      real(r8), pointer, public :: zeta_patch       (:)   ! patch dimensionless stability parameter
      real(r8), pointer, public :: vpd_patch        (:)   ! patch vapor pressure deficit [Pa]
      real(r8), pointer, public :: num_iter_patch   (:)   ! patch number of iterations
+     real(r8), pointer, public :: z0m_actual_patch (:)   ! patch roughness length actually used in flux calculations, momentum [m]
 
    contains
 
@@ -76,6 +77,7 @@ module FrictionVelocityMod
      procedure, public :: Init
      procedure, public :: Restart
      procedure, public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
+     procedure, public :: SetActualRoughnessLengths ! Set roughness lengths actually used in flux calculations
      procedure, public :: FrictionVelocity       ! Calculate friction velocity
      procedure, public :: MoninObukIni           ! Initialization of the Monin-Obukhov length
 
@@ -163,6 +165,7 @@ contains
     allocate(this%zeta_patch       (begp:endp)) ; this%zeta_patch       (:)   = nan
     allocate(this%vpd_patch        (begp:endp)) ; this%vpd_patch        (:)   = nan
     allocate(this%num_iter_patch   (begp:endp)) ; this%num_iter_patch   (:)   = nan
+    allocate(this%z0m_actual_patch (begp:endp)) ; this%z0m_actual_patch (:)   = nan
 
   end subroutine InitAllocate
 
@@ -575,6 +578,72 @@ contains
     end associate
 
   end subroutine SetRoughnessLengthsAndForcHeightsNonLake
+
+  !-----------------------------------------------------------------------
+  subroutine SetActualRoughnessLengths(this, bounds, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp, &
+       num_urbanp, filter_urbanp, &
+       num_lakep, filter_lakep)
+    !
+    ! !DESCRIPTION:
+    ! Set roughness lengths actually used in flux calculations
+    !
+    ! !ARGUMENTS:
+    class(frictionvel_type) , intent(inout) :: this
+    type(bounds_type)       , intent(in)    :: bounds
+    integer                 , intent(in)    :: num_exposedvegp         ! number of points in filter_exposedvegp
+    integer                 , intent(in)    :: filter_exposedvegp(:)   ! patch filter for non-snow-covered veg
+    integer                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                 , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 (but does NOT include lake or urban)
+    integer                 , intent(in)    :: num_urbanp              ! number of points in filter_urbanp
+    integer                 , intent(in)    :: filter_urbanp(:)        ! patch filter for urban
+    integer                 , intent(in)    :: num_lakep               ! number of points in filter_lakep
+    integer                 , intent(in)    :: filter_lakep(:)         ! patch filter for lake
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fp, p, c, l
+
+    character(len=*), parameter :: subname = 'SetActualRoughnessLengths'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         z_0_town   => lun%z_0_town          , & ! Input:  [real(r8) (:)] momentum roughness length of urban landunit [m]
+
+         z0mv       => this%z0mv_patch       , & ! Input:  [real(r8) (:)] roughness length over vegetation, momentum [m]
+         z0mg       => this%z0mg_col         , & ! Input:  [real(r8) (:)] roughness length over ground, momentum [m]
+         z0m_actual => this%z0m_actual_patch   & ! Output: [real(r8) (:)] roughness length actually used in flux calculations, momentum [m]
+         )
+
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
+
+       z0m_actual(p) = z0mv(p)
+    end do
+
+    do fp = 1, num_noexposedvegp
+       p = filter_noexposedvegp(fp)
+       c = patch%column(p)
+
+       z0m_actual(p) = z0mg(c)
+    end do
+
+    do fp = 1, num_urbanp
+       p = filter_urbanp(fp)
+       l = patch%landunit(p)
+
+       z0m_actual(p) = z_0_town(l)
+    end do
+
+    do fp = 1, num_lakep
+       p = filter_lakep(fp)
+       c = patch%column(p)
+
+       z0m_actual(p) = z0mg(c)
+    end do
+
+    end associate
+  end subroutine SetActualRoughnessLengths
 
   !------------------------------------------------------------------------------
   subroutine FrictionVelocity(this, lbn, ubn, fn, filtern, &

@@ -32,7 +32,7 @@ program mksurfdat
     use mkurbanparMod      , only : mkurbanInit, mkurban, mkurbanpar, numurbl
     use mkutilsMod         , only : normalize_classes_by_gcell
     use mkfileMod          , only : mkfile
-    use mkvarpar           , only : nlevsoi, elev_thresh
+    use mkvarpar           , only : nlevsoi, elev_thresh, numstdpft
     use mkvarctl
     use nanMod             , only : nan, bigint
     use mkncdio            , only : check_ret, ncd_put_time_slice
@@ -44,7 +44,6 @@ program mksurfdat
     use mkagfirepkmonthMod , only : mkagfirepkmon
     use mktopostatsMod     , only : mktopostats
     use mkVICparamsMod     , only : mkVICparams
-    use mkCH4inversionMod  , only : mkCH4inversion
 !
 ! !ARGUMENTS:
     implicit none
@@ -94,7 +93,7 @@ program mksurfdat
     type(pct_pft_type), allocatable :: pctnatpft_max(:) ! % of grid cell maximum PFTs of the time series
     type(pct_pft_type), allocatable :: pctcft(:)        ! % of grid cell that is crop, and breakdown into CFTs
     type(pct_pft_type), allocatable :: pctcft_max(:)    ! % of grid cell maximum CFTs of the time series
-    type(pct_pft_type), allocatable :: pctcft_saved(:)  ! version of pctcft saved from the initial call to mkpft
+    real(r8)               :: harvest_initval    ! initial value for harvest variables
     real(r8), pointer      :: harvest1D(:)       ! harvest 1D data: normalized harvesting
     real(r8), pointer      :: harvest2D(:,:)     ! harvest 1D data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
@@ -135,9 +134,6 @@ program mksurfdat
     real(r8), allocatable  :: vic_dsmax(:)       ! VIC Dsmax parameter (mm/day)
     real(r8), allocatable  :: vic_ds(:)          ! VIC Ds parameter (unitless)
     real(r8), allocatable  :: lakedepth(:)       ! lake depth (m)
-    real(r8), allocatable  :: f0(:)              ! max fractional inundated area (unitless)
-    real(r8), allocatable  :: p3(:)              ! coefficient for qflx_surf_lag for finundated (s/mm)
-    real(r8), allocatable  :: zwt0(:)            ! decay factor for finundated (m)
 
     real(r8) :: std_elev = -999.99_r8            ! Standard deviation of elevation (m) to use for entire grid
 
@@ -185,6 +181,7 @@ program mksurfdat
          soil_fmax,                &
          soil_clay,                &
          pft_idx,                  &
+         all_veg,                  &
          pft_frc,                  &
          all_urban,                &
          no_inlandwet,             &
@@ -213,6 +210,8 @@ program mksurfdat
          outnc_large_files,        &
          outnc_double,             &
          outnc_dims,               &
+         outnc_vic,                &
+         outnc_3dglc,              &
          fsurdat,                  &
          fdyndat,                  &   
          fsurlog,                  &
@@ -282,12 +281,15 @@ program mksurfdat
     !    mksrf_gridtype ---- Type of grid (default is 'global')
     !    outnc_double ------ If output should be in double precision
     !    outnc_large_files - If output should be in NetCDF large file format
+    !    outnc_vic --------- Output fields needed for VIC
+    !    outnc_3dglc ------- Output 3D glacier fields (normally only needed for comparasion)
     !    nglcec ------------ If you want to change the number of Glacier elevation classes
     !    gitdescribe ------- Description of this version from git
     ! ======================================
     ! Optional settings to change values for entire area
     ! ======================================
     !    all_urban --------- If entire area is urban
+    !    all_veg ----------- If entire area is to be vegetated (pft_idx and pft_frc then required)
     !    no_inlandwet ------ If wetland should be set to 0% over land
     !    soil_color -------- If you want to change the soil_color to this value everywhere
     !    soil_clay --------- If you want to change the soil_clay % to this value everywhere
@@ -308,7 +310,10 @@ program mksurfdat
     mksrf_gridtype    = 'global'
     outnc_large_files = .false.
     outnc_double      = .true.
+    outnc_vic         = .false.
+    outnc_3dglc       = .false.
     all_urban         = .false.
+    all_veg           = .false.
     no_inlandwet      = .true.
 
     ! default value for bug work around
@@ -354,6 +359,15 @@ program mksurfdat
     if ( outnc_double )then
        write(6,*)'Output ALL data in file as 64-bit'
     end if
+    if ( outnc_vic )then
+       write(6,*)'Output VIC fields'
+    end if
+    if ( outnc_3dglc )then
+       write(6,*)'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+    end if
+    if ( outnc_3dglc )then
+       write(6,*)'Output optional 3D glacier fields (mostly used for verification of the glacier model)'
+    end if
     if ( all_urban )then
        write(6,*) 'Output ALL data in file as 100% urban'
     end if
@@ -369,7 +383,7 @@ program mksurfdat
     ! Call module initialization routines
     !
     call mksoilInit( )
-    call mkpftInit( all_urban, all_veg )
+    call mkpftInit( zero_out_l=all_urban, all_veg_l=all_veg )
     allocate ( elevclass(nglcec+1) )
     call mkglcmecInit (elevclass)
     call mkurbanInit (mksrf_furban)
@@ -424,7 +438,6 @@ program mksurfdat
                pctnatpft_max(ns_o)                , &
                pctcft(ns_o)                       , &
                pctcft_max(ns_o)                   , &
-               pctcft_saved(ns_o)                 , &
                pctgla(ns_o)                       , & 
                pctlak(ns_o)                       , & 
                pctwet(ns_o)                       , & 
@@ -446,9 +459,6 @@ program mksurfdat
                vic_dsmax(ns_o)                    , &
                vic_ds(ns_o)                       , &
                lakedepth(ns_o)                    , &
-               f0(ns_o)                           , &
-               p3(ns_o)                           , &
-               zwt0(ns_o)                         , &
                glacier_region(ns_o)               )       
     landfrac_pft(:)       = spval 
     pctlnd_pft(:)         = spval
@@ -474,9 +484,6 @@ program mksurfdat
     vic_dsmax(:)          = spval
     vic_ds(:)             = spval
     lakedepth(:)          = spval
-    f0(:)                 = spval
-    p3(:)                 = spval
-    zwt0(:)               = spval
     glacier_region(:)     = -999
 
     ! ----------------------------------------------------------------------
@@ -559,20 +566,22 @@ program mksurfdat
     ! Make PFTs [pctnatpft, pctcft] from dataset [fvegtyp]
 
     call mkpft(ldomain, mapfname=map_fpft, fpft=mksrf_fvegtyp, &
-         ndiag=ndiag, allow_no_crops=.false., &
-         pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
+         ndiag=ndiag, pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
 
     ! Create harvesting data at model resolution
-    call mkharvest_init( ns_o, spval, harvdata, mksrf_fhrvtyp )
-    if ( .not. any(pft_frc > 0.0_r8 ) )then
+    if (all_veg) then
+       ! In this case, we don't call mkharvest, so we want the harvest variables to be
+       ! initialized reasonably.
+       harvest_initval = 0._r8
+    else
+       harvest_initval = spval
+    end if
+    call mkharvest_init( ns_o, harvest_initval, harvdata, mksrf_fhrvtyp )
+    if ( .not. all_veg )then
 
        call mkharvest( ldomain, mapfname=map_fharvest, datfname=mksrf_fhrvtyp, &
                        ndiag=ndiag, harvdata=harvdata )
     end if
-
-    ! Save the version of pctcft before any corrections are made. In particular, we want
-    ! to save the version before remove_small_cover is called.
-    pctcft_saved = pctcft
 
     ! Make inland water [pctlak, pctwet] [flakwat] [fwetlnd]
 
@@ -661,16 +670,14 @@ program mksurfdat
          ndiag=ndiag, topo_stddev_o=topo_stddev, slope_o=slope, std_elev=std_elev)
 
     ! Make VIC parameters [binfl, ws, dsmax, ds] from [fvic]
-    call mkVICparams (ldomain, mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
-         binfl_o=vic_binfl, ws_o=vic_ws, dsmax_o=vic_dsmax, ds_o=vic_ds)
+    if ( outnc_vic )then
+       call mkVICparams (ldomain, mapfname=map_fvic, datfname=mksrf_fvic, ndiag=ndiag, &
+            binfl_o=vic_binfl, ws_o=vic_ws, dsmax_o=vic_dsmax, ds_o=vic_ds)
+    end if
 
     ! Make lake depth [lakedepth] from [flakwat]
     call mklakparams (ldomain, mapfname=map_flakwat, datfname=mksrf_flakwat, ndiag=ndiag, &
          lakedepth_o=lakedepth)
-
-    ! Make inversion-derived CH4 parameters [f0, p3, zwt0] from [fch4]
-    call mkCH4inversion (ldomain, mapfname=map_fch4, datfname=mksrf_fch4, ndiag=ndiag, &
-         f0_o=f0, p3_o=p3, zwt0_o=zwt0)
 
     ! Make organic matter density [organic] [forganic]
     allocate (organic(ns_o,nlevsoi))
@@ -704,25 +711,6 @@ program mksurfdat
 
     do n = 1,ns_o
 
-       ! Assume wetland and/or lake when dataset landmask implies ocean 
-       ! (assume medium soil color (15) and loamy texture).
-       ! Also set pftdata_mask here
-
-       if (pctlnd_pft(n) < 1.e-6_r8) then
-          pftdata_mask(n)  = 0
-          soicol(n)        = 15
-          pctwet(n)        = 100._r8 - pctlak(n)
-          pcturb(n)        = 0._r8
-          pctgla(n)        = 0._r8
-          call pctnatpft(n)%set_pct_l2g(0._r8)
-          call pctcft(n)%set_pct_l2g(0._r8)
-          pctsand(n,:)     = 43._r8
-          pctclay(n,:)     = 18._r8
-          organic(n,:)   = 0._r8
-       else
-          pftdata_mask(n) = 1
-       end if
-
        ! Truncate all percentage fields on output grid. This is needed to
        ! insure that wt is zero (not a very small number such as
        ! 1e-16) where it really should be zero
@@ -735,6 +723,29 @@ program mksurfdat
        pctwet(n) = float(nint(pctwet(n)))
        pctgla(n) = float(nint(pctgla(n)))
        
+       ! Assume wetland, glacier and/or lake when dataset landmask implies ocean 
+       ! (assume medium soil color (15) and loamy texture).
+       ! Also set pftdata_mask here
+
+       if (pctlnd_pft(n) < 1.e-6_r8) then
+          pftdata_mask(n)  = 0
+          soicol(n)        = 15
+          if (pctgla(n) < 1.e-6_r8) then
+              pctwet(n)    = 100._r8 - pctlak(n)
+              pctgla(n)    = 0._r8
+          else
+              pctwet(n)    = max(100._r8 - pctgla(n) - pctlak(n), 0.0_r8)
+          end if
+          pcturb(n)        = 0._r8
+          call pctnatpft(n)%set_pct_l2g(0._r8)
+          call pctcft(n)%set_pct_l2g(0._r8)
+          pctsand(n,:)     = 43._r8
+          pctclay(n,:)     = 18._r8
+          organic(n,:)   = 0._r8
+       else
+          pftdata_mask(n) = 1
+       end if
+
        ! Make sure sum of land cover types does not exceed 100. If it does,
        ! subtract excess from most dominant land cover.
        
@@ -786,24 +797,29 @@ program mksurfdat
     ! This call needs to occur after pctgla has been adjusted for the final time
 
     allocate (pctglcmec(ns_o,nglcec), &
-         topoglcmec(ns_o,nglcec), &
+         topoglcmec(ns_o,nglcec) )
+    if ( outnc_3dglc )then
+       allocate( &
          pctglcmec_gic(ns_o,nglcec), &
          pctglcmec_icesheet(ns_o,nglcec))
-    allocate (pctglc_gic(ns_o))
-    allocate (pctglc_icesheet(ns_o))
+       allocate (pctglc_gic(ns_o))
+       allocate (pctglc_icesheet(ns_o))
+    end if
 
     pctglcmec(:,:)          = spval
     topoglcmec(:,:)         = spval
-    pctglcmec_gic(:,:)      = spval
-    pctglcmec_icesheet(:,:) = spval
-    pctglc_gic(:)           = spval
-    pctglc_icesheet(:)      = spval
 
-    call mkglcmec (ldomain, mapfname=map_fglacier, &
-         datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
-         pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
-         pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
-         pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
+    if ( outnc_3dglc )then
+       call mkglcmec (ldomain, mapfname=map_fglacier, &
+            datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+            pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec, &
+            pctglcmec_gic_o=pctglcmec_gic, pctglcmec_icesheet_o=pctglcmec_icesheet, &
+            pctglc_gic_o=pctglc_gic, pctglc_icesheet_o=pctglc_icesheet)
+    else
+       call mkglcmec (ldomain, mapfname=map_fglacier, &
+            datfname_fglacier=mksrf_fglacier, ndiag=ndiag, &
+            pctglcmec_o=pctglcmec, topoglcmec_o=topoglcmec )
+    end if
 
     ! Determine fractional land from pft dataset
 
@@ -885,17 +901,33 @@ program mksurfdat
        call check_ret(nf_inq_varid(ncid, 'TOPO_GLC_MEC', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, topoglcmec), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
+       if ( outnc_3dglc )then
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
+       end if
+
+       if ( outnc_3dglc )then
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_gic), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_MEC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglcmec_icesheet), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_GIC', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_gic), subname)
+
+          call check_ret(nf_inq_varid(ncid, 'PCT_GLC_ICESHEET', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, pctglc_icesheet), subname)
+       end if
 
        call check_ret(nf_inq_varid(ncid, 'PCT_URBAN', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, urbn_classes_g), subname)
@@ -950,29 +982,22 @@ program mksurfdat
        call check_ret(nf_inq_varid(ncid, 'STD_ELEV', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, topo_stddev), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'binfl', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, vic_binfl), subname)
+       if ( outnc_vic )then
+          call check_ret(nf_inq_varid(ncid, 'binfl', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, vic_binfl), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'Ws', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, vic_ws), subname)
+          call check_ret(nf_inq_varid(ncid, 'Ws', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, vic_ws), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'Dsmax', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, vic_dsmax), subname)
+          call check_ret(nf_inq_varid(ncid, 'Dsmax', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, vic_dsmax), subname)
 
-       call check_ret(nf_inq_varid(ncid, 'Ds', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, vic_ds), subname)
+          call check_ret(nf_inq_varid(ncid, 'Ds', varid), subname)
+          call check_ret(nf_put_var_double(ncid, varid, vic_ds), subname)
+       end if
 
        call check_ret(nf_inq_varid(ncid, 'LAKEDEPTH', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, lakedepth), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'F0', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, f0), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'P3', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, p3), subname)
-
-       call check_ret(nf_inq_varid(ncid, 'ZWT0', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, zwt0), subname)
 
        call check_ret(nf_inq_varid(ncid, 'EF1_BTR', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, ef1_btr), subname)
@@ -1019,7 +1044,7 @@ program mksurfdat
 
        write(6,*)'calling mklai'
        call mklai(ldomain, mapfname=map_flai, datfname=mksrf_flai, &
-            ndiag=ndiag, ncido=ncid )
+               ndiag=ndiag, ncido=ncid )
 
        ! Close surface dataset
 
@@ -1040,7 +1065,7 @@ program mksurfdat
     deallocate ( organic )
     deallocate ( ef1_btr, ef1_fet, ef1_fdt, ef1_shr, ef1_grs, ef1_crp )
     deallocate ( pctglcmec, topoglcmec)
-    deallocate ( pctglc_gic, pctglc_icesheet)
+    if ( outnc_3dglc ) deallocate ( pctglc_gic, pctglc_icesheet)
     deallocate ( elevclass )
     deallocate ( fmax )
     deallocate ( pctsand, pctclay )
@@ -1050,7 +1075,6 @@ program mksurfdat
     deallocate ( topo_stddev, slope )
     deallocate ( vic_binfl, vic_ws, vic_dsmax, vic_ds )
     deallocate ( lakedepth )
-    deallocate ( f0, p3, zwt0 )
     deallocate ( glacier_region )
 
     call harvdata%clean()
@@ -1116,7 +1140,7 @@ program mksurfdat
           !
           ! If pft fraction override is set, than intrepret string as PFT and harvesting override values
           !
-          if ( any(pft_frc > 0.0_r8 ) )then
+          if ( all_veg )then
              fname = ' '
              fhrvname  = ' '
              call mkpft_parse_oride(string)
@@ -1140,9 +1164,7 @@ program mksurfdat
           ! Create pctpft data at model resolution
           
           call mkpft(ldomain, mapfname=map_fpft, fpft=fname, &
-               ndiag=ndiag, allow_no_crops=.false., &
-               pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft, &
-               pctcft_o_saved=pctcft_saved)
+               ndiag=ndiag, pctlnd_o=pctlnd_pft_dyn, pctnatpft_o=pctnatpft, pctcft_o=pctcft )
 
           ! Create harvesting data at model resolution
 
@@ -1356,6 +1378,26 @@ subroutine normalizencheck_landuse(ldomain)
     do n = 1,ns_o
 
        ! Check preconditions
+       if ( pctlak(n) < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pctlak is negative!'
+          write(6,*) 'n, pctlak = ', n, pctlak(n)
+          call abort()
+       end if
+       if ( pctwet(n) < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pctwet is negative!'
+          write(6,*) 'n, pctwet = ', n, pctwet(n)
+          call abort()
+       end if
+       if ( pcturb(n) < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pcturb is negative!'
+          write(6,*) 'n, pcturb = ', n, pcturb(n)
+          call abort()
+       end if
+       if ( pctgla(n) < 0.0_r8 )then
+          write(6,*) subname, ' ERROR: pctgla is negative!'
+          write(6,*) 'n, pctgla = ', n, pctgla(n)
+          call abort()
+       end if
 
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
        if (suma > (100._r8 + tol_loose)) then
