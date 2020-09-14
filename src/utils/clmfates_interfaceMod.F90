@@ -701,6 +701,7 @@ module CLMFatesInterfaceMod
       
       ! !USES
       use CNFireFactoryMod, only: scalar_lightning
+      use subgridMod, only :  natveg_patch_exists
 
       ! !ARGUMENTS:
       implicit none
@@ -726,6 +727,7 @@ module CLMFatesInterfaceMod
       integer  :: p                        ! HLM patch index
       integer  :: nlevsoil                 ! number of soil layers at the site
       integer  :: nld_si                   ! site specific number of decomposition layers
+      integer  :: ft                        ! plant functional type
       real(r8), pointer :: lnfm24(:)
       integer  :: ier
       integer  :: begg,endg
@@ -814,15 +816,15 @@ module CLMFatesInterfaceMod
          ! number of FATES PFTs. 
 
          if(use_fates_sp)then
-           do m = natpft_lb,natpft_ub-1
-             ft = m-natpft_lb+1
-             if (natveg_patch_exists(g, m)) then
-!              this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
+           do p = natpft_lb,natpft_ub-1 !set of pfts in HLM
+             ft = p-natpft_lb+1 ! pfts ordered from 1. 
+             if (natveg_patch_exists(g, p)) then
+!              this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,p)
                this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = 5.0_r8
                this%fates(nc)%bc_in(s)%hlm_sp_tsai(ft) = 1.0_r8
                this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = 20.0_r8
              end if ! patch exists
-           end do ! m
+           end do ! p
          end if ! SP
 
          if(use_fates_planthydro)then
