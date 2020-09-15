@@ -141,9 +141,9 @@ contains
     allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
     ! History file
     this%btran2_patch(begp:endp) = spval
-    !call hist_addfld1d(fname='BTRAN2', units='unitless',  &
-         !avgflag='A', long_name='root zone soil wetness factor', &
-         !ptr_patch=this%btran2_patch, l2g_scale_type='veg')
+    call hist_addfld1d(fname='BTRAN2FIRE', units='unitless',  &
+         avgflag='A', long_name='root zone soil wetness factor', &
+         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
   end subroutine CNFireInit
 
   !----------------------------------------------------------------------
@@ -160,7 +160,7 @@ contains
 
     logical :: readvar
 
-    call restartvar(ncid=ncid, flag=flag, varname='btran2', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, varname='btran2fire', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%btran2_patch)
