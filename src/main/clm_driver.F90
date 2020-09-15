@@ -667,11 +667,6 @@ contains
        croot_carbon = bgc_vegetation_inst%get_croot_carbon_patch( &
             bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
 
-       call bgc_vegetation_inst%cnfire_method%CNFire_calc_fire_root_wetness( bounds_clump, nlevgrnd, &
-                                     filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
-                                     water_inst%waterstatebulk_inst, soilstate_inst,     &
-                                     soil_water_retention_curve )
-
        call CanopyFluxes(bounds_clump,                                                      &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp,                             &
             clm_fates,nc,                                                                   &
@@ -687,6 +682,11 @@ contains
             croot_carbon = croot_carbon(bounds_clump%begp:bounds_clump%endp))
        deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
+
+       call bgc_vegetation_inst%cnfire_method%CNFire_calc_fire_root_wetness( bounds_clump, nlevgrnd, &
+                                     filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
+                                     water_inst%waterstatebulk_inst, soilstate_inst,     &
+                                     soil_water_retention_curve )
 
        ! Fluxes for all urban landunits
 
