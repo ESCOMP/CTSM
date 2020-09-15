@@ -78,7 +78,7 @@ sub make_config_cache {
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,ctsm5_1">Specifies clm physics</entry>
+<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies clm physics</entry>
 </config_definition>
 EOF
    $fh->close();
@@ -1079,7 +1079,7 @@ foreach my $key ( keys(%warntest) ) {
 #
 # Loop over all physics versions
 #
-foreach my $phys ( "clm4_5", "clm5_0", "ctsm5_1" ) {
+foreach my $phys ( "clm4_5", "clm5_0", "clm5_1" ) {
 $mode = "-phys $phys";
 &make_config_cache($phys);
 
@@ -1355,10 +1355,10 @@ foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transi
 }
 
 print "\n==================================================\n";
-print "Test clm4.5/clm5.0/ctsm5_1 resolutions \n";
+print "Test clm4.5/clm5.0/clm5_1 resolutions \n";
 print "==================================================\n";
 
-foreach my $phys ( "clm4_5", 'clm5_0', 'ctsm5_1' ) {
+foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
@@ -1450,11 +1450,11 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'ctsm5_1' ) {
 my $res = "0.9x1.25";
 my $mask = "gx1v6";
 my $simyr = "1850";
-foreach my $phys ( "clm4_5", 'clm5_0', 'ctsm5_1' ) {
+foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @forclist = ();
-  if ( $phys == "ctsm5_1" ) {
+  if ( $phys == "clm5_1" ) {
     @forclist = ( "GSWP3v1" );
   } else {
     @forclist = ( "CRUv7", "GSWP3v1", "cam6.0" );

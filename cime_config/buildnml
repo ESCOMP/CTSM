@@ -23,7 +23,7 @@ _config_cache_template = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,ctsm5_1">Specifies CTSM physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies CTSM physics</entry>
 </config_definition>
 """
 
@@ -188,7 +188,7 @@ def buildnml(case, caseroot, compname):
         # -----------------------------------------------------
 
         if run_type == "hybrid" or run_type == "branch":
-            compnames = [ "clm4", "clm5", "ctsm5", "clm2" ]
+            compnames = [ "clm4", "clm5", "clm2" ]
             for comp in compnames:
                clm_startfile = "%s.%s%s.r.%s-%s.nc"%(run_refcase,comp,inst_string,run_refdate,run_reftod)
                if os.path.exists(os.path.join(rundir, clm_startfile)):

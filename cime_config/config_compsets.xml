@@ -14,7 +14,7 @@
     Where for the CAM specific compsets below the following is supported
     TIME = Time period (e.g. 2000, HIST, SSP585...)
     ATM  = [CAM40, CAM50, CAM55]
-    LND  = [CLM45, CLM50, CTSM51, SLND]
+    LND  = [CLM45, CLM50, CLM51, SLND]
     ICE  = [CICE, DICE, SICE]
     OCN  = [DOCN, ,AQUAP, SOCN]
     ROF  = [RTM, SROF]
@@ -232,7 +232,7 @@
 
   <compset>
     <alias>IHistCtsm51BgcCrop</alias>
-    <lname>HIST_DATM%GSWP3v1_CTSM51%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM51%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
