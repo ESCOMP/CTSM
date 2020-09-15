@@ -141,9 +141,9 @@ contains
     allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
     ! History file
     this%btran2_patch(begp:endp) = spval
-    call hist_addfld1d(fname='BTRAN2', units='unitless',  &
-         avgflag='A', long_name='root zone soil wetness factor', &
-         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
+    !call hist_addfld1d(fname='BTRAN2', units='unitless',  &
+         !avgflag='A', long_name='root zone soil wetness factor', &
+         !ptr_patch=this%btran2_patch, l2g_scale_type='veg')
   end subroutine CNFireInit
 
   !----------------------------------------------------------------------
