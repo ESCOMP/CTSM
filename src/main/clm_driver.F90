@@ -679,14 +679,10 @@ contains
             downreg_patch = downreg_patch(bounds_clump%begp:bounds_clump%endp), &
             leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp), &
             froot_carbon = froot_carbon(bounds_clump%begp:bounds_clump%endp), &
-            croot_carbon = croot_carbon(bounds_clump%begp:bounds_clump%endp))
+            croot_carbon = croot_carbon(bounds_clump%begp:bounds_clump%endp), &
+            bgc_vegetation_inst = bgc_vegetation_inst )
        deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
-
-       call bgc_vegetation_inst%cnfire_method%CNFire_calc_fire_root_wetness( bounds_clump, nlevgrnd, &
-                                     filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
-                                     water_inst%waterstatebulk_inst, soilstate_inst,     &
-                                     soil_water_retention_curve )
 
        ! Fluxes for all urban landunits
 

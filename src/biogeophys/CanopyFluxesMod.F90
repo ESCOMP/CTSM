@@ -190,7 +190,8 @@ contains
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, ch4_inst, ozone_inst,            &
        photosyns_inst, &
        humanindex_inst, soil_water_retention_curve, &
-       downreg_patch, leafn_patch, froot_carbon, croot_carbon)
+       downreg_patch, leafn_patch, froot_carbon, croot_carbon, &
+       bgc_vegetation_inst)
     !
     ! !DESCRIPTION:
     ! 1. Calculates the leaf temperature:
@@ -233,6 +234,7 @@ contains
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    use CNVegetationFacade   , only : cn_vegetation_type
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)            :: bounds 
@@ -262,6 +264,7 @@ contains
     real(r8), intent(in) :: leafn_patch(bounds%begp:)   ! leaf N (gN/m2)
     real(r8), intent(inout) :: froot_carbon(bounds%begp:)  ! fine root biomass (gC/m2)
     real(r8), intent(inout) :: croot_carbon(bounds%begp:)  ! live coarse root biomass (gC/m2)
+    type(cn_vegetation_type)             , intent(inout) :: bgc_vegetation_inst
     !
     ! !LOCAL VARIABLES:
     real(r8), pointer   :: bsun(:)          ! sunlit canopy transpiration wetness factor (0 to 1)
@@ -706,8 +709,8 @@ contains
             temperature_inst=temperature_inst, &
             waterstatebulk_inst=waterstatebulk_inst,   &
             waterdiagnosticbulk_inst=waterdiagnosticbulk_inst,   &
-              soil_water_retention_curve=soil_water_retention_curve)
-
+              soil_water_retention_curve=soil_water_retention_curve, &
+              bgc_vegetation_inst=bgc_vegetation_inst)
      
       end if
 
