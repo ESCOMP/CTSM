@@ -379,6 +379,10 @@ contains
          h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col   & ! Output: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          ) 
 
+       call bgc_vegetation_inst%cnfire_method%CNFire_calc_fire_root_wetness( bounds, nlevgrnd, &
+                                     fn, filterp, waterstatebulk_inst, soilstate_inst,     &
+                                     soil_water_retention_curve )
+
       do j = 1,nlevgrnd
          do f = 1, fn
             p = filterp(f)
@@ -427,10 +431,6 @@ contains
                     (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
          end do
       end do
-
-       call bgc_vegetation_inst%cnfire_method%CNFire_calc_fire_root_wetness( bounds, nlevgrnd, &
-                                     fn, filterp, waterstatebulk_inst, soilstate_inst,     &
-                                     soil_water_retention_curve )
 
       ! Normalize root resistances to get layer contribution to ET
       ! Note that rootr as calculated here is based on the SMS (soil moisture stress) method, 
