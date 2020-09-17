@@ -136,6 +136,7 @@ module CLMFatesInterfaceMod
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
    use FatesSoilBGCFluxMod    , only : FluxIntoLitterPools
+   use FatesSoilBGCFluxMod    , only : UnPackNutrientAquisitionBCs
    use FatesPlantHydraulicsMod, only : hydraulics_drive
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
@@ -860,7 +861,7 @@ module CLMFatesInterfaceMod
       ! Nutrient uptake fluxes have been accumulating with each short
       ! timestep, here, we unload them from the boundary condition
       ! structures into the cohort structures.
-      ! call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
+      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
 
       
       ! ---------------------------------------------------------------------------------
@@ -877,7 +878,7 @@ module CLMFatesInterfaceMod
             call ed_update_site(this%fates(nc)%sites(s), &
                   this%fates(nc)%bc_in(s), & 
                   this%fates(nc)%bc_out(s))
-            
+
       enddo
       
       ! ---------------------------------------------------------------------------------
@@ -2140,9 +2141,6 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%tot_litc     = totlitc(c)
       end do
 
-
-      print*,"LSM BGC rates: ",hr(c),totsomc(c),totlitc(c)
-      
       dtime = get_step_size_real()
       
       ! Update history variables that track these variables
