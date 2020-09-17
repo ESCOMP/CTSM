@@ -276,9 +276,14 @@ Global constant for deforestation fires (/day)
 Fire occurance for high GDP areas that are tree dominated (fraction)
 </entry>
 
-<entry id="cmb_cmplt_fact" type="real(2)" category="clm_physics"
+<entry id="cmb_cmplt_fact_litter" type="real" category="clm_physics"
        group="lifire_inparm" >
-Combustion completeness factor (for litter and CWD[Course Woody Debris]) (unitless)
+Combustion completeness factor for litter (unitless)
+</entry>
+
+<entry id="cmb_cmplt_fact_cwd" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Combustion completeness factor for CWD[Course Woody Debris] (unitless)
 </entry>
 
 <entry id="ncrit" type="real" category="clm_physics"
@@ -978,18 +983,6 @@ Multiplier for heterotrophic respiration for max denitrification rates
 <entry id="denitrif_respiration_exponent" type="real" category="bgc"
        group="nitrif_inparm" valid_values="" >
 Exponent power for heterotrophic respiration for max denitrification rates
-(ONLY used if use_nitrif_denitrif is enabled)
-</entry>
-
-<entry id="denitrif_nitrateconc_coefficient" type="real" category="bgc"
-       group="nitrif_inparm" valid_values="" >
-Multiplier for nitrate concentration for max denitrification rates
-(ONLY used if use_nitrif_denitrif is enabled)
-</entry>
-
-<entry id="denitrif_nitrateconc_exponent" type="real" category="bgc"
-       group="nitrif_inparm" valid_values="" >
-Exponent power for nitrate concentrationfor max denitrification rates
 (ONLY used if use_nitrif_denitrif is enabled)
 </entry>
 

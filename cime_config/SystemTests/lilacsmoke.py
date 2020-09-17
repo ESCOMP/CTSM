@@ -111,6 +111,12 @@ class LILACSMOKE(SystemTestsCommon):
             debug=str(self._case.get_value('DEBUG')).upper(),
             ctsm_mkfile=os.path.join(caseroot, 'lilac_build', 'ctsm.mk'))
         makecmd = 'make {makevars} atm_driver'.format(makevars=makevars)
+
+        # Normally the user will source either ctsm_build_environment.sh or
+        # ctsm_build_environment.csh before building the atmosphere model. In the context
+        # of this test case, case.load_env does the equivalent.
+        self._case.load_env()
+
         self._run_build_cmd(makecmd, blddir, 'atm_driver.bldlog')
 
     def _create_link_to_atm_driver(self):
