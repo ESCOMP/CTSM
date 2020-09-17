@@ -38,5 +38,11 @@ run_clmtowers
         It's based on having created surface datasets with PTCLM.
         v1 - Keith Oleson, 8/2015
 
+ssp_anomaly_forcing_smooth
+        This script creates anomaly forcing for CMIP6 SSP scenarios that 
+        can be used to run CTSM in CESM with datm.
+        v0 -- Sean Swenson
+        v1 - Peter Lawrence 3/2020
+
 
 

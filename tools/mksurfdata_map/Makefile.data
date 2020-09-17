@@ -56,10 +56,15 @@ MKSURFDATA = $(BATCHJOBS) $(PWD)/mksurfdata.pl
 
 # f19 and f09 are standard resolutions, f10 is used for testing, f45 is used for FATES
 # ne30np4 is standard resolution for SE dycore in CAM, C96 is standard for fv3 dycore
+# The ne30np4 series (including pg2, pg3, pg4) are standard for SE dycore
+# The variable resolution grids for ARCTIC, ARCTICGRIS and CONUS are also standard
 STANDARD_RES_NO_CROP = 0.9x1.25,1.9x2.5,10x15
-STANDARD_RES = 0.9x1.25,1.9x2.5,10x15,4x5,ne30np4,C96
+STANDARD_RES = 0.9x1.25,1.9x2.5,10x15,4x5,ne30np4,C96,ne30pg2,ne30pg3,ne30pg4,ne120np4pg3,ne0np4ARCTICGRISne30x8,ne0np4ARCTICne30x4,ne0np4CONUSne30x8
 
+# For future CMIP6 scenarios: SSP-RCP's
 FUTURE_RES = 0.9x1.25,1.9x2.5,10x15
+# For historical transient cases (TRY TO KEEP THIS LIST AS SHORT AS POSSIBLE)
+TRANS_RES = 0.9x1.25,1.9x2.5,10x15,ne30np4,ne0np4ARCTICGRISne30x8,ne0np4ARCTICne30x4,ne0np4CONUSne30x8
 
 # ne120np4 is for high resolution SE dycore, ne16 is for testing SE dycore
 # T42 is for SCAM
@@ -77,7 +82,6 @@ TROPICS = \
 
 CROP = \
 	crop-global-present \
-	crop-global-present-f05 \
 	crop-global-present-ne16np4 \
 	crop-global-present-ne120np4 \
 	crop-numa-present \
@@ -85,12 +89,8 @@ CROP = \
 	crop-smallville \
 	crop-smallville-historical \
 	crop-global-historical \
-	crop-global-historical-f05 \
-	crop-global-historical-ne120np4 \
-	crop-global-transient-f05 \
 	crop-global-transient \
-	crop-global-future \
-	crop-global-transient-ne120np4
+	crop-global-future
 
 all : standard tropics crop urban landuse-timeseries
 
@@ -178,7 +178,7 @@ crop-global-historical-ne120np4 : FORCE
 	$(MKSURFDATA) -glc_nec 10 -y 1850 -res ne120np4 $(BACKGROUND)
 
 crop-global-transient: FORCE
-	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res $(STANDARD_RES) $(BACKGROUND)
+	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res $(TRANS_RES) $(BACKGROUND)
 
 crop-global-transient-ne120np4 : FORCE
 	$(MKSURFDATA) -no_surfdata -glc_nec 10 -y 1850-2000 -res ne120np4 $(BACKGROUND)
