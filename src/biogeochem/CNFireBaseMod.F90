@@ -74,7 +74,7 @@ module CNFireBaseMod
   type, abstract, extends(fire_base_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
-      real(r8), pointer :: btran2_patch            (:)   ! patch root zone soil wetness factor (0 to 1)
+      real(r8), public, pointer :: btran2_patch   (:)   ! patch root zone soil wetness factor (0 to 1)
 
     contains
       !
@@ -188,6 +188,8 @@ contains
     real(r8) :: smp_node_lf       !temporary variable
     integer :: p, f, j, c, l      !indices
 
+    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
+
     associate(                                                &
          smpso         => pftcon%smpso                      , & ! Input:  soil water potential at full stomatal opening (mm)
          smpsc         => pftcon%smpsc                      , & ! Input:  soil water potential at full stomatal closure (mm)
@@ -196,6 +198,11 @@ contains
          rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
+
+      SHR_ASSERT_ALL_FL((ubound(watsat)     == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(h2osoi_vol) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(rootfr)     == (/bounds%endp,nlevgrnd/)), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(btran2)     == (/bounds%endp/)),          sourcefile, __LINE__)
       do f = 1, num_exposedvegp
          p = filter_exposedvegp(f)
          btran2(p)   = btran0
