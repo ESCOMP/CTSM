@@ -74,6 +74,7 @@ module CNFireBaseMod
   type, abstract, extends(fire_base_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
+      ! !PUBLIC MEMBER DATA (used by extensions of the base class):
       real(r8), public, pointer :: btran2_patch   (:)   ! patch root zone soil wetness factor (0 to 1)
 
     contains
@@ -141,7 +142,7 @@ contains
     allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
     ! History file
     this%btran2_patch(begp:endp) = spval
-    call hist_addfld1d(fname='BTRAN2FIRE', units='unitless',  &
+    call hist_addfld1d(fname='BTRAN2', units='unitless',  &
          avgflag='A', long_name='root zone soil wetness factor', &
          ptr_patch=this%btran2_patch, l2g_scale_type='veg')
   end subroutine CNFireInit
@@ -160,7 +161,7 @@ contains
 
     logical :: readvar
 
-    call restartvar(ncid=ncid, flag=flag, varname='btran2fire', xtype=ncd_double,  &
+    call restartvar(ncid=ncid, flag=flag, varname='btran2', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%btran2_patch)
@@ -169,6 +170,9 @@ contains
   !----------------------------------------------------------------------
   subroutine CNFire_calc_fire_root_wetness( this, bounds, nlevgrnd, num_exposedvegp, filter_exposedvegp, &
                                      waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+    !
+    ! Calculate the root wetness term that will be used by the fire model
+    !
     use pftconMod                 , only : pftcon
     use PatchType                 , only : patch
     use WaterStateBulkType        , only : waterstatebulk_type
@@ -182,11 +186,12 @@ contains
     type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     type(soilstate_type)   , intent(in)   :: soilstate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
-
+    ! !LOCAL VARIABLES:
     real(r8), parameter :: btran0 = 0.0_r8  ! initial value
     real(r8) :: smp_node, s_node  !temporary variables
     real(r8) :: smp_node_lf       !temporary variable
     integer :: p, f, j, c, l      !indices
+    !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
 
