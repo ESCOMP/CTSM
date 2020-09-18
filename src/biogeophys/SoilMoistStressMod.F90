@@ -332,6 +332,7 @@ contains
     use PatchType            , only : patch
     use clm_varctl           , only : iulog, use_hydrstress
     use CNVegetationFacade   , only : cn_vegetation_type
+    use clm_varctl           , only : use_cn, use_fates
     !
     ! !ARGUMENTS:
     implicit none
@@ -351,7 +352,6 @@ contains
     ! !LOCAL VARIABLES:
     real(r8), parameter :: btran0 = 0.0_r8  ! initial value
     real(r8) :: smp_node, s_node  !temporary variables
-    real(r8) :: smp_node_lf       !temporary variable
     integer :: p, f, j, c, l      !indices
     !------------------------------------------------------------------------------
 
@@ -372,16 +372,20 @@ contains
          rootr         => soilstate_inst%rootr_patch        , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer (SMS method only)
 
          btran         => energyflux_inst%btran_patch       , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
-         btran2        => energyflux_inst%btran2_patch      , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
          rresis        => energyflux_inst%rresis_patch      , & ! Output: [real(r8) (:,:) ]  root soil water stress (resistance) by layer (0-1)  (nlevgrnd)                          
 
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
          h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col   & ! Output: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          ) 
 
-       call bgc_vegetation_inst%cnfire_method%CNFire_calc_fire_root_wetness( bounds, nlevgrnd, &
-                                     fn, filterp, waterstatebulk_inst, soilstate_inst,     &
-                                     soil_water_retention_curve )
+      !
+      ! Root zone wetness only used by the CN Li Fire model
+      !
+      if ( use_cn .and. .not. use_fates )then
+         call bgc_vegetation_inst%cnfire_method%CNFire_calc_fire_root_wetness( bounds, nlevgrnd, &
+                                       fn, filterp, waterstatebulk_inst, soilstate_inst,     &
+                                       soil_water_retention_curve )
+      end if
 
       do j = 1,nlevgrnd
          do f = 1, fn
@@ -422,13 +426,6 @@ contains
                ! inconsistency for now.
                btran(p)    = btran(p) + max(rootr(p,j),0._r8)
             end if
-            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
-
-            call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
-
-            smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf) 
-            btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
-                    (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
          end do
       end do
 
