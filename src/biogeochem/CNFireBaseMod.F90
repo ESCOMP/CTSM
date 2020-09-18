@@ -87,6 +87,9 @@ module CNFireBaseMod
       procedure, public :: CNFireArea                    ! Calculate fire area
       procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
       procedure, public :: CNFire_calc_fire_root_wetness ! Calcualte CN-fire specific root wetness
+      ! !PRIVATE MEMBER FUNCTIONS:
+      procedure, private :: InitAllocate                 ! Memory allocation of Fire
+      procedure, private :: InitHistory                  ! History file assignment of fire
       !
   end type cnfire_base_type
   !-----------------------------------------------------------------------
@@ -121,31 +124,57 @@ contains
     !
     ! !DESCRIPTION:
     ! Initialize CN Fire module
-    ! !USES:
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    character(len=*),  intent(in) :: NLFilename
+    !-----------------------------------------------------------------------
+    ! Call the base-class Initialization method
+    call this%BaseFireInit( bounds, NLFilename )
+
+    ! Allocate memory
+    call this%InitAllocate( bounds )
+    ! History file
+    call this%InitHistory( bounds )
+  end subroutine CNFireInit
+  !----------------------------------------------------------------------
+
+  subroutine InitAllocate( this, bounds )
+    !
+    ! Initiaze memory allocate's
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    !-----------------------------------------------------------------------
+    integer :: begp, endp
+    !------------------------------------------------------------------------
+    begp = bounds%begp; endp= bounds%endp
+
+    allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
+
+  end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine InitHistory( this, bounds )
+    !
+    ! Initailizae history variables
     use clm_varcon      , only : spval
     use histFileMod     , only : hist_addfld1d
     !
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
     type(bounds_type), intent(in) :: bounds
-    character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
     integer :: begp, endp
     !------------------------------------------------------------------------
-    ! Call the base-class Initialization method
-    call this%BaseFireInit( bounds, NLFilename )
-
     begp = bounds%begp; endp= bounds%endp
-
-    ! Allocate memory
-    allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
-    ! History file
     this%btran2_patch(begp:endp) = spval
     call hist_addfld1d(fname='BTRAN2', units='unitless',  &
          avgflag='A', long_name='root zone soil wetness factor', &
          ptr_patch=this%btran2_patch, l2g_scale_type='veg')
-  end subroutine CNFireInit
+  end subroutine InitHistory
 
   !----------------------------------------------------------------------
   subroutine CNFireRestart( this, bounds, ncid, flag )
