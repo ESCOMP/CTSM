@@ -231,7 +231,7 @@
   </compset>
 
   <compset>
-    <alias>IHistCtsm51BgcCrop</alias>
+    <alias>IHistClm51BgcCrop</alias>
     <lname>HIST_DATM%GSWP3v1_CLM51%BGC-CROP_SICE_SOCN_MOSART_CISM2%NOEVOLVE_SWAV</lname>
   </compset>
 
