@@ -299,7 +299,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <occur_hi_gdp_tree        fire_method="li2021gswpfrc" >0.33d00</occur_hi_gdp_tree>
 <lfuel                    fire_method="li2021gswpfrc" >75.d00</lfuel>
 <ufuel                    fire_method="li2021gswpfrc" >1050.d00</ufuel>
-<cmb_cmplt_fact           fire_method="li2021gswpfrc" >0.5d00, 0.28d00</cmb_cmplt_fact>
+<cmb_cmplt_fact_litter    fire_method="li2021gswpfrc" >0.5d00</cmb_cmplt_fact_litter>
+<cmb_cmplt_fact_cwd       fire_method="li2021gswpfrc" >0.28d00</cmb_cmplt_fact_cwd>
 
 <!-- Canopy fluxes namelist defaults -->
 <use_undercanopy_stability phys="clm5_1" >.false.</use_undercanopy_stability>

@@ -312,7 +312,8 @@ contains
   subroutine calc_root_moist_stress_clm45default(bounds, &
        nlevgrnd, fn, filterp, rootfr_unf, &
        temperature_inst, soilstate_inst, energyflux_inst, waterstatebulk_inst, &
-       waterdiagnosticbulk_inst, soil_water_retention_curve) 
+       waterdiagnosticbulk_inst, soil_water_retention_curve, &
+       bgc_vegetation_inst ) 
     !
     ! DESCRIPTIONS
     ! compute the root water stress using the default clm45 approach
@@ -330,6 +331,8 @@ contains
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use PatchType            , only : patch
     use clm_varctl           , only : iulog, use_hydrstress
+    use CNVegetationFacade   , only : cn_vegetation_type
+    use clm_varctl           , only : use_cn, use_fates
     !
     ! !ARGUMENTS:
     implicit none
@@ -344,12 +347,12 @@ contains
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    type(cn_vegetation_type)             , intent(inout) :: bgc_vegetation_inst
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: btran0 = 0.0_r8  ! initial value
     real(r8) :: smp_node, s_node  !temporary variables
-    real(r8) :: smp_node_lf       !temporary variable
-    integer :: p, f, j, c, l      !indices
+    integer :: p, f, j, c         !indices
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes   
@@ -369,18 +372,25 @@ contains
          rootr         => soilstate_inst%rootr_patch        , & ! Output: [real(r8) (:,:) ]  effective fraction of roots in each soil layer (SMS method only)
 
          btran         => energyflux_inst%btran_patch       , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) (integrated soil water stress)
-         btran2        => energyflux_inst%btran2_patch      , & ! Output: [real(r8) (:)   ]  root zone soil wetness (0 to 1)
          rresis        => energyflux_inst%rresis_patch      , & ! Output: [real(r8) (:,:) ]  root soil water stress (resistance) by layer (0-1)  (nlevgrnd)                          
 
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col    , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
          h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col   & ! Output: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          ) 
 
+      !
+      ! Root zone wetness only used by the CN Li Fire model
+      !
+      if ( use_cn .and. .not. use_fates )then
+         call bgc_vegetation_inst%cnfire_method%CNFire_calc_fire_root_wetness( bounds, nlevgrnd, &
+                                       fn, filterp, waterstatebulk_inst, soilstate_inst,     &
+                                       soil_water_retention_curve )
+      end if
+
       do j = 1,nlevgrnd
          do f = 1, fn
             p = filterp(f)
             c = patch%column(p)
-            l = patch%landunit(p)
 
             ! Root resistance factors
             ! rootr effectively defines the active root fraction in each layer      
@@ -415,17 +425,6 @@ contains
                ! inconsistency for now.
                btran(p)    = btran(p) + max(rootr(p,j),0._r8)
             end if
-            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
-
-            if ( .true. )then
-              call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
-
-              smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf) 
-              btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
-                      (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
-            else
-              btran2(p)   = btran2(p) +rootfr(p,j)*s_node
-            end if
          end do
       end do
 
@@ -451,7 +450,8 @@ contains
   !--------------------------------------------------------------------------------
   subroutine calc_root_moist_stress(bounds, nlevgrnd, fn, filterp, &
        active_layer_inst, energyflux_inst,  soilstate_inst, temperature_inst, &
-       waterstatebulk_inst, waterdiagnosticbulk_inst, soil_water_retention_curve)
+       waterstatebulk_inst, waterdiagnosticbulk_inst, soil_water_retention_curve, &
+       bgc_vegetation_inst )
     !
     ! DESCRIPTIONS
     ! compute the root water stress using different approaches
@@ -468,6 +468,7 @@ contains
     use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use abortutils      , only : endrun       
+    use CNVegetationFacade        , only : cn_vegetation_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -482,6 +483,7 @@ contains
     type(waterstatebulk_type)  , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    type(cn_vegetation_type)             , intent(inout) :: bgc_vegetation_inst
     !
     ! !LOCAL VARIABLES:
     integer :: p, f, j, c, l                                   ! indices
@@ -519,7 +521,8 @@ contains
             waterstatebulk_inst=waterstatebulk_inst,            &
             waterdiagnosticbulk_inst=waterdiagnosticbulk_inst,            &
             rootfr_unf=rootfr_unf(bounds%begp:bounds%endp,1:nlevgrnd), &
-            soil_water_retention_curve=soil_water_retention_curve)
+            soil_water_retention_curve=soil_water_retention_curve,     &
+            bgc_vegetation_inst=bgc_vegetation_inst )
 
     case default
        call endrun(subname // ':: a root moisture stress function must be specified!')     

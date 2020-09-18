@@ -190,7 +190,8 @@ contains
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, ch4_inst, ozone_inst,            &
        photosyns_inst, &
        humanindex_inst, soil_water_retention_curve, &
-       downreg_patch, leafn_patch, froot_carbon, croot_carbon)
+       downreg_patch, leafn_patch, froot_carbon, croot_carbon, &
+       bgc_vegetation_inst)
     !
     ! !DESCRIPTION:
     ! 1. Calculates the leaf temperature:
@@ -233,6 +234,7 @@ contains
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    use CNVegetationFacade   , only : cn_vegetation_type
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)            :: bounds 
@@ -262,6 +264,7 @@ contains
     real(r8), intent(in) :: leafn_patch(bounds%begp:)   ! leaf N (gN/m2)
     real(r8), intent(inout) :: froot_carbon(bounds%begp:)  ! fine root biomass (gC/m2)
     real(r8), intent(inout) :: croot_carbon(bounds%begp:)  ! live coarse root biomass (gC/m2)
+    type(cn_vegetation_type)             , intent(inout) :: bgc_vegetation_inst
     !
     ! !LOCAL VARIABLES:
     real(r8), pointer   :: bsun(:)          ! sunlit canopy transpiration wetness factor (0 to 1)
@@ -537,7 +540,6 @@ contains
          grnd_ch4_cond          => ch4_inst%grnd_ch4_cond_patch                 , & ! Output: [real(r8) (:)   ]  tracer conductance for boundary layer [m/s] 
 
          htvp                   => energyflux_inst%htvp_col                     , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg] (constant)                      
-         btran2                 => energyflux_inst%btran2_patch                 , & ! Output: [real(r8) (:)   ]  F. Li and S. Levis                                                     
          btran                  => energyflux_inst%btran_patch                  , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1)                                 
          rresis                 => energyflux_inst%rresis_patch                 , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd)                          
          taux                   => energyflux_inst%taux_patch                   , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)                                  
@@ -630,7 +632,6 @@ contains
          wtaq0(p)  = 0._r8
          obuold(p) = 0._r8
          btran(p)  = btran0
-         btran2(p)  = btran0
       end do
 
       ! calculate daylength control for Vcmax
@@ -706,8 +707,8 @@ contains
             temperature_inst=temperature_inst, &
             waterstatebulk_inst=waterstatebulk_inst,   &
             waterdiagnosticbulk_inst=waterdiagnosticbulk_inst,   &
-              soil_water_retention_curve=soil_water_retention_curve)
-
+              soil_water_retention_curve=soil_water_retention_curve, &
+              bgc_vegetation_inst=bgc_vegetation_inst)
      
       end if
 
