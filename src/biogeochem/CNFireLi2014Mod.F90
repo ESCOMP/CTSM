@@ -333,6 +333,7 @@ contains
         end if
      end do
 
+     ! This subroutine calculates btran2
      call this%CNFire_calc_fire_root_wetness(bounds, num_exposedvegp, filter_exposedvegp, &
           waterstatebulk_inst, soilstate_inst, soil_water_retention_curve)
 
