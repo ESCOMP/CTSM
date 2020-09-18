@@ -84,7 +84,6 @@ module CNFireBaseMod
       procedure, public :: FireReadNML                   ! Read in namelist for CNFire
       procedure, public :: CNFireRestart                 ! Restart for CNFire
       procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
-      procedure, public :: CNFireArea                    ! Calculate fire area
       procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
       procedure, public :: CNFire_calc_fire_root_wetness ! Calcualte CN-fire specific root wetness
       !
@@ -168,19 +167,19 @@ contains
   end subroutine CNFireRestart
 
   !----------------------------------------------------------------------
-  subroutine CNFire_calc_fire_root_wetness( this, bounds, nlevgrnd, num_exposedvegp, filter_exposedvegp, &
+  subroutine CNFire_calc_fire_root_wetness( this, bounds, num_exposedvegp, filter_exposedvegp, &
                                      waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
     !
     ! Calculate the root wetness term that will be used by the fire model
     !
     use pftconMod                 , only : pftcon
+    use clm_varpar                , only : nlevgrnd
     use PatchType                 , only : patch
     use WaterStateBulkType        , only : waterstatebulk_type
     use SoilStateType             , only : soilstate_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     class(cnfire_base_type) :: this
     type(bounds_type)      , intent(in)   :: bounds                         !bounds
-    integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
     integer                , intent(in)   :: num_exposedvegp                !number of filters
     integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
     type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
@@ -201,13 +200,10 @@ contains
          watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
          btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
          rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
-         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         ! FIXME(wjs, 2020-09-18) change this to use h2osoi_vol_col instead of the prehydrology version
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_prehydrology_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
 
-      SHR_ASSERT_ALL_FL((ubound(watsat)     == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
-      SHR_ASSERT_ALL_FL((ubound(h2osoi_vol) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
-      SHR_ASSERT_ALL_FL((ubound(rootfr)     == (/bounds%endp,nlevgrnd/)), sourcefile, __LINE__)
-      SHR_ASSERT_ALL_FL((ubound(btran2)     == (/bounds%endp/)),          sourcefile, __LINE__)
       do f = 1, num_exposedvegp
          p = filter_exposedvegp(f)
          btran2(p)   = btran0
@@ -337,40 +333,6 @@ contains
     end if
 
   end subroutine FireReadNML
-
-  !-----------------------------------------------------------------------
-  subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
-       waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
-       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
-    !
-    ! !DESCRIPTION:
-    ! Computes column-level burned area 
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    class(cnfire_base_type)                               :: this
-    type(bounds_type)                     , intent(in)    :: bounds 
-    integer                               , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
-    integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
-    type(energyflux_type)                 , intent(in)    :: energyflux_inst
-    type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
-    type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
-    type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
-    type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
-    type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
-    real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
-    real(r8)                              , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:)
-    real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)
-    !
-
-    call endrun( 'cnfire_base::CNFireArea: this method MUST be implemented!' )
-
-  end subroutine CNFireArea
 
   !-----------------------------------------------------------------------
   subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
