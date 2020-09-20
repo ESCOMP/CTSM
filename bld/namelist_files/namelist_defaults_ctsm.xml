@@ -1517,7 +1517,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_last_urbantv  sim_year="constant" sim_year_range="1850-2000" >2106</stream_year_last_urbantv>
 
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" 
->lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c181017.nc</stream_fldfilename_urbantv>
+>lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
 
 <stream_fldfilename_urbantv phys="clm4_5" hgrid="0.9x1.25" 
 >lnd/clm2/urbandata/CLM45_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>

@@ -55,8 +55,7 @@ contains
     use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp, decompInit_lnd3D
     use decompInitMod    , only: decompInit_ocn
     use domainMod        , only: domain_check, ldomain, domain_init
-    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches, &
-                                 surfrd_get_nlevurb
+    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
     use controlMod       , only: control_init, control_print, NLFilename
     use ncdio_pio        , only: ncd_pio_init
     use initGridCellsMod , only: initGridCells
@@ -85,7 +84,6 @@ contains
     integer           :: nc                      ! clump index
     integer           :: actual_maxsoil_patches  ! value from surface dataset
     integer           :: actual_numcft           ! numcft from sfc dataset
-    integer           :: actual_nlevurb          ! nlevurb from sfc dataset
     integer ,pointer  :: amask(:)                ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
@@ -107,8 +105,7 @@ contains
     call control_init(dtime)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
-    call surfrd_get_nlevurb(fsurdat, actual_nlevurb)
-    call clm_varpar_init(actual_maxsoil_patches, actual_numcft, actual_nlevurb)
+    call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
 

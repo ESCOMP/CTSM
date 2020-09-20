@@ -97,7 +97,7 @@ module clm_varpar
 contains
 
   !------------------------------------------------------------------------------
-  subroutine clm_varpar_init(actual_maxsoil_patches, actual_numcft, actual_nlevurb)
+  subroutine clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     !
     ! !DESCRIPTION:
     ! Initialize module variables 
@@ -106,7 +106,6 @@ contains
     implicit none
     integer, intent(in) :: actual_maxsoil_patches  ! value from surface dataset
     integer, intent(in) :: actual_numcft  ! Actual number of crops
-    integer, intent(in) :: actual_nlevurb          ! nlevurb from surface dataset
     !
     ! !LOCAL VARIABLES:
     !
@@ -145,7 +144,7 @@ contains
     max_patch_per_col= max(maxsoil_patches, actual_numcft, maxpatch_urb)
 
     nlevsoifl   =  10
-    nlevurb     =  actual_nlevurb
+    nlevurb     =  5
 
     if ( masterproc ) write(iulog, *) 'soil_layerstruct_predefined varpar ', soil_layerstruct_predefined
     if ( masterproc ) write(iulog, *) 'soil_layerstruct_userdefined varpar ', soil_layerstruct_userdefined
