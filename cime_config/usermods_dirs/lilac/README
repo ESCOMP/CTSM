@@ -1,0 +1,2 @@
+The user_nl_ctsm file in this directory is copied to the runtime_inputs
+directory when setting up a LILAC build using build_ctsm.

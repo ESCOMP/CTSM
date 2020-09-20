@@ -4,7 +4,6 @@ module restUtilMod
   ! provies generic routines and types for use with restart files
   !
 #include "shr_assert.h"
-  use shr_log_mod , only: errMsg => shr_log_errMsg
   use shr_kind_mod, only: r8=>shr_kind_r8, r4 => shr_kind_r4, i4=>shr_kind_i4
   use shr_sys_mod,  only: shr_sys_abort
   use spmdMod,      only: masterproc
@@ -532,7 +531,7 @@ contains
     character(len=*), parameter :: subname = 'set_missing_from_template'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(template_var) == ubound(my_var)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(template_var) == ubound(my_var)), sourcefile, __LINE__)
 
     do i = 1, size(my_var)
        if (isnan(template_var(i))) then
@@ -579,7 +578,7 @@ contains
     character(len=*), parameter :: subname = 'set_grc_field_from_col_field'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(data_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(data_grc) == (/bounds%endg/)), sourcefile, __LINE__)
 
     allocate(data_col(bounds%begc:bounds%endc))
     call ncd_io(varname=trim(varname), data=data_col, &

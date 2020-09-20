@@ -53,6 +53,7 @@ contains
          info = water_info_tracer_type(&
          tracer_name = 'foo', &
          ratio = 0.456_r8, &
+         included_in_consistency_check = .false., &
          communicated_with_coupler = .false.), &
 
          tracer_vars = my_vars)

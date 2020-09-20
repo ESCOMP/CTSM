@@ -7,7 +7,6 @@ module WaterFluxType
   !
   ! !USES:
   use shr_kind_mod   , only: r8 => shr_kind_r8
-  use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : nlevsno, nlevsoi
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
@@ -29,14 +28,18 @@ module WaterFluxType
 
      ! water fluxes are in units or mm/s
 
-     real(r8), pointer :: qflx_prec_grnd_patch     (:)   ! patch water onto ground including canopy runoff [kg/(m2 s)]
-     real(r8), pointer :: qflx_prec_grnd_col       (:)   ! col water onto ground including canopy runoff [kg/(m2 s)]
-     real(r8), pointer :: qflx_rain_grnd_patch     (:)   ! patch rain on ground after interception (mm H2O/s) [+]
-     real(r8), pointer :: qflx_rain_grnd_col       (:)   ! col rain on ground after interception (mm H2O/s) [+]
-     real(r8), pointer :: qflx_snow_grnd_patch     (:)   ! patch snow on ground after interception (mm H2O/s) [+]
+     real(r8), pointer :: qflx_through_snow_patch  (:)   ! patch canopy throughfall of snow (mm H2O/s)
+     real(r8), pointer :: qflx_through_liq_patch  (:)    ! patch canopy throughfal of liquid (rain+irrigation) (mm H2O/s)
+     real(r8), pointer :: qflx_intercepted_snow_patch(:) ! patch canopy interception of snow (mm H2O/s)
+     real(r8), pointer :: qflx_intercepted_liq_patch(:)  ! patch canopy interception of liquid (rain+irrigation) (mm H2O/s)
+     real(r8), pointer :: qflx_snocanfall_patch(:)       ! patch rate of excess canopy snow falling off canopy (mm H2O/s)
+     real(r8), pointer :: qflx_liqcanfall_patch(:)       ! patch rate of excess canopy liquid falling off canopy (mm H2O/s)
+     real(r8), pointer :: qflx_snow_unload_patch(:)      ! patch rate of canopy snow unloading (mm H2O/s)
+     real(r8), pointer :: qflx_liq_grnd_col        (:)   ! col liquid (rain+irrigation) on ground after interception (mm H2O/s) [+]
      real(r8), pointer :: qflx_snow_grnd_col       (:)   ! col snow on ground after interception (mm H2O/s) [+]
-     real(r8), pointer :: qflx_sub_snow_patch      (:)   ! patch sublimation rate from snow pack (mm H2O /s) [+]
-     real(r8), pointer :: qflx_sub_snow_col        (:)   ! col sublimation rate from snow pack (mm H2O /s) [+]
+     real(r8), pointer :: qflx_rain_plus_snomelt_col(:)  ! col rain plus snow melt falling on the soil (mm/s)
+     real(r8), pointer :: qflx_solidevap_from_top_layer_patch(:) ! patch rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
+     real(r8), pointer :: qflx_solidevap_from_top_layer_col(:)   ! col rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
      real(r8), pointer :: qflx_evap_soi_patch      (:)   ! patch soil evaporation (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_evap_soi_col        (:)   ! col soil evaporation (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_evap_veg_patch      (:)   ! patch vegetation evaporation (mm H2O/s) (+ = to atm)
@@ -45,8 +48,8 @@ module WaterFluxType
      real(r8), pointer :: qflx_evap_can_col        (:)   ! col evaporation from leaves and stems (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_evap_tot_patch      (:)   ! patch pft_qflx_evap_soi + pft_qflx_evap_veg + qflx_tran_veg
      real(r8), pointer :: qflx_evap_tot_col        (:)   ! col col_qflx_evap_soi + col_qflx_evap_veg + qflx_tran_veg
-     real(r8), pointer :: qflx_evap_grnd_patch     (:)   ! patch ground surface evaporation rate (mm H2O/s) [+]
-     real(r8), pointer :: qflx_evap_grnd_col       (:)   ! col ground surface evaporation rate (mm H2O/s) [+]
+     real(r8), pointer :: qflx_liqevap_from_top_layer_patch(:) ! patch rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
+     real(r8), pointer :: qflx_liqevap_from_top_layer_col(:)   ! col rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
 
      ! In the snow capping parametrization excess mass above h2osno_max is removed.  A breakdown of mass into liquid 
      ! and solid fluxes is done, these are represented by qflx_snwcp_liq_col and qflx_snwcp_ice_col. 
@@ -61,12 +64,10 @@ module WaterFluxType
 
      real(r8), pointer :: qflx_tran_veg_patch      (:)   ! patch vegetation transpiration (mm H2O/s) (+ = to atm)
      real(r8), pointer :: qflx_tran_veg_col        (:)   ! col vegetation transpiration (mm H2O/s) (+ = to atm)
-     real(r8), pointer :: qflx_dew_snow_patch      (:)   ! patch surface dew added to snow pack (mm H2O /s) [+]
-     real(r8), pointer :: qflx_dew_snow_col        (:)   ! col surface dew added to snow pack (mm H2O /s) [+]
-     real(r8), pointer :: qflx_dew_grnd_patch      (:)   ! patch ground surface dew formation (mm H2O /s) [+]
-     real(r8), pointer :: qflx_dew_grnd_col        (:)   ! col ground surface dew formation (mm H2O /s) [+] (+ = to atm); usually eflx_bot >= 0)
-     real(r8), pointer :: qflx_prec_intr_patch     (:)   ! patch interception of precipitation [mm/s]
-     real(r8), pointer :: qflx_prec_intr_col       (:)   ! col interception of precipitation [mm/s]
+     real(r8), pointer :: qflx_soliddew_to_top_layer_patch(:) ! patch rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
+     real(r8), pointer :: qflx_soliddew_to_top_layer_col(:)   ! col rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+] (+ = to atm); usually eflx_bot >= 0)
+     real(r8), pointer :: qflx_liqdew_to_top_layer_patch(:)   ! patch rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
+     real(r8), pointer :: qflx_liqdew_to_top_layer_col(:)     ! col rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
 
      real(r8), pointer :: qflx_infl_col            (:)   ! col infiltration (mm H2O /s)
      real(r8), pointer :: qflx_surf_col            (:)   ! col total surface runoff (mm H2O /s)
@@ -89,21 +90,19 @@ module WaterFluxType
 
      real(r8), pointer :: qflx_h2osfc_to_ice_col   (:)   ! col conversion of h2osfc to ice
      real(r8), pointer :: qflx_snow_h2osfc_col     (:)   ! col snow falling on surface water
+     real(r8), pointer :: qflx_too_small_h2osfc_to_soil_col(:) ! col h2osfc transferred to soil if h2osfc is below some threshold (mm H2O /s)
+     real(r8), pointer :: qflx_snow_percolation_col(:,:) ! col liquid percolation out of the bottom of snow layer j (mm H2O /s)
 
      ! Dynamic land cover change
      real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
      real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux
 
-     real(r8), pointer :: qflx_sfc_irrig_patch      (:)   ! patch surface irrigation flux (mm H2O/s) [+]           
      real(r8), pointer :: qflx_sfc_irrig_col        (:)   ! col surface irrigation flux (mm H2O/s) [+]             
-     real(r8), pointer :: qflx_gw_uncon_irrig_patch (:)   ! patch unconfined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_gw_uncon_irrig_col   (:)   ! col unconfined groundwater irrigation flux (mm H2O/s)
-     real(r8), pointer :: qflx_gw_con_irrig_patch   (:)   ! patch confined groundwater irrigation flux (mm H2O/s)
+     real(r8), pointer :: qflx_gw_uncon_irrig_lyr_col(:,:) ! col unconfined groundwater irrigation flux, separated by layer (mm H2O/s)
      real(r8), pointer :: qflx_gw_con_irrig_col     (:)   ! col confined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_irrig_drip_patch     (:)   ! patch drip irrigation
-     real(r8), pointer :: qflx_irrig_drip_col       (:)   ! col   drip irrigation
      real(r8), pointer :: qflx_irrig_sprinkler_patch(:)   ! patch sprinkler irrigation
-     real(r8), pointer :: qflx_irrig_sprinkler_col  (:)   ! col   sprinkler irrigation
 
      ! Objects that help convert once-per-year dynamic land cover changes into fluxes
      ! that are dribbled throughout the year
@@ -155,45 +154,51 @@ contains
     ! !LOCAL VARIABLES:
     !------------------------------------------------------------------------
 
-    call AllocateVar1d(var = this%qflx_prec_intr_patch, name = 'qflx_prec_intr_patch', &
+    call AllocateVar1d(var = this%qflx_through_snow_patch, name = 'qflx_through_snow_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_prec_grnd_patch, name = 'qflx_prec_grnd_patch', &
+    call AllocateVar1d(var = this%qflx_through_liq_patch, name = 'qflx_through_liq_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_rain_grnd_patch, name = 'qflx_rain_grnd_patch', &
+    call AllocateVar1d(var = this%qflx_intercepted_snow_patch, name = 'qflx_intercepted_snow_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_snow_grnd_patch, name = 'qflx_snow_grnd_patch', &
+    call AllocateVar1d(var = this%qflx_intercepted_liq_patch, name = 'qflx_intercepted_liq_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_sub_snow_patch, name = 'qflx_sub_snow_patch', &
+    call AllocateVar1d(var = this%qflx_snocanfall_patch, name = 'qflx_snocanfall_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_liqcanfall_patch, name = 'qflx_liqcanfall_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_snow_unload_patch, name = 'qflx_snow_unload_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+    call AllocateVar1d(var = this%qflx_solidevap_from_top_layer_patch, name = 'qflx_solidevap_from_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH, &
          ival = 0.0_r8)
     call AllocateVar1d(var = this%qflx_tran_veg_patch, name = 'qflx_tran_veg_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_dew_grnd_patch, name = 'qflx_dew_grnd_patch', &
+    call AllocateVar1d(var = this%qflx_liqdew_to_top_layer_patch, name = 'qflx_liqdew_to_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_dew_snow_patch, name = 'qflx_dew_snow_patch', &
+    call AllocateVar1d(var = this%qflx_soliddew_to_top_layer_patch, name = 'qflx_soliddew_to_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
 
-    call AllocateVar1d(var = this%qflx_prec_intr_col, name = 'qflx_prec_intr_col', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_prec_grnd_col, name = 'qflx_prec_grnd_col', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_rain_grnd_col, name = 'qflx_rain_grnd_col', &
+    call AllocateVar1d(var = this%qflx_liq_grnd_col, name = 'qflx_liq_grnd_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_snow_grnd_col, name = 'qflx_snow_grnd_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_sub_snow_col, name = 'qflx_sub_snow_col', &
+    call AllocateVar1d(var = this%qflx_rain_plus_snomelt_col, name = 'qflx_rain_plus_snomelt_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_solidevap_from_top_layer_col, name = 'qflx_solidevap_from_top_layer_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          ival = 0.0_r8)
@@ -236,13 +241,13 @@ contains
     call AllocateVar1d(var = this%qflx_evap_tot_col, name = 'qflx_evap_tot_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_evap_grnd_col, name = 'qflx_evap_grnd_col', &
+    call AllocateVar1d(var = this%qflx_liqevap_from_top_layer_col, name = 'qflx_liqevap_from_top_layer_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_dew_grnd_col, name = 'qflx_dew_grnd_col', &
+    call AllocateVar1d(var = this%qflx_liqdew_to_top_layer_col, name = 'qflx_liqdew_to_top_layer_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%qflx_dew_snow_col, name = 'qflx_dew_snow_col', &
+    call AllocateVar1d(var = this%qflx_soliddew_to_top_layer_col, name = 'qflx_soliddew_to_top_layer_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_evap_veg_patch, name = 'qflx_evap_veg_patch', &
@@ -257,7 +262,7 @@ contains
     call AllocateVar1d(var = this%qflx_evap_tot_patch, name = 'qflx_evap_tot_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_evap_grnd_patch, name = 'qflx_evap_grnd_patch', &
+    call AllocateVar1d(var = this%qflx_liqevap_from_top_layer_patch, name = 'qflx_liqevap_from_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
 
@@ -323,6 +328,14 @@ contains
     call AllocateVar1d(var = this%qflx_snow_h2osfc_col, name = 'qflx_snow_h2osfc_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_too_small_h2osfc_to_soil_col, name = 'qflx_too_small_h2osfc_to_soil_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+
+    call AllocateVar2d(var = this%qflx_snow_percolation_col, name = 'qflx_snow_percolation_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = -nlevsno+1, dim2end = 0)
 
     call AllocateVar1d(var = this%qflx_liq_dynbal_grc, name = 'qflx_liq_dynbal_grc', &
          container = tracer_vars, &
@@ -331,23 +344,19 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
 
-    call AllocateVar1d(var = this%qflx_sfc_irrig_patch, name = 'qflx_sfc_irrig_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%qflx_sfc_irrig_col, name = 'qflx_sfc_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
-    call AllocateVar1d(var = this%qflx_gw_uncon_irrig_patch, name = 'qflx_gw_uncon_irrig_patch', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%qflx_gw_uncon_irrig_col, name = 'qflx_gw_uncon_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
-    call AllocateVar1d(var = this%qflx_gw_con_irrig_patch, name = 'qflx_gw_con_irrig_patch', &
+    call AllocateVar2d(var = this%qflx_gw_uncon_irrig_lyr_col, name = 'qflx_gw_uncon_irrig_lyr_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         dim2beg = 1, dim2end = nlevsoi)
+
     call AllocateVar1d(var = this%qflx_gw_con_irrig_col, name = 'qflx_gw_con_irrig_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -355,16 +364,10 @@ contains
     call AllocateVar1d(var = this%qflx_irrig_drip_patch, name = 'qflx_irrig_drip_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_irrig_drip_col, name = 'qflx_irrig_drip_col', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
     call AllocateVar1d(var = this%qflx_irrig_sprinkler_patch, name = 'qflx_irrig_sprinkler_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
-    call AllocateVar1d(var = this%qflx_irrig_sprinkler_col, name = 'qflx_irrig_sprinkler_col', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     
     this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
          bounds = bounds, &
@@ -392,13 +395,52 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
+
+    this%qflx_through_liq_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDIRECT_THROUGHFALL'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('direct throughfall of liquid (rain + above-canopy irrigation)'), &
+         ptr_patch=this%qflx_through_liq_patch, c2l_scale_type='urbanf', default='inactive')
+
+    this%qflx_through_snow_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDIRECT_THROUGHFALL_SNOW'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('direct throughfall of snow'), &
+         ptr_patch=this%qflx_through_snow_patch, c2l_scale_type='urbanf', default='inactive')
+
+    this%qflx_liqcanfall_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRIP'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('rate of excess canopy liquid falling off canopy'), &
+         ptr_patch=this%qflx_liqcanfall_patch, c2l_scale_type='urbanf', default='inactive')
+
+    this%qflx_snocanfall_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QDRIP_SNOW'), &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('rate of excess canopy snow falling off canopy'), &
+         ptr_patch=this%qflx_snocanfall_patch, c2l_scale_type='urbanf', default='inactive')
+
+    this%qflx_snow_unload_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOUNLOAD'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('canopy snow unloading'), &
+         ptr_patch=this%qflx_snow_unload_patch, c2l_scale_type='urbanf')
 
     this%qflx_top_soil_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -558,22 +600,6 @@ contains
          long_name=this%info%lname('drainage from snow pack melt (ice landunits only)'), &
          ptr_col=this%qflx_snow_drain_col, c2l_scale_type='urbanf', l2g_scale_type='ice')
 
-    this%qflx_prec_intr_patch(begp:endp) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('QINTR'), &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('interception'), &
-         ptr_patch=this%qflx_prec_intr_patch, set_lake=0._r8)
-
-    this%qflx_prec_grnd_patch(begp:endp) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('QDRIP'), &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('throughfall'), &
-         ptr_patch=this%qflx_prec_grnd_patch, c2l_scale_type='urbanf')
-
     this%qflx_evap_soi_patch(begp:endp) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QSOIL'), &
@@ -603,14 +629,7 @@ contains
          units='mm/s',  &
          avgflag='A', &
          long_name=this%info%lname('canopy transpiration'), &
-         ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
-
-    call hist_addfld1d ( &
-         fname=this%info%fname('QSNOEVAP'), &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('evaporation from snow'), &
-         ptr_patch=this%qflx_tran_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+         ptr_patch=this%qflx_tran_veg_patch, c2l_scale_type='urbanf')
 
     this%qflx_snwcp_liq_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -652,29 +671,29 @@ contains
          long_name=this%info%lname('ice melt'), &
          ptr_col=this%qflx_glcice_melt_col, l2g_scale_type='ice')
 
-    this%qflx_rain_grnd_patch(begp:endp) = spval
+    this%qflx_liq_grnd_col(begc:endc) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_RAIN_GRND'), &
+         fname=this%info%fname('QFLX_LIQ_GRND'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('rain on ground after interception'), &
-         ptr_patch=this%qflx_rain_grnd_patch, default='inactive', c2l_scale_type='urbanf')
+         long_name=this%info%lname('liquid (rain+irrigation) on ground after interception'), &
+         ptr_col=this%qflx_liq_grnd_col, default='inactive', c2l_scale_type='urbanf')
 
-    this%qflx_snow_grnd_patch(begp:endp) = spval
+    this%qflx_snow_grnd_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QFLX_SNOW_GRND'), &
          units='mm H2O/s', &
          avgflag='A', &
          long_name=this%info%lname('snow on ground after interception'), &
-         ptr_patch=this%qflx_snow_grnd_patch, default='inactive', c2l_scale_type='urbanf')
+         ptr_col=this%qflx_snow_grnd_col, default='inactive', c2l_scale_type='urbanf')
 
-    this%qflx_evap_grnd_patch(begp:endp) = spval
+    this%qflx_liqevap_from_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_EVAP_GRND'), &
+         fname=this%info%fname('QFLX_LIQEVAP_FROM_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('ground surface evaporation'), &
-         ptr_patch=this%qflx_evap_grnd_patch, default='inactive', c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of liquid water evaporated from top soil or snow layer'), &
+         ptr_patch=this%qflx_liqevap_from_top_layer_patch, c2l_scale_type='urbanf')
 
     this%qflx_evap_veg_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -687,43 +706,43 @@ contains
     this%qflx_evap_tot_patch(begp:endp) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QFLX_EVAP_TOT'), &
-         units='mm H2O/s', &
+         units='kg m-2 s-1', &
          avgflag='A', &
          long_name=this%info%lname('qflx_evap_soi + qflx_evap_can + qflx_tran_veg'), &
          ptr_patch=this%qflx_evap_tot_patch, c2l_scale_type='urbanf')
 
-    this%qflx_dew_grnd_patch(begp:endp) = spval
+    this%qflx_liqdew_to_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_DEW_GRND'), &
+         fname=this%info%fname('QFLX_LIQDEW_TO_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('ground surface dew formation'), &
-         ptr_patch=this%qflx_dew_grnd_patch, c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of liquid water deposited on top soil or snow layer (dew)'), &
+         ptr_patch=this%qflx_liqdew_to_top_layer_patch, c2l_scale_type='urbanf')
 
-    this%qflx_sub_snow_patch(begp:endp) = spval
+    this%qflx_solidevap_from_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_SUB_SNOW'), &
+         fname=this%info%fname('QFLX_SOLIDEVAP_FROM_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('sublimation rate from snow pack (also includes bare ice sublimation from glacier columns)'), &
-         ptr_patch=this%qflx_sub_snow_patch, c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of ice evaporated from top soil or snow layer (sublimation) (also includes bare ice sublimation from glacier columns)'), &
+         ptr_patch=this%qflx_solidevap_from_top_layer_patch, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_SUB_SNOW_ICE'), &
+         fname=this%info%fname('QFLX_SOLIDEVAP_FROM_TOP_LAYER_ICE'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('sublimation rate from snow pack (also includes bare ice sublimation from glacier columns) '// &
+         long_name=this%info%lname('rate of ice evaporated from top soil or snow layer (sublimation) (also includes bare ice sublimation from glacier columns) '// &
          '(ice landunits only)'), &
-         ptr_patch=this%qflx_sub_snow_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         ptr_patch=this%qflx_solidevap_from_top_layer_patch, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
-    this%qflx_dew_snow_patch(begp:endp) = spval
+    this%qflx_soliddew_to_top_layer_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('QFLX_DEW_SNOW'), &
+         fname=this%info%fname('QFLX_SOLIDDEW_TO_TOP_LAYER'), &
          units='mm H2O/s', &
          avgflag='A', &
-         long_name=this%info%lname('surface dew added to snow pacK'), &
-         ptr_patch=this%qflx_dew_snow_patch, c2l_scale_type='urbanf')
+         long_name=this%info%lname('rate of solid water deposited on top soil or snow layer (frost)'), &
+         ptr_patch=this%qflx_soliddew_to_top_layer_patch, c2l_scale_type='urbanf')
 
     this%qflx_rsub_sat_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -741,29 +760,29 @@ contains
          long_name=this%info%lname('surface water converted to ice'), &
          ptr_col=this%qflx_h2osfc_to_ice_col, default='inactive')
 
-    this%qflx_sfc_irrig_patch(begp:endp) = spval
+    this%qflx_sfc_irrig_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QIRRIG_FROM_SURFACE'), &
          units='mm/s', &
          avgflag='A', &
          long_name=this%info%lname('water added through surface water irrigation'), &
-         ptr_patch=this%qflx_sfc_irrig_patch)
+         ptr_col=this%qflx_sfc_irrig_col)
 
-    this%qflx_gw_uncon_irrig_patch(begp:endp) = spval
+    this%qflx_gw_uncon_irrig_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QIRRIG_FROM_GW_UNCONFINED'), &
          units='mm/s', &
          avgflag='A', &
          long_name=this%info%lname('water added through unconfined groundwater irrigation'), &
-         ptr_patch=this%qflx_gw_uncon_irrig_patch)
+         ptr_col=this%qflx_gw_uncon_irrig_col)
 
-    this%qflx_gw_con_irrig_patch(begp:endp) = spval
+    this%qflx_gw_con_irrig_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('QIRRIG_FROM_GW_CONFINED'), &
          units='mm/s', &
          avgflag='A', &
          long_name=this%info%lname('water added through confined groundwater irrigation'), &
-         ptr_patch=this%qflx_gw_con_irrig_patch)
+         ptr_col=this%qflx_gw_con_irrig_col)
 
     this%qflx_irrig_drip_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -797,27 +816,27 @@ contains
     type(bounds_type) , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer :: p,c,l
+    integer :: c,l
     !-----------------------------------------------------------------------
 
-    this%qflx_evap_grnd_patch(bounds%begp:bounds%endp)        = 0.0_r8
-    this%qflx_dew_grnd_patch (bounds%begp:bounds%endp)        = 0.0_r8
-    this%qflx_dew_snow_patch (bounds%begp:bounds%endp)        = 0.0_r8
+    this%qflx_snocanfall_patch(bounds%begp:bounds%endp)       = 0.0_r8
+    this%qflx_liqcanfall_patch(bounds%begp:bounds%endp)       = 0.0_r8
+    this%qflx_snow_unload_patch(bounds%begp:bounds%endp)      = 0.0_r8
 
-    this%qflx_sfc_irrig_patch (bounds%begp:bounds%endp)       = 0.0_r8
+    this%qflx_liqevap_from_top_layer_patch(bounds%begp:bounds%endp) = 0.0_r8
+    this%qflx_liqdew_to_top_layer_patch(bounds%begp:bounds%endp)    = 0.0_r8
+    this%qflx_soliddew_to_top_layer_patch (bounds%begp:bounds%endp) = 0.0_r8
+
     this%qflx_sfc_irrig_col (bounds%begc:bounds%endc)         = 0.0_r8
-    this%qflx_gw_uncon_irrig_patch (bounds%begp:bounds%endp)  = 0.0_r8
     this%qflx_gw_uncon_irrig_col (bounds%begc:bounds%endc)    = 0.0_r8
-    this%qflx_gw_con_irrig_patch (bounds%begp:bounds%endp)    = 0.0_r8
+    this%qflx_gw_uncon_irrig_lyr_col(bounds%begc:bounds%endc,:) = 0.0_r8
     this%qflx_gw_con_irrig_col (bounds%begc:bounds%endc)      = 0.0_r8
     this%qflx_irrig_drip_patch (bounds%begp:bounds%endp)      = 0.0_r8
-    this%qflx_irrig_drip_col (bounds%begc:bounds%endc)        = 0.0_r8
     this%qflx_irrig_sprinkler_patch (bounds%begp:bounds%endp) = 0.0_r8
-    this%qflx_irrig_sprinkler_col (bounds%begc:bounds%endc)   = 0.0_r8
     
-    this%qflx_evap_grnd_col(bounds%begc:bounds%endc) = 0.0_r8
-    this%qflx_dew_grnd_col (bounds%begc:bounds%endc) = 0.0_r8
-    this%qflx_dew_snow_col (bounds%begc:bounds%endc) = 0.0_r8
+    this%qflx_liqevap_from_top_layer_col(bounds%begc:bounds%endc) = 0.0_r8
+    this%qflx_liqdew_to_top_layer_col(bounds%begc:bounds%endc)    = 0.0_r8
+    this%qflx_soliddew_to_top_layer_col (bounds%begc:bounds%endc) = 0.0_r8
     this%qflx_snow_drain_col(bounds%begc:bounds%endc)  = 0._r8
 
     ! This variable only gets set in the hydrology filter; need to initialize it to 0 for
@@ -830,6 +849,11 @@ contains
     ! Other qflx_glcice fluxes intentionally remain unset (spval) outside the do_smb
     ! filter, so that they are flagged as missing value outside that filter.
     this%qflx_glcice_dyn_water_flux_col(bounds%begc:bounds%endc) = 0._r8
+
+    ! These fluxes are never set for non-vegetated landunits, but we want their values to
+    ! be 0 there, so initialize the fluxes to 0 everywhere
+    this%qflx_tran_veg_patch(bounds%begp:bounds%endp) = 0._r8
+    this%qflx_evap_veg_patch(bounds%begp:bounds%endp) = 0._r8
 
     ! needed for CNNLeaching 
     do c = bounds%begc, bounds%endc
@@ -860,18 +884,6 @@ contains
     !-----------------------------------------------------------------------
 
     ! needed for SNICAR
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('qflx_snofrz_lyr'), &
-         xtype=ncd_double,  &
-         dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
-         long_name=this%info%lname('snow layer ice freezing rate'), &
-         units='kg m-2 s-1', &
-         interpinic_flag='interp', readvar=readvar, data=this%qflx_snofrz_lyr_col)
-    if (flag == 'read' .and. .not. readvar) then
-       ! initial run, not restart: initialize qflx_snofrz_lyr to zero
-       this%qflx_snofrz_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:0) = 0._r8
-    endif
-
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('qflx_snow_drain')//':'//this%info%fname('qflx_snow_melt'), &
          xtype=ncd_double,  &

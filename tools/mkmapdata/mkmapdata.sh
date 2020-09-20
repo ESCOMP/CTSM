@@ -56,7 +56,7 @@ usage() {
   echo "     This variable will override the automatic generation of the"
   echo "     filename generated from the -res argument "
   echo "     the filename is generated ASSUMING that this is a supported "
-  echo "     grid that has entries in the file namelist_defaults_clm.xml"
+  echo "     grid that has entries in the file namelist_defaults_ctsm.xml"
   echo "     the -r|--res argument MUST be specied if this argument is specified" 
   echo "[-r|--res <res>]"
   echo "     Model output resolution (default is $default_res)"
@@ -90,7 +90,7 @@ usage() {
   echo "  REGRID_PROC -- Number of MPI processors to use"
   echo "                 (default is $REGRID_PROC)"
   echo ""
-  echo "**defaults can be determined on the machines: cheyenne or geyser"
+  echo "**defaults can be determined on the machines: cheyenne or casper"
   echo ""
   echo "**pass environment variables by preceding above commands "
   echo "  with 'env var1=setting var2=setting '"
@@ -342,19 +342,17 @@ case $hostname in
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=36
   fi
-  esmfvers=7.0.0
-  intelvers=17.0.1
+  esmfvers=7.1.0r
+  intelvers=18.0.5    # Could also use intel/19.0.2 EBK 10/4/2019
   module load esmf_libs/$esmfvers
   module load intel/$intelvers
   module load ncl
   module load nco
 
-  if [ "$interactive" = "NO" ]; then
+  if [[ $REGRID_PROC > 1 ]]; then
      mpi=mpi
-     mpitype="mpich2"
   else
      mpi=uni
-     mpitype="mpiuni"
   fi
   module load esmf-${esmfvers}-ncdfio-${mpi}-O
   if [ -z "$ESMFBIN_PATH" ]; then
@@ -366,35 +364,43 @@ case $hostname in
   ;;
 
   ## DAV
-  pronghorn* | caldera* | geyser* )
+  pronghorn* | casper* )
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=8
   fi
-  esmfvers=7.0.0
-  intelvers=15.0.0
-  #intelvers=12.1.5
+  echo "REGRID_PROC=$REGRID_PROC"
+  esmfvers=7.1.0r
+  intelvers=17.0.1
   module purge
   module load intel/$intelvers
+  if [ $? != 0 ]; then
+    echo "Error doing module load: intel/$intelvers"
+    exit 1
+  fi
   module load ncl
   module load nco
-  #module load impi
-  module load mpich-slurm
-  module load netcdf/4.3.3.1
-  #module load netcdf/4.3.0
+  module load netcdf
   module load ncarcompilers
 
-  module load esmf
+  module load esmflibs/$esmfvers
+  if [ $? != 0 ]; then
+    echo "Error doing module load: esmflibs/$esmfvers"
+    exit 1
+  fi
 
-  if [ "$interactive" = "NO" ]; then
+  if [[ $REGRID_PROC > 1 ]]; then
      mpi=mpi
-     mpitype="mpich2"
+     echo "MPI option is NOT currently available"
+     exit 1
   else
      mpi=uni
-     mpitype="mpiuni"
   fi
-  export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib/gcc/x86_64-redhat-linux/4.4.7:/usr/lib64:/glade/apps/opt/usr/lib:/usr/lib:/glade/u/ssg/ys/opt/intel/12.1.0.233/composer_xe_2011_sp1.11.339/compiler/lib/intel64:/lib:/lib64"
   module load esmf-${esmfvers}-ncdfio-${mpi}-O
+  if [ $? != 0 ]; then
+    echo "Error doing module load: esmf-${esmfvers}-ncdfio-${mpi}-O"
+    exit 1
+  fi
   if [ -z "$ESMFBIN_PATH" ]; then
      ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
@@ -404,8 +410,6 @@ case $hostname in
   if [ -z "$MPIEXEC" ]; then
      MPIEXEC="mpiexec -n $REGRID_PROC"
   fi
-  echo "ERROR: Currently can NOT run on the DAV cluster, because ESMF is not configured correctly"
-  exit 1
   ;;
 
   ##no other machine currently supported    

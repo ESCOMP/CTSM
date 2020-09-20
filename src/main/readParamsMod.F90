@@ -40,6 +40,20 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
     use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
+    use LunaMod                           , only : readParams_Luna                        => readParams
+    use BareGroundFluxesMod               , only : readParams_BareGroundFluxes            => readParams
+    use LakeFluxesMod                     , only : readParams_LakeFluxes                  => readParams
+    use CanopyFluxesMod                   , only : readParams_CanopyFluxes                => readParams
+    use UrbanFluxesMod                    , only : readParams_UrbanFluxes                 => readParams
+    use CanopyHydrologyMod                , only : readParams_CanopyHydrology             => readParams
+    use SoilHydrologyMod                  , only : readParams_SoilHydrology               => readParams
+    use SoilStateInitTimeConstMod         , only : readParams_SoilStateInitTimeConst      => readParams
+    use SoilWaterMovementMod              , only : readParams_SoilWaterMovement           => readParams
+    use SaturatedExcessRunoffMod          , only : readParams_SaturatedExcessRunoff       => readParams
+    use InfiltrationExcessRunoffMod       , only : readParams_InfiltrationExcessRunoff    => readParams
+    use SurfaceResistanceMod              , only : readParams_SurfaceResistance           => readParams
+    use WaterDiagnosticBulkType           , only : readParams_WaterDiagnosticBulk         => readParams
+    use SnowHydrologyMod                  , only : readParams_SnowHydrology               => readParams
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
@@ -97,7 +111,20 @@ contains
     ! Biogeophysics
     !
     call photosyns_inst%ReadParams( ncid )
-
+    call readParams_Luna ( ncid )
+    call readParams_BareGroundFluxes ( ncid )
+    call readParams_LakeFluxes ( ncid )
+    call readParams_CanopyFluxes ( ncid )
+    call readParams_UrbanFluxes ( ncid )
+    call readParams_CanopyHydrology ( ncid )
+    call readParams_SoilHydrology ( ncid )
+    call readParams_SoilStateInitTimeConst ( ncid )
+    call readParams_SaturatedExcessRunoff ( ncid )
+    call readParams_SoilWaterMovement ( ncid )
+    call readParams_InfiltrationExcessRunoff ( ncid )
+    call readParams_SurfaceResistance ( ncid )
+    call readParams_WaterDiagnosticBulk ( ncid )
+    call readParams_SnowHydrology (ncid)
 
     !
     call ncd_pio_closefile(ncid)

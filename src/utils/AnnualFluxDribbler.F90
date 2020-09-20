@@ -247,7 +247,7 @@ contains
 
     beg_index = lbound(delta, 1)
     end_index = get_end(bounds, this%bounds_subgrid_level)
-    SHR_ASSERT_ALL((ubound(delta) == (/end_index/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(delta) == (/end_index/)), sourcefile, __LINE__)
 
     if (is_beg_curr_year()) then
        do i = beg_index, end_index
@@ -317,7 +317,7 @@ contains
 
     beg_index = lbound(flux, 1)
     end_index = get_end(bounds, this%bounds_subgrid_level)
-    SHR_ASSERT_ALL((ubound(flux) == (/end_index/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(flux) == (/end_index/)), sourcefile, __LINE__)
 
     secs_per_year = get_days_per_year() * secspday
     dtime = get_step_size_real()
@@ -358,7 +358,7 @@ contains
 
     beg_index = lbound(delta, 1)
     end_index = get_end(bounds, this%bounds_subgrid_level)
-    SHR_ASSERT_ALL((ubound(delta) == (/end_index/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(delta) == (/end_index/)), sourcefile, __LINE__)
 
     allocate(flux(beg_index:end_index))
 
@@ -597,7 +597,7 @@ contains
 
     beg_index = lbound(amount_left_to_dribble, 1)
     end_index = get_end(bounds, this%bounds_subgrid_level)
-    SHR_ASSERT_ALL((ubound(amount_left_to_dribble) == (/end_index/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(amount_left_to_dribble) == (/end_index/)), sourcefile, __LINE__)
 
     do i = beg_index, end_index
        if (yearfrac < 1.e-15_r8) then

@@ -11,11 +11,8 @@ module Waterlnd2atmBulkType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varctl     , only : iulog
   use clm_varpar     , only : nlevgrnd
-  use clm_varcon     , only : spval
   use WaterLnd2atmType , only : waterlnd2atm_type
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
@@ -69,7 +66,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(waterlnd2atmbulk_type), intent(inout) :: this

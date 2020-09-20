@@ -6,7 +6,7 @@ module CNNStateUpdate1Mod
   !
   ! !USES:
   use shr_kind_mod                    , only: r8 => shr_kind_r8
-  use clm_time_manager                , only : get_step_size, get_step_size_real
+  use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
   use clm_varpar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
@@ -88,6 +88,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine NStateUpdate1(num_soilc, filter_soilc, num_soilp, filter_soilp, &
        cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst) 
+     use CNSharedParamsMod               , only : use_fun
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic nitrogen state
@@ -98,7 +99,7 @@ contains
     integer                                 , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                                 , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(cnveg_nitrogenflux_type)           , intent(in)    :: cnveg_nitrogenflux_inst
+    type(cnveg_nitrogenflux_type)           , intent(inout) :: cnveg_nitrogenflux_inst
     type(cnveg_nitrogenstate_type)          , intent(inout) :: cnveg_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
@@ -119,7 +120,7 @@ contains
          )
 
       ! set time steps
-      dt = real( get_step_size(), r8 )
+      dt = get_step_size_real()
 
 
       ! soilbiogeochemistry fluxes TODO - this should be moved elsewhere
@@ -189,11 +190,20 @@ contains
             ns_veg%deadcrootn_patch(p)   = ns_veg%deadcrootn_patch(p) + nf_veg%livecrootn_to_deadcrootn_patch(p)*dt
             ns_veg%livecrootn_patch(p)   = ns_veg%livecrootn_patch(p) - nf_veg%livecrootn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livecrootn_to_retransn_patch(p)*dt
+            ! WW change logic so livestem_retrans goes to npool (via free_retrans flux)
+            ! this should likely be done more cleanly if it works, i.e. not update fluxes w/ states
+            ! additional considerations for crop?
+            if (use_fun ) then
+               nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livestemn_to_retransn_patch(p)
+               nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livecrootn_to_retransn_patch(p)
+            end if
          end if
          if (ivt(p) >= npcropmin) then ! Beth adds retrans from froot
             ns_veg%frootn_patch(p)       = ns_veg%frootn_patch(p)     - nf_veg%frootn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%frootn_to_retransn_patch(p)*dt
             ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_litter_patch(p)*dt
+            ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_biofueln_patch(p)*dt
+            ns_veg%leafn_patch(p)        = ns_veg%leafn_patch(p)      - nf_veg%leafn_to_biofueln_patch(p)*dt
             ns_veg%livestemn_patch(p)    = ns_veg%livestemn_patch(p)  - nf_veg%livestemn_to_retransn_patch(p)*dt
             ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
             ns_veg%grainn_patch(p)       = ns_veg%grainn_patch(p) &

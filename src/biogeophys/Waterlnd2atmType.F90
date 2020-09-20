@@ -11,8 +11,6 @@ module Waterlnd2atmType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varctl     , only : iulog
-  use clm_varcon     , only : spval
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d
@@ -27,7 +25,7 @@ module Waterlnd2atmType
      class(water_info_base_type), pointer :: info
 
      real(r8), pointer :: q_ref2m_grc        (:)   ! 2m surface specific humidity (kg/kg)
-     real(r8), pointer :: h2osno_grc         (:)   ! snow water (mm H2O)
+     real(r8), pointer :: h2osno_grc         (:)   ! snow water (m H2O)
      real(r8), pointer :: qflx_evap_tot_grc  (:)   ! qflx_evap_soi + qflx_evap_can + qflx_tran_veg
      real(r8), pointer :: qflx_rofliq_grc         (:)   ! rof liq forcing
      real(r8), pointer :: qflx_rofliq_qsur_grc    (:)   ! rof liq -- surface runoff component
@@ -79,7 +77,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(waterlnd2atm_type), intent(inout) :: this

@@ -18,9 +18,11 @@ module WaterInfoBulkType
   type, extends(water_info_base_type), public :: water_info_bulk_type
      private
    contains
-     procedure, public :: fname  ! Get a history/restart field name
-     procedure, public :: lname  ! Get a history/restart long name
+     procedure, public :: get_name ! Get name ('bulk')
+     procedure, public :: fname    ! Get a history/restart field name
+     procedure, public :: lname    ! Get a history/restart long name
      procedure, public :: is_communicated_with_coupler
+     procedure, public :: is_included_in_consistency_check
   end type water_info_bulk_type
 
   interface water_info_bulk_type
@@ -39,6 +41,25 @@ contains
     call this%set_metadata(ratio = 1._r8)
     ! nothing to do
   end function constructor
+
+  !-----------------------------------------------------------------------
+  pure function get_name(this) result(name)
+    !
+    ! !DESCRIPTION:
+    ! Get the name ('bulk')
+    !
+    ! !ARGUMENTS:
+    character(len=:), allocatable :: name  ! function result
+    class(water_info_bulk_type), intent(in) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_name'
+    !-----------------------------------------------------------------------
+
+    name = 'bulk'
+
+  end function get_name
 
   !-----------------------------------------------------------------------
   pure function fname(this, basename)
@@ -91,5 +112,12 @@ contains
 
     coupled = .true.
   end function is_communicated_with_coupler
+
+  pure function is_included_in_consistency_check(this) result(included)
+    logical :: included
+    class(water_info_bulk_type), intent(in) :: this
+
+    included = .false.
+  end function is_included_in_consistency_check
 
 end module WaterInfoBulkType

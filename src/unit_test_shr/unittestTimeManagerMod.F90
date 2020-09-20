@@ -63,7 +63,6 @@ contains
     ! Set ymd values to be year N, month 1, day 1
     integer, parameter :: start_ymd = 10101
     integer, parameter :: ref_ymd = start_ymd
-    integer, parameter :: stop_ymd = 20101
     integer, parameter :: perpetual_ymd = start_ymd
 
     ! Set current time to be at the start of year 1
@@ -92,11 +91,8 @@ contains
          start_tod_in = 0, &
          ref_ymd_in = ref_ymd, &
          ref_tod_in = 0, &
-         stop_ymd_in = stop_ymd, &
-         stop_tod_in = 0, &
          perpetual_run_in = .false., &
          perpetual_ymd_in = perpetual_ymd, &
-         nelapse_in = 1, &
          dtime_in = l_dtime)
 
     call timemgr_init()

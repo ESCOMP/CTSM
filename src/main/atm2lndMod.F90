@@ -136,7 +136,7 @@ contains
     character(len=*), parameter :: subname = 'downscale_forcings'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(&
          ! Parameters:
@@ -310,7 +310,7 @@ contains
     character(len=*), parameter :: subname = 'partition_precip'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(eflx_sh_precip_conversion) == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(&
          ! Gridcell-level non-downscaled fields:
@@ -358,10 +358,10 @@ contains
                   rain = forc_rain_c(c), &
                   snow = forc_snow_c(c))
              if (forc_rain_c(c) > rain_orig) then
-                snow_to_rain_conversion_c(c) = forc_rain_c(c) - rain_orig
+                snow_to_rain_conversion_c(c) = snow_orig - forc_snow_c(c)
              end if
              if (forc_snow_c(c) > snow_orig) then
-                rain_to_snow_conversion_c(c) = forc_snow_c(c) - snow_orig
+                rain_to_snow_conversion_c(c) = rain_orig - forc_rain_c(c)
              end if
              call sens_heat_from_precip_conversion(&
                   rain_to_snow = rain_to_snow_conversion_c(c), &
@@ -608,9 +608,9 @@ contains
     real(r8), intent(out) :: norms(:)       ! computed normalization factors
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((size(orig_field) == size(norms)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(sum_field) == size(norms)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((size(sum_wts) == size(norms)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((size(orig_field) == size(norms)), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(sum_field) == size(norms)), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(sum_wts) == size(norms)), sourcefile, __LINE__)
 
     where (sum_wts == 0._r8)
        ! Avoid divide by zero; if sum_wts is 0, then the normalization doesn't matter,

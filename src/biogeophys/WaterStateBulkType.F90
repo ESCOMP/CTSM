@@ -11,9 +11,7 @@ module WaterStateBulkType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
-  use clm_varctl     , only : iulog
   use clm_varpar     , only : nlevgrnd, nlevsno   
   use clm_varcon     , only : spval
   use WaterStateType , only : waterstate_type
@@ -118,7 +116,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
@@ -129,8 +126,6 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
@@ -145,7 +140,7 @@ contains
          fname=this%info%fname('INT_SNOW'),  &
          units='mm',  &
          avgflag='A', &
-         long_name=this%info%lname('accumulated swe (vegetated landunits only)'), &
+         long_name=this%info%lname('accumulated swe (natural vegetated and crop landunits only)'), &
          ptr_col=this%int_snow_col, l2g_scale_type='veg', &
          default='inactive')
 
@@ -181,12 +176,10 @@ contains
     real(r8)              , intent(in)    :: h2osno_input_col(bounds%begc:)
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
+    integer            :: c
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(h2osno_input_col)     == (/bounds%endc/))          , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(h2osno_input_col)     == (/bounds%endc/))          , sourcefile, __LINE__)
 
     do c = bounds%begc,bounds%endc
        this%int_snow_col(c)           = h2osno_input_col(c) 
@@ -203,13 +196,7 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
-    use clm_varctl       , only : bound_h2osoi
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
+    use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -224,7 +211,7 @@ contains
     logical  :: readvar
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc,nlevgrnd/)) , sourcefile, __LINE__)
 
     call this%restart (bounds, ncid, flag=flag, &
          watsat_col=watsat_col(bounds%begc:bounds%endc,:)) 

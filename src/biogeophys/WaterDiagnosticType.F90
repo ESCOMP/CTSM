@@ -11,15 +11,16 @@ module WaterDiagnosticType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varctl     , only : use_vancouver, use_mexicocity, iulog
+  use clm_varctl     , only : use_vancouver, use_mexicocity
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d
+  use WaterStateType, only : waterstate_type
+  use WaterFluxType, only : waterflux_type
   !
   implicit none
   save
@@ -33,6 +34,7 @@ module WaterDiagnosticType
      real(r8), pointer :: snowice_col            (:)   ! col average snow ice lens
      real(r8), pointer :: snowliq_col            (:)   ! col average snow liquid water
 
+     real(r8), pointer :: h2ocan_patch           (:)   ! patch total canopy water (liq+ice) (mm H2O)
      real(r8), pointer :: total_plant_stored_h2o_col(:) ! col water that is bound in plants, including roots, sapwood, leaves, etc
                                                         ! in most cases, the vegetation scheme does not have a dynamic
                                                         ! water storage in plants, and thus 0.0 is a suitable for the trivial case.
@@ -50,11 +52,12 @@ module WaterDiagnosticType
 
    contains
 
-     procedure          :: Init         
-     procedure          :: Restart      
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure          :: Init
+     procedure          :: Restart
+     procedure          :: Summary        ! Compute end-of-timestep summaries of water diagnostic terms
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type waterdiagnostic_type
 
@@ -90,7 +93,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(inout) :: this
@@ -106,6 +108,9 @@ contains
     call AllocateVar1d(var = this%snowliq_col, name = 'snowliq_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%h2ocan_patch, name = 'h2ocan_patch', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
     call AllocateVar1d(var = this%total_plant_stored_h2o_col, name = 'total_plant_stored_h2o_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -143,7 +148,6 @@ contains
     ! Initialize module data structure
     !
     ! !USES:
-    use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
     use histFileMod    , only : hist_addfld1d
     !
     ! !ARGUMENTS:
@@ -154,13 +158,19 @@ contains
     integer           :: begp, endp
     integer           :: begc, endc
     integer           :: begg, endg
-    character(10)     :: active
-    real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
+
+    this%h2ocan_patch(begp:endp) = spval 
+    call hist_addfld1d ( &
+         fname=this%info%fname('H2OCAN'), &
+         units='mm',  &
+         avgflag='A', &
+         long_name=this%info%lname('intercepted water'), &
+         ptr_patch=this%h2ocan_patch)
 
     this%h2osoi_liqice_10cm_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -168,7 +178,7 @@ contains
          units='kg/m2', &
          avgflag='A', &
          long_name=this%info%lname('soil liquid water + ice in top 10cm of soil (veg landunits only)'), &
-         ptr_col=this%h2osoi_liqice_10cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+         ptr_col=this%h2osoi_liqice_10cm_col, l2g_scale_type='veg')
 
     this%tws_grc(begg:endg) = spval
     call hist_addfld1d ( &
@@ -241,49 +251,36 @@ contains
     ! Initialize time constant variables and cold start conditions 
     !
     ! !USES:
-    use shr_const_mod   , only : shr_const_pi
-    use shr_log_mod     , only : errMsg => shr_log_errMsg
-    use shr_spfn_mod    , only : shr_spfn_erf
-    use shr_kind_mod    , only : r8 => shr_kind_r8
-    use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use clm_varpar      , only : nlevsoi, nlevgrnd, nlevsno, nlevlak, nlevurb
-    use landunit_varcon , only : istwet, istsoil, istdlak, istcrop, istice_mec  
-    use column_varcon   , only : icol_shadewall, icol_road_perv
-    use column_varcon   , only : icol_road_imperv, icol_roof, icol_sunwall
-    use clm_varcon      , only : spval, sb, bdsno 
-    use clm_varcon      , only : zlnd, tfrz, spval, pc
-    use clm_varctl      , only : fsurdat, iulog
-    use spmdMod         , only : masterproc
-    use abortutils      , only : endrun
-    use fileutils       , only : getfil
-    use ncdio_pio       , only : file_desc_t, ncd_io
+    use ncdio_pio       , only : file_desc_t
     !
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer            :: p,c,j,l,g,lev
-    real(r8)           :: maxslope, slopemax, minslope
-    real(r8)           :: d, fd, dfdd, slope0,slopebeta
-    real(r8) ,pointer  :: std (:)     
-    logical            :: readvar 
-    type(file_desc_t)  :: ncid        
-    character(len=256) :: locfn       
+    integer            :: l
+    real(r8)           :: ratio
     !-----------------------------------------------------------------------
+
+    ratio = this%info%get_ratio()
+
+    ! h2ocan_patch is explicitly set for soil patches; this setting ensures that it will
+    ! be 0 for special landunits
+    this%h2ocan_patch(bounds%begp:bounds%endp) = 0._r8
 
     ! Water Stored in plants is almost always a static entity, with the exception
     ! of when FATES-hydraulics is used. As such, this is trivially set to 0.0 (rgk 03-2017)
     this%total_plant_stored_h2o_col(bounds%begc:bounds%endc) = 0.0_r8
 
+
     do l = bounds%begl, bounds%endl 
        if (lun%urbpoi(l)) then
           if (use_vancouver) then
-             this%qaf_lun(l) = 0.0111_r8
+             this%qaf_lun(l) = 0.0111_r8 * ratio
           else if (use_mexicocity) then
-             this%qaf_lun(l) = 0.00248_r8
+             this%qaf_lun(l) = 0.00248_r8 * ratio
           else
-             this%qaf_lun(l) = 1.e-4_r8 ! Arbitrary set since forc_q is not yet available
+             this%qaf_lun(l) = 1.e-4_r8 * ratio ! Arbitrary set since forc_q is not yet available
           end if
        end if
     end do
@@ -297,13 +294,8 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use spmdMod          , only : masterproc
-    use clm_varcon       , only : pondmx, watmin, spval, nameg
-    use landunit_varcon  , only : istcrop, istdlak, istsoil  
-    use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall
-    use clm_time_manager , only : is_first_step
-    use clm_varctl       , only : bound_h2osoi
-    use ncdio_pio        , only : file_desc_t, ncd_io, ncd_double
+    use clm_varcon       , only : nameg
+    use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -338,5 +330,38 @@ contains
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
 
   end subroutine Restart
+
+  !-----------------------------------------------------------------------
+  subroutine Summary(this, bounds, &
+       num_soilp, filter_soilp, &
+       num_allc, filter_allc, &
+       waterstate_inst, waterflux_inst)
+    !
+    ! !DESCRIPTION:
+    ! Compute end-of-timestep summaries of water diagnostic terms
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnostic_type) , intent(inout) :: this
+    type(bounds_type)           , intent(in)    :: bounds
+    integer                     , intent(in)    :: num_soilp       ! number of patches in soilp filter
+    integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer                     , intent(in)    :: num_allc        ! number of columns in allc filter
+    integer                     , intent(in)    :: filter_allc(:)  ! filter for all columns
+    class(waterstate_type)      , intent(in)    :: waterstate_inst
+    class(waterflux_type)       , intent(in)    :: waterflux_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: fp, p
+
+    character(len=*), parameter :: subname = 'Summary'
+    !-----------------------------------------------------------------------
+
+    do fp = 1, num_soilp
+       p = filter_soilp(fp)
+       this%h2ocan_patch(p) = waterstate_inst%liqcan_patch(p) + waterstate_inst%snocan_patch(p)
+    end do
+
+  end subroutine Summary
+
 
 end module WaterDiagnosticType

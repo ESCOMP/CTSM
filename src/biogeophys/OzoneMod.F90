@@ -16,7 +16,6 @@ module OzoneMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use decompMod   , only : bounds_type
   use clm_varcon  , only : spval
-  use shr_log_mod , only : errMsg => shr_log_errMsg
   use OzoneBaseMod, only : ozone_base_type
   use abortutils  , only : endrun
 
@@ -339,13 +338,13 @@ contains
     !-----------------------------------------------------------------------
     
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(forc_pbot) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(forc_th) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rssun) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rssha) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(rb) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ram) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tlai) == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(forc_pbot) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(forc_th) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rssun) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rssha) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(rb) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ram) == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tlai) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate( &
          o3coefvsha  => this%o3coefvsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
@@ -361,51 +360,21 @@ contains
        p = filter_exposedvegp(fp)
        c = patch%column(p)
 
-!       if (.not.patch%is_fates(p)) then   ! When FATES coexists with other vegetation,
-                                     ! or when it has an ozone compatible module,  this
-                                     ! logic will likely come into play
-          
-          ! Ozone stress for shaded leaves
-          call CalcOzoneStressOnePoint( &
-               forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
-               rs=rssha(p), rb=rb(p), ram=ram(p), &
-               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-               o3uptake=o3uptakesha(p), o3coefv=o3coefvsha(p), o3coefg=o3coefgsha(p))
-          
-          ! Ozone stress for sunlit leaves
-          call CalcOzoneStressOnePoint( &
-               forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
-               rs=rssun(p), rb=rb(p), ram=ram(p), &
-               tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-               o3uptake=o3uptakesun(p), o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
-          
-          tlai_old(p) = tlai(p)
+       ! Ozone stress for shaded leaves
+       call CalcOzoneStressOnePoint( &
+            forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+            rs=rssha(p), rb=rb(p), ram=ram(p), &
+            tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+            o3uptake=o3uptakesha(p), o3coefv=o3coefvsha(p), o3coefg=o3coefgsha(p))
 
-!       else
-!          ! FATES is fundamentlaly incompatible with this type of patch-level
-!          ! association with plant functional type, so for the time
-!          ! being, fates patches will just push these values to invalid
-!          o3uptakesha(p) = spval
-!          o3coefvsha(p)  = spval
-!          o3coefgsha(p)  = spval
-!          o3uptakesun(p) = spval
-!          o3coefvsun(p)  = spval
-!          o3coefgsun(p)  = spval 
-!
-!       end if
+       ! Ozone stress for sunlit leaves
+       call CalcOzoneStressOnePoint( &
+            forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
+            rs=rssun(p), rb=rb(p), ram=ram(p), &
+            tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
+            o3uptake=o3uptakesun(p), o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
 
-!       else
-!          ! FATES is fundamentlaly incompatible with this type of patch-level
-!          ! association with plant functional type, so for the time
-!          ! being, fates patches will just push these values to invalid
-!          o3uptakesha(p) = spval
-!          o3coefvsha(p)  = spval
-!          o3coefgsha(p)  = spval
-!          o3uptakesun(p) = spval
-!          o3coefvsun(p)  = spval
-!          o3coefgsun(p)  = spval 
-!
-!       end if
+       tlai_old(p) = tlai(p)
 
     end do
 

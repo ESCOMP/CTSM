@@ -6,7 +6,6 @@ module column_varcon
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use landunit_varcon, only : isturb_MIN
   !
   ! !PUBLIC TYPES:
@@ -96,7 +95,7 @@ contains
     character(len=*), parameter :: subname = 'icemec_class_to_col_itype'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), sourcefile, __LINE__)
 
     col_itype = istice_mec*100 + icemec_class
 
@@ -125,7 +124,7 @@ contains
 
     ! The following assertion is here to ensure that col_itype is really from an
     ! istice_mec landunit
-    SHR_ASSERT((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((1 <= icemec_class .and. icemec_class <= maxpatch_glcmec), sourcefile, __LINE__)
 
   end function col_itype_to_icemec_class
 

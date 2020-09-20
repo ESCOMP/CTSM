@@ -43,7 +43,7 @@ if ( ! defined($result) ) {
 ** Cannot find perl module \"Build/NamelistDefinition.pm\" from directories: @dirs **
 EOF
 }
-my $nldef_file     = "$scrdir/../../bld/namelist_files/namelist_definition_clm4_5.xml";
+my $nldef_file     = "$scrdir/../../bld/namelist_files/namelist_definition_ctsm.xml";
 
 my $definition = Build::NamelistDefinition->new( $nldef_file );
 
@@ -51,6 +51,8 @@ my $CSMDATA = "/glade/p/cesm/cseg/inputdata";
 
 my %opts = ( 
                hgrid=>"all", 
+               vic=>0,
+               glc=>0,
                ssp_rcp=>"hist", 
                debug=>0,
                exedir=>undef,
@@ -107,17 +109,20 @@ SYNOPSIS
                                    Default: $opts{'usr_mapdir'}
 
 OPTIONS
+     NOTE: The three critical options are (-years, -glc_nec, and -ssp_rcp) they are marked as such.
+
      -allownofile                  Allow the script to run even if one of the input files
                                    does NOT exist.
      -dinlc [or -l]                Enter the directory location for inputdata 
                                    (default $opts{'csmdata'})
      -debug [or -d]                Do not actually run -- just print out what 
                                    would happen if ran.
-     -dynpft "filename"            Dynamic PFT/harvesting file to use 
-                                   (rather than create it on the fly) 
-                                   (must be consistent with first year)
+     -dynpft "filename"            Dynamic PFT/harvesting file to use if you have a manual list you want to use
+                                   (rather than create it on the fly, must be consistent with first year)
+                                   (Normally NOT used)
      -fast_maps                    Toggle fast mode which doesn't use the large mapping files
      -glc_nec "number"             Number of glacier elevation classes to use (by default $opts{'glc_nec'})
+                                   (CRITICAL OPTION)
      -merge_gis                    If you want to use the glacier dataset that merges in
                                    the Greenland Ice Sheet data that CISM uses (typically
                                    used only if consistency with CISM is important)
@@ -132,7 +137,8 @@ OPTIONS
      -no_surfdata                  Do not output a surface dataset
                                    This is useful if you only want a landuse_timeseries file
      -years [or -y] "years"        Simulation year(s) to run over (by default $opts{'years'}) 
-                                   (can also be a simulation year range: i.e. 1850-2000)
+                                   (can also be a simulation year range: i.e. 1850-2000 or 1850-2100 for ssp_rcp future scenarios)
+                                   (CRITICAL OPTION)
      -help  [or -h]                Display this help.
 
      -rundir "directory"           Directory to run in
@@ -141,8 +147,13 @@ OPTIONS
      -ssp_rcp "scenario-name"      Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).
                                    "hist" for historical, otherwise in form of SSPn-m.m where n is the SSP number
                                    and m.m is the radiative forcing in W/m^2 at the peak or 2100.
+                                   (normally use thiw with -years 1850-2100)
+                                   (CRITICAL OPTION)
      
      -usrname "clm_usrdat_name"    CLM user data name to find grid file with.
+
+     -vic                          Add the fields required for the VIC model
+     -glc                          Add the optional 3D glacier fields for verification of the glacier model
 
       NOTE: years, res, and ssp_rcp can be comma delimited lists.
 
@@ -267,10 +278,10 @@ sub write_transient_timeseries_file {
       $fh_landuse_timeseries->open( ">$landuse_timeseries_text_file" ) or die "** can't open file: $landuse_timeseries_text_file\n";
       print "Writing out landuse_timeseries text file: $landuse_timeseries_text_file\n";
       for( my $yr = $sim_yr0; $yr <= $sim_yrn; $yr++ ) {
-        my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=$yr,ssp-rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
+        my $vegtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year='$yr',ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $vegtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $vegtypyr, $yr;
-        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=$yr,ssp-rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
+        my $hrvtypyr = `$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='$yr',ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp`;
         chomp( $hrvtypyr );
         printf $fh_landuse_timeseries $dynpft_format, $hrvtypyr, $yr;
         if ( $yr % 100 == 0 ) {
@@ -336,8 +347,6 @@ sub write_namelist_file {
  map_fpeat        = '$map->{'peat'}'
  map_fsoildepth   = '$map->{'soildepth'}'
  map_fabm         = '$map->{'abm'}'
- map_fvic         = '$map->{'vic'}'
- map_fch4         = '$map->{'ch4'}'
  mksrf_fsoitex    = '$datfil->{'tex'}'
  mksrf_forganic   = '$datfil->{'org'}'
  mksrf_flakwat    = '$datfil->{'lak'}'
@@ -351,14 +360,29 @@ sub write_namelist_file {
  mksrf_fpeat      = '$datfil->{'peat'}'
  mksrf_fsoildepth = '$datfil->{'soildepth'}'
  mksrf_fabm       = '$datfil->{'abm'}'
- mksrf_fvic       = '$datfil->{'vic'}'
- mksrf_fch4       = '$datfil->{'ch4'}'
  outnc_double   = $double
  all_urban      = $all_urb
  no_inlandwet   = $no_inlandwet
  mksrf_furban   = '$datfil->{'urb'}'
  gitdescribe    = '$gitdescribe'
 EOF
+  if ( $opts{'vic'} ) {
+    print $fh <<"EOF";
+ map_fvic         = '$map->{'vic'}'
+ mksrf_fvic       = '$datfil->{'vic'}'
+ outnc_vic = .true.
+EOF
+  }
+  if ( $opts{'glc'} ) {
+    print $fh <<"EOF";
+ outnc_3dglc = .true.
+EOF
+  }
+  if ( $opts{'glc'} ) {
+    print $fh <<"EOF";
+ outnc_3dglc = .true.
+EOF
+  }
   if ( ! $opts{'fast_maps'} ) {
     print $fh <<"EOF";
  map_ftopostats   = '$map->{'topostats'}'
@@ -377,6 +401,7 @@ EOF
   }
   if ( defined($opts{'pft_override'}) ) {
     print $fh <<"EOF";
+ all_veg      = .true.
  pft_frc      = $opts{'pft_frc'}
  pft_idx      = $opts{'pft_idx'}
 EOF
@@ -450,6 +475,8 @@ EOF
         "pft_frc=s"    => \$opts{'pft_frc'},
         "pft_idx=s"    => \$opts{'pft_idx'},
         "ssp_rcp=s"    => \$opts{'ssp_rcp'},
+        "vic!"         => \$opts{'vic'},
+        "glc!"         => \$opts{'glc'},
         "rundir=s"     => \$opts{'rundir'},
         "soil_col=i"   => \$opts{'soil_col'},
         "soil_fmx=f"   => \$opts{'soil_fmx'},
@@ -511,7 +538,7 @@ EOF
    my @years   = split( ",", $opts{'years'} );
    # Check that resolutions are valid
    foreach my $sim_year ( @years ) {
-     if ("-" eq substr($sim_year, 4, 1)) {
+     if ( ("-" eq substr($sim_year, 4, 1)) || ("-" eq substr($sim_year, 3, 1)) ) {
        # range of years for transient run
        if ( ! $definition->is_valid_value( "sim_year_range", "'$sim_year'" ) ) {
          print "** Invalid simulation simulation year range: $sim_year\n";
@@ -519,19 +546,19 @@ EOF
        }
      } else {
        # single year.
-       if ( ! $definition->is_valid_value( "sim_year", $sim_year ) ) {
+       if ( ! $definition->is_valid_value( "sim_year", "'$sim_year'" ) ) {
          print "** Invalid simulation year: $sim_year\n";
          usage();
        }
      }
    }
    #
-   # Set ssp-rcp to use
+   # Set ssp_rcp to use
    #
    my @rcpaths = split( ",", $opts{'ssp_rcp'} );
-   # Check that ssp-rcp is valid
+   # Check that ssp_rcp is valid
    foreach my $ssp_rcp ( @rcpaths  ) {
-      if ( ! $definition->is_valid_value( "ssp-rcp", $ssp_rcp ) ) {
+      if ( ! $definition->is_valid_value( "ssp_rcp", "'$ssp_rcp'" ) ) {
           print "** Invalid ssp_rcp: $ssp_rcp\n";
           usage();
        }
@@ -582,7 +609,7 @@ EOF
    my $mkcrop_on  = ",crop='on'";
 
    #
-   # Loop over all resolutions listed
+   # Loop over all resolutions and sim-years listed
    #
    foreach my $res ( @hresols ) {
       #
@@ -594,7 +621,7 @@ EOF
       } else {
 	  $queryopts = "-res $res -csmdata $CSMDATA -silent -justvalue";
       }
-      $queryfilopts = "$queryopts -onlyfiles -phys clm4_5 ";
+      $queryfilopts = "$queryopts -onlyfiles ";
       my $mkcrop = $mkcrop_off;
       my $setnumpft = "";
       $mkcrop    = $mkcrop_on;
@@ -606,7 +633,7 @@ EOF
       #
       # Mapping files
       #
-      my %map; my %hgrd; my %lmsk; my %datfil;
+      my %map; my %hgrd; my %lmsk; my %datfil; my %filnm;
       my $hirespft = "off";
       if ( defined($opts{'hirespft'}) ) {
          $hirespft = "on";
@@ -619,7 +646,10 @@ EOF
       my $mkopts = "-csmdata $CSMDATA -silent -justvalue -namelist clmexp $usrnam";
       my @typlist = ( "lak", "veg", "voc", "tex", "col", "hrv",
                         "fmx", "lai", "urb", "org", "glc", "glcregion", "utp", "wet",
-		        "gdp", "peat","soildepth","abm", "vic", "ch4");
+		        "gdp", "peat","soildepth","abm");
+      if ( $opts{'vic'} ) {
+         push( @typlist, "vic" );
+      }
       if ( ! $opts{'fast_maps'} ) {
          push( @typlist, "topostats" );
       }
@@ -634,8 +664,9 @@ EOF
          $hgrid = trim($hgrid);
          my $filnm = `$scrdir/../../bld/queryDefaultNamelist.pl $mopts -options type=$typ -var mksrf_filename`;
          $filnm = trim($filnm);
-         $hgrd{$typ} = $hgrid;
-         $lmsk{$typ} = $lmask;
+         $filnm{$typ} = $filnm;
+         $hgrd{$typ}  = $hgrid;
+         $lmsk{$typ}  = $lmask;
 	 if ( $opts{'hgrid'} eq "usrspec" ) {
 	     $map{$typ} = $opts{'usr_mapdir'}."/map_${hgrid}_${lmask}_to_${res}_nomask_aave_da_c${mapdate}\.nc";
 	 } else {
@@ -647,15 +678,6 @@ EOF
          }
          if ( ! defined($opts{'allownofile'}) && ! -f $map{$typ} ) {
             die "ERROR: mapping file for this resolution does NOT exist ($map{$typ}).\n";
-          }
-         my $typ_cmd = "$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop -var $filnm";
-         $datfil{$typ} = `$typ_cmd`;
-         $datfil{$typ} = trim($datfil{$typ});
-         if ( $datfil{$typ} !~ /[^ ]+/ ) {
-            die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n$typ_cmd\n\n";
-         }
-         if ( ! defined($opts{'allownofile'}) && ! -f $datfil{$typ} ) {
-            die "ERROR: data file for this resolution does NOT exist ($datfil{$typ}).\n";
          }
       }
       #
@@ -687,7 +709,7 @@ EOF
       #
       my $double = ".true.";
       #
-      # Loop over each sim_year
+      # Loop over each SSP-RCP scenario
       #
       RCP: foreach my $ssp_rcp ( @rcpaths ) {
          #
@@ -697,7 +719,7 @@ EOF
             #
             # Skip if urban unless sim_year=2000
             #
-            if ( $urb_pt && $sim_year != 2000 ) {
+            if ( $urb_pt && $sim_year ne '2000' ) {
                print "For urban -- skip this simulation year = $sim_year\n";
                next SIM_YEAR;
             }
@@ -720,16 +742,34 @@ EOF
                $sim_yrn = $2;
                $transient = 1;
             }
+            #
+            # Find the file for each of the types
+            #
+            foreach my $typ ( @typlist ) {
+               my $hgrid = $hgrd{$typ};
+               my $lmask = $lmsk{$typ};
+               my $filnm = $filnm{$typ};
+               my $typ_cmd = "$scrdir/../../bld/queryDefaultNamelist.pl $mkopts -options " . 
+                             "hgrid=$hgrid,lmask=$lmask,mergeGIS=$merge_gis$mkcrop,sim_year=$sim_yr0 -var $filnm";
+               $datfil{$typ} = `$typ_cmd`;
+               $datfil{$typ} = trim($datfil{$typ});
+               if ( $datfil{$typ} !~ /[^ ]+/ ) {
+                  die "ERROR: could NOT find a $filnm data file for this resolution: $hgrid and type: $typ and $lmask.\n$typ_cmd\n\n";
+               }
+               if ( ! defined($opts{'allownofile'}) && ! -f $datfil{$typ} ) {
+                  die "ERROR: data file for this resolution does NOT exist ($datfil{$typ}).\n";
+               }
+            }
             # determine simulation year to use for the surface dataset:
-            my $sim_yr_surfdat = $sim_yr0;
+            my $sim_yr_surfdat = "$sim_yr0";
             
-            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resol -options sim_year='${sim_yr_surfdat}'$mkcrop,ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp";
             my $vegtyp = `$cmd`;
             chomp( $vegtyp );
             if ( $vegtyp eq "" ) {
                die "** trouble getting vegtyp file with: $cmd\n";
             }
-            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year=${sim_yr_surfdat}$mkcrop -var mksrf_fvegtyp -namelist clmexp";
+            my $cmd    = "$scrdir/../../bld/queryDefaultNamelist.pl $queryfilopts $resolhrv -options sim_year='${sim_yr_surfdat}'$mkcrop,ssp_rcp=${ssp_rcp}${mkcrop} -var mksrf_fvegtyp -namelist clmexp";
             my $hrvtyp = `$cmd`;
             chomp( $hrvtyp );
             if ( $hrvtyp eq "" ) {
@@ -743,8 +783,8 @@ EOF
             if ( $mkcrop ne "" ) {
                $options = "-options $mkcrop";
             }
-            $desc         = sprintf( "%s_%s_%s_simyr%4.4d-%4.4d", $ssp_rcp, $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
-            $desc_surfdat = sprintf( "%s_%s_%s_simyr%4.4d",       $ssp_rcp, $crpdes, $cmip_series, $sim_yr_surfdat  );
+            $desc         = sprintf( "%s_%s_%s_simyr%s-%4.4d", $ssp_rcp, $crpdes, $cmip_series, $sim_yr0, $sim_yrn );
+            $desc_surfdat = sprintf( "%s_%s_%s_simyr%s",       $ssp_rcp, $crpdes, $cmip_series, $sim_yr_surfdat  );
 
             my $fsurdat_fname_base = "";
             my $fsurdat_fname = "";
@@ -781,7 +821,7 @@ EOF
                  $sim_yr_surfdat);
 
             print "CSMDATA is $CSMDATA \n";
-            print "resolution: $res ssp-rcp=$ssp_rcp sim_year = $sim_year\n";
+            print "resolution: $res ssp_rcp=$ssp_rcp sim_year = $sim_year\n";
             print "namelist: $namelist_fname\n";
             
             write_namelist_file(

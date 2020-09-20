@@ -23,10 +23,13 @@ module WaterInfoTracerType
      ! tracer is just used internally in CTSM, and is set to some fixed ratio times the
      ! bulk water.
      logical :: communicated_with_coupler
+     logical :: included_in_consistency_check
    contains
-     procedure, public :: fname  ! Get a history/restart field name for this tracer
-     procedure, public :: lname  ! Get a history/restart long name for this tracer
+     procedure, public :: get_name ! Get name of this tracer
+     procedure, public :: fname    ! Get a history/restart field name for this tracer
+     procedure, public :: lname    ! Get a history/restart long name for this tracer
      procedure, public :: is_communicated_with_coupler
+     procedure, public :: is_included_in_consistency_check
   end type water_info_tracer_type
 
   interface water_info_tracer_type
@@ -38,11 +41,13 @@ module WaterInfoTracerType
 
 contains
 
-  function constructor(tracer_name, ratio, communicated_with_coupler) result(this)
+  function constructor(tracer_name, ratio, included_in_consistency_check, &
+                       communicated_with_coupler) result(this)
     ! Create a water_info_tracer_type object
     type(water_info_tracer_type) :: this  ! function result
     character(len=*), intent(in) :: tracer_name
     real(r8), intent(in)         :: ratio
+    logical, intent(in)          :: included_in_consistency_check
 
     ! If true, this tracer is received from and sent to the coupler. If false, this tracer
     ! is just used internally in CTSM, and is set to some fixed ratio times the bulk
@@ -51,8 +56,28 @@ contains
 
     this%tracer_name = trim(tracer_name)
     this%communicated_with_coupler = communicated_with_coupler
+    this%included_in_consistency_check = included_in_consistency_check
     call this%set_metadata(ratio = ratio)
   end function constructor
+
+  !-----------------------------------------------------------------------
+  pure function get_name(this) result(name)
+    !
+    ! !DESCRIPTION:
+    ! Get this tracer's name
+    !
+    ! !ARGUMENTS:
+    character(len=:), allocatable :: name  ! function result
+    class(water_info_tracer_type), intent(in) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_name'
+    !-----------------------------------------------------------------------
+
+    name = this%tracer_name
+
+  end function get_name
 
   !-----------------------------------------------------------------------
   pure function fname(this, basename)
@@ -118,6 +143,15 @@ contains
     coupled = this%communicated_with_coupler
 
   end function is_communicated_with_coupler
+
+  pure function is_included_in_consistency_check(this) result(included)
+
+    logical :: included  ! function result
+    class(water_info_tracer_type), intent(in) :: this
+
+    included = this%included_in_consistency_check
+
+  end function is_included_in_consistency_check
 
 
 end module WaterInfoTracerType

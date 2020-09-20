@@ -18,9 +18,10 @@
     <default_value>unset</default_value>
     <values>
       <value component="clm"      >$SRCROOT</value>
-      <value component="dlnd"      >$CIMEROOT/src/components/data_comps/dlnd</value>
-      <value component="slnd"      >$CIMEROOT/src/components/stub_comps/slnd</value>
-      <value component="xlnd"      >$CIMEROOT/src/components/xcpl_comps/xlnd</value>
+      <value component="dlnd" comp_interface="mct">$CIMEROOT/src/components/data_comps_mct/dlnd</value>
+      <value component="dlnd" comp_interface="nuopc">$CIMEROOT/src/components/cdeps/dlnd</value>
+      <value component="slnd"      >$CIMEROOT/src/components/stub_comps_$COMP_INTERFACE/slnd</value>
+      <value component="xlnd"      >$CIMEROOT/src/components/xcpl_comps_$COMP_INTERFACE/xlnd</value>
     </values>
     <group>case_comps</group>
     <file>env_case.xml</file>

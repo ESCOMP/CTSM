@@ -24,25 +24,34 @@ module dynConsBiogeophysMod
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use WaterBalanceType        , only : waterbalance_type
   use WaterType               , only : water_type
+  use TotalWaterAndHeatMod    , only : AccumulateSoilLiqIceMassNonLake
+  use TotalWaterAndHeatMod    , only : AccumulateSoilHeatNonLake
   use TotalWaterAndHeatMod    , only : ComputeLiqIceMassNonLake, ComputeLiqIceMassLake
   use TotalWaterAndHeatMod    , only : ComputeHeatNonLake, ComputeHeatLake
   use TotalWaterAndHeatMod    , only : AdjustDeltaHeatForDeltaLiq
   use TotalWaterAndHeatMod    , only : heat_base_temp
-  use subgridAveMod           , only : p2c, c2g
+  use subgridAveMod           , only : p2c, c2g, c2l
+  use GridcellType            , only : grc
   use LandunitType            , only : lun
   use ColumnType              , only : col
   use PatchType               , only : patch
-  use clm_varcon              , only : tfrz, cpliq, hfus
+  use clm_varcon              , only : tfrz, cpliq, hfus, ispval
+  use landunit_varcon         , only : istsoil, istice_mec
   use dynSubgridControlMod    , only : get_for_testing_zero_dynbal_fluxes
+  use filterColMod            , only : filter_col_type, col_filter_from_ltypes
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   private
   !
-  public :: dyn_hwcontent_init         ! compute grid-level heat and water content, before land cover change
-  public :: dyn_hwcontent_final        ! compute grid-level heat and water content and dynbal fluxes after land cover change
+  public :: dyn_hwcontent_set_baselines ! set start-of-run baseline values for heat and water content in some columns
+  public :: dyn_hwcontent_init          ! compute grid-level heat and water content, before land cover change
+  public :: dyn_hwcontent_final         ! compute grid-level heat and water content and dynbal fluxes after land cover change
   !
   ! !PRIVATE MEMBER FUNCTIONS
+  private :: dyn_water_content_set_baselines ! set start-of-run baseline values for water content, for a single water tracer or bulk water
+  private :: dyn_heat_content_set_baselines  ! set start-of-run baseline values for heat content
+  private :: set_glacier_baselines           ! compute start-of-run baseline values for each glacier column, for some dynbal term
   private :: dyn_water_content_final      ! compute grid-level water content and dynbal fluxes after landcover change, for a single water tracer or bulk water
   private :: dyn_water_content            ! compute gridcell total liquid and ice water contents
   private :: dyn_heat_content             ! compute gridcell total heat contents
@@ -52,6 +61,273 @@ module dynConsBiogeophysMod
   !---------------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine dyn_hwcontent_set_baselines(bounds, num_icemecc, filter_icemecc, &
+       urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set start-of-run baseline values for heat and water content in some columns.
+    !
+    ! These baseline values will be subtracted from each column's total heat and water
+    ! calculations in each time step. This can correct for things like virtual mass (e.g.,
+    ! the virtual ice column in glacier columns), or can add states that are not
+    ! explicitly represented in the model (e.g., adding typical values for soil heat and
+    ! water content in glacier columns, where the soil column is not explicitly
+    ! represented). These corrections will typically reduce the fictitious dynbal
+    ! conservation fluxes.
+    !
+    ! At a minimum, this should be called during cold start initialization, to initialize
+    ! the baseline values based on cold start states. In addition, this can be called when
+    ! starting a new run from existing initial conditions, if the user desires. This
+    ! optional resetting can further reduce the dynbal fluxes; however, it can break
+    ! conservation. (So, for example, it can be done when transitioning from an offline
+    ! spinup to a coupled run, but it should not be done when transitioning from a
+    ! coupled historical run to a future scenario.)
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+
+    ! The following filter should include inactive as well as active points. This could
+    ! be important if an inactive point later becomes active, so that we have an
+    ! appropriate baseline value for that point.
+    integer, intent(in) :: num_icemecc  ! number of points in filter_icemecc
+    integer, intent(in) :: filter_icemecc(:) ! filter for icemec (i.e., glacier) columns
+
+    type(urbanparams_type), intent(in) :: urbanparams_inst
+    type(soilstate_type), intent(in) :: soilstate_inst
+    type(water_type), intent(inout) :: water_inst
+    type(temperature_type), intent(inout) :: temperature_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: i
+    type(filter_col_type) :: natveg_and_glc_filterc
+
+    character(len=*), parameter :: subname = 'dyn_hwcontent_set_baselines'
+    !-----------------------------------------------------------------------
+
+    ! Note that we include inactive points in the following. This could be important if
+    ! an inactive point later becomes active, so that we have an appropriate baseline
+    ! value for that point.
+    natveg_and_glc_filterc = col_filter_from_ltypes( &
+         bounds = bounds, &
+         ltypes = [istsoil, istice_mec], &
+         include_inactive = .true.)
+
+    do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
+       associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
+
+       call dyn_water_content_set_baselines(bounds, natveg_and_glc_filterc, &
+            num_icemecc, filter_icemecc, &
+            bulk_or_tracer%waterstate_inst)
+       end associate
+    end do
+
+    call dyn_heat_content_set_baselines(bounds, natveg_and_glc_filterc, &
+         num_icemecc, filter_icemecc, &
+         urbanparams_inst, soilstate_inst, water_inst%waterstatebulk_inst, &
+         temperature_inst)
+
+  end subroutine dyn_hwcontent_set_baselines
+
+  !-----------------------------------------------------------------------
+  subroutine dyn_water_content_set_baselines(bounds, natveg_and_glc_filterc, &
+       num_icemecc, filter_icemecc, &
+       waterstate_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set start-of-run baseline values for water content, for a single water tracer or
+    ! bulk water.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    type(filter_col_type), intent(in) :: natveg_and_glc_filterc  ! filter for natural veg and glacier columns
+
+    ! The following filter should include inactive as well as active points
+    integer, intent(in) :: num_icemecc  ! number of points in filter_icemecc
+    integer, intent(in) :: filter_icemecc(:) ! filter for icemec (i.e., glacier) columns
+
+    class(waterstate_type), intent(inout) :: waterstate_inst
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: soil_liquid_mass_col(bounds%begc:bounds%endc)
+    real(r8) :: soil_ice_mass_col(bounds%begc:bounds%endc)
+
+    character(len=*), parameter :: subname = 'dyn_water_content_set_baselines'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         dynbal_baseline_liq => waterstate_inst%dynbal_baseline_liq_col, & ! Output: [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
+         dynbal_baseline_ice => waterstate_inst%dynbal_baseline_ice_col  & ! Output: [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
+         )
+
+    soil_liquid_mass_col(bounds%begc:bounds%endc) = 0._r8
+    soil_ice_mass_col   (bounds%begc:bounds%endc) = 0._r8
+
+    call AccumulateSoilLiqIceMassNonLake(bounds, &
+         natveg_and_glc_filterc%num, natveg_and_glc_filterc%indices, &
+         waterstate_inst, &
+         liquid_mass = soil_liquid_mass_col(bounds%begc:bounds%endc), &
+         ice_mass = soil_ice_mass_col(bounds%begc:bounds%endc))
+
+    ! For glacier columns, the liquid and ice in the "soil" (i.e., in the glacial ice) is
+    ! a virtual pool. So we'll subtract this amount when determining the dynbal
+    ! fluxes. (Note that a positive value in these baseline variables indicates an extra
+    ! stock that will be subtracted later.) But glacier columns do not represent the soil
+    ! under the glacial ice. Let's assume that the soil state under each glacier column is
+    ! the same as the soil state in the natural vegetation landunit on that grid cell. We
+    ! subtract this from the dynbal baseline variables to indicate a missing stock.
+    call set_glacier_baselines(bounds, num_icemecc, filter_icemecc, &
+         vals_col = soil_liquid_mass_col(bounds%begc:bounds%endc), &
+         baselines_col = dynbal_baseline_liq(bounds%begc:bounds%endc))
+    call set_glacier_baselines(bounds, num_icemecc, filter_icemecc, &
+         vals_col = soil_ice_mass_col(bounds%begc:bounds%endc), &
+         baselines_col = dynbal_baseline_ice(bounds%begc:bounds%endc))
+
+    end associate
+
+  end subroutine dyn_water_content_set_baselines
+
+  !-----------------------------------------------------------------------
+  subroutine dyn_heat_content_set_baselines(bounds, natveg_and_glc_filterc, &
+       num_icemecc, filter_icemecc, &
+       urbanparams_inst, soilstate_inst, waterstatebulk_inst, &
+       temperature_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set start-of-run baseline values for heat content.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    type(filter_col_type), intent(in) :: natveg_and_glc_filterc  ! filter for natural veg and glacier columns
+
+    ! The following filter should include inactive as well as active points
+    integer, intent(in) :: num_icemecc  ! number of points in filter_icemecc
+    integer, intent(in) :: filter_icemecc(:) ! filter for icemec (i.e., glacier) columns
+
+    type(urbanparams_type), intent(in) :: urbanparams_inst
+    type(soilstate_type), intent(in) :: soilstate_inst
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    type(temperature_type), intent(inout) :: temperature_inst
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: soil_heat_col(bounds%begc:bounds%endc) ! soil heat content [J/m^2]
+    real(r8) :: soil_heat_liquid_col(bounds%begc:bounds%endc)  ! unused; just needed for AccumulateSoilHeatNonLake interface
+    real(r8) :: soil_cv_liquid_col(bounds%begc:bounds%endc)  ! unused; just needed for AccumulateSoilHeatNonLake interface
+
+    character(len=*), parameter :: subname = 'dyn_heat_content_set_baselines'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col & ! Output: [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
+         )
+
+    soil_heat_col(bounds%begc:bounds%endc) = 0._r8
+    soil_heat_liquid_col(bounds%begc:bounds%endc) = 0._r8
+    soil_cv_liquid_col(bounds%begc:bounds%endc) = 0._r8
+
+    call AccumulateSoilHeatNonLake(bounds, &
+         natveg_and_glc_filterc%num, natveg_and_glc_filterc%indices, &
+         urbanparams_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, &
+         heat = soil_heat_col(bounds%begc:bounds%endc), &
+         heat_liquid = soil_heat_liquid_col(bounds%begc:bounds%endc), &
+         cv_liquid = soil_cv_liquid_col(bounds%begc:bounds%endc))
+
+    ! See comments in dyn_water_content_set_baselines for rationale for these glacier
+    ! baselines. Even though the heat in glacier ice can interact with the rest of the
+    ! system (e.g., giving off heat to the atmosphere or receiving heat from the
+    ! atmosphere), it is still a virtual state in the sense that the glacier ice column
+    ! is virtual. And, as for water, we subtract the heat of the soil in the associated
+    ! natural vegetated landunit to account for the fact that we don't explicitly model
+    ! the soil under glacial ice.
+    !
+    ! Aside from these considerations of what is virtual vs. real, another rationale
+    ! driving the use of these baselines is the desire to minimize the dynbal fluxes. For
+    ! the sake of conservation, it seems okay to pick any fixed baseline when summing the
+    ! energy (or water) content of a given column (as long as that baseline doesn't
+    ! change over time). By using the baselines computed here, we reduce the dynbal
+    ! fluxes to more reasonable values.
+    call set_glacier_baselines(bounds, num_icemecc, filter_icemecc, &
+         vals_col = soil_heat_col(bounds%begc:bounds%endc), &
+         baselines_col = dynbal_baseline_heat(bounds%begc:bounds%endc))
+
+    end associate
+
+  end subroutine dyn_heat_content_set_baselines
+
+  !-----------------------------------------------------------------------
+  subroutine set_glacier_baselines(bounds, num_icemecc, filter_icemecc, &
+       vals_col, baselines_col)
+    !
+    ! !DESCRIPTION:
+    ! Compute start-of-run baseline values for each glacier column, for some dynbal term.
+    !
+    ! The baselines for a given glacier column are set equal to the input value in that
+    ! glacier column minus the average value for the vegetated landunit on that column's
+    ! gridcell.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+
+    ! The following filter should include inactive as well as active points
+    integer, intent(in) :: num_icemecc  ! number of points in filter_icemecc
+    integer, intent(in) :: filter_icemecc(:) ! filter for icemec (i.e., glacier) columns
+
+    real(r8), intent(in) :: vals_col( bounds%begc: ) ! values in each column; must be set for at least natural veg and glacier columns
+    real(r8), intent(inout) :: baselines_col( bounds%begc: ) ! baselines in each column; will be set for all points in the icemecc filter
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fc, c, l, g  ! indices
+    integer  :: l_natveg     ! index of natural veg landunit on this grid cell
+    real(r8) :: vals_lun(bounds%begl:bounds%endl)
+
+    character(len=*), parameter :: subname = 'set_glacier_baselines'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(vals_col) == [bounds%endc]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(baselines_col) == [bounds%endc]), sourcefile, __LINE__)
+
+    ! Average values from column to landunit for the natural veg landunit, in case there
+    ! are multiple columns on the natural veg landunit.
+    !
+    ! It's somewhat inefficient that we produce landunit averages for all landunits, when
+    ! all we really need are averages for the natural veg landunit. But since this
+    ! subroutine is only called in initialization, code reuse/simplicity is more important
+    ! than performance.
+    !
+    ! No thought has been given to c2l_scale_type here. This may need to be fixed if we
+    ! ever start caring about urban averages in this routine.
+    call c2l(bounds = bounds, &
+         carr = vals_col(bounds%begc:bounds%endc), &
+         larr = vals_lun(bounds%begl:bounds%endl), &
+         c2l_scale_type = 'urbanf', &
+         include_inactive = .true.)
+
+    do fc = 1, num_icemecc
+       c = filter_icemecc(fc)
+       g = col%gridcell(c)
+
+       ! Start by setting the baseline for this glacier column equal to the value in this
+       ! glacier column.
+       baselines_col(c) = vals_col(c)
+
+       ! Now subtract the value in the natural vegetated landunit on this gridcell. This
+       ! subtraction represents the missing stock, since glacier columns do not have
+       ! explicit stocks for the soil under the glacial ice. So we are assuming here that
+       ! the soil state under each glacier column is the same as the soil state in the
+       ! natural vegetation landunit on that grid cell.
+       !
+       ! Note that we don't do this subtraction if the gridcell doesn't have a natural
+       ! vegetation landunit. But we shouldn't have any transient glacier areas in that
+       ! case anyway, so that shouldn't matter.
+       l_natveg = grc%landunit_indices(istsoil, g)
+       if (l_natveg /= ispval) then
+          baselines_col(c) = baselines_col(c) - vals_lun(l_natveg)
+       end if
+    end do
+
+  end subroutine set_glacier_baselines
+
 
   !---------------------------------------------------------------------------
   subroutine dyn_hwcontent_init(bounds, &
@@ -230,7 +506,7 @@ contains
     character(len=*), parameter :: subname = 'dyn_water_content_final'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(delta_liq) == [bounds%endg]), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(delta_liq) == [bounds%endg]), sourcefile, __LINE__)
 
     associate( &
          begg => bounds%begg, &
@@ -297,18 +573,20 @@ contains
     character(len=*), parameter :: subname = 'dyn_water_content'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(liquid_mass) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(ice_mass) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(liquid_mass) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_mass) == (/bounds%endg/)), sourcefile, __LINE__)
 
     call ComputeLiqIceMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstate_inst, waterdiagnostic_inst, &
-         liquid_mass_col(bounds%begc:bounds%endc), &
-         ice_mass_col(bounds%begc:bounds%endc))
+         subtract_dynbal_baselines = .true., &
+         liquid_mass = liquid_mass_col(bounds%begc:bounds%endc), &
+         ice_mass = ice_mass_col(bounds%begc:bounds%endc))
 
     call ComputeLiqIceMassLake(bounds, num_lakec, filter_lakec, &
          waterstate_inst, &
-         liquid_mass_col(bounds%begc:bounds%endc), &
-         ice_mass_col(bounds%begc:bounds%endc))
+         subtract_dynbal_baselines = .true., &
+         liquid_mass = liquid_mass_col(bounds%begc:bounds%endc), &
+         ice_mass = ice_mass_col(bounds%begc:bounds%endc))
 
     call c2g(bounds, &
          carr = liquid_mass_col(bounds%begc:bounds%endc), &
@@ -370,8 +648,8 @@ contains
     !-------------------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL((ubound(heat_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(liquid_water_temp_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(heat_grc) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(liquid_water_temp_grc) == (/bounds%endg/)), sourcefile, __LINE__)
 
     call ComputeHeatNonLake(bounds, num_nolakec, filter_nolakec, &
          urbanparams_inst, soilstate_inst, &

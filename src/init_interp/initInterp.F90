@@ -23,6 +23,7 @@ module initInterpMod
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
   use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
+  use IssueFixedMetadataHandler, only : copy_issue_fixed_metadata
   use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
   use ncdio_pio
@@ -39,6 +40,7 @@ module initInterpMod
 
   ! Private methods
 
+  private :: copy_metadata
   private :: check_dim_subgrid
   private :: check_dim_level
   private :: skip_var
@@ -208,15 +210,15 @@ contains
     integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
     integer            :: npftso, ncolso, nlunso, ngrcso 
     logical            :: glc_elevclasses_same
-    integer , pointer  :: pftindx(:)
-    integer , pointer  :: colindx(:)     
-    integer , pointer  :: lunindx(:)     
-    integer , pointer  :: grcindx(:) 
-    logical , pointer  :: pft_activei(:), pft_activeo(:) 
-    logical , pointer  :: col_activei(:), col_activeo(:) 
-    logical , pointer  :: lun_activei(:), lun_activeo(:)
-    logical , pointer  :: grc_activei(:), grc_activeo(:)
-    integer , pointer  :: sgridindex(:)
+    integer , allocatable, target  :: pftindx(:)
+    integer , allocatable, target  :: colindx(:)
+    integer , allocatable, target  :: lunindx(:)
+    integer , allocatable, target  :: grcindx(:)
+    logical , allocatable  :: pft_activei(:), pft_activeo(:)
+    logical , allocatable  :: col_activei(:), col_activeo(:)
+    logical , allocatable  :: lun_activei(:), lun_activeo(:)
+    logical , allocatable  :: grc_activei(:), grc_activeo(:)
+    integer , pointer      :: sgridindex(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
     type(interp_multilevel_container_type) :: interp_multilevel_container
     type(interp_2dvar_type) :: var2d_i, var2d_o  ! holds metadata for 2-d variables
@@ -233,6 +235,8 @@ contains
 
     call ncd_pio_openfile (ncidi, trim(filei) , 0)
     call ncd_pio_openfile (ncido, trim(fileo),  ncd_write)
+
+    call copy_metadata(ncidi, ncido)
 
     call check_interp_non_ciso_to_ciso(ncidi)
 
@@ -396,7 +400,7 @@ contains
     if (masterproc) then
        write(iulog,*)'setting up interpolators for multi-level variables'
     end if
-    interp_multilevel_container = interp_multilevel_container_type( &
+    call interp_multilevel_container%init( &
          ncid_source = ncidi, ncid_dest = ncido, &
          bounds_source = bounds_i, bounds_dest = bounds_o, &
          pftindex = pftindx, colindex = colindx)
@@ -694,7 +698,43 @@ contains
        write (iulog,*) ' Successfully created initial condition file mapped from input IC file'
     end if
 
+    sgridindex => null()
+    deallocate(pftindx)
+    deallocate(colindx)
+    deallocate(lunindx)
+    deallocate(grcindx)
+    deallocate(pft_activei)
+    deallocate(col_activei)
+    deallocate(lun_activei)
+    deallocate(grc_activei)
+    deallocate(pft_activeo)
+    deallocate(col_activeo)
+    deallocate(lun_activeo)
+    deallocate(grc_activeo)
+
   end subroutine initInterp
+
+  !-----------------------------------------------------------------------
+  subroutine copy_metadata(ncidi, ncido)
+    !
+    ! !DESCRIPTION:
+    ! Copy any necessary global metadata from the input file to the output file
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncidi ! input (source) file
+    type(file_desc_t), intent(inout) :: ncido ! output (destination) file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'copy_metadata'
+    !-----------------------------------------------------------------------
+
+    call ncd_redef(ncido)
+    call copy_issue_fixed_metadata(ncidi, ncido)
+    call ncd_enddef(ncido)
+
+  end subroutine copy_metadata
+
 
   !-----------------------------------------------------------------------
   function skip_var(iflag_interpinic)
@@ -797,9 +837,6 @@ contains
        call endrun('Unhandled interp_method'//errMsg(sourcefile, __LINE__))
     end select
 
-    deallocate(subgridi%lat, subgridi%lon, subgridi%coslat)
-    deallocate(subgrido%lat, subgrido%lon, subgrido%coslat)
-    
   end subroutine findMinDist
 
  !=======================================================================
@@ -1066,11 +1103,11 @@ contains
     real(r8), pointer   :: rbuf2do_levelsi(:,:) ! array on output horiz grid, but input levels
     ! --------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2di%get_vec_beg() == begi, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2di%get_vec_end() == endi, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2do%get_vec_beg() == bego, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(var2do%get_vec_end() == endo, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(sgridindex) == (/endo/)), sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2di%get_vec_beg() == begi, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2di%get_vec_end() == endi, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2do%get_vec_beg() == bego, sourcefile, __LINE__)
+    SHR_ASSERT_FL(var2do%get_vec_end() == endo, sourcefile, __LINE__)
 
     multilevel_interpolator => interp_multilevel_container%find_interpolator( &
          lev_dimname = var2do%get_lev_dimname(), &
@@ -1132,6 +1169,7 @@ contains
     call var2do%writevar_double(rbuf2do)
        
     deallocate(rbuf2do, rbuf2do_levelsi)
+    multilevel_interpolator => null()
 
   end subroutine interp_2d_double
 

@@ -35,7 +35,7 @@ if ($ProgDir) {
 }
 # The namelist definition file contains entries for all namelist variables that
 # can be output by build-namelist.
-my $nl_definition_file = "$cfgdir/../../bld/namelist_files/namelist_definition_clm4_5.xml";
+my $nl_definition_file = "$cfgdir/../../bld/namelist_files/namelist_definition_ctsm.xml";
 (-f "$nl_definition_file")  or  die <<"EOF";
 ** $ProgName - Cannot find namelist definition file \"$nl_definition_file\" **
 EOF
