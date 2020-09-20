@@ -93,6 +93,11 @@
   </compset>
 
   <compset>
+    <alias>I2000Clm51BgcCropGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM51%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>I2000Clm51BgcGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM51%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
