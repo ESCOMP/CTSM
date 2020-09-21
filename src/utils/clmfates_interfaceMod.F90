@@ -35,6 +35,7 @@ module CLMFatesInterfaceMod
 #include "shr_assert.h"
    use PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
+   use shr_infnan_mod    , only : isnan => shr_infnan_isnan
    use decompMod         , only : bounds_type
    use WaterStateBulkType    , only : waterstatebulk_type
    use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
@@ -820,9 +821,9 @@ module CLMFatesInterfaceMod
              ft = p-natpft_lb+1 ! pfts ordered from 1. 
              if (natveg_patch_exists(g, p)) then
 !              this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,p)
-               this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = 5.0_r8
-               this%fates(nc)%bc_in(s)%hlm_sp_tsai(ft) = 1.0_r8
-               this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = 20.0_r8
+               this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = 0.5_r8
+               this%fates(nc)%bc_in(s)%hlm_sp_tsai(ft) = 0.2_r8
+               this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = 10.0_r8
              end if ! patch exists
            end do ! p
          end if ! SP
@@ -1048,6 +1049,7 @@ module CLMFatesInterfaceMod
 
           ! Set the bareground patch indicator
           patch%is_bareground(col%patchi(c)) = .true.
+          !this is hardwiring something to the 'youngest patch'
           npatch = this%fates(nc)%sites(s)%youngest_patch%patchno
 
           ! Precision errors on the canopy_fraction_pa sum, even small (e-12)
@@ -1059,9 +1061,14 @@ module CLMFatesInterfaceMod
           patch%wt_ed(col%patchi(c)) = max(0.0_r8, &
                1.0_r8-sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)))
 
-          if(sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))>1.0_r8)then
+if(isnan(patch%wt_ed(col%patchi(c))))then
+         p = col%patchi(c)
+             write(*,*) 'bg nan in interface',patch%wt_ed(p),p,this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)
+end if
+          if(sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))>1.0_r8+1.0e-12_r8)then
              write(iulog,*)'Projected Canopy Area of all FATES patches'
-             write(iulog,*)'cannot exceed 1.0'
+             write(iulog,*)'cannot exceed 1.0',this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)
+             write(iulog,*) 'sum', sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))
              !end_run()
           end if
 
@@ -1082,7 +1089,9 @@ module CLMFatesInterfaceMod
              hbot(p) = this%fates(nc)%bc_out(s)%hbot_pa(ifp)
              htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
              frac_veg_nosno_alb(p) = this%fates(nc)%bc_out(s)%frac_veg_nosno_alb_pa(ifp)
-
+            if(isnan(patch%wt_ed(col%patchi(c))))then
+             write(*,*) 'nan in interface',patch%wt_ed(p),p,this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+             end if
              ! Note that while we pass the following values at this point
              ! we have to send the same values after each time-step because
              ! the HLM keeps changing the value and re-setting, so we
