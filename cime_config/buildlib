@@ -69,7 +69,7 @@ def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
 # ======================================================================
 
 CTSM_BLD_DIR   = {ctsm_bld_dir}
-CTSM_INC       = $(CTSM_BLD_DIR)/ctsm/obj
+CTSM_INC       = $(CTSM_BLD_DIR)/clm/obj
 
 # ======================================================================
 # The following settings should be included in an atmosphere model's build.
