@@ -66,7 +66,7 @@ def buildnml(case, caseroot, compname):
     # Set ctsmconf
     # -----------------------------------------------------
 
-    ctsmconf = os.path.join(caseroot, "Buildconf", "ctsmconf")
+    ctsmconf = os.path.join(caseroot, "Buildconf", compname+"conf")
     if not os.path.isdir(ctsmconf):
         os.makedirs(ctsmconf)
 
@@ -80,7 +80,7 @@ def buildnml(case, caseroot, compname):
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
 
     config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
-    config_cache_path = os.path.join(caseroot, "Buildconf", "ctsmconf", "config_cache.xml")
+    config_cache_path = os.path.join(caseroot, "Buildconf", compname+"conf", "config_cache.xml")
     with open(config_cache_path, 'w') as config_cache_file:
         config_cache_file.write(config_cache_text)
 
@@ -154,7 +154,7 @@ def buildnml(case, caseroot, compname):
     
     lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
     
-    config_cache_file = os.path.join(caseroot,"Buildconf","ctsmconf","config_cache.xml")
+    config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
 
     # -----------------------------------------------------
     # Clear out old data
