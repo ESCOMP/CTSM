@@ -1,14 +1,13 @@
 ===============================================================
 Tag name:  ctsm5.1.dev001
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Wed Sep 23 02:16:01 MDT 2020
+Date: Wed Sep 23 02:29:08 MDT 2020
 One-line Summary: Start the clm5_1 physics series, with some changes to the fire model from Fang Li
 
 Purpose of changes
 ------------------
 
-
-Fang's latest Fire version - includes allowing clm5.1 phys version. New physics option is added
+Fang Li's latest Fire version - includes allowing clm5.1 phys version. New physics option is added
 called "clm5_1", with currently the new feature to use the latest fire changes. This has some
 adjustments to the fire model and includes some changes to the parameter file. Other new features
 will be added into clm5_1 in future tags.
@@ -114,6 +113,8 @@ Pull Requests that document the changes (include PR ids):
   #1151 -- Move btran2 to inside CNFireBase
   #1150 -- ctsm5.1 starting point
   #1157 -- Urban mksurfdata_map changes
+  #1149 -- LILACSMOKE test change
+  #1146 -- Add --project to LILACS create_newcase
 
 ===============================================================
 ===============================================================
