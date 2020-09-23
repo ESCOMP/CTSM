@@ -15,14 +15,8 @@ module CNFireBaseMod
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
-  use shr_strdata_mod                    , only : shr_strdata_type, shr_strdata_create, shr_strdata_print
-  use shr_strdata_mod                    , only : shr_strdata_advance
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog
-  use spmdMod                            , only : masterproc, mpicom, comp_id
-  use fileutils                          , only : getavu, relavu
-  use decompMod                          , only : gsmap_lnd_gdc2glo
-  use domainMod                          , only : ldomain
   use pftconMod                          , only : noveg, pftcon
   use abortutils                         , only : endrun
   use decompMod                          , only : bounds_type
@@ -36,13 +30,13 @@ module CNFireBaseMod
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use EnergyFluxType                     , only : energyflux_type
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
-  use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
+  use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType               , only : wateratm2lndbulk_type
   use GridcellType                       , only : grc
   use ColumnType                         , only : col
   use PatchType                          , only : patch
-  use mct_mod
-  use CNFireMethodMod                    , only : cnfire_method_type
+  use FireMethodType                     , only : fire_method_type
+  use FireDataBaseType                   , only : fire_base_type
   !
   implicit none
   private
@@ -50,9 +44,6 @@ module CNFireBaseMod
   ! !PUBLIC TYPES:
   public :: cnfire_base_type
 
-  integer, private, parameter :: num_fp = 2   ! Number of pools relevent for fire
-  integer, private, parameter :: lit_fp = 1   ! Pool for liter
-  integer, private, parameter :: cwd_fp = 2   ! Pool for CWD Course woody debris
   type, public :: cnfire_const_type
       ! !PRIVATE MEMBER DATA:
       real(r8) :: borealat = 40._r8                    ! Latitude for boreal peat fires
@@ -70,7 +61,8 @@ module CNFireBaseMod
       real(r8) :: cropfire_a1 = 0.3_r8                 ! a1 parameter for cropland fire in (Li et. al., 2014) (/hr)
       real(r8) :: occur_hi_gdp_tree = 0.39_r8          ! fire occurance for high GDP areas that are tree dominated (fraction)
 
-      real(r8) :: cmb_cmplt_fact(num_fp) = (/ 0.5_r8, 0.25_r8 /) ! combustion completion factor (unitless)
+      real(r8) :: cmb_cmplt_fact_litter = 0.5_r8       ! combustion completion factor for litter (unitless)
+      real(r8) :: cmb_cmplt_fact_cwd    = 0.25_r8      ! combustion completion factor for CWD (unitless)
   end type
 
   type, public :: params_type
@@ -79,34 +71,26 @@ module CNFireBaseMod
   end type params_type
 
   !
-  type, abstract, extends(cnfire_method_type) :: cnfire_base_type
+  type, abstract, extends(fire_base_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
-
-      real(r8), public, pointer :: forc_lnfm(:)        ! Lightning frequency
-      real(r8), public, pointer :: forc_hdm(:)         ! Human population density
-
-      type(shr_strdata_type) :: sdat_hdm    ! Human population density input data stream
-      type(shr_strdata_type) :: sdat_lnfm   ! Lightning input data stream
-
+      ! !PUBLIC MEMBER DATA (used by extensions of the base class):
+      real(r8), public, pointer :: btran2_patch   (:)   ! patch root zone soil wetness factor (0 to 1)
 
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: CNFireInit        ! Initialization of CNFire
-      procedure, public :: CNFireReadParams  ! Read in constant parameters from the paramsfile
-      procedure, public :: CNFireReadNML     ! Read in namelist for CNFire
-      procedure, public :: CNFireInterp      ! Interpolate fire data
-      procedure, public :: CNFireArea        ! Calculate fire area
-      procedure, public :: CNFireFluxes      ! Calculate fire fluxes
-      procedure(need_lightning_and_popdens_interface), public, deferred :: &
-           need_lightning_and_popdens ! Returns true if need lightning & popdens
-      !
+      procedure, public :: FireInit => CNFireInit        ! Initialization of Fire
+      procedure, public :: FireReadNML                   ! Read in namelist for CNFire
+      procedure, public :: CNFireRestart                 ! Restart for CNFire
+      procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
+      procedure, public :: CNFireArea                    ! Calculate fire area
+      procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
+      procedure, public :: CNFire_calc_fire_root_wetness ! Calcualte CN-fire specific root wetness
       ! !PRIVATE MEMBER FUNCTIONS:
-      procedure, private :: hdm_init    ! position datasets for dynamic human population density
-      procedure, private :: hdm_interp  ! interpolates between two years of human pop. density file data
-      procedure, private :: lnfm_init   ! position datasets for Lightning
-      procedure, private :: lnfm_interp ! interpolates between two years of Lightning file data
+      procedure, private :: InitAllocate                 ! Memory allocation of Fire
+      procedure, private :: InitHistory                  ! History file assignment of fire
+      !
   end type cnfire_base_type
   !-----------------------------------------------------------------------
 
@@ -140,33 +124,139 @@ contains
     !
     ! !DESCRIPTION:
     ! Initialize CN Fire module
-    ! !USES:
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    character(len=*),  intent(in) :: NLFilename
+    !-----------------------------------------------------------------------
+    ! Call the base-class Initialization method
+    call this%BaseFireInit( bounds, NLFilename )
+
+    ! Allocate memory
+    call this%InitAllocate( bounds )
+    ! History file
+    call this%InitHistory( bounds )
+  end subroutine CNFireInit
+  !----------------------------------------------------------------------
+
+  subroutine InitAllocate( this, bounds )
+    !
+    ! Initiaze memory allocate's
     use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
     class(cnfire_base_type) :: this
-    type(bounds_type), intent(in) :: bounds  
-    character(len=*),  intent(in) :: NLFilename
+    type(bounds_type), intent(in) :: bounds
     !-----------------------------------------------------------------------
+    integer :: begp, endp
+    !------------------------------------------------------------------------
+    begp = bounds%begp; endp= bounds%endp
 
-    if ( this%need_lightning_and_popdens() ) then
-       ! Allocate lightning forcing data
-       allocate( this%forc_lnfm(bounds%begg:bounds%endg) )
-       this%forc_lnfm(bounds%begg:) = nan
-       ! Allocate pop dens forcing data
-       allocate( this%forc_hdm(bounds%begg:bounds%endg) )
-       this%forc_hdm(bounds%begg:) = nan
+    allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
 
-       call this%hdm_init(bounds, NLFilename)
-       call this%hdm_interp(bounds)
-       call this%lnfm_init(bounds, NLFilename)
-       call this%lnfm_interp(bounds)
-    end if
-
-  end subroutine CNFireInit
+  end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
-  subroutine CNFireReadNML( this, NLFilename )
+  subroutine InitHistory( this, bounds )
+    !
+    ! Initailizae history variables
+    use clm_varcon      , only : spval
+    use histFileMod     , only : hist_addfld1d
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    !-----------------------------------------------------------------------
+    integer :: begp, endp
+    !------------------------------------------------------------------------
+    begp = bounds%begp; endp= bounds%endp
+    this%btran2_patch(begp:endp) = spval
+    call hist_addfld1d(fname='BTRAN2', units='unitless',  &
+         avgflag='A', long_name='root zone soil wetness factor', &
+         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
+  end subroutine InitHistory
+
+  !----------------------------------------------------------------------
+  subroutine CNFireRestart( this, bounds, ncid, flag )
+    use ncdio_pio       , only : ncd_double, file_desc_t
+    use restUtilMod     , only : restartvar
+    implicit none
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+
+    logical :: readvar
+
+    call restartvar(ncid=ncid, flag=flag, varname='btran2', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%btran2_patch)
+  end subroutine CNFireRestart
+
+  !----------------------------------------------------------------------
+  subroutine CNFire_calc_fire_root_wetness( this, bounds, nlevgrnd, num_exposedvegp, filter_exposedvegp, &
+                                     waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+    !
+    ! Calculate the root wetness term that will be used by the fire model
+    !
+    use pftconMod                 , only : pftcon
+    use PatchType                 , only : patch
+    use WaterStateBulkType        , only : waterstatebulk_type
+    use SoilStateType             , only : soilstate_type
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    class(cnfire_base_type) :: this
+    type(bounds_type)      , intent(in)   :: bounds                         !bounds
+    integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
+    integer                , intent(in)   :: num_exposedvegp                !number of filters
+    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    type(soilstate_type)   , intent(in)   :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    ! !LOCAL VARIABLES:
+    real(r8), parameter :: btran0 = 0.0_r8  ! initial value
+    real(r8) :: smp_node, s_node  !temporary variables
+    real(r8) :: smp_node_lf       !temporary variable
+    integer :: p, f, j, c, l      !indices
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
+
+    associate(                                                &
+         smpso         => pftcon%smpso                      , & ! Input:  soil water potential at full stomatal opening (mm)
+         smpsc         => pftcon%smpsc                      , & ! Input:  soil water potential at full stomatal closure (mm)
+         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
+         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
+         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         )
+
+      do f = 1, num_exposedvegp
+         p = filter_exposedvegp(f)
+         btran2(p)   = btran0
+      end do
+      do j = 1,nlevgrnd
+         do f = 1, num_exposedvegp
+            p = filter_exposedvegp(f)
+            c = patch%column(p)
+            l = patch%landunit(p)
+            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+
+            call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
+
+            smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf)
+            btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
+                    (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
+         end do
+      end do
+    end associate 
+
+  end subroutine CNFire_calc_fire_root_wetness
+
+  !----------------------------------------------------------------------
+  subroutine FireReadNML( this, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read the namelist for CNFire
@@ -186,18 +276,18 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'CNFireReadNML'
+    character(len=*), parameter :: subname = 'FireReadNML'
     character(len=*), parameter :: nmlname = 'lifire_inparm'
     !-----------------------------------------------------------------------
     real(r8) :: cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha
     real(r8) :: non_boreal_peatfire_c, cropfire_a1
     real(r8) :: rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree
-    real(r8) :: lfuel, ufuel, cmb_cmplt_fact(num_fp)
+    real(r8) :: lfuel, ufuel, cmb_cmplt_fact_litter, cmb_cmplt_fact_cwd
 
     namelist /lifire_inparm/ cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha, &
                              non_boreal_peatfire_c, cropfire_a1,                &
                              rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree, &
-                             lfuel, ufuel, cmb_cmplt_fact
+                             lfuel, ufuel, cmb_cmplt_fact_litter, cmb_cmplt_fact_cwd
 
     if ( this%need_lightning_and_popdens() ) then
        cli_scale                 = cnfire_const%cli_scale
@@ -212,7 +302,8 @@ contains
        bt_min                    = cnfire_const%bt_min
        bt_max                    = cnfire_const%bt_max
        occur_hi_gdp_tree         = cnfire_const%occur_hi_gdp_tree
-       cmb_cmplt_fact(:)         = cnfire_const%cmb_cmplt_fact(:)
+       cmb_cmplt_fact_litter     = cnfire_const%cmb_cmplt_fact_litter
+       cmb_cmplt_fact_cwd        = cnfire_const%cmb_cmplt_fact_cwd
        ! Initialize options to default values, in case they are not specified in
        ! the namelist
 
@@ -244,7 +335,8 @@ contains
        call shr_mpi_bcast (bt_min                  , mpicom)
        call shr_mpi_bcast (bt_max                  , mpicom)
        call shr_mpi_bcast (occur_hi_gdp_tree       , mpicom)
-       call shr_mpi_bcast (cmb_cmplt_fact          , mpicom)
+       call shr_mpi_bcast (cmb_cmplt_fact_litter   , mpicom)
+       call shr_mpi_bcast (cmb_cmplt_fact_cwd      , mpicom)
 
        cnfire_const%cli_scale                 = cli_scale
        cnfire_const%boreal_peatfire_c         = boreal_peatfire_c
@@ -258,7 +350,8 @@ contains
        cnfire_const%bt_min                    = bt_min
        cnfire_const%bt_max                    = bt_max
        cnfire_const%occur_hi_gdp_tree         = occur_hi_gdp_tree
-       cnfire_const%cmb_cmplt_fact(:)         = cmb_cmplt_fact(:)
+       cnfire_const%cmb_cmplt_fact_litter     = cmb_cmplt_fact_litter
+       cnfire_const%cmb_cmplt_fact_cwd        = cmb_cmplt_fact_cwd
 
        if (masterproc) then
           write(iulog,*) ' '
@@ -268,25 +361,7 @@ contains
        end if
     end if
 
-  end subroutine CNFireReadNML
-
-  !-----------------------------------------------------------------------
-  subroutine CNFireInterp(this,bounds)
-    !
-    ! !DESCRIPTION:
-    ! Interpolate CN Fire datasets
-    !
-    ! !ARGUMENTS:
-    class(cnfire_base_type) :: this
-    type(bounds_type), intent(in) :: bounds  
-    !-----------------------------------------------------------------------
-
-    if ( this%need_lightning_and_popdens() ) then
-       call this%hdm_interp(bounds)
-       call this%lnfm_interp(bounds)
-    end if
-
-  end subroutine CNFireInterp
+  end subroutine FireReadNML
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -432,7 +507,8 @@ contains
          fr_fcel                             => pftcon%fr_fcel                                                    , & ! Input: 
          fr_flig                             => pftcon%fr_flig                                                    , & ! Input: 
 
-         cmb_cmplt_fact                      => cnfire_const%cmb_cmplt_fact                                       , & ! Input:  [real(r8) (:)     ]  Combustion completion factor (unitless)
+         cmb_cmplt_fact_litter               => cnfire_const%cmb_cmplt_fact_litter                                , & ! Input:  [real(r8) (:)     ]  Combustion completion factor for litter (unitless)
+         cmb_cmplt_fact_cwd                  => cnfire_const%cmb_cmplt_fact_cwd                                   , & ! Input:  [real(r8) (:)     ]  Combustion completion factor for CWD (unitless)
          
          nind                                => dgvs_inst%nind_patch                                              , & ! Input:  [real(r8) (:)     ]  number of individuals (#/m2)                      
          
@@ -917,11 +993,11 @@ contains
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * &
-                      cmb_cmplt_fact(lit_fp)
+                      cmb_cmplt_fact_litter
               end if
               if ( is_cwd(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
-                      (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
+                      (f-baf_crop(c)) * cmb_cmplt_fact_cwd
               end if
            end do
 
@@ -929,11 +1005,11 @@ contains
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
                  m_decomp_npools_to_fire_vr(c,j,l) = decomp_npools_vr(c,j,l) * f * &
-                      cmb_cmplt_fact(lit_fp)
+                      cmb_cmplt_fact_litter
               end if
               if ( is_cwd(l) ) then
                  m_decomp_npools_to_fire_vr(c,j,l) = decomp_npools_vr(c,j,l) * &
-                      (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
+                      (f-baf_crop(c)) * cmb_cmplt_fact_cwd
               end if
            end do
 
@@ -1005,318 +1081,5 @@ contains
     call readNcdioScalar(ncid, 'ignition_efficiency', subname, cnfire_params%ignition_efficiency)
 
   end subroutine CNFireReadParams
-
-  !-----------------------------------------------------------------------
-  subroutine hdm_init( this, bounds, NLFilename )
-   !
-   ! !DESCRIPTION:
-   ! Initialize data stream information for population density.
-   !
-   ! !USES:
-   use clm_varctl       , only : inst_name
-   use clm_time_manager , only : get_calendar
-   use ncdio_pio        , only : pio_subsystem
-   use shr_pio_mod      , only : shr_pio_getiotype
-   use clm_nlUtilsMod   , only : find_nlgroup_name
-   use ndepStreamMod    , only : clm_domain_mct
-   use histFileMod      , only : hist_addfld1d
-   !
-   ! !ARGUMENTS:
-   implicit none
-   class(cnfire_base_type)       :: this
-   type(bounds_type), intent(in) :: bounds  
-   character(len=*),  intent(in) :: NLFilename   ! Namelist filename
-   !
-   ! !LOCAL VARIABLES:
-   integer            :: stream_year_first_popdens   ! first year in pop. dens. stream to use
-   integer            :: stream_year_last_popdens    ! last year in pop. dens. stream to use
-   integer            :: model_year_align_popdens    ! align stream_year_first_hdm with 
-   integer            :: nu_nml                      ! unit for namelist file
-   integer            :: nml_error                   ! namelist i/o error flag
-   type(mct_ggrid)    :: dom_clm                     ! domain information 
-   character(len=CL)  :: stream_fldFileName_popdens  ! population density streams filename
-   character(len=CL)  :: popdensmapalgo = 'bilinear' ! mapping alogrithm for population density
-   character(len=CL)  :: popdens_tintalgo = 'nearest'! time interpolation alogrithm for population density
-   character(*), parameter :: subName = "('hdmdyn_init')"
-   character(*), parameter :: F00 = "('(hdmdyn_init) ',4a)"
-   !-----------------------------------------------------------------------
-
-   namelist /popd_streams/          &
-        stream_year_first_popdens,  &
-        stream_year_last_popdens,   &
-        model_year_align_popdens,   &
-        popdensmapalgo,             &
-        stream_fldFileName_popdens, &
-        popdens_tintalgo
-
-   ! Default values for namelist
-   stream_year_first_popdens  = 1       ! first year in stream to use
-   stream_year_last_popdens   = 1       ! last  year in stream to use
-   model_year_align_popdens   = 1       ! align stream_year_first_popdens with this model year
-   stream_fldFileName_popdens = ' '
-
-   ! Read popd_streams namelist
-   if (masterproc) then
-      nu_nml = getavu()
-      open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-      call find_nlgroup_name(nu_nml, 'popd_streams', status=nml_error)
-      if (nml_error == 0) then
-         read(nu_nml, nml=popd_streams,iostat=nml_error)
-         if (nml_error /= 0) then
-            call endrun(msg='ERROR reading popd_streams namelist'//errMsg(sourcefile, __LINE__))
-         end if
-      end if
-      close(nu_nml)
-      call relavu( nu_nml )
-   endif
-
-   call shr_mpi_bcast(stream_year_first_popdens, mpicom)
-   call shr_mpi_bcast(stream_year_last_popdens, mpicom)
-   call shr_mpi_bcast(model_year_align_popdens, mpicom)
-   call shr_mpi_bcast(stream_fldFileName_popdens, mpicom)
-   call shr_mpi_bcast(popdens_tintalgo, mpicom)
-
-   if (masterproc) then
-      write(iulog,*) ' '
-      write(iulog,*) 'popdens_streams settings:'
-      write(iulog,*) '  stream_year_first_popdens  = ',stream_year_first_popdens  
-      write(iulog,*) '  stream_year_last_popdens   = ',stream_year_last_popdens   
-      write(iulog,*) '  model_year_align_popdens   = ',model_year_align_popdens   
-      write(iulog,*) '  stream_fldFileName_popdens = ',stream_fldFileName_popdens
-      write(iulog,*) '  popdens_tintalgo           = ',popdens_tintalgo
-      write(iulog,*) ' '
-   endif
-
-   call clm_domain_mct (bounds, dom_clm)
-
-   call shr_strdata_create(this%sdat_hdm,name="clmhdm",     &
-        pio_subsystem=pio_subsystem,                   & 
-        pio_iotype=shr_pio_getiotype(inst_name),       &
-        mpicom=mpicom, compid=comp_id,                 &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,        &
-        nxg=ldomain%ni, nyg=ldomain%nj,                &
-        yearFirst=stream_year_first_popdens,           &
-        yearLast=stream_year_last_popdens,             &
-        yearAlign=model_year_align_popdens,            &
-        offset=0,                                      &
-        domFilePath='',                                &
-        domFileName=trim(stream_fldFileName_popdens),  &
-        domTvarName='time',                            &
-        domXvarName='lon' ,                            &
-        domYvarName='lat' ,                            &  
-        domAreaName='area',                            &
-        domMaskName='mask',                            &
-        filePath='',                                   &
-        filename=(/trim(stream_fldFileName_popdens)/) , &
-        fldListFile='hdm',                             &
-        fldListModel='hdm',                            &
-        fillalgo='none',                               &
-        mapalgo=popdensmapalgo,                        &
-        calendar=get_calendar(),                       &
-        tintalgo=popdens_tintalgo,                     &
-        taxmode='extend'                           )
-
-   if (masterproc) then
-      call shr_strdata_print(this%sdat_hdm,'population density data')
-   endif
-
-   ! Add history fields
-   call hist_addfld1d (fname='HDM', units='counts/km^2',      &
-         avgflag='A', long_name='human population density',   &
-         ptr_lnd=this%forc_hdm, default='inactive')
-
-  end subroutine hdm_init
-  
-  !-----------------------------------------------------------------------
-  subroutine hdm_interp( this, bounds)
-  !
-  ! !DESCRIPTION:
-  ! Interpolate data stream information for population density.
-  !
-  ! !USES:
-  use clm_time_manager, only : get_curr_date
-  !
-  ! !ARGUMENTS:
-  class(cnfire_base_type)       :: this
-  type(bounds_type), intent(in) :: bounds  
-  !
-  ! !LOCAL VARIABLES:
-  integer :: g, ig
-  integer :: year    ! year (0, ...) for nstep+1
-  integer :: mon     ! month (1, ..., 12) for nstep+1
-  integer :: day     ! day of month (1, ..., 31) for nstep+1
-  integer :: sec     ! seconds into current date for nstep+1
-  integer :: mcdate  ! Current model date (yyyymmdd)
-  !-----------------------------------------------------------------------
-
-   call get_curr_date(year, mon, day, sec)
-   mcdate = year*10000 + mon*100 + day
-
-   call shr_strdata_advance(this%sdat_hdm, mcdate, sec, mpicom, 'hdmdyn')
-
-   ig = 0
-   do g = bounds%begg,bounds%endg
-      ig = ig+1
-      this%forc_hdm(g) = this%sdat_hdm%avs(1)%rAttr(1,ig)
-   end do
-   
-  end subroutine hdm_interp
-
-  !-----------------------------------------------------------------------
-  subroutine lnfm_init( this, bounds, NLFilename )
-  !
-  ! !DESCRIPTION:
-  !
-  ! Initialize data stream information for Lightning.
-  !
-  ! !USES:
-  use clm_varctl       , only : inst_name
-  use clm_time_manager , only : get_calendar
-  use ncdio_pio        , only : pio_subsystem
-  use shr_pio_mod      , only : shr_pio_getiotype
-  use clm_nlUtilsMod   , only : find_nlgroup_name
-  use ndepStreamMod    , only : clm_domain_mct
-  use histFileMod      , only : hist_addfld1d
-  !
-  ! !ARGUMENTS:
-  implicit none
-  class(cnfire_base_type)       :: this
-  type(bounds_type), intent(in) :: bounds  
-  character(len=*),  intent(in) :: NLFilename
-  !
-  ! !LOCAL VARIABLES:
-  integer            :: stream_year_first_lightng  ! first year in Lightning stream to use
-  integer            :: stream_year_last_lightng   ! last year in Lightning stream to use
-  integer            :: model_year_align_lightng   ! align stream_year_first_lnfm with 
-  integer            :: nu_nml                     ! unit for namelist file
-  integer            :: nml_error                  ! namelist i/o error flag
-  type(mct_ggrid)    :: dom_clm                    ! domain information 
-  character(len=CL)  :: stream_fldFileName_lightng ! lightning stream filename to read
-  character(len=CL)  :: lightng_tintalgo = 'linear'! time interpolation alogrithm
-  character(len=CL)  :: lightngmapalgo = 'bilinear'! Mapping alogrithm
-  character(*), parameter :: subName = "('lnfmdyn_init')"
-  character(*), parameter :: F00 = "('(lnfmdyn_init) ',4a)"
-  !-----------------------------------------------------------------------
-
-   namelist /light_streams/         &
-        stream_year_first_lightng,  &
-        stream_year_last_lightng,   &
-        model_year_align_lightng,   &
-        lightngmapalgo,             &
-        stream_fldFileName_lightng, &
-        lightng_tintalgo
-
-   ! Default values for namelist
-    stream_year_first_lightng  = 1      ! first year in stream to use
-    stream_year_last_lightng   = 1      ! last  year in stream to use
-    model_year_align_lightng   = 1      ! align stream_year_first_lnfm with this model year
-    stream_fldFileName_lightng = ' '
-
-   ! Read light_streams namelist
-   if (masterproc) then
-      nu_nml = getavu()
-      open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-      call find_nlgroup_name(nu_nml, 'light_streams', status=nml_error)
-      if (nml_error == 0) then
-         read(nu_nml, nml=light_streams,iostat=nml_error)
-         if (nml_error /= 0) then
-            call endrun(msg='ERROR reading light_streams namelist'//errMsg(sourcefile, __LINE__))
-         end if
-      end if
-      close(nu_nml)
-      call relavu( nu_nml )
-   endif
-
-   call shr_mpi_bcast(stream_year_first_lightng, mpicom)
-   call shr_mpi_bcast(stream_year_last_lightng, mpicom)
-   call shr_mpi_bcast(model_year_align_lightng, mpicom)
-   call shr_mpi_bcast(stream_fldFileName_lightng, mpicom)
-   call shr_mpi_bcast(lightng_tintalgo, mpicom)
-
-   if (masterproc) then
-      write(iulog,*) ' '
-      write(iulog,*) 'light_stream settings:'
-      write(iulog,*) '  stream_year_first_lightng  = ',stream_year_first_lightng  
-      write(iulog,*) '  stream_year_last_lightng   = ',stream_year_last_lightng   
-      write(iulog,*) '  model_year_align_lightng   = ',model_year_align_lightng   
-      write(iulog,*) '  stream_fldFileName_lightng = ',stream_fldFileName_lightng
-      write(iulog,*) '  lightng_tintalgo           = ',lightng_tintalgo
-      write(iulog,*) ' '
-   endif
-
-   call clm_domain_mct (bounds, dom_clm)
-
-   call shr_strdata_create(this%sdat_lnfm,name="clmlnfm",  &
-        pio_subsystem=pio_subsystem,                  & 
-        pio_iotype=shr_pio_getiotype(inst_name),      &
-        mpicom=mpicom, compid=comp_id,                &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,       &
-        nxg=ldomain%ni, nyg=ldomain%nj,               &
-        yearFirst=stream_year_first_lightng,          &
-        yearLast=stream_year_last_lightng,            &
-        yearAlign=model_year_align_lightng,           &
-        offset=0,                                     &
-        domFilePath='',                               &
-        domFileName=trim(stream_fldFileName_lightng), &
-        domTvarName='time',                           &
-        domXvarName='lon' ,                           &
-        domYvarName='lat' ,                           &  
-        domAreaName='area',                           &
-        domMaskName='mask',                           &
-        filePath='',                                  &
-        filename=(/trim(stream_fldFileName_lightng)/),&
-        fldListFile='lnfm',                           &
-        fldListModel='lnfm',                          &
-        fillalgo='none',                              &
-        tintalgo=lightng_tintalgo,                    &
-        mapalgo=lightngmapalgo,                       &
-        calendar=get_calendar(),                      &
-        taxmode='cycle'                            )
-
-   if (masterproc) then
-      call shr_strdata_print(this%sdat_lnfm,'Lightning data')
-   endif
-
-   ! Add history fields
-   call hist_addfld1d (fname='LNFM', units='counts/km^2/hr',  &
-         avgflag='A', long_name='Lightning frequency',        &
-         ptr_lnd=this%forc_lnfm, default='inactive')
-
-  end subroutine lnfm_init
-  
-  !-----------------------------------------------------------------------
-  subroutine lnfm_interp(this, bounds )
-  !
-  ! !DESCRIPTION:
-  ! Interpolate data stream information for Lightning.
-  !
-  ! !USES:
-  use clm_time_manager, only : get_curr_date
-  !
-  ! !ARGUMENTS:
-  class(cnfire_base_type)       :: this
-  type(bounds_type), intent(in) :: bounds  
-  !
-  ! !LOCAL VARIABLES:
-  integer :: g, ig
-  integer :: year    ! year (0, ...) for nstep+1
-  integer :: mon     ! month (1, ..., 12) for nstep+1
-  integer :: day     ! day of month (1, ..., 31) for nstep+1
-  integer :: sec     ! seconds into current date for nstep+1
-  integer :: mcdate  ! Current model date (yyyymmdd)
-  !-----------------------------------------------------------------------
-
-   call get_curr_date(year, mon, day, sec)
-   mcdate = year*10000 + mon*100 + day
-
-   call shr_strdata_advance(this%sdat_lnfm, mcdate, sec, mpicom, 'lnfmdyn')
-
-   ig = 0
-   do g = bounds%begg,bounds%endg
-      ig = ig+1
-      this%forc_lnfm(g) = this%sdat_lnfm%avs(1)%rAttr(1,ig)
-   end do
-   
-  end subroutine lnfm_interp
 
 end module CNFireBaseMod

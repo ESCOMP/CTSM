@@ -4,6 +4,7 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import sys
 import subprocess
 from datetime import datetime
 
@@ -434,6 +435,7 @@ def _record_git_status(testroot, dry_run):
             now_str = now.strftime("%m%d-%H%M%S")
             git_status_filepath = git_status_filepath + '_' + now_str
         with open(git_status_filepath, 'w') as git_status_file:
+            git_status_file.write(' '.join(sys.argv) + '\n\n')
             git_status_file.write("SRCROOT: {}\n".format(ctsm_root))
             git_status_file.write(output)
 

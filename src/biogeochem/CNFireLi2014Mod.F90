@@ -39,7 +39,7 @@ module CNFireLi2014Mod
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
-  use CNFireMethodMod                    , only : cnfire_method_type
+  use FireMethodType                     , only : fire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
   !
   implicit none
@@ -160,7 +160,7 @@ contains
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
 
-         btran2             => energyflux_inst%btran2_patch                    , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
+         btran2             => this%cnfire_base_type%btran2_patch              , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
          fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
          wf                 => waterdiagnosticbulk_inst%wf_col                          , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.05 m         
          wf2                => waterdiagnosticbulk_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         

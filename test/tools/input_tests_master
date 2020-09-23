@@ -14,6 +14,9 @@ blg54 TBLtools.sh mksurfdata_map   tools__s  namelist
 smi24 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds
 bli24 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_T31_crpglc_2000^tools__ds
 
+smi04 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_f09_PtVg^tools__ds
+bli04 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_f09_PtVg^tools__ds
+
 smi53 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__o
 bli53 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__o
 smi54 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_10x15_1850^tools__ds
