@@ -74,14 +74,19 @@ module CNFireBaseMod
   type, abstract, extends(fire_base_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
+      ! !PUBLIC MEMBER DATA (used by extensions of the base class):
+      real(r8), public, pointer :: btran2_patch   (:)   ! patch root zone soil wetness factor (0 to 1)
 
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: FireReadNML       ! Read in namelist for CNFire
-      procedure, public :: CNFireReadParams  ! Read in constant parameters from the paramsfile
-      procedure, public :: CNFireArea        ! Calculate fire area
-      procedure, public :: CNFireFluxes      ! Calculate fire fluxes
+      procedure, public :: FireInit => CNFireInit        ! Initialization of Fire
+      procedure, public :: FireReadNML                   ! Read in namelist for CNFire
+      procedure, public :: CNFireRestart                 ! Restart for CNFire
+      procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
+      procedure, public :: CNFireArea                    ! Calculate fire area
+      procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
+      procedure, public :: CNFire_calc_fire_root_wetness ! Calcualte CN-fire specific root wetness
       !
   end type cnfire_base_type
   !-----------------------------------------------------------------------
@@ -112,6 +117,120 @@ module CNFireBaseMod
 contains
 
   !-----------------------------------------------------------------------
+  subroutine CNFireInit( this, bounds, NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Initialize CN Fire module
+    ! !USES:
+    use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
+    use clm_varcon      , only : spval
+    use histFileMod     , only : hist_addfld1d
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    character(len=*),  intent(in) :: NLFilename
+    !-----------------------------------------------------------------------
+    integer :: begp, endp
+    !------------------------------------------------------------------------
+    ! Call the base-class Initialization method
+    call this%BaseFireInit( bounds, NLFilename )
+
+    begp = bounds%begp; endp= bounds%endp
+
+    ! Allocate memory
+    allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
+    ! History file
+    this%btran2_patch(begp:endp) = spval
+    call hist_addfld1d(fname='BTRAN2', units='unitless',  &
+         avgflag='A', long_name='root zone soil wetness factor', &
+         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
+  end subroutine CNFireInit
+
+  !----------------------------------------------------------------------
+  subroutine CNFireRestart( this, bounds, ncid, flag )
+    use ncdio_pio       , only : ncd_double, file_desc_t
+    use restUtilMod     , only : restartvar
+    implicit none
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+
+    logical :: readvar
+
+    call restartvar(ncid=ncid, flag=flag, varname='btran2', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%btran2_patch)
+  end subroutine CNFireRestart
+
+  !----------------------------------------------------------------------
+  subroutine CNFire_calc_fire_root_wetness( this, bounds, nlevgrnd, num_exposedvegp, filter_exposedvegp, &
+                                     waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+    !
+    ! Calculate the root wetness term that will be used by the fire model
+    !
+    use pftconMod                 , only : pftcon
+    use PatchType                 , only : patch
+    use WaterStateBulkType        , only : waterstatebulk_type
+    use SoilStateType             , only : soilstate_type
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    class(cnfire_base_type) :: this
+    type(bounds_type)      , intent(in)   :: bounds                         !bounds
+    integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
+    integer                , intent(in)   :: num_exposedvegp                !number of filters
+    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    type(soilstate_type)   , intent(in)   :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    ! !LOCAL VARIABLES:
+    real(r8), parameter :: btran0 = 0.0_r8  ! initial value
+    real(r8) :: smp_node, s_node  !temporary variables
+    real(r8) :: smp_node_lf       !temporary variable
+    integer :: p, f, j, c, l      !indices
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
+
+    associate(                                                &
+         smpso         => pftcon%smpso                      , & ! Input:  soil water potential at full stomatal opening (mm)
+         smpsc         => pftcon%smpsc                      , & ! Input:  soil water potential at full stomatal closure (mm)
+         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
+         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
+         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         )
+
+      SHR_ASSERT_ALL_FL((ubound(watsat)     == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(h2osoi_vol) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(rootfr)     == (/bounds%endp,nlevgrnd/)), sourcefile, __LINE__)
+      SHR_ASSERT_ALL_FL((ubound(btran2)     == (/bounds%endp/)),          sourcefile, __LINE__)
+      do f = 1, num_exposedvegp
+         p = filter_exposedvegp(f)
+         btran2(p)   = btran0
+      end do
+      do j = 1,nlevgrnd
+         do f = 1, num_exposedvegp
+            p = filter_exposedvegp(f)
+            c = patch%column(p)
+            l = patch%landunit(p)
+            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+
+            call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
+
+            smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf)
+            btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
+                    (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
+         end do
+      end do
+    end associate 
+
+  end subroutine CNFire_calc_fire_root_wetness
+
+  !----------------------------------------------------------------------
   subroutine FireReadNML( this, NLFilename )
     !
     ! !DESCRIPTION:
