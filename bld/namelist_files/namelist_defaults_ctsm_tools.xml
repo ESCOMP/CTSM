@@ -269,7 +269,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- urban -->
 <mksrf_furban   hgrid="3x3min"   lmask="LandScan2004"
->lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc</mksrf_furban>
+>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c170724.nc</mksrf_furban>
 
 <mksrf_furban   hgrid="3x3min"   lmask="LandScan2004" sim_year="PtVg"
 >lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.c181014.nc</mksrf_furban>
