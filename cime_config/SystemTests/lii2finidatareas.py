@@ -41,7 +41,7 @@ currently used by this test, but with a new creation date.
 
 (3) Update namelist defaults to point to the new finidat file. If
 updating the out-of-the-box file is not desired, then you could instead
-point to this new finidat file with a user_nl_clm file in this testmod.
+point to this new finidat file with a user_nl_ctsm file in this testmod.
 """
 
 from CIME.XML.standard_module_setup import *
