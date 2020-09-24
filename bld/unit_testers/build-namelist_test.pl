@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1516;
+my $ntests = 1517;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1017;
 }
@@ -445,6 +445,11 @@ my %failtest = (
                                      namelst=>"reseed_dead_plants=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
+                                   },
+     "onset_threh w SP"          =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"onset_thresh_depends_on_veg=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
      "dribble_crphrv w/o CN"     =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",

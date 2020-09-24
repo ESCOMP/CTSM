@@ -2649,7 +2649,7 @@ sub setup_logic_cnphenology {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
                    'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'} );
     } else {
-       if ( defined($nl->get_value($nl->get_value($var))) ) {
+       if ( defined($nl->get_value($var)) ) {
           $log->fatal_error("$var should only be set if use_cn is on");
        }
     }
