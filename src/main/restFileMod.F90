@@ -17,7 +17,7 @@ module restFileMod
   use accumulMod       , only : accumulRest
   use clm_instMod      , only : clm_instRest
   use histFileMod      , only : hist_restart_ncd
-  use clm_varctl       , only : iulog, use_fates, use_hydrstress
+  use clm_varctl       , only : iulog, use_fates, use_hydrstress, compname
   use clm_varctl       , only : create_crop_landunit, irrigate
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
@@ -263,8 +263,8 @@ contains
        end if
        call getfil( path, file, 0 )
 
-       ! tcraig, adding xx. and .clm2 makes this more robust
-       ctest = 'xx.'//trim(caseid)//'.clm2'
+       ! tcraig, adding xx. and .compname makes this more robust
+       ctest = 'xx.'//trim(caseid)//'.'//trim(compname)
        ftest = 'xx.'//trim(file)
        status = index(trim(ftest),trim(ctest))
        if (status /= 0 .and. .not.(brnch_retain_casename)) then
@@ -466,7 +466,7 @@ contains
     character(len=*), intent(in) :: rdate   ! input date for restart file name 
     !-----------------------------------------------------------------------
 
-    restFile_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
+    restFile_filename = "./"//trim(caseid)//"."//trim(compname)//trim(inst_suffix)//&
          ".r."//trim(rdate)//".nc"
     if (masterproc) then
        write(iulog,*)'writing restart file ',trim(restFile_filename),' for model date = ',rdate
@@ -485,7 +485,7 @@ contains
     use clm_varctl           , only : caseid, ctitle, version, username, hostname, fsurdat
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
-    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevurb, nlevcan
+    use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevcan
     use clm_varpar           , only : maxpatch_glcmec, nvegwcs
     use decompMod            , only : get_proc_global
     !
@@ -518,7 +518,6 @@ contains
     call ncd_defdim(ncid , nameCohort , numCohort      ,  dimid)
 
     call ncd_defdim(ncid , 'levgrnd' , nlevgrnd       ,  dimid)
-    call ncd_defdim(ncid , 'levurb'  , nlevurb        ,  dimid)
     call ncd_defdim(ncid , 'levlak'  , nlevlak        ,  dimid)
     call ncd_defdim(ncid , 'levsno'  , nlevsno        ,  dimid)
     call ncd_defdim(ncid , 'levsno1' , nlevsno+1      ,  dimid)
@@ -528,7 +527,6 @@ contains
     if ( use_hydrstress ) then
       call ncd_defdim(ncid , 'vegwcs'  , nvegwcs        ,  dimid)
     end if
-    call ncd_defdim(ncid , 'string_length', 64        ,  dimid)
     call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
     call ncd_defdim(ncid , 'glc_nec1', maxpatch_glcmec+1, dimid)
 
@@ -680,7 +678,7 @@ contains
     !
     ! !USES:
     use decompMod,  only : get_proc_global
-    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd, nlevurb
+    use clm_varpar, only : nlevsno, nlevlak, nlevgrnd
     use clm_varctl, only : single_column, nsrest, nsrStartup
     !
     ! !ARGUMENTS:
@@ -719,7 +717,6 @@ contains
          'use_init_interp = .true. in user_nl_clm'
     call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
     call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
-    call check_dim(ncid, 'levurb'  , nlevurb)
     call check_dim(ncid, 'levlak'  , nlevlak) 
 
   end subroutine restFile_dimcheck

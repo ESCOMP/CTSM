@@ -1,4 +1,4 @@
-module CNFireLi2016Mod
+module CNFireLi2021Mod
 
 #include "shr_assert.h"
 
@@ -17,6 +17,7 @@ module CNFireLi2016Mod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
+  use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
   use clm_varcon                         , only : dzsoi_decomp
@@ -34,43 +35,44 @@ module CNFireLi2016Mod
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use EnergyFluxType                     , only : energyflux_type
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
-  use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
-  use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
+  use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
+  use Wateratm2lndBulkType               , only : wateratm2lndbulk_type
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   use FireMethodType                     , only : fire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
+  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const
   !
   implicit none
   private
   !
   ! !PUBLIC TYPES:
-  public :: cnfire_li2016_type
+  public :: cnfire_li2021_type
   !
-  type, extends(cnfire_base_type) :: cnfire_li2016_type
+  type, extends(cnfire_base_type) :: cnfire_li2021_type
      private
   contains
-    !
-    ! !PUBLIC MEMBER FUNCTIONS:
-    procedure, public :: need_lightning_and_popdens
-    procedure, public :: CNFireArea    ! Calculate fire area
-  end type cnfire_li2016_type
+     !
+     ! !PUBLIC MEMBER FUNCTIONS:
+     procedure, public :: need_lightning_and_popdens
+     procedure, public :: CNFireArea    ! Calculate fire area
+  end type cnfire_li2021_type
 
   !
   ! !PRIVATE MEMBER DATA:
   !-----------------------------------------------------------------------
-
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
 
+
   !-----------------------------------------------------------------------
   function need_lightning_and_popdens(this)
     ! !ARGUMENTS:
-    class(cnfire_li2016_type), intent(in) :: this
+    class(cnfire_li2021_type), intent(in) :: this
     logical :: need_lightning_and_popdens  ! function result
     !
     ! !LOCAL VARIABLES:
@@ -90,7 +92,7 @@ contains
     ! Computes column-level burned area 
     !
     ! !USES:
-    use clm_time_manager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
+    use clm_time_manager     , only: get_step_size, get_days_per_year, get_curr_date, get_nstep
     use clm_varpar           , only: max_patch_per_col
     use clm_varcon           , only: secspday, secsphr
     use clm_varctl           , only: spinup_state
@@ -99,7 +101,7 @@ contains
     use dynSubgridControlMod , only : run_has_transient_landcover
     !
     ! !ARGUMENTS:
-    class(cnfire_li2016_type)                             :: this
+    class(cnfire_li2021_type)                             :: this
     type(bounds_type)                     , intent(in)    :: bounds 
     integer                               , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -108,8 +110,8 @@ contains
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
-    type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
-    type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
+    type(waterdiagnosticbulk_type)        , intent(in)    :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)           , intent(in)    :: wateratm2lndbulk_inst
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -146,9 +148,9 @@ contains
     real(r8), pointer :: rh30_col(:)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(totlitc_col)           == (/bounds%endc/))                              , sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(t_soi17cm_col)         == (/bounds%endc/))                              , sourcefile, __LINE__)
+    SHR_ASSERT_ALL((ubound(totlitc_col)           == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL((ubound(t_soi17cm_col)         == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
 
     associate(                                                                      & 
          totlitc            => totlitc_col                                     , & ! Input:  [real(r8) (:)     ]  (gC/m2) total lit C (column-level mean)           
@@ -159,8 +161,6 @@ contains
          ufuel              => cnfire_const%ufuel                              , & ! Input:  [real(r8)         ]  (gC/m2) Upper threshold of fuel mass
          rh_hgh             => cnfire_const%rh_hgh                             , & ! Input:  [real(r8)         ]  (%) High relative humidity
          rh_low             => cnfire_const%rh_low                             , & ! Input:  [real(r8)         ]  (%) Low relative humidity
-         bt_min             => cnfire_const%bt_min                             , & ! Input:  [real(r8)         ]  (0-1) Minimum btran
-         bt_max             => cnfire_const%bt_max                             , & ! Input:  [real(r8)         ]  (0-1) Maximum btran
          cli_scale          => cnfire_const%cli_scale                          , & ! Input:  [real(r8)         ]  (/d) global constant for deforestation fires
          cropfire_a1        => cnfire_const%cropfire_a1                        , & ! Input:  [real(r8)         ]  (/hr) a1 parameter for cropland fire
          non_boreal_peatfire_c => cnfire_const%non_boreal_peatfire_c           , & ! Input:  [real(r8)         ]  (/hr) c parameter for non-boreal peatland fire
@@ -169,22 +169,23 @@ contains
          
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
-
+         rswf_min           => pftcon%rswf_min                                 , & ! Input:
+         rswf_max           => pftcon%rswf_max                                 , & ! Input:
          btran2             => this%cnfire_base_type%btran2_patch              , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
          fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
-         wf2                => waterdiagnosticbulk_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
+         wf2                => waterdiagnosticbulk_inst%wf2_col                , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
          
          is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool                         
          spinup_factor      => decomp_cascade_con%spinup_factor                , & ! Input:  [real(r8) (:)     ]  factor for AD spinup associated with each pool           
 
-         forc_rh            => wateratm2lndbulk_inst%forc_rh_grc                        , & ! Input:  [real(r8) (:)     ]  relative humidity                                 
+         forc_rh            => wateratm2lndbulk_inst%forc_rh_grc               , & ! Input:  [real(r8) (:)     ]  relative humidity                                 
          forc_wind          => atm2lnd_inst%forc_wind_grc                      , & ! Input:  [real(r8) (:)     ]  atmospheric wind speed (m/s)                       
          forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)                  
-         forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled rain                                              
-         forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col           , & ! Input:  [real(r8) (:)     ]  downscaled snow                                              
-         prec60             => wateratm2lndbulk_inst%prec60_patch                       , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation         
-         prec10             => wateratm2lndbulk_inst%prec10_patch                       , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation         
-         rh30               => wateratm2lndbulk_inst%rh30_patch                         , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation 
+         forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled rain                                              
+         forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled snow                                              
+         prec60             => wateratm2lndbulk_inst%prec60_patch              , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation         
+         prec10             => wateratm2lndbulk_inst%prec10_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation         
+         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation 
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column                   
          gdp_lf             => cnveg_state_inst%gdp_lf_col                     , & ! Input:  [real(r8) (:)     ]  gdp data                                          
@@ -259,7 +260,7 @@ contains
      call get_curr_date (kyr, kmo, kda, mcsec)
      dayspyr = get_days_per_year()
      ! Get model step size
-     dt      = get_step_size_real()
+     dt      = real( get_step_size(), r8 )
      !
      ! On first time-step, just set area burned to zero and exit
      !
@@ -351,11 +352,13 @@ contains
               p = col%patchi(c) + pi - 1
 
               ! For non-crop -- natural vegetation and bare-soil
-              if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+              if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1._r8 )then
                  if( .not. shr_infnan_isnan(btran2(p))) then
                     if (btran2(p)  <=  1._r8 ) then
-                       btran_col(c) = btran_col(c)+btran2(p)*patch%wtcol(p)
-                       wtlf(c)      = wtlf(c)+patch%wtcol(p)
+                       btran_col(c) = btran_col(c)+max(0._r8, min(1._r8, &
+                      (btran2(p)-rswf_min(patch%itype(p)))/(rswf_max(patch%itype(p)) &
+                      -rswf_min(patch%itype(p)))))*patch%wtcol(p)
+                        wtlf(c)      = wtlf(c)+patch%wtcol(p)
                     end if
                  end if
 
@@ -379,10 +382,10 @@ contains
                  ! whereas in fact the land cover change occurred when the column *was*
                  ! tropical closed forest.
                  if( patch%itype(p) == nbrdlf_evr_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)
+                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)*col%wtgcell(c)
                  end if
                  if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)
+                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)*col%wtgcell(c)
                  end if
 
                  if (transient_landcover) then
@@ -406,7 +409,7 @@ contains
                           ! different seasons. But having deforestation spread evenly
                           ! throughout the year is much better than having it all
                           ! concentrated on January 1.)
-                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)
+                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)*col%wtgcell(c)
                        end if
                     end if
                  end if
@@ -578,7 +581,6 @@ contains
         c = filter_soilc(fc)
         g = col%gridcell(c)
         hdmlf=this%forc_hdm(g)
-        nfire(c) = 0._r8
         if( cropf_col(c)  <  1._r8 )then
            fuelc(c) = totlitc(c)+totvegc(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            if (spinup_state == 2) then
@@ -597,17 +599,18 @@ contains
            if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then  
               afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
-              arh30=1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/90._r8))
+              arh30=1._r8-max(0.7_r8, min(1._r8,rh30_col(c)/90._r8))
               if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
-                fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8)*((1._r8 -max(0._r8,&
-                    min(1._r8,(btran_col(c)/wtlf(c)-bt_min)/(bt_max-bt_min))))**0.5_r8)
+                fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8) &
+                             *((1._r8-btran_col(c)/wtlf(c))**0.5_r8)
               else
                 fire_m   = 0._r8
               end if
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
-              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
-                         cnfire_params%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c))
+              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
+                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))*0.22_r8)  &
+                         *(1._r8-fs)*(1._r8-cropf_col(c))
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               spread_m = fire_m**0.5_r8
@@ -632,9 +635,9 @@ contains
                     cri = (4.0_r8*trotr1_col(c)+1.8_r8*trotr2_col(c))/(trotr1_col(c)+trotr2_col(c))
                     cli = (max(0._r8,min(1._r8,(cri-prec60_col(c)*secspday)/cri))**0.5)* &
                          (max(0._r8,min(1._r8,(cri-prec10_col(c)*secspday)/cri))**0.5)* &
-                         max(0.0005_r8,min(1._r8,19._r8*dtrotr_col(c)*dayspyr*secspday/dt-0.001_r8))* &
+                         (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
-                    farea_burned(c) = cli*(cli_scale/secspday)+baf_crop(c)+baf_peatf(c)
+                    farea_burned(c) = fb*cli*(cli_scale/secspday)+baf_crop(c)+baf_peatf(c)
                     ! burned area out of conversion region due to land use fire
                     fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)   
                  end if
@@ -655,4 +658,52 @@ contains
 
  end subroutine CNFireArea
 
-end module CNFireLi2016Mod
+ !----------------------------------------------------------------------
+ subroutine CNFire_calc_fire_root_wetness( this, bounds, nlevgrnd, num_exposedvegp, filter_exposedvegp, &
+                                     waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+    !
+    ! Calculate the root wetness term that will be used by the fire model
+    !
+    use pftconMod                 , only : pftcon
+    use PatchType                 , only : patch
+    use WaterStateBulkType        , only : waterstatebulk_type
+    use SoilStateType             , only : soilstate_type
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    class(cnfire_base_type) :: this
+    type(bounds_type)      , intent(in)   :: bounds                         !bounds
+    integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
+    integer                , intent(in)   :: num_exposedvegp                !number of filters
+    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    type(soilstate_type)   , intent(in)   :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    ! !LOCAL VARIABLES:
+    real(r8) :: s_node  !temporary variables
+    integer :: p, f, j, c         !indices
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
+
+    associate(                                                &
+         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
+         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
+         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         )
+
+      do j = 1,nlevgrnd
+         do f = 1, num_exposedvegp
+            p = filter_exposedvegp(f)
+            c = patch%column(p)
+            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+
+            btran2(p)   = btran2(p) + rootfr(p,j)*s_node
+         end do
+      end do
+    end associate 
+
+ end subroutine CNFire_calc_fire_root_wetness
+ !----------------------------------------------------------------------
+
+
+end module CNFireLi2021Mod

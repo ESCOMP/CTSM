@@ -125,7 +125,7 @@ while ($DONE_RUNA == 0)
     set DONE_RUNA = 1
     echo '1850-1870 run is complete'
     while ($DONE_ARCHIVE == 0) 
-       set nh0 = `ls -l $WDIR/*clm2.h0.* | egrep -c '^-'`
+       set nh0 = `ls -l $WDIR/*clm?.h0.* | egrep -c '^-'`
        echo $nh0
        if ($nh0 == 1) then
           set DONE_ARCHIVE = 1 
@@ -177,7 +177,7 @@ while ($DONE_RUNA == 0)
     set DONE_RUNA = 1
     echo '1850-1900 run is complete'
     while ($DONE_ARCHIVE == 0) 
-       set nh0 = `ls -l $WDIR/*clm2.h0.* | egrep -c '^-'`
+       set nh0 = `ls -l $WDIR/*clm?.h0.* | egrep -c '^-'`
        echo $nh0
        if ($nh0 == 1) then
           set DONE_ARCHIVE = 1 
@@ -242,7 +242,7 @@ while ($DONE_RUNA == 0)
     set DONE_RUNA = 1
     echo '1901-1989 run is complete'
     while ($DONE_ARCHIVE == 0)
-       set nh0 = `ls -l $WDIR/*clm2.h0.* | egrep -c '^-'`
+       set nh0 = `ls -l $WDIR/*clm?.h0.* | egrep -c '^-'`
        echo $nh0
        if ($nh0 == 1) then
           set DONE_ARCHIVE = 1
@@ -295,7 +295,7 @@ while ($DONE_RUNA == 0)
     set DONE_RUNA = 1
     echo '1989-2004 run is complete'
     while ($DONE_ARCHIVE == 0)
-       set nh0 = `ls -l $WDIR/*clm2.h0.* | egrep -c '^-'`
+       set nh0 = `ls -l $WDIR/*clm?.h0.* | egrep -c '^-'`
        echo $nh0
        if ($nh0 == 1) then
           set DONE_ARCHIVE = 1
@@ -349,7 +349,7 @@ while ($DONE_RUNA == 0)
     set DONE_RUNA = 1
     echo '2005-2014 run is complete'
     while ($DONE_ARCHIVE == 0)
-       set nh0 = `ls -l $WDIR/*clm2.h0.* | egrep -c '^-'`
+       set nh0 = `ls -l $WDIR/*clm?.h0.* | egrep -c '^-'`
        echo $nh0
        if ($nh0 == 1) then
           set DONE_ARCHIVE = 1

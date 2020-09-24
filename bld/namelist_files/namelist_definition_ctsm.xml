@@ -49,6 +49,15 @@ Full pathname of master restart file for a branch run. (only used if RUN_TYPE=br
 (Set with RUN_REFCASE and RUN_REFDATE)
 </entry>
 
+<entry id="compname" 
+       type="char*8" 
+       category="datasets"
+       group="clm_inparm" 
+       value="clm2"
+       valid_values="clm2,clm4,clm5" >
+Component name to use in history and restart files
+</entry>
+
 <entry id="fatmlndfrc" 
        type="char*256" 
        category="datasets"
@@ -198,12 +207,13 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc" >
 The method type to use for CNFire
 
 nofire:        Turn fire effects off
 li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric forcing
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
+li2021gswpfrc: Reference paper Li, et. al.(2021?) tuned with GSWP3 atmospheric forcing
 </entry>
 
 <entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
@@ -266,9 +276,14 @@ Global constant for deforestation fires (/day)
 Fire occurance for high GDP areas that are tree dominated (fraction)
 </entry>
 
-<entry id="cmb_cmplt_fact" type="real(2)" category="clm_physics"
+<entry id="cmb_cmplt_fact_litter" type="real" category="clm_physics"
        group="lifire_inparm" >
-Combustion completeness factor (for litter and CWD[Course Woody Debris]) (unitless)
+Combustion completeness factor for litter (unitless)
+</entry>
+
+<entry id="cmb_cmplt_fact_cwd" type="real" category="clm_physics"
+       group="lifire_inparm" >
+Combustion completeness factor for CWD[Course Woody Debris] (unitless)
 </entry>
 
 <entry id="ncrit" type="real" category="clm_physics"
@@ -968,18 +983,6 @@ Multiplier for heterotrophic respiration for max denitrification rates
 <entry id="denitrif_respiration_exponent" type="real" category="bgc"
        group="nitrif_inparm" valid_values="" >
 Exponent power for heterotrophic respiration for max denitrification rates
-(ONLY used if use_nitrif_denitrif is enabled)
-</entry>
-
-<entry id="denitrif_nitrateconc_coefficient" type="real" category="bgc"
-       group="nitrif_inparm" valid_values="" >
-Multiplier for nitrate concentration for max denitrification rates
-(ONLY used if use_nitrif_denitrif is enabled)
-</entry>
-
-<entry id="denitrif_nitrateconc_exponent" type="real" category="bgc"
-       group="nitrif_inparm" valid_values="" >
-Exponent power for nitrate concentrationfor max denitrification rates
 (ONLY used if use_nitrif_denitrif is enabled)
 </entry>
 
@@ -1971,7 +1974,7 @@ Land mask description
 
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed
@@ -2024,7 +2027,7 @@ How close in years to use when looking for an initial condition file (finidat) i
 </entry>
 
 <entry id="init_interp_sim_years" type="integer(6)"  category="default_settings"
-       group="default_settings" valid_values="1850,1979,1982,2000,2010,2013" >
+       group="default_settings" valid_values="1850,1979,2000,2003,2010,2013" >
 Simulation years you can look for in initial condition files (finidat) if interpolation is turned on (use_init_interp is .true.)
 </entry>
 

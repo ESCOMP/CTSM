@@ -1207,7 +1207,8 @@ sub setup_cmdl_run_type {
     if ($opts->{$var} eq "default" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
                   'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                  'sim_year'=>$st_year );
+                  'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, 
+                  'bgc_spinup'=>$nl_flags->{'bgc_spinup'} );
     } else {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
@@ -1485,7 +1486,7 @@ sub process_namelist_inline_logic {
   ##############################
   # namelist group: clm_inparm #
   ##############################
-  setup_logic_site_specific($nl_flags, $definition, $nl);
+  setup_logic_site_specific($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_lnd_frac($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1569,6 +1570,11 @@ sub process_namelist_inline_logic {
   # namelist group: nitrif_inparm #
   #################################
   setup_logic_nitrif_params( $nl_flags, $definition, $defaults, $nl );
+
+  #############################################
+  # namelist group: mineral_nitrogen_dynamics #
+  #############################################
+  setup_logic_mineral_nitrogen_dynamics( $opts, $nl_flags, $definition, $defaults, $nl );
 
   ####################################
   # namelist group: photosyns_inparm #
@@ -1709,7 +1715,7 @@ sub process_namelist_inline_logic {
 
 sub setup_logic_site_specific {
   # site specific requirements
-  my ($nl_flags, $definition, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   # res check prevents polluting the namelist with an unnecessary
   # false variable for every run
@@ -1740,6 +1746,9 @@ sub setup_logic_site_specific {
       $log->fatal_error("1x1_numaIA grids must use a compset with CN and CROP turned on.");
     }
   }
+  #  Set compname
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'compname',
+              'phys'=>$nl_flags->{'phys'} );
 }
 
 #-------------------------------------------------------------------------------
@@ -1817,7 +1826,8 @@ sub setup_logic_co2_type {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, $opts->{$var});
     } else {
-      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'} );
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'},
+                  'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
     }
   }
 }
@@ -1977,7 +1987,8 @@ sub setup_logic_cnfire {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my @fire_consts = ( "rh_low", "rh_hgh", "bt_min", "bt_max", "cli_scale", "boreal_peatfire_c", "non_boreal_peatfire_c",
-                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", "cmb_cmplt_fact" );
+                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", 
+                      "cmb_cmplt_fact_litter", "cmb_cmplt_fact_cwd" );
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      foreach my $item ( @fire_consts ) {
         if ( ! &value_is_true($nl_flags->{'cnfireson'} ) ) {
@@ -2187,7 +2198,7 @@ sub setup_logic_surface_dataset {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with ecosystem dynamics (use_fates=.true)." );
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
-              'hgrid'=>$nl_flags->{'res'},
+              'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
               'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
               'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
 }
@@ -2244,11 +2255,11 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $nl_flags->{'sim_year'};
        $opts->{'ignore_ic_year'} = 1; 
     } else {
-       delete( $settings{'sim_year'} );
+       $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
                        "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates",
-                       "lnd_tuning_mode"
+                       "lnd_tuning_mode", 
                      ) {
        $settings{$item}    = $nl_flags->{$item};
     }
@@ -2296,10 +2307,8 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
              my $how_close = undef;
              if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
                 $how_close = abs(1850 - $sim_yr);
-             # EBK 07/20/2020 -- This makes sure the sim_year matched is based on the sim-year
-             #                   rather than  the start year.
-             #} elsif ( $nl_flags->{'flanduse_timeseries'} eq "null" ) {
-             #   $how_close = abs($nl_flags->{'sim_year'} - $sim_yr);
+             } elsif ( $nl_flags->{'flanduse_timeseries'} eq "null" ) {
+                $how_close = abs($nl_flags->{'sim_year'} - $sim_yr);
              } else {
                 $how_close = abs($st_year - $sim_yr);
              }
@@ -2321,7 +2330,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
           }    # SIMYR:
           $settings{'sim_year'} = $closest_sim_year;
           add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $useinitvar,
-                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(),
+                      'use_cndv'=>$nl_flags->{'use_cndv'}, 'phys'=>$physv->as_string(), 'hgrid'=>$nl_flags->{'res'},
                       'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                       'use_fates'=>$nl_flags->{'use_fates'} );
           $settings{$useinitvar} = $nl->get_value($useinitvar);
@@ -2741,8 +2750,7 @@ sub setup_logic_nitrif_params {
   my ($nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( !  &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) {
-    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent",
-                 "denitrif_nitrateconc_coefficient", "denitrif_nitrateconc_exponent" );
+    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent");
     foreach my $var ( @vars ) {
        if ( defined($nl->get_value( $var ) ) ) {
          $log->fatal_error("$var is only used when use_nitrif_denitrif is turned on");
@@ -2750,6 +2758,30 @@ sub setup_logic_nitrif_params {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_mineral_nitrogen_dynamics {
+  #
+  # Logic for mineral_nitrogen_dynamics
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept" );
+  if (  &value_is_true($nl_flags->{'use_cn'}) && &value_is_true($nl->get_value('use_fun')) ) {
+    foreach my $var ( @vars ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                'use_cn'=>$nl_flags->{'use_cn'}, 'use_fun'=>$nl->get_value('use_fun') );
+    }
+  } else {
+    foreach my $var ( @vars ) {
+       if ( defined($nl->get_value( $var ) ) ) {
+         $log->fatal_error("$var is only used when use_cn and use_fun are both turned on");
+       }
+    }
+  }
+}
+
 
 #-------------------------------------------------------------------------------
 
@@ -3127,9 +3159,17 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+       # Also check at f19 resolution
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+       # If not found report an error
+       if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+          $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
+                        "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
+                        "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
+                        "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
+       }
     }
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
@@ -3384,7 +3424,7 @@ sub setup_logic_megan {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_soilm_streams {
-  # prescribed soil moisture streams require clm4_5/clm5_0
+  # prescribed soil moisture streams require clm4_5/clm5_0/clm5_1
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');
