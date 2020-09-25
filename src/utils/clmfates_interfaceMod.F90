@@ -799,6 +799,11 @@ module CLMFatesInterfaceMod
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
+         ! Decomposition fluxes
+         this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%w_scalar_col(c,1:nlevsoil)
+         this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%t_scalar_col(c,1:nlevsoil)
+
+         ! Soil water
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
