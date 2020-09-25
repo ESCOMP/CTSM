@@ -247,7 +247,7 @@ contains
 
     call derive_quantities(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, forc_rainc, forc_rainl, forc_snowc, forc_snowl)
 
-    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
+    call check_for_errors(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst)
 
   end subroutine import_fields
 
