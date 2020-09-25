@@ -1058,14 +1058,6 @@ contains
              
        end if ! use_fates branch
 
-
-       if ( use_fates ) then
-
- 
-          
-       end if
-
-       
        ! ============================================================================
        ! Create summaries of water diagnostic terms
        ! ============================================================================
