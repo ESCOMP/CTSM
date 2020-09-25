@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev002
 Originator(s):  slevis (Samuel Levis,303-665-1310)
-Date:  Mon Aug 17 12:35:19 MDT 2020
+Date:  Mon Sep 25 09:39:19 MDT 2020
 One-line Summary: Reduce duplication between caps
 
 Purpose of changes
@@ -59,18 +59,6 @@ Code reviewed by: @billsacks @slevisconsulting
 
 CTSM testing:
 
-[... Remove before making master tag.  Available test levels:
-
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CTSM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
-
-... ]
-
  [PASS means all tests PASS and OK means tests PASS other than expected fails.]
 
   build-namelist tests:
@@ -91,8 +79,8 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- 
-    izumi ------- 
+    cheyenne ---- OK
+    izumi ------- PASS
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
