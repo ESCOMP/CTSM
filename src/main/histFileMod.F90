@@ -27,7 +27,7 @@ module histFileMod
   use FatesInterfaceTypesMod , only : nlevheight
   use EDTypesMod        , only : nfsc
   use FatesLitterMod    , only : ncwd
-  use EDTypesMod        , only : num_elements_fates => num_elements
+  use PRTGenericMod     , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
   use ncdio_pio 
 

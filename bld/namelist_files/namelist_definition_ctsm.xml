@@ -631,7 +631,7 @@ Toggle to turn on the FATES model
 </entry>
 
 <entry id="fates_parteh_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="1">
+        group="clm_inparm" valid_values="1,2">
 Switch deciding which nutrient model to use in FATES.
 </entry>
 
