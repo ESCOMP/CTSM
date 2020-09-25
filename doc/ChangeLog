@@ -16,7 +16,7 @@ Purpose of changes
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #): #918 #1094
+Issues fixed (include CTSM Issue #): #918
 
 
 Significant changes to scientifically-supported configurations
@@ -120,11 +120,10 @@ Detailed list of changes
  file /src/utils/lnd_import_export_utils.F90.
 
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
- Modified code in /src/cpl  @billsacks IS THAT CONSIDERED AN EXTERNAL DIRECTORY?
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/CTSM/pull/1086
-
+ https://github.com/ESCOMP/CTSM/pull/1094
 ===============================================================
 ===============================================================
 Tag name:  ctsm5.1.dev001
