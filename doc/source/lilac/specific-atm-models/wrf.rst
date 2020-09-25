@@ -35,11 +35,11 @@ and :numref:`wrf-set-ctsm-runtime-options`.
 Clone WRF and CTSM Repositories
 -------------------------------
 
-Clone the WRF CTSM feature branch::
+Clone the WRF repository and checkout `develop` branch::
 
     git clone https://github.com/wrf-model/WRF.git WRF-CTSM
     cd WRF-CTSM
-    git checkout ctsm_coupling
+    git checkout develop
 
 
 Clone the CTSM repository::
@@ -48,9 +48,6 @@ Clone the CTSM repository::
     cd CTSM
     ./manage_externals/checkout_externals
 
-.. todo::
-
-    update the git address to WRF repository and feature branch...
 
 .. _build-CTSM-and-dependencies:
 
