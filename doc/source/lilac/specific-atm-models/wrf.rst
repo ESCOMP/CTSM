@@ -358,9 +358,9 @@ in our directory.
 If you plan to use this example's preexisting files, copy
 the following files to your WRF run directory::
 
- ln -sf /glade/work/slevis/git_wrf/WRF/test/em_real/namelist.input.ctsm.2013.d01.12month namelist.input
- ln -sf /glade/work/slevis/git_wrf/WRF/test/em_real/wrfinput_d01.ERAI.12month wrfinput_d01
- ln -sf /glade/work/slevis/git_wrf/WRF/test/em_real/wrfbdy_d01.ERAI.12month wrfbdy_d01
+    cp /glade/scratch/negins/wrf_ctsm_files/namelist.input . 
+    cp /glade/scratch/negins/wrf_ctsm_files/wrfinput_d01 .
+    cp /glade/scratch/negins/wrf_ctsm_files/wrfbdy_d01 .
 
 Now run WRF-CTSM. On Cheyenne this means submitting a batch job to PBS (Pro workload management system).
 Please check NCAR CISL's `instructions on running a batch job on Cheyenne. 
