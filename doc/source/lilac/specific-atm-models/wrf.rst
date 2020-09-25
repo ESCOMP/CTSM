@@ -35,7 +35,7 @@ and :numref:`wrf-set-ctsm-runtime-options`.
 Clone WRF and CTSM Repositories
 -------------------------------
 
-Clone the WRF repository and checkout `develop` branch::
+Clone the WRF repository and checkout  ``develop`` branch::
 
     git clone https://github.com/wrf-model/WRF.git WRF-CTSM
     cd WRF-CTSM
@@ -147,7 +147,7 @@ distributed memory parallelization (``dmpar``).
     recommended for compiling WRF.
 
 The next prompt requests an option for nesting. Currently nesting is not
-available for WRF-CTSM so select option 1 (basic).
+available for WRF-CTSM so select option ``1 (basic)``.
 
 
 Now compile em_real and save the log::
