@@ -8,3 +8,4 @@
    :maxdepth: 2
 
    wrf.rst
+   wrf-tools.rst
