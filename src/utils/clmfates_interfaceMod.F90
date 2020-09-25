@@ -909,7 +909,7 @@ module CLMFatesInterfaceMod
 
       ! ---------------------------------------------------------------------------------
       ! Part III.2 (continued).
-      ! Update UpdateLdiagnostics of the FATES ecosystem structure that are used in the HLM.
+      ! Update diagnostics of the FATES ecosystem structure that are used in the HLM.
       ! ---------------------------------------------------------------------------------
       call this%wrap_update_hlmfates_dyn(nc,               &
                                          bounds_clump,     &
