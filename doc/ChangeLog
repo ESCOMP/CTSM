@@ -1,4 +1,132 @@
 ===============================================================
+Tag name:  ctsm5.1.dev002
+Originator(s):  slevis (Samuel Levis,303-665-1310)
+Date:  Mon Sep 25 09:39:19 MDT 2020
+One-line Summary: Reduce duplication between caps
+
+Purpose of changes
+------------------
+
+ Eliminate duplication of the "derived quantities for required fields"
+ and corresponding error checking codes that repeat across the mct,
+ nuopc, and lilac caps. This consolidates the code and reduces
+ maintenance requirements.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #918 #1094
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite] None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing: None
+
+Code reviewed by: @billsacks @slevisconsulting
+
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  If a tag changes answers relative to baseline comparison the
+  following should be filled in (otherwise remove this section):
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: Larger than roundoff/same climate
+
+
+Detailed list of changes
+------------------------
+
+ Changes were implemented in three steps:
+
+ 1) Bit-for-bit: @billsacks simplified subroutine QSat by making three
+ arguments optional (es, qsdT, esdT).
+
+ 2) Answer-changing: @slevisconsulting replaced local calculations of
+ qsat in /src/cpl/mct, /src/cpl/lilac, and /src/cpl/nuopc with calls to
+ CTSM's subroutine QSat. Subroutine QSat uses a higher-order polynomial
+ approximation to estimate qsat, which explains the larger than
+ round-off diffs. When moving the three identical local approximations
+ to QSat as a temporary test instead of using the higher-order
+ polynomial approximation, the diffs reduce to round-off.
+
+ 3) Bit-for-bit: @slevisconsulting consolidated repeating codes in
+ /src/cpl/mct, /src/cpl/lilac, and /src/cpl/nuopc by placing in the new
+ file /src/utils/lnd_import_export_utils.F90.
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+ Modified code in /src/cpl  @billsacks IS THAT CONSIDERED AN EXTERNAL DIRECTORY?
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1086
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev001
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Sep 23 02:29:08 MDT 2020
