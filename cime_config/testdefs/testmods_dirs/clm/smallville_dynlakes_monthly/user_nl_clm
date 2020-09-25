@@ -1,0 +1,9 @@
+do_transient_lakes = .true.
+
+! This file was created with the following command:
+! ncap2 -s 'PCT_LAKE=array(0.0,0.0,PCT_CROP); PCT_LAKE={0.,50.,25.,25.,25.,25.}; HASLAKE=array(1.,1.,AREA)' landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynLakes_c200923.nc
+! Key points are that lake area starts as 0, increases after the first
+! year, then decreases after the second year.
+! Note that the use of this file means that this testmod can only be
+! used with the 1x1_smallvilleIA grid.
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynLakes_c200923.nc'
