@@ -88,10 +88,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+Changes answers relative to baseline: Yes
 
   Summarize any changes to answers, i.e.,
     - what code configurations: All
@@ -793,10 +790,6 @@ Answer changes
 --------------
 
 Changes answers relative to baseline: YES
-
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm50 with Bgc or Cn
@@ -1565,8 +1558,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
- No
+Changes answers relative to baseline: No
 
 Detailed list of changes
 ------------------------
@@ -1678,9 +1670,6 @@ Answer changes
 --------------
 
 Changes answers relative to baseline:  Yes for clm5_0
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
     - what code configurations: clm5_0 when Luna on as well as smaller changes for urban
@@ -2042,9 +2031,6 @@ Answer changes
 
 Changes answers relative to baseline: YES, just on izumi due to machine updates
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: some izumi tests
     - what platforms/compilers: izumi gnu & pgi
@@ -2317,9 +2303,6 @@ Changes answers relative to baseline: YES, but diagnostic only due to
 change in dimension sizes - does not change answers in any meaningful
 way
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Transient CLM50 cases with crops; just
       changes dimensions on vector (h1) history files
@@ -2461,7 +2444,6 @@ Answer changes
 
 Changes answers relative to baseline: No
 
-
 Detailed list of changes
 ------------------------
 
@@ -2570,9 +2552,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations:
       - cheyenne_gnu - due to compiler version update
@@ -2584,16 +2563,6 @@ Changes answers relative to baseline: YES
     I have verified that gnu tests in 59d1dd4a are identical to those
     in dcaad375 - i.e., the rework of the initialization logic for fire
     didn't change answers
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -3135,9 +3104,6 @@ Answer changes
 
 Changes answers relative to baseline: YES, in theory (but none in test suite)
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: potentially all, but very rarely
     - what platforms/compilers: all
@@ -3146,16 +3112,6 @@ Changes answers relative to baseline: YES, in theory (but none in test suite)
 
       Potentially changes answers by roundoff (see notes above), but no
       changes were observed in any test in the test suite
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -3522,9 +3478,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
@@ -3549,16 +3502,6 @@ Changes answers relative to baseline: YES
         FAIL SMS_D_Lm6.f45_f45_mg37.I2000Clm50Fates.cheyenne_intel.clm-FatesColdDef BASELINE ctsm1.0.dev087: DIFF
         FAIL SMS_D_Lm6_P144x1.f45_f45_mg37.I2000Clm50Fates.cheyenne_intel.clm-FatesColdDef BASELINE ctsm1.0.dev087: DIFF
         FAIL SMS_Lm13.f19_g17.I2000Clm50BgcCrop.cheyenne_intel.clm-cropMonthOutput BASELINE ctsm1.0.dev087: DIFF
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -3674,10 +3617,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+Changes answers relative to baseline: Yes (only Non-SP cases with NWP)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Non-SP cases with NWP or non-standard
@@ -3697,16 +3637,6 @@ Changes answers relative to baseline:
       had no differences; I'm guessing this is just because there didn't
       happen to be the appropriate PFTs present to show differences in
       this short, coarse-resolution test.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -3831,9 +3761,6 @@ Answer changes
 
 Changes answers relative to baseline: YES (just for NUOPC configurations)
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Just some NUOPC configurations
     - what platforms/compilers:
@@ -3845,16 +3772,6 @@ Changes answers relative to baseline: YES (just for NUOPC configurations)
      orbital parameters. Note that no differences showed up in the test
      suite, however, because the only nuopc test in the test suite is
      new in this tag (so did not have baselines).
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -4305,9 +4222,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
@@ -4317,16 +4231,6 @@ Changes answers relative to baseline: YES
 
       Possibility of other answer changes in rare circumstances, not
       observed in testing.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -4429,8 +4333,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
- No
+Changes answers relative to baseline: No
 
  @billsacks recommended running a global test in the branch vs. in master (i.e.
  with vs. without the code mods) to compare restart files because the test suite
@@ -4554,9 +4457,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Cases at f10 resolution
     - what platforms/compilers: all
@@ -4564,16 +4464,6 @@ Changes answers relative to baseline: YES
       Larger than roundoff, but probably same climate
 
       Answer changes are due to https://github.com/esmci/cime/pull/3186
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -4802,9 +4692,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm50Bgc (cases with both use_hydrstress=.true. and methane active)
     - what platforms/compilers: all
@@ -4814,12 +4701,9 @@ Changes answers relative to baseline: YES
       For details on differences, see
       https://github.com/ESCOMP/CTSM/issues/812#issuecomment-547924289
 
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
-       - casename: N/A
+       - casename: clm50_ctsm10d074_2deg_GSWP3V1_rootr_hist
 
    URL for LMWG diagnostics output used to validate new climate:
    http://webext.cgd.ucar.edu/I20TR/clm50_ctsm10d074_2deg_GSWP3V1_rootr_hist/lnd/clm50_ctsm10d074_2deg_GSWP3V1_rootr_hist.1995_2014-clm50_ctsm10d074_2deg_GSWP3V1_hist.1995_2014/setsIndex.html
@@ -4974,9 +4858,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
@@ -4999,16 +4880,6 @@ Changes answers relative to baseline: YES
 
       For the non-default use_subgrid_fluxes = .false., there
       differences in the natural vegetation and crop landunits, too.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -5121,24 +4992,11 @@ Answer changes
 
 Changes answers relative to baseline: YES, but just for the diagnostic field FSNO_EFF
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
       diagnostic only: just changes FSNO_EFF
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -5255,9 +5113,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
@@ -5289,16 +5144,6 @@ Changes answers relative to baseline: YES
          transient case, and not in similar non-transient cases. See
          https://github.com/ESCOMP/CTSM/issues/658#issuecomment-546740771
          for more details.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -5433,9 +5278,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
@@ -5451,16 +5293,6 @@ Changes answers relative to baseline: YES
       (which uses init_interp): I checked which points have differences
       in FSH in the h1 (vector) history file. Diffs were only over lake
       points.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -5564,9 +5396,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
@@ -5581,16 +5410,6 @@ Changes answers relative to baseline: YES
       than that; only one or a few f10 grid cells have significantly
       greater differences, with the biggest difference being about 0.1 W
       m-2.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -5806,24 +5625,11 @@ Answer changes
 Changes answers relative to baseline: YES, but only for the
 (default-inactive) field QFLX_EVAP_VEG
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
       larger than roundoff, but only for the default-inactive field QFLX_EVAP_VEG
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -6047,9 +5853,6 @@ Answer changes
 
 Changes answers relative to baseline: YES, but just for select diagnostic fields
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
     - what platforms/compilers: ALL
@@ -6069,16 +5872,6 @@ Changes answers relative to baseline: YES, but just for select diagnostic fields
       Changes are also possible in rare circumstances for the NFIRE
       diagnostic field, in transient cases, although no differences were
       observed for this field in the test suite (see ESCOMP/ctsm#31).
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -6393,7 +6186,6 @@ Answer changes
 
 Changes answers relative to baseline: NO
 
-
 Detailed list of changes
 ------------------------
 
@@ -6497,9 +6289,6 @@ Answer changes
 --------------
 
 Changes answers relative to baseline: YES
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -6645,15 +6434,6 @@ Changes answers relative to baseline: YES
                      + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
                 int_snow(c) = int_snow(c) + frac_sno_eff(c) &
                               * (qflx_dew_snow(c) + qflx_dew_grnd(c) + qflx_liq_grnd(c)) * dtime
-
-
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -6898,8 +6678,7 @@ Changes answers relative to baseline: Yes!
 
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
-       - casename: 
-           oleson/clm50_cesm20R_2deg_GSWP3V1_issue780_hist (for the fire change)
+       - casename: oleson/clm50_cesm20R_2deg_GSWP3V1_issue780_hist (for the fire change)
 
    URL for LMWG diagnostics output used to validate new climate:
 http://webext.cgd.ucar.edu/I20TR/clm50_cesm20R_2deg_GSWP3V1_issue780_hist/lnd/clm50_cesm20R_2deg_GSWP3V1_issue780_hist.1995_2014-clm50_cesm20R_2deg_GSWP3V1_hist.1995_2014/setsIndex.html
@@ -7307,9 +7086,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: potentially all, though only show up in
       a few tests
@@ -7346,14 +7122,6 @@ Changes answers relative to baseline: YES
       truncation using custom, inline code (commit 0d21ccb5). These two
       were bit-for-bit with each other, giving me more confidence that I
       didn't make a mistake with either implementation.
-
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -7566,10 +7334,10 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: Yes
 
   Summarize any changes to answers, i.e.,
-    - what code configurations: not clm45
+    - what code configurations: not clm45 (clm5_0 and ctsm5_0-nwp)
     - what platforms/compilers: all
     - nature of change: larger than roundoff/same climate
       based on the assumption that shifting soil texture assignments by
@@ -7716,9 +7484,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
@@ -7738,13 +7503,6 @@ Changes answers relative to baseline: YES
       temporarily putting in an endrun if the new frac_sno differs from
       the old by more than 1e-13; this was not triggered for any test in
       the aux_clm test suite.
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A (Keith Oleson will run this)
-
-   URL for LMWG diagnostics output used to validate new climate: N/A (Keith Oleson will run this)
-	
 
 Detailed list of changes
 ------------------------
@@ -7860,9 +7618,6 @@ Answer changes
 --------------
 
 Changes answers relative to baseline: YES
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -8720,10 +8475,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+Changes answers relative to baseline: Yes (roundoff level)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Many/all
@@ -8735,13 +8487,6 @@ Changes answers relative to baseline:
 
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? via summarize_cprnc_diffs
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -8844,7 +8589,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: Yes (when methane on)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: use_lch4 = .true.
@@ -8934,7 +8679,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes
+Changes answers relative to baseline: Yes (roundoff level change when MOSART on)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: some compsets with mosart
@@ -9179,9 +8924,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
@@ -9207,16 +8949,6 @@ Changes answers relative to baseline: YES
       - Overall, this doesn't look climate changing, but could
         potentially have a significant impact on select grid cells, and
         on some variables in polar regions
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -9347,10 +9079,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+Changes answers relative to baseline: Yes (mostly roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -9406,14 +9135,6 @@ Changes answers relative to baseline:
         +
            end subroutine initialize2
          end module clm_initializeMod
-
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: n/a
-
-   URL for LMWG diagnostics output used to validate new climate: n/a
-	
 
 Detailed list of changes
 ------------------------
@@ -9522,10 +9243,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+Changes answers relative to baseline: YES (should be small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -9536,17 +9254,6 @@ Changes answers relative to baseline: YES
     Answer changes are expected to be small, since this should just
     change the timing of snow capping a bit, but I haven't looked
     closely at the magnitude of the answer changes.
-
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -9887,7 +9594,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes!
+Changes answers relative to baseline: Yes! (roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
@@ -10028,10 +9735,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+Changes answers relative to baseline: YES (roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -10092,13 +9796,6 @@ Changes answers relative to baseline: YES
      in just one test
      (SMS_D_Ld1.f19_g17.I1850Clm45Cn.hobart_gnu.clm-default; old:
      -8.15e-322, new: -2e-323).
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -10206,7 +9903,7 @@ CTSM tag used for the baseline comparisons:
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (single precision roundoff)
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
     - what platforms/compilers: ALL
@@ -10329,26 +10026,12 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
       larger than roundoff; likely same climate, but this still requires
       investigation
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A (Keith Oleson will run this soon)
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-   (Keith Oleson will run this soon)
-	
 
 Detailed list of changes
 ------------------------
@@ -10519,7 +10202,6 @@ Answer changes
 
 Changes answers relative to baseline: NO
 
-
 Detailed list of changes
 ------------------------
 
@@ -10623,9 +10305,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Present-day compsets (I2000, I1Pt; also I2010 once those compsets are added)
     - what platforms/compilers: all
@@ -10635,16 +10314,6 @@ Changes answers relative to baseline: YES
       This changes the year alignment of datm. Climatological averages
       should be the same as before, but the alignment of model year to
       datm year changes.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -10751,13 +10420,6 @@ Changes answers relative to baseline: Only for Carbon isotopes on under transien
     - what code configurations: Bgc with use_c13 or use_c14 T and with a transient land-use change after each year boundary
     - what platforms/compilers: All
     - nature of change: same climate for bulk Carbon, isotopic Carbon is quite different for regions with land-use change
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: 
-
-   URL for LMWG diagnostics output used to validate new climate:
-	
 
 Detailed list of changes
 ------------------------
@@ -10878,10 +10540,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev034
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
-
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+Changes answers relative to baseline: YES (roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -10916,13 +10575,6 @@ Changes answers relative to baseline: YES
 
      Soon, we plan to do a more rigorous test to double check that this
      change is not climate-changing.
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -11051,9 +10703,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm45 compsets
     - what platforms/compilers: all
@@ -11077,16 +10726,6 @@ Changes answers relative to baseline: YES
       (Also changes answers for
       ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline,
       which uses a clm45 initial file.)
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -11489,9 +11128,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL, but different configurations show
       different levels of changes, as noted below
@@ -11519,16 +11155,6 @@ Changes answers relative to baseline: YES
     (3) All runs have large changes in the diagnostic variables,
         ICE_CONTENT1, LIQUID_CONTENT1 and HEAT_CONTENT1, over grid cells
         containing some glacier area.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -11647,9 +11273,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: f19_g17, T31_g37
     - what platforms/compilers: all
@@ -11664,17 +11287,6 @@ Changes answers relative to baseline: YES
 
       - T31_g37: greater than roundoff-level, presumably due to new
         domain file from cime commit 4fcf592ee
-
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -11886,9 +11498,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: all configurations that still need use_init_interp = .true.
     - what platforms/compilers: all
@@ -11965,16 +11574,6 @@ Changes answers relative to baseline: YES
     changes, I suspect the root cause is similar to the isolated answer
     changes I saw sprinkled around the world for
     `ERP_Ld5.f19_g17.I1850Clm50Bgc.cheyenne_intel.clm-default`.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -12670,9 +12269,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations:
 
@@ -12690,16 +12286,6 @@ Changes answers relative to baseline: YES
     - what platforms/compilers: all
     - nature of change (roundoff; larger than roundoff/same climate; new climate): 
       See notes under "what code configurations" for details.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -12955,9 +12541,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Some CLM50 cases that are either cold start
       or (unusually) use a CLM45 initial conditions file; it's possible
@@ -13006,16 +12589,6 @@ Changes answers relative to baseline: YES
       configuration:
 
          ERS_D_Ln9_P480x3.f19_g16.I2000Clm50SpGs.cheyenne_intel.clm-waccmx_offline
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -13129,9 +12702,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: CLM50 cold start or transient (Hist) cases
     - what platforms/compilers: all
@@ -13143,16 +12713,6 @@ Changes answers relative to baseline: YES
       small, partly based on difference statistics from the test suite,
       and partly based on the fact that the only change in this tag is
       in cold start initialization of some values).
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -13277,9 +12837,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: many
     - what platforms/compilers: all
@@ -13289,13 +12846,6 @@ Changes answers relative to baseline: YES
 
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? via summarize_cprnc_diffs to see differences in the test suite
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -13525,9 +13075,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: All I compsets (except spinup test that uses cplhist datm forcing)
     - what platforms/compilers: All
@@ -13537,16 +13084,6 @@ Changes answers relative to baseline: YES
   Changes answers for I compsets due to datm update as part of the cime
   update: new presaero and CO2 datasets
   (https://github.com/esmci/cime/pull/2828)
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -14699,9 +14236,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Startup / Hybrid runs that include CISM
      (even NOEVOLVE) and do not use init_interp, due to:
@@ -14719,16 +14253,6 @@ Changes answers relative to baseline: YES
       below-ground C and N states in the old code, as CTSM adjusts its
       areas to match CISM's. In the new code, there are no C and N
       adjustments in the first time step from this adjustment.
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -15567,9 +15091,6 @@ Answer changes
 
 Changes answers relative to baseline: YES
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-
   Summarize any changes to answers, i.e.,
     - what code configurations: Essentially all (except CLM4)
     - what platforms/compilers: All
@@ -15584,16 +15105,6 @@ Changes answers relative to baseline: YES
     - VIC: see (A2) and (A3) notes above (magnitude of change not
       investigated carefully)
     - QOVER diagnostic field: see (A4) note above
-
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
