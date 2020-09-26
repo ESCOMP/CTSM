@@ -88,7 +88,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes
+Changes answers relative to baseline: Yes (Similar climate)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: All
@@ -569,7 +569,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes 
+Changes answers relative to baseline: Yes (similar climate)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: (2010 and SSP compsets) and Clm50 with LUNA on (Bgc or Sp)
@@ -789,7 +789,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (similar climate)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm50 with Bgc or Cn
@@ -797,19 +797,12 @@ Changes answers relative to baseline: YES
     - nature of change (roundoff; larger than roundoff/same climate; new
 	climate): larger than roundoff/same climate
 
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff?
-
    If this tag changes climate describe the run(s) done to evaluate the new
    climate (put details of the simulations in the experiment database)
    
    Will Wieder thought the changes were small enough that we didn't need to do
    a long simulation. Erik Kluzek thinks the changes were verified with single
    point simulations. 
-
-
-   URL for LMWG diagnostics output used to validate new climate:
-	
 
 Detailed list of changes
 ------------------------
@@ -1034,7 +1027,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes!
+Changes answers relative to baseline: Yes! (very small)
 
   Hist and SSP BGC compsets change answers because of the correction of the end year for ndep. 
   You wouldn't think this would matter until you get to the end of the time-sequence -- but it 
@@ -1669,7 +1662,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:  Yes for clm5_0
+Changes answers relative to baseline:  Yes for clm5_0 (important change required retuning)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: clm5_0 when Luna on as well as smaller changes for urban
@@ -2042,16 +2035,6 @@ Changes answers relative to baseline: YES, just on izumi due to machine updates
       - SMS_D.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop
       - SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop
 
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
-
 Detailed list of changes
 ------------------------
 
@@ -2332,16 +2315,6 @@ way
 
       Other than this, there were FIELDLIST differences, as expected.
 
-   If bitwise differences were observed, how did you show they were no worse
-   than roundoff? N/A
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
-
 Detailed list of changes
 ------------------------
 
@@ -2550,7 +2523,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations:
@@ -2840,7 +2813,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes
+Changes answers relative to baseline: Yes (small)
 
   Updates in all fsurdat files leads to changes in answers
   Also there are updated finidat files as they had to be interpolated
@@ -3476,7 +3449,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (Small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -4220,7 +4193,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (only one diagnostic field)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -4455,7 +4428,7 @@ was not run on ctsm1.0.dev079.
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (only f10, same climate)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Cases at f10 resolution
@@ -4690,7 +4663,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (PHS and methane) (same climate)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm50Bgc (cases with both use_hydrstress=.true. and methane active)
@@ -4856,7 +4829,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (Small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -5111,7 +5084,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (Small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -5276,7 +5249,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (same climate, only at startup)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -5394,7 +5367,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -5622,8 +5595,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES, but only for the
-(default-inactive) field QFLX_EVAP_VEG
+Changes answers relative to baseline: YES, but only for the (default-inactive) field QFLX_EVAP_VEG
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -6288,7 +6260,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -6550,7 +6522,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -6668,7 +6640,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes!
+Changes answers relative to baseline: Yes! (important clm5_0-BGC)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm50Bgc and some Clm45Bgc cases
@@ -7084,7 +7056,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: potentially all, though only show up in
@@ -7334,7 +7306,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes
+Changes answers relative to baseline: Yes (clm5) small
 
   Summarize any changes to answers, i.e.,
     - what code configurations: not clm45 (clm5_0 and ctsm5_0-nwp)
@@ -7482,7 +7454,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -7617,7 +7589,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -7672,13 +7644,6 @@ Changes answers relative to baseline: YES
                       if (snl(c) == 0) then
                          h2osno_no_layers(c) = h2osno_no_layers(c) + qflx_snow_grnd(c)*dtime  ! snow water equivalent (mm)
                       else
-
-   If this tag changes climate describe the run(s) done to evaluate the new
-   climate (put details of the simulations in the experiment database)
-       - casename: N/A
-
-   URL for LMWG diagnostics output used to validate new climate: N/A
-	
 
 Detailed list of changes
 ------------------------
@@ -8589,7 +8554,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes (when methane on)
+Changes answers relative to baseline: Yes (when methane on) (diagnostic only)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: use_lch4 = .true.
@@ -8922,7 +8887,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (similar climate)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -9469,7 +9434,7 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes!
+Changes answers relative to baseline: Yes! (Important when FUN model on)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Anything with use_FUN=T (so Clm50Bgc compsets) 
@@ -10024,7 +9989,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev038
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all
@@ -10303,7 +10268,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev036
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Present-day compsets (I2000, I1Pt; also I2010 once those compsets are added)
@@ -10701,7 +10666,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev033
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (clm4_5) Important
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm45 compsets
@@ -11126,7 +11091,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev030
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (Important)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL, but different configurations show
@@ -11271,7 +11236,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev029
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (f19_g17, T31_g37 small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: f19_g17, T31_g37
@@ -11496,7 +11461,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev027
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (just for initial conditions)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: all configurations that still need use_init_interp = .true.
@@ -12267,7 +12232,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev021
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations:
@@ -12539,7 +12504,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev019
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (same climate)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Some CLM50 cases that are either cold start
@@ -12700,7 +12665,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev018
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: CLM50 cold start or transient (Hist) cases
@@ -12835,7 +12800,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev017
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: many
@@ -13073,7 +13038,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev015
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (new presaesro and CO2 datasets)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: All I compsets (except spinup test that uses cplhist datm forcing)
@@ -13509,7 +13474,7 @@ CTSM tag used for the baseline comparisons:  ctsm1.0.dev012
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes!
+Changes answers relative to baseline: Yes! (Important)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: clm4_5/clm5_0 transient simulations without Crop (either Bgc or SP)
@@ -14110,7 +14075,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev007
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes!
+Changes answers relative to baseline: Yes! (ndep files, and steams years)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: 1850_control or 20thC_transient for Clm50
@@ -14234,7 +14199,7 @@ CTSM tag used for the baseline comparisons: ctsm1.0.dev006
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (small)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Startup / Hybrid runs that include CISM
@@ -14886,7 +14851,7 @@ CLM tag used for the baseline comparisons: ctsm1.0.dev001
 Answer changes
 --------------
 
-Changes answers relative to baseline: clm5_0 BGC configurations with FUN and clm5_0 with BGC for new 1850 ndep file
+Changes answers relative to baseline: Yes, clm5_0 BGC configurations with FUN and clm5_0 with BGC for new 1850 ndep file
 
   Summarize any changes to answers, i.e.,
     - what code configurations: All clm5_0 BGC due to NFIX fields, and clm5_0 1850 BGC due to new ndep file
@@ -15089,7 +15054,7 @@ CLM tag used for the baseline comparisons: clm5.0.dev013
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES (roundoff)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: Essentially all (except CLM4)
