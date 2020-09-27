@@ -4015,6 +4015,8 @@ contains
     snow_dzmax_u_1 = 0.02_r8  ! user_nl_clm
     snow_dzmax_u_2 = 0.05_r8
 
+    params_inst%wind_snowcompact_fact = 5.0_r8
+
   end subroutine SnowHydrologySetControlForTesting
 
   !-----------------------------------------------------------------------
