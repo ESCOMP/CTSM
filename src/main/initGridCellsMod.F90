@@ -130,7 +130,6 @@ contains
        li = bounds_clump%begl-1
        ci = bounds_clump%begc-1
        pi = bounds_clump%begp-1
-        
 
        ! Determine naturally vegetated landunit
        do gdc = bounds_clump%begg,bounds_clump%endg
