@@ -153,7 +153,6 @@ contains
     if (npatches > 0) then
        ! Assume that the vegetated landunit has one column
        ncols = 1
-
        nlunits = 1
     else
        ! As noted in natveg_patch_exists, we expect a naturally vegetated landunit in
