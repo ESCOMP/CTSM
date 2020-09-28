@@ -650,7 +650,7 @@ contains
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
          b_waterstate_inst, lakestate_inst, &
-         subtract_dynbal_baselines = .false., &
+         add_lake_water_and_subtract_dynbal_baselines = .false., &
          water_mass = endwb(bounds%begc:bounds%endc))
 
     do j = 1, nlevgrnd
