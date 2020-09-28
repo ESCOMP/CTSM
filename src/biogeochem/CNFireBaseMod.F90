@@ -44,9 +44,6 @@ module CNFireBaseMod
   ! !PUBLIC TYPES:
   public :: cnfire_base_type
 
-  integer, private, parameter :: num_fp = 2   ! Number of pools relevent for fire
-  integer, private, parameter :: lit_fp = 1   ! Pool for liter
-  integer, private, parameter :: cwd_fp = 2   ! Pool for CWD Course woody debris
   type, public :: cnfire_const_type
       ! !PRIVATE MEMBER DATA:
       real(r8) :: borealat = 40._r8                    ! Latitude for boreal peat fires
@@ -64,7 +61,8 @@ module CNFireBaseMod
       real(r8) :: cropfire_a1 = 0.3_r8                 ! a1 parameter for cropland fire in (Li et. al., 2014) (/hr)
       real(r8) :: occur_hi_gdp_tree = 0.39_r8          ! fire occurance for high GDP areas that are tree dominated (fraction)
 
-      real(r8) :: cmb_cmplt_fact(num_fp) = (/ 0.5_r8, 0.25_r8 /) ! combustion completion factor (unitless)
+      real(r8) :: cmb_cmplt_fact_litter = 0.5_r8       ! combustion completion factor for litter (unitless)
+      real(r8) :: cmb_cmplt_fact_cwd    = 0.25_r8      ! combustion completion factor for CWD (unitless)
   end type
 
   type, public :: params_type
@@ -76,14 +74,22 @@ module CNFireBaseMod
   type, abstract, extends(fire_base_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
+      ! !PUBLIC MEMBER DATA (used by extensions of the base class):
+      real(r8), public, pointer :: btran2_patch   (:)   ! patch root zone soil wetness factor (0 to 1)
 
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: FireReadNML       ! Read in namelist for CNFire
-      procedure, public :: CNFireReadParams  ! Read in constant parameters from the paramsfile
-      procedure, public :: CNFireArea        ! Calculate fire area
-      procedure, public :: CNFireFluxes      ! Calculate fire fluxes
+      procedure, public :: FireInit => CNFireInit        ! Initialization of Fire
+      procedure, public :: FireReadNML                   ! Read in namelist for CNFire
+      procedure, public :: CNFireRestart                 ! Restart for CNFire
+      procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
+      procedure, public :: CNFireArea                    ! Calculate fire area
+      procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
+      procedure, public :: CNFire_calc_fire_root_wetness ! Calcualte CN-fire specific root wetness
+      ! !PRIVATE MEMBER FUNCTIONS:
+      procedure, private :: InitAllocate                 ! Memory allocation of Fire
+      procedure, private :: InitHistory                  ! History file assignment of fire
       !
   end type cnfire_base_type
   !-----------------------------------------------------------------------
@@ -114,6 +120,142 @@ module CNFireBaseMod
 contains
 
   !-----------------------------------------------------------------------
+  subroutine CNFireInit( this, bounds, NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Initialize CN Fire module
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    character(len=*),  intent(in) :: NLFilename
+    !-----------------------------------------------------------------------
+    ! Call the base-class Initialization method
+    call this%BaseFireInit( bounds, NLFilename )
+
+    ! Allocate memory
+    call this%InitAllocate( bounds )
+    ! History file
+    call this%InitHistory( bounds )
+  end subroutine CNFireInit
+  !----------------------------------------------------------------------
+
+  subroutine InitAllocate( this, bounds )
+    !
+    ! Initiaze memory allocate's
+    use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    !-----------------------------------------------------------------------
+    integer :: begp, endp
+    !------------------------------------------------------------------------
+    begp = bounds%begp; endp= bounds%endp
+
+    allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
+
+  end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine InitHistory( this, bounds )
+    !
+    ! Initailizae history variables
+    use clm_varcon      , only : spval
+    use histFileMod     , only : hist_addfld1d
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    !-----------------------------------------------------------------------
+    integer :: begp, endp
+    !------------------------------------------------------------------------
+    begp = bounds%begp; endp= bounds%endp
+    this%btran2_patch(begp:endp) = spval
+    call hist_addfld1d(fname='BTRAN2', units='unitless',  &
+         avgflag='A', long_name='root zone soil wetness factor', &
+         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
+  end subroutine InitHistory
+
+  !----------------------------------------------------------------------
+  subroutine CNFireRestart( this, bounds, ncid, flag )
+    use ncdio_pio       , only : ncd_double, file_desc_t
+    use restUtilMod     , only : restartvar
+    implicit none
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+
+    logical :: readvar
+
+    call restartvar(ncid=ncid, flag=flag, varname='btran2', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%btran2_patch)
+  end subroutine CNFireRestart
+
+  !----------------------------------------------------------------------
+  subroutine CNFire_calc_fire_root_wetness( this, bounds, nlevgrnd, num_exposedvegp, filter_exposedvegp, &
+                                     waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+    !
+    ! Calculate the root wetness term that will be used by the fire model
+    !
+    use pftconMod                 , only : pftcon
+    use PatchType                 , only : patch
+    use WaterStateBulkType        , only : waterstatebulk_type
+    use SoilStateType             , only : soilstate_type
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    class(cnfire_base_type) :: this
+    type(bounds_type)      , intent(in)   :: bounds                         !bounds
+    integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
+    integer                , intent(in)   :: num_exposedvegp                !number of filters
+    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    type(soilstate_type)   , intent(in)   :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    ! !LOCAL VARIABLES:
+    real(r8), parameter :: btran0 = 0.0_r8  ! initial value
+    real(r8) :: smp_node, s_node  !temporary variables
+    real(r8) :: smp_node_lf       !temporary variable
+    integer :: p, f, j, c, l      !indices
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
+
+    associate(                                                &
+         smpso         => pftcon%smpso                      , & ! Input:  soil water potential at full stomatal opening (mm)
+         smpsc         => pftcon%smpsc                      , & ! Input:  soil water potential at full stomatal closure (mm)
+         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
+         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
+         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         )
+
+      do f = 1, num_exposedvegp
+         p = filter_exposedvegp(f)
+         btran2(p)   = btran0
+      end do
+      do j = 1,nlevgrnd
+         do f = 1, num_exposedvegp
+            p = filter_exposedvegp(f)
+            c = patch%column(p)
+            l = patch%landunit(p)
+            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+
+            call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
+
+            smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf)
+            btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
+                    (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
+         end do
+      end do
+    end associate 
+
+  end subroutine CNFire_calc_fire_root_wetness
+
+  !----------------------------------------------------------------------
   subroutine FireReadNML( this, NLFilename )
     !
     ! !DESCRIPTION:
@@ -140,12 +282,12 @@ contains
     real(r8) :: cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha
     real(r8) :: non_boreal_peatfire_c, cropfire_a1
     real(r8) :: rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree
-    real(r8) :: lfuel, ufuel, cmb_cmplt_fact(num_fp)
+    real(r8) :: lfuel, ufuel, cmb_cmplt_fact_litter, cmb_cmplt_fact_cwd
 
     namelist /lifire_inparm/ cli_scale, boreal_peatfire_c, pot_hmn_ign_counts_alpha, &
                              non_boreal_peatfire_c, cropfire_a1,                &
                              rh_low, rh_hgh, bt_min, bt_max, occur_hi_gdp_tree, &
-                             lfuel, ufuel, cmb_cmplt_fact
+                             lfuel, ufuel, cmb_cmplt_fact_litter, cmb_cmplt_fact_cwd
 
     if ( this%need_lightning_and_popdens() ) then
        cli_scale                 = cnfire_const%cli_scale
@@ -160,7 +302,8 @@ contains
        bt_min                    = cnfire_const%bt_min
        bt_max                    = cnfire_const%bt_max
        occur_hi_gdp_tree         = cnfire_const%occur_hi_gdp_tree
-       cmb_cmplt_fact(:)         = cnfire_const%cmb_cmplt_fact(:)
+       cmb_cmplt_fact_litter     = cnfire_const%cmb_cmplt_fact_litter
+       cmb_cmplt_fact_cwd        = cnfire_const%cmb_cmplt_fact_cwd
        ! Initialize options to default values, in case they are not specified in
        ! the namelist
 
@@ -192,7 +335,8 @@ contains
        call shr_mpi_bcast (bt_min                  , mpicom)
        call shr_mpi_bcast (bt_max                  , mpicom)
        call shr_mpi_bcast (occur_hi_gdp_tree       , mpicom)
-       call shr_mpi_bcast (cmb_cmplt_fact          , mpicom)
+       call shr_mpi_bcast (cmb_cmplt_fact_litter   , mpicom)
+       call shr_mpi_bcast (cmb_cmplt_fact_cwd      , mpicom)
 
        cnfire_const%cli_scale                 = cli_scale
        cnfire_const%boreal_peatfire_c         = boreal_peatfire_c
@@ -206,7 +350,8 @@ contains
        cnfire_const%bt_min                    = bt_min
        cnfire_const%bt_max                    = bt_max
        cnfire_const%occur_hi_gdp_tree         = occur_hi_gdp_tree
-       cnfire_const%cmb_cmplt_fact(:)         = cmb_cmplt_fact(:)
+       cnfire_const%cmb_cmplt_fact_litter     = cmb_cmplt_fact_litter
+       cnfire_const%cmb_cmplt_fact_cwd        = cmb_cmplt_fact_cwd
 
        if (masterproc) then
           write(iulog,*) ' '
@@ -362,7 +507,8 @@ contains
          fr_fcel                             => pftcon%fr_fcel                                                    , & ! Input: 
          fr_flig                             => pftcon%fr_flig                                                    , & ! Input: 
 
-         cmb_cmplt_fact                      => cnfire_const%cmb_cmplt_fact                                       , & ! Input:  [real(r8) (:)     ]  Combustion completion factor (unitless)
+         cmb_cmplt_fact_litter               => cnfire_const%cmb_cmplt_fact_litter                                , & ! Input:  [real(r8) (:)     ]  Combustion completion factor for litter (unitless)
+         cmb_cmplt_fact_cwd                  => cnfire_const%cmb_cmplt_fact_cwd                                   , & ! Input:  [real(r8) (:)     ]  Combustion completion factor for CWD (unitless)
          
          nind                                => dgvs_inst%nind_patch                                              , & ! Input:  [real(r8) (:)     ]  number of individuals (#/m2)                      
          
@@ -847,11 +993,11 @@ contains
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * &
-                      cmb_cmplt_fact(lit_fp)
+                      cmb_cmplt_fact_litter
               end if
               if ( is_cwd(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
-                      (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
+                      (f-baf_crop(c)) * cmb_cmplt_fact_cwd
               end if
            end do
 
@@ -859,11 +1005,11 @@ contains
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
                  m_decomp_npools_to_fire_vr(c,j,l) = decomp_npools_vr(c,j,l) * f * &
-                      cmb_cmplt_fact(lit_fp)
+                      cmb_cmplt_fact_litter
               end if
               if ( is_cwd(l) ) then
                  m_decomp_npools_to_fire_vr(c,j,l) = decomp_npools_vr(c,j,l) * &
-                      (f-baf_crop(c)) * cmb_cmplt_fact(cwd_fp)
+                      (f-baf_crop(c)) * cmb_cmplt_fact_cwd
               end if
            end do
 

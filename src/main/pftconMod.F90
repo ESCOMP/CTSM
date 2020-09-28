@@ -221,6 +221,8 @@ module pftconMod
      real(r8), allocatable :: fm_droot      (:)
      real(r8), allocatable :: fsr_pft       (:)
      real(r8), allocatable :: fd_pft        (:)
+     real(r8), allocatable :: rswf_min      (:)
+     real(r8), allocatable :: rswf_max      (:)
 
      ! pft parameters for crop code
      real(r8), allocatable :: manunitro     (:)   ! manure
@@ -432,6 +434,8 @@ contains
     allocate( this%fm_droot      (0:mxpft) )
     allocate( this%fsr_pft       (0:mxpft) )
     allocate( this%fd_pft        (0:mxpft) )
+    allocate( this%rswf_max      (0:mxpft) )
+    allocate( this%rswf_min      (0:mxpft) )
     allocate( this%manunitro     (0:mxpft) )
     allocate( this%fleafcn       (0:mxpft) )  
     allocate( this%ffrootcn      (0:mxpft) ) 
@@ -951,6 +955,11 @@ contains
     call ncd_io('fd_pft', this%  fd_pft, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
+    call ncd_io('rswf_min', this% rswf_min, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('rswf_max', this% rswf_max, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__)) 
     call ncd_io('planting_temp', this%planttemp, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -1365,6 +1374,8 @@ contains
     deallocate( this%fm_droot)
     deallocate( this%fsr_pft)
     deallocate( this%fd_pft)
+    deallocate( this%rswf_min)
+    deallocate( this%rswf_max)
     deallocate( this%manunitro)
     deallocate( this%fleafcn)
     deallocate( this%ffrootcn)

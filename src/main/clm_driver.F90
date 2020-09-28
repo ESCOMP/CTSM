@@ -679,7 +679,8 @@ contains
             downreg_patch = downreg_patch(bounds_clump%begp:bounds_clump%endp), &
             leafn_patch = leafn_patch(bounds_clump%begp:bounds_clump%endp), &
             froot_carbon = froot_carbon(bounds_clump%begp:bounds_clump%endp), &
-            croot_carbon = croot_carbon(bounds_clump%begp:bounds_clump%endp))
+            croot_carbon = croot_carbon(bounds_clump%begp:bounds_clump%endp), &
+            bgc_vegetation_inst = bgc_vegetation_inst )
        deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
 

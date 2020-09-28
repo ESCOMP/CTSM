@@ -23,6 +23,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <megan_specifier>'ISOP = isoprene', 'C10H16 = pinene_a + carene_3 + thujene_a', 'CH3OH = methanol', 'C2H5OH = ethanol', 'CH2O = formaldehyde', 'CH3CHO = acetaldehyde', 'CH3COOH = acetic_acid', 'CH3COCH3 = acetone'</megan_specifier>
 
+<megan_factors_file phys="clm5_1" >atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc</megan_factors_file>
 <megan_factors_file phys="clm5_0" >atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc</megan_factors_file>
 <megan_factors_file phys="clm4_5" >atm/cam/chem/trop_mozart/emis/megan21_emis_factors_78pft_c20161108.nc</megan_factors_file>
 

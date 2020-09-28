@@ -25,6 +25,9 @@ module FireMethodType
      ! Read parameters  for the fire datasets
      procedure(CNFireReadParams_interface), public, deferred :: CNFireReadParams
 
+     ! Restart
+     procedure(CNFireRestart_interface), public, deferred :: CNFireRestart
+
      ! Interpolate the fire datasets
      procedure(FireInterp_interface) , public, deferred :: FireInterp
 
@@ -33,6 +36,9 @@ module FireMethodType
 
      ! Figure out the fire fluxes
      procedure(CNFireFluxes_interface) , public, deferred :: CNFireFluxes
+
+     ! Calculate root wetness for the CN Fire
+     procedure(CNFire_calc_fire_root_wetness_interface) , public, deferred :: CNFire_calc_fire_root_wetness
 
   end type fire_method_type
 
@@ -112,6 +118,24 @@ module FireMethodType
     !--------------------------------------------------------------------
 
   end subroutine CNFireReadParams_interface
+
+  !-----------------------------------------------------------------------
+  subroutine CNFireRestart_interface( this, bounds, ncid, flag )
+    !
+    ! Restart for the CN fire base class
+    ! !USES:
+    use ncdio_pio       , only : file_desc_t
+    use decompMod       , only : bounds_type
+    import :: fire_method_type
+    !
+    ! !ARGUMENTS:
+    class(fire_method_type)          :: this
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+    !--------------------------------------------------------------------
+
+  end subroutine CNFireRestart_interface
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea_interface (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -206,7 +230,28 @@ module FireMethodType
    !-----------------------------------------------------------------------
   end subroutine CNFireFluxes_interface
 
- !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+
+  !----------------------------------------------------------------------
+  subroutine CNFire_calc_fire_root_wetness_interface( this, bounds, nlevgrnd, num_exposedvegp, &
+                                     filter_exposedvegp, waterstatebulk_inst, &
+                                     soilstate_inst, soil_water_retention_curve )
+    ! Calculate root wetness that will be used for the CN fire model
+    use decompMod                 , only : bounds_type
+    use WaterStateBulkType        , only : waterstatebulk_type
+    use SoilStateType             , only : soilstate_type
+    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    import :: fire_method_type
+    class(fire_method_type)                :: this
+    type(bounds_type)      , intent(in)    :: bounds                         !bounds
+    integer                , intent(in)    :: nlevgrnd                       !number of vertical layers
+    integer                , intent(in)    :: num_exposedvegp                !number of filters
+    integer                , intent(in)    :: filter_exposedvegp(:)          !filter array
+    type(waterstatebulk_type), intent(in)  :: waterstatebulk_inst
+    type(soilstate_type)   , intent(in)    :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    !-----------------------------------------------------------------------
+  end subroutine CNFire_calc_fire_root_wetness_interface
 
   end interface
 
