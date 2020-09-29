@@ -421,7 +421,9 @@ contains
     real(r8) :: uuc(bounds%begp:bounds%endp)       ! undercanopy windspeed
     real(r8) :: carea_stem                         !cross-sectional area of stem
 
-    ! biomass parameters
+    ! Biomass heat storage tuning parameters
+    ! These parameters can be used to account for differences
+    ! in vegetation shape.
     real(r8), parameter :: k_vert = 0.1            !vertical distribution of stem
     real(r8), parameter :: k_cyl_vol = 1.0         !departure from cylindrical volume
     real(r8), parameter :: k_cyl_area = 1.0        !departure from cylindrical area
