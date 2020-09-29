@@ -807,20 +807,13 @@ module CLMFatesInterfaceMod
 
          end do
 
-         ! Here we use the logic of setting each patch LAI properties for SP mode
-         ! using the same indexing system as above. When we set pft_areafrac, in the initialization
-         ! phase, we set one value for each PFT, but by the time we set these values, we've already 
-         ! got rid of the PFTs that have no area, so we don'tneed a whole grid x PFT array, just a grid x patchno array
-
          ! Here we use the same logic as the pft_areafrac initialization to get an array with values for each pft
-         ! in FATES, some of the HLM PFTs may be aggregated, to the number of patches may be different from the 
-         ! number of FATES PFTs. 
-
+         ! in FATES. 
+         ! N.B. Fow now these are fixed values pending HLM updates. 
          if(use_fates_sp)then
            do p = natpft_lb,natpft_ub-1 !set of pfts in HLM
              ft = p-natpft_lb+1 ! pfts ordered from 1. 
              if (natveg_patch_exists(g, p)) then
-!              this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,p)
                this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = 0.5_r8
                this%fates(nc)%bc_in(s)%hlm_sp_tsai(ft) = 0.2_r8
                this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = 10.0_r8
@@ -1061,15 +1054,9 @@ module CLMFatesInterfaceMod
           patch%wt_ed(col%patchi(c)) = max(0.0_r8, &
                1.0_r8-sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)))
 
-if(isnan(patch%wt_ed(col%patchi(c))))then
-         p = col%patchi(c)
-             write(*,*) 'bg nan in interface',patch%wt_ed(p),p,this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)
-end if
-          if(sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))>1.0_r8+1.0e-12_r8)then
+          if(sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))>1.0_r8)then
              write(iulog,*)'Projected Canopy Area of all FATES patches'
              write(iulog,*)'cannot exceed 1.0',this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)
-             write(iulog,*) 'sum', sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch))
-             !end_run()
           end if
 
           do ifp = 1, npatch
@@ -1089,9 +1076,6 @@ end if
              hbot(p) = this%fates(nc)%bc_out(s)%hbot_pa(ifp)
              htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
              frac_veg_nosno_alb(p) = this%fates(nc)%bc_out(s)%frac_veg_nosno_alb_pa(ifp)
-            if(isnan(patch%wt_ed(col%patchi(c))))then
-             write(*,*) 'nan in interface',patch%wt_ed(p),p,this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
-             end if
              ! Note that while we pass the following values at this point
              ! we have to send the same values after each time-step because
              ! the HLM keeps changing the value and re-setting, so we
