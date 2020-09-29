@@ -81,6 +81,8 @@ module clm_varcon
   real(r8), public :: alpha_aero = 1.0_r8                           ! constant for aerodynamic parameter weighting
   real(r8), public :: tlsai_crit = 2.0_r8                           ! critical value of elai+esai for which aerodynamic parameters are maximum
   real(r8), public :: watmin = 0.01_r8                              ! minimum soil moisture (mm)
+  real(r8), public :: c_water = 4188_r8                             ! specific heat of water   [J/kg/K]
+  real(r8), public :: c_dry_biomass  = 1400_r8                      ! specific heat of dry biomass
 
   real(r8), public :: re = SHR_CONST_REARTH*0.001_r8                ! radius of earth (km)
 

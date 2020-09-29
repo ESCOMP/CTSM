@@ -228,6 +228,7 @@ contains
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, c_to_b
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
+    use clm_varcon         , only : c_water, c_dry_biomass
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
@@ -740,12 +741,13 @@ contains
 
             ! calculate specify heat capacity of vegetation
             ! as weighted averaged of dry biomass and water
-            ! lma_dry has units of kg dry mass/m2 here (table 2 of bonan 2017) 
-            ! cdry_biomass = 1400 J/kg/K, cwater = 4188 J/kg/K
-            cp_leaf(p)  = leaf_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
+            ! lma_dry has units of kg dry mass/m2 here
+            ! (Appendix B of Bonan et al., GMD, 2018) 
+
+            cp_leaf(p)  = leaf_biomass(p) * (c_dry_biomass*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
 
             ! cp-stem will have units J/k/ground_area
-            cp_stem(p) = stem_biomass(p) * (1400._r8*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*4188._r8)
+            cp_stem(p) = stem_biomass(p) * (c_dry_biomass*(1.-fbw(patch%itype(p))) + (fbw(patch%itype(p)))*c_water)
             ! adjust for departure from cylindrical stem model
             cp_stem(p) = k_cyl_vol * cp_stem(p)
 
@@ -1471,15 +1473,19 @@ contains
 
          ! Downward longwave radiation below the canopy
 
-         dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) + &
-              emv(p)*emg(c)*sb*(tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1.-frac_rad_abs_by_stem(p))+ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p))*frac_rad_abs_by_stem(p))
+         dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) &
+              + emv(p)*emg(c)*sb*(tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
+              *(1.-frac_rad_abs_by_stem(p))+ts_ini(p)**3*(ts_ini(p) &
+              + 4._r8*dt_stem(p))*frac_rad_abs_by_stem(p))
 
          ! Upward longwave radiation above the canopy
 
          ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
-              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*((1.-frac_rad_abs_by_stem(p)) &
-              *tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))+frac_rad_abs_by_stem(p)*ts_ini(p)**3*(ts_ini(p) &
-              + 4._r8*dt_stem(p))) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
+              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
+              *((1.-frac_rad_abs_by_stem(p))*tlbef(p)**3 &
+              *(tlbef(p) + 4._r8*dt_veg(p)) &
+              +frac_rad_abs_by_stem(p)*ts_ini(p)**3*(ts_ini(p)+ 4._r8*dt_stem(p))) &
+              + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
 
 
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
