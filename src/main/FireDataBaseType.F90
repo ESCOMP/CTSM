@@ -42,7 +42,8 @@ module FireDataBaseType
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: FireInit          ! Initialization of Fire
+      procedure, public :: FireInit => BaseFireInit     ! Initialization of Fire
+      procedure, public :: BaseFireInit                 ! Initialization of Fire
       procedure(FireReadNML_interface), public, deferred :: FireReadNML       ! Read in namelist for Fire
       procedure, public :: FireInterp        ! Interpolate fire data
       procedure(need_lightning_and_popdens_interface), public, deferred :: &
@@ -92,7 +93,7 @@ contains
   end subroutine FireReadNML_interface
 
   !-----------------------------------------------------------------------
-  subroutine FireInit( this, bounds, NLFilename )
+  subroutine BaseFireInit( this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
     ! Initialize CN Fire module
@@ -119,7 +120,7 @@ contains
        call this%lnfm_interp(bounds)
     end if
 
-  end subroutine FireInit
+  end subroutine BaseFireInit
 
   !-----------------------------------------------------------------------
   subroutine FireInterp(this,bounds)

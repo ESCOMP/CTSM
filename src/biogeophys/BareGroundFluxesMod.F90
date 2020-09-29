@@ -141,9 +141,7 @@ contains
     real(r8) :: z0hg_patch(bounds%begp:bounds%endp)
     real(r8) :: z0qg_patch(bounds%begp:bounds%endp)
     real(r8) :: e_ref2m                          ! 2 m height surface saturated vapor pressure [Pa]
-    real(r8) :: de2mdT                           ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m                       ! 2 m height surface saturated specific humidity [kg/kg]
-    real(r8) :: dqsat2mdT                        ! derivative of 2 m height surface saturated specific humidity on t_ref2m 
     real(r8) :: www                              ! surface soil wetness [-]
     !------------------------------------------------------------------------------
 
@@ -426,7 +424,8 @@ contains
          q_ref2m(p) = forc_q(c) + temp2(p)*dqh(p)*(1._r8/temp22m(p) - 1._r8/temp2(p))
 
          ! 2 m height relative humidity
-         call QSat(t_ref2m(p), forc_pbot(c), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+         call QSat(t_ref2m(p), forc_pbot(c), qsat_ref2m, &
+              es = e_ref2m)
 
          rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
 

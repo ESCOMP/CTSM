@@ -117,7 +117,7 @@ module TemperatureType
      real(r8), pointer    :: xmf_h2osfc_col        (:)   ! latent heat of phase change of surface water
      real(r8), pointer    :: fact_col              (:,:) ! used in computing tridiagonal matrix
      real(r8), pointer    :: c_h2osfc_col          (:)   ! heat capacity of surface water
-
+     
    contains
 
      procedure, public  :: Init
@@ -628,7 +628,6 @@ contains
             avgflag='A', long_name='10 day running mean of patch night-time vegetation temperature', &
             ptr_patch=this%t_veg10_night_patch, default='inactive')
     endif
-
 
   end subroutine InitHistory
 

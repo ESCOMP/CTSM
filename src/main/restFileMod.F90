@@ -17,7 +17,7 @@ module restFileMod
   use accumulMod       , only : accumulRest
   use clm_instMod      , only : clm_instRest
   use histFileMod      , only : hist_restart_ncd
-  use clm_varctl       , only : iulog, use_fates, use_hydrstress
+  use clm_varctl       , only : iulog, use_fates, use_hydrstress, compname
   use clm_varctl       , only : create_crop_landunit, irrigate
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
@@ -25,6 +25,7 @@ module restFileMod
   use ncdio_pio        , only : check_att, ncd_getatt
   use glcBehaviorMod   , only : glc_behavior_type
   use reweightMod      , only : reweight_wrapup
+  use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -44,6 +45,8 @@ module restFileMod
   private :: restFile_write_pfile       ! Writes restart pointer file
   private :: restFile_closeRestart      ! Close restart file and write restart pointer file
   private :: restFile_dimset
+  private :: restFile_write_issues_fixed ! Write metadata for issues fixed
+  private :: restFile_read_issues_fixed ! Read and process metadata for issues fixed
   private :: restFile_add_flag_metadata ! Add global metadata for some logical flag
   private :: restFile_add_ilun_metadata ! Add global metadata defining landunit types
   private :: restFile_add_icol_metadata ! Add global metadata defining column types
@@ -55,6 +58,9 @@ module restFileMod
   private :: restFile_check_year          ! Check consistency of year on the restart file
   !
   ! !PRIVATE TYPES:
+
+  ! Issue numbers for issue-fixed metadata
+  integer, parameter :: lake_dynbal_baseline_issue = 1140
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -108,6 +114,9 @@ contains
        call hist_restart_ncd (bounds, ncid, flag='define', rdate=rdate )
     end if
 
+    call restFile_write_issues_fixed(ncid, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file)
+
     call restFile_enddef( ncid )
 
     ! Write variables
@@ -142,7 +151,7 @@ contains
   end subroutine restFile_write
 
   !-----------------------------------------------------------------------
-  subroutine restFile_read( bounds_proc, file, glc_behavior )
+  subroutine restFile_read( bounds_proc, file, glc_behavior, reset_dynbal_baselines_lake_columns )
     !
     ! !DESCRIPTION:
     ! Read a CLM restart file.
@@ -151,6 +160,13 @@ contains
     type(bounds_type) , intent(in) :: bounds_proc      ! processor-level bounds
     character(len=*)  , intent(in) :: file             ! output netcdf restart file
     type(glc_behavior_type), intent(in) :: glc_behavior
+
+    ! BACKWARDS_COMPATIBILITY(wjs, 2020-09-02) This is needed when reading old initial
+    ! conditions files created before https://github.com/ESCOMP/CTSM/issues/1140 was
+    ! resolved via https://github.com/ESCOMP/CTSM/pull/1109: The definition of total
+    ! column water content has been changed for lakes, so we need to reset baseline values
+    ! for lakes on older initial conditions files.
+    logical, intent(out) :: reset_dynbal_baselines_lake_columns
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid    ! netcdf id
@@ -200,6 +216,9 @@ contains
     call restFile_set_derived(bounds_proc, glc_behavior)
 
     call hist_restart_ncd (bounds_proc, ncid, flag='read' )
+
+    call restFile_read_issues_fixed(ncid, &
+         reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
 
     ! Do error checking on file
     
@@ -263,8 +282,8 @@ contains
        end if
        call getfil( path, file, 0 )
 
-       ! tcraig, adding xx. and .clm2 makes this more robust
-       ctest = 'xx.'//trim(caseid)//'.clm2'
+       ! tcraig, adding xx. and .compname makes this more robust
+       ctest = 'xx.'//trim(caseid)//'.'//trim(compname)
        ftest = 'xx.'//trim(file)
        status = index(trim(ftest),trim(ctest))
        if (status /= 0 .and. .not.(brnch_retain_casename)) then
@@ -466,7 +485,7 @@ contains
     character(len=*), intent(in) :: rdate   ! input date for restart file name 
     !-----------------------------------------------------------------------
 
-    restFile_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
+    restFile_filename = "./"//trim(caseid)//"."//trim(compname)//trim(inst_suffix)//&
          ".r."//trim(rdate)//".nc"
     if (masterproc) then
        write(iulog,*)'writing restart file ',trim(restFile_filename),' for model date = ',rdate
@@ -562,6 +581,63 @@ contains
     call restFile_add_ilun_metadata(ncid)
 
   end subroutine restFile_dimset
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_write_issues_fixed(ncid, writing_finidat_interp_dest_file)
+    !
+    ! !DESCRIPTION:
+    ! Write metadata for issues fixed
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid ! local file id
+    logical          , intent(in)    :: writing_finidat_interp_dest_file ! true if we are writing a finidat_interp_dest file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'restFile_write_issues_fixed'
+    !-----------------------------------------------------------------------
+
+    ! See comment associated with reset_dynbal_baselines_lake_columns in restFile_read
+    call write_issue_fixed_metadata( &
+         ncid = ncid, &
+         writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
+         issue_num = lake_dynbal_baseline_issue)
+
+  end subroutine restFile_write_issues_fixed
+
+  !-----------------------------------------------------------------------
+  subroutine restFile_read_issues_fixed(ncid, reset_dynbal_baselines_lake_columns)
+    !
+    ! !DESCRIPTION:
+    ! Read and process metadata for issues fixed
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), intent(inout) :: ncid ! local file id
+    logical, intent(out) :: reset_dynbal_baselines_lake_columns ! see comment in restFile_read for details
+    !
+    ! !LOCAL VARIABLES:
+    integer :: attribute_value
+
+    character(len=*), parameter :: subname = 'restFile_read_issues_fixed'
+    !-----------------------------------------------------------------------
+
+    ! See comment associated with reset_dynbal_baselines_lake_columns in restFile_read
+    call read_issue_fixed_metadata( &
+         ncid = ncid, &
+         issue_num = lake_dynbal_baseline_issue, &
+         attribute_value = attribute_value)
+    if (attribute_value == 0) then
+       ! Old restart file, from before lake_dynbal_baseline_issue was resolved, so we
+       ! need to reset dynbal baselines for lake columns later in initialization.
+       reset_dynbal_baselines_lake_columns = .true.
+    else
+       ! Recent restart file, so no need to reset dynbal baselines for lake columns,
+       ! because they are already up to date.
+       reset_dynbal_baselines_lake_columns = .false.
+    end if
+
+  end subroutine restFile_read_issues_fixed
+
 
   !-----------------------------------------------------------------------
   subroutine restFile_add_flag_metadata(ncid, flag, flag_name)

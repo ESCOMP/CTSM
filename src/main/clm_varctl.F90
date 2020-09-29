@@ -68,6 +68,9 @@ module clm_varctl
   ! dataset conventions
   character(len=256), public :: conventions = "CF-1.0"                   
 
+  ! component name for filenames (history or restart files)
+  character(len=8), public :: compname = 'clm2'
+
   !----------------------------------------------------------
   ! Unit Numbers
   !----------------------------------------------------------

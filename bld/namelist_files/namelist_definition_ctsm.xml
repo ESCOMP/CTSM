@@ -49,6 +49,15 @@ Full pathname of master restart file for a branch run. (only used if RUN_TYPE=br
 (Set with RUN_REFCASE and RUN_REFDATE)
 </entry>
 
+<entry id="compname" 
+       type="char*8" 
+       category="datasets"
+       group="clm_inparm" 
+       value="clm2"
+       valid_values="clm2,clm4,clm5" >
+Component name to use in history and restart files
+</entry>
+
 <entry id="fatmlndfrc" 
        type="char*256" 
        category="datasets"
@@ -198,12 +207,13 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc" >
 The method type to use for CNFire
 
 nofire:        Turn fire effects off
 li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric forcing
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
+li2021gswpfrc: Reference paper Li, et. al.(2021?) tuned with GSWP3 atmospheric forcing
 </entry>
 
 <entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
@@ -1968,7 +1978,7 @@ Land mask description
 
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed
@@ -2415,6 +2425,12 @@ If TRUE, apply transient natural PFTs from flanduse_timeseries file.
 <entry id="do_transient_crops" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply transient crops from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+</entry>
+
+<entry id="do_transient_lakes" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply transient lakes from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 </entry>
 

@@ -142,7 +142,7 @@ contains
     namelist /clm_inparm / &
          fatmlndfrc, finidat, nrevsn, &
          finidat_interp_dest, &
-         use_init_interp
+         use_init_interp, compname
 
     ! Input datasets
 
@@ -620,6 +620,7 @@ contains
     ! run control variables
     call mpi_bcast (caseid, len(caseid), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (ctitle, len(ctitle), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (compname, len(compname), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (version, len(version), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hostname, len(hostname), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (username, len(username), MPI_CHARACTER, 0, mpicom, ier)
