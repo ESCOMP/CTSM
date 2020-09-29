@@ -62,7 +62,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_nocomp
    use clm_varctl        , only : use_fates_sp
    use clm_varctl        , only : fates_inventory_ctrl_filename
- 
+   use clm_varctl        , only : use_nitrif_denitrif
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
    use clm_varcon        , only : denice
@@ -112,6 +112,8 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod, only : SetFatesGlobalElements
    use FatesInterfaceMod     , only : allocate_bcin
    use FatesInterfaceMod     , only : allocate_bcout
+   use FatesInterfaceMod     , only : allocate_bcpconst
+   use FatesInterfaceMod     , only : set_bcpconst
    use FatesInterfaceMod     , only : zero_bcs
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
@@ -121,7 +123,7 @@ module CLMFatesInterfaceMod
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
-   use EDTypesMod            , only : num_elements
+   use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
@@ -136,7 +138,8 @@ module CLMFatesInterfaceMod
    use EDCanopyStructureMod  , only : canopy_summarization, update_hlm_dynamics
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-   use EDPhysiologyMod       , only : FluxIntoLitterPools
+   use FatesSoilBGCFluxMod    , only : FluxIntoLitterPools
+   use FatesSoilBGCFluxMod    , only : UnPackNutrientAquisitionBCs
    use FatesPlantHydraulicsMod, only : hydraulics_drive
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
@@ -206,7 +209,7 @@ module CLMFatesInterfaceMod
       procedure, public :: wrap_accumulatefluxes
       procedure, public :: prep_canopyfluxes
       procedure, public :: wrap_canopy_radiation
-      procedure, public :: wrap_bgc_summary
+      procedure, public :: wrap_update_hifrq_hist
       procedure, public :: TransferZ0mDisp
       procedure, public :: InterpFileInputs  ! Interpolate inputs from files
       procedure, public :: Init2  ! Initialization after determining subgrid weights
@@ -292,6 +295,28 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1))
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
+
+        ! CTSM-FATES is not fully coupled (yet)
+        ! So lets tell fates to use the RD competition mechanism
+        ! which has fewer boundary conditions (simpler)
+        call set_fates_ctrlparms('nu_com',cval='RD')
+
+        ! These may be in a non-limiting status (ie when supplements)
+        ! are added, but they are always allocated and cycled non-the less
+        ! FATES may want to interact differently with other models
+        ! that don't even have these arrays allocated.
+        ! FATES also checks that if NO3 is cycled in ELM, then
+        ! any plant affinity parameters are checked.
+
+        if(use_nitrif_denitrif) then
+           call set_fates_ctrlparms('nitrogen_spec',ival=1)
+        else
+           call set_fates_ctrlparms('nitrogen_spec',ival=2)
+        end if
+
+        ! Phosphorus is not tracked in CLM
+        call set_fates_ctrlparms('phosphorus_spec',ival=0)
+
         
         call set_fates_ctrlparms('spitfire_mode',ival=fates_spitfire_mode)
         call set_fates_ctrlparms('sf_nofire_def',ival=no_fire)
@@ -565,9 +590,19 @@ module CLMFatesInterfaceMod
          ! Allocate the FATES boundary arrays (out)
          allocate(this%fates(nc)%bc_out(this%fates(nc)%nsites))
 
+
+         ! Parameter Constants defined by FATES, but used in ELM
+         ! Note that FATES has its parameters defined, so we can also set the values
+         call allocate_bcpconst(this%fates(nc)%bc_pconst,nlevdecomp)
+
+         ! This also needs 
+         call set_bcpconst(this%fates(nc)%bc_pconst,nlevdecomp)
+
+         
          ! Allocate and Initialize the Boundary Condition Arrays
          ! These are staticaly allocated at maximums, so
          ! No information about the patch or cohort structure is needed at this step
+
          
          do s = 1, this%fates(nc)%nsites
             
@@ -858,6 +893,12 @@ module CLMFatesInterfaceMod
 
       end do
 
+      ! Nutrient uptake fluxes have been accumulating with each short
+      ! timestep, here, we unload them from the boundary condition
+      ! structures into the cohort structures.
+      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
+
+      
       ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
       ! provided.
@@ -866,21 +907,15 @@ module CLMFatesInterfaceMod
       do s = 1,this%fates(nc)%nsites
 
             call ed_ecosystem_dynamics(this%fates(nc)%sites(s),    &
-                  this%fates(nc)%bc_in(s))
+                  this%fates(nc)%bc_in(s), & 
+                  this%fates(nc)%bc_out(s))
             
             call ed_update_site(this%fates(nc)%sites(s), &
-                  this%fates(nc)%bc_in(s))
-            
+                  this%fates(nc)%bc_in(s), & 
+                  this%fates(nc)%bc_out(s))
+
       enddo
       
-      ! call subroutine to aggregate fates litter output fluxes and 
-      ! package them for handing across interface
-      call FluxIntoLitterPools(this%fates(nc)%nsites, &
-            this%fates(nc)%sites,  &
-            this%fates(nc)%bc_in,  &
-            this%fates(nc)%bc_out)
-
-
       ! ---------------------------------------------------------------------------------
       ! Part III: Process FATES output into the dimensions and structures that are part
       ! of the HLMs API.  (column, depth, and litter fractions)
@@ -1331,9 +1366,20 @@ module CLMFatesInterfaceMod
                ! update type stuff, should consolidate (rgk 11-2016)
                do s = 1,this%fates(nc)%nsites
                   call ed_update_site( this%fates(nc)%sites(s), &
-                        this%fates(nc)%bc_in(s) )
-               end do
+                        this%fates(nc)%bc_in(s), & 
+                        this%fates(nc)%bc_out(s) )
 
+
+               ! This call sends internal fates variables into the
+               ! output boundary condition structures. Note: this is called
+               ! internally in fates dynamics as well.
+               call FluxIntoLitterPools(this%fates(nc)%sites(s), &
+                    this%fates(nc)%bc_in(s), & 
+                    this%fates(nc)%bc_out(s))
+                  
+               end do
+               
+               
                ! ------------------------------------------------------------------------
                ! Re-populate all the hydraulics variables that are dependent
                ! on the key hydro state variables and plant carbon/geometry
@@ -1446,7 +1492,8 @@ module CLMFatesInterfaceMod
            end do
            
            call set_site_properties(this%fates(nc)%nsites, &
-                                    this%fates(nc)%sites,this%fates(nc)%bc_in)
+                                    this%fates(nc)%sites,  &
+                                    this%fates(nc)%bc_in)
 
            ! ----------------------------------------------------------------------------
            ! Initialize Hydraulics Code if turned on
@@ -1493,7 +1540,16 @@ module CLMFatesInterfaceMod
 
            do s = 1,this%fates(nc)%nsites
               call ed_update_site(this%fates(nc)%sites(s), &
-                    this%fates(nc)%bc_in(s))
+                    this%fates(nc)%bc_in(s), & 
+                    this%fates(nc)%bc_out(s))
+
+              ! This call sends internal fates variables into the
+              ! output boundary condition structures. Note: this is called
+              ! internally in fates dynamics as well.
+              call FluxIntoLitterPools(this%fates(nc)%sites(s), &
+                   this%fates(nc)%bc_in(s), & 
+                   this%fates(nc)%bc_out(s))
+              
            end do
 
            ! ------------------------------------------------------------------------
@@ -1992,12 +2048,6 @@ module CLMFatesInterfaceMod
                                this%fates(nc)%bc_out, &
                                dtime)
 
-    
-    call this%fates_hist%update_history_prod(nc, &
-                               this%fates(nc)%nsites,  &
-                               this%fates(nc)%sites, &
-                               dtime)
-
    call t_stopf('fates_wrapaccfluxes')
 
  end subroutine wrap_accumulatefluxes
@@ -2094,28 +2144,29 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
- subroutine wrap_bgc_summary(this, nc, soilbiogeochem_carbonflux_inst,     &
-                                    soilbiogeochem_carbonstate_inst)
-
-   
+ subroutine wrap_update_hifrq_hist(this, bounds_clump, &
+                                   soilbiogeochem_carbonflux_inst,     &
+                                   soilbiogeochem_carbonstate_inst)
 
     ! Arguments
     class(hlm_fates_interface_type), intent(inout)    :: this
-    integer          , intent(in)                     :: nc
+    type(bounds_type), intent(in)                     :: bounds_clump
     type(soilbiogeochem_carbonflux_type), intent(in)  :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
 
     ! locals
     real(r8) :: dtime
-    integer  :: s,c
+    integer  :: s, c, nc
 
-    call t_startf('fates_wrapbgcsummary')
+    call t_startf('fates_update_hifrq_hist')
 
     associate(& 
-        hr            => soilbiogeochem_carbonflux_inst%hr_col,      & ! (gC/m2/s) total heterotrophic respiration
+        hr            => soilbiogeochem_carbonflux_inst%hr_col,       & ! (gC/m2/s) total heterotrophic respiration
         totsomc       => soilbiogeochem_carbonstate_inst%totsomc_col, & ! (gC/m2) total soil organic matter carbon
         totlitc       => soilbiogeochem_carbonstate_inst%totlitc_col)   ! (gC/m2) total litter carbon in BGC pools
 
+      nc = bounds_clump%clump_index
+      
       ! Summarize Net Fluxes
       do s = 1, this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
@@ -2127,7 +2178,7 @@ module CLMFatesInterfaceMod
       dtime = get_step_size_real()
       
       ! Update history variables that track these variables
-      call this%fates_hist%update_history_cbal(nc, &
+      call this%fates_hist%update_history_hifrq(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
@@ -2135,9 +2186,9 @@ module CLMFatesInterfaceMod
 
     end associate
 
-    call t_stopf('fates_wrapbgcsummary')
+    call t_stopf('fates_wrap_hifrq_hist')
 
- end subroutine wrap_bgc_summary
+  end subroutine wrap_update_hifrq_hist
 
  ! ======================================================================================
 
@@ -2182,7 +2233,8 @@ module CLMFatesInterfaceMod
     return
  end subroutine TransferZ0mDisp
 
-  !-----------------------------------------------------------------------
+ !-----------------------------------------------------------------------
+ 
   subroutine InterpFileInputs(this, bounds)
     !
     ! !DESCRIPTION:
