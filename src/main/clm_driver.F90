@@ -9,7 +9,7 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : wrtdia, iulog, use_fates
+  use clm_varctl             , only : wrtdia, iulog, use_fates,use_fates_sp
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
@@ -226,7 +226,7 @@ contains
 
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
-       if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
+       if ( (n_drydep > 0 .and. drydep_method == DD_XLND).or.use_fates_sp ) then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -949,7 +949,7 @@ contains
 
                 ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
-       if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb)) then
+       if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb)).or.(use_fates_sp.and.(doalb))) then
           call t_startf('SatellitePhenology')
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
