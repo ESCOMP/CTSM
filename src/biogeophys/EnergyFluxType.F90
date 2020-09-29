@@ -441,12 +441,12 @@ contains
          avgflag='A', long_name='sensible heat from veg', &
          ptr_patch=this%eflx_sh_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
-    this%eflx_sh_stem_patch(begp:endp) = spval
-    call hist_addfld1d (fname='FSH_STEM', units='W/m^2',  &
-         avgflag='A', long_name='sensible heat from stem', &
-         ptr_patch=this%eflx_sh_stem_patch, c2l_scale_type='urbanf',default = 'inactive')
-
     if (use_biomass_heat_storage) then
+       this%eflx_sh_stem_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FSH_STEM', units='W/m^2',  &
+            avgflag='A', long_name='sensible heat from stem', &
+            ptr_patch=this%eflx_sh_stem_patch, c2l_scale_type='urbanf',default = 'inactive')
+
        this%dhsdt_canopy_patch(begp:endp) = spval
        call hist_addfld1d (fname='DHSDT_CANOPY', units='W/m^2',  &
             avgflag='A', long_name='change in canopy heat storage', &
