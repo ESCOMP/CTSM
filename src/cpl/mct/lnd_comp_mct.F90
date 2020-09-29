@@ -42,7 +42,7 @@ contains
     ! !USES:
     use shr_kind_mod     , only : shr_kind_cl
     use abortutils       , only : endrun
-    use clm_time_manager , only : get_nstep, get_step_size, set_timemgr_init, set_nextsw_cday
+    use clm_time_manager , only : get_nstep, set_timemgr_init, set_nextsw_cday
     use clm_initializeMod, only : initialize1, initialize2
     use clm_instMod      , only : water_inst, lnd2atm_inst, lnd2glc_inst
     use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog, noland
@@ -82,7 +82,6 @@ contains
     integer  :: lsize                                ! size of attribute vector
     integer  :: g,i,j                                ! indices
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
-    integer  :: dtime_clm                            ! clm time-step
     logical  :: exists                               ! true if file exists
     logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
     real(r8) :: scmlat                               ! single-column latitude
@@ -100,8 +99,6 @@ contains
     integer :: ref_tod                               ! reference time of day (sec)
     integer :: start_ymd                             ! start date (YYYYMMDD)
     integer :: start_tod                             ! start time of day (sec)
-    integer :: stop_ymd                              ! stop date (YYYYMMDD)
-    integer :: stop_tod                              ! stop time of day (sec)
     logical :: brnch_retain_casename                 ! flag if should retain the case name on a branch start type
     integer :: lbnum                                 ! input to memory diagnostic
     integer :: shrlogunit,shrloglev                  ! old values for log unit and log level
@@ -167,18 +164,25 @@ contains
     call seq_timemgr_EClockGetData(EClock,                               &
                                    start_ymd=start_ymd,                  &
                                    start_tod=start_tod, ref_ymd=ref_ymd, &
-                                   ref_tod=ref_tod, stop_ymd=stop_ymd,   &
-                                   stop_tod=stop_tod,                    &
-                                   calendar=calendar )
+                                   ref_tod=ref_tod, &
+                                   calendar=calendar, &
+                                   dtime=dtime_sync)
+    if (masterproc) then
+       write(iulog,*)'dtime = ',dtime_sync
+    end if
+
     call seq_infodata_GetData(infodata, case_name=caseid,    &
                               case_desc=ctitle, single_column=single_column,    &
                               scmlat=scmlat, scmlon=scmlon,                     &
                               brnch_retain_casename=brnch_retain_casename,      &
                               start_type=starttype, model_version=version,      &
                               hostname=hostname, username=username )
+
+    ! Note that we assume that CTSM's internal dtime matches the coupling time step.
+    ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
-                           ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, stop_ymd_in=stop_ymd,         &
-                           stop_tod_in=stop_tod)
+         ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, dtime_in=dtime_sync)
+
     if (     trim(starttype) == trim(seq_infodata_start_type_start)) then
        nsrest = nsrStartup
     else if (trim(starttype) == trim(seq_infodata_start_type_cont) ) then
@@ -197,7 +201,7 @@ contains
 
     ! Read namelist, grid and surface data
 
-    call initialize1( )
+    call initialize1(dtime=dtime_sync)
 
     ! If no land then exit out of initialization
 
@@ -232,20 +236,6 @@ contains
     ! Finish initializing clm
 
     call initialize2()
-
-    ! Check that clm internal dtime aligns with clm coupling interval
-
-    call seq_timemgr_EClockGetData(EClock, dtime=dtime_sync )
-    dtime_clm = get_step_size()
-    if (masterproc) then
-       write(iulog,*)'dtime_sync= ',dtime_sync,&
-            ' dtime_clm= ',dtime_clm,' mod = ',mod(dtime_sync,dtime_clm)
-    end if
-    if (mod(dtime_sync,dtime_clm) /= 0) then
-       write(iulog,*)'clm dtime ',dtime_clm,' and Eclock dtime ',&
-            dtime_sync,' never align'
-       call endrun( sub//' ERROR: time out of sync' )
-    end if
 
     ! Create land export state
 
@@ -420,6 +410,15 @@ contains
        ! Determine if dosend
        ! When time is not updated at the beginning of the loop - then return only if
        ! are in sync with clock before time is updated
+       !
+       ! NOTE(wjs, 2020-03-09) I think the do while (.not. dosend) loop only is important
+       ! for the first time step (when we run 2 steps). After that, we now assume that we
+       ! run one time step per coupling interval (based on setting the model's dtime from
+       ! the driver). (According to Mariana Vertenstein, sub-cycling (running multiple
+       ! land model time steps per coupling interval) used to be supported, but hasn't
+       ! been fully supported for a long time.) We may want to rework this logic to make
+       ! this more explicit, or - ideally - get rid of this extra time step at the start
+       ! of the run, at which point I think we could do away with this looping entirely.
 
        call get_curr_date( yr, mon, day, tod )
        ymd = yr*10000 + mon*100 + day
@@ -439,7 +438,7 @@ contains
        end if
        call update_rad_dtime(doalb)
 
-       ! Determine if time to write cam restart and stop
+       ! Determine if time to write restart and stop
 
        rstwr = .false.
        if (rstwr_sync .and. dosend) rstwr = .true.

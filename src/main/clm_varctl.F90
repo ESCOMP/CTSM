@@ -68,6 +68,9 @@ module clm_varctl
   ! dataset conventions
   character(len=256), public :: conventions = "CF-1.0"                   
 
+  ! component name for filenames (history or restart files)
+  character(len=8), public :: compname = 'clm2'
+
   !----------------------------------------------------------
   ! Unit Numbers
   !----------------------------------------------------------
@@ -221,6 +224,10 @@ module clm_varctl
   logical, public :: use_fates = .false.            ! true => use fates
 
   ! These are INTERNAL to the FATES module
+  integer, public            :: fates_parteh_mode = -9                 ! 1 => carbon only
+                                                                       ! 2 => C+N+P (not enabled yet)
+                                                                       ! no others enabled
+
   logical, public            :: use_fates_spitfire = .false.           ! true => use spitfire model
   logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
   logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
@@ -255,6 +262,12 @@ module clm_varctl
   integer, public :: CN_partition_opt = 0
   integer, public :: CN_evergreen_phenology_opt = 0
   integer, public :: carbon_resp_opt = 0
+
+  !----------------------------------------------------------
+  ! prescribed soil moisture streams switch 
+  !----------------------------------------------------------
+
+  logical, public :: use_soil_moisture_streams = .false. ! true => use prescribed soil moisture stream
 
   !----------------------------------------------------------
   ! lai streams switch for Sat. Phenology

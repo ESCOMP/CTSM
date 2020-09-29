@@ -12,14 +12,41 @@ in a namelist, but they are default values that will help
 determine default values for namelists.
 -->
 
-<!-- Default CLM start-type -->
-<clm_start_type phys="clm4_5"                   >startup</clm_start_type>
-<clm_start_type phys="clm5_0"                   >startup</clm_start_type>
-<clm_start_type phys="clm5_0" use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5" use_cndv=".true." >arb_ic</clm_start_type>
-<clm_start_type phys="clm5_0" use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type phys="clm4_5" use_fates=".true.">arb_ic</clm_start_type>
-<clm_start_type bgc_spinup="on"                 >cold</clm_start_type>
+<!-- 
+
+    Default CLM start-type 
+
+    NOTE: For clm_start_type of "startup" these need to be carefully coordinated with
+          the settings for use_init_interp, init_interp_attributes and finidat in
+          namelist_defaults_ctsm.xml.
+
+-->
+
+<clm_start_type phys="clm5_1"  use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"  use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_cndv=".true." >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm5_1"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm5_1"  sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm5_0"  sim_year="1850"   >startup</clm_start_type>
+<clm_start_type phys="clm4_5"  sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm5_1"  sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm5_0"  sim_year="2000"   >startup</clm_start_type>
+<clm_start_type phys="clm4_5"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_0"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm5_1"                    >arb_ic</clm_start_type>
+<clm_start_type phys="clm4_5"  use_fates=".true.">arb_ic</clm_start_type>
+<clm_start_type bgc_spinup="on"                  >cold</clm_start_type>
+
+<clm_start_type sim_year_range="1850-2100">arb_ic</clm_start_type>
+
+
+<!-- For transient cases, turn on demand to set flanduse_timeseries -->
+<clm_demand sim_year_range="1850-2000">flanduse_timeseries</clm_demand>
+<clm_demand sim_year_range="1850-2100">flanduse_timeseries</clm_demand>
+
 
 <!-- Default location of {csmdata} -->
 <csmdata>/fs/cgd/csm/inputdata</csmdata>
@@ -42,16 +69,15 @@ determine default values for namelists.
 <!-- Default simulation year range -->
 <sim_year_range>constant</sim_year_range>
 
-<!-- Check resolution and land/mask before continuing -->
-<chk_res mode="clm_stndln" >1</chk_res>
-<chk_res mode="ext_cesm"   >0</chk_res>
+<!-- Check resolution and land/mask in the local resolution list before continuing - normally turned off -->
+<chk_res>0</chk_res>
 
 <!-- Add note to namelist files documenting the options given to build-namelist -->
 <note mode="clm_stndln" >1</note>
 <note mode="ext_cesm"   >0</note>
 
-<!-- Default representative concentration pathway for future scenarios -->
-<rcp>-999.9</rcp>
+<!-- Default Shared Socioeconomic Pathway and representative concentration pathway for future scenarios -->
+<ssp_rcp>hist</ssp_rcp>
 
 <!-- Default land/ocean mask type -->
 <mask hgrid="0.23x0.31"           >gx1v6</mask>

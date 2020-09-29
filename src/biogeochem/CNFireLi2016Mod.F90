@@ -40,8 +40,8 @@ module CNFireLi2016Mod
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
-  use CNFireMethodMod                    , only : cnfire_method_type
-  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const
+  use FireMethodType                     , only : fire_method_type
+  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
   !
   implicit none
   private
@@ -52,19 +52,14 @@ module CNFireLi2016Mod
   type, extends(cnfire_base_type) :: cnfire_li2016_type
      private
   contains
-     !
-     ! !PUBLIC MEMBER FUNCTIONS:
-     procedure, public :: CNFireArea    ! Calculate fire area
+    !
+    ! !PUBLIC MEMBER FUNCTIONS:
+    procedure, public :: need_lightning_and_popdens
+    procedure, public :: CNFireArea    ! Calculate fire area
   end type cnfire_li2016_type
 
   !
   ! !PRIVATE MEMBER DATA:
-  !-----------------------------------------------------------------------
-
-  interface cnfire_li2016_type
-     ! initialize a new cnfire_base object
-     module procedure constructor
-  end interface cnfire_li2016_type
   !-----------------------------------------------------------------------
 
   character(len=*), parameter, private :: sourcefile = &
@@ -72,15 +67,19 @@ module CNFireLi2016Mod
 
 contains
 
-  !------------------------------------------------------------------------
-  type(cnfire_li2016_type) function constructor()
-    !
-    ! !DESCRIPTION:
-    ! Creates an object of type cnfire_base_type.
+  !-----------------------------------------------------------------------
+  function need_lightning_and_popdens(this)
     ! !ARGUMENTS:
+    class(cnfire_li2016_type), intent(in) :: this
+    logical :: need_lightning_and_popdens  ! function result
+    !
+    ! !LOCAL VARIABLES:
 
-    constructor%need_lightning_and_popdens = .true.
-  end function constructor
+    character(len=*), parameter :: subname = 'need_lightning_and_popdens'
+    !-----------------------------------------------------------------------
+
+    need_lightning_and_popdens = .true.
+  end function need_lightning_and_popdens
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
@@ -171,7 +170,7 @@ contains
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
 
-         btran2             => energyflux_inst%btran2_patch                    , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
+         btran2             => this%cnfire_base_type%btran2_patch              , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
          fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
          wf2                => waterdiagnosticbulk_inst%wf2_col                         , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
          
@@ -598,7 +597,7 @@ contains
            if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then  
               afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
-              arh30=1._r8-max(0.7_r8, min(1._r8,rh30_col(c)/90._r8))
+              arh30=1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/90._r8))
               if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
                 fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8)*((1._r8 -max(0._r8,&
                     min(1._r8,(btran_col(c)/wtlf(c)-bt_min)/(bt_max-bt_min))))**0.5_r8)
@@ -607,8 +606,8 @@ contains
               end if
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
-              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))*0.22_r8)  &
-                         *(1._r8-fs)*(1._r8-cropf_col(c))
+              ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8*cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                         cnfire_params%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c))
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               spread_m = fire_m**0.5_r8

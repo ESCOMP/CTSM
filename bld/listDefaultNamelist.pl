@@ -17,7 +17,7 @@
 #
 # To then get the files from the CESM SVN repository:
 #
-# ../../cime/scripts/Tools/check_input_data -datalistdir . -export
+# ../cime/scripts/Tools/check_input_data --data-list-dir . --download
 #
 #=======================================================================
 
@@ -44,13 +44,13 @@ else { $cfgdir = $cwd; }
 #-----------------------------------------------------------------------------------------------
 # Add $cfgdir to the list of paths that Perl searches for modules
 
-my @dirs = ( "$cfgdir", "../../../cime/utils/perl5lib" );
+my @dirs = ( "$cfgdir", "../cime/utils/perl5lib" );
 unshift @INC, @dirs;
 
 require queryDefaultXML;
 
 # Defaults
-my $cesmroot    = abs_path( "$cfgdir/../../../");
+my $cesmroot    = abs_path( "$cfgdir/../");
 
 # The namelist defaults file contains default values for all required namelist variables.
 my @nl_defaults_files = ( "$cfgdir/namelist_files/namelist_defaults_overall.xml",
@@ -84,9 +84,23 @@ EXAMPLES
 
   to then read the resulting clm.input_data_list file and retreive the files
 
-  ../../cime/scripts/Tools/check_input_data -datalistdir . -export
+  ../cime/scripts/Tools/check_input_data --data-list-dir . --download
 
 EOF
+}
+
+sub make_config_cache {
+   # Write a config_cache.xml file to read in
+   my ($phys, $config_cachefile) = @_;
+   my $fh = IO::File->new($config_cachefile, '>') or die "can't open file: $config_cachefile";
+   print $fh <<EOF;
+<?xml version="1.0"?>
+<config_definition>
+<commandline></commandline>
+<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies clm physics</entry>
+</config_definition>
+EOF
+   $fh->close();
 }
 
 #-----------------------------------------------------------------------------------------------
@@ -191,14 +205,12 @@ sub GetListofNeededFiles {
                                  "$cfgdir/namelist_files/namelist_definition_ctsm.xml"
                                );
   $inputopts{'nldef_files'}    = \@nl_definition_files;
-  $inputopts{'empty_cfg_file'} = "$cfgdir/config_files/config_definition_ctsm.xml";
+  $inputopts{'empty_cfg_file'} = "config_cache.xml";
 
   my $definition = Build::NamelistDefinition->new( $nl_definition_files[0] );
   foreach my $nl_defin_file ( @nl_definition_files ) {
      $definition->add( "$nl_defin_file" );
   }
-  my $cfg = Build::Config->new( $inputopts{'empty_cfg_file'} );
-
   # Resolutions...
   my @resolutions;
   if ( $opts{'res'} eq "all" ) {
@@ -208,6 +220,7 @@ sub GetListofNeededFiles {
   }
 
   # Input options
+  &make_config_cache( "clm5_0", $inputopts{'empty_cfg_file'} );
   push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_ctsm.xml";
   if ( defined($opts{'usrdat'}) ) {
       push @nl_defaults_files, "$cfgdir/namelist_files/namelist_defaults_usr_files.xml";
@@ -248,14 +261,14 @@ sub GetListofNeededFiles {
         # Loop over all possible simulation year: 1890, 2000, 2100 etc.
         #
         $settings{'sim_year_range'} = "constant";
-        my @rcps = $definition->get_valid_values( "rcp", 'noquotes'=>1 );
-        $settings{'rcp'} = $rcps[0];
+        my @ssp_rcps = $definition->get_valid_values( "ssp_rcp", 'noquotes'=>1 );
+        $settings{'ssp_rcp'} = $ssp_rcps[0];
 YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquotes'=>1 ) ) {
            print "sim_year = $sim_year\n" if $printing;
            $settings{'sim_year'} = $sim_year;
            if ( $sim_year ne 1850 && $sim_year ne 2000 && $sim_year > 1800 ) { next YEAR; }
 
-           my @bgcsettings   = $cfg->get_valid_values( "bgc" );
+           my @bgcsettings   = $definition->get_valid_values( "bgc_mode", 'noquotes'=>1 );
            print "bgc=@bgcsettings\n" if $printing;
            #
            # Loop over all possible BGC settings
@@ -298,11 +311,11 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
               $settings{'sim_year'}  = $1;
            }
            #
-           # Loop over all possible rcp's
+           # Loop over all possible ssp_rcp's
            #
-           print "sim_year_range=$sim_year_range rcp=@rcps\n" if $printing;
-           foreach my $rcp ( @rcps ) {
-              $settings{'rcp'}       = $rcp;
+           print "sim_year_range=$sim_year_range ssp_rcp=@ssp_rcps\n" if $printing;
+           foreach my $ssp_rcp ( @ssp_rcps ) {
+              $settings{'ssp_rcp'}       = $ssp_rcp;
               &GetListofNeededFiles( \%inputopts, \%settings, \%files );
               if ( $printTimes >= 1 ) {
                  $inputopts{'printing'} = 0;

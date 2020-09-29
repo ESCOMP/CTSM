@@ -17,6 +17,23 @@ manage_externals.log
 *.swp
 *~
 
+# vim files (from https://github.com/github/gitignore/blob/master/Global/Vim.gitignore)
+# Swap
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+# Session
+Session.vim
+# Temporary
+.netrwhist
+# (removed *~ because it is listed above)
+# Auto-generated tag files
+tags
+# Persistent undo
+[._]*.un~
+
 # mac files
 .DS_Store
 
@@ -55,6 +72,7 @@ buildnmlc
 /bld/unit_testers/drv_flds_in*
 /bld/unit_testers/temp_file.txt*
 /bld/unit_testers/user_nl_clm_real_parameters*
+/bld/unit_testers/user_nl_ctsm_real_parameters*
 /bld/unit_testers/env_run.xml
 
 # tools testing output
@@ -69,9 +87,12 @@ surfdata_*.namelist
 landuse.timeseries_*.namelist
 landuse.timeseries_*.log
 landuse_timeseries_*.txt
-clm.input_data_list
-clm.input_data_list.previous
+ctsm.input_data_list
+ctsm.input_data_list.previous
 *.stdout.txt.o*
+
+# mksurfdata unit tests
+unit_test_build
 
 # Tools executables
 /tools/mksurfdata_map/mksurfdata_map

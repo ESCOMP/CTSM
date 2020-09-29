@@ -95,7 +95,6 @@ module EnergyFluxType
      real(r8), pointer :: bsha_patch              (:)   ! patch shaded canopy transpiration wetness factor (0 to 1)
 
      ! Roots
-     real(r8), pointer :: btran2_patch            (:)   ! patch root zone soil wetness factor (0 to 1) 
      real(r8), pointer :: rresis_patch            (:,:) ! patch root resistance by layer (0-1)  (nlevgrnd)
 
      ! Latent heat
@@ -250,7 +249,6 @@ contains
     allocate(this%btran_patch              (begp:endp))             ; this%btran_patch             (:)   = nan
     allocate(this%btran_min_patch          (begp:endp))             ; this%btran_min_patch         (:)   = nan
     allocate(this%btran_min_inst_patch     (begp:endp))             ; this%btran_min_inst_patch    (:)   = nan
-    allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
     allocate( this%bsun_patch              (begp:endp))             ; this%bsun_patch              (:)   = nan
     allocate( this%bsha_patch              (begp:endp))             ; this%bsha_patch              (:)   = nan
     allocate( this%errsoi_patch            (begp:endp))             ; this%errsoi_patch            (:)   = nan
@@ -640,11 +638,6 @@ contains
          avgflag='A', long_name='daily minimum of transpiration beta factor', &
          ptr_patch=this%btran_min_patch, l2g_scale_type='veg')
 
-    this%btran2_patch(begp:endp) = spval
-    call hist_addfld1d (fname='BTRAN2', units='unitless',  &
-         avgflag='A', long_name='root zone soil wetness factor', &
-         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
-
     if (use_cn) then
        this%rresis_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='RRESIS', units='proportion', type2d='levgrnd', &
@@ -860,11 +853,6 @@ contains
             long_name='urban heating flux', units='watt/m^2', &
             interpinic_flag='interp', readvar=readvar, data=this%eflx_urban_heat_col)
     end if
-
-    call restartvar(ncid=ncid, flag=flag, varname='btran2', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%btran2_patch) 
 
     call restartvar(ncid=ncid, flag=flag, varname='BTRAN_MIN', xtype=ncd_double,  &
          dim1name='pft', &

@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""Script to build CTSM library and its dependencies using cime's build system"""
+
+import os
+import sys
+
+_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            os.pardir,
+                            'python')
+sys.path.insert(1, _CTSM_PYTHON)
+
+from ctsm.path_utils import add_cime_lib_to_path
+
+cime_path = add_cime_lib_to_path()
+
+from ctsm.lilac_build_ctsm import main
+
+if __name__ == "__main__":
+    main(cime_path=cime_path)
