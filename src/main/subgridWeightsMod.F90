@@ -92,7 +92,7 @@ module subgridWeightsMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use abortutils   , only : endrun
-  use clm_varctl   , only : iulog, all_active, run_zero_weight_urban, use_fates
+  use clm_varctl   , only : iulog, all_active, run_zero_weight_urban, use_fates,use_fates_sp
   use clm_varcon   , only : nameg, namel, namec, namep
   use decompMod    , only : bounds_type
   use GridcellType , only : grc                
@@ -194,7 +194,7 @@ contains
          avgflag='A', long_name='% of each landunit on grid cell', &
          ptr_lnd=subgrid_weights_diagnostics%pct_landunit)
 
-    if(.not.use_fates) then
+    if(.not.use_fates.or.use_fates_sp) then
        call hist_addfld2d (fname='PCT_NAT_PFT', units='%', type2d='natpft', &
              avgflag='A', long_name='% of each PFT on the natural vegetation (i.e., soil) landunit', &
              ptr_lnd=subgrid_weights_diagnostics%pct_nat_pft)
@@ -858,7 +858,7 @@ contains
        g = patch%gridcell(p)
        l = patch%landunit(p)
        ptype = patch%itype(p)
-       if (lun%itype(l) == istsoil .and. (.not.use_fates) ) then
+       if (lun%itype(l) == istsoil .and. (.not.use_fates.or.use_fates_sp) ) then
           ptype_1indexing = ptype + (1 - natpft_lb)
           subgrid_weights_diagnostics%pct_nat_pft(g, ptype_1indexing) = patch%wtlunit(p) * 100._r8
        else if (lun%itype(l) == istcrop) then
