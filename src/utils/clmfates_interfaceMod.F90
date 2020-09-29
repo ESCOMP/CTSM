@@ -596,9 +596,9 @@ module CLMFatesInterfaceMod
             do m = natpft_lb,natpft_ub-1
                ft = m-natpft_lb+1 
                if (natveg_patch_exists(g, m)) then
-                  this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
+                  this%fates(nc)%bc_in(s)%pft_areafrac(ft-1)=wt_nat_patch(g,m)
                else 
-                  this%fates(nc)%bc_in(s)%pft_areafrac(ft)=0._r8
+                  this%fates(nc)%bc_in(s)%pft_areafrac(ft-1)=0._r8
                end if
             end do
 
@@ -1099,7 +1099,7 @@ end if
              z0m(p)    = this%fates(nc)%bc_out(s)%z0m_pa(ifp)
              displa(p) = this%fates(nc)%bc_out(s)%displa_pa(ifp)
              dleaf_patch(p) = this%fates(nc)%bc_out(s)%dleaf_pa(ifp)
-             
+
 
           end do
 
