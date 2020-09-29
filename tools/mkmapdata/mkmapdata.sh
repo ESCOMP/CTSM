@@ -511,14 +511,14 @@ until ((nfile>${#INGRID[*]})); do
          # NCHUNKS_DST = 20 fails for 10x15
          # Possible to calculate from DST_MAXSPATIALRES?
          NCHUNKS_DST=10
-         cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES} --weightfilemode WITHAUX"
+         cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES} --weightfilemode WITHAUX --64bit_offset"
          runcmd $cmd
       else
          NCHUNKS_DST=1
          cmd="$mpirun ${CLI_EXECUTABLE} --source ${INGRID[nfile]} --destination ${GRIDFILE} --spatial_subset --no_genweights --spatial_subset_path ${SUBSETS_PATH} --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]}"
          runcmd $cmd
 
-         cmd="$mpirun ${CLI_EXECUTABLE} --source ${SUBSETS_PATH} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES} --weightfilemode WITHAUX"
+         cmd="$mpirun ${CLI_EXECUTABLE} --source ${SUBSETS_PATH} --destination ${GRIDFILE} --esmf_regrid_method CONSERVE --nchunks_dst ${NCHUNKS_DST} --wd ${CHUNKDIR} --weight ${OUTFILE[nfile]} --persist --esmf_src_type ${SRC_TYPE[nfile]} --esmf_dst_type ${DST_TYPE} --src_resolution ${SRC_MAXSPATIALRES[nfile]} --dst_resolution ${DST_MAXSPATIALRES} --weightfilemode WITHAUX --64bit_offset"
          runcmd $cmd
       fi
 
