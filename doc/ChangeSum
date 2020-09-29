@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev003 ivanderk 09/29/2020 Add capability for dynamic lakes
   ctsm5.1.dev002   slevis 09/25/2020 Reduce duplication between caps
   ctsm5.1.dev001     erik 09/23/2020 Start the clm5_1 physics series, with some changes to the fire model from Fang Li
   ctsm1.0.dev113   negins 09/08/2020 Some bit-for-bit changes needed for the Perturbed Parameter Ensemble work
