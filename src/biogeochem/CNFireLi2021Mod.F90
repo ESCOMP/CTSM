@@ -19,7 +19,7 @@ module CNFireLi2021Mod
   use shr_infnan_mod                     , only : shr_infnan_isnan
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog
-  use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
+  use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full, nlevgrnd
   use clm_varcon                         , only : dzsoi_decomp
   use pftconMod                          , only : noveg, pftcon
   use abortutils                         , only : endrun
@@ -37,6 +37,9 @@ module CNFireLi2021Mod
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
   use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType               , only : wateratm2lndbulk_type
+  use WaterStateBulkType                 , only : waterstatebulk_type
+  use SoilStateType                      , only : soilstate_type
+  use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -85,8 +88,10 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_exposedvegp, filter_exposedvegp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
-       wateratm2lndbulk_inst, cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+       wateratm2lndbulk_inst, waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
+       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
     ! Computes column-level burned area 
@@ -107,11 +112,16 @@ contains
     integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer                               , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
+    integer                               , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
     type(waterdiagnosticbulk_type)        , intent(in)    :: waterdiagnosticbulk_inst
     type(wateratm2lndbulk_type)           , intent(in)    :: wateratm2lndbulk_inst
+    type(waterstatebulk_type)             , intent(in)    :: waterstatebulk_inst
+    type(soilstate_type)                  , intent(in)    :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -344,6 +354,10 @@ contains
            dtrotr_col(c)=0._r8
         end if
      end do
+
+     call this%CNFire_calc_fire_root_wetness(bounds, num_exposedvegp, filter_exposedvegp, &
+          waterstatebulk_inst, soilstate_inst, soil_water_retention_curve)
+
      do pi = 1,max_patch_per_col
         do fc = 1,num_soilc
            c = filter_soilc(fc)
@@ -659,19 +673,15 @@ contains
  end subroutine CNFireArea
 
  !----------------------------------------------------------------------
- subroutine CNFire_calc_fire_root_wetness( this, bounds, nlevgrnd, num_exposedvegp, filter_exposedvegp, &
+ subroutine CNFire_calc_fire_root_wetness( this, bounds, num_exposedvegp, filter_exposedvegp, &
                                      waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
     !
     ! Calculate the root wetness term that will be used by the fire model
     !
     use pftconMod                 , only : pftcon
     use PatchType                 , only : patch
-    use WaterStateBulkType        , only : waterstatebulk_type
-    use SoilStateType             , only : soilstate_type
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     class(cnfire_base_type) :: this
     type(bounds_type)      , intent(in)   :: bounds                         !bounds
-    integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
     integer                , intent(in)   :: num_exposedvegp                !number of filters
     integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
     type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
@@ -688,7 +698,8 @@ contains
          watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
          btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
          rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
-         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         ! FIXME(wjs, 2020-09-18) change this to use h2osoi_vol_col instead of the prehydrology version
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_prehydrology_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
 
       do j = 1,nlevgrnd
