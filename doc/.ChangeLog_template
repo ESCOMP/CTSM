@@ -56,9 +56,6 @@ Caveats for developers (e.g., code that is duplicated that requires double maint
 
 Changes to tests or testing:
 
-Code reviewed by:
-
-
 CTSM testing:
 
 [... Remove before making master tag.  Available test levels:
@@ -104,8 +101,9 @@ Answer changes
 
 Changes answers relative to baseline:
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
 
   Summarize any changes to answers, i.e.,
     - what code configurations:

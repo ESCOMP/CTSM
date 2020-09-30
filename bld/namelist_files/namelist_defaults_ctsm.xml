@@ -3599,6 +3599,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- (some other defaults for dynamic subgrid   -->
 <!-- are set in the BuildNamelist code)         -->
 <!-- =========================================  -->
+<do_transient_lakes>.false.</do_transient_lakes>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
 
 <!-- =========================================  -->
