@@ -348,7 +348,7 @@ contains
     ! !LOCAL VARIABLES:
     real(r8), parameter :: btran0 = 0.0_r8  ! initial value
     real(r8) :: smp_node, s_node  !temporary variables
-    integer :: p, f, j, c, l      !indices
+    integer :: p, f, j, c         !indices
     !------------------------------------------------------------------------------
 
     ! Enforce expected array sizes   
@@ -378,7 +378,6 @@ contains
          do f = 1, fn
             p = filterp(f)
             c = patch%column(p)
-            l = patch%landunit(p)
 
             ! Root resistance factors
             ! rootr effectively defines the active root fraction in each layer      

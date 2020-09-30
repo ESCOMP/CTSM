@@ -12,7 +12,7 @@ module histFileMod
   use shr_sys_mod    , only : shr_sys_flush
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_vertsoilc, use_fates
+  use clm_varctl     , only : iulog, use_vertsoilc, use_fates, compname
   use clm_varcon     , only : spval, ispval, dzsoi_decomp
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
@@ -492,7 +492,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (masterproc) then
-       write(iulog,*)  trim(subname),' Initializing clm2 history files'
+       write(iulog,*)  trim(subname),' Initializing ', trim(compname), ' history files'
        write(iulog,'(72a1)') ("-",i=1,60)
        call shr_sys_flush(iulog)
     endif
@@ -539,7 +539,7 @@ contains
     end do
 
     if (masterproc) then
-       write(iulog,*)  trim(subname),' Successfully initialized clm2 history files'
+       write(iulog,*)  trim(subname),' Successfully initialized ', trim(compname), ' history files'
        write(iulog,'(72a1)') ("-",i=1,60)
        call shr_sys_flush(iulog)
     endif
@@ -3749,7 +3749,7 @@ contains
 
           ! Create the restart history filename and open it
           write(hnum,'(i1.1)') t-1
-          locfnhr(t) = "./" // trim(caseid) //".clm2"// trim(inst_suffix) &
+          locfnhr(t) = "./" // trim(caseid) //"."// trim(compname) // trim(inst_suffix) &
                         // ".rh" // hnum //"."// trim(rdate) //".nc"
 
           call htape_create( t, histrest=.true. )
@@ -4546,7 +4546,7 @@ contains
       write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
    endif
    write(hist_index,'(i1.1)') hist_file - 1
-   set_hist_filename = "./"//trim(caseid)//".clm2"//trim(inst_suffix)//&
+   set_hist_filename = "./"//trim(caseid)//"."//trim(compname)//trim(inst_suffix)//&
                        ".h"//hist_index//"."//trim(cdate)//".nc"
 
    ! check to see if the concatenated filename exceeded the
