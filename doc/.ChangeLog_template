@@ -101,9 +101,9 @@ Answer changes
 
 Changes answers relative to baseline:
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
-  And always remove these three lines and parts that don't apply.
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
 
   Summarize any changes to answers, i.e.,
     - what code configurations:
