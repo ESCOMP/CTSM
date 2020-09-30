@@ -17,7 +17,6 @@ module CNFireLi2021Mod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
-  use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full, nlevgrnd
   use clm_varcon                         , only : dzsoi_decomp
@@ -46,7 +45,6 @@ module CNFireLi2021Mod
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   use FireMethodType                     , only : fire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
-  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const
   !
   implicit none
   private
@@ -66,11 +64,11 @@ module CNFireLi2021Mod
   !
   ! !PRIVATE MEMBER DATA:
   !-----------------------------------------------------------------------
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
-
 
   !-----------------------------------------------------------------------
   function need_lightning_and_popdens(this)
@@ -97,7 +95,7 @@ contains
     ! Computes column-level burned area 
     !
     ! !USES:
-    use clm_time_manager     , only: get_step_size, get_days_per_year, get_curr_date, get_nstep
+    use clm_time_manager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
     use clm_varpar           , only: max_patch_per_col
     use clm_varcon           , only: secspday, secsphr
     use clm_varctl           , only: spinup_state
@@ -158,9 +156,9 @@ contains
     real(r8), pointer :: rh30_col(:)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(totlitc_col)           == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soi17cm_col)         == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(totlitc_col)           == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soi17cm_col)         == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                      & 
          totlitc            => totlitc_col                                     , & ! Input:  [real(r8) (:)     ]  (gC/m2) total lit C (column-level mean)           
@@ -270,7 +268,7 @@ contains
      call get_curr_date (kyr, kmo, kda, mcsec)
      dayspyr = get_days_per_year()
      ! Get model step size
-     dt      = real( get_step_size(), r8 )
+     dt      = get_step_size_real()
      !
      ! On first time-step, just set area burned to zero and exit
      !
@@ -355,6 +353,7 @@ contains
         end if
      end do
 
+     ! This subroutine calculates btran2
      call this%CNFire_calc_fire_root_wetness(bounds, num_exposedvegp, filter_exposedvegp, &
           waterstatebulk_inst, soilstate_inst, soil_water_retention_curve)
 
