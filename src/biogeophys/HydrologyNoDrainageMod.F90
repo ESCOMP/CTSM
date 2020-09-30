@@ -251,7 +251,6 @@ contains
          h2osoi_ice_tot     => b_waterdiagnostic_inst%h2osoi_ice_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
          h2osoi_liq_tot     => b_waterdiagnostic_inst%h2osoi_liq_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed liquid water (kg/m2)   
          h2osoi_vol         => b_waterstate_inst%h2osoi_vol_col         , & ! Output: [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-         h2osoi_vol_prehydrology => b_waterstate_inst%h2osoi_vol_prehydrology_col         , & ! Output: [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) saved before hydrology [m3/m3]
          h2osno_top         => b_waterdiagnostic_inst%h2osno_top_col         , & ! Output: [real(r8) (:)   ]  mass of snow in top layer (col) [kg]    
          wf                 => b_waterdiagnostic_inst%wf_col                 , & ! Output: [real(r8) (:)   ]  soil water as frac. of whc for top 0.05 m 
          wf2                => b_waterdiagnostic_inst%wf2_col                , & ! Output: [real(r8) (:)   ]  soil water as frac. of whc for top 0.17 m 
@@ -272,13 +271,6 @@ contains
        call water_inst%ResetCheckedTracers(bounds)
        call water_inst%TracerConsistencyCheck(bounds, 'before main snow code in HydrologyNoDrainage')
     end if
-
-    do j = 1, nlevgrnd
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          h2osoi_vol_prehydrology(c,j) = h2osoi_vol(c,j)
-       end do
-    end do
 
       ! Determine step size
 

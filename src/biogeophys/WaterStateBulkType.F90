@@ -27,8 +27,6 @@ module WaterStateBulkType
 
      real(r8), pointer :: snow_persistence_col   (:)   ! col length of time that ground has had non-zero snow thickness (sec)
      real(r8), pointer :: int_snow_col           (:)   ! col integrated snowfall (mm H2O)
-     real(r8), pointer :: h2osoi_vol_prehydrology_col (:,:) ! col volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevgrnd) - saved pre-hydrology
-
 
    contains
 
@@ -105,8 +103,6 @@ contains
 
     allocate(this%snow_persistence_col   (begc:endc))                     ; this%snow_persistence_col   (:)   = nan
     allocate(this%int_snow_col           (begc:endc))                     ; this%int_snow_col           (:)   = nan   
-    allocate(this%h2osoi_vol_prehydrology_col(begc:endc, 1:nlevgrnd)); this%h2osoi_vol_prehydrology_col(:,:)  = nan
-
 
   end subroutine InitBulkAllocate
 
