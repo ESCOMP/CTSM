@@ -1,4 +1,131 @@
 ===============================================================
+Tag name:  ctsm5.1.dev004
+Originator(s): oleson (Keith Oleson), sacks (Bill Sacks)
+Date:  Wed Sep 30 10:45:25 MDT 2020
+One-line Summary: Improve robustness of onset and offset counters when changing dt
+
+Purpose of changes
+------------------
+
+The logic in CNPhenology for onset_counter and offset_counter was not
+robust when the model time step differed from the time step used to
+generate the finidat file. This showed up when running with a 20-minute
+time step using a finidat file that was generated with a 30-minute time
+step. See https://github.com/ESCOMP/CTSM/issues/1163 for details.
+
+The fix here improves the situation significantly, but I believe still
+leaves some issues remaining; see
+https://github.com/ESCOMP/CTSM/issues/1167 for details.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1163 (onset_counter variable on (all?) restart
+  files is not compatible with subsequent model runs using a 20 minute
+  time step)
+
+Known bugs introduced in this tag (include github issue ID):
+- ESCOMP/CTSM#1167 (Rework CNPhenology onset and offset triggers to be
+  more robust to changes in dt)
+  - This issue was not exactly introduced in this tag, but it captures
+    some things that I think still need to be done for complete robustness
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: not checked (none expected)
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- pass
+
+    ok: tests pass, one test had answer changes as noted below
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but in very limited circumstances
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only when the model run uses a different
+      time step than the initial conditions file
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; magnitude not investigated; in some cases,
+      the differences might be significant if the model actually
+      continues without aborting
+
+    In the aux_clm test suite, this only appears in one test:
+      SMS_Ln9.ne30pg2_ne30pg2_mg17.I2000Clm50BgcCrop.cheyenne_intel.clm-clm50cam6LndTuningMode
+
+    but it might appear more widely in cam / fully coupled testing
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1165
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev003
 Originator(s): ivanderkelen (Inne Vanderkelen) / sacks (Bill Sacks)
 Date:  Tue Sep 29 10:16:00 MDT 2020
