@@ -44,7 +44,7 @@ module controlMod
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp 
-  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif, nitrifReadNML
+  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
   use SoilHydrologyMod                 , only: soilHydReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
@@ -109,13 +109,13 @@ contains
   end subroutine control_setNL
 
   !------------------------------------------------------------------------
-  subroutine control_init( )
+
+  subroutine control_init(dtime)
     !
     ! !DESCRIPTION:
     ! Initialize CLM run control information
     !
     ! !USES:
-    use clm_time_manager                 , only : set_timemgr_init
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
@@ -124,21 +124,19 @@ contains
     use landunit_varcon                  , only : max_lunit
     use CNSoilMatrixMod                  , only : CNSoilMatrixInit
     !
+    ! ARGUMENTS
+    integer, intent(in) :: dtime    ! model time step (seconds)
+
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
-    integer :: dtime                ! Integer time-step
     logical :: use_init_interp      ! Apply initInterp to the file given by finidat
     !------------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
     ! Namelist Variables
     ! ----------------------------------------------------------------------
-
-    ! Time step
-    namelist / clm_inparm/ &
-    dtime
 
     ! CLM namelist settings
 
@@ -231,7 +229,8 @@ contains
           use_fates_planthydro, use_fates_ed_st3,       &
           use_fates_ed_prescribed_phys,                 &
           use_fates_inventory_init,                     &
-          fates_inventory_ctrl_filename
+          fates_inventory_ctrl_filename,                &
+          fates_parteh_mode
 
 
     ! CLM 5.0 nitrogen flags
@@ -241,6 +240,8 @@ contains
          plant_ndemand_opt, substrate_term_opt, nscalar_opt, temp_scalar_opt, &
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
          CN_partition_opt, CN_evergreen_phenology_opt, carbon_resp_opt  
+
+    namelist /clm_inparm/ use_soil_moisture_streams
 
     namelist /clm_inparm/ use_lai_streams
 
@@ -351,19 +352,16 @@ contains
        ! Process some namelist variables, and perform consistency checks
        ! ----------------------------------------------------------------------
 
-       call set_timemgr_init( dtime_in=dtime )
-
-       if (use_init_interp) then
-          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
-       end if
-
-       ! History and restart files
-
+       ! History and restart files (dependent on settings of dtime)
        do i = 1, max_tapes
           if (hist_nhtfrq(i) < 0) then
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
+
+       if (use_init_interp) then
+          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
+       end if
 
        if (maxpatch_glcmec <= 0) then
           call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
@@ -548,7 +546,6 @@ contains
 
     call soilHydReadNML(   NLFilename )
     if ( use_cn ) then
-       call nitrifReadNML(             NLFilename )
        call CNFireReadNML(             NLFilename )
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
@@ -734,6 +731,7 @@ contains
     call mpi_bcast (use_fates_inventory_init, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -754,6 +752,8 @@ contains
     call mpi_bcast (carbon_resp_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
 
     call mpi_bcast (use_luna, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_soil_moisture_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -1083,6 +1083,7 @@ contains
        write(iulog, *) '    use_fates_spitfire = ', use_fates_spitfire
        write(iulog, *) '    use_fates_logging = ', use_fates_logging
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
+       write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
        write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
@@ -1116,7 +1117,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (finidat == ' ') then
-       call endrun(msg=' ERROR: Can only set use_init_interp if finidat is set')
+       write(iulog,*)' WARNING: Setting use_init_interp has no effect if finidat is not also set'
     end if
 
     if (finidat_interp_source /= ' ') then

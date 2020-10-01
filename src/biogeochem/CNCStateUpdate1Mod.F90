@@ -143,7 +143,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
        crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-       soilbiogeochem_carbonflux_inst)
+       soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, update all the prognostic carbon state
@@ -159,6 +159,7 @@ contains
     type(cnveg_carbonflux_type)          , intent(inout) :: cnveg_carbonflux_inst ! See note below for xsmrpool_to_atm_patch
     type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+    logical                              , intent(in)    :: dribble_crophrv_xsmrpool_2atm
     !
     ! !LOCAL VARIABLES:
     integer  :: c,p,j,k,l ! indices
@@ -166,6 +167,7 @@ contains
     real(r8) :: dt        ! radiation time step (seconds)
     real(r8) :: check_cpool
     real(r8) :: cpool_delta
+    real(r8), parameter :: kprod05 = 1.44e-7  ! decay constant for 0.5-year product pool (1/s) (lose ~90% over a half year)
     !-----------------------------------------------------------------------
 
     associate(                                                               & 
@@ -190,33 +192,33 @@ contains
 
       ! plant to litter fluxes
       if (.not. use_fates) then    
-      do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            if (.not. use_soil_matrixcn) then
-            ! phenology and dynamic land cover fluxes
-               cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = &
-                    cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
-               cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = &
-                    cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
-               cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = &
-                    cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               if (.not. use_soil_matrixcn) then
+               ! phenology and dynamic land cover fluxes
+                  cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = &
+                       cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
+                  cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = &
+                       cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
+                  cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = &
+                       cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
                
 
-            ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
-            ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
-            ! time step, but to be safe, I'm explicitly setting it to zero here.
-               cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
-            else
-               cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
-                    cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
-               cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
-                    cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
-               cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
-                    cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
-            end if
+               ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
+               ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
+               ! time step, but to be safe, I'm explicitly setting it to zero here.
+                  cf_soil%decomp_cpools_sourcesink_col(c,j,i_cwd) = 0._r8
+               else
+                  cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
+                       cf_soil%matrix_Cinput%V(c,j+(i_met_lit-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
+                  cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
+                       cf_soil%matrix_Cinput%V(c,j+(i_cel_lit-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
+                  cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
+                       cf_soil%matrix_Cinput%V(c,j+(i_lig_lit-1)*nlevdecomp) + cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
+               end if
+            end do
          end do
-      end do
       else  !use_fates
          ! here add all fates litterfall and CWD breakdown to litter fluxes
          do j = 1,nlevdecomp
@@ -260,7 +262,7 @@ contains
       end do
 
     if (.not. use_fates) then    
-      do fp = 1,num_soilp
+patch:do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
 
@@ -292,9 +294,6 @@ contains
            cs_veg%leafc_patch(p) = cs_veg%leafc_patch(p) - cf_veg%leafc_to_litter_patch(p)*dt
            cs_veg%frootc_patch(p) = cs_veg%frootc_patch(p) - cf_veg%frootc_to_litter_patch(p)*dt
          
-        
-        
-
          ! livewood turnover fluxes
            if (woody(ivt(p)) == 1._r8) then
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_deadstemc_patch(p)*dt
@@ -304,6 +303,8 @@ contains
            end if
            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
               cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_litter_patch(p)*dt
+              cs_veg%livestemc_patch(p)  = cs_veg%livestemc_patch(p)  - cf_veg%livestemc_to_biofuelc_patch(p)*dt
+              cs_veg%leafc_patch(p)      = cs_veg%leafc_patch(p)      - cf_veg%leafc_to_biofuelc_patch(p)*dt
               cs_veg%grainc_patch(p)     = cs_veg%grainc_patch(p) &
                    - (cf_veg%grainc_to_food_patch(p) + cf_veg%grainc_to_seed_patch(p))*dt
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
@@ -319,45 +320,45 @@ contains
            end if
         end if !not use_matrixcn
 
-         check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
-         cpool_delta  =  cs_veg%cpool_patch(p) 
-         
-         ! maintenance respiration fluxes from cpool
+        check_cpool = cs_veg%cpool_patch(p)- cf_veg%psnsun_to_cpool_patch(p)*dt-cf_veg%psnshade_to_cpool_patch(p)*dt
+        cpool_delta  =  cs_veg%cpool_patch(p) 
 
-         cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_xsmrpool_patch(p)*dt
-         cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%leaf_curmr_patch(p)*dt
-         cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%froot_curmr_patch(p)*dt
-         If (woody(ivt(p)) == 1._r8) then
-            cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
-            cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livecroot_curmr_patch(p)*dt
-         end if
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
-            cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
-            cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%grain_curmr_patch(p)*dt
-         end if
-         
-         
-         cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) -  cf_veg%cpool_to_resp_patch(p)*dt
+           ! maintenance respiration fluxes from cpool
 
-         !RF Add in the carbon spent on uptake respiration. 
-         cs_veg%cpool_patch(p)= cs_veg%cpool_patch(p) - cf_veg%soilc_change_patch(p)*dt
+           cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%cpool_to_xsmrpool_patch(p)*dt
+           cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%leaf_curmr_patch(p)*dt
+           cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%froot_curmr_patch(p)*dt
+           If (woody(ivt(p)) == 1._r8) then
+              cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
+              cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livecroot_curmr_patch(p)*dt
+           end if
+           if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+              cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%livestem_curmr_patch(p)*dt
+              cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) - cf_veg%grain_curmr_patch(p)*dt
+           end if
          
-         ! maintenance respiration fluxes from xsmrpool
-         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) + cf_veg%cpool_to_xsmrpool_patch(p)*dt
-         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%leaf_xsmr_patch(p)*dt
-         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%froot_xsmr_patch(p)*dt
-         if (woody(ivt(p)) == 1._r8) then
-            cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
-            cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livecroot_xsmr_patch(p)*dt
-         end if
+         
+           cs_veg%cpool_patch(p) = cs_veg%cpool_patch(p) -  cf_veg%cpool_to_resp_patch(p)*dt
 
-         ! allocation fluxes
-         if (carbon_resp_opt == 1) then
-            cf_veg%cpool_to_leafc_patch(p) = cf_veg%cpool_to_leafc_patch(p) - cf_veg%cpool_to_leafc_resp_patch(p)
-            cf_veg%cpool_to_leafc_storage_patch(p) = cf_veg%cpool_to_leafc_storage_patch(p) - &
-                 cf_veg%cpool_to_leafc_storage_resp_patch(p)
-    	    cf_veg%cpool_to_frootc_patch(p) = cf_veg%cpool_to_frootc_patch(p) - cf_veg%cpool_to_frootc_resp_patch(p)
-            cf_veg%cpool_to_frootc_storage_patch(p) = cf_veg%cpool_to_frootc_storage_patch(p) &
+           !RF Add in the carbon spent on uptake respiration. 
+           cs_veg%cpool_patch(p)= cs_veg%cpool_patch(p) - cf_veg%soilc_change_patch(p)*dt
+           
+           ! maintenance respiration fluxes from xsmrpool
+           cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) + cf_veg%cpool_to_xsmrpool_patch(p)*dt
+           cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%leaf_xsmr_patch(p)*dt
+           cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%froot_xsmr_patch(p)*dt
+           if (woody(ivt(p)) == 1._r8) then
+              cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livestem_xsmr_patch(p)*dt
+              cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p) - cf_veg%livecroot_xsmr_patch(p)*dt
+           end if
+
+           ! allocation fluxes
+           if (carbon_resp_opt == 1) then
+              cf_veg%cpool_to_leafc_patch(p) = cf_veg%cpool_to_leafc_patch(p) - cf_veg%cpool_to_leafc_resp_patch(p)
+              cf_veg%cpool_to_leafc_storage_patch(p) = cf_veg%cpool_to_leafc_storage_patch(p) - &
+                   cf_veg%cpool_to_leafc_storage_resp_patch(p)
+              cf_veg%cpool_to_frootc_patch(p) = cf_veg%cpool_to_frootc_patch(p) - cf_veg%cpool_to_frootc_resp_patch(p)
+              cf_veg%cpool_to_frootc_storage_patch(p) = cf_veg%cpool_to_frootc_storage_patch(p) &
                  - cf_veg%cpool_to_frootc_storage_resp_patch(p)
          end if
          cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_leafc_patch(p)*dt &
@@ -377,8 +378,8 @@ contains
                cf_veg%cpool_to_livecrootc_patch(p) = cf_veg%cpool_to_livecrootc_patch(p) - cf_veg%cpool_to_livecrootc_resp_patch(p)
                cf_veg%cpool_to_livecrootc_storage_patch(p) = cf_veg%cpool_to_livecrootc_storage_patch(p) - &
                     cf_veg%cpool_to_livecrootc_storage_resp_patch(p)
-    	       cf_veg%cpool_to_livestemc_patch(p) = cf_veg%cpool_to_livestemc_patch(p) - cf_veg%cpool_to_livestemc_resp_patch(p)
-    	       cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
+               cf_veg%cpool_to_livestemc_patch(p) = cf_veg%cpool_to_livestemc_patch(p) - cf_veg%cpool_to_livestemc_resp_patch(p)
+               cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
                  cf_veg%cpool_to_livestemc_storage_resp_patch(p)
             end if
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt &
@@ -405,7 +406,7 @@ contains
          if (ivt(p) >= npcropmin) then ! skip 2 generic crops
             if (carbon_resp_opt == 1) then
                cf_veg%cpool_to_livestemc_patch(p) = cf_veg%cpool_to_livestemc_patch(p) - cf_veg%cpool_to_livestemc_resp_patch(p)
-    	       cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) 	- &
+               cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
                  cf_veg%cpool_to_livestemc_storage_resp_patch(p)
             end if
             cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt &
@@ -540,9 +541,9 @@ contains
          end if
 
          
-      end do ! end of patch loop
-    end if
-        
+        end do patch ! end of patch loop
+      end if   ! end of NOT fates
+    
     end associate
   
   end subroutine CStateUpdate1

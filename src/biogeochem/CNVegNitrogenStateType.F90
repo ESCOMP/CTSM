@@ -115,6 +115,7 @@ module CNVegNitrogenStateType
      real(r8), pointer :: totn_p2c_col                        (:) ! (gN/m2) totn_patch averaged to col
      real(r8), pointer :: totn_col                            (:) ! (gN/m2) total column nitrogen, incl veg
      real(r8), pointer :: totecosysn_col                      (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
+     real(r8), pointer :: totn_grc                            (:) ! (gN/m2) total gridcell nitrogen
 ! acc spinup
      real(r8), pointer :: matrix_nalloc_leaf_acc_patch        (:) ! (gN/m2/year) Input N allocated to leaf during this year 
      real(r8), pointer :: matrix_nalloc_leafst_acc_patch      (:) ! (gN/m2/year) Input N allocated to leaf storage during this year
@@ -335,6 +336,7 @@ contains
     allocate(this%totn_p2c_col                           (begc:endc)) ; this%totn_p2c_col                        (:) = nan
     allocate(this%totn_col                               (begc:endc)) ; this%totn_col                            (:) = nan
     allocate(this%totecosysn_col                         (begc:endc)) ; this%totecosysn_col                      (:) = nan
+    allocate(this%totn_grc                               (begg:endg)) ; this%totn_grc                            (:) = nan
 
     if(use_matrixcn)then
        allocate(this%leafn0_patch                        (begp:endp)) ; this%leafn0_patch                        (:) = nan
@@ -456,6 +458,7 @@ contains
        allocate(this%matrix_nturnover_grainxf_acc_patch                    (begp:endp)) ; this%matrix_nturnover_grainxf_acc_patch                    (:) = nan 
        allocate(this%matrix_nturnover_retransn_acc_patch                   (begp:endp)) ; this%matrix_nturnover_retransn_acc_patch                   (:) = nan 
     end if
+
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -1083,6 +1086,7 @@ contains
 
     do g = bounds%begg, bounds%endg
        this%seedn_grc(g) = 0._r8
+       this%totn_grc(g)  = 0._r8
     end do
 
     ! now loop through special filters and explicitly set the variables that
@@ -2263,9 +2267,6 @@ contains
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
 
     end do
-    
-    
-    
 
   end subroutine Summary_nitrogenstate
 

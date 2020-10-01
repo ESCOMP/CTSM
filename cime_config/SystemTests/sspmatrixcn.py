@@ -6,7 +6,7 @@ This is a CLM specific test:
 Verifies that spinup works correctly
 this test is only valid for CLM compsets
 
-Step 0: Run a cold-start with matrix spinup off
+Step 0: Run a AD cold-start with matrix and matrix spinup off
 Step 1: Run a fast-mode spinup
 Step 2: Run a 2-loop fast-mode spinup
 Step 3: Run a slow-mode spinup
@@ -39,7 +39,7 @@ class SSPMATRIXCN(SystemTestsCommon):
     thrice = 3 * nyr_forcing
     # Define the settings that will be used for each step
     steps  = ["0",       "1",      "2",      "3",      "4"      ]
-    desc   = ["cold",    "fast",   "trans",  "slow",   "normal" ]
+    desc   = ["AD-cold", "fast",   "trans",  "slow",   "normal" ]
     runtyp = ["startup", "branch", "branch", "branch", "branch" ]
     spin   = [False,     True,     True,     True,     False    ]
     stop_n = [5,         thrice,   twice,    thrice,   thrice   ]
@@ -114,6 +114,9 @@ class SSPMATRIXCN(SystemTestsCommon):
             if ( self.iloop[n] != -999 ):
                contents_to_append = contents_to_append + ", iloop_avg = " + str(self.iloop[n])
 
+        # For cold start, run with matrix off
+        if ( self.cold[n] ):
+
         # Always append to the end
         user_nl_utils.append_to_user_nl_files(caseroot = caseroot,
                                               component = "clm",
@@ -148,15 +151,17 @@ class SSPMATRIXCN(SystemTestsCommon):
            with clone:
               clone.set_value("RUN_TYPE", self.runtyp[n] )
               clone.set_value("STOP_N", self.stop_n[n] )
-              if ( self.cold[n] ):
-                 clone.set_value("CLM_FORCE_COLDSTART", "on" )
-              else:
-                 clone.set_value("CLM_FORCE_COLDSTART", "off" )
 
               if ( self.spin[n] ):
                  clone.set_value("CLM_ACCELERATED_SPINUP", "on" )
               else:
                  clone.set_value("CLM_ACCELERATED_SPINUP", "off" )
+
+              if ( self.cold[n] ):
+                 clone.set_value("CLM_FORCE_COLDSTART", "on" )
+                 clone.set_value("CLM_ACCELERATED_SPINUP", "on" )
+              else:
+                 clone.set_value("CLM_FORCE_COLDSTART", "off" )
 
               self.append_user_nl( clone_path, n )
 

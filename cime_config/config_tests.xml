@@ -1,19 +1,7 @@
 <?xml version="1.0"?>
 
 <!--
-
-The following CLM-specific system tests are defined here:
-
-LII    CLM initial condition interpolation test
-
-LVG   Verify that adding virtual glacier columns doesn't change answers
-
-SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
-       do an initial spin test (setting CLM_ACCELERATED_SPINUP to on)
-         write restarts at the end of the run
-         short term archiving is on
-       do a hybrid non-spinup simulation run from the restart files generated in the first phase
-
+This defines various CTSM-specific system tests
 -->
 
 <config_test>
@@ -45,6 +33,16 @@ SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
     <REST_OPTION>never</REST_OPTION>
     <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
     <HIST_N>$STOP_N</HIST_N>
+  </test>
+
+  <test NAME="LILACSMOKE">
+    <DESC>CTSM test: Smoke test of building and running CTSM via LILAC. Grid and compset (and most case settings) are ignored.</DESC>
+    <!-- Many of the options are irrelevant here, but we define them for consistency with other tests -->
+    <INFO_DBUG>1</INFO_DBUG>
+    <STOP_OPTION>ndays</STOP_OPTION>
+    <STOP_N>11</STOP_N>
+    <CHECK_TIMING>FALSE</CHECK_TIMING>
+    <DOUT_S>FALSE</DOUT_S>
   </test>
 
   <test NAME="LVG">
@@ -84,6 +82,14 @@ SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
     <HIST_OPTION>$STOP_OPTION</HIST_OPTION>
     <HIST_N>$STOP_N</HIST_N>
   </test>
+
+<!--
+SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
+       do an initial spin test (setting CLM_ACCELERATED_SPINUP to on)
+         write restarts at the end of the run
+         short term archiving is on
+       do a hybrid non-spinup simulation run from the restart files generated in the first phase
+-->
 
   <test NAME="SSP">
     <DESC>smoke CLM spinup test</DESC>

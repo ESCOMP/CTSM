@@ -50,6 +50,7 @@ module initInterpMindist
      real(r8), pointer :: coslat(:)
    contains
      procedure :: print_point  ! print info about one point
+     final :: destroy_subgrid_type
   end type subgrid_type
 
   ! Private methods
@@ -98,6 +99,49 @@ contains
     
   end subroutine print_point
 
+  !-----------------------------------------------------------------------
+  subroutine destroy_subgrid_type(this)
+    !
+    ! !DESCRIPTION:
+    ! Finalize routine for subgrid_type
+    !
+    ! !ARGUMENTS:
+    type(subgrid_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'destroy_subgrid_type'
+    !-----------------------------------------------------------------------
+
+    if (associated(this%ptype)) then
+       deallocate(this%ptype)
+    end if
+
+    if (associated(this%ctype)) then
+       deallocate(this%ctype)
+    end if
+
+    if (associated(this%ltype)) then
+       deallocate(this%ltype)
+    end if
+
+    if (associated(this%topoglc)) then
+       deallocate(this%topoglc)
+    end if
+
+    if (associated(this%lat)) then
+       deallocate(this%lat)
+    end if
+
+    if (associated(this%lon)) then
+       deallocate(this%lon)
+    end if
+
+    if (associated(this%coslat)) then
+       deallocate(this%coslat)
+    end if
+
+  end subroutine destroy_subgrid_type
 
   !=======================================================================
 
