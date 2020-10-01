@@ -382,10 +382,10 @@ contains
                  ! whereas in fact the land cover change occurred when the column *was*
                  ! tropical closed forest.
                  if( patch%itype(p) == nbrdlf_evr_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)*col%wtgcell(c)
+                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)
                  end if
                  if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)*col%wtgcell(c)
+                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)
                  end if
 
                  if (transient_landcover) then
@@ -409,7 +409,7 @@ contains
                           ! different seasons. But having deforestation spread evenly
                           ! throughout the year is much better than having it all
                           ! concentrated on January 1.)
-                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)*col%wtgcell(c)
+                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)
                        end if
                     end if
                  end if
