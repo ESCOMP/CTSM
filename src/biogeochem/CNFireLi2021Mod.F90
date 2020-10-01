@@ -691,6 +691,10 @@ contains
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
 
+      do f = 1, num_exposedvegp
+         p = filter_exposedvegp(f)
+         btran2(p)   = 0._r8
+      end do
       do j = 1,nlevgrnd
          do f = 1, num_exposedvegp
             p = filter_exposedvegp(f)
