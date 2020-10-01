@@ -2873,7 +2873,7 @@ contains
                         livestemc_to_litter(p) = 0
                      end if
                      if(livestemn(p) .gt. 0)then
-                        matrix_phtransfer(p,ilivestem_to_iout_phn) = livestemn_to_biofuelc(p) / livestemn(p)
+                        matrix_phtransfer(p,ilivestem_to_iout_phn) = livestemn_to_biofueln(p) / livestemn(p)
                      else
                         livestemn_to_litter(p) = 0
                      end if
@@ -3050,7 +3050,7 @@ contains
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
                livestemn_to_litter(p) = livestemn(p) / dt * (1 - biofuel_harvfrac(ivt(p)))
                if(use_matrixcn)then
-                  matrix_nphtransfer(p,ilivestem_to_iout_phn) = (1.0_r8 - biofuel_harvfrac(ivt(p) ) / dt
+                  matrix_nphtransfer(p,ilivestem_to_iout_phn) = (1.0_r8 - biofuel_harvfrac(ivt(p)) ) / dt
                end if
             end if
 

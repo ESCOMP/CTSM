@@ -262,7 +262,7 @@ contains
       end do
 
     if (.not. use_fates) then    
-patch:do fp = 1,num_soilp
+ptch: do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
 
@@ -541,7 +541,7 @@ patch:do fp = 1,num_soilp
          end if
 
          
-        end do patch ! end of patch loop
+        end do ptch ! end of patch loop
       end if   ! end of NOT fates
     
     end associate
