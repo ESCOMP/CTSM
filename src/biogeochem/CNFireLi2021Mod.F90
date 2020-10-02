@@ -679,6 +679,8 @@ contains
     !
     ! Calculate the root wetness term that will be used by the fire model
     !
+    ! FIXME(wjs, 2020-10-02) remove next line
+    use clm_varcon      , only : spval
     use pftconMod                 , only : pftcon
     use PatchType                 , only : patch
     class(cnfire_li2021_type) :: this
@@ -701,6 +703,9 @@ contains
          rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
+
+    ! FIXME(wjs, 2020-10-02) Remove next line
+    btran2(bounds%begp:bounds%endp) = spval
 
       do f = 1, num_exposedvegp
          p = filter_exposedvegp(f)
