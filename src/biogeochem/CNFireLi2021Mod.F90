@@ -720,6 +720,19 @@ contains
             btran2(p)   = btran2(p) + rootfr(p,j)*s_node
          end do
       end do
+
+      do f = 1, num_exposedvegp
+         p = filter_exposedvegp(f)
+         if (btran2(p) > 1._r8) then
+            ! FIXME(wjs, 2020-10-02) remove this endrun conditional
+            if (btran2(p) > (1._r8 + 1.e-12_r8)) then
+               write(iulog,*) 'btran2 exceeds 1 by too much: ', p, btran2(p)
+               call endrun('btran2 exceeds 1 by too much')
+            end if
+            btran2(p) = 1._r8
+         end if
+      end do
+
     end associate 
 
  end subroutine CNFire_calc_fire_root_wetness
