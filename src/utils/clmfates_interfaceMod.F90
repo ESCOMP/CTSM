@@ -114,9 +114,9 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
 
-
-   use FatesHistoryInterfaceMod, only : fates_history_interface_type
-   use FatesRestartInterfaceMod, only : fates_restart_interface_type
+   use CLMFatesParamInterfaceMod, only : FatesReadParameters
+   use FatesHistoryInterfaceMod,  only : fates_history_interface_type
+   use FatesRestartInterfaceMod,  only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
    use EDTypesMod            , only : num_elements
@@ -400,6 +400,10 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('check_allset')
         
      end if
+
+
+     ! first read the non-PFT parameters
+     call FatesReadParameters()
      
      ! This determines the total amount of space it requires in its largest
      ! dimension.  We are currently calling that the "cohort" dimension, but
