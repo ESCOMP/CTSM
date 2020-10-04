@@ -725,7 +725,7 @@ contains
          p = filter_exposedvegp(f)
          if (btran2(p) > 1._r8) then
             ! FIXME(wjs, 2020-10-02) remove this endrun conditional
-            if (btran2(p) > (1._r8 + 1.e-12_r8)) then
+            if (btran2(p) > (1._r8 + 1.e-2_r8)) then
                write(iulog,*) 'btran2 exceeds 1 by too much: ', p, btran2(p)
                call endrun('btran2 exceeds 1 by too much')
             end if
