@@ -25,9 +25,6 @@ module FireMethodType
      ! Read parameters  for the fire datasets
      procedure(CNFireReadParams_interface), public, deferred :: CNFireReadParams
 
-     ! Restart
-     procedure(CNFireRestart_interface), public, deferred :: CNFireRestart
-
      ! Interpolate the fire datasets
      procedure(FireInterp_interface) , public, deferred :: FireInterp
 
@@ -118,24 +115,6 @@ module FireMethodType
     !--------------------------------------------------------------------
 
   end subroutine CNFireReadParams_interface
-
-  !-----------------------------------------------------------------------
-  subroutine CNFireRestart_interface( this, bounds, ncid, flag )
-    !
-    ! Restart for the CN fire base class
-    ! !USES:
-    use ncdio_pio       , only : file_desc_t
-    use decompMod       , only : bounds_type
-    import :: fire_method_type
-    !
-    ! !ARGUMENTS:
-    class(fire_method_type)          :: this
-    type(bounds_type), intent(in)    :: bounds
-    type(file_desc_t), intent(inout) :: ncid
-    character(len=*) , intent(in)    :: flag
-    !--------------------------------------------------------------------
-
-  end subroutine CNFireRestart_interface
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea_interface (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &

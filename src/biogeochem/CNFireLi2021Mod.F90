@@ -357,6 +357,17 @@ contains
      ! This subroutine calculates btran2
      call this%CNFire_calc_fire_root_wetness(bounds, num_exposedvegp, filter_exposedvegp, &
           waterstatebulk_inst, soilstate_inst, soil_water_retention_curve)
+     do fp = 1, num_exposedvegp
+        p = filter_exposedvegp(fp)
+        c = patch%column(p)
+        ! For non-crop -- natural vegetation and bare-soil
+        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+           btran_col(c) = btran_col(c)+max(0._r8, min(1._r8, &
+                (btran2(p)-rswf_min(patch%itype(p)))/(rswf_max(patch%itype(p)) &
+                -rswf_min(patch%itype(p)))))*patch%wtcol(p)
+           wtlf(c)      = wtlf(c)+patch%wtcol(p)
+        end if
+     end do
 
      do pi = 1,max_patch_per_col
         do fc = 1,num_soilc
@@ -366,15 +377,7 @@ contains
               p = col%patchi(c) + pi - 1
 
               ! For non-crop -- natural vegetation and bare-soil
-              if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1._r8 )then
-                 if( .not. shr_infnan_isnan(btran2(p))) then
-                    if (btran2(p)  <=  1._r8 ) then
-                       btran_col(c) = btran_col(c)+max(0._r8, min(1._r8, &
-                      (btran2(p)-rswf_min(patch%itype(p)))/(rswf_max(patch%itype(p)) &
-                      -rswf_min(patch%itype(p)))))*patch%wtcol(p)
-                        wtlf(c)      = wtlf(c)+patch%wtcol(p)
-                    end if
-                 end if
+              if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
 
                  ! NOTE(wjs, 2016-12-15) These calculations of the fraction of evergreen
                  ! and deciduous tropical trees (used to determine if a column is
@@ -679,8 +682,6 @@ contains
     !
     ! Calculate the root wetness term that will be used by the fire model
     !
-    ! FIXME(wjs, 2020-10-02) remove next line
-    use clm_varcon      , only : spval
     use pftconMod                 , only : pftcon
     use PatchType                 , only : patch
     class(cnfire_li2021_type) :: this
@@ -703,9 +704,6 @@ contains
          rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
-
-    ! FIXME(wjs, 2020-10-02) Remove next line
-    btran2(bounds%begp:bounds%endp) = spval
 
       do f = 1, num_exposedvegp
          p = filter_exposedvegp(f)

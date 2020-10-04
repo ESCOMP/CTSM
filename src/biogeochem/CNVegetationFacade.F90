@@ -507,8 +507,6 @@ contains
        end if
        call this%n_products_inst%restart(bounds, ncid, flag)
 
-       call this%cnfire_method%CNFireRestart(bounds, ncid, flag)
-
     end if
 
     if (use_cndv) then

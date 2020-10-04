@@ -82,7 +82,6 @@ module CNFireBaseMod
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: FireInit => CNFireInit        ! Initialization of Fire
       procedure, public :: FireReadNML                   ! Read in namelist for CNFire
-      procedure, public :: CNFireRestart                 ! Restart for CNFire
       procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
       procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
       procedure, public :: CNFire_calc_fire_root_wetness ! Calcualte CN-fire specific root wetness
@@ -176,33 +175,11 @@ contains
   end subroutine InitHistory
 
   !----------------------------------------------------------------------
-  subroutine CNFireRestart( this, bounds, ncid, flag )
-    use ncdio_pio       , only : ncd_double, file_desc_t
-    use restUtilMod     , only : restartvar
-    implicit none
-    !
-    ! !ARGUMENTS:
-    class(cnfire_base_type) :: this
-    type(bounds_type), intent(in)    :: bounds
-    type(file_desc_t), intent(inout) :: ncid
-    character(len=*) , intent(in)    :: flag
-
-    logical :: readvar
-
-    call restartvar(ncid=ncid, flag=flag, varname='btran2', xtype=ncd_double,  &
-         dim1name='pft', &
-         long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%btran2_patch)
-  end subroutine CNFireRestart
-
-  !----------------------------------------------------------------------
   subroutine CNFire_calc_fire_root_wetness( this, bounds, num_exposedvegp, filter_exposedvegp, &
                                      waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
     !
     ! Calculate the root wetness term that will be used by the fire model
     !
-    ! FIXME(wjs, 2020-10-02) remove next line
-    use clm_varcon      , only : spval
     use pftconMod                 , only : pftcon
     use clm_varpar                , only : nlevgrnd
     use PatchType                 , only : patch
@@ -234,9 +211,6 @@ contains
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
 
-    ! FIXME(wjs, 2020-10-02) Remove next line
-    btran2(bounds%begp:bounds%endp) = spval
-
       do f = 1, num_exposedvegp
          p = filter_exposedvegp(f)
          btran2(p)   = btran0
@@ -259,11 +233,6 @@ contains
       do f = 1, num_exposedvegp
          p = filter_exposedvegp(f)
          if (btran2(p) > 1._r8) then
-            ! FIXME(wjs, 2020-10-02) remove this endrun conditional
-            if (btran2(p) > (1._r8 + 1.e-12_r8)) then
-               write(iulog,*) 'btran2 exceeds 1 by too much: ', p, btran2(p)
-               call endrun('btran2 exceeds 1 by too much')
-            end if
             btran2(p) = 1._r8
          end if
       end do

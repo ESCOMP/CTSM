@@ -336,6 +336,15 @@ contains
      ! This subroutine calculates btran2
      call this%CNFire_calc_fire_root_wetness(bounds, num_exposedvegp, filter_exposedvegp, &
           waterstatebulk_inst, soilstate_inst, soil_water_retention_curve)
+     do fp = 1, num_exposedvegp
+        p = filter_exposedvegp(fp)
+        c = patch%column(p)
+        ! For non-crop -- natural vegetation and bare-soil
+        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+           btran_col(c) = btran_col(c)+btran2(p)*patch%wtcol(p)
+           wtlf(c)      = wtlf(c)+patch%wtcol(p)
+        end if
+     end do
 
      do pi = 1,max_patch_per_col
         do fc = 1,num_soilc
@@ -346,12 +355,6 @@ contains
 
               ! For non-crop -- natural vegetation and bare-soil
               if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
-                 if( .not. shr_infnan_isnan(btran2(p))) then
-                    if (btran2(p)  <=  1._r8 ) then
-                       btran_col(c) = btran_col(c)+btran2(p)*patch%wtcol(p)
-                       wtlf(c)      = wtlf(c)+patch%wtcol(p)
-                    end if
-                 end if
 
                  ! NOTE(wjs, 2016-12-15) These calculations of the fraction of evergreen
                  ! and deciduous tropical trees (used to determine if a column is
