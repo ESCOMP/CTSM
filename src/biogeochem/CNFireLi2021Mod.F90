@@ -58,6 +58,7 @@ module CNFireLi2021Mod
      ! !PUBLIC MEMBER FUNCTIONS:
      procedure, public :: need_lightning_and_popdens
      procedure, public :: CNFireArea    ! Calculate fire area
+     procedure, public :: CNFire_calc_fire_root_wetness ! Calculate the root wetness term that will be used by the fire model
   end type cnfire_li2021_type
 
   !
@@ -670,7 +671,7 @@ contains
     use WaterStateBulkType        , only : waterstatebulk_type
     use SoilStateType             , only : soilstate_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    class(cnfire_base_type) :: this
+    class(cnfire_li2021_type) :: this
     type(bounds_type)      , intent(in)   :: bounds                         !bounds
     integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
     integer                , intent(in)   :: num_exposedvegp                !number of filters
