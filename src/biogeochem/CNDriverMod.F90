@@ -82,7 +82,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNDriverNoLeaching(bounds,                                                    &
        num_soilc, filter_soilc, num_soilp, filter_soilp, num_pcropp, filter_pcropp,        &
-       num_exposedvegp, filter_exposedvegp, doalb,                                         &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, doalb, &
        cnveg_state_inst,                                                                   &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                                      &
        c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,                              &
@@ -151,6 +151,8 @@ contains
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     integer                                 , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
+    integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                                 , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
     type(cnveg_state_type)                  , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonflux_type)             , intent(inout) :: cnveg_carbonflux_inst
@@ -753,7 +755,7 @@ contains
 
     call t_startf('CNFire')
     call cnfire_method%CNFireArea(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-         num_exposedvegp, filter_exposedvegp, &
+         num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
          atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
          waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
          cnveg_state_inst, cnveg_carbonstate_inst, &

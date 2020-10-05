@@ -58,7 +58,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       num_exposedvegp, filter_exposedvegp, &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
        waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
@@ -79,6 +79,8 @@ contains
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                               , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                               , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
+    integer                               , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                               , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst

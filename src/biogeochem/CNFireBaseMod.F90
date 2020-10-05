@@ -180,8 +180,9 @@ contains
   end subroutine InitHistory
 
   !----------------------------------------------------------------------
-  subroutine CNFire_calc_fire_root_wetness_Li2014( this, bounds, num_exposedvegp, filter_exposedvegp, &
-                                     waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+  subroutine CNFire_calc_fire_root_wetness_Li2014( this, bounds, &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
+       waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
     !
     ! Calculate the root wetness term that will be used by the fire model
     !
@@ -189,14 +190,15 @@ contains
     type(bounds_type)      , intent(in)   :: bounds                         !bounds
     integer                , intent(in)   :: num_exposedvegp                !number of filters
     integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    integer                , intent(in)   :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                , intent(in)   :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
     type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     type(soilstate_type)   , intent(in)   :: soilstate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     ! !LOCAL VARIABLES:
-    real(r8), parameter :: btran0 = 0.0_r8  ! initial value
     real(r8) :: smp_node, s_node  !temporary variables
     real(r8) :: smp_node_lf       !temporary variable
-    integer :: p, f, j, c, l      !indices
+    integer :: p, fp, j, c, l      !indices
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
@@ -210,38 +212,46 @@ contains
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
 
-      do f = 1, num_exposedvegp
-         p = filter_exposedvegp(f)
-         btran2(p)   = btran0
-      end do
-      do j = 1,nlevgrnd
-         do f = 1, num_exposedvegp
-            p = filter_exposedvegp(f)
-            c = patch%column(p)
-            l = patch%landunit(p)
-            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+    do fp = 1, num_noexposedvegp
+       p = filter_noexposedvegp(fp)
+       ! Set for the sake of history diagnostics. The "normal" btran is set to 0 over
+       ! this filter, so we do the same for btran2.
+       btran2(p) = 0._r8
+    end do
 
-            call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
+       btran2(p) = 0._r8
+    end do
+    do j = 1,nlevgrnd
+       do fp = 1, num_exposedvegp
+          p = filter_exposedvegp(fp)
+          c = patch%column(p)
+          l = patch%landunit(p)
+          s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
 
-            smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf)
-            btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
-                    (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
-         end do
-      end do
+          call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
 
-      do f = 1, num_exposedvegp
-         p = filter_exposedvegp(f)
-         if (btran2(p) > 1._r8) then
-            btran2(p) = 1._r8
-         end if
-      end do
+          smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf)
+          btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
+               (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
+       end do
+    end do
 
-    end associate 
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
+       if (btran2(p) > 1._r8) then
+          btran2(p) = 1._r8
+       end if
+    end do
+
+    end associate
 
   end subroutine CNFire_calc_fire_root_wetness_Li2014
 
   !----------------------------------------------------------------------
-  subroutine CNFire_calc_fire_root_wetness_Li2021( this, bounds, num_exposedvegp, filter_exposedvegp, &
+  subroutine CNFire_calc_fire_root_wetness_Li2021( this, bounds, &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
        waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
     !
     ! Calculate the root wetness term that will be used by the fire model
@@ -252,12 +262,14 @@ contains
     type(bounds_type)      , intent(in)   :: bounds                         !bounds
     integer                , intent(in)   :: num_exposedvegp                !number of filters
     integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    integer                , intent(in)   :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                , intent(in)   :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
     type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
     type(soilstate_type)   , intent(in)   :: soilstate_inst
     class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
     ! !LOCAL VARIABLES:
     real(r8) :: s_node  !temporary variables
-    integer :: p, f, j, c         !indices
+    integer :: p, fp, j, c         !indices
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
@@ -269,13 +281,20 @@ contains
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
 
-    do f = 1, num_exposedvegp
-       p = filter_exposedvegp(f)
+    do fp = 1, num_noexposedvegp
+       p = filter_noexposedvegp(fp)
+       ! Set for the sake of history diagnostics. The "normal" btran is set to 0 over
+       ! this filter, so we do the same for btran2.
+       btran2(p) = 0._r8
+    end do
+
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
        btran2(p)   = 0._r8
     end do
     do j = 1,nlevgrnd
-       do f = 1, num_exposedvegp
-          p = filter_exposedvegp(f)
+       do fp = 1, num_exposedvegp
+          p = filter_exposedvegp(fp)
           c = patch%column(p)
           s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
 
@@ -283,8 +302,8 @@ contains
        end do
     end do
 
-    do f = 1, num_exposedvegp
-       p = filter_exposedvegp(f)
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
        if (btran2(p) > 1._r8) then
           btran2(p) = 1._r8
        end if
