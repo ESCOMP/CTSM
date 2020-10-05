@@ -160,9 +160,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <urban_traffic>.false.</urban_traffic>
 
 <!-- Soil state settings -->
-<organic_frac_squared phys="clm5_1" >.true.</organic_frac_squared>
 <organic_frac_squared phys="clm4_5" >.true.</organic_frac_squared>
 <organic_frac_squared phys="clm5_0" >.false.</organic_frac_squared>
+<organic_frac_squared phys="clm5_1" >.false.</organic_frac_squared>
 
 <soil_layerstruct_predefined structure="fast">4SL_2m</soil_layerstruct_predefined>
 <soil_layerstruct_predefined structure="standard" phys="clm5_1" >20SL_8.5m</soil_layerstruct_predefined>
@@ -3599,6 +3599,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- (some other defaults for dynamic subgrid   -->
 <!-- are set in the BuildNamelist code)         -->
 <!-- =========================================  -->
+<do_transient_lakes>.false.</do_transient_lakes>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
 
 <!-- =========================================  -->
