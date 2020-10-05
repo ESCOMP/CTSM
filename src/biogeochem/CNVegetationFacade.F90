@@ -56,7 +56,7 @@ module CNVegetationFacade
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
-  use CNFireMethodMod                 , only : cnfire_method_type
+  use FireMethodType                  , only : fire_method_type
   use CNProductsMod                   , only : cn_products_type
   use NutrientCompetitionMethodMod    , only : nutrient_competition_method_type
   use SpeciesIsotopeType              , only : species_isotope_type
@@ -125,7 +125,7 @@ module CNVegetationFacade
      type(cn_products_type)         :: n_products_inst
 
      type(cn_balance_type)          :: cn_balance_inst
-     class(cnfire_method_type), allocatable :: cnfire_method
+     class(fire_method_type), allocatable :: cnfire_method
      type(dgvs_type)                :: dgvs_inst
 
      ! Control variables
@@ -508,6 +508,8 @@ contains
        end if
        call this%n_products_inst%restart(bounds, ncid, flag)
 
+       call this%cnfire_method%CNFireRestart(bounds, ncid, flag)
+
     end if
 
     if (use_cndv) then
@@ -607,7 +609,7 @@ contains
     character(len=*), parameter :: subname = 'InterpFileInputs'
     !-----------------------------------------------------------------------
 
-    call this%cnfire_method%CNFireInterp(bounds)
+    call this%cnfire_method%FireInterp(bounds)
 
   end subroutine InterpFileInputs
 

@@ -606,17 +606,15 @@ def _create_case(cime_path, build_dir, compiler,
                           '--res', _RES,
                           '--compiler', compiler,
                           '--driver', 'nuopc',
+                          # Project isn't used for anything in the LILAC workflow, but it
+                          # still needs to be specified on machines that expect it.
+                          '--project', 'UNSET',
                           '--run-unsupported']
     create_newcase_cmd.extend(machine_args)
     if inputdata_path:
         create_newcase_cmd.extend(['--input-dir', inputdata_path])
     run_cmd_output_on_error(create_newcase_cmd,
                             errmsg='Problem creating CTSM case directory')
-
-    # PIO2 sometimes causes errors: see
-    # https://github.com/ESCOMP/CTSM/issues/876#issuecomment-653189406 and following
-    # comments in that issue. So use PIO1 for now.
-    subprocess.check_call([xmlchange, 'PIO_VERSION=1'], cwd=case_dir)
 
     subprocess.check_call([xmlchange, 'LILAC_MODE=on'], cwd=case_dir)
     if build_debug:

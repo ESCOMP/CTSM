@@ -23,9 +23,9 @@ no_interp test fails.
 
 (2) Copy the finidat_interp_dest.nc file from the 'base' case to the inputdata
 space. Rename this to be similar to the name of the file pointed to in this
-test's user_nl_clm file, but with a new creation date.
+test's user_nl_ctsm file, but with a new creation date.
 
-(3) Update this test's user_nl_clm file (in the appropriate testmods directory)
+(3) Update this test's user_nl_ctsm file (in the appropriate testmods directory)
 to point to the new finidat file.
 """
 

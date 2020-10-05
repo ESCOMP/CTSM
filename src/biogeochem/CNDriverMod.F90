@@ -65,17 +65,17 @@ contains
     ! !USES:
     use CNSharedParamsMod           , only : use_fun
     use CNPhenologyMod              , only : CNPhenologyInit
-    use CNFireMethodMod             , only : cnfire_method_type
+    use FireMethodType              , only : fire_method_type
     use SoilBiogeochemCompetitionMod, only : SoilBiogeochemCompetitionInit
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds      
     character(len=*)                       , intent(in)    :: NLFilename     ! Namelist filename
-    class(cnfire_method_type)              , intent(inout) :: cnfire_method 
+    class(fire_method_type)                , intent(inout) :: cnfire_method 
     !-----------------------------------------------------------------------
     call SoilBiogeochemCompetitionInit(bounds)
     call CNPhenologyInit(bounds)
-    call cnfire_method%CNFireInit(bounds, NLFilename)
+    call cnfire_method%FireInit(bounds, NLFilename)
     
   end subroutine CNDriverInit
 
@@ -116,7 +116,7 @@ contains
     use CNFUNMod                          , only: CNFUNInit  !, CNFUN 
     use CNPhenologyMod                    , only: CNPhenology
     use CNGRespMod                        , only: CNGResp
-    use CNFireMethodMod                   , only: cnfire_method_type
+    use FireMethodType                    , only: fire_method_type
     use CNCIsoFluxMod                     , only: CIsoFlux1, CIsoFlux2, CIsoFlux2h, CIsoFlux3
     use CNC14DecayMod                     , only: C14Decay
     use CNCStateUpdate1Mod                , only: CStateUpdate1,CStateUpdate0
@@ -191,7 +191,7 @@ contains
     type(saturated_excess_runoff_type)      , intent(in)    :: saturated_excess_runoff_inst
     type(energyflux_type)                   , intent(in)    :: energyflux_inst
     class(nutrient_competition_method_type) , intent(inout) :: nutrient_competition_method
-    class(cnfire_method_type)               , intent(inout) :: cnfire_method
+    class(fire_method_type)                 , intent(inout) :: cnfire_method
     logical                                 , intent(in)    :: dribble_crophrv_xsmrpool_2atm
     !
     ! !LOCAL VARIABLES:

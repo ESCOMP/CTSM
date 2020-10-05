@@ -7,7 +7,7 @@ module test_dyn_cons_biogeophys
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestSubgridMod
   use unittestArrayMod, only : col_array
-  use unittestFilterBuilderMod, only : filter_from_range
+  use unittestFilterBuilderMod, only : filter_from_range, filter_empty
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use clm_varpar, only : nlevgrnd, nlevsno, maxpatch_glcmec
   use column_varcon, only : icemec_class_to_col_itype
@@ -18,6 +18,7 @@ module test_dyn_cons_biogeophys
   use SoilStateType, only : soilstate_type
   use TemperatureType, only : temperature_type
   use UrbanParamsType, only : urbanparams_type
+  use LakestateType, only : lakestate_type
   use WaterType, only : water_type
   use TotalWaterAndHeatMod, only : AccumulateSoilLiqIceMassNonLake
   use TotalWaterAndHeatMod, only : AccumulateSoilHeatNonLake
@@ -30,6 +31,7 @@ module test_dyn_cons_biogeophys
      type(soilstate_type) :: soilstate_inst
      type(temperature_type) :: temperature_inst
      type(urbanparams_type) :: urbanparams_inst
+     type(lakestate_type) :: lakestate_inst
      type(water_type) :: water_inst
    contains
      procedure :: setUp
@@ -99,8 +101,8 @@ contains
     real(r8), parameter :: wt_veg_col1 = 0.25_r8
     real(r8), parameter :: wt_veg_col2 = 0.75_r8
     integer :: veg_col1, veg_col2, glc_col
-    integer :: num_icemecc, num_natveg_and_icemecc
-    integer, allocatable :: filter_icemecc(:), filter_natveg_and_icemecc(:)
+    integer :: num_icemecc, num_natveg_and_icemecc, num_lakec
+    integer, allocatable :: filter_icemecc(:), filter_natveg_and_icemecc(:), filter_lakec(:)
     integer :: c
     real(r8), allocatable :: expected_vals_liq_col(:)
     real(r8), allocatable :: expected_vals_ice_col(:)
@@ -160,6 +162,9 @@ contains
          numf=num_icemecc, filter=filter_icemecc)
     call filter_from_range(start=veg_col1, end=glc_col, &
          numf=num_natveg_and_icemecc, filter=filter_natveg_and_icemecc)
+    ! For now, this test does NOT cover lake columns. So just use an empty lake filter.
+    ! This also allows us to avoid initializing variables in this%lakestate_inst.
+    call filter_empty(num_lakec, filter_lakec)
 
     ! Initialize necessary variables in soilstate_inst
     allocate(this%soilstate_inst%csol_col(bounds%begc:bounds%endc, nlevgrnd))
@@ -203,8 +208,10 @@ contains
     ! ------------------------------------------------------------------------
 
     call dyn_hwcontent_set_baselines(bounds, num_icemecc, filter_icemecc, &
-         this%urbanparams_inst, this%soilstate_inst, &
-         this%water_inst, this%temperature_inst)
+         num_lakec, filter_lakec, &
+         this%urbanparams_inst, this%soilstate_inst, this%lakestate_inst, &
+         this%water_inst, this%temperature_inst, &
+         reset_all_baselines = .true., reset_lake_baselines = .false.)
 
     ! ------------------------------------------------------------------------
     ! Compute expected values

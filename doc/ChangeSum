@@ -1,5 +1,24 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev006    sacks 10/03/2020 Call correct routine to calculate btran2 for CNFireLi2021
+  ctsm5.1.dev005    sacks 10/02/2020 Answer changing bug fixes for clm51: fire and organic_frac_squared
+  ctsm5.1.dev004   oleson 09/30/2020 Improve robustness of onset and offset counters when changing dt
+  ctsm5.1.dev003 ivanderk 09/29/2020 Add capability for dynamic lakes
+  ctsm5.1.dev002   slevis 09/25/2020 Reduce duplication between caps
+  ctsm5.1.dev001     erik 09/23/2020 Start the clm5_1 physics series, with some changes to the fire model from Fang Li
+  ctsm1.0.dev113   negins 09/08/2020 Some bit-for-bit changes needed for the Perturbed Parameter Ensemble work
+  ctsm1.0.dev112 sacks/ww 08/28/2020 Small changes to mksurfdata_map, singlept tool and run_sys_tests
+  ctsm1.0.dev111     erik 08/28/2020 Compsets don't use 2014 for GSWP3 forcing, LUNA prevyr changed back
+  ctsm1.0.dev110 jedwards 08/21/2020 Fixes needed for PIO2
+  ctsm1.0.dev109   negins 08/20/2020 Allow for resorbtion in transition from live to dead wood N
+  ctsm1.0.dev108     erik 08/19/2020  Update default PE layouts for new SE/FV3 grids
+  ctsm1.0.dev107     erik 08/10/2020 Answer changes needed for CESM2.2.0
+  ctsm1.0.dev106     erik 08/06/2020 Bit-for-bit updates for the CESM2.2.0 release
+release-clm5.0.34    erik 04/20/2020 Update doc for release-clm5.0 (SKIPPED), and fix issues with no-anthro surface dataset creation
+release-clm5.0.33    erik 04/07/2020 SKIPPED ON MASTER -- Turn irrigation on for 2300 SSP extensions
+release-clm5.0.32    erik 04/02/2020 SKIPPED ON MASTER -- Extensions to 2300 for SSP5-8.5,SSP5-3.4, and SSP1-2.6
+release-clm5.0.31    erik 03/29/2020 Bring raw 2100-2300 extension (SKIPPED), some other misc. changes
+  ctsm1.0.dev105 erik/fis 07/23/2020 Bring in some new SE grids for CAM as well as initial condition files for them
   ctsm1.0.dev104    sacks 07/06/2020 Add LILAC
   ctsm1.0.dev103   slevis 06/29/2020 Gridcell-level error-check for methane (CH4)
   ctsm1.0.dev102 erik/ole 06/26/2020 Some important fixes for LUNA in clm5_0, and small urban issue in clm5_0

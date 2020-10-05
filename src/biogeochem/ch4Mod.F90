@@ -1251,7 +1251,7 @@ contains
     character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
     !-----------------------------------------------------------------------
 
-    ! BUG(wjs, 2016-02-16, bugz 2283) Need to do some special handling of finundated for
+    ! BUG(wjs, 2016-02-16, ESCOMP/CTSM#43) Need to do some special handling of finundated for
     ! increases in lake area, since lakes are assumed to be 100% inundated. Probably it's
     ! most appropriate for this special handling to happen elsewhere - i.e., within this
     ! routine, we do the standard adjustments as they are currently done, but then in the
