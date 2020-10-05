@@ -34,9 +34,6 @@ module FireMethodType
      ! Figure out the fire fluxes
      procedure(CNFireFluxes_interface) , public, deferred :: CNFireFluxes
 
-     ! Calculate root wetness for the CN Fire
-     procedure(CNFire_calc_fire_root_wetness_interface) , public, deferred :: CNFire_calc_fire_root_wetness
-
   end type fire_method_type
 
   abstract interface
@@ -220,26 +217,6 @@ module FireMethodType
   end subroutine CNFireFluxes_interface
 
   !-----------------------------------------------------------------------
-
-  !----------------------------------------------------------------------
-  subroutine CNFire_calc_fire_root_wetness_interface( this, bounds, num_exposedvegp, &
-                                     filter_exposedvegp, waterstatebulk_inst, &
-                                     soilstate_inst, soil_water_retention_curve )
-    ! Calculate root wetness that will be used for the CN fire model
-    use decompMod                 , only : bounds_type
-    use WaterStateBulkType        , only : waterstatebulk_type
-    use SoilStateType             , only : soilstate_type
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    import :: fire_method_type
-    class(fire_method_type)                :: this
-    type(bounds_type)      , intent(in)    :: bounds                         !bounds
-    integer                , intent(in)    :: num_exposedvegp                !number of filters
-    integer                , intent(in)    :: filter_exposedvegp(:)          !filter array
-    type(waterstatebulk_type), intent(in)  :: waterstatebulk_inst
-    type(soilstate_type)   , intent(in)    :: soilstate_inst
-    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
-    !-----------------------------------------------------------------------
-  end subroutine CNFire_calc_fire_root_wetness_interface
 
   end interface
 

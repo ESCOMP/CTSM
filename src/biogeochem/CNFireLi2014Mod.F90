@@ -334,7 +334,7 @@ contains
      end do
 
      ! This subroutine calculates btran2
-     call this%CNFire_calc_fire_root_wetness(bounds, num_exposedvegp, filter_exposedvegp, &
+     call this%CNFire_calc_fire_root_wetness_Li2014(bounds, num_exposedvegp, filter_exposedvegp, &
           waterstatebulk_inst, soilstate_inst, soil_water_retention_curve)
      do fp = 1, num_exposedvegp
         p = filter_exposedvegp(fp)

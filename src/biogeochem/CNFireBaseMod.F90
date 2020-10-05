@@ -17,6 +17,7 @@ module CNFireBaseMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog
+  use clm_varpar                         , only : nlevgrnd
   use pftconMod                          , only : noveg, pftcon
   use abortutils                         , only : endrun
   use decompMod                          , only : bounds_type
@@ -32,6 +33,9 @@ module CNFireBaseMod
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
   use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType               , only : wateratm2lndbulk_type
+  use WaterStateBulkType                 , only : waterstatebulk_type
+  use SoilStateType                      , only : soilstate_type
+  use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
   use GridcellType                       , only : grc
   use ColumnType                         , only : col
   use PatchType                          , only : patch
@@ -84,7 +88,8 @@ module CNFireBaseMod
       procedure, public :: FireReadNML                   ! Read in namelist for CNFire
       procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
       procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
-      procedure, public :: CNFire_calc_fire_root_wetness ! Calcualte CN-fire specific root wetness
+      procedure, public :: CNFire_calc_fire_root_wetness_Li2014 ! Calculate CN-fire specific root wetness: original version
+      procedure, public :: CNFire_calc_fire_root_wetness_Li2021 ! Calculate CN-fire specific root wetness: 2021 version
       ! !PRIVATE MEMBER FUNCTIONS:
       procedure, private :: InitAllocate                 ! Memory allocation of Fire
       procedure, private :: InitHistory                  ! History file assignment of fire
@@ -175,17 +180,11 @@ contains
   end subroutine InitHistory
 
   !----------------------------------------------------------------------
-  subroutine CNFire_calc_fire_root_wetness( this, bounds, num_exposedvegp, filter_exposedvegp, &
+  subroutine CNFire_calc_fire_root_wetness_Li2014( this, bounds, num_exposedvegp, filter_exposedvegp, &
                                      waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
     !
     ! Calculate the root wetness term that will be used by the fire model
     !
-    use pftconMod                 , only : pftcon
-    use clm_varpar                , only : nlevgrnd
-    use PatchType                 , only : patch
-    use WaterStateBulkType        , only : waterstatebulk_type
-    use SoilStateType             , only : soilstate_type
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     class(cnfire_base_type) :: this
     type(bounds_type)      , intent(in)   :: bounds                         !bounds
     integer                , intent(in)   :: num_exposedvegp                !number of filters
@@ -239,7 +238,62 @@ contains
 
     end associate 
 
-  end subroutine CNFire_calc_fire_root_wetness
+  end subroutine CNFire_calc_fire_root_wetness_Li2014
+
+  !----------------------------------------------------------------------
+  subroutine CNFire_calc_fire_root_wetness_Li2021( this, bounds, num_exposedvegp, filter_exposedvegp, &
+       waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+    !
+    ! Calculate the root wetness term that will be used by the fire model
+    !
+    use pftconMod                 , only : pftcon
+    use PatchType                 , only : patch
+    class(cnfire_base_type) :: this
+    type(bounds_type)      , intent(in)   :: bounds                         !bounds
+    integer                , intent(in)   :: num_exposedvegp                !number of filters
+    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    type(soilstate_type)   , intent(in)   :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    ! !LOCAL VARIABLES:
+    real(r8) :: s_node  !temporary variables
+    integer :: p, f, j, c         !indices
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
+
+    associate(                                                &
+         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
+         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
+         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         )
+
+    do f = 1, num_exposedvegp
+       p = filter_exposedvegp(f)
+       btran2(p)   = 0._r8
+    end do
+    do j = 1,nlevgrnd
+       do f = 1, num_exposedvegp
+          p = filter_exposedvegp(f)
+          c = patch%column(p)
+          s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+
+          btran2(p)   = btran2(p) + rootfr(p,j)*s_node
+       end do
+    end do
+
+    do f = 1, num_exposedvegp
+       p = filter_exposedvegp(f)
+       if (btran2(p) > 1._r8) then
+          btran2(p) = 1._r8
+       end if
+    end do
+
+    end associate
+
+  end subroutine CNFire_calc_fire_root_wetness_Li2021
+  !----------------------------------------------------------------------
 
   !----------------------------------------------------------------------
   subroutine FireReadNML( this, NLFilename )

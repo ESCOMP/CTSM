@@ -59,7 +59,6 @@ module CNFireLi2021Mod
      ! !PUBLIC MEMBER FUNCTIONS:
      procedure, public :: need_lightning_and_popdens
      procedure, public :: CNFireArea    ! Calculate fire area
-     procedure, public :: CNFire_calc_fire_root_wetness ! Calculate the root wetness term that will be used by the fire model
   end type cnfire_li2021_type
 
   !
@@ -355,7 +354,7 @@ contains
      end do
 
      ! This subroutine calculates btran2
-     call this%CNFire_calc_fire_root_wetness(bounds, num_exposedvegp, filter_exposedvegp, &
+     call this%CNFire_calc_fire_root_wetness_Li2021(bounds, num_exposedvegp, filter_exposedvegp, &
           waterstatebulk_inst, soilstate_inst, soil_water_retention_curve)
      do fp = 1, num_exposedvegp
         p = filter_exposedvegp(fp)
@@ -675,61 +674,5 @@ contains
    end associate
 
  end subroutine CNFireArea
-
- !----------------------------------------------------------------------
- subroutine CNFire_calc_fire_root_wetness( this, bounds, num_exposedvegp, filter_exposedvegp, &
-                                     waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
-    !
-    ! Calculate the root wetness term that will be used by the fire model
-    !
-    use pftconMod                 , only : pftcon
-    use PatchType                 , only : patch
-    class(cnfire_li2021_type) :: this
-    type(bounds_type)      , intent(in)   :: bounds                         !bounds
-    integer                , intent(in)   :: num_exposedvegp                !number of filters
-    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
-    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
-    type(soilstate_type)   , intent(in)   :: soilstate_inst
-    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
-    ! !LOCAL VARIABLES:
-    real(r8) :: s_node  !temporary variables
-    integer :: p, f, j, c         !indices
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
-
-    associate(                                                &
-         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
-         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
-         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
-         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
-         )
-
-      do f = 1, num_exposedvegp
-         p = filter_exposedvegp(f)
-         btran2(p)   = 0._r8
-      end do
-      do j = 1,nlevgrnd
-         do f = 1, num_exposedvegp
-            p = filter_exposedvegp(f)
-            c = patch%column(p)
-            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
-
-            btran2(p)   = btran2(p) + rootfr(p,j)*s_node
-         end do
-      end do
-
-      do f = 1, num_exposedvegp
-         p = filter_exposedvegp(f)
-         if (btran2(p) > 1._r8) then
-            btran2(p) = 1._r8
-         end if
-      end do
-
-    end associate 
-
- end subroutine CNFire_calc_fire_root_wetness
- !----------------------------------------------------------------------
-
 
 end module CNFireLi2021Mod
