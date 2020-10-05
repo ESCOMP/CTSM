@@ -58,6 +58,7 @@ module CNFireLi2021Mod
      ! !PUBLIC MEMBER FUNCTIONS:
      procedure, public :: need_lightning_and_popdens
      procedure, public :: CNFireArea    ! Calculate fire area
+     procedure, public :: CNFire_calc_fire_root_wetness ! Calculate the root wetness term that will be used by the fire model
   end type cnfire_li2021_type
 
   !
@@ -382,10 +383,10 @@ contains
                  ! whereas in fact the land cover change occurred when the column *was*
                  ! tropical closed forest.
                  if( patch%itype(p) == nbrdlf_evr_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)*col%wtgcell(c)
+                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)
                  end if
                  if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)*col%wtgcell(c)
+                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)
                  end if
 
                  if (transient_landcover) then
@@ -409,7 +410,7 @@ contains
                           ! different seasons. But having deforestation spread evenly
                           ! throughout the year is much better than having it all
                           ! concentrated on January 1.)
-                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)*col%wtgcell(c)
+                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)
                        end if
                     end if
                  end if
@@ -581,6 +582,7 @@ contains
         c = filter_soilc(fc)
         g = col%gridcell(c)
         hdmlf=this%forc_hdm(g)
+        nfire(c) = 0._r8
         if( cropf_col(c)  <  1._r8 )then
            fuelc(c) = totlitc(c)+totvegc(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            if (spinup_state == 2) then
@@ -669,7 +671,7 @@ contains
     use WaterStateBulkType        , only : waterstatebulk_type
     use SoilStateType             , only : soilstate_type
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    class(cnfire_base_type) :: this
+    class(cnfire_li2021_type) :: this
     type(bounds_type)      , intent(in)   :: bounds                         !bounds
     integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
     integer                , intent(in)   :: num_exposedvegp                !number of filters
@@ -691,6 +693,10 @@ contains
          h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
          )
 
+      do f = 1, num_exposedvegp
+         p = filter_exposedvegp(f)
+         btran2(p)   = 0._r8
+      end do
       do j = 1,nlevgrnd
          do f = 1, num_exposedvegp
             p = filter_exposedvegp(f)
