@@ -224,12 +224,12 @@ contains
                ns_veg%retransn_patch(p)     = ns_veg%retransn_patch(p)   + nf_veg%livestemn_to_retransn_patch(p)*dt
                ns_veg%grainn_patch(p)       = ns_veg%grainn_patch(p) &
                     - (nf_veg%grainn_to_food_patch(p) + nf_veg%grainn_to_seed_patch(p))*dt
-               ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
-                    - nf_veg%crop_seedn_to_leaf_patch(p) * dt &
-                    + nf_veg%grainn_to_seed_patch(p) * dt
             else
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
+            ns_veg%cropseedn_deficit_patch(p) = ns_veg%cropseedn_deficit_patch(p) &
+                    - nf_veg%crop_seedn_to_leaf_patch(p) * dt &
+                    + nf_veg%grainn_to_seed_patch(p) * dt
          end if
 
          ! uptake from soil mineral N pool
