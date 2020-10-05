@@ -2873,9 +2873,14 @@ contains
                         livestemc_to_litter(p) = 0
                      end if
                      if(livestemn(p) .gt. 0)then
-                        matrix_phtransfer(p,ilivestem_to_iout_phn) = livestemn_to_biofueln(p) / livestemn(p)
+                        matrix_nphtransfer(p,ilivestem_to_iout_phn) = livestemn_to_biofueln(p) / livestemn(p)
                      else
                         livestemn_to_litter(p) = 0
+                     end if
+                     if(leafn(p) > 0)then
+                        matrix_nphtransfer(p,ileaf_to_iout_phn)  = leafn_to_biofueln(p) / leafn(p)
+                     else
+                        leafn_to_litter(p) = 0
                      end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
