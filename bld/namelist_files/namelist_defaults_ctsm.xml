@@ -586,8 +586,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_hydrstress phys="clm5_1"  use_fates=".false." configuration="clm">.true.</use_hydrstress>
 
 <!-- General CN options -->
-<dribble_crophrv_xsmrpool_2atm co2_type="prognostic" use_crop=".true.">.true.</dribble_crophrv_xsmrpool_2atm>
-<dribble_crophrv_xsmrpool_2atm                       use_crop=".true.">.false.</dribble_crophrv_xsmrpool_2atm>
+<!-- Turn this on all of the time, eventually this namelist item should be removed -->
+<dribble_crophrv_xsmrpool_2atm use_crop=".true.">.true.</dribble_crophrv_xsmrpool_2atm>
  
 <!--
 
