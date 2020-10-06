@@ -33,7 +33,7 @@ module ncdio_pio
   use pio            , only : pio_put_att, pio_put_var, pio_read_darray, pio_real, pio_seterrorhandling
   use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
   use pio            , only : pio_iotask_rank, PIO_REARR_SUBSET, PIO_REARR_BOX
-  use pio            , only : pio_inq_vartype
+  use pio            , only : pio_inq_vartype, pio_real
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -1612,6 +1612,7 @@ contains
     logical                          :: varpresent ! if true, variable is on tape
     integer                          :: xtype      ! type of var in file
     integer                , pointer :: idata(:)   ! Temporary integer data to send to file
+    real(r8)               , pointer :: ddata(:)   ! Temporary double data to send to file
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter       :: subname='ncd_io_1d_{TYPE}' ! subroutine name
@@ -1693,13 +1694,23 @@ contains
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
 #if ({ITYPE}==TYPELOGICAL)
-             allocate(idata(size(data)))
-             call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
-             data = (idata == 1)
-             if ( any(idata /= 0 .and. idata /= 1) )then
-                call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
-             end if
-             deallocate( idata )
+             if (xtype == PIO_INT .or. xtype == PIO_REAL) then
+                allocate(idata(size(data)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
+                data = (idata == 1)
+                if ( any(idata /= 0 .and. idata /= 1) )then
+                   call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
+                end if
+                deallocate( idata )
+             else if (xtype == PIO_DOUBLE) then
+                allocate(ddata(size(data)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, ddata, status)
+                data = (ddata == 1.)
+                if ( any(ddata /= 0. .and. ddata /= 1.) )then
+                   call shr_sys_abort(' ERROR: read in bad value(s) for logical data'//errMsg(sourcefile, __LINE__))
+                end if
+                deallocate( ddata )
+             endif
 #else
              call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
              call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
