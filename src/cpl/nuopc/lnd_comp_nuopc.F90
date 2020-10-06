@@ -201,6 +201,13 @@ contains
 
     call mpi_comm_dup(lmpicom, mpicom, ierr)
 
+    !----------------------------------------------------------------------------
+    ! reset shr logging to my log file
+    !----------------------------------------------------------------------------
+
+    call set_component_logging(gcomp, localPet==0, iulog, shrlogunit, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
     ! Note still need compid for those parts of the code that use the data model
     ! functionality through subroutine calls
     call NUOPC_CompAttributeGet(gcomp, name='MCTID', value=cvalue, rc=rc)
@@ -214,13 +221,6 @@ contains
     !----------------------------------------------------------------------------
 
     call get_component_instance(gcomp, inst_suffix, inst_index, rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    !----------------------------------------------------------------------------
-    ! reset shr logging to my log file
-    !----------------------------------------------------------------------------
-
-    call set_component_logging(gcomp, localPet==0, iulog, shrlogunit, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
@@ -327,7 +327,6 @@ contains
 
     call shr_file_setLogUnit (shrlogunit)
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
-
   end subroutine InitializeAdvertise
 
   !===============================================================================
@@ -427,7 +426,6 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
 !$  call omp_set_num_threads(localPeCount)
-    print *,__FILE__,__LINE__,localPeCount
 
     !----------------------
     ! Obtain attribute values
