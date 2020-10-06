@@ -3375,7 +3375,7 @@ contains
 
 
       ! patch loop
-      do fp = 1,num_soilp
+ptch: do fp = 1,num_soilp
          p = filter_soilp(fp)
 
          ! only calculate these fluxes for woody types
@@ -3413,7 +3413,7 @@ contains
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if
-            end if    
+            end if
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
             !matrix for livestemn_to_retransn will be added in allocation subroutine
@@ -3433,7 +3433,7 @@ contains
             end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
-              if (livecrootc(p) == 0.0_r8) then    
+               if (livecrootc(p) == 0.0_r8) then    
                   ntovr = 0.0_r8    
                   livecrootn_to_deadcrootn(p) = 0.0_r8 
                else    
@@ -3462,10 +3462,11 @@ contains
                      livestemn_to_retransn(p)  = 0
                   end if
                end if !use_matrixcn
+            end if
 
-         end if
+         end if !woody
 
-      end do
+      end do ptch
 
     end associate 
 
