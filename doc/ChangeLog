@@ -1,4 +1,121 @@
 ===============================================================
+Tag name:  ctsm5.1.dev006
+Originator(s):  sacks (Bill Sacks)
+Date:  Sat Oct  3 19:50:41 MDT 2020
+One-line Summary: Call correct routine to calculate btran2 for CNFireLi2021
+
+Purpose of changes
+------------------
+
+Due to a subtle code bug, CNFireLi2021 was using the btran2 calculating
+routine from the base class rather than the new one that is specific to
+this formulation.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1173 (CNFireLi2021Mod uses the wrong btran2
+  routine)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: not investigated (none expected)
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok: tests pass, Clm51Bgc baselines fail as expected
+
+    Note: there were also the following BFAIL results due to missing
+    baselines, as documented in the previous tag:
+
+    FAIL ERS_D_Ld10.C96_C96_mg17.IHistClm50Sp.cheyenne_intel.clm-decStart BASELINE ctsm5.1.dev005: ERROR BFAIL some baseline files were missing
+    FAIL ERS_Ln9.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.IHistClm50SpGs.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start BASELINE ctsm5.1.dev005: ERROR BFAIL some baseline files were missing
+    FAIL SMS_Ln9.ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12.IHistClm50Sp.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start BASELINE ctsm5.1.dev005: ERROR BFAIL some baseline files were missing
+    FAIL SMS_Ln9.ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12.ISSP585Clm50BgcCrop.cheyenne_intel.clm-clm50cam6LndTuningMode BASELINE ctsm5.1.dev005: ERROR BFAIL some baseline files were missing
+    FAIL SMS_Ln9.ne0CONUSne30x8_ne0CONUSne30x8_mt12.IHistClm50Sp.cheyenne_intel.clm-clm50cam6LndTuningMode_2013Start BASELINE ctsm5.1.dev005: ERROR BFAIL some baseline files were missing
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm51Bgc
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; whether it is climate changing was not investigated
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1174
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev005
 Originator(s):  sacks (Bill Sacks)
 Date:  Fri Oct  2 09:51:08 MDT 2020
