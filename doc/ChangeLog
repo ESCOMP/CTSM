@@ -1,4 +1,214 @@
 ===============================================================
+Tag name:  ctsm5.1.dev007
+Originator(s):  sacks (Bill Sacks)
+Date:  Tue Oct  6 09:29:27 MDT 2020
+One-line Summary: CNFire: btran2 fixes and general cleanup
+
+Purpose of changes
+------------------
+
+(1) Call routine to calculate fire's btran2 from CNFireArea; this has a
+    few advantages:
+
+    - It makes the logic of CNFireArea more clear (rather than depending on
+      a btran2 variable that is calculated from some other part of the code)
+
+    - This avoids having the biogeophysics depend on the biogeochemistry
+
+    - This lets us avoid doing this btran calc if using no-fire – or other,
+      future, fire methods that don't need it
+
+    Note regarding testing: In the initial step, I kept this calculation
+    dependent on a saved version of h2osoi_vol to avoid changing
+    answers; I changed this in the answer changes in step (2), as noted
+    below.
+
+(2) Answer-changing fixes to CNFire's btran2 calculation and use:
+
+    (a) Calculate fire btran2 using updated h2osoi_vol (this is an
+        answer-changing cleanup step from (1))
+
+    (b) TEMPORARY CHANGE (reverted in the cleanup in (3)): Reinitialize
+        fire btran2 to spval for all patches in each time step, so that
+        the fire code isn't trying to use btran2 from earlier time steps
+        for patches that were in the exposed veg filter at one point but
+        no longer are.
+
+        One implication of this is that, if there is currently no
+        exposed veg on a column, the new code leads to the block of code
+        that forces fire_m = 0 (because wtlf will be 0). Previously, in
+        contrast, it looks like fire_m was allowed to be non-zero even
+        if there is currently no exposed veg, because btran2 and wtlf
+        were accumulated if a patch ever was exposed in the past.
+
+    (c) Limit fire btran2 to be <= 1, rather than letting it be slightly
+        greater than 1. (Due to a conditional in CNFireArea, these
+        slightly-greater-tan-1 values were being ignored when computing
+        btran_col, rather than averaging in a 1 value.)
+
+(3) Non-answer-changing fire code cleanup:
+
+    (a) Cleanup of the btran2 fixes, including reverting the TEMPORARY
+        CHANGE noted in (2b), instead relying on a better mechanism:
+        just doing the calculations of btran_col and wtlf over the
+        exposedvegp filter. Also, get rid of the checks for
+        shr_infnan_isnan(btran2(p)) and btran2(p) <= 1 (allowed by the
+        other changes in (2) and (3)).
+
+    (b) Set btran2 to 0 over non-exposed-veg points: this changes
+        answers for the BTRAN2 diagnostic field, but nothing else. (This
+        follows what is done for the standard BTRAN.)
+
+    (c) Move calc_fire_root_wetness for CNFireLi2021 into the base type
+        to avoid future bugs (assuming that the next fire module will
+        extend the base class but will also want to use this new version
+        of calc_fire_root_wetness).
+
+    (d) Change fire looping structure to be more standard
+
+(4) Remove some very expensive tests from aux_clm, putting some in the
+    new ctsm_sci test list instead
+
+(5) A bit of other minor cleanup
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1139 (Decrease expense of ne0ARCTICGRISne30x8
+  test and C96 tests)
+- Resolves ESCOMP/CTSM#1153 (Fire btran2 is only computed for exposed
+  veg patches, but is used over all veg patches)
+- Resolves ESCOMP/CTSM#1170 (CNFire code: btran2 should not be skipped
+  when it's greater than 1)
+- Partially addresses ESCOMP/CTSM#1142 (Add ctsm_sci test list that
+  would be used for releases and making sure important resolutions run
+  well)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: Remove some very expensive tests from
+aux_clm, putting some in the new ctsm_sci test list instead.
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - pass (on my mac)
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok: tests pass, many baselines fail as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, for all CN/BGC configurations
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All CN/BGC configurations
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      larger than roundoff; expected to be same climate, but not
+      investigated yet
+
+
+  To verify that the answer changes only came from expected changes, I
+  did a few rounds of testing. The following numbers refer to the groups
+  of changes listed under "Purpose of changes", above. The changes in
+  groups (4) and (5) were combined with those in groups (1) and (3) -
+  i.e., the basically non-answer-changing sets.
+
+  First, I tested with just the changes in (1). This led to differences
+  in only limited configurations, as noted in
+  https://github.com/ESCOMP/CTSM/pull/1155#issuecomment-695035048:
+  - nofire tests had diffs in BTRAN2
+  - dynroots tests had extensive diffs because now btran2 is calculated
+    after the dyn roots updates in each time step
+  - tests where the compared clm2 h0 file includes the 0th time step had
+    diffs just in BTRAN2, for reasons I couldn't determine
+
+  Then I tested with the changes in (2), which were expected to change
+  answers for all CN/BGC tests. In particular, these change answers due
+  to:
+  - using updated h2osoi_vol rather than the one earlier in the time
+    step when calculating btran2
+  - only considering points in the exposed veg filter when averaging
+    btran2 from patch to column, rather than using stale values from
+    no-longer-exposed patches (which also means having fire_m = 0 if
+    there are no currently-exposed veg patches in a column) (fix for
+    ESCOMP/CTSM#1153)
+  - treating btran2 values that are slightly greater than 1 as 1, rather
+    than ignoring them completely (fix for ESCOMP/CTSM#1170)
+
+  Finally, I tested with all of the changes, comparing against the
+  baselines generated from (2). As expected, the only answer changes in
+  this final round were in the BTRAN2 diagnostic field (due to setting
+  btran2 to 0 over non-exposed-veg points).
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1155
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev006
 Originator(s):  sacks (Bill Sacks)
 Date:  Sat Oct  3 19:50:41 MDT 2020

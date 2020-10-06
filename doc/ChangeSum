@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev007    sacks 10/06/2020 CNFire: btran2 fixes and general cleanup
   ctsm5.1.dev006    sacks 10/03/2020 Call correct routine to calculate btran2 for CNFireLi2021
   ctsm5.1.dev005    sacks 10/02/2020 Answer changing bug fixes for clm51: fire and organic_frac_squared
   ctsm5.1.dev004   oleson 09/30/2020 Improve robustness of onset and offset counters when changing dt

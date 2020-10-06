@@ -25,9 +25,6 @@ module FireMethodType
      ! Read parameters  for the fire datasets
      procedure(CNFireReadParams_interface), public, deferred :: CNFireReadParams
 
-     ! Restart
-     procedure(CNFireRestart_interface), public, deferred :: CNFireRestart
-
      ! Interpolate the fire datasets
      procedure(FireInterp_interface) , public, deferred :: FireInterp
 
@@ -36,9 +33,6 @@ module FireMethodType
 
      ! Figure out the fire fluxes
      procedure(CNFireFluxes_interface) , public, deferred :: CNFireFluxes
-
-     ! Calculate root wetness for the CN Fire
-     procedure(CNFire_calc_fire_root_wetness_interface) , public, deferred :: CNFire_calc_fire_root_wetness
 
   end type fire_method_type
 
@@ -120,27 +114,11 @@ module FireMethodType
   end subroutine CNFireReadParams_interface
 
   !-----------------------------------------------------------------------
-  subroutine CNFireRestart_interface( this, bounds, ncid, flag )
-    !
-    ! Restart for the CN fire base class
-    ! !USES:
-    use ncdio_pio       , only : file_desc_t
-    use decompMod       , only : bounds_type
-    import :: fire_method_type
-    !
-    ! !ARGUMENTS:
-    class(fire_method_type)          :: this
-    type(bounds_type), intent(in)    :: bounds
-    type(file_desc_t), intent(inout) :: ncid
-    character(len=*) , intent(in)    :: flag
-    !--------------------------------------------------------------------
-
-  end subroutine CNFireRestart_interface
-
-  !-----------------------------------------------------------------------
   subroutine CNFireArea_interface (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
+       waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
        cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
@@ -152,8 +130,11 @@ module FireMethodType
     use atm2lndType                        , only : atm2lnd_type
     use EnergyFluxType                     , only : energyflux_type
     use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
-    use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
-    use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
+    use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
+    use Wateratm2lndBulkType               , only : wateratm2lndbulk_type
+    use WaterStateBulkType                 , only : waterstatebulk_type
+    use SoilStateType                      , only : soilstate_type
+    use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
     use CNVegStateType                     , only : cnveg_state_type
     use CNVegCarbonStateType               , only : cnveg_carbonstate_type
     import :: fire_method_type
@@ -165,11 +146,18 @@ module FireMethodType
     integer                               , intent(in)    :: filter_soilc(:) !  filter for soil columns
     integer                               , intent(in)    :: num_soilp       !  number of soil patches in filter
     integer                               , intent(in)    :: filter_soilp(:) !  filter for soil patches
+    integer                               , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
+    integer                               , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
+    integer                               , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                               , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
-    type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
-    type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
+    type(waterdiagnosticbulk_type)        , intent(in)    :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)           , intent(in)    :: wateratm2lndbulk_inst
+    type(waterstatebulk_type)             , intent(in)    :: waterstatebulk_inst
+    type(soilstate_type)                  , intent(in)    :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -231,27 +219,6 @@ module FireMethodType
   end subroutine CNFireFluxes_interface
 
   !-----------------------------------------------------------------------
-
-  !----------------------------------------------------------------------
-  subroutine CNFire_calc_fire_root_wetness_interface( this, bounds, nlevgrnd, num_exposedvegp, &
-                                     filter_exposedvegp, waterstatebulk_inst, &
-                                     soilstate_inst, soil_water_retention_curve )
-    ! Calculate root wetness that will be used for the CN fire model
-    use decompMod                 , only : bounds_type
-    use WaterStateBulkType        , only : waterstatebulk_type
-    use SoilStateType             , only : soilstate_type
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    import :: fire_method_type
-    class(fire_method_type)                :: this
-    type(bounds_type)      , intent(in)    :: bounds                         !bounds
-    integer                , intent(in)    :: nlevgrnd                       !number of vertical layers
-    integer                , intent(in)    :: num_exposedvegp                !number of filters
-    integer                , intent(in)    :: filter_exposedvegp(:)          !filter array
-    type(waterstatebulk_type), intent(in)  :: waterstatebulk_inst
-    type(soilstate_type)   , intent(in)    :: soilstate_inst
-    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
-    !-----------------------------------------------------------------------
-  end subroutine CNFire_calc_fire_root_wetness_interface
 
   end interface
 

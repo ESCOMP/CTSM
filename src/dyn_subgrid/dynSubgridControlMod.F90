@@ -344,7 +344,7 @@ contains
     ! Return the value of the do_transient_lakes control flag
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(dyn_subgrid_control_inst%initialized, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
 
     get_do_transient_lakes = dyn_subgrid_control_inst%do_transient_lakes
 
