@@ -41,7 +41,7 @@ EXAMPLES:
 
      To document a new tag
 
-     $ProgName ctsm1.0.dev012 "Description of this tag"
+     $ProgName release-cesm2.2.09 "Description of this tag"
 EOF
 }
 
@@ -67,7 +67,7 @@ if ( ! $opts{'update'} ) {
    $tag = $ARGV[0];
    $sum = $ARGV[1];
 
-   if ( $tag !~ /ctsm[0-9]\.[0-9]\.(dev[0-9][0-9][0-9]|[0-9][0-9])/ ) {
+   if ( $tag !~ /release-cesm[0-9]\.[0-9]\.([0-9][0-9])/ ) {
      print "ERROR: bad tagname: $tag\n";
      usage();
    }
@@ -84,8 +84,8 @@ if ( $EDITOR !~ /.+/ ) {
 }
 
 
-my $template      = ".ChangeLog_template";
-my $changelog     = "ChangeLog";
+my $template      = ".release-ChangeLog_template";
+my $changelog     = "release-cesm2.2.ChangeLog";
 my $changesum     = "ChangeSum";
 my $changelog_tmp = "ChangeLog.tmp";
 my $changesum_tmp = "ChangeSum.tmp";
@@ -137,7 +137,7 @@ my $update = $opts{'update'};
 my $oldTag = "";
 while( $_ = <CL> ) {
   # If adding a new tag check that new tag name does NOT match any old tag
-  if (  $_ =~ /Tag name:[   ]*(ctsm.+)/ ) {
+  if (  $_ =~ /Tag name:[   ]*(release-cesm.+)/ ) {
      $oldTag = $1;
      if ( (! $opts{'update'}) && ($tag eq $oldTag) ) {
         close( CL );
@@ -177,10 +177,10 @@ while( $_ = <CS> ) {
   # Find header line
   if ( $_ =~ /=====================/ ) {
      print FH $_;
-     my $format = "%16.16s %8.8s %10.10s %s\n";
+     my $format = "%18.18s %6.6s %10.10s %s\n";
      if ( $update ) {
        $_ = <CS>;
-       if ( /^(.{16}) (.{8}) (.{10}) (.+)$/ ) {
+       if ( /^(.{18}) (.{6}) (.{10}) (.+)$/ ) {
           $tag  = $1;
           $user = $2;
           $sum  = $4;
