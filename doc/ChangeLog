@@ -1,4 +1,105 @@
 ===============================================================
+Tag name:  ctsm5.1.dev008
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Oct  7 11:48:30 MDT 2020
+One-line Summary: Two answer changes: Clm45/50/51 with crop, and for 2000Clm51
+
+Purpose of changes
+------------------
+
+Turn dribble_crophrv_xsmrpool_2atm when crop is on for clm4_5, clm5_0, and clm5_1 physics
+Fix the finidat files being selected for 2000_control conditions for clm5_1
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): 
+   Fixes #1158 -- Turn dribble_crophrv_xsmrpool_2atm on when crop is on for all physics versions
+   Another issue in #1166 -- correct finidat file for 2000Clm51
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[x] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[x] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): None
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   dribble_crophrv_xsmrpool_2atm now on when crop on for all physics versions
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   The namelist dribble_crophrv_xsmrpool_2atm should now be removed as a namelist item both
+   in the fortran code and in build-namelist scripts. This change should be bit-for-bit.
+
+Changes to tests or testing: None
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS (120 tests are different than before)
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyenne -- PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Clm45/50/51 with crop (except with prognostic CO2) and 2000Clm51
+    - what platforms/compilers: All
+    - nature of change: same climate
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids): #1177
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1177 -- Two answer changes turn dribble_crophrv_xsmrpool_2atm and correct clm5_1 finidat 
+           file for 2000 conditions
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev007
 Originator(s):  sacks (Bill Sacks)
 Date:  Tue Oct  6 09:29:27 MDT 2020
