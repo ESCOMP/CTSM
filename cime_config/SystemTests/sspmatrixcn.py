@@ -117,7 +117,7 @@ class SSPMATRIXCN(SystemTestsCommon):
         # For cold start, run with matrix off
         if ( self.cold[n] ):
             contents_to_append = contents_to_append + ", use_matrixcn = .False."
-            contents_to_append = contents_to_append + ", use_soilmatrixcn = .False."
+            contents_to_append = contents_to_append + ", use_soil_matrixcn = .False."
 
         # Always append to the end
         user_nl_utils.append_to_user_nl_files(caseroot = caseroot,
