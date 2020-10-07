@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev008
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Wed Oct  7 11:36:54 MDT 2020
+Date: Wed Oct  7 11:48:30 MDT 2020
 One-line Summary: Two answer changes: Clm45/50/51 with crop, and for 2000Clm51
 
 Purpose of changes
@@ -63,7 +63,7 @@ CTSM testing: regular
 
   build-namelist tests:
 
-    cheyenne - PASS
+    cheyenne - PASS (120 tests are different than before)
 
   python testing (see instructions in python/README.md; document testing done):
 
