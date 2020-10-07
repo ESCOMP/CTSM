@@ -1612,6 +1612,7 @@ contains
     logical                          :: varpresent ! if true, variable is on tape
     integer                          :: xtype      ! type of var in file
     integer                , pointer :: idata(:)   ! Temporary integer data to send to file
+    real(r4)               , pointer :: fdata(:)   ! Temporary double data to send to file
     real(r8)               , pointer :: ddata(:)   ! Temporary double data to send to file
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
@@ -1713,7 +1714,30 @@ contains
              endif
 #else
              call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-             call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+#if ({ITYPE}==TYPEINT)
+             if (xtype == PIO_INT .or. xtype == PIO_REAL) then
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+             else if (xtype == PIO_DOUBLE) then
+                allocate(ddata(size(data)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, ddata, status)
+                data = int(ddata)
+                deallocate( ddata )
+             endif
+#else if ({ITYPE}==TYPEDOUBLE)
+             if (xtype == PIO_DOUBLE) then
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+             else if (xtype == PIO_INT) then
+                allocate(idata(size(data)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
+                data = real(idata, kind=R8)
+                deallocate(idata)
+             else if (xtype == PIO_REAL) then
+                allocate(fdata(size(data)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, fdata, status)
+                data = real(fdata, kind=R8)
+                deallocate(fdata)
+             endif
+#endif
 #endif
              if ( status /= PIO_NOERR ) then
                 call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
@@ -1818,6 +1842,9 @@ contains
     integer           :: lb1,lb2
     integer           :: ub1,ub2
     integer           :: xtype      ! netcdf type of variable on file
+    integer                , pointer :: idata(:,:)   ! Temporary integer data to read from file
+    real(r4)               , pointer :: fdata(:,:)   ! Temporary double data to read from file
+    real(r8)               , pointer :: ddata(:,:)   ! Temporary double data to read from file
 
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
@@ -1913,18 +1940,40 @@ contains
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-             if (present(switchdim)) then
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, temp, status)
-                do j = lb2,ub2
-                do i = lb1,ub1
-                   data(i,j) = temp(j,i)
-                end do
-                end do
-             else
+#if ({ITYPE}==TYPEINT)
+             if(xtype == PIO_INT .or. xtype == PIO_REAL) then
                 call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+             elseif(xtype == PIO_DOUBLE) then
+                allocate(ddata(size(data,1),size(data,2)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, ddata, status)
+                data = int(ddata)
+             endif
+#endif
+#if ({ITYPE}==TYPEDOUBLE)
+             if(xtype == PIO_DOUBLE) then
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+             else if(xtype == PIO_INT) then
+                allocate(idata(size(data,1),size(data,2)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
+                data = real(idata, kind=R8)
+                deallocate(idata)
+             else if(xtype == PIO_REAL) then
+                allocate(fdata(size(data,1),size(data,2)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, fdata, status)
+                data = real(fdata, kind=R8)
+                deallocate(fdata)
+             endif
+#endif
+             if (present(switchdim)) then
+                temp = data
+                do j = lb2,ub2
+                   do i = lb1,ub1
+                      data(i,j) = temp(j,i)
+                   end do
+                end do
              end if
           end if
-#if ({ITYPE}!=TYPEINT)
+#if ({ITYPE}==TYPEDOUBLE)
           if ( present(cnvrtnan2fill) )then
              do j = lb2,ub2
              do i = lb1,ub1
@@ -2054,6 +2103,9 @@ contains
     integer                          :: count(5)   ! netcdf count index
     integer                          :: xtype      ! netcdf type of variable on file
     logical                          :: varpresent ! if true, variable is on tape
+    integer                , pointer :: idata(:,:,:)   ! Temporary integer data to read from file
+    real(r4)               , pointer :: fdata(:,:,:)   ! Temporary double data to read from file
+    real(r8)               , pointer :: ddata(:,:,:)   ! Temporary double data to read from file
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter :: subname='ncd_io_3d_{TYPE}' ! subroutine name
@@ -2116,7 +2168,31 @@ contains
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-             call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+#if ({ITYPE}==TYPEINT)
+             if(xtype == PIO_INT .or. xtype == PIO_REAL) then
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+             elseif (xtype == PIO_DOUBLE) then
+                allocate(ddata(size(data,1),size(data,2),size(data,3)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, ddata, status)
+                data = int(ddata)
+                deallocate(ddata)
+             endif
+#endif
+#if ({ITYPE}==TYPEDOUBLE)
+             if(xtype == PIO_INT) then
+                allocate(idata(size(data,1),size(data,2),size(data,3)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
+                data = real(idata, kind=r8)
+                deallocate(idata)
+             else if(xtype == PIO_REAL) then
+                allocate(fdata(size(data,1),size(data,2),size(data,3)))
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, fdata, status)
+                data = real(fdata, kind=r8)
+                deallocate(fdata)
+             else
+                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
+             endif
+#endif
           end if
        end if
        if (present(readvar)) readvar = varpresent
