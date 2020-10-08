@@ -106,7 +106,8 @@ contains
          nind               =>  dgvs_inst%nind_patch                    , & ! Input:  [real(r8) (:) ] number of individuals (#/m**2)                    
          fpcgrid            =>  dgvs_inst%fpcgrid_patch                 , & ! Input:  [real(r8) (:) ] fractional area of patch (pft area/nat veg area)    
 
-         snow_depth         =>  waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:) ] snow height (m)                                   
+         frac_sno           =>  waterdiagnosticbulk_inst%frac_sno_col   , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
+         snow_depth         =>  waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)                                   
 
          forc_hgt_u_patch   =>  frictionvel_inst%forc_hgt_u_patch       , & ! Input:  [real(r8) (:) ] observational height of wind at patch-level [m]     
 
@@ -292,8 +293,10 @@ contains
             !depth of snow required for complete burial of grasses
          endif
 
-         elai(p) = max(tlai(p)*fb, 0.0_r8)
-         esai(p) = max(tsai(p)*fb, 0.0_r8)
+         !grass and crop snow burial changes with PFT height
+         !accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
+         elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
+         esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
 
          ! Fraction of vegetation free of snow
          if ((elai(p) + esai(p)) > 0._r8) then
