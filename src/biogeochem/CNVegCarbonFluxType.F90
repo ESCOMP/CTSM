@@ -134,6 +134,9 @@ module CNVegCarbonFluxType
      real(r8), pointer :: frootc_to_litter_patch                    (:)     ! fine root C litterfall (gC/m2/s)
      real(r8), pointer :: livestemc_to_litter_patch                 (:)     ! live stem C litterfall (gC/m2/s)
      real(r8), pointer :: grainc_to_food_patch                      (:)     ! grain C to food for prognostic crop(gC/m2/s)
+     
+     real(r8), pointer :: leafc_to_biofuelc_patch                   (:)     ! leaf C to biofuel C (gC/m2/s)
+     real(r8), pointer :: livestemc_to_biofuelc_patch               (:)     ! livestem C to biofuel C (gC/m2/s)
      real(r8), pointer :: grainc_to_seed_patch                      (:)     ! grain C to seed for prognostic crop(gC/m2/s)
 
      ! maintenance respiration fluxes     
@@ -601,6 +604,8 @@ contains
     allocate(this%cpool_to_grainc_storage_patch             (begp:endp)) ; this%cpool_to_grainc_storage_patch             (:) = nan
     allocate(this%livestemc_to_litter_patch                 (begp:endp)) ; this%livestemc_to_litter_patch                 (:) = nan
     allocate(this%grainc_to_food_patch                      (begp:endp)) ; this%grainc_to_food_patch                      (:) = nan
+    allocate(this%leafc_to_biofuelc_patch                   (begp:endp)) ; this%leafc_to_biofuelc_patch                   (:) = nan
+    allocate(this%livestemc_to_biofuelc_patch               (begp:endp)) ; this%livestemc_to_biofuelc_patch               (:) = nan
     allocate(this%grainc_to_seed_patch                      (begp:endp)) ; this%grainc_to_seed_patch                      (:) = nan
     allocate(this%grainc_xfer_to_grainc_patch               (begp:endp)) ; this%grainc_xfer_to_grainc_patch               (:) = nan
     allocate(this%cpool_grain_gr_patch                      (begp:endp)) ; this%cpool_grain_gr_patch                      (:) = nan
@@ -831,6 +836,16 @@ contains
           call hist_addfld1d (fname='GRAINC_TO_FOOD', units='gC/m^2/s', &
                avgflag='A', long_name='grain C to food', &
                ptr_patch=this%grainc_to_food_patch)
+
+          this%leafc_to_biofuelc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_TO_BIOFUELC', units='gC/m^2/s', &
+               avgflag='A', long_name='leaf C to biofuel C', &
+               ptr_patch=this%leafc_to_biofuelc_patch)
+
+          this%livestemc_to_biofuelc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_TO_BIOFUELC', units='gC/m^2/s', &
+               avgflag='A', long_name='livestem C to biofuel C', &
+               ptr_patch=this%livestemc_to_biofuelc_patch)
 
           this%grainc_to_seed_patch(begp:endp) = spval
           call hist_addfld1d (fname='GRAINC_TO_SEED', units='gC/m^2/s', &
@@ -3518,7 +3533,7 @@ contains
             dim1name='pft', &
             long_name='grain C to food', units='gC/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%grainc_to_food_patch)
-
+            
        call restartvar(ncid=ncid, flag=flag,  varname='cpool_to_grainc', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='allocation to grain C', units='gC/m2/s', &
@@ -3855,6 +3870,10 @@ contains
           this%xsmrpool_to_atm_patch(i)         = value_patch
           this%livestemc_to_litter_patch(i)     = value_patch
           this%grainc_to_food_patch(i)          = value_patch
+
+          this%leafc_to_biofuelc_patch(i)       = value_patch
+          this%livestemc_to_biofuelc_patch(i)   = value_patch
+          
           this%grainc_to_seed_patch(i)          = value_patch
           this%grainc_xfer_to_grainc_patch(i)   = value_patch
           this%cpool_to_grainc_patch(i)         = value_patch
@@ -3964,7 +3983,6 @@ contains
        this%litfire_col(i)             = value_column
        this%somfire_col(i)             = value_column
        this%totfire_col(i)             = value_column
-       this%fire_closs_col(i)          = value_column
 
        ! Zero p2c column fluxes
        this%rr_col(i)                  = value_column  

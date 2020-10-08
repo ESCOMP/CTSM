@@ -38,6 +38,7 @@ module UrbanFluxesMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: UrbanFluxes       ! Urban physics - turbulent fluxes
+  public :: readParams
   !-----------------------------------------------------------------------
 
   ! !PRIVATE FUNCTIONS:
@@ -45,10 +46,35 @@ module UrbanFluxesMod
   private :: simple_wasteheatfromac  ! Calculate waste heat from air-conditioning with the simpler method (CLM4.5)
   private :: calc_simple_internal_building_temp ! Calculate internal building temperature by simpler method (CLM4.5)
 
+  type, private :: params_type
+     real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
+  end type params_type
+  type(params_type), private ::  params_inst
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
+
+  !------------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_UrbanFluxes'
+    !--------------------------------------------------------------------
+
+    ! Minimum wind speed at the atmospheric forcing height (m/s)
+    call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine UrbanFluxes (bounds, num_nourbanl, filter_nourbanl,                        &
@@ -348,7 +374,7 @@ contains
 
          ! Magnitude of atmospheric wind
 
-         ur(l) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
+         ur(l) = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
 
          ! Canyon top wind
 

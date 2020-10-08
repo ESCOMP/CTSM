@@ -34,9 +34,10 @@ module LakeFluxesMod
   public :: readParams
 
   type, private :: params_type
-      real(r8) :: a_coef  ! Drag coefficient under less dense canopy (unitless)
-      real(r8) :: a_exp  ! Drag exponent under less dense canopy (unitless)
-      real(r8) :: zsno  ! Momentum roughness length for snow (m)
+      real(r8) :: a_coef   ! Drag coefficient under less dense canopy (unitless)
+      real(r8) :: a_exp    ! Drag exponent under less dense canopy (unitless)
+      real(r8) :: zsno     ! Momentum roughness length for snow (m)
+      real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
   end type params_type
   type(params_type), private ::  params_inst
   !-----------------------------------------------------------------------
@@ -63,6 +64,8 @@ contains
     call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
     ! Momentum roughness length for snow (m)
     call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
+    ! Minimum wind speed at the atmospheric forcing height (m/s)
+    call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
 
   end subroutine readParams
 
@@ -392,7 +395,7 @@ contains
 
          ! Initialize stability variables
 
-         ur(p)    = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
+         ur(p)    = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
          dth(p)   = thm(p)-t_grnd(c)
          dqh(p)   = forc_q(c)-qsatg(c)
          dthv     = dth(p)*(1._r8+0.61_r8*forc_q(c))+0.61_r8*forc_th(c)*dqh(p)
