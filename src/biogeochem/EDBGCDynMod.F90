@@ -336,19 +336,6 @@ contains
     ! call soilbiogeochem_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc)
 
 
-    ! -----------------------------------------------------------------------------------
-    ! fates veg carbon state and flux summary, Nitrogen (TBD) and Balance Checks
-    ! -----------------------------------------------------------------------------------
-    ! ----------------------------------------------
-    ! fates veg nitrogen flux summary
-    ! ----------------------------------------------
-    ! ----------------------------------------------
-    ! calculate balance checks on entire carbon cycle (FATES + BGC)
-    ! ----------------------------------------------
-
-    call clm_fates%wrap_bgc_summary(nc, soilbiogeochem_carbonflux_inst, &
-                                        soilbiogeochem_carbonstate_inst)
-
     call t_stopf('BGCsum')
 
   end subroutine EDBGCDynSummary
