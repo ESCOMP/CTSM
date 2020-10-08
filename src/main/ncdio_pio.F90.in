@@ -1616,6 +1616,7 @@ contains
     real(r8)               , pointer :: ddata(:)   ! Temporary double data to send to file
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
+    integer                          :: oldhandle  ! previous value of pio_error_handle
     character(len=*),parameter       :: subname='ncd_io_1d_{TYPE}' ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -1641,7 +1642,6 @@ contains
 
        call ncd_inqvid(ncid, varname, varid, vardesc, readvar=varpresent)
        if (varpresent) then
-          call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
           if (single_column) then
              start(:) = 1 ; count(:) = 1
              call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
@@ -1660,6 +1660,7 @@ contains
              end if
 #if ({ITYPE}==TYPELOGICAL)
              allocate(idata(size(data)))
+             call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
              status = pio_get_var(ncid, varid, start(1:n), count(1:n), idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
@@ -1673,6 +1674,8 @@ contains
                 call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
                 // errMsg(sourcefile, __LINE__))
              end if
+             call pio_seterrorhandling(ncid, oldhandle)
+
           else
              status = pio_inq_varndims(ncid, vardesc, ndims)
              status = pio_inq_vardimid(ncid, vardesc, dids(1:ndims))
@@ -1694,58 +1697,20 @@ contains
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-#if ({ITYPE}==TYPELOGICAL)
-             if (xtype == PIO_INT .or. xtype == PIO_REAL) then
-                allocate(idata(size(data)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
-                data = (idata == 1)
-                if ( any(idata /= 0 .and. idata /= 1) )then
-                   call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
-                end if
-                deallocate( idata )
-             else if (xtype == PIO_DOUBLE) then
-                allocate(ddata(size(data)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, ddata, status)
-                data = (ddata == 1.)
-                if ( any(ddata /= 0. .and. ddata /= 1.) )then
-                   call shr_sys_abort(' ERROR: read in bad value(s) for logical data'//errMsg(sourcefile, __LINE__))
-                end if
-                deallocate( ddata )
+             if(xtype == PIO_INT) then
+                call read_darray_{TYPE}_from_int_1(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+             elseif(xtype == PIO_REAL) then
+                call read_darray_{TYPE}_from_real_1(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+             elseif(xtype == PIO_DOUBLE) then
+                call read_darray_{TYPE}_from_double_1(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+             else
+                   call shr_sys_abort(' ERROR: unrecognised type in read'//errMsg(sourcefile, __LINE__))
+
              endif
-#else
-             call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-#if ({ITYPE}==TYPEINT)
-             if (xtype == PIO_INT .or. xtype == PIO_REAL) then
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
-             else if (xtype == PIO_DOUBLE) then
-                allocate(ddata(size(data)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, ddata, status)
-                data = int(ddata)
-                deallocate( ddata )
-             endif
-#else if ({ITYPE}==TYPEDOUBLE)
-             if (xtype == PIO_DOUBLE) then
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
-             else if (xtype == PIO_INT) then
-                allocate(idata(size(data)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
-                data = real(idata, kind=R8)
-                deallocate(idata)
-             else if (xtype == PIO_REAL) then
-                allocate(fdata(size(data)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, fdata, status)
-                data = real(fdata, kind=R8)
-                deallocate(fdata)
-             endif
-#endif
-#endif
-             if ( status /= PIO_NOERR ) then
-                call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
-                // errMsg(sourcefile, __LINE__))
-             end if
+
           end if
        end if
-       call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
+
        if (present(readvar)) readvar = varpresent
 
     elseif (flag == 'write') then
@@ -1929,48 +1894,41 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              status = pio_inq_vartype(ncid, vardesc, xtype)
-             if (present(switchdim)) then
-                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     xtype, iodnum, switchdim=.true.)
-             else
-                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
-                     xtype, iodnum)
-             end if
-             iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-#if ({ITYPE}==TYPEINT)
-             if(xtype == PIO_INT .or. xtype == PIO_REAL) then
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
-             elseif(xtype == PIO_DOUBLE) then
-                allocate(ddata(size(data,1),size(data,2)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, ddata, status)
-                data = int(ddata)
-             endif
-#endif
-#if ({ITYPE}==TYPEDOUBLE)
-             if(xtype == PIO_DOUBLE) then
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
-             else if(xtype == PIO_INT) then
-                allocate(idata(size(data,1),size(data,2)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
-                data = real(idata, kind=R8)
-                deallocate(idata)
-             else if(xtype == PIO_REAL) then
-                allocate(fdata(size(data,1),size(data,2)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, fdata, status)
-                data = real(fdata, kind=R8)
-                deallocate(fdata)
-             endif
-#endif
              if (present(switchdim)) then
-                temp = data
+                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                     xtype, iodnum, switchdim=.true.)
+                iodesc_plus => iodesc_list(iodnum)
+                if(xtype == PIO_INT) then
+                   call read_darray_{TYPE}_from_int_2(ncid, vardesc, iodesc_plus%iodesc, varname, temp)
+                elseif(xtype == PIO_REAL) then
+                   call read_darray_{TYPE}_from_real_2(ncid, vardesc, iodesc_plus%iodesc, varname, temp)
+                elseif(xtype == PIO_DOUBLE) then
+                   call read_darray_{TYPE}_from_double_2(ncid, vardesc, iodesc_plus%iodesc, varname, temp)
+                else
+                   call shr_sys_abort(' ERROR: unrecognised type in read'//errMsg(sourcefile, __LINE__))
+                endif
                 do j = lb2,ub2
                    do i = lb1,ub1
                       data(i,j) = temp(j,i)
                    end do
                 end do
+             else
+                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                     xtype, iodnum)
+                iodesc_plus => iodesc_list(iodnum)
+
+                if(xtype == PIO_INT) then
+                   call read_darray_{TYPE}_from_int_2(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+                elseif(xtype == PIO_REAL) then
+                   call read_darray_{TYPE}_from_real_2(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+                elseif(xtype == PIO_DOUBLE) then
+                   call read_darray_{TYPE}_from_double_2(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+                else
+                   call shr_sys_abort(' ERROR: unrecognised type in read'//errMsg(sourcefile, __LINE__))
+                endif
              end if
           end if
 #if ({ITYPE}==TYPEDOUBLE)
@@ -2069,7 +2027,6 @@ contains
     end if
 
   end subroutine ncd_io_2d_{TYPE}
-
   !-----------------------------------------------------------------------
 
   !TYPE int,double
@@ -2168,31 +2125,17 @@ contains
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-#if ({ITYPE}==TYPEINT)
-             if(xtype == PIO_INT .or. xtype == PIO_REAL) then
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
-             elseif (xtype == PIO_DOUBLE) then
-                allocate(ddata(size(data,1),size(data,2),size(data,3)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, ddata, status)
-                data = int(ddata)
-                deallocate(ddata)
-             endif
-#endif
-#if ({ITYPE}==TYPEDOUBLE)
-             if(xtype == PIO_INT) then
-                allocate(idata(size(data,1),size(data,2),size(data,3)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, idata, status)
-                data = real(idata, kind=r8)
-                deallocate(idata)
-             else if(xtype == PIO_REAL) then
-                allocate(fdata(size(data,1),size(data,2),size(data,3)))
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, fdata, status)
-                data = real(fdata, kind=r8)
-                deallocate(fdata)
-             else
-                call pio_read_darray(ncid, vardesc, iodesc_plus%iodesc, data, status)
-             endif
-#endif
+
+                if(xtype == PIO_INT) then
+                   call read_darray_{TYPE}_from_int_3(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+                elseif(xtype == PIO_REAL) then
+                   call read_darray_{TYPE}_from_real_3(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+                elseif(xtype == PIO_DOUBLE) then
+                   call read_darray_{TYPE}_from_double_3(ncid, vardesc, iodesc_plus%iodesc, varname, data)
+                else
+                   call shr_sys_abort(' ERROR: unrecognised type in read'//errMsg(sourcefile, __LINE__))
+                endif
+
           end if
        end if
        if (present(readvar)) readvar = varpresent
@@ -2234,6 +2177,154 @@ contains
     endif
 
   end subroutine ncd_io_3d_{TYPE}
+
+
+  !TYPE int,double,logical
+  !DIMS 1,2,3
+  subroutine read_darray_{TYPE}_from_double_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    class(file_desc_t), intent(inout) :: ncid
+    type(var_desc_t), intent(inout) :: vardesc
+    type(io_desc_t), intent(inout) :: iodesc
+    {VTYPE}, pointer :: data{DIMSTR}
+    character(len=*), intent(in) :: varname
+    integer :: status
+
+    real(R8), allocatable :: ddata{DIMSTR}
+    integer :: oldhandle
+
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
+#if({ITYPE}==TYPEDOUBLE)
+    call pio_read_darray(ncid, vardesc, iodesc, data, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#else
+#if({DIMS}==1)
+    allocate(ddata(size(data)))
+#elif({DIMS}==2)
+    allocate(ddata(size(data,1),size(data,2)))
+#elif({DIMS}==3)
+    allocate(ddata(size(data,1),size(data,2),size(data,3)))
+#endif
+    call pio_read_darray(ncid, vardesc, iodesc, ddata, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#if({ITYPE}==TYPEINT)
+    data = int(ddata)
+#else
+    if ( any(ddata /= 0. .and. ddata /= 1.) )then
+       call shr_sys_abort(' ERROR: read in bad value(s) for logical data'//errMsg(sourcefile, __LINE__))
+    end if
+
+    where( ddata /= 0.)
+      data = .true.
+   elsewhere
+      data = .false.
+    end where
+#endif
+    deallocate(ddata)
+#endif
+    call pio_seterrorhandling(ncid, oldhandle)
+  end subroutine read_darray_{TYPE}_from_double_{DIMS}
+
+  !TYPE int,double,logical
+  !DIMS 1,2,3
+  subroutine read_darray_{TYPE}_from_int_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    class(file_desc_t), intent(inout) :: ncid
+    type(var_desc_t), intent(inout) :: vardesc
+    type(io_desc_t), intent(inout) :: iodesc
+    character(len=*), intent(in) :: varname
+    {VTYPE}, pointer :: data{DIMSTR}
+    integer :: status
+
+    integer, allocatable :: idata{DIMSTR}
+    integer :: oldhandle
+
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
+#if({ITYPE}==TYPEINT)
+    call pio_read_darray(ncid, vardesc, iodesc, data, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#else
+#if({DIMS}==1)
+    allocate(idata(size(data)))
+#elif({DIMS}==2)
+    allocate(idata(size(data,1),size(data,2)))
+#elif({DIMS}==3)
+    allocate(idata(size(data,1),size(data,2),size(data,3)))
+#endif
+    call pio_read_darray(ncid, vardesc, iodesc, idata, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#if({ITYPE}==TYPEDOUBLE)
+    data = real(idata, kind=R8)
+#else
+    if ( any(idata /= 0 .and. idata /= 1) )then
+       call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
+    end if
+    where( idata /= 0)
+      data = .true.
+   elsewhere
+      data = .false.
+    end where
+#endif
+    deallocate(idata)
+#endif
+    call pio_seterrorhandling(ncid, oldhandle)
+  end subroutine read_darray_{TYPE}_from_int_{DIMS}
+
+  !TYPE int,double,logical
+  !DIMS 1,2,3
+  subroutine read_darray_{TYPE}_from_real_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    class(file_desc_t), intent(inout) :: ncid
+    type(var_desc_t), intent(inout) :: vardesc
+    type(io_desc_t), intent(inout) :: iodesc
+    character(len=*), intent(in) :: varname
+    {VTYPE}, pointer :: data{DIMSTR}
+
+    integer :: status
+    real(r4), allocatable :: rdata{DIMSTR}
+    integer :: oldhandle
+
+    call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
+
+#if({DIMS}==1)
+    allocate(rdata(size(data)))
+#elif({DIMS}==2)
+    allocate(rdata(size(data,1),size(data,2)))
+#elif({DIMS}==3)
+    allocate(rdata(size(data,1),size(data,2),size(data,3)))
+#endif
+    call pio_read_darray(ncid, vardesc, iodesc, rdata, status)
+    if ( status /= PIO_NOERR ) then
+       call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
+            // errMsg(sourcefile, __LINE__))
+    end if
+#if({ITYPE}==TYPEDOUBLE)
+    data = real(rdata, kind=R8)
+#elif({ITYPE}==TYPEINT)
+    data = int(rdata)
+#else
+    if ( any(rdata /= 0. .and. rdata /= 1.) )then
+       call shr_sys_abort(' ERROR: read in bad value(s) for logical data'//errMsg(sourcefile, __LINE__))
+    end if
+    where(rdata /= 0.)
+       data = .true.
+    elsewhere
+       data = .false.
+    end where
+#endif
+    deallocate(rdata)
+    call pio_seterrorhandling(ncid, oldhandle)
+
+  end subroutine read_darray_{TYPE}_from_real_{DIMS}
 
   !------------------------------------------------------------------------
 
