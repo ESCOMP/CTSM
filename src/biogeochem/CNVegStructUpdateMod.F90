@@ -285,6 +285,10 @@ contains
          ! adjust lai and sai for burying by snow. 
          ! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height 
          ! accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
+
+         ! NOTE: The following snow burial code is duplicated in SatellitePhenologyMod.
+         ! Changes in one place should be accompanied by similar changes in the other.
+
          if (ivt(p) > noveg .and. ivt(p) <= nbrdlf_dcd_brl_shrub ) then
             ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
             fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
