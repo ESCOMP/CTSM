@@ -283,18 +283,16 @@ contains
          end if
 
          ! adjust lai and sai for burying by snow. 
-         ! snow burial fraction for short vegetation (e.g. grasses) as in
-         ! Wang and Zeng, 2007.
+         ! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height 
+         ! accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
          if (ivt(p) > noveg .and. ivt(p) <= nbrdlf_dcd_brl_shrub ) then
             ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
             fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
          else
-            fb = 1._r8 - max(min(snow_depth(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
+            fb = 1._r8 - (max(min(snow_depth(c),max(0.05,htop(p)*0.8_r8)),0._r8)/(max(0.05,htop(p)*0.8_r8)))
             !depth of snow required for complete burial of grasses
          endif
 
-         !grass and crop snow burial changes with PFT height
-         !accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
          elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
          esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
 
