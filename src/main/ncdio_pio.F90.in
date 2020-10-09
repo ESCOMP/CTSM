@@ -2206,16 +2206,18 @@ contains
     end if
 #if({ITYPE}==TYPEINT)
     data = int(ddata)
-#else
-    if ( any(ddata /= 0. .and. ddata /= 1.) )then
+#elif({ITYPE}==TYPELOGICAL)
+    if ( any(ddata /= 0._r8 .and. ddata /= 1._r8) )then
        call shr_sys_abort(' ERROR: read in bad value(s) for logical data'//errMsg(sourcefile, __LINE__))
     end if
 
-    where( ddata /= 0.)
-      data = .true.
-   elsewhere
-      data = .false.
+    where( ddata == 1._r8)
+       data = .true.
+    elsewhere
+       data = .false.
     end where
+#else
+    call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
 #endif
     deallocate(ddata)
 #endif
@@ -2258,15 +2260,17 @@ contains
     end if
 #if({ITYPE}==TYPEDOUBLE)
     data = real(idata, kind=R8)
-#else
+#elif({ITYPE}==TYPELOGICAL)
     if ( any(idata /= 0 .and. idata /= 1) )then
        call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
     end if
-    where( idata /= 0)
-      data = .true.
-   elsewhere
-      data = .false.
+    where( idata == 1)
+       data = .true.
+    elsewhere
+       data = .false.
     end where
+#else
+    call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
 #endif
     deallocate(idata)
 #endif
@@ -2305,15 +2309,17 @@ contains
     data = real(rdata, kind=R8)
 #elif({ITYPE}==TYPEINT)
     data = int(rdata)
-#else
+#elif({ITYPE}==TYPELOGICAL)
     if ( any(rdata /= 0. .and. rdata /= 1.) )then
        call shr_sys_abort(' ERROR: read in bad value(s) for logical data'//errMsg(sourcefile, __LINE__))
     end if
-    where(rdata /= 0.)
+    where(rdata == 1.)
        data = .true.
     elsewhere
        data = .false.
     end where
+#else
+    call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
 #endif
     deallocate(rdata)
     call pio_seterrorhandling(ncid, oldhandle)
