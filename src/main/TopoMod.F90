@@ -141,7 +141,7 @@ contains
           ! where this matters, this will get overwritten in the run loop by values sent
           ! from CISM
           if (lun%itype(l) == istsoil .and. use_hillslope) then
-             this%topo_col(c) = col%hill_elev(c) ! + atm_topo(g)
+             this%topo_col(c) = col%hill_elev(c)
              this%needs_downscaling_col(c) = .true.
           else
              this%topo_col(c) = 0._r8
@@ -259,7 +259,7 @@ contains
           g = col%gridcell(c)
           l = col%landunit(c)
           if (lun%itype(l) == istsoil .and. use_hillslope) then
-             this%topo_col(c) = col%hill_elev(c) + atm_topo(g)
+             this%topo_col(c) = col%hill_elev(c)
              this%needs_downscaling_col(c) = .true.
           else
              this%topo_col(c) = atm_topo(g)
