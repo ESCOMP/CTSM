@@ -1655,37 +1655,6 @@ Filename of input stream data for prescribed soil moisture streams data
 Time interpolation method to use for prescribed soil moisture streams data
 </entry>
 
-<!-- Prescribed soil moisture -->
-<entry id="use_soil_moisture_streams" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on use of input prescribed soil moisture streams rather than have CLM prognose it (EXPERIMENTAL)
-</entry>
-
-<entry id="stream_year_first_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
-First year to loop over for prescribed soil moisture streams data
-</entry>
-
-<entry id="stream_year_last_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
-Last year to loop over for prescribed soil moisture streams data
-</entry>
-
-<entry id="model_year_align_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
-Simulation year that aligns with stream_year_first_soilm value
-</entry>
-
-<entry id="stream_fldfilename_soilm" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="soil_moisture_streams" valid_values="" >
-Filename of input stream data for prescribed soil moisture streams data
-</entry>
-
-<entry id="soilm_tintalgo" type="char*256" category="datasets"
-       group="soil_moisture_streams" valid_values="linear,nearest,lower,upper" >
-Time interpolation method to use for prescribed soil moisture streams data
-</entry>
-
 <entry id="soilm_offset" type="integer" category="datasets"
        group="soil_moisture_streams" >
 Offset in time coordinate for soil moisture streams (sec)
