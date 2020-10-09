@@ -2192,13 +2192,7 @@ contains
             // errMsg(sourcefile, __LINE__))
     end if
 #else
-#if({DIMS}==1)
-    allocate(ddata(size(data)))
-#elif({DIMS}==2)
-    allocate(ddata(size(data,1),size(data,2)))
-#elif({DIMS}==3)
-    allocate(ddata(size(data,1),size(data,2),size(data,3)))
-#endif
+    allocate(ddata({REPEAT: size(data,#)}))
     call pio_read_darray(ncid, vardesc, iodesc, ddata, status)
     if ( status /= PIO_NOERR ) then
        call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
@@ -2246,13 +2240,7 @@ contains
             // errMsg(sourcefile, __LINE__))
     end if
 #else
-#if({DIMS}==1)
-    allocate(idata(size(data)))
-#elif({DIMS}==2)
-    allocate(idata(size(data,1),size(data,2)))
-#elif({DIMS}==3)
-    allocate(idata(size(data,1),size(data,2),size(data,3)))
-#endif
+    allocate(idata({REPEAT: size(data,#)}))
     call pio_read_darray(ncid, vardesc, iodesc, idata, status)
     if ( status /= PIO_NOERR ) then
        call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
@@ -2293,13 +2281,7 @@ contains
 
     call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
 
-#if({DIMS}==1)
-    allocate(rdata(size(data)))
-#elif({DIMS}==2)
-    allocate(rdata(size(data,1),size(data,2)))
-#elif({DIMS}==3)
-    allocate(rdata(size(data,1),size(data,2),size(data,3)))
-#endif
+    allocate(rdata({REPEAT: size(data,#)}))
     call pio_read_darray(ncid, vardesc, iodesc, rdata, status)
     if ( status /= PIO_NOERR ) then
        call shr_sys_abort(' ERROR: reading in variable: '// trim(varname) &
