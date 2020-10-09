@@ -1612,8 +1612,6 @@ contains
     logical                          :: varpresent ! if true, variable is on tape
     integer                          :: xtype      ! type of var in file
     integer                , pointer :: idata(:)   ! Temporary integer data to send to file
-    real(r4)               , pointer :: fdata(:)   ! Temporary double data to send to file
-    real(r8)               , pointer :: ddata(:)   ! Temporary double data to send to file
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
     integer                          :: oldhandle  ! previous value of pio_error_handle
@@ -1807,9 +1805,6 @@ contains
     integer           :: lb1,lb2
     integer           :: ub1,ub2
     integer           :: xtype      ! netcdf type of variable on file
-    integer                , pointer :: idata(:,:)   ! Temporary integer data to read from file
-    real(r4)               , pointer :: fdata(:,:)   ! Temporary double data to read from file
-    real(r8)               , pointer :: ddata(:,:)   ! Temporary double data to read from file
 
     type(iodesc_plus_type) , pointer  :: iodesc_plus
     type(var_desc_t)                  :: vardesc
@@ -2060,9 +2055,6 @@ contains
     integer                          :: count(5)   ! netcdf count index
     integer                          :: xtype      ! netcdf type of variable on file
     logical                          :: varpresent ! if true, variable is on tape
-    integer                , pointer :: idata(:,:,:)   ! Temporary integer data to read from file
-    real(r4)               , pointer :: fdata(:,:,:)   ! Temporary double data to read from file
-    real(r8)               , pointer :: ddata(:,:,:)   ! Temporary double data to read from file
     type(iodesc_plus_type) , pointer :: iodesc_plus
     type(var_desc_t)                 :: vardesc
     character(len=*),parameter :: subname='ncd_io_3d_{TYPE}' ! subroutine name
@@ -2178,7 +2170,7 @@ contains
 
   end subroutine ncd_io_3d_{TYPE}
 
-
+  !------------------------------------------------------------------------
   !TYPE int,double,logical
   !DIMS 1,2,3
   subroutine read_darray_{TYPE}_from_double_{DIMS}(ncid, vardesc, iodesc, varname, data)
@@ -2230,6 +2222,7 @@ contains
     call pio_seterrorhandling(ncid, oldhandle)
   end subroutine read_darray_{TYPE}_from_double_{DIMS}
 
+  !------------------------------------------------------------------------
   !TYPE int,double,logical
   !DIMS 1,2,3
   subroutine read_darray_{TYPE}_from_int_{DIMS}(ncid, vardesc, iodesc, varname, data)
@@ -2280,6 +2273,7 @@ contains
     call pio_seterrorhandling(ncid, oldhandle)
   end subroutine read_darray_{TYPE}_from_int_{DIMS}
 
+  !------------------------------------------------------------------------
   !TYPE int,double,logical
   !DIMS 1,2,3
   subroutine read_darray_{TYPE}_from_real_{DIMS}(ncid, vardesc, iodesc, varname, data)
