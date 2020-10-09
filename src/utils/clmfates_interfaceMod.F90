@@ -850,14 +850,14 @@ module CLMFatesInterfaceMod
          ! in FATES. 
          ! N.B. Fow now these are fixed values pending HLM updates. 
          if(use_fates_sp)then
-           do ft = natpft_lb,natpft_ub-1 !set of pfts in HLM
+           do ft = natpft_lb,natpft_ub !set of pfts in HLM
                ! here we are mapping from P space in the HLM to FT space in the sp_input arrays.  
                p = ft + col%patchi(c) ! for an FT of 1 we want to use 
-               this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft+1) = canopystate_inst%tlai_patch(p)
-               this%fates(nc)%bc_in(s)%hlm_sp_tsai(ft+1) = canopystate_inst%tsai_patch(p)
-               this%fates(nc)%bc_in(s)%hlm_sp_htop(ft+1) = canopystate_inst%htop_patch(p)
+               this%fates(nc)%bc_in(s)%hlm_sp_tlai(ft) = canopystate_inst%tlai_patch(p)
+               this%fates(nc)%bc_in(s)%hlm_sp_tsai(ft) = canopystate_inst%tsai_patch(p)
+               this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = canopystate_inst%htop_patch(p)
                if(canopystate_inst%htop_patch(p).lt.1.0e-20)then ! zero htop causes inifinite/nans. This is 
-                 this%fates(nc)%bc_in(s)%hlm_sp_htop(ft+1) = 0.01_r8
+                 this%fates(nc)%bc_in(s)%hlm_sp_htop(ft) = 0.01_r8
                endif
            end do ! p
          end if ! SP
