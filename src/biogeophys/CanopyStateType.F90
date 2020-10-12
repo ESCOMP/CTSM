@@ -171,16 +171,6 @@ contains
          avgflag='A', long_name='exposed one-sided stem area index', &
          ptr_patch=this%esai_patch)
 
-    this%tlai_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TLAI', units='m^2/m^2', &
-         avgflag='A', long_name='total projected leaf area index', &
-         ptr_patch=this%tlai_patch)
-
-    this%tsai_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TSAI', units='m^2/m^2', &
-         avgflag='A', long_name='total projected stem area index', &
-         ptr_patch=this%tsai_patch)
-
     this%laisun_patch(begp:endp) = spval
     call hist_addfld1d (fname='LAISUN', units='m^2/m^2', &
          avgflag='A', long_name='sunlit projected leaf area index', &
@@ -197,11 +187,6 @@ contains
             avgflag='A', long_name='sunlit fraction of canopy', &
             ptr_patch=this%fsun_patch, default='inactive')
 
-       this%htop_patch(begp:endp) = spval
-       call hist_addfld1d (fname='HTOP', units='m', &
-            avgflag='A', long_name='canopy top', &
-            ptr_patch=this%htop_patch)
-
        this%hbot_patch(begp:endp) = spval
        call hist_addfld1d (fname='HBOT', units='m', &
             avgflag='A', long_name='canopy bottom', &
@@ -211,31 +196,44 @@ contains
        call hist_addfld1d (fname='DISPLA', units='m', &
             avgflag='A', long_name='displacement height', &
             ptr_patch=this%displa_patch, default='inactive')
-    end if
+     endif !fates or CN
 
-
-   if(use_fates_sp)then
+     if(use_fates_sp)then
        this%tlai_hist_patch(begp:endp) = spval
-       call hist_addfld1d (fname='TLAI_SP', units='m', &
-            avgflag='A', long_name='TLAI weights for SP mode', &
-            ptr_patch=this%tlai_hist_patch)
+       call hist_addfld1d (fname='TLAI', units='m', &
+           avgflag='A', long_name='TLAI weights for SP mode', &
+           ptr_patch=this%tlai_hist_patch)
 
        this%tsai_hist_patch(begp:endp) = spval
-       call hist_addfld1d (fname='TSAI_SP', units='m', &
-            avgflag='A', long_name='TSAI weights for SP mode', &
-            ptr_patch=this%tsai_hist_patch)
+       call hist_addfld1d (fname='TSAI', units='m', &
+           avgflag='A', long_name='TSAI weights for SP mode', &
+           ptr_patch=this%tsai_hist_patch)
 
        this%htop_hist_patch(begp:endp) = spval
-       call hist_addfld1d (fname='HTOP_SP', units='m', &
-            avgflag='A', long_name='HTOP weights for SP mode', &
-            ptr_patch=this%htop_hist_patch)
+       call hist_addfld1d (fname='HTOP', units='m', &
+           avgflag='A', long_name='HTOP weights for SP mode', &
+           ptr_patch=this%htop_hist_patch)
+     else
+        this%tlai_patch(begp:endp) = spval
+        call hist_addfld1d (fname='TLAI', units='m^2/m^2', &
+            avgflag='A', long_name='total projected leaf area index', &
+            ptr_patch=this%tlai_patch)
 
-    endif
+        this%tsai_patch(begp:endp) = spval
+        call hist_addfld1d (fname='TSAI', units='m^2/m^2', &
+            avgflag='A', long_name='total projected stem area index', &
+            ptr_patch=this%tsai_patch)
 
-       this%z0m_patch(begp:endp) = spval
-       call hist_addfld1d (fname='Z0M', units='m', &
-            avgflag='A', long_name='momentum roughness length', &
-            ptr_patch=this%z0m_patch, default='inactive')
+        this%htop_patch(begp:endp) = spval
+           call hist_addfld1d (fname='HTOP', units='m', &
+            avgflag='A', long_name='canopy top', &
+            ptr_patch=this%htop_patch)
+     endif !FATES_SP
+
+     this%z0m_patch(begp:endp) = spval
+     call hist_addfld1d (fname='Z0M', units='m', &
+          avgflag='A', long_name='momentum roughness length', &
+           ptr_patch=this%z0m_patch, default='inactive')
 
     ! Accumulated fields
     this%fsun24_patch(begp:endp) = spval
