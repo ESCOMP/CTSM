@@ -630,10 +630,11 @@ module CLMFatesInterfaceMod
             do m = natpft_lb,natpft_ub
                ft = m-natpft_lb
                this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,ft)
+
             end do
 
             if(abs(sum(this%fates(nc)%bc_in(s)%pft_areafrac(natpft_lb:natpft_ub))-1.0_r8).gt.1.0e-9)then
-               write(*,*) 'pft_area error in interfc ',s, sum(this%fates(nc)%bc_in(s)%pft_areafrac(:))-1.0_r8
+               write(iulog,*) 'pft_area error in interfc ',s, sum(this%fates(nc)%bc_in(s)%pft_areafrac(:))-1.0_r8
                call endrun(msg=errMsg(sourcefile, __LINE__))
               endif
           end do !site
@@ -826,11 +827,7 @@ module CLMFatesInterfaceMod
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno !for vegetated patches
             ! Mapping between  IFP space (1,2,3) and HLM P space (looping by IFP)
-            if(use_fates_sp)then
-             p = this%fates(nc)%bc_out(s)%nocomp_pft_label_pa(ifp) + col%patchi(c)
-            else
-             p = ifp+col%patchi(c)
-            endif
+            p = ifp+col%patchi(c)
 
             this%fates(nc)%bc_in(s)%t_veg24_pa(ifp) = &
                  temperature_inst%t_veg24_patch(p)
@@ -1005,11 +1002,11 @@ module CLMFatesInterfaceMod
      call t_startf('fates_wrap_update_hlmfates_dyn')
 
      associate(                                &
-         tlai => canopystate_inst%tlai_patch , &
+         tlai => canopystate_inst%tlai_hist_patch , &
          elai => canopystate_inst%elai_patch , &
-         tsai => canopystate_inst%tsai_patch , &
+         tsai => canopystate_inst%tsai_hist_patch , &
          esai => canopystate_inst%esai_patch , &
-         htop => canopystate_inst%htop_patch , &
+         htop => canopystate_inst%htop_hist_patch , &
          hbot => canopystate_inst%hbot_patch , & 
          z0m  => canopystate_inst%z0m_patch  , & ! Output: [real(r8) (:)   ] momentum roughness length (m)      
          displa => canopystate_inst%displa_patch, &
@@ -1095,6 +1092,7 @@ module CLMFatesInterfaceMod
           ! protext it here with a lower bound of 0.0_r8.
 
           patch%wt_ed(col%patchi(c)) = max(0.0_r8, &
+
                1.0_r8-sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)))
 
           patch%sp_pftorder_index(col%patchi(c)) = 0 !bg is the 0th patch in the SP FATES structure
@@ -1104,12 +1102,7 @@ module CLMFatesInterfaceMod
           do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
              ! for the vegetated patches
 
-             if(.not.use_fates_sp)then
-               p = ifp+col%patchi(c)
-             else 
-!                ! in this case, the FATES ifp's map back on to the HLM PFT patches 
-               p = this%fates(nc)%bc_out(s)%nocomp_pft_label_pa(ifp) + col%patchi(c)
-             end if
+             p = ifp+col%patchi(c)
 
              ! bc_out(s)%canopy_fraction_pa(ifp) is the area fraction
              ! the site's total ground area that is occupied by the 
@@ -1117,7 +1110,6 @@ module CLMFatesInterfaceMod
  
              patch%is_veg(p) = .true.
              patch%wt_ed(p)  = this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
-
              areacheck = areacheck + patch%wt_ed(p)
 
              tlai(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
@@ -1127,12 +1119,8 @@ module CLMFatesInterfaceMod
              htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
              hbot(p) = this%fates(nc)%bc_out(s)%hbot_pa(ifp)
 
-             if(use_fates_sp) then !set the mapping between the HLM P value and the FATES IFP index
-                patch%sp_pftorder_index(p)= ifp
-             endif     
-
              if(use_fates_sp.and.abs(tlai(p)-this%fates(nc)%bc_out(s)%tlai_pa(ifp)).gt.1e-09)then
-               !write(*,*) 'fates lai not like hlm lai',tlai(p),this%fates(nc)%bc_out(s)%tlai_pa(ifp),ifp
+               write(iulog,*) 'fates lai not like hlm lai',tlai(p),this%fates(nc)%bc_out(s)%tlai_pa(ifp),ifp
              endif
 
              frac_veg_nosno_alb(p) = this%fates(nc)%bc_out(s)%frac_veg_nosno_alb_pa(ifp)
@@ -1681,12 +1669,8 @@ module CLMFatesInterfaceMod
         do s = 1, this%fates(nc)%nsites
            c = this%f2hmap(nc)%fcolumn(s)
            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-              if(use_fates_sp)then
-                ! MappING from FATES ifp (1,2,3,) space into HLM P space
-                p = this%fates(nc)%bc_out(s)%nocomp_pft_label_pa(ifp) + col%patchi(c)
-             else
-                p = ifp+col%patchi(c)
-              endif
+
+              p = ifp+col%patchi(c)
 
               fsun(p)   = this%fates(nc)%bc_out(s)%fsun_pa(ifp)
               laisun(p) = this%fates(nc)%bc_out(s)%laisun_pa(ifp)
@@ -1894,12 +1878,8 @@ module CLMFatesInterfaceMod
            nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
            c = this%f2hmap(nc)%fcolumn(s)
            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-              if(use_fates_sp)then
-                ! Mappping from FATES IFP space into HLM P space
-                p = this%fates(nc)%bc_out(s)%nocomp_pft_label_pa(ifp) + col%patchi(c)
-             else
-                p = ifp+col%patchi(c)
-              endif
+
+              p = ifp+col%patchi(c)
 
               do j = 1,nlevsoil
                  
@@ -1980,12 +1960,7 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%forc_pbot           = forc_pbot(c)   ! atmospheric pressure (Pa)
     
          do ifp = 1,this%fates(nc)%sites(s)%youngest_patch%patchno
-            if(use_fates_sp)then
-             ! Mapping from HLM P space onto the FATES IFP space
-             p = this%fates(nc)%bc_out(s)%nocomp_pft_label_pa(ifp) + col%patchi(c)            
-            else   
-             p = ifp+col%patchi(c)
-            endif 
+            p = ifp+col%patchi(c)
             ! Check to see if this patch is in the filter
             ! Note that this filter is most likely changing size, and getting smaller
             ! and smaller as more patch have converged on solution
@@ -2031,13 +2006,6 @@ module CLMFatesInterfaceMod
          ! do if structure here and only pass natveg columns
          ifp = p-col%patchi(c)
                               
-          if(use_fates_sp)then 
-                ! here we are mapping from HLM P into FATES IFP space
-                ! but we only know P, not the order in the P space nor the IFP
-                ! these will only be vegetated patches
-               ifp = patch%sp_pftorder_index(p)
-           endif
-
          if(this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) /= 2)then
             write(iulog,*) 'Not all patches on the natveg column in the photosynthesis'
             write(iulog,*) 'filter ran photosynthesis s p icp ifp ilter',s,p,icp,ifp
@@ -2080,12 +2048,6 @@ module CLMFatesInterfaceMod
        c = patch%column(p)
        s = this%f2hmap(nc)%hsites(c)
        ifp = p-col%patchi(c)
-       if(use_fates_sp)then 
-         ! Mapping from HLM P space into FATES IFP space without knowing patch number 
-         ifp = patch%sp_pftorder_index(p)
-       else
-         ifp = p-col%patchi(c)
-      endif
        if(this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) /= 3)then
             write(iulog,*) 'Not all patches on the natveg column in the canopys'
             write(iulog,*) 'filter ran canopy fluxes s p icp ifp ilter',s,p,icp,ifp
@@ -2143,12 +2105,7 @@ module CLMFatesInterfaceMod
        c = this%f2hmap(nc)%fcolumn(s)
 
          do ifp = 1,this%fates(nc)%sites(s)%youngest_patch%patchno
-            if(use_fates_sp)then
-             !start at the second FATES patch
-              p = this%fates(nc)%bc_out(s)%nocomp_pft_label_pa(icp+1) + col%patchi(c)
-            else
-              p = ifp+col%patchi(c)
-            endif
+           p = ifp+col%patchi(c)
 
           if( any(filter_vegsol==p) )then
     
@@ -2178,16 +2135,12 @@ module CLMFatesInterfaceMod
        c = patch%column(p)
        s = this%f2hmap(nc)%hsites(c)
        ! do if structure here and only pass natveg columns
-       if(use_fates_sp)then
-         ! Mapping from HLM P space into FTES IFP space without knowing patch order. 
-         ifp = patch%sp_pftorder_index(p)
-       else
-         ifp = p-col%patchi(c)
-       endif
+       ifp = p-col%patchi(c)
 
        if(.not.this%fates(nc)%bc_in(s)%filter_vegzen_pa(ifp) )then
-          write(iulog,*) 'Not all patches on the natveg column were passed to canrad'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+          write(iulog,*) 's,p,ifp',s,p,ifp
+          write(iulog,*) 'Not all patches on the natveg column were passed to canrad',patch%sp_pftorder_index(p)
+!          call endrun(msg=errMsg(sourcefile, __LINE__))
        else
           albd(p,:) = this%fates(nc)%bc_out(s)%albd_parb(ifp,:)
           albi(p,:) = this%fates(nc)%bc_out(s)%albi_parb(ifp,:)
@@ -2285,12 +2238,7 @@ module CLMFatesInterfaceMod
        displa_patch(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
 
          do ifp = 1, this%fates(ci)%sites(s)%youngest_patch%patchno
-            if(use_fates_sp)then
-             ! Mapping from FATES IFP space into HLM P space. 
-             p = this%fates(ci)%bc_out(s)%nocomp_pft_label_pa(ifp) + col%patchi(c)
-            else
-             p = ifp+col%patchi(c)
-            endif
+          p = ifp+col%patchi(c)
           z0m_patch(p) = this%fates(ci)%bc_out(s)%z0m_pa(ifp)
           displa_patch(p) = this%fates(ci)%bc_out(s)%displa_pa(ifp)
        end do
@@ -2833,16 +2781,11 @@ module CLMFatesInterfaceMod
             soilstate_inst%eff_porosity_col(c,1:nlevsoil)
 
         do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-            if(use_fates_sp)then
-             ! Mapping from HLM P space into FATES IFP space. 
-             p = this%fates(nc)%bc_out(s)%nocomp_pft_label_pa(ifp) + col%patchi(c)
-            else
-             p = ifp+col%patchi(c)
-            endif
+         p = ifp+col%patchi(c)
 
          this%fates(nc)%bc_in(s)%swrad_net_pa(ifp) = solarabs_inst%fsa_patch(p)
          this%fates(nc)%bc_in(s)%lwrad_net_pa(ifp) = energyflux_inst%eflx_lwrad_net_patch(p)
-      end do
+        end do
    end do
 
    ! The exposed vegetation filter "filterp" dictates which patches
@@ -2853,11 +2796,8 @@ module CLMFatesInterfaceMod
       p = filterp(f)
       c = patch%column(p)
       s = this%f2hmap(nc)%hsites(c)
-      if(use_fates_sp)then
-        ifp = patch%sp_pftorder_index(p)
-      else
-        ifp = p - col%patchi(c)
-      endif
+      ifp = p - col%patchi(c)
+
       this%fates(nc)%bc_in(s)%qflx_transp_pa(ifp) = waterfluxbulk_inst%qflx_tran_veg_patch(p)
    end do
 
