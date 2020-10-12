@@ -18,7 +18,7 @@ module SatellitePhenologyMod
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_varctl      , only : scmlat,scmlon,single_column
-  use clm_varctl      , only : iulog, use_lai_streams
+  use clm_varctl      , only : iulog, use_lai_streams,use_fates_sp
   use clm_varcon      , only : grlnd
   use controlMod      , only : NLFilename
   use decompMod       , only : gsmap_lnd_gdc2glo
@@ -285,6 +285,7 @@ contains
        else                       ! non-vegetated pft
           canopystate_inst%tlai_patch(p) = 0._r8
        endif
+
     end do
 
   end subroutine lai_interp
@@ -352,6 +353,7 @@ contains
     integer  :: fp,p,c                            ! indices
     real(r8) :: ol                                ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb                                ! fraction of canopy layer covered by snow
+    integer  :: nploop
     !-----------------------------------------------------------------------
 
     associate(                                                           &
@@ -365,15 +367,28 @@ contains
          hbot               => canopystate_inst%hbot_patch    ,          & ! Output: [real(r8) (:) ] canopy bottom (m)                           
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
          )
-
+       
       if (use_lai_streams) then
          call lai_interp(bounds, canopystate_inst)
       endif
 
 
-      do fp = 1, num_nolakep
-         p = filter_nolakep(fp)
+      if(use_fates_sp)then
+        ! when we use FATES SP mode, the inactive points are not in the nolakep filter
+        ! thus we need to force a loop around all patches to get at the SP inputs the
+        ! are indexed in the HLM 'P' space.
+        nploop = bounds%endp-bounds%begp+1 
+      else
+        nploop=num_nolakep
+      endif
+      do fp = 1, nploop
+         if(use_fates_sp)then
+          p = fp + bounds%begp -1 
+        else
+          p = filter_nolakep(fp)
+        endif
          c = patch%column(p)
+         
 
          ! need to update elai and esai only every albedo time step so do not
          ! have any inconsistency in lai and sai between SurfaceAlbedo calls (i.e.,
@@ -415,20 +430,22 @@ contains
          endif
 
          ! area weight by snow covered fraction
+         if(.not.use_fates_sp)then
+         ! Do not set these in FATES_SP mode as they turn on the 'vegsol' filter and also
+         ! are duplicated by the FATE variables (in the FATES IFP indexing space) 
+           elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
+           esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
+           if (elai(p) < 0.05_r8) elai(p) = 0._r8
+           if (esai(p) < 0.05_r8) esai(p) = 0._r8
 
-         elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
-         esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
-         if (elai(p) < 0.05_r8) elai(p) = 0._r8
-         if (esai(p) < 0.05_r8) esai(p) = 0._r8
+           ! Fraction of vegetation free of snow
 
-         ! Fraction of vegetation free of snow
-
-         if ((elai(p) + esai(p)) >= 0.05_r8) then
-            frac_veg_nosno_alb(p) = 1
-         else
-            frac_veg_nosno_alb(p) = 0
-         end if
-
+           if ((elai(p) + esai(p)) >= 0.05_r8) then
+              frac_veg_nosno_alb(p) = 1
+           else
+              frac_veg_nosno_alb(p) = 0
+           end if
+         endif !fates_sp
       end do ! end of patch loop
 
     end associate
