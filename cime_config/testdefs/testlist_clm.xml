@@ -2331,6 +2331,19 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
   </test>
 
+  <test name="SMS_D_Ln1" grid="f10_f10_musgs" compset="I2000Clm50BgcCropQianRsGs" testmods="clm-run_self_tests">
+    <machines>
+
+      <machine name="izumi" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:20:00</option>
+          <option name="comment">Include a test that triggers run_self_tests. The grid and compset aren't very important here, but we do want more than a single-point test so that we can run on more than one processor; we use Qian atm forcing to facilitate running this test on small systems (to avoid large input data needs). The self-tests are run in initialization, so we only need to run for a single time step.</option>
+        </options>
+      </machine>
+
+    </machines>
+  </test>
+
   <test name="FUNITCTSM_P1x1" grid="f10_f10_musgs" compset="I2000Clm50SpGs">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">

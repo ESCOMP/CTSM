@@ -1514,6 +1514,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -3897,6 +3898,17 @@ sub setup_logic_fates {
            }
         }
     }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_misc {
+   #
+   # Set some misc options
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'run_self_tests');
 }
 
 #-------------------------------------------------------------------------------

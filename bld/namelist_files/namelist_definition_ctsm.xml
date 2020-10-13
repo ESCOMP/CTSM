@@ -941,6 +941,12 @@ Whether to use subgrid fluxes for snow
 Whether snow on the vegetation canopy affects the radiation/albedo calculations
 </entry>
 
+<entry id="run_self_tests" type="logical" category="default_settings"
+       group="clm_inparm" >
+Whether to run self-tests as part of the model run. This is typically
+only used in automated tests.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->
