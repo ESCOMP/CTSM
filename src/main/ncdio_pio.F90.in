@@ -34,6 +34,7 @@ module ncdio_pio
   use pio            , only : pio_setframe, pio_unlimited, pio_write, pio_write_darray, var_desc_t
   use pio            , only : pio_iotask_rank, PIO_REARR_SUBSET, PIO_REARR_BOX
   use pio            , only : pio_inq_vartype, pio_real
+  use array_utils    , only : convert_to_logical
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -2201,15 +2202,7 @@ contains
 #if({ITYPE}==TYPEINT)
     data = int(ddata)
 #elif({ITYPE}==TYPELOGICAL)
-    if ( any(ddata /= 0._r8 .and. ddata /= 1._r8) )then
-       call shr_sys_abort(' ERROR: read in bad value(s) for logical data'//errMsg(sourcefile, __LINE__))
-    end if
-
-    where( ddata == 1._r8)
-       data = .true.
-    elsewhere
-       data = .false.
-    end where
+    call convert_to_logical(ddata, data)
 #else
     call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
 #endif
@@ -2249,14 +2242,7 @@ contains
 #if({ITYPE}==TYPEDOUBLE)
     data = real(idata, kind=R8)
 #elif({ITYPE}==TYPELOGICAL)
-    if ( any(idata /= 0 .and. idata /= 1) )then
-       call shr_sys_abort(' ERROR: read in bad integer value(s) for logical data'//errMsg(sourcefile, __LINE__))
-    end if
-    where( idata == 1)
-       data = .true.
-    elsewhere
-       data = .false.
-    end where
+    call convert_to_logical(idata, data)
 #else
     call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
 #endif
@@ -2292,14 +2278,7 @@ contains
 #elif({ITYPE}==TYPEINT)
     data = int(rdata)
 #elif({ITYPE}==TYPELOGICAL)
-    if ( any(rdata /= 0. .and. rdata /= 1.) )then
-       call shr_sys_abort(' ERROR: read in bad value(s) for logical data'//errMsg(sourcefile, __LINE__))
-    end if
-    where(rdata == 1.)
-       data = .true.
-    elsewhere
-       data = .false.
-    end where
+    call convert_to_logical(rdata, data)
 #else
     call shr_sys_abort(' ERROR: unhandled type'//errMsg(sourcefile, __LINE__))
 #endif
