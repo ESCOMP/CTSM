@@ -366,6 +366,7 @@ contains
     integer, pointer        :: gindex(:)             ! global index space for land and ocean points
     integer, pointer        :: gindex_lnd(:)         ! global index space for just land points
     integer, pointer        :: gindex_ocn(:)         ! global index space for just ocean points
+    integer, pointer        :: mask(:)               ! local land/ocean mask  
     character(ESMF_MAXSTR)  :: cvalue                ! config data
     integer                 :: nlnd, nocn            ! local size ofarrays
     integer                 :: g,n                   ! indices
@@ -589,11 +590,14 @@ contains
     ! create a global index that includes both land and ocean points
     nocn = size(gindex_ocn)
     allocate(gindex(nlnd + nocn))
+    allocate(mask(nlnd + nocn))
     do n = 1,nlnd+nocn
        if (n <= nlnd) then
           gindex(n) = gindex_lnd(n)
+          mask(n) = 1
        else
           gindex(n) = gindex_ocn(n-nlnd)
+          mask(n) = 0
        end if
     end do
 
@@ -662,6 +666,11 @@ contains
        ! create the mesh from the grid
        mesh =  ESMF_MeshCreate(lgrid, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       ! reset the global mask (which is 1) to the land/ocean mask
+       call ESMF_MeshSet(mesh, elementMask=mask, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       deallocate(mask)
 
     else
 
