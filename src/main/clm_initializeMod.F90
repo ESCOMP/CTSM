@@ -265,7 +265,7 @@ contains
     ! Run self-tests if requested
 
     if (run_self_tests) then
-       call self_test_driver
+       call self_test_driver(bounds_proc)
     end if
 
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.

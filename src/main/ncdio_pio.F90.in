@@ -64,6 +64,7 @@ module ncdio_pio
   public :: ncd_defvar         ! define variables
   public :: ncd_inqvid         ! inquire variable id
   public :: ncd_inqvname       ! inquire variable name
+  public :: ncd_inqvtype       ! inquire variable type
   public :: ncd_inqvdims       ! inquire variable ndims
   public :: ncd_inqvdids       ! inquire variable dimids
   public :: ncd_inqvdlen       ! inquire variable dimension size
@@ -590,6 +591,28 @@ contains
     varid = vardesc%varid
 
   end subroutine ncd_inqvid
+
+  !-----------------------------------------------------------------------
+  subroutine ncd_inqvtype(ncid, vardesc, vartype)
+    !
+    ! !DESCRIPTION:
+    ! Inquire variable type
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(in)  :: ncid      ! netcdf file id
+    type(var_desc_t)   , intent(in)  :: vardesc   ! variable descriptor
+    integer            , intent(out) :: vartype   ! type of var in file (ncd_int, ncd_float, ncd_double, etc.)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: status
+
+    character(len=*), parameter :: subname = 'ncd_inqvtype'
+    !-----------------------------------------------------------------------
+
+    vartype = -9999
+    status = pio_inq_vartype(ncid, vardesc, vartype)
+
+  end subroutine ncd_inqvtype
 
   !-----------------------------------------------------------------------
   subroutine ncd_inqvdims(ncid,ndims,vardesc)
