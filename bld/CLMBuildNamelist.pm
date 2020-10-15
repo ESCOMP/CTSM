@@ -3908,7 +3908,7 @@ sub setup_logic_misc {
    #
    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'run_self_tests');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
 }
 
 #-------------------------------------------------------------------------------

@@ -6,6 +6,7 @@ module SelfTestDriver
   !
   ! See the README file in this directory for a high-level overview of these self-tests.
 
+  use clm_varctl, only : for_testing_run_ncdiopio_tests
   use decompMod, only : bounds_type
   use TestNcdioPio, only : test_ncdio_pio
 
@@ -28,6 +29,9 @@ contains
     ! !DESCRIPTION:
     ! Top-level driver to the self-test code
     !
+    ! This subroutine should be called all the time, but each set of self tests is only
+    ! run if the appropriate flag is set.
+    !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     !
@@ -36,7 +40,9 @@ contains
     character(len=*), parameter :: subname = 'self_test_driver'
     !-----------------------------------------------------------------------
 
-    call test_ncdio_pio(bounds)
+    if (for_testing_run_ncdiopio_tests) then
+       call test_ncdio_pio(bounds)
+    end if
 
   end subroutine self_test_driver
 

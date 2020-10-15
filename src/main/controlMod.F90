@@ -202,7 +202,7 @@ contains
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero, run_self_tests
+         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -660,8 +660,8 @@ contains
     ! Crop saturated excess runoff
     call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! Whether to run self-tests
-    call mpi_bcast(run_self_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
+    ! Whether to run tests of ncdio_pio
+    call mpi_bcast(for_testing_run_ncdiopio_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)

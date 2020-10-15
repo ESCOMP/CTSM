@@ -13,7 +13,7 @@ module clm_initializeMod
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
-  use clm_varctl      , only : use_soil_moisture_streams, run_self_tests
+  use clm_varctl      , only : use_soil_moisture_streams
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec, haslake
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
@@ -262,11 +262,8 @@ contains
        call ch4conrd()
     end if
 
-    ! Run self-tests if requested
-
-    if (run_self_tests) then
-       call self_test_driver(bounds_proc)
-    end if
+    ! Run any requested self-tests
+    call self_test_driver(bounds_proc)
 
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the

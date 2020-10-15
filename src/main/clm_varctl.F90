@@ -53,8 +53,8 @@ module clm_varctl
   !true => no valid land points -- do NOT run
   logical, public :: noland = .false.                                    
 
-  ! true => run self_tests
-  logical, public :: run_self_tests = .false.
+  ! true => run tests of ncdio_pio
+  logical, public :: for_testing_run_ncdiopio_tests = .false.
 
   ! Hostname of machine running on
   character(len=256), public :: hostname = ' '                           
