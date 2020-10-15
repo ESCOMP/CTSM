@@ -240,13 +240,10 @@ contains
 
     !
     ! !LOCAL VARIABLES:
-    integer :: my_io_type
     integer :: ierr
     !-----------------------------------------------------------------------
 
-    my_io_type = io_type
-
-    ierr = pio_createfile(pio_subsystem, file, my_io_type, fname, ior(PIO_CLOBBER,io_netcdf_format))
+    ierr = pio_createfile(pio_subsystem, file, io_type, fname, ior(PIO_CLOBBER,io_netcdf_format))
 
     if(ierr/= PIO_NOERR) then
        call shr_sys_abort( ' ncd_pio_createfile ERROR: Failed to open file to write: '//trim(fname))
