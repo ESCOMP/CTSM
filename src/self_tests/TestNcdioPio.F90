@@ -49,6 +49,22 @@ contains
     ! !DESCRIPTION:
     ! Drive tests of ncdio_pio
     !
+    ! NOTE(wjs, 2020-10-15) Currently, endrun is called when any test assertion fails. I
+    ! thought about changing this so that, instead, a counter is incremented for each
+    ! failure, then at the end of the testing (in the higher-level self-test driver),
+    ! endrun is called if this counter is greater than 0. The benefit of this is that we'd
+    ! see all test failures, not just the first failure. To do that, we'd need to change
+    ! the assertions here to increment a counter rather than aborting. However, I'm not
+    ! spending the time to make this change for now because (1) I'm not sure how much
+    ! value we'd get from it; (2) even if we made that change, it's still very possible
+    ! for test code to abort for reasons other than assertions, if something goes wrong
+    ! inside ncdio_pio or pio; and (3) some tests here are dependent on earlier tests (for
+    ! example, the reads depend on the writes having worked), so a failure in an early
+    ! phase could really muck things up for later testing phases. Migrating to a
+    ! pFUnit-based unit test would solve this problem, since each pFUnit test is
+    ! independent, though would prevent us from being able to have dependent tests the
+    ! way we do here (where reads depend on earlier writes), for better or for worse.
+    !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
     !
