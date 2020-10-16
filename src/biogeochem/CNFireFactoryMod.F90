@@ -2,7 +2,7 @@ module CNFireFactoryMod
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Factory to create an instance of cnfire_method_type. This module figures
+  ! Factory to create an instance of fire_method_type. This module figures
   ! out the particular type to return.
   !
   ! !USES:
@@ -97,20 +97,21 @@ contains
   subroutine create_cnfire_method( NLFilename, cnfire_method )
     !
     ! !DESCRIPTION:
-    ! Create and return an object of cnfire_method_type. The particular type
+    ! Create and return an object of fire_method_type. The particular type
     ! is determined based on a namelist parameter.
     !
     ! !USES:
     use shr_kind_mod     , only : SHR_KIND_CL
-    use CNFireMethodMod  , only : cnfire_method_type
+    use FireMethodType   , only : fire_method_type
     use CNFireNoFireMod  , only : cnfire_nofire_type
     use CNFireLi2014Mod  , only : cnfire_li2014_type
     use CNFireLi2016Mod  , only : cnfire_li2016_type
+    use CNFireLi2021Mod  , only : cnfire_li2021_type
     use decompMod        , only : bounds_type
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
-    class(cnfire_method_type), allocatable, intent(inout) :: cnfire_method
+    class(fire_method_type), allocatable, intent(inout) :: cnfire_method
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'create_cnfire_method'
@@ -124,13 +125,15 @@ contains
        allocate(cnfire_li2014_type :: cnfire_method)
     case ("li2016crufrc")
        allocate(cnfire_li2016_type :: cnfire_method)
+    case ("li2021gswpfrc")
+       allocate(cnfire_li2021_type :: cnfire_method)
 
     case default
        write(iulog,*) subname//' ERROR: unknown method: ', fire_method
        call endrun(msg=errMsg(sourcefile, __LINE__))
 
     end select
-    call cnfire_method%CNFireReadNML( NLFilename )
+    call cnfire_method%FireReadNML( NLFilename )
 
   end subroutine create_cnfire_method
   !-----------------------------------------------------------------------

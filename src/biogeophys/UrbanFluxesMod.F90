@@ -38,6 +38,7 @@ module UrbanFluxesMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: UrbanFluxes       ! Urban physics - turbulent fluxes
+  public :: readParams
   !-----------------------------------------------------------------------
 
   ! !PRIVATE FUNCTIONS:
@@ -45,10 +46,35 @@ module UrbanFluxesMod
   private :: simple_wasteheatfromac  ! Calculate waste heat from air-conditioning with the simpler method (CLM4.5)
   private :: calc_simple_internal_building_temp ! Calculate internal building temperature by simpler method (CLM4.5)
 
+  type, private :: params_type
+     real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
+  end type params_type
+  type(params_type), private ::  params_inst
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
+
+  !------------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_UrbanFluxes'
+    !--------------------------------------------------------------------
+
+    ! Minimum wind speed at the atmospheric forcing height (m/s)
+    call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine UrbanFluxes (bounds, num_nourbanl, filter_nourbanl,                        &
@@ -184,9 +210,7 @@ contains
     integer  :: indexl                                               ! index of first found in search loop
     integer  :: nstep                                                ! time step number
     real(r8) :: e_ref2m                                              ! 2 m height surface saturated vapor pressure [Pa]
-    real(r8) :: de2mdT                                               ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m                                           ! 2 m height surface saturated specific humidity [kg/kg]
-    real(r8) :: dqsat2mdT                                            ! derivative of 2 m height surface saturated specific humidity on t_ref2m
     !
     real(r8), parameter :: lapse_rate = 0.0098_r8 ! Dry adiabatic lapse rate (K/m)
     integer , parameter  :: niters = 3            ! maximum number of iterations for surface temperature
@@ -348,7 +372,7 @@ contains
 
          ! Magnitude of atmospheric wind
 
-         ur(l) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
+         ur(l) = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
 
          ! Canyon top wind
 
@@ -861,7 +885,8 @@ contains
 
          ! 2 m height relative humidity
 
-         call QSat(t_ref2m(p), forc_pbot(g), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+         call QSat(t_ref2m(p), forc_pbot(g), qsat_ref2m, &
+              es = e_ref2m)
          rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
          rh_ref2m_u(p) = rh_ref2m(p)
 

@@ -282,7 +282,7 @@ contains
        call CNLivewoodTurnover(num_soilp, filter_soilp, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
-       call CNGrainToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
+       call CNCropHarvestToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
             cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        ! gather all patch-level litterfall fluxes to the column for litter C and N inputs
@@ -772,7 +772,7 @@ contains
 
                ! if this is the end of the offset_period, reset phenology
                ! flags and indices
-               if (offset_counter(p) == 0.0_r8) then
+               if (offset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_offset_cleanup(p)
                   ! inlined during vectorization
 
@@ -797,7 +797,7 @@ contains
 
                ! if this is the end of the onset period, reset phenology
                ! flags and indices
-               if (onset_counter(p) == 0.0_r8) then
+               if (onset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_onset_cleanup(p)
                   ! inlined during vectorization
 
@@ -1092,7 +1092,7 @@ contains
 
                ! if this is the end of the offset_period, reset phenology
                ! flags and indices
-               if (offset_counter(p) == 0._r8) then
+               if (offset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_offset_cleanup(p)
                   ! inlined during vectorization
                   offset_flag(p) = 0._r8
@@ -1113,7 +1113,7 @@ contains
 
                ! if this is the end of the onset period, reset phenology
                ! flags and indices
-               if (onset_counter(p) == 0.0_r8) then
+               if (onset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_onset_cleanup(p)
                   ! inlined during vectorization
                   onset_flag(p) = 0._r8
@@ -1394,6 +1394,8 @@ contains
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
     use pftconMod        , only : nirrig_trp_corn, nirrig_sugarcane, nirrig_trp_soybean
     use pftconMod        , only : nirrig_cotton, nirrig_rice
+    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    
     use clm_varcon       , only : spval, secspday
     use clm_varctl       , only : use_fertilizer 
     use clm_varctl       , only : use_c13, use_c14
@@ -1686,9 +1688,12 @@ contains
                        ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
                      gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
                   end if
+                  
                   if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                       ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+                      ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+                      ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                      gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
                      gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
                   end if
@@ -1735,9 +1740,12 @@ contains
                       ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
                      gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
                   end if
+                  
                   if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                       ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+                      ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+                      ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                      gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
                   end if
                   if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
@@ -1798,7 +1806,9 @@ contains
 
             if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                 ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+                ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+                ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                ! the following estimation of crmcorn from gddmaturity is based on a linear
                ! regression using data from Pioneer-brand corn hybrids (Kucharik, 2003,
                ! Earth Interactions 7:1-33: fig. 2)
@@ -2272,7 +2282,7 @@ contains
             ! The transfer rate is a linearly decreasing function of time,
             ! going to zero on the last timestep of the onset period
 
-            if (onset_counter(p) == dt) then
+            if (abs(onset_counter(p) - dt) <= dt/2._r8) then
                t1 = 1.0_r8 / dt
             else
                t1 = 2.0_r8 / (onset_counter(p))
@@ -2331,6 +2341,8 @@ contains
     !
     ! !USES:
     use pftconMod        , only : npcropmin
+    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    
     use CNSharedParamsMod, only : use_fun
     use clm_varctl       , only : CNratio_floating    
     !
@@ -2355,7 +2367,10 @@ contains
     associate(                                                                           & 
          ivt                   =>    patch%itype                                       , & ! Input:  [integer  (:) ]  patch vegetation type                                
 
-         leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN)                                  
+         leafcn                =>    pftcon%leafcn                                     , & ! Input:  leaf C:N (gC/gN) 
+         
+         biofuel_harvfrac      =>    pftcon%biofuel_harvfrac                           , & ! Input:  cut a fraction of leaf & stem for biofuel (-) 
+                                          
          lflitcn               =>    pftcon%lflitcn                                    , & ! Input:  leaf litter C:N (gC/gN)                           
          frootcn               =>    pftcon%frootcn                                    , & ! Input:  fine root C:N (gC/gN)                             
          graincn               =>    pftcon%graincn                                    , & ! Input:  grain C:N (gC/gN)                                 
@@ -2382,14 +2397,18 @@ contains
          leafc_to_litter       =>    cnveg_carbonflux_inst%leafc_to_litter_patch       , & ! Output: [real(r8) (:) ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter      =>    cnveg_carbonflux_inst%frootc_to_litter_patch      , & ! Output: [real(r8) (:) ]  fine root C litterfall (gC/m2/s)                  
          livestemc_to_litter   =>    cnveg_carbonflux_inst%livestemc_to_litter_patch   , & ! Output: [real(r8) (:) ]  live stem C litterfall (gC/m2/s)                  
-         grainc_to_food        =>    cnveg_carbonflux_inst%grainc_to_food_patch        , & ! Output: [real(r8) (:) ]  grain C to food (gC/m2/s)                         
+         grainc_to_food        =>    cnveg_carbonflux_inst%grainc_to_food_patch        , & ! Output: [real(r8) (:) ]  grain C to food (gC/m2/s)             
          grainc_to_seed        =>    cnveg_carbonflux_inst%grainc_to_seed_patch        , & ! Output: [real(r8) (:) ]  grain C to seed (gC/m2/s)
+         leafc_to_biofuelc     =>    cnveg_carbonflux_inst%leafc_to_biofuelc_patch     , & ! Output: [real(r8) (:) ]  leaf C to biofuel C (gC/m2/s)
+         livestemc_to_biofuelc =>    cnveg_carbonflux_inst%livestemc_to_biofuelc_patch , & ! Output: [real(r8) (:) ]  livestem C to biofuel C (gC/m2/s)
          leafn                 =>    cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:) ]  (gN/m2) leaf N      
          frootn                =>    cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:) ]  (gN/m2) fine root N                        
 
          livestemn_to_litter   =>    cnveg_nitrogenflux_inst%livestemn_to_litter_patch , & ! Output: [real(r8) (:) ]  livestem N to litter (gN/m2/s)                    
-         grainn_to_food        =>    cnveg_nitrogenflux_inst%grainn_to_food_patch      , & ! Output: [real(r8) (:) ]  grain N to food (gN/m2/s)                         
+         grainn_to_food        =>    cnveg_nitrogenflux_inst%grainn_to_food_patch      , & ! Output: [real(r8) (:) ]  grain N to food (gN/m2/s)                                   
          grainn_to_seed        =>    cnveg_nitrogenflux_inst%grainn_to_seed_patch      , & ! Output: [real(r8) (:) ]  grain N to seed (gN/m2/s)
+         leafn_to_biofueln     =>    cnveg_nitrogenflux_inst%leafn_to_biofueln_patch   , & ! Output: [real(r8) (:) ]  leaf N to biofuel N (gN/m2/s)
+         livestemn_to_biofueln =>    cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch, & ! Output: [real(r8) (:) ]  livestem N to biofuel N (gN/m2/s)     
          leafn_to_litter       =>    cnveg_nitrogenflux_inst%leafn_to_litter_patch     , & ! Output: [real(r8) (:) ]  leaf N litterfall (gN/m2/s)                       
          leafn_to_retransn     =>    cnveg_nitrogenflux_inst%leafn_to_retransn_patch   , & ! Input: [real(r8) (:) ]  leaf N to retranslocated N pool (gN/m2/s)         
          free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
@@ -2408,10 +2427,13 @@ contains
          ! only calculate fluxes during offset period
          if (offset_flag(p) == 1._r8) then
 
-            if (offset_counter(p) == dt) then
+            if (abs(offset_counter(p) - dt) <= dt/2._r8) then
                t1 = 1.0_r8 / dt
-               leafc_to_litter(p)  = t1 * leafc(p)  + cpool_to_leafc(p)
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
+               
+               ! biofuel_harvfrac is only non-zero for prognostic crops.
+               leafc_to_litter(p)  = t1 * leafc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_leafc(p)
+
                ! this assumes that offset_counter == dt for crops
                ! if this were ever changed, we'd need to add code to the "else"
                if (ivt(p) >= npcropmin) then
@@ -2424,8 +2446,17 @@ contains
                   ! Send the remaining grain to the food product pool
                   grainc_to_food(p) = t1 * grainc(p)  + cpool_to_grainc(p) - grainc_to_seed(p)
                   grainn_to_food(p) = t1 * grainn(p)  + npool_to_grainn(p) - grainn_to_seed(p)
+                  
+                  ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of leaf C
+                  ! and move this fration of leaf C to biofuel C, rather than move it to litter
+                  leafc_to_biofuelc(p) = t1 * leafc(p) * biofuel_harvfrac(ivt(p))
+                  leafn_to_biofueln(p) = t1 * leafn(p) * biofuel_harvfrac(ivt(p))
 
-                  livestemc_to_litter(p) = t1 * livestemc(p)  + cpool_to_livestemc(p)
+                  ! Cut a certain fraction (i.e., biofuel_harvfrac(ivt(p))) (e.g., biofuel_harvfrac(ivt(p)=70% for bioenergy crops) of livestem C
+                  ! and move this fration of leaf C to biofuel C, rather than move it to litter
+                  livestemc_to_litter(p)   = t1 * livestemc(p)*(1._r8-biofuel_harvfrac(ivt(p)))  + cpool_to_livestemc(p)
+                  livestemc_to_biofuelc(p) = t1 * livestemc(p) * biofuel_harvfrac(ivt(p))
+                  livestemn_to_biofueln(p) = t1 * livestemn(p) * biofuel_harvfrac(ivt(p))
                end if
             else
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
@@ -2507,13 +2538,13 @@ contains
                ! NOTE(slevis, 2014-12) results in -ve livestemn and -ve totpftn
                !X! livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
-               livestemn_to_litter(p) = livestemn(p) / dt
+               livestemn_to_litter(p) = livestemn(p) / dt * (1 - biofuel_harvfrac(ivt(p)))
             end if
 
             ! save the current litterfall fluxes
             prev_leafc_to_litter(p)  = leafc_to_litter(p)
             prev_frootc_to_litter(p) = frootc_to_litter(p)
-
+                
          end if ! end if offset period
 
       end do ! end patch loop
@@ -2720,11 +2751,12 @@ contains
             if (CNratio_floating .eqv. .true.) then    
                if (livestemc(p) == 0.0_r8) then    
                    ntovr = 0.0_r8    
+                   livestemn_to_deadstemn(p) = 0.0_r8 
                 else    
                    ntovr = ctovr * (livestemn(p) / livestemc(p))   
+                   livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p)) 
                 end if   
 
-                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
             end if    
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
@@ -2739,19 +2771,15 @@ contains
             if (CNratio_floating .eqv. .true.) then    
               if (livecrootc(p) == 0.0_r8) then    
                   ntovr = 0.0_r8    
+                  livecrootn_to_deadcrootn(p) = 0.0_r8 
                else    
                   ntovr = ctovr * (livecrootn(p) / livecrootc(p))   
+                   livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p)) 
                end if   
 
-               livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
-            if(use_fun)then
-               !TURNED OFF FLUXES TO CORRECT N ACCUMULATION ISSUE. RF. Oct 2015. 
-               livecrootn_to_retransn(p) = 0.0_r8
-               livestemn_to_retransn(p)  = 0.0_r8
-            endif
 
          end if
 
@@ -2762,12 +2790,12 @@ contains
   end subroutine CNLivewoodTurnover
 
   !-----------------------------------------------------------------------
-  subroutine CNGrainToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
+  subroutine CNCropHarvestToProductPools(bounds, num_soilp, filter_soilp, num_soilc, filter_soilc, &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
-    ! If using prognostic crop along with use_grainproduct, then move the patch-level
-    ! grain-to-food fluxes into the column-level grain-to-cropprod fluxes
+    ! If using prognostic crop, then move any necessary harvested amounts into fluxes
+    ! destined for the product pools.
     !
     ! !USES:
     use clm_varctl    , only : use_crop
@@ -2786,21 +2814,28 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fp, p
 
-    character(len=*), parameter :: subname = 'CNGrainToProductPools'
+    character(len=*), parameter :: subname = 'CNCropHarvestToProductPools'
     !-----------------------------------------------------------------------
 
-    ! Explicitly checking use_crop is probably unnecessary here (because presumably
-    ! use_grainproduct is only true if use_crop is true), but we do it for safety because
-    ! the grain*_to_food_patch fluxes are not set if use_crop is false.
-    if (use_crop .and. use_grainproduct) then
+    if (use_crop) then
        do fp = 1, num_soilp
           p = filter_soilp(fp)
-          cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = &
-               cnveg_carbonflux_inst%grainc_to_food_patch(p)
-          cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = &
-               cnveg_nitrogenflux_inst%grainn_to_food_patch(p)
+          cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = cnveg_carbonflux_inst%leafc_to_biofuelc_patch(p) + &
+               cnveg_carbonflux_inst%livestemc_to_biofuelc_patch(p)
+          cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = cnveg_nitrogenflux_inst%leafn_to_biofueln_patch(p) + &
+               cnveg_nitrogenflux_inst%livestemn_to_biofueln_patch(p)
        end do
 
+       if (use_grainproduct) then
+          do fp = 1, num_soilp
+             p = filter_soilp(fp)
+             cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) = cnveg_carbonflux_inst%grainc_to_cropprodc_patch(p) + &
+                  cnveg_carbonflux_inst%grainc_to_food_patch(p)
+             cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) = cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(p) + &
+                  cnveg_nitrogenflux_inst%grainn_to_food_patch(p)
+          end do
+       end if
+       
        call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_carbonflux_inst%grainc_to_cropprodc_patch(bounds%begp:bounds%endp), &
             cnveg_carbonflux_inst%grainc_to_cropprodc_col(bounds%begc:bounds%endc))
@@ -2808,12 +2843,10 @@ contains
        call p2c (bounds, num_soilc, filter_soilc, &
             cnveg_nitrogenflux_inst%grainn_to_cropprodn_patch(bounds%begp:bounds%endp), &
             cnveg_nitrogenflux_inst%grainn_to_cropprodn_col(bounds%begc:bounds%endc))
+
     end if
 
-    ! No else clause: if use_grainproduct is false, then the grain*_to_cropprod fluxes
-    ! will remain at their initial value (0).
-
-  end subroutine CNGrainToProductPools
+  end subroutine CNCropHarvestToProductPools
 
   !-----------------------------------------------------------------------
   subroutine CNLitterToColumn (bounds, num_soilc, filter_soilc,         &
@@ -2863,13 +2896,13 @@ contains
          leafc_to_litter           => cnveg_carbonflux_inst%leafc_to_litter_patch           , & ! Input:  [real(r8) (:)   ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter          => cnveg_carbonflux_inst%frootc_to_litter_patch          , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          livestemc_to_litter       => cnveg_carbonflux_inst%livestemc_to_litter_patch       , & ! Input:  [real(r8) (:)   ]  live stem C litterfall (gC/m2/s)                  
-         grainc_to_food            => cnveg_carbonflux_inst%grainc_to_food_patch            , & ! Input:  [real(r8) (:)   ]  grain C to food (gC/m2/s)                         
+         grainc_to_food            => cnveg_carbonflux_inst%grainc_to_food_patch            , & ! Input:  [real(r8) (:)   ]  grain C to food (gC/m2/s)                            
          phenology_c_to_litr_met_c => cnveg_carbonflux_inst%phenology_c_to_litr_met_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
          phenology_c_to_litr_cel_c => cnveg_carbonflux_inst%phenology_c_to_litr_cel_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
          phenology_c_to_litr_lig_c => cnveg_carbonflux_inst%phenology_c_to_litr_lig_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
 
          livestemn_to_litter       => cnveg_nitrogenflux_inst%livestemn_to_litter_patch     , & ! Input:  [real(r8) (:)   ]  livestem N to litter (gN/m2/s)                    
-         grainn_to_food            => cnveg_nitrogenflux_inst%grainn_to_food_patch          , & ! Input:  [real(r8) (:)   ]  grain N to food (gN/m2/s)                         
+         grainn_to_food            => cnveg_nitrogenflux_inst%grainn_to_food_patch          , & ! Input:  [real(r8) (:)   ]  grain N to food (gN/m2/s) 
          leafn_to_litter           => cnveg_nitrogenflux_inst%leafn_to_litter_patch         , & ! Input:  [real(r8) (:)   ]  leaf N litterfall (gN/m2/s)                       
          frootn_to_litter          => cnveg_nitrogenflux_inst%frootn_to_litter_patch        , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          phenology_n_to_litr_met_n => cnveg_nitrogenflux_inst%phenology_n_to_litr_met_n_col , & ! Output: [real(r8) (:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)

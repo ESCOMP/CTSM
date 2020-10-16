@@ -14,7 +14,7 @@ module clm_initializeMod
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
   use clm_varctl      , only : use_soil_moisture_streams
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
+  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec, haslake
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
   use ncdio_pio       , only : file_desc_t
@@ -41,7 +41,7 @@ module clm_initializeMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine initialize1(gindex_ocn)
+  subroutine initialize1(dtime, gindex_ocn)
     !
     ! !DESCRIPTION:
     ! CLM initialization first phase
@@ -63,7 +63,14 @@ contains
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     !
     ! !ARGUMENTS
-    integer, pointer, optional, intent(out) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
+    integer, intent(in) :: dtime    ! model time step (seconds)
+
+    ! COMPILER_BUG(wjs, 2020-02-20, intel18.0.3) Although gindex_ocn could be
+    ! intent(out), intel18.0.3 generates a runtime segmentation fault in runs that don't
+    ! have this argument present when this is declared intent(out). (It works fine on
+    ! intel 19.0.2 when declared as intent(out).) See also
+    ! https://github.com/ESCOMP/CTSM/issues/930.
+    integer, pointer, optional, intent(inout) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -95,7 +102,7 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    call control_init()
+    call control_init(dtime)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
@@ -176,7 +183,7 @@ contains
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
     allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
     allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
-
+    allocate (haslake      (begg:endg                      ))
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
 
@@ -259,7 +266,7 @@ contains
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking.
 
-    deallocate (wt_lunit, wt_cft, wt_glc_mec)
+    deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
 
     call t_stopf('clm_init1')
 
@@ -272,6 +279,7 @@ contains
     ! CLM initialization - second phase
     !
     ! !USES:
+
     use shr_orb_mod           , only : shr_orb_decl
     use shr_scam_mod          , only : shr_scam_getCloseLatLon
     use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
@@ -283,7 +291,7 @@ contains
     use clm_varctl            , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size_real, get_curr_calday
-    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep 
+    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep
     use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
     use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
     use DaylengthMod          , only : InitDaylength
@@ -333,6 +341,8 @@ contains
     logical               :: lexist
     integer               :: closelatidx,closelonidx
     real(r8)              :: closelat,closelon
+    logical               :: reset_dynbal_baselines_all_columns
+    logical               :: reset_dynbal_baselines_lake_columns
     integer               :: begp, endp
     integer               :: begc, endc
     integer               :: begl, endl
@@ -482,8 +492,14 @@ contains
        call dyn_hwcontent_set_baselines(bounds_clump, &
             filter_inactive_and_active(nc)%num_icemecc, &
             filter_inactive_and_active(nc)%icemecc, &
-            urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
+            filter_inactive_and_active(nc)%num_lakec, &
+            filter_inactive_and_active(nc)%lakec, &
+            urbanparams_inst, soilstate_inst, lakestate_inst, water_inst, temperature_inst, &
+            reset_all_baselines = .true., &
+            ! reset_lake_baselines is irrelevant since reset_all_baselines is true
+            reset_lake_baselines = .false.)
     end do
+    !$OMP END PARALLEL DO
 
     ! ------------------------------------------------------------------------
     ! Initialize modules (after time-manager initialization in most cases)
@@ -541,6 +557,7 @@ contains
 
     is_cold_start = .false.
     is_interpolated_start = .false.
+    reset_dynbal_baselines_lake_columns = .false.
 
     if (nsrest == nsrStartup) then
 
@@ -561,7 +578,8 @@ contains
              write(iulog,*)'Reading initial conditions from ',trim(finidat)
           end if
           call getfil( finidat, fnamer, 0 )
-          call restFile_read(bounds_proc, fnamer, glc_behavior)
+          call restFile_read(bounds_proc, fnamer, glc_behavior, &
+               reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
        end if
 
     else if ((nsrest == nsrContinue) .or. (nsrest == nsrBranch)) then
@@ -569,8 +587,8 @@ contains
        if (masterproc) then
           write(iulog,*)'Reading restart file ',trim(fnamer)
        end if
-       call restFile_read(bounds_proc, fnamer, glc_behavior)
-
+       call restFile_read(bounds_proc, fnamer, glc_behavior, &
+            reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
     end if
 
     ! ------------------------------------------------------------------------
@@ -596,7 +614,8 @@ contains
             glc_behavior=glc_behavior)
 
        ! Read new interpolated conditions file back in
-       call restFile_read(bounds_proc, finidat_interp_dest, glc_behavior)
+       call restFile_read(bounds_proc, finidat_interp_dest, glc_behavior, &
+            reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
 
        ! Reset finidat to now be finidat_interp_dest
        ! (to be compatible with routines still using finidat)
@@ -611,30 +630,49 @@ contains
     ! interpolated restart file, if applicable).
     ! ------------------------------------------------------------------------
 
-    if (get_reset_dynbal_baselines()) then
-       if (nsrest == nsrStartup) then
-          if (masterproc) then
-             write(iulog,*) ' '
-             write(iulog,*) 'Resetting dynbal baselines'
-             write(iulog,*) ' '
-          end if
-
-          !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
-          do nc = 1,nclumps
-             call get_clump_bounds(nc, bounds_clump)
-
-             call dyn_hwcontent_set_baselines(bounds_clump, &
-                  filter_inactive_and_active(nc)%num_icemecc, &
-                  filter_inactive_and_active(nc)%icemecc, &
-                  urbanparams_inst, soilstate_inst, water_inst, temperature_inst)
-          end do
-       else if (nsrest == nsrBranch) then
+    reset_dynbal_baselines_all_columns = get_reset_dynbal_baselines()
+    if (nsrest == nsrBranch) then
+       if (reset_dynbal_baselines_all_columns) then
           call endrun(msg='ERROR clm_initializeMod: '//&
                'Cannot set reset_dynbal_baselines in a branch run')
        end if
-       ! nsrContinue not explicitly handled: it's okay for reset_dynbal_baselines to
-       ! remain set in a continue run, but it has no effect
+    else if (nsrest == nsrContinue) then
+       ! It's okay for the reset_dynbal_baselines flag to remain set in a continue
+       ! run, but we'll ignore it. (This way, the user doesn't have to change their
+       ! namelist file for the continue run.)
+       reset_dynbal_baselines_all_columns = .false.
     end if
+    ! Note that we will still honor reset_dynbal_baselines_lake_columns even in a branch
+    ! or continue run: even in these runs, we want to reset those baselines if they are
+    ! wrong on the restart file.
+
+    if (masterproc) then
+       if (reset_dynbal_baselines_all_columns) then
+          write(iulog,*) ' '
+          write(iulog,*) 'Resetting dynbal baselines for all columns'
+          write(iulog,*) ' '
+       else if (reset_dynbal_baselines_lake_columns) then
+          write(iulog,*) ' '
+          write(iulog,*) 'Resetting dynbal baselines for lake columns'
+          write(iulog,*) ' '
+       end if
+    end if
+
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       call dyn_hwcontent_set_baselines(bounds_clump, &
+            filter_inactive_and_active(nc)%num_icemecc, &
+            filter_inactive_and_active(nc)%icemecc, &
+            filter_inactive_and_active(nc)%num_lakec, &
+            filter_inactive_and_active(nc)%lakec, &
+            urbanparams_inst, soilstate_inst, lakestate_inst, &
+            water_inst, temperature_inst, &
+            reset_all_baselines = reset_dynbal_baselines_all_columns, &
+            reset_lake_baselines = reset_dynbal_baselines_lake_columns)
+    end do
+    !$OMP END PARALLEL DO
 
     ! ------------------------------------------------------------------------
     ! Initialize nitrogen deposition

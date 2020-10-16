@@ -93,6 +93,7 @@ program mksurfdat
     type(pct_pft_type), allocatable :: pctnatpft_max(:) ! % of grid cell maximum PFTs of the time series
     type(pct_pft_type), allocatable :: pctcft(:)        ! % of grid cell that is crop, and breakdown into CFTs
     type(pct_pft_type), allocatable :: pctcft_max(:)    ! % of grid cell maximum CFTs of the time series
+    real(r8)               :: harvest_initval    ! initial value for harvest variables
     real(r8), pointer      :: harvest1D(:)       ! harvest 1D data: normalized harvesting
     real(r8), pointer      :: harvest2D(:,:)     ! harvest 1D data: normalized harvesting
     real(r8), allocatable  :: pctgla(:)          ! percent of grid cell that is glacier  
@@ -568,7 +569,14 @@ program mksurfdat
          ndiag=ndiag, pctlnd_o=pctlnd_pft, pctnatpft_o=pctnatpft, pctcft_o=pctcft)
 
     ! Create harvesting data at model resolution
-    call mkharvest_init( ns_o, spval, harvdata, mksrf_fhrvtyp )
+    if (all_veg) then
+       ! In this case, we don't call mkharvest, so we want the harvest variables to be
+       ! initialized reasonably.
+       harvest_initval = 0._r8
+    else
+       harvest_initval = spval
+    end if
+    call mkharvest_init( ns_o, harvest_initval, harvdata, mksrf_fhrvtyp )
     if ( .not. all_veg )then
 
        call mkharvest( ldomain, mapfname=map_fharvest, datfname=mksrf_fhrvtyp, &
@@ -703,6 +711,18 @@ program mksurfdat
 
     do n = 1,ns_o
 
+       ! Truncate all percentage fields on output grid. This is needed to
+       ! insure that wt is zero (not a very small number such as
+       ! 1e-16) where it really should be zero
+       
+       do k = 1,nlevsoi
+          pctsand(n,k) = float(nint(pctsand(n,k)))
+          pctclay(n,k) = float(nint(pctclay(n,k)))
+       end do
+       pctlak(n) = float(nint(pctlak(n)))
+       pctwet(n) = float(nint(pctwet(n)))
+       pctgla(n) = float(nint(pctgla(n)))
+       
        ! Assume wetland, glacier and/or lake when dataset landmask implies ocean 
        ! (assume medium soil color (15) and loamy texture).
        ! Also set pftdata_mask here
@@ -726,18 +746,6 @@ program mksurfdat
           pftdata_mask(n) = 1
        end if
 
-       ! Truncate all percentage fields on output grid. This is needed to
-       ! insure that wt is zero (not a very small number such as
-       ! 1e-16) where it really should be zero
-       
-       do k = 1,nlevsoi
-          pctsand(n,k) = float(nint(pctsand(n,k)))
-          pctclay(n,k) = float(nint(pctclay(n,k)))
-       end do
-       pctlak(n) = float(nint(pctlak(n)))
-       pctwet(n) = float(nint(pctwet(n)))
-       pctgla(n) = float(nint(pctgla(n)))
-       
        ! Make sure sum of land cover types does not exceed 100. If it does,
        ! subtract excess from most dominant land cover.
        

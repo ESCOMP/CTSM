@@ -8,8 +8,6 @@ module lnd_import_export
   use NUOPC                 , only : NUOPC_CompAttributeGet, NUOPC_Advertise, NUOPC_IsConnected
   use NUOPC_Model           , only : NUOPC_ModelGet
   use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
-  use shr_infnan_mod        , only : isnan => shr_infnan_isnan
-  use shr_string_mod        , only : shr_string_listGetName, shr_string_listGetNum
   use shr_sys_mod           , only : shr_sys_abort
   use clm_varctl            , only : iulog
   use clm_time_manager      , only : get_nstep
@@ -26,6 +24,7 @@ module lnd_import_export
   use shr_carma_mod         , only : shr_carma_readnl
   use shr_ndep_mod          , only : shr_ndep_readnl
   use lnd_shr_methods       , only : chkerr
+  use lnd_import_export_utils, only : derive_quantities, check_for_errors, check_for_nans
 
   implicit none
   private ! except
@@ -40,7 +39,6 @@ module lnd_import_export
   private :: state_getimport
   private :: state_setexport
   private :: state_getfldptr
-  private :: check_for_nans
 
   type fld_list_type
      character(len=128) :: stdname
@@ -369,6 +367,7 @@ contains
     use clm_varcon           , only: rair, o2_molar_const, c13ratio
     use shr_const_mod        , only: SHR_CONST_TKFRZ
     use Wateratm2lndBulkType , only: wateratm2lndbulk_type
+    use QSatMod              , only: QSat
 
     ! input/output variabes
     type(ESMF_GridComp)                         :: gcomp
@@ -388,15 +387,7 @@ contains
     integer                   :: num
     integer                   :: begg, endg                          ! bounds
     integer                   :: g,i,k                               ! indices
-    real(r8)                  :: e                                   ! vapor pressure (Pa)
-    real(r8)                  :: qsat                                ! saturation specific humidity (kg/kg)
-    real(r8)                  :: esatw                               ! saturation vapor pressure over water (Pa)
-    real(r8)                  :: esati                               ! saturation vapor pressure over ice (Pa)
-    real(r8)                  :: a0,a1,a2,a3,a4,a5,a6                ! coefficients for esat over water
-    real(r8)                  :: b0,b1,b2,b3,b4,b5,b6                ! coefficients for esat over ice
-    real(r8)                  :: tdc, t                              ! Kelvins to Celcius function and its input
-    real(r8)                  :: forc_t                              ! atmospheric temperature (Kelvin)
-    real(r8)                  :: forc_q                              ! atmospheric specific humidity (kg/kg)
+    real(r8)                  :: qsat_kg_kg                          ! saturation specific humidity (kg/kg)
     real(r8)                  :: forc_pbot                           ! atmospheric pressure (Pa)
     real(r8)                  :: co2_ppmv_input(bounds%begg:bounds%endg)   ! temporary
     real(r8)                  :: forc_rainc(bounds%begg:bounds%endg) ! rainxy Atm flux mm/s
@@ -412,21 +403,6 @@ contains
     real(r8)                  :: icemask_coupled_fluxes_grc(bounds%begg:bounds%endg)
     character(len=*), parameter :: subname='(lnd_import_export:import_fields)'
 
-    ! Constants to compute vapor pressure
-    parameter (a0=6.107799961_r8    , a1=4.436518521e-01_r8, &
-         a2=1.428945805e-02_r8, a3=2.650648471e-04_r8, &
-         a4=3.031240396e-06_r8, a5=2.034080948e-08_r8, &
-         a6=6.136820929e-11_r8)
-
-    parameter (b0=6.109177956_r8    , b1=5.034698970e-01_r8, &
-         b2=1.886013408e-02_r8, b3=4.176223716e-04_r8, &
-         b4=5.824720280e-06_r8, b5=4.838803174e-08_r8, &
-         b6=1.838826904e-10_r8)
-
-    ! function declarations
-    tdc(t) = min( 50._r8, max(-50._r8,(t-SHR_CONST_TKFRZ)) )
-    esatw(t) = 100._r8*(a0+t*(a1+t*(a2+t*(a3+t*(a4+t*(a5+t*a6))))))
-    esati(t) = 100._r8*(b0+t*(b1+t*(b2+t*(b3+t*(b4+t*(b5+t*b6))))))
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -677,79 +653,14 @@ contains
     end if
 
     !--------------------------
-    ! Derived quantities
+    ! Derived quantities for required fields
+    ! and corresponding error checks
     !--------------------------
 
-    do g = begg, endg
-       forc_t    = atm2lnd_inst%forc_t_not_downscaled_grc(g)
-       forc_q    = wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g)
-       forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
+    call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
+       forc_rainc, forc_rainl, forc_snowc, forc_snowl)
 
-       atm2lnd_inst%forc_hgt_u_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of wind [m]
-       atm2lnd_inst%forc_hgt_t_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of temperature [m]
-       atm2lnd_inst%forc_hgt_q_grc(g) = atm2lnd_inst%forc_hgt_grc(g)    !observational height of humidity [m]
-
-       atm2lnd_inst%forc_vp_grc(g) = forc_q * forc_pbot  / (0.622_r8 + 0.378_r8 * forc_q)
-
-       atm2lnd_inst%forc_rho_not_downscaled_grc(g) = &
-            (forc_pbot - 0.378_r8 * atm2lnd_inst%forc_vp_grc(g)) / (rair * forc_t)
-
-       atm2lnd_inst%forc_po2_grc(g) = o2_molar_const * forc_pbot
-
-       atm2lnd_inst%forc_wind_grc(g) = sqrt(atm2lnd_inst%forc_u_grc(g)**2 + atm2lnd_inst%forc_v_grc(g)**2)
-
-       atm2lnd_inst%forc_solar_grc(g) = atm2lnd_inst%forc_solad_grc(g,1) + atm2lnd_inst%forc_solai_grc(g,1) + &
-                                        atm2lnd_inst%forc_solad_grc(g,2) + atm2lnd_inst%forc_solai_grc(g,2)
-
-       wateratm2lndbulk_inst%forc_rain_not_downscaled_grc(g)  = forc_rainc(g) + forc_rainl(g)
-       wateratm2lndbulk_inst%forc_snow_not_downscaled_grc(g)  = forc_snowc(g) + forc_snowl(g)
-
-       if (forc_t > SHR_CONST_TKFRZ) then
-          e = esatw(tdc(forc_t))
-       else
-          e = esati(tdc(forc_t))
-       end if
-       qsat = 0.622_r8*e / (forc_pbot - 0.378_r8*e)
-
-       ! modify specific humidity if precip occurs
-       if (1==2) then
-          if ((forc_rainc(g)+forc_rainl(g)) > 0._r8) then
-             forc_q = 0.95_r8*qsat
-            !forc_q = qsat
-             wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
-          endif
-       endif
-
-       wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat)
-    end do
-
-    !--------------------------
-    ! Error checks
-    !--------------------------
-
-    ! Check that solar, specific-humidity and LW downward aren't negative
-    do g = begg,endg
-       if ( atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) <= 0.0_r8 ) then
-          call shr_sys_abort( subname//&
-               ' ERROR: Longwave down sent from the atmosphere model is negative or zero' )
-       end if
-       if ( (atm2lnd_inst%forc_solad_grc(g,1) < 0.0_r8) .or. &
-            (atm2lnd_inst%forc_solad_grc(g,2) < 0.0_r8) .or. &
-            (atm2lnd_inst%forc_solai_grc(g,1) < 0.0_r8) .or. &
-            (atm2lnd_inst%forc_solai_grc(g,2) < 0.0_r8) ) then
-          call shr_sys_abort( subname//&
-               ' ERROR: One of the solar fields (indirect/diffuse, vis or near-IR)'// &
-               ' from the atmosphere model is negative or zero' )
-       end if
-       if ( wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) < 0.0_r8 )then
-          call shr_sys_abort( subname//&
-               ' ERROR: Bottom layer specific humidty sent from the atmosphere model is less than zero' )
-       end if
-    end do
-
-    ! Make sure relative humidity is properly bounded
-    ! atm2lnd_inst%forc_rh_grc(g) = min( 100.0_r8, atm2lnd_inst%forc_rh_grc(g) )
-    ! atm2lnd_inst%forc_rh_grc(g) = max(   0.0_r8, atm2lnd_inst%forc_rh_grc(g) )
+    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
 
   end subroutine import_fields
 
@@ -859,7 +770,7 @@ contains
          minus=.true., ungridded_index=4, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%flux_ch4_grc, minus=.true., rc=rc)
+    call state_setexport(exportState, 'Fall_methane', bounds, input=lnd2atm_inst%ch4_surf_flux_tot_grc, minus=.true., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call state_setexport(exportState, 'Sl_ram1', bounds, input=lnd2atm_inst%ram1_grc, rc=rc)
@@ -979,7 +890,7 @@ contains
     if (num > fldsMax) then
        call ESMF_LogWrite(trim(subname)//": ERROR num > fldsMax "//trim(stdname), &
             ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__)
-       return
+       call shr_sys_abort(trim(subname)//": ERROR: num > fldsMax")
     endif
     fldlist(num)%stdname = trim(stdname)
 
@@ -1196,6 +1107,7 @@ contains
     integer             , intent(out)   :: rc
 
     ! local variables
+    logical                     :: l_minus  ! local version of minus
     integer                     :: g, i, n
     real(R8), pointer           :: fldptr1d(:)
     real(R8), pointer           :: fldptr2d(:,:)
@@ -1205,6 +1117,11 @@ contains
     ! ----------------------------------------------
 
     rc = ESMF_SUCCESS
+
+    l_minus = .false.
+    if (present(minus)) then
+       l_minus = minus
+    end if
 
     ! Determine if field with name fldname exists in state
     call ESMF_StateGet(state, trim(fldname), itemFlag, rc=rc)
@@ -1238,7 +1155,7 @@ contains
              n = g - bounds%begg + 1
              fldptr2d(ungridded_index,n) = input(g)
           end do
-          if (present(minus)) then
+          if (l_minus) then
              fldptr2d(ungridded_index,:) = -fldptr2d(ungridded_index,:)
           end if
        else
@@ -1248,7 +1165,7 @@ contains
              n = g - bounds%begg + 1
              fldptr1d(n) = input(g)
           end do
-          if (present(minus)) then
+          if (l_minus) then
              fldptr1d(:) = -fldptr1d(:)
           end if
        end if
@@ -1331,32 +1248,5 @@ contains
     endif  ! status
 
   end subroutine state_getfldptr
-
-  !===============================================================================
-
-  subroutine check_for_nans(array, fname, begg)
-
-    ! input/output variables
-    real(r8)         , intent(in) :: array(:)
-    character(len=*) , intent(in) :: fname
-    integer          , intent(in) :: begg
-
-    ! local variables
-    integer :: i
-    !-------------------------------------------------------------------------------
-
-    ! Check if any input from mediator or output to mediator is NaN
-
-    if (any(isnan(array))) then
-       write(iulog,*) '# of NaNs = ', count(isnan(array))
-       write(iulog,*) 'Which are NaNs = ', isnan(array)
-       do i = 1, size(array)
-          if (isnan(array(i))) then
-             write(iulog,*) "NaN found in field ", trim(fname), ' at gridcell index ',begg+i-1
-          end if
-       end do
-       call shr_sys_abort(' ERROR: One or more of the output from CLM to the coupler are NaN ' )
-    end if
-  end subroutine check_for_nans
 
 end module lnd_import_export

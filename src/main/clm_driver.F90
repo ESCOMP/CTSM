@@ -58,7 +58,7 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
-  use ch4Mod                 , only : ch4, ch4_init_balance_check
+  use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
   !
@@ -303,6 +303,33 @@ contains
        !$OMP END PARALLEL DO
     end if
 
+    !$OMP PARALLEL DO PRIVATE (nc,bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+
+       call t_startf('begcnbal_grc')
+       if (use_cn) then
+          ! Initialize gridcell-level balance check
+          call bgc_vegetation_inst%InitGridcellBalance(bounds_clump, &
+               filter(nc)%num_allc, filter(nc)%allc, &
+               filter(nc)%num_soilc, filter(nc)%soilc, &
+               filter(nc)%num_soilp, filter(nc)%soilp, &
+               soilbiogeochem_carbonstate_inst, &
+               c13_soilbiogeochem_carbonstate_inst, &
+               c14_soilbiogeochem_carbonstate_inst, &
+               soilbiogeochem_nitrogenstate_inst)
+       end if
+       if (use_lch4) then
+          call ch4_init_gridcell_balance_check(bounds_clump, &
+               filter(nc)%num_nolakec, filter(nc)%nolakec, &
+               filter(nc)%num_lakec, filter(nc)%lakec, &
+               ch4_inst)
+       end if
+       call t_stopf('begcnbal_grc')
+
+    end do
+    !$OMP END PARALLEL DO
+
     ! ============================================================================
     ! Update subgrid weights with dynamic landcover (prescribed transient patches,
     ! CNDV, and or dynamic landunits), and do related adjustments. Note that this
@@ -312,7 +339,7 @@ contains
     call t_startf('dyn_subgrid')
     call dynSubgrid_driver(bounds_proc,                                               &
          urbanparams_inst, soilstate_inst, water_inst,                       &
-         temperature_inst, energyflux_inst,          &
+         temperature_inst, energyflux_inst, lakestate_inst, &
          canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst, &
          soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst,                  &
          c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,    &
@@ -358,13 +385,14 @@ contains
        call BeginWaterBalance(bounds_clump,                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
-            water_inst, soilhydrology_inst, &
+            water_inst, soilhydrology_inst, lakestate_inst, &
             use_aquifer_layer = use_aquifer_layer())
 
        call t_stopf('begwbal')
 
        call t_startf('begcnbal_col')
        if (use_cn) then
+          ! Initialize column-level balance check
           call bgc_vegetation_inst%InitColumnBalance(bounds_clump, &
                filter(nc)%num_allc, filter(nc)%allc, &
                filter(nc)%num_soilc, filter(nc)%soilc, &
@@ -376,7 +404,7 @@ contains
        end if
 
        if (use_lch4) then
-          call ch4_init_balance_check(bounds_clump, &
+          call ch4_init_column_balance_check(bounds_clump, &
                filter(nc)%num_nolakec, filter(nc)%nolakec, &
                filter(nc)%num_lakec, filter(nc)%lakec, &
                ch4_inst)
@@ -605,6 +633,7 @@ contains
        ! Determine fluxes
        ! ============================================================================
 
+       call t_startf('bgp_fluxes')
        call t_startf('bgflux')
 
        ! Bareground fluxes for all patches except lakes and urban landunits
@@ -686,6 +715,19 @@ contains
             lakestate_inst,&
             humanindex_inst)
        call t_stopf('bgplake')
+
+       call frictionvel_inst%SetActualRoughnessLengths( &
+            bounds = bounds_clump, &
+            num_exposedvegp = filter(nc)%num_exposedvegp, &
+            filter_exposedvegp = filter(nc)%exposedvegp, &
+            num_noexposedvegp = filter(nc)%num_noexposedvegp, &
+            filter_noexposedvegp = filter(nc)%noexposedvegp, &
+            num_urbanp = filter(nc)%num_urbanp, &
+            filter_urbanp = filter(nc)%urbanp, &
+            num_lakep = filter(nc)%num_lakep, &
+            filter_lakep = filter(nc)%lakep)
+
+       call t_stopf('bgp_fluxes')
 
        if (irrigate) then
 
@@ -930,7 +972,10 @@ contains
           call bgc_vegetation_inst%EcosystemDynamicsPreDrainage(bounds_clump,            &
                   filter(nc)%num_soilc, filter(nc)%soilc,                       &
                   filter(nc)%num_soilp, filter(nc)%soilp,                       &
-                  filter(nc)%num_pcropp, filter(nc)%pcropp, doalb,              &
+                  filter(nc)%num_pcropp, filter(nc)%pcropp, &
+                  filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
+                  filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp, &
+                  doalb,              &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
@@ -939,7 +984,8 @@ contains
                active_layer_inst, &
                atm2lnd_inst, water_inst%waterstatebulk_inst, &
                water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst,      &
-               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
+               soil_water_retention_curve, crop_inst, ch4_inst, &
                photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
                nutrient_competition_method, fireemis_inst)
 
@@ -1077,7 +1123,8 @@ contains
           call t_startf('cnbalchk')
           call bgc_vegetation_inst%BalanceCheck( &
                bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
-               soilbiogeochem_carbonflux_inst, soilbiogeochem_nitrogenflux_inst)
+               soilbiogeochem_carbonflux_inst, &
+               soilbiogeochem_nitrogenflux_inst, atm2lnd_inst )
           call t_stopf('cnbalchk')
        end if
 

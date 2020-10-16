@@ -72,6 +72,7 @@ buildnmlc
 /bld/unit_testers/drv_flds_in*
 /bld/unit_testers/temp_file.txt*
 /bld/unit_testers/user_nl_clm_real_parameters*
+/bld/unit_testers/user_nl_ctsm_real_parameters*
 /bld/unit_testers/env_run.xml
 
 # tools testing output
@@ -86,8 +87,8 @@ surfdata_*.namelist
 landuse.timeseries_*.namelist
 landuse.timeseries_*.log
 landuse_timeseries_*.txt
-clm.input_data_list
-clm.input_data_list.previous
+ctsm.input_data_list
+ctsm.input_data_list.previous
 *.stdout.txt.o*
 
 # mksurfdata unit tests

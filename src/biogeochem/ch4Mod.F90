@@ -49,7 +49,8 @@ module ch4Mod
 
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: readParams
-  public  :: ch4_init_balance_check
+  public  :: ch4_init_column_balance_check
+  public  :: ch4_init_gridcell_balance_check
   public  :: ch4
 
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -155,7 +156,9 @@ module ch4Mod
      real(r8), pointer, private :: zwt_ch4_unsat_col          (:)   ! col depth of water table for unsaturated fraction (m)
      real(r8), pointer, private :: lake_soilc_col             (:,:) ! col total soil organic matter found in level (g C / m^3) (nlevsoi)
      real(r8), pointer, private :: totcolch4_col              (:)   ! col total methane found in soil col (g C / m^2)
+     real(r8), pointer, private :: totcolch4_grc              (:)   ! grc total methane found in soil col (g C / m^2)
      real(r8), pointer, private :: totcolch4_bef_col          (:)   ! col total methane found in soil col, start of timestep (g C / m^2)
+     real(r8), pointer, private :: totcolch4_bef_grc          (:)   ! grc total methane found in soil col, start of timestep (g C / m^2)
      real(r8), pointer, private :: annsum_counter_col         (:)   ! col seconds since last annual accumulator turnover
      real(r8), pointer, private :: tempavg_somhr_col          (:)   ! col temporary average SOM heterotrophic resp. (gC/m2/s)
      real(r8), pointer, private :: annavg_somhr_col           (:)   ! col annual average SOM heterotrophic resp. (gC/m2/s)
@@ -187,7 +190,7 @@ module ch4Mod
      ! false. This could be a scalar, but scalars cause problems with threading, so we use
      ! a column-level array (column-level for convenience, because it is referenced in
      ! column-level loops).
-     logical , pointer, private :: ch4_first_time_col         (:)   ! col whether this is the first time step that includes ch4
+     logical , pointer, private :: ch4_first_time_grc         (:)   ! grc whether this is the first time step that includes ch4
      !
      real(r8), pointer, public :: finundated_col             (:)   ! col fractional inundated area (excluding dedicated wetland cols)
      real(r8), pointer, public :: finundated_pre_snow_col    (:)   ! col fractional inundated area (excluding dedicated wetland cols) before snow
@@ -302,7 +305,9 @@ contains
     allocate(this%zwt_ch4_unsat_col          (begc:endc))            ;  this%zwt_ch4_unsat_col          (:)   = nan
     allocate(this%lake_soilc_col             (begc:endc,1:nlevgrnd)) ;  this%lake_soilc_col             (:,:) = spval !first time-step
     allocate(this%totcolch4_col              (begc:endc))            ;  this%totcolch4_col              (:)   = nan
+    allocate(this%totcolch4_grc              (begg:endg))            ;  this%totcolch4_grc              (:)   = nan
     allocate(this%totcolch4_bef_col          (begc:endc))            ;  this%totcolch4_bef_col          (:)   = nan
+    allocate(this%totcolch4_bef_grc          (begg:endg))            ;  this%totcolch4_bef_grc          (:)   = nan
     allocate(this%annsum_counter_col         (begc:endc))            ;  this%annsum_counter_col         (:)   = nan 
     allocate(this%tempavg_somhr_col          (begc:endc))            ;  this%tempavg_somhr_col          (:)   = nan
     allocate(this%annavg_somhr_col           (begc:endc))            ;  this%annavg_somhr_col           (:)   = nan 
@@ -327,7 +332,7 @@ contains
     allocate(this%annavg_agnpp_patch         (begp:endp))            ;  this%annavg_agnpp_patch         (:)   = spval ! To detect first year
     allocate(this%annavg_bgnpp_patch         (begp:endp))            ;  this%annavg_bgnpp_patch         (:)   = spval ! To detect first year
 
-    allocate(this%ch4_first_time_col         (begc:endc))            ; this%ch4_first_time_col          (:)   = .true.
+    allocate(this%ch4_first_time_grc         (begg:endg))            ; this%ch4_first_time_grc          (:)   = .true.
 
     allocate(this%finundated_col             (begc:endc))            ;  this%finundated_col             (:)   = nan          
     allocate(this%finundated_pre_snow_col    (begc:endc))            ;  this%finundated_pre_snow_col    (:)   = nan          
@@ -337,7 +342,6 @@ contains
     allocate(this%conc_o2_unsat_col          (begc:endc,1:nlevgrnd)) ;  this%conc_o2_unsat_col          (:,:) = nan
     allocate(this%o2_decomp_depth_sat_col    (begc:endc,1:nlevgrnd)) ;  this%o2_decomp_depth_sat_col    (:,:) = nan          
     allocate(this%o2_decomp_depth_unsat_col  (begc:endc,1:nlevgrnd)) ;  this%o2_decomp_depth_unsat_col  (:,:) = nan
-    allocate(this%ch4_surf_flux_tot_col      (begc:endc))            ;  this%ch4_surf_flux_tot_col      (:)   = nan
 
     allocate(this%grnd_ch4_cond_patch        (begp:endp))            ;  this%grnd_ch4_cond_patch        (:)   = nan
     allocate(this%grnd_ch4_cond_col          (begc:endc))            ;  this%grnd_ch4_cond_col          (:)   = nan
@@ -1144,7 +1148,7 @@ contains
        ! restart file based on whether FINUNDATED is present on the restart file. We
        ! could use any methane variable, but FINUNDATED is a good choice because this
        ! "first time" variable is used in connection with FINUNDATED.
-       this%ch4_first_time_col(bounds%begc:bounds%endc) = .false.
+       this%ch4_first_time_grc(bounds%begg:bounds%endg) = .false.
 
        ! BACKWARDS_COMPATIBILITY(wjs, 2016-02-11) The following is needed for backwards
        ! compatibility with restart files generated from older versions of the code, where
@@ -1247,7 +1251,7 @@ contains
     character(len=*), parameter :: subname = 'DynamicColumnAdjustments'
     !-----------------------------------------------------------------------
 
-    ! BUG(wjs, 2016-02-16, bugz 2283) Need to do some special handling of finundated for
+    ! BUG(wjs, 2016-02-16, ESCOMP/CTSM#43) Need to do some special handling of finundated for
     ! increases in lake area, since lakes are assumed to be 100% inundated. Probably it's
     ! most appropriate for this special handling to happen elsewhere - i.e., within this
     ! routine, we do the standard adjustments as they are currently done, but then in the
@@ -1554,13 +1558,68 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine ch4_init_balance_check(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+  subroutine ch4_init_gridcell_balance_check(bounds, num_nolakec, &
+                filter_nolakec, num_lakec, filter_lakec, ch4_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate beginning gridcell-level ch4 balance for mass conservation
+    ! check
+    !
+    ! This sets ch4_inst%totcolch4_bef_grc
+    !
+    ! Called before the weight updates done for dynamic landunits and the
+    ! associated filter updates
+    !
+    ! !USES:
+    use subgridAveMod, only: c2g
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in)    :: bounds
+    integer          , intent(in)    :: num_nolakec        ! number of column non-lake points in column filter
+    integer          , intent(in)    :: filter_nolakec(:)  ! column filter for non-lake points
+    integer          , intent(in)    :: num_lakec          ! number of column lake points in column filter
+    integer          , intent(in)    :: filter_lakec(:)    ! column filter for lake points
+    type(ch4_type)   , intent(inout) :: ch4_inst
+    !
+    ! !LOCAL VARIABLES:
+
+    integer :: begc, endc, begg, endg
+    real(r8), allocatable :: totcolch4_bef_col(:)  ! col total methane found in soil col, start of timestep (g C / m^2) NB: this variable appears with the same name in ch4_type but the one here is local and for temporary use
+    character(len=*), parameter       :: subname = 'ch4_init_gridcell_balance_check'
+    !-----------------------------------------------------------------------
+
+    begc = bounds%begc
+    endc = bounds%endc
+    begg = bounds%begg
+    endg = bounds%endg
+
+    allocate(totcolch4_bef_col(begc:endc))
+
+    ! This is only really needed for soilc and lakec, but we use nolakec rather
+    ! than just soilc for consistency with the other call to ch4_totcolch4
+    ! (which computes ch4_inst%totcolch4 over all columns for diagnostic
+    ! purposes).
+    call ch4_totcolch4(bounds, num_nolakec, filter_nolakec, num_lakec, &
+         filter_lakec, ch4_inst, &
+         totcolch4_bef_col(begc:endc))
+
+    call c2g( bounds, &
+         totcolch4_bef_col(begc:endc), &
+         ch4_inst%totcolch4_bef_grc(begg:endg), &
+         c2l_scale_type= 'unity', l2g_scale_type='unity' )
+
+    deallocate(totcolch4_bef_col)
+
+  end subroutine ch4_init_gridcell_balance_check
+
+  !-----------------------------------------------------------------------
+  subroutine ch4_init_column_balance_check(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
        ch4_inst)
     !
     ! !DESCRIPTION:
     ! Calculate beginning column-level ch4 balance, for mass conservation check
     !
-    ! This sets ch4_inst%totcolch4_bef
+    ! This sets ch4_inst%totcolch4_bef_col
     !
     ! This should be called after the weight updates due to dynamic landunits, and the
     ! associated filter updates - i.e., using the new version of the filters.
@@ -1576,9 +1635,8 @@ contains
     type(ch4_type)    , intent(inout) :: ch4_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: fc, c
 
-    character(len=*), parameter       :: subname = 'ch4_init_balance_check'
+    character(len=*), parameter       :: subname = 'ch4_init_column_balance_check'
     !-----------------------------------------------------------------------
 
     ! This is only really needed for soilc and lakec, but we use nolakec rather than just
@@ -1587,7 +1645,7 @@ contains
     call ch4_totcolch4(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
          ch4_inst, ch4_inst%totcolch4_bef_col(bounds%begc:bounds%endc))
 
-  end subroutine ch4_init_balance_check
+  end subroutine ch4_init_column_balance_check
 
 
   !-----------------------------------------------------------------------
@@ -1698,7 +1756,8 @@ contains
          qflx_surf            =>   waterfluxbulk_inst%qflx_surf_col              , & ! Input:  [real(r8) (:)   ]  total surface runoff (mm H2O /s)
 
          conc_o2_sat          =>   ch4_inst%conc_o2_sat_col                  , & ! Input:  [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
-         totcolch4_bef        =>   ch4_inst%totcolch4_bef_col                , & ! Input:  [real(r8) (:)   ]  total methane in soil column, start of timestep (g C / m^2)
+         totcolch4_bef_col    =>   ch4_inst%totcolch4_bef_col                , & ! Input:  [real(r8) (:)   ]  column-level total methane in soil column, start of timestep (g C / m^2)
+         totcolch4_bef_grc    =>   ch4_inst%totcolch4_bef_grc                , & ! Input:  [real(r8) (:)   ]  gridcell-level total methane in soil column, start of timestep (g C / m^2)
 
          grnd_ch4_cond_patch  =>   ch4_inst%grnd_ch4_cond_patch              , & ! Input:  [real(r8) (:)   ]  tracer conductance for boundary layer [m/s]       
          grnd_ch4_cond_col    =>   ch4_inst%grnd_ch4_cond_col                , & ! Output: [real(r8) (:)   ]  tracer conductance for boundary layer [m/s] (p2c)      
@@ -1724,17 +1783,19 @@ contains
          conc_o2_lake         =>   ch4_inst%conc_o2_lake_col                 , & ! Output: [real(r8) (:,:) ]  O2 conc  in each soil layer (mol/m3) (nlevsoi)  
          ch4_dfsat_flux       =>   ch4_inst%ch4_dfsat_flux_col               , & ! Output: [real(r8) (:)   ]  CH4 flux to atm due to decreasing finundated (kg C/m^2/s) [+]
          zwt_ch4_unsat        =>   ch4_inst%zwt_ch4_unsat_col                , & ! Output: [real(r8) (:)   ]  depth of water table for unsaturated fraction (m) 
-         totcolch4            =>   ch4_inst%totcolch4_col                    , & ! Output: [real(r8) (:)   ]  total methane in soil column (g C / m^2)          
+         totcolch4_col        =>   ch4_inst%totcolch4_col                    , & ! Output: [real(r8) (:)   ]  column-level total methane in soil column (g C / m^2)
+         totcolch4_grc        =>   ch4_inst%totcolch4_grc                    , & ! Output: [real(r8) (:)   ]  gridcell-level total methane in soil column (g C / m^2)
          finundated           =>   ch4_inst%finundated_col                   , & ! Output: [real(r8) (:)   ]  fractional inundated area in soil column (excluding dedicated wetland columns)
          finundated_pre_snow  =>   ch4_inst%finundated_pre_snow_col          , & ! Output: [real(r8) (:)   ]  fractional inundated area in soil column (excluding dedicated wetland columns) before snow
-         ch4_first_time       =>   ch4_inst%ch4_first_time_col               , & ! Output: [logical  (:)   ]  whether this is the first time step that includes ch4
+         ch4_first_time_grc   =>   ch4_inst%ch4_first_time_grc               , & ! Output: [logical  (:)   ]  grc whether this is the first time step that includes ch4
          qflx_surf_lag        =>   ch4_inst%qflx_surf_lag_col                , & ! Output: [real(r8) (:)   ]  time-lagged surface runoff (mm H2O /s)
          finundated_lag       =>   ch4_inst%finundated_lag_col               , & ! Output: [real(r8) (:)   ]  time-lagged fractional inundated area             
          layer_sat_lag        =>   ch4_inst%layer_sat_lag_col                , & ! Output: [real(r8) (:,:) ]  Lagged saturation status of soil layer in the unsaturated zone (1 = sat)
          c_atm                =>   ch4_inst%c_atm_grc                        , & ! Output: [real(r8) (:,:) ]  CH4, O2, CO2 atmospheric conc  (mol/m3)         
          ch4co2f              =>   ch4_inst%ch4co2f_grc                      , & ! Output: [real(r8) (:)   ]  gridcell CO2 production from CH4 oxidation (g C/m**2/s)
          ch4prodg             =>   ch4_inst%ch4prodg_grc                     , & ! Output: [real(r8) (:)   ]  gridcell average CH4 production (g C/m^2/s)       
-         ch4_surf_flux_tot    =>   ch4_inst%ch4_surf_flux_tot_col            , & ! Output: [real(r8) (:)   ]  col CH4 flux to atm. (kg C/m**2/s)          
+         ch4_surf_flux_tot_col =>  ch4_inst%ch4_surf_flux_tot_col            , & ! Output: [real(r8) (:)   ]  col CH4 flux to atm. (kg C/m**2/s)
+         ch4_surf_flux_tot_grc =>  lnd2atm_inst%ch4_surf_flux_tot_grc            , & ! Output: [real(r8) (:)   ]  grc CH4 flux to atm. (kg C/m**2/s)
 
          nem_grc              =>   lnd2atm_inst%nem_grc                      , & ! Output: [real(r8) (:)   ]  gridcell average net methane correction to CO2 flux (g C/m^2/s)
 
@@ -1762,7 +1823,7 @@ contains
       jwt(begc:endc)            = huge(1)
 
       ! Initialize local fluxes to zero: necessary for columns outside the filters because averaging up to gridcell will be done
-      ch4_surf_flux_tot(begc:endc) = 0._r8
+      ch4_surf_flux_tot_col(begc:endc) = 0._r8
       ch4_prod_tot(begc:endc)      = 0._r8
       ch4_oxid_tot(begc:endc)      = 0._r8
       rootfraction(begp:endp,:)    = spval
@@ -1848,7 +1909,8 @@ contains
                ch4_dfsat_flux(c) = 0._r8
             end if
 
-            if (.not. ch4_first_time(c)) then
+            g = col%gridcell(c)
+            if (.not. ch4_first_time_grc(g)) then
                if (finundated(c) > fsat_bef(c)) then !Reduce conc_ch4_sat
                   dfsat = finundated(c) - fsat_bef(c)
                   conc_ch4_sat(c,j) = (fsat_bef(c)*conc_ch4_sat(c,j) + dfsat*conc_ch4_unsat(c,j)) / finundated(c)
@@ -2060,7 +2122,7 @@ contains
             if (j == 1) then
                totalsat = ch4_surf_diff_sat(c) + ch4_surf_aere_sat(c) + ch4_surf_ebul_sat(c)
                totalunsat = ch4_surf_diff_unsat(c) + ch4_surf_aere_unsat(c) + ch4_surf_ebul_unsat(c)
-               ch4_surf_flux_tot(c) = (finundated(c)*totalsat + (1._r8 - finundated(c))*totalunsat) * &
+               ch4_surf_flux_tot_col(c) = (finundated(c)*totalsat + (1._r8 - finundated(c))*totalunsat) * &
                     catomw / 1000._r8
                !Convert from mol to kg C
                ! ch4_oxid_tot and ch4_prod_tot are initialized to zero above
@@ -2086,7 +2148,7 @@ contains
       do fc = 1, num_soilc
          c = filter_soilc(fc)
 
-         ch4_surf_flux_tot(c) = ch4_surf_flux_tot(c) + ch4_dfsat_flux(c)
+         ch4_surf_flux_tot_col(c) = ch4_surf_flux_tot_col(c) + ch4_dfsat_flux(c)
       end do
 
       if (allowlakeprod) then
@@ -2097,7 +2159,7 @@ contains
                if (j == 1) then
                   ! ch4_oxid_tot and ch4_prod_tot are initialized to zero above
                   totalsat = ch4_surf_diff_sat(c) + ch4_surf_aere_sat(c) + ch4_surf_ebul_sat(c)
-                  ch4_surf_flux_tot(c) = totalsat*catomw / 1000._r8
+                  ch4_surf_flux_tot_col(c) = totalsat*catomw / 1000._r8
                end if
 
                ch4_oxid_tot(c) = ch4_oxid_tot(c) + ch4_oxid_depth_sat(c,j)*dz(c,j)*catomw
@@ -2144,27 +2206,29 @@ contains
       ! Finalize CH4 balance and check for errors
 
       call ch4_totcolch4(bounds, num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-           ch4_inst, totcolch4(bounds%begc:bounds%endc))
+           ch4_inst, totcolch4_col(bounds%begc:bounds%endc))
+
+      ! Column level balance
 
       do fc = 1, num_soilc
          c = filter_soilc(fc)
+         g = col%gridcell(c)
 
-         if (.not. ch4_first_time(c)) then
+         if (.not. ch4_first_time_grc(g)) then
             ! Check balance
-            errch4 = totcolch4(c) - totcolch4_bef(c) &
+            errch4 = totcolch4_col(c) - totcolch4_bef_col(c) &
                  - dtime*(ch4_prod_tot(c) - ch4_oxid_tot(c) &
-                 - ch4_surf_flux_tot(c)*1000._r8) ! kg C --> g C
+                 - ch4_surf_flux_tot_col(c)*1000._r8) ! kg C --> g C
             if (abs(errch4) > 1.e-7_r8) then ! g C / m^2 / timestep
-               write(iulog,*)'CH4 Conservation Error in CH4Mod driver, nstep, c, errch4 (gC /m^2.timestep)', &
+               write(iulog,*)'Column-level CH4 Conservation Error in CH4Mod driver, nstep, c, errch4 (gC /m^2.timestep)', &
                     nstep,c,errch4
-               g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg,col%itype=',grc%latdeg(g),grc%londeg(g),col%itype(c)
-               write(iulog,*)'totcolch4                    = ', totcolch4(c)
-               write(iulog,*)'totcolch4_bef                = ', totcolch4_bef(c)
+               write(iulog,*)'totcolch4_col                = ', totcolch4_col(c)
+               write(iulog,*)'totcolch4_bef_col            = ', totcolch4_bef_col(c)
                write(iulog,*)'dtime*ch4_prod_tot           = ', dtime*ch4_prod_tot(c)
                write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
-                    ch4_surf_flux_tot(c)*1000._r8
+                    ch4_surf_flux_tot_col(c)*1000._r8
                call endrun(msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
             end if
          end if
@@ -2173,23 +2237,23 @@ contains
       if (allowlakeprod) then
          do fc = 1, num_lakec
             c = filter_lakec(fc)
+            g = col%gridcell(c)
 
-            if (.not. ch4_first_time(c)) then
+            if (.not. ch4_first_time_grc(g)) then
                ! Check balance
-               errch4 = totcolch4(c) - totcolch4_bef(c) &
+               errch4 = totcolch4_col(c) - totcolch4_bef_col(c) &
                     - dtime*(ch4_prod_tot(c) - ch4_oxid_tot(c) &
-                    - ch4_surf_flux_tot(c)*1000._r8) ! kg C --> g C
+                    - ch4_surf_flux_tot_col(c)*1000._r8) ! kg C --> g C
                if (abs(errch4) > 1.e-7_r8) then ! g C / m^2 / timestep
-                  write(iulog,*)'CH4 Conservation Error in CH4Mod driver for lake column, nstep, c, errch4 (gC/m^2.timestep)', &
+                  write(iulog,*)'Column-level CH4 Conservation Error in CH4Mod driver for lake column, nstep, c, errch4 (gC/m^2.timestep)', &
                        nstep,c,errch4
-                  g = col%gridcell(c)
                   write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-                  write(iulog,*)'totcolch4                    = ', totcolch4(c)
-                  write(iulog,*)'totcolch4_bef                = ', totcolch4_bef(c)
+                  write(iulog,*)'totcolch4_col                = ', totcolch4_col(c)
+                  write(iulog,*)'totcolch4_bef_col            = ', totcolch4_bef_col(c)
                   write(iulog,*)'dtime*ch4_prod_tot           = ', dtime*ch4_prod_tot(c)
                   write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                   write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
-                       ch4_surf_flux_tot(c)*1000._r8
+                       ch4_surf_flux_tot_col(c)*1000._r8
                   call endrun(msg=' ERROR: Methane conservation error, allowlakeprod'//&
                        errMsg(sourcefile, __LINE__))
                end if
@@ -2198,7 +2262,7 @@ contains
          end do
       end if
 
-      ! Now average up to gridcell for fluxes
+      ! Now average up to gridcell for fluxes and totcolch4
       call c2g( bounds, &
            ch4_oxid_tot(begc:endc), ch4co2f(begg:endg),        &
            c2l_scale_type= 'unity', l2g_scale_type='unity' )
@@ -2211,7 +2275,37 @@ contains
            nem_col(begc:endc), nem_grc(begg:endg),               &
            c2l_scale_type= 'unity', l2g_scale_type='unity' )
 
-      ch4_first_time(begc:endc) = .false.
+      call c2g( bounds, &
+           ch4_surf_flux_tot_col(begc:endc), ch4_surf_flux_tot_grc(begg:endg), &
+           c2l_scale_type= 'unity', l2g_scale_type='unity' )
+
+      call c2g( bounds, &
+           ch4_inst%totcolch4_col(begc:endc), &
+           ch4_inst%totcolch4_grc(begg:endg), &
+           c2l_scale_type= 'unity', l2g_scale_type='unity' )
+
+      ! Gricell level balance
+
+      do g = begg, endg
+         if (.not. ch4_first_time_grc(g)) then
+            ! Check balance
+            errch4 = totcolch4_grc(g) - totcolch4_bef_grc(g) + dtime * &
+              (nem_grc(g) + ch4_surf_flux_tot_grc(g) * 1000._r8)  ! kg C --> g C
+
+            if (abs(errch4) > 1.e-7_r8) then  ! g C / m^2 / timestep
+               write(iulog,*)'Gridcell-level CH4 Conservation Error in CH4Mod driver, nstep, g, errch4 (gC /m^2.timestep)', &
+                    nstep, g, errch4
+               write(iulog,*)'latdeg, londeg =', grc%latdeg(g), grc%londeg(g)
+               write(iulog,*)'totcolch4_grc     =', totcolch4_grc(g)
+               write(iulog,*)'totcolch4_bef_grc =', totcolch4_bef_grc(g)
+               write(iulog,*)'dtime * nem_grc   =', dtime * nem_grc(g)
+               write(iulog,*)'dtime * ch4_surf_flux_tot * 1000 =', dtime * ch4_surf_flux_tot_grc(g) * 1000._r8
+               call endrun(msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
+            end if
+         end if
+      end do
+
+      ch4_first_time_grc(begg:endg) = .false.
 
     end associate
 

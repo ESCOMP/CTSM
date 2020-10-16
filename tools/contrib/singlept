@@ -116,7 +116,7 @@ datm_eyr=2014
 #--  Modify landunit structure
 overwrite_single_pft = True
 dominant_pft         = 7 #BETr
-zero_nonveg_pfts     = True
+zero_nonveg_landunits= True
 uniform_snowpack     = True
 no_saturation_excess = True
 
@@ -145,11 +145,12 @@ fdomain  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
 fdomain2 = dir_output + AddTagToFilename( fdomain, tag )
 
 #--  Specify surface data file  --------------------------------
-fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/surfdata_0.9x1.25_16pfts_CMIP6_simyr1850_c170706.nc'
+fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
+
 fsurf2   = dir_output + AddTagToFilename( fsurf, tag )
 
 #--  Specify landuse file  -------------------------------------
-fluse    = dir_inputdata+'lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc'
+fluse    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc'
 fluse2   = dir_output + AddTagToFilename( fluse, tag )
 
 #--  Specify datm domain file  ---------------------------------
@@ -204,7 +205,7 @@ if create_surfdata:
     if overwrite_single_pft:
         f3['PCT_NAT_PFT'][:,:,:] = 0
         f3['PCT_NAT_PFT'][:,:,dominant_pft] = 100
-    if zero_nonveg_pfts:
+    if zero_nonveg_landunits:
         f3['PCT_NATVEG'][:,:]  = 100
         f3['PCT_CROP'][:,:]    = 0
         f3['PCT_LAKE'][:,:]    = 0.
@@ -233,7 +234,7 @@ if create_surfdata:
         f1.to_netcdf(path='~/junk.nc', mode='w')
         #f1.to_netcdf(path=fsurf2, mode='w')
         f1.close()
-    if zero_nonveg_pfts:
+    if zero_nonveg_landunits:
         #f1  = xr.open_dataset(fsurf2)
         f1  = xr.open_dataset('~/junk.nc')
         f1['PCT_NATVEG']  = 100

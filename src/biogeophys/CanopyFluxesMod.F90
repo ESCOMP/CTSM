@@ -58,12 +58,13 @@ module CanopyFluxesMod
   public :: readParams
 
   type, private :: params_type
-     real(r8) :: lai_dl  ! Plant litter area index (m2/m2)
-     real(r8) :: z_dl  ! Litter layer thickness (m)
-     real(r8) :: a_coef  ! Drag coefficient under less dense canopy (unitless)
-     real(r8) :: a_exp  ! Drag exponent under less dense canopy (unitless)
-     real(r8) :: csoilc  ! Soil drag coefficient under dense canopy (unitless)
-     real(r8) :: cv  ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
+     real(r8) :: lai_dl   ! Plant litter area index (m2/m2)
+     real(r8) :: z_dl     ! Litter layer thickness (m)
+     real(r8) :: a_coef   ! Drag coefficient under less dense canopy (unitless)
+     real(r8) :: a_exp    ! Drag exponent under less dense canopy (unitless)
+     real(r8) :: csoilc   ! Soil drag coefficient under dense canopy (unitless)
+     real(r8) :: cv       ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
+     real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -176,6 +177,8 @@ contains
     call readNcdioScalar(ncid, 'csoilc', subname, params_inst%csoilc)
     ! Turbulent transfer coeff between canopy surface and canopy air (m/s^(1/2))
     call readNcdioScalar(ncid, 'cv', subname, params_inst%cv)
+    ! Minimum wind speed at the atmospheric forcing height (m/s)
+    call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
 
   end subroutine readParams
 
@@ -318,13 +321,10 @@ contains
     real(r8) :: wtalq(bounds%begp:bounds%endp)       ! normalized latent heat cond. for air and leaf [-]
     real(r8) :: wtgaq                                ! normalized latent heat cond. for air and ground [-]
     real(r8) :: el(bounds%begp:bounds%endp)          ! vapor pressure on leaf surface [pa]
-    real(r8) :: deldT                                ! derivative of "el" on "t_veg" [pa/K]
     real(r8) :: qsatl(bounds%begp:bounds%endp)       ! leaf specific humidity [kg/kg]
     real(r8) :: qsatldT(bounds%begp:bounds%endp)     ! derivative of "qsatl" on "t_veg"
     real(r8) :: e_ref2m                              ! 2 m height surface saturated vapor pressure [Pa]
-    real(r8) :: de2mdT                               ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m                           ! 2 m height surface saturated specific humidity [kg/kg]
-    real(r8) :: dqsat2mdT                            ! derivative of 2 m height surface saturated specific humidity on t_ref2m
     real(r8) :: air(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
     real(r8) :: bir(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
     real(r8) :: cir(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
@@ -534,7 +534,6 @@ contains
          grnd_ch4_cond          => ch4_inst%grnd_ch4_cond_patch                 , & ! Output: [real(r8) (:)   ]  tracer conductance for boundary layer [m/s] 
 
          htvp                   => energyflux_inst%htvp_col                     , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg] (constant)                      
-         btran2                 => energyflux_inst%btran2_patch                 , & ! Output: [real(r8) (:)   ]  F. Li and S. Levis                                                     
          btran                  => energyflux_inst%btran_patch                  , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1)                                 
          rresis                 => energyflux_inst%rresis_patch                 , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd)                          
          taux                   => energyflux_inst%taux_patch                   , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)                                  
@@ -627,7 +626,6 @@ contains
          wtaq0(p)  = 0._r8
          obuold(p) = 0._r8
          btran(p)  = btran0
-         btran2(p)  = btran0
       end do
 
       ! calculate daylength control for Vcmax
@@ -704,7 +702,6 @@ contains
             waterstatebulk_inst=waterstatebulk_inst,   &
             waterdiagnosticbulk_inst=waterdiagnosticbulk_inst,   &
               soil_water_retention_curve=soil_water_retention_curve)
-
      
       end if
 
@@ -737,7 +734,9 @@ contains
          ! Saturated vapor pressure, specific humidity, and their derivatives
          ! at the leaf surface
 
-         call QSat (t_veg(p), forc_pbot(c), el(p), deldT, qsatl(p), qsatldT(p))
+         call QSat (t_veg(p), forc_pbot(c), qsatl(p), &
+              es = el(p), &
+              qsdT = qsatldT(p))
 
          ! Determine atmospheric co2 and o2
 
@@ -755,7 +754,7 @@ contains
          taf(p) = (t_grnd(c) + thm(p))/2._r8
          qaf(p) = (forc_q(c)+qg(c))/2._r8
 
-         ur(p) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
+         ur(p) = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
          dth(p) = thm(p)-taf(p)
          dqh(p) = forc_q(c)-qaf(p)
          delq(p) = qg(c) - qaf(p)
@@ -1106,7 +1105,9 @@ contains
             ! Re-calculate saturated vapor pressure, specific humidity, and their
             ! derivatives at the leaf surface
 
-            call QSat(t_veg(p), forc_pbot(c), el(p), deldT, qsatl(p), qsatldT(p))
+            call QSat(t_veg(p), forc_pbot(c), qsatl(p), &
+                 es = el(p), &
+                 qsdT = qsatldT(p))
 
             ! Update vegetation/ground surface temperature, canopy air
             ! temperature, canopy vapor pressure, aerodynamic temperature, and
@@ -1225,7 +1226,8 @@ contains
 
          ! 2 m height relative humidity
 
-         call QSat(t_ref2m(p), forc_pbot(c), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+         call QSat(t_ref2m(p), forc_pbot(c), qsat_ref2m, &
+              es = e_ref2m)
          rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
          rh_ref2m_r(p) = rh_ref2m(p)
 

@@ -128,10 +128,9 @@ contains
     ! temporaries for topo downscaling
     real(r8) :: hsurf_g,hsurf_c
     real(r8) :: Hbot, zbot
-    real(r8) :: tbot_g, pbot_g, thbot_g, qbot_g, qs_g, es_g, rhos_g
-    real(r8) :: tbot_c, pbot_c, thbot_c, qbot_c, qs_c, es_c, rhos_c
+    real(r8) :: tbot_g, pbot_g, thbot_g, qbot_g, qs_g, rhos_g
+    real(r8) :: tbot_c, pbot_c, thbot_c, qbot_c, qs_c, rhos_c
     real(r8) :: rhos_c_estimate, rhos_g_estimate
-    real(r8) :: dum1,   dum2
 
     character(len=*), parameter :: subname = 'downscale_forcings'
     !-----------------------------------------------------------------------
@@ -223,8 +222,8 @@ contains
 
          thbot_c= thbot_g + (tbot_c - tbot_g)*exp((zbot/Hbot)*(rair/cpair))  ! pot temp calc
 
-         call Qsat(tbot_g,pbot_g,es_g,dum1,qs_g,dum2)
-         call Qsat(tbot_c,pbot_c,es_c,dum1,qs_c,dum2)
+         call Qsat(tbot_g,pbot_g,qs_g)
+         call Qsat(tbot_c,pbot_c,qs_c)
 
          qbot_c = qbot_g*(qs_c/qs_g)
 

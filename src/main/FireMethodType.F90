@@ -1,8 +1,9 @@
-module CNFireMethodMod
+module FireMethodType
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Abstract base class for functions to implement CN and BGC fire model
+  ! Abstract base class for functions to implement fire model and fire data for 
+  ! both FATES and BGC.
   !
   ! Created by Erik Kluzek, following Bill Sack's implementation of polymorphism
   ! !USES:
@@ -10,19 +11,22 @@ module CNFireMethodMod
   private
   !
   ! !PUBLIC TYPES:
-  public :: cnfire_method_type
+  public :: fire_method_type
 
-  type, abstract :: cnfire_method_type
+  type, abstract :: fire_method_type
    contains
 
      ! Initialize the fire datasets
-     procedure(CNFireInit_interface)   , public, deferred :: CNFireInit
+     procedure(FireInit_interface)   , public, deferred :: FireInit
 
      ! Read namelist for the fire datasets
-     procedure(CNFireReadNML_interface), public, deferred :: CNFireReadNML
+     procedure(FireReadNML_interface), public, deferred :: FireReadNML
+
+     ! Read parameters  for the fire datasets
+     procedure(CNFireReadParams_interface), public, deferred :: CNFireReadParams
 
      ! Interpolate the fire datasets
-     procedure(CNFireInterp_interface) , public, deferred :: CNFireInterp
+     procedure(FireInterp_interface) , public, deferred :: FireInterp
 
      ! Figure out the fire area
      procedure(CNFireArea_interface)   , public, deferred :: CNFireArea
@@ -30,7 +34,7 @@ module CNFireMethodMod
      ! Figure out the fire fluxes
      procedure(CNFireFluxes_interface) , public, deferred :: CNFireFluxes
 
-  end type cnfire_method_type
+  end type fire_method_type
 
   abstract interface
 
@@ -48,55 +52,73 @@ module CNFireMethodMod
      !   consistent between different implementations.
      !
      !---------------------------------------------------------------------------
-  subroutine CNFireInit_interface(this, bounds, NLFilename )
+  subroutine FireInit_interface(this, bounds, NLFilename )
     !
     ! !DESCRIPTION:
-    ! Initialize CN Fire datasets
+    ! Initialize Fire datasets
     !
     ! USES
     use decompMod              , only : bounds_type
-    import :: cnfire_method_type
+    import :: fire_method_type
     ! !ARGUMENTS:
-    class(cnfire_method_type)     :: this
+    class(fire_method_type)     :: this
     type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
-  end subroutine CNFireInit_interface
+  end subroutine FireInit_interface
 
-  subroutine CNFireReadNML_interface(this, NLFilename )
+  subroutine FireReadNML_interface(this, NLFilename )
     !
     ! !DESCRIPTION:
     ! Read general fire namelist
     !
     ! USES
-    import :: cnfire_method_type
+    import :: fire_method_type
     ! !ARGUMENTS:
-    class(cnfire_method_type)     :: this
+    class(fire_method_type)     :: this
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
-  end subroutine CNFireReadNML_interface
+  end subroutine FireReadNML_interface
 
-  subroutine CNFireInterp_interface(this, bounds)
+  subroutine FireInterp_interface(this, bounds)
     !
     ! !DESCRIPTION:
-    ! Interpolate CN Fire datasets
+    ! Interpolate Fire datasets
     !
     ! USES
     use decompMod              , only : bounds_type
-    import :: cnfire_method_type
+    import :: fire_method_type
     ! !ARGUMENTS:
-    class(cnfire_method_type)     :: this
+    class(fire_method_type)     :: this
     type(bounds_type), intent(in) :: bounds
     !-----------------------------------------------------------------------
 
-  end subroutine CNFireInterp_interface
+  end subroutine FireInterp_interface
+
+  !-----------------------------------------------------------------------
+  subroutine CNFireReadParams_interface( this, ncid )
+    !
+    ! Read in the constant parameters from the input NetCDF parameter file
+    ! !USES:
+    use ncdio_pio   , only: file_desc_t
+    import :: fire_method_type
+    !
+    ! !ARGUMENTS:
+    implicit none
+    class(fire_method_type)     :: this
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !--------------------------------------------------------------------
+
+  end subroutine CNFireReadParams_interface
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea_interface (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
        waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
+       waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
        cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
@@ -108,24 +130,34 @@ module CNFireMethodMod
     use atm2lndType                        , only : atm2lnd_type
     use EnergyFluxType                     , only : energyflux_type
     use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
-    use WaterDiagnosticBulkType                     , only : waterdiagnosticbulk_type
-    use Wateratm2lndBulkType                     , only : wateratm2lndbulk_type
+    use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
+    use Wateratm2lndBulkType               , only : wateratm2lndbulk_type
+    use WaterStateBulkType                 , only : waterstatebulk_type
+    use SoilStateType                      , only : soilstate_type
+    use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
     use CNVegStateType                     , only : cnveg_state_type
     use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-    import :: cnfire_method_type
+    import :: fire_method_type
     !
     ! !ARGUMENTS:
-    class(cnfire_method_type)                             :: this
+    class(fire_method_type)                             :: this
     type(bounds_type)                     , intent(in)    :: bounds
     integer                               , intent(in)    :: num_soilc       !  number of soil columns in filter
     integer                               , intent(in)    :: filter_soilc(:) !  filter for soil columns
     integer                               , intent(in)    :: num_soilp       !  number of soil patches in filter
     integer                               , intent(in)    :: filter_soilp(:) !  filter for soil patches
+    integer                               , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
+    integer                               , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
+    integer                               , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                               , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
-    type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
-    type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
+    type(waterdiagnosticbulk_type)        , intent(in)    :: waterdiagnosticbulk_inst
+    type(wateratm2lndbulk_type)           , intent(in)    :: wateratm2lndbulk_inst
+    type(waterstatebulk_type)             , intent(in)    :: waterstatebulk_inst
+    type(soilstate_type)                  , intent(in)    :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -143,7 +175,7 @@ module CNFireMethodMod
    !
    ! !DESCRIPTION:
    ! Fire effects routine for coupled carbon-nitrogen code (CN).
-   ! Relies primarily on estimate of fractional area burned, from CNFireArea().
+   ! Relies primarily on estimate of fractional area burned, from FireArea().
    !
    ! Total fire carbon emissions (g C/m2 land area/yr) 
    !  =avg(COL_FIRE_CLOSS)*seconds_per_year + avg(SOMC_FIRE)*seconds_per_year + 
@@ -160,10 +192,10 @@ module CNFireMethodMod
    use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
    use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
    use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
-   import :: cnfire_method_type
+   import :: fire_method_type
    !
    ! !ARGUMENTS:
-   class(cnfire_method_type)                      :: this
+   class(fire_method_type)                      :: this
    type(bounds_type)              , intent(in)    :: bounds
    integer                        , intent(in)    :: num_soilc       ! number of soil columns in filter
    integer                        , intent(in)    :: filter_soilc(:) ! filter for soil columns
@@ -186,8 +218,8 @@ module CNFireMethodMod
    !-----------------------------------------------------------------------
   end subroutine CNFireFluxes_interface
 
- !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
 
   end interface
 
-end module CNFireMethodMod
+end module FireMethodType
