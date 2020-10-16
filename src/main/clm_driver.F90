@@ -1048,26 +1048,9 @@ contains
 
        end if
 
-       if ( use_fates  .and. is_beg_curr_day() ) then ! run fates at the start of each day
 
-          if ( masterproc ) then
-             write(iulog,*)  'clm: calling FATES model ', get_nstep()
-          end if
-
-          call clm_fates%dynamics_driv( nc, bounds_clump,                        &
-               atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
-               water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-               water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
-               frictionvel_inst)
-
-          ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
-          ! call to reweight_wrapup, if it's needed at all.
-          call setFilters( bounds_clump, glc_behavior )
-
-       end if ! use_fates branch
-
-
-       if ( use_fates ) then
+       
+       if ( use_fates) then
 
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
@@ -1091,9 +1074,36 @@ contains
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                 clm_fates, nc)
-       end if
 
-       
+          call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
+               soilbiogeochem_carbonflux_inst, &
+               soilbiogeochem_carbonstate_inst)
+
+          
+          if( is_beg_curr_day() ) then
+
+             ! --------------------------------------------------------------------------
+             ! This is the main call to FATES dynamics
+             ! --------------------------------------------------------------------------
+
+             if ( masterproc ) then
+                write(iulog,*)  'clm: calling FATES model ', get_nstep()
+             end if
+             
+             call clm_fates%dynamics_driv( nc, bounds_clump,                        &
+                  atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
+                  water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
+                  water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
+                  frictionvel_inst)
+             
+             ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
+             ! call to reweight_wrapup, if it's needed at all.
+             call setFilters( bounds_clump, glc_behavior )
+
+          end if
+             
+       end if ! use_fates branch
+
        ! ============================================================================
        ! Create summaries of water diagnostic terms
        ! ============================================================================

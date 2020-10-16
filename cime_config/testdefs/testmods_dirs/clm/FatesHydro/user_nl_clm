@@ -1,3 +1,5 @@
+hist_mfilt        = 365
+hist_nhtfrq       = -24
 hist_empty_htapes = .true.
 use_fates_planthydro= .true.
 hist_fincl1       = 'FATES_ERRH2O_SCPF','FATES_TRAN_SCPF',
