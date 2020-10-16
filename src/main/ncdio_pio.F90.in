@@ -1680,9 +1680,9 @@ contains
                    start(2) = nt ; count(2) = 1
                 end if
              end if
+             call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
 #if ({ITYPE}==TYPELOGICAL)
              allocate(idata(size(data)))
-             call pio_seterrorhandling(ncid, PIO_BCAST_ERROR, oldhandle)
              status = pio_get_var(ncid, varid, start(1:n), count(1:n), idata)
              data = (idata == 1)
              if ( any(idata /= 0 .and. idata /= 1) )then
