@@ -156,6 +156,12 @@ contains
      
      real(r8):: dt        ! time step (seconds)
      real(r8):: secspyear ! time step (seconds)
+#ifdef _OPENMP
+     integer, external :: OMP_GET_MAX_THREADS
+     integer :: nthreads  ! Number of threads
+#else
+     integer, parameter :: nthreads = 0 ! Number of threads
+#endif
  
     associate(                          &
      ivt                   => patch%itype                                       , & ! Input:  [integer  (:) ]  patch vegetation type
@@ -985,6 +991,9 @@ contains
     list_gmn_phgmfi                     => cnveg_nitrogenflux_inst%list_gmn_phgmfin , & ! The locations of entries in AKgmvegn mapped into (AKphvegn+AKgmvegn+AKfivegn)
     list_fin_phgmfi                     => cnveg_nitrogenflux_inst%list_fin_phgmfin   & ! The locations of entries in AKfivegn mapped into (AKphvegn+AKgmvegn+AKfivegn)
     )
+#ifdef _OPENMP
+     nthreads = OMP_GET_MAX_THREADS()
+#endif
    !-----------------------------------------------------------------------
     ! set time steps
       call t_startf('CN veg matrix-init')
@@ -1529,7 +1538,7 @@ contains
   ! When no fire, Afi_c*Kfi_c = 0, AKallvegc = Aph_c*Kph_c + Agm_c*Kgm_c
   ! When fire is on, AKallvegc = Aph_c*Kph_c + Agm_c*Kgm_c + Afi_c*Kfi_c
 
-         if(num_actfirep .eq. 0)then
+         if(num_actfirep .eq. 0 .and. nthreads < 2)then
             call AKallvegc%SPMP_AB(num_soilp,filter_soilp,AKphvegc,AKgmvegc,list_ready_phgmc,list_A=list_phc_phgm,list_B=list_gmc_phgm,&
                  NE_AB=NE_AKallvegc,RI_AB=RI_AKallvegc,CI_AB=CI_AKallvegc)
          else
@@ -1671,7 +1680,7 @@ contains
   ! When no fire, Afi_n*Kfi_n = 0, AKallvegn = Aph_n*Kph_n + Agm_n*Kgm_n
   ! When fire is on, AKallvegn = Aph_n*Kph_n + Agm_n*Kgm_n + Afi_n*Kfi_n
 
-         if(num_actfirep .eq. 0)then
+         if(num_actfirep .eq. 0 .and. nthreads < 2)then
             call AKallvegn%SPMP_AB(num_soilp,filter_soilp,AKphvegn,AKgmvegn,list_ready_phgmn,list_A=list_phn_phgm,list_B=list_gmn_phgm,&
                  NE_AB=NE_AKallvegn,RI_AB=RI_AKallvegn,CI_AB=CI_AKallvegn)
          else
