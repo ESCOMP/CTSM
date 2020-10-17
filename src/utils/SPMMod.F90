@@ -1023,8 +1023,8 @@ if(list_ready .and. .not. (present(list_A) .and. present(list_B) .and. present(l
    return
 end if
 if(present(num_actunit_A))then
-   if(num_actunit_A .eq. 0)then
-      write(iulog,*) "error: num_actunit_A cannot be set to 0"
+   if(num_actunit_A < 0)then
+      write(iulog,*) "error: num_actunit_A cannot be less than 0"
       call endrun( subname//" ERROR: bad value for num_actunit_A" )
       return
    end if
@@ -1033,10 +1033,11 @@ if(present(num_actunit_A))then
       call endrun( subname//" ERROR: missing required optional arguments" )
       return
    end if
+   SHR_ASSERT_FL((size(filter_actunit_A) > num_actunit_A), sourcefile, __LINE__)
 end if
 if(present(num_actunit_B))then
-   if(num_actunit_B .eq. 0)then
-      write(iulog,*) "error: num_actunit_B cannot be set to 0"
+   if(num_actunit_B < 0)then
+      write(iulog,*) "error: num_actunit_B cannot be less than 0"
       call endrun( subname//" ERROR: bad value for num_actunit_B" )
       return
    end if
@@ -1045,10 +1046,11 @@ if(present(num_actunit_B))then
       call endrun( subname//" ERROR: missing required optional arguments" )
       return
    end if
+   SHR_ASSERT_FL((size(filter_actunit_B) > num_actunit_B), sourcefile, __LINE__)
 end if
 if(present(num_actunit_C))then
-   if(num_actunit_C .eq. 0)then
-      write(iulog,*) "error: num_actunit_C cannot be set to 0"
+   if(num_actunit_C < 0)then
+      write(iulog,*) "error: num_actunit_C cannot be less than 0"
       call endrun( subname//" ERROR: bad value for num_actunit_C" )
       return
    end if
@@ -1057,6 +1059,7 @@ if(present(num_actunit_C))then
       call endrun( subname//" ERROR: missing required optional arguments" )
       return
    end if
+   SHR_ASSERT_FL((size(filter_actunit_C) > num_actunit_C), sourcefile, __LINE__)
 end if
 
 if(.not. list_ready)then
