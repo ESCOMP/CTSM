@@ -193,7 +193,7 @@ contains
          units='mm/s', &
          avgflag='A', &
          long_name=this%info%lname('hydraulic redistribution'), &
-         ptr_patch=this%qflx_hydr_redist_patch, set_spec=spval, l2g_scale_type='veg', default='inactive')
+         ptr_patch=this%qflx_hydr_redist_patch, set_spec=spval, l2g_scale_type='veg', default='active')
 
     this%qflx_snowindunload_patch(begp:endp) = spval
     call hist_addfld1d ( &

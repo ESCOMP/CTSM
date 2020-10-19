@@ -249,11 +249,11 @@ contains
        this%vegwp_ln_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='VEGWPLN',  units='mm', type2d='nvegwcs', &
             avgflag='A', long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', &
-            ptr_patch=this%vegwp_ln_patch)
+            ptr_patch=this%vegwp_ln_patch, default='active')
        this%vegwp_pd_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='VEGWPPD',  units='mm', type2d='nvegwcs', avgflag='A', &
             long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', &
-            ptr_patch=this%vegwp_pd_patch)
+            ptr_patch=this%vegwp_pd_patch, default='active')
     end if
 
   end subroutine InitHistory
@@ -543,6 +543,17 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fsun', xtype=ncd_double,  &
          dim1name='pft', long_name='sunlit fraction of canopy', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%fsun_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='VEGWPLN', xtype=ncd_double,  &
+         dim1name='pft', dim2name='vegwcs', &                                                                                                                                        
+         long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', units='mm', &
+         interpinic_flag='skip', readvar=readvar, data=this%vegwp_ln_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='VEGWPPD', xtype=ncd_double,  &
+         dim1name='pft', dim2name='vegwcs', &
+         long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', units='mm', &
+         interpinic_flag='skip', readvar=readvar, data=this%vegwp_pd_patch)
+
 
     if (flag=='read' )then
        do p = bounds%begp,bounds%endp

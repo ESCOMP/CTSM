@@ -380,7 +380,7 @@ contains
     this%vpd_can_patch(begp:endp) = spval
     call hist_addfld1d (fname='VPD_CAN', units='kPa', &
          avgflag='A', long_name='canopy vapor pressure deficit', &
-         ptr_patch=this%vpd_can_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%vpd_can_patch, set_spec=spval, default='active')
 
 
 
@@ -934,6 +934,13 @@ contains
          dim1name='pft', long_name='canopy profile of tpu', &
          units='umol/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%lutpu25top_patch)    
+
+   call restartvar(ncid=ncid, flag=flag, varname='VPD_CAN', xtype=ncd_double,  &
+         dim1name='pft', long_name='canopy vapor pressure deficit', &
+         units='kPa', &                                             
+         interpinic_flag='interp', readvar=readvar, data=this%vpd_can_patch)
+
+
 
   end subroutine Restart
 
