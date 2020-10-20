@@ -140,6 +140,12 @@ module ncdio_pio
      module procedure ncd_inqvdname_byName
   end interface
 
+  interface read_darray_dispatcher
+     !TYPE int,double,logical
+     !DIMS 1,2,3
+     module procedure read_darray_{TYPE}_dispatcher_{DIMS}
+  end interface read_darray_dispatcher
+
   private :: ncd_getiodesc      ! obtain iodesc
   private :: scam_field_offsets ! get offset to proper lat/lon gridcell for SCAM
 
@@ -1719,16 +1725,7 @@ contains
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-             if(xtype == PIO_INT) then
-                call read_darray_{TYPE}_from_int_1(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-             elseif(xtype == PIO_REAL) then
-                call read_darray_{TYPE}_from_real_1(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-             elseif(xtype == PIO_DOUBLE) then
-                call read_darray_{TYPE}_from_double_1(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-             else
-                   call shr_sys_abort(' ERROR: unrecognised type in read'//errMsg(sourcefile, __LINE__))
-
-             endif
+             call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, data)
 
           end if
        end if
@@ -1920,15 +1917,7 @@ contains
                 call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                      xtype, iodnum, switchdim=.true.)
                 iodesc_plus => iodesc_list(iodnum)
-                if(xtype == PIO_INT) then
-                   call read_darray_{TYPE}_from_int_2(ncid, vardesc, iodesc_plus%iodesc, varname, temp)
-                elseif(xtype == PIO_REAL) then
-                   call read_darray_{TYPE}_from_real_2(ncid, vardesc, iodesc_plus%iodesc, varname, temp)
-                elseif(xtype == PIO_DOUBLE) then
-                   call read_darray_{TYPE}_from_double_2(ncid, vardesc, iodesc_plus%iodesc, varname, temp)
-                else
-                   call shr_sys_abort(' ERROR: unrecognised type in read'//errMsg(sourcefile, __LINE__))
-                endif
+                call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, temp)
                 do j = lb2,ub2
                    do i = lb1,ub1
                       data(i,j) = temp(j,i)
@@ -1938,16 +1927,8 @@ contains
                 call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                      xtype, iodnum)
                 iodesc_plus => iodesc_list(iodnum)
+                call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, data)
 
-                if(xtype == PIO_INT) then
-                   call read_darray_{TYPE}_from_int_2(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-                elseif(xtype == PIO_REAL) then
-                   call read_darray_{TYPE}_from_real_2(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-                elseif(xtype == PIO_DOUBLE) then
-                   call read_darray_{TYPE}_from_double_2(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-                else
-                   call shr_sys_abort(' ERROR: unrecognised type in read'//errMsg(sourcefile, __LINE__))
-                endif
              end if
           end if
 #if ({ITYPE}==TYPEDOUBLE)
@@ -2141,16 +2122,7 @@ contains
              if (present(nt)) then
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
-
-                if(xtype == PIO_INT) then
-                   call read_darray_{TYPE}_from_int_3(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-                elseif(xtype == PIO_REAL) then
-                   call read_darray_{TYPE}_from_real_3(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-                elseif(xtype == PIO_DOUBLE) then
-                   call read_darray_{TYPE}_from_double_3(ncid, vardesc, iodesc_plus%iodesc, varname, data)
-                else
-                   call shr_sys_abort(' ERROR: unrecognised type in read'//errMsg(sourcefile, __LINE__))
-                endif
+             call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, data)
 
           end if
        end if
@@ -2193,6 +2165,42 @@ contains
     endif
 
   end subroutine ncd_io_3d_{TYPE}
+
+  !-----------------------------------------------------------------------
+  !TYPE int,double,logical
+  !DIMS 1,2,3
+  subroutine read_darray_{TYPE}_dispatcher_{DIMS}(ncid, vardesc, iodesc, varname, xtype, data)
+    !
+    ! !DESCRIPTION:
+    ! Dispatch to the appropriate read_darray routine based on xtype (the type of var in file)
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(inout) :: ncid
+    type(var_desc_t), intent(inout) :: vardesc
+    type(io_desc_t), intent(inout) :: iodesc
+    character(len=*), intent(in) :: varname
+    integer, intent(in) :: xtype
+    {VTYPE}, pointer :: data{DIMSTR}
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'read_darray_{TYPE}_dispatcher_{DIMS}'
+    !-----------------------------------------------------------------------
+
+    select case (xtype)
+    case (PIO_INT)
+       call read_darray_{TYPE}_from_int_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    case (PIO_REAL)
+       call read_darray_{TYPE}_from_real_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    case (PIO_DOUBLE)
+       call read_darray_{TYPE}_from_double_{DIMS}(ncid, vardesc, iodesc, varname, data)
+    case default
+       write(iulog,*) subname//' ERROR: unrecognized type in read: ', xtype
+       call shr_sys_abort(' ERROR: unrecognized type in read '//errMsg(sourcefile, __LINE__))
+    end select
+
+  end subroutine read_darray_{TYPE}_dispatcher_{DIMS}
+
 
   !------------------------------------------------------------------------
   !TYPE int,double,logical
