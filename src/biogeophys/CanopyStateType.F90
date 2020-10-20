@@ -544,15 +544,6 @@ contains
          dim1name='pft', long_name='sunlit fraction of canopy', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%fsun_patch)
 
-    call restartvar(ncid=ncid, flag=flag, varname='VEGWPLN', xtype=ncd_double,  &
-         dim1name='pft', dim2name='vegwcs', &                                                                                                                                        
-         long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', units='mm', &
-         interpinic_flag='skip', readvar=readvar, data=this%vegwp_ln_patch)
-
-    call restartvar(ncid=ncid, flag=flag, varname='VEGWPPD', xtype=ncd_double,  &
-         dim1name='pft', dim2name='vegwcs', &
-         long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', units='mm', &
-         interpinic_flag='skip', readvar=readvar, data=this%vegwp_pd_patch)
 
 
     if (flag=='read' )then
@@ -568,6 +559,16 @@ contains
             dim1name='pft', dim2name='vegwcs', switchdim=.true., &
             long_name='vegetation water matric potential', units='mm', &
             interpinic_flag='interp', readvar=readvar, data=this%vegwp_patch) 
+
+       call restartvar(ncid=ncid, flag=flag, varname='VEGWPLN', xtype=ncd_double,  &
+            dim1name='pft', dim2name='vegwcs', &                                                                                                                                        
+            long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', units='mm', &
+            interpinic_flag='skip', readvar=readvar, data=this%vegwp_ln_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='VEGWPPD', xtype=ncd_double,  &
+            dim1name='pft', dim2name='vegwcs', &
+            long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', units='mm', &
+            interpinic_flag='skip', readvar=readvar, data=this%vegwp_pd_patch)
 
     end if
 
