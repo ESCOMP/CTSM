@@ -1,4 +1,109 @@
 ===============================================================
+Tag name:  ctsm5.1.dev009
+Originator(s):  negins (Negin Sobhani,UCAR/TSS,303-497-1224)
+Date: Wed Oct 21 11:14:25 MDT 2020
+One-line Summary: BFB changes for Perturbed Parameter Ensemble and  Hydraulic redistribution
+
+Purpose of changes
+------------------
+
+Some BFB changes for PPE work and Hydraulic redistribution
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): [If none, remove this line]
+	- resolves ESCOMP/CTSM#881
+	- resolves ESCOMP/CTSM#1020
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):  
+	- maxpatch_pft is removed from namelist 
+
+Changes made to namelist defaults (e.g., changed parameter values): None
+
+Changes to the datasets (e.g., parameter, surface or initial files): None
+
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): None
+
+Changes to tests or testing:
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - None
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok 
+    izumi ------- ok
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here: N/A
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ Four new fields regarding plant hydraulic processes has been added:
+
+	- QHR (patch-level hydraulic redistribution)
+	- VEGWPLN (local noon vegetation water potential)
+	- VEGWPPD (predawn vegetation water potential)
+	- VPD_CAN: canopy vapor pressure deficit (functional input to Medlyn model)
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): None
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1187
+https://github.com/ESCOMP/CTSM/pull/1126
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev008
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Oct  7 11:48:30 MDT 2020
