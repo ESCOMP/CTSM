@@ -720,8 +720,11 @@ contains
     call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
     call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
     call check_dim(ncid, 'levurb'  , nlevurb)
-    call check_dim(ncid, 'levmaxurbgrnd' , nlevmaxurbgrnd, msg=msg)
     call check_dim(ncid, 'levlak'  , nlevlak) 
+    ! NOTE(wjs, 2020-10-21) We deliberately do NOT check 'levmaxurbgrnd' against
+    ! nlevmaxurbgrnd. This is largely for the sake of backwards compatibility (to support
+    ! old restart files that do not have 'levmaxurbgrnd'). But in addition, that check
+    ! seems unnecessary since we already check both levgrnd and levurb.
 
   end subroutine restFile_dimcheck
 
