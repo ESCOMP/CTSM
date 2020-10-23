@@ -525,18 +525,41 @@ ptch: do fp = 1,num_soilp
                ! bounds. Zeroing out these small pools and putting them into the flux to the
                ! atmosphere solved many of the crop isotope problems
 
-               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
-               cs_veg%xsmrpool_patch(p)        = 0._r8
-               cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
-               cs_veg%cpool_patch(p)           = 0._r8
-               if(.not. use_matrixcn)then
-                  cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
-                  cs_veg%frootc_patch(p)          = 0._r8
+               if ( .not. dribble_crophrv_xsmrpool_2atm ) then
+                  cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%xsmrpool_patch(p)/dt
+                  cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%cpool_patch(p)/dt
+                  if(.not. use_matrixcn)then
+                     cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) + cs_veg%frootc_patch(p)/dt
+                  else
+                     cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) &
+                       + (1._r8/dt - cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph)) * cs_veg%frootc_patch(p)
+                     cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph) = 1._r8 / dt
+                  end if
+                  ! Save xsmrpool, cpool, frootc to loss state variable for
+                  ! dribbling
                else
-                  cf_veg%xsmrpool_to_atm_patch(p) = cf_veg%xsmrpool_to_atm_patch(p) &
-                    + (1._r8/dt - cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph)) * cs_veg%frootc_patch(p)
-                  cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph) = 1._r8 / dt
-               end if !not use_matrixcn
+                  cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + &
+                                                  cs_veg%xsmrpool_patch(p) + &
+                                                  cs_veg%cpool_patch(p)
+                  if(.not. use_matrixcn)then
+                     cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + cs_veg%frootc_patch(p)
+                  else
+                     cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) &
+                       + (1._r8/dt - cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph)) * cs_veg%frootc_patch(p)
+                     cf_veg%matrix_phtransfer_patch(p,cf_veg%ifroot_to_iout_ph) = 1._r8 / dt
+                  end if
+               end if
+               cs_veg%frootc_patch(p)          = 0._r8
+               cs_veg%xsmrpool_patch(p)        = 0._r8
+               cs_veg%cpool_patch(p)           = 0._r8
+               ! Slowly release xsmrpool to atmosphere
+               if ( dribble_crophrv_xsmrpool_2atm ) then
+                  ! calculate flux of xsmrpool loss to atm
+                  cf_veg%xsmrpool_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
+
+                  ! update xsmrpool loss state
+                  cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) - cf_veg%xsmrpool_to_atm_patch(p) * dt
+               end if
             end if
          end if
 
