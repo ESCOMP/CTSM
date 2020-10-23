@@ -57,6 +57,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
 <spinup_state clm_accelerated_spinup="off"                               >0</spinup_state>
 
+<for_testing_run_ncdiopio_tests>.false.</for_testing_run_ncdiopio_tests>
+
 <!-- In accelerated spinup mode reduce the amount of history output -->
 <hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."

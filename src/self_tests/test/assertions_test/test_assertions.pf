@@ -1,0 +1,157 @@
+module test_assertions
+
+  ! Tests of Assertions
+
+  use pfunit_mod
+  use Assertions
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestAssertions
+     character(len=:), allocatable :: expected_msg  ! expected error message for failures
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestAssertions
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestAssertions), intent(inout) :: this
+
+    this%expected_msg = endrun_msg('ERROR in assert_equal')
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestAssertions), intent(inout) :: this
+  end subroutine tearDown
+
+  @Test
+  subroutine test_assertEqual_1dDouble_passes(this)
+    class(TestAssertions), intent(inout) :: this
+    real(r8) :: data1(3), data2(3)
+
+    data1 = [1._r8, 2._r8, 3._r8]
+    data2 = data1
+
+    ! Just make sure this doesn't abort
+    call assert_equal(data1, data2, msg=' ')
+  end subroutine test_assertEqual_1dDouble_passes
+
+  @Test
+  subroutine test_assertEqual_1dDouble_fails(this)
+    class(TestAssertions), intent(inout) :: this
+    real(r8) :: data1(3), data2(3)
+
+    data1 = [1._r8, 2._r8, 3._r8]
+    data2 = [1._r8, 2.1_r8, 3._r8]
+
+    call assert_equal(data1, data2, msg=' ')
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine test_assertEqual_1dDouble_fails
+
+  @Test
+  subroutine test_assertEqual_1dDouble_withTol_passes(this)
+    class(TestAssertions), intent(inout) :: this
+    real(r8) :: data1(3), data2(3)
+
+    data1 = [1._r8, 2._r8, 3._r8]
+    data2 = [1._r8, 2.1_r8, 3._r8]
+
+    ! Just make sure this doesn't abort
+    call assert_equal(data1, data2, msg=' ', abs_tol=0.11_r8)
+  end subroutine test_assertEqual_1dDouble_withTol_passes
+
+  @Test
+  subroutine test_assertEqual_1dDouble_withTol_fails(this)
+    class(TestAssertions), intent(inout) :: this
+    real(r8) :: data1(3), data2(3)
+
+    data1 = [1._r8, 2._r8, 3._r8]
+    data2 = [1._r8, 2.1_r8, 3._r8]
+
+    call assert_equal(data1, data2, msg=' ', abs_tol=0.09_r8)
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine test_assertEqual_1dDouble_withTol_fails
+
+  @Test
+  subroutine test_assertEqual_1dLogical_passes(this)
+    class(TestAssertions), intent(inout) :: this
+    logical :: data1(4), data2(4)
+
+    data1 = [.true., .false., .true., .false.]
+    data2 = data1
+
+    ! Just make sure this doesn't abort
+    call assert_equal(data1, data2, msg=' ')
+  end subroutine test_assertEqual_1dLogical_passes
+
+  @Test
+  subroutine test_assertEqual_1dLogical_fails(this)
+    class(TestAssertions), intent(inout) :: this
+    logical :: data1(4), data2(4)
+
+    data1 = [.true., .false., .true., .false.]
+    data2 = [.true., .true. , .true., .false.]
+
+    call assert_equal(data1, data2, msg=' ')
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine test_assertEqual_1dLogical_fails
+
+  @Test
+  subroutine test_assertEqual_2dDouble_passes(this)
+    class(TestAssertions), intent(inout) :: this
+    real(r8) :: data1(3,2), data2(3,2)
+
+    data1 = reshape([1._r8, 2._r8, 3._r8, 4._r8, 5._r8, 6._r8], [3, 2])
+    data2 = data1
+
+    ! Just make sure this doesn't abort
+    call assert_equal(data1, data2, msg=' ')
+  end subroutine test_assertEqual_2dDouble_passes
+
+  @Test
+  subroutine test_assertEqual_2dDouble_fails(this)
+    class(TestAssertions), intent(inout) :: this
+    real(r8) :: data1(3,2), data2(3,2)
+
+    data1 = reshape([1._r8, 2._r8, 3._r8, 4._r8, 5._r8,  6._r8], [3, 2])
+    data2 = reshape([1._r8, 2._r8, 3._r8, 4._r8, 5.1_r8, 6._r8], [3, 2])
+
+    call assert_equal(data1, data2, msg=' ')
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine test_assertEqual_2dDouble_fails
+
+  @Test
+  subroutine test_assertEqual_3dDouble_passes(this)
+    class(TestAssertions), intent(inout) :: this
+    real(r8) :: data1(4,3,2), data2(4,3,2)
+    integer :: i
+
+    data1 = reshape([(real(i, r8), i = 1, 24)], [4, 3, 2])
+    data2 = data1
+
+    ! Just make sure this doesn't abort
+    call assert_equal(data1, data2, msg=' ')
+  end subroutine test_assertEqual_3dDouble_passes
+
+  @Test
+  subroutine test_assertEqual_3dDouble_fails(this)
+    class(TestAssertions), intent(inout) :: this
+    real(r8) :: data1(4,3,2), data2(4,3,2)
+    integer :: i
+
+    data1 = reshape([(real(i, r8), i = 1, 24)], [4, 3, 2])
+    data2 = data1
+    data2(3,2,2) = data2(3,2,2) + 0.1_r8
+
+    call assert_equal(data1, data2, msg=' ')
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine test_assertEqual_3dDouble_fails
+
+end module test_assertions
