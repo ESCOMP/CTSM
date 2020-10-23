@@ -1008,24 +1008,6 @@ sub setup_cmdl_maxpft {
   }
   $nl_flags->{'maxpft'} = $val;
 
-  $var = "maxpatch_pft";
-  my $group = $definition->get_group_name($var);
-  if ( ! defined($nl->get_variable_value($group, $var)) ) {
-    $val = $nl_flags->{'maxpft'};
-    $nl->set_variable_value($group, $var, $val);
-  }
-  $val = $nl->get_variable_value($group, $var);
-  my @valid_values   = ($maxpatchpft{'.true.'}, $maxpatchpft{'.false.'}  );
-  my $found = 0;
-  foreach my $valid_val ( @valid_values ) {
-     if ( $val == $valid_val ) {
-       $found = 1;
-       last;
-     }
-  }
-  if ( ! $found ) {
-     $log->warning("$var has a value ($val) that is normally NOT valid. Normal valid values are: @valid_values");
-  }
 }
 
 #-------------------------------------------------------------------------------
@@ -1514,6 +1496,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -3920,6 +3903,17 @@ sub setup_logic_fates {
            }
         }
     }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_misc {
+   #
+   # Set some misc options
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
 }
 
 #-------------------------------------------------------------------------------
