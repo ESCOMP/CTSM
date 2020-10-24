@@ -164,7 +164,7 @@ def run_sys_tests(machine, cime_path,
         if not dry_run:
             _make_cs_status_non_suite(testroot, testid_base)
         if testfile:
-            test_args = ['--testfile', testfile]
+            test_args = ['--testfile', os.path.abspath(testfile)]
         elif testlist:
             test_args = testlist
         else:

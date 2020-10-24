@@ -96,6 +96,7 @@ module CNVegetationFacade
   use CNPrecisionControlMod           , only: CNPrecisionControl
   use SoilBiogeochemPrecisionControlMod , only: SoilBiogeochemPrecisionControl
   use GridcellType                    , only : grc
+  use SoilWaterRetentionCurveMod      , only : soil_water_retention_curve_type
   !
   implicit none
   private
@@ -508,8 +509,6 @@ contains
        end if
        call this%n_products_inst%restart(bounds, ncid, flag)
 
-       call this%cnfire_method%CNFireRestart(bounds, ncid, flag)
-
     end if
 
     if (use_cndv) then
@@ -879,6 +878,8 @@ contains
        num_actfirec, filter_actfirec, &
        num_actfirep, filter_actfirep, &
        num_pcropp, filter_pcropp, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp, &
        doalb, &
        soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst,         &
        c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
@@ -887,7 +888,8 @@ contains
        soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
        active_layer_inst, &
        atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
-       wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+       wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
+       soil_water_retention_curve, crop_inst, ch4_inst, &
        photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
        nutrient_competition_method, fireemis_inst)
     !
@@ -912,6 +914,10 @@ contains
     integer                                 , intent(out)   :: filter_actfirep(:)! filter for soil patches on fire
     integer                                 , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
     integer                                 , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
+    integer                                 , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
+    integer                                 , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
+    integer                                 , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                                 , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
     logical                                 , intent(in)    :: doalb             ! true = surface albedo calculation time step
     type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
@@ -931,6 +937,7 @@ contains
     type(canopystate_type)                  , intent(inout) :: canopystate_inst
     type(soilstate_type)                    , intent(inout) :: soilstate_inst
     type(temperature_type)                  , intent(inout) :: temperature_inst
+    class(soil_water_retention_curve_type)  , intent(in)    :: soil_water_retention_curve
     type(crop_type)                         , intent(inout) :: crop_inst
     type(ch4_type)                          , intent(in)    :: ch4_inst
     type(photosyns_type)                    , intent(in)    :: photosyns_inst
@@ -951,7 +958,10 @@ contains
          num_soilp, filter_soilp,                       &
          num_actfirec, filter_actfirec, &
          num_actfirep, filter_actfirep, &
-         num_pcropp, filter_pcropp, doalb,              &
+         num_pcropp, filter_pcropp,                     &
+         num_exposedvegp, filter_exposedvegp,           &
+         num_noexposedvegp, filter_noexposedvegp,       &
+         doalb,              &
          this%cnveg_state_inst,                                                        &
          this%cnveg_carbonflux_inst, this%cnveg_carbonstate_inst,                           &
          this%c13_cnveg_carbonflux_inst, this%c13_cnveg_carbonstate_inst,                   &
@@ -966,7 +976,8 @@ contains
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
          active_layer_inst, &
          atm2lnd_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst,                           &
-         wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst, &
+         wateratm2lndbulk_inst, canopystate_inst, soilstate_inst, temperature_inst, &
+         soil_water_retention_curve, crop_inst, ch4_inst, &
          this%dgvs_inst, photosyns_inst, saturated_excess_runoff_inst, energyflux_inst,          &
          nutrient_competition_method, this%cnfire_method, this%dribble_crophrv_xsmrpool_2atm)
 
