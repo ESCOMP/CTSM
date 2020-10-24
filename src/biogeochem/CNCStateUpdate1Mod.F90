@@ -361,10 +361,10 @@ ptch: do fp = 1,num_soilp
               cf_veg%cpool_to_frootc_storage_patch(p) = cf_veg%cpool_to_frootc_storage_patch(p) &
                  - cf_veg%cpool_to_frootc_storage_resp_patch(p)
          end if
-         cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_leafc_patch(p)*dt &
-                                                                            - cf_veg%cpool_to_leafc_storage_patch(p)*dt &
-                                                                            - cf_veg%cpool_to_frootc_patch(p)*dt &
-                                                                            - cf_veg%cpool_to_frootc_storage_patch(p)*dt 
+         cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_leafc_patch(p)*dt
+         cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_leafc_storage_patch(p)*dt
+         cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_patch(p)*dt
+         cs_veg%cpool_patch(p)             = cs_veg%cpool_patch(p)          - cf_veg%cpool_to_frootc_storage_patch(p)*dt 
         if(.not. use_matrixcn) then
            cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)          + cf_veg%cpool_to_leafc_patch(p)*dt
            cs_veg%leafc_storage_patch(p)   = cs_veg%leafc_storage_patch(p)  + cf_veg%cpool_to_leafc_storage_patch(p)*dt
@@ -382,14 +382,14 @@ ptch: do fp = 1,num_soilp
                cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
                  cf_veg%cpool_to_livestemc_storage_resp_patch(p)
             end if
-            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_livestemc_storage_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_deadstemc_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_deadstemc_storage_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_livecrootc_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_livecrootc_storage_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_deadcrootc_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_deadcrootc_storage_patch(p)*dt 
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_storage_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_deadstemc_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_deadstemc_storage_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livecrootc_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livecrootc_storage_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_deadcrootc_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_deadcrootc_storage_patch(p)*dt 
             if(.not. use_matrixcn)then
                cs_veg%livestemc_patch(p)          = cs_veg%livestemc_patch(p)          + cf_veg%cpool_to_livestemc_patch(p)*dt
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
@@ -409,10 +409,10 @@ ptch: do fp = 1,num_soilp
                cf_veg%cpool_to_livestemc_storage_patch(p) = cf_veg%cpool_to_livestemc_storage_patch(p) - &
                  cf_veg%cpool_to_livestemc_storage_resp_patch(p)
             end if
-            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_livestemc_storage_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_grainc_patch(p)*dt &
-                                                                                    - cf_veg%cpool_to_grainc_storage_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_livestemc_storage_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_patch(p)*dt
+            cs_veg%cpool_patch(p)              = cs_veg%cpool_patch(p)              - cf_veg%cpool_to_grainc_storage_patch(p)*dt
             if(.not. use_matrixcn)then
                cs_veg%livestemc_patch(p)          = cs_veg%livestemc_patch(p)          + cf_veg%cpool_to_livestemc_patch(p)*dt
                cs_veg%livestemc_storage_patch(p)  = cs_veg%livestemc_storage_patch(p)  + cf_veg%cpool_to_livestemc_storage_patch(p)*dt
