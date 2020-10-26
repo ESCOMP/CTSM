@@ -1,0 +1,19 @@
+!------------------------------------------------------------------------
+! Users should ONLY USE user_nl_datm to change namelists variables
+! Users should add all user specific namelist changes below in the form of
+! namelist_var = new_namelist_value
+! Note that any namelist variable from shr_strdata_nml and datm_nml can
+! be modified below using the above syntax
+! User preview_namelists to view (not modify) the output namelist in the
+! directory $CASEROOT/CaseDocs
+! To modify the contents of a stream txt file, first use preview_namelists
+! to obtain the contents of the stream txt files in CaseDocs, and then
+! place a copy of the  modified stream txt file in $CASEROOT with the string
+! user_ prepended.
+!------------------------------------------------------------------------
+ streams = "datm.streams.txt.CLMGSWP3v1.Solar 1901 1901 1920",
+     "datm.streams.txt.CLMGSWP3v1.Precip 1901 1901 1920",
+     "datm.streams.txt.CLMGSWP3v1.TPQW 1901 1901 1920",
+     "datm.streams.txt.presaero.SSP3-7.0 1850 1850 2025",
+     "datm.streams.txt.topo.observed 1 1 1",
+     "datm.streams.txt.co2tseries.SSP3-7.0 1850 1850 2025"

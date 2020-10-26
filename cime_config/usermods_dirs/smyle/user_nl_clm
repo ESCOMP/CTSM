@@ -1,4 +1,15 @@
 dribble_crophrv_xsmrpool_2atm = .true.
 flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.31/landuse.timeseries_0.9x1.25_hist_78pfts_TRENDY_simyr1700-2019_c200803.nc'
-fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.24/landuse.timeseries_0.9x1.25_hist_78pfts_TRENDY_simyr1700-2018_c190814.nc'
+fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.24/surfdata_0.9x1.25_hist_78pfts_TRENDY_simyr1700_c190814.nc'
+
+ model_year_align_ndep = 1850
+ ndep_taxmode = 'limit'
+ stream_year_first_ndep = 1850
+ stream_year_last_ndep = 2025
+ model_year_align_popdens = 1850
+ stream_year_first_popdens = 1850
+ stream_year_last_popdens = 2025
+ model_year_align_urbantv = 1850
+ stream_year_first_urbantv = 1850
+ stream_year_last_urbantv = 2025
 
