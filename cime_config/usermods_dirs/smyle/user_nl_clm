@@ -1,0 +1,4 @@
+dribble_crophrv_xsmrpool_2atm = .true.
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.31/landuse.timeseries_0.9x1.25_hist_78pfts_TRENDY_simyr1700-2019_c200803.nc'
+fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.24/landuse.timeseries_0.9x1.25_hist_78pfts_TRENDY_simyr1700-2018_c190814.nc'
+
