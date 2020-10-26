@@ -53,6 +53,9 @@ module clm_varctl
   !true => no valid land points -- do NOT run
   logical, public :: noland = .false.                                    
 
+  ! true => run tests of ncdio_pio
+  logical, public :: for_testing_run_ncdiopio_tests = .false.
+
   ! Hostname of machine running on
   character(len=256), public :: hostname = ' '                           
 
@@ -67,6 +70,9 @@ module clm_varctl
 
   ! dataset conventions
   character(len=256), public :: conventions = "CF-1.0"                   
+
+  ! component name for filenames (history or restart files)
+  character(len=8), public :: compname = 'clm2'
 
   !----------------------------------------------------------
   ! Unit Numbers
@@ -188,7 +194,10 @@ module clm_varctl
   !----------------------------------------------------------
 
   ! use subgrid fluxes
-  integer,  public :: subgridflag = 1                   
+  logical,  public :: use_subgrid_fluxes = .true.
+
+  ! which snow cover fraction parameterization to use
+  character(len=64), public :: snow_cover_fraction_method
 
   ! true => write global average diagnostics to std out
   logical,  public :: wrtdia       = .false.            
@@ -218,6 +227,10 @@ module clm_varctl
   logical, public :: use_fates = .false.            ! true => use fates
 
   ! These are INTERNAL to the FATES module
+  integer, public            :: fates_parteh_mode = -9                 ! 1 => carbon only
+                                                                       ! 2 => C+N+P (not enabled yet)
+                                                                       ! no others enabled
+
   logical, public            :: use_fates_spitfire = .false.           ! true => use spitfire model
   logical, public            :: use_fates_logging = .false.            ! true => turn on logging module
   logical, public            :: use_fates_planthydro = .false.         ! true => turn on fates hydro
@@ -254,6 +267,12 @@ module clm_varctl
   integer, public :: carbon_resp_opt = 0
 
   !----------------------------------------------------------
+  ! prescribed soil moisture streams switch 
+  !----------------------------------------------------------
+
+  logical, public :: use_soil_moisture_streams = .false. ! true => use prescribed soil moisture stream
+
+  !----------------------------------------------------------
   ! lai streams switch for Sat. Phenology
   !----------------------------------------------------------
 
@@ -264,7 +283,9 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical,           public :: use_bedrock = .false. ! true => use spatially variable soil depth
-  character(len=16), public :: soil_layerstruct = '10SL_3.5m'
+  character(len=16), public :: soil_layerstruct_predefined = 'UNSET'
+  real(r8), public :: soil_layerstruct_userdefined(99) = rundef
+  integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch

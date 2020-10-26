@@ -114,7 +114,6 @@ contains
     !
     ! USES
     use shr_kind_mod   , only : r8 => shr_kind_r8   
-    use shr_assert_mod , only : shr_assert
     use shr_log_mod    , only : errMsg => shr_log_errMsg
     use decompMod      , only : bounds_type
     use abortutils     , only : endrun         
@@ -136,7 +135,7 @@ contains
     integer           :: rooting_profile_varidx      ! Rooting profile variant index to use
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(rootfr) == (/bounds%endp, nlevgrnd/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(rootfr) == (/bounds%endp, nlevgrnd/)), sourcefile, __LINE__)
 
     if (     water_carbon == 'water' ) then 
        rooting_profile_method = rooting_profile_method_water
@@ -180,7 +179,6 @@ contains
     !
     ! USES
     use shr_kind_mod   , only : r8 => shr_kind_r8   
-    use shr_assert_mod , only : shr_assert
     use shr_log_mod    , only : errMsg => shr_log_errMsg   
     use decompMod      , only : bounds_type
     use pftconMod      , only : pftcon
@@ -236,7 +234,6 @@ contains
     !
     ! USES
     use shr_kind_mod   , only : r8 => shr_kind_r8   
-    use shr_assert_mod , only : shr_assert
     use shr_log_mod    , only : errMsg => shr_log_errMsg   
     use decompMod      , only : bounds_type
     use pftconMod      , only : pftcon
@@ -289,7 +286,6 @@ contains
     !
     ! USES
     use shr_kind_mod   , only : r8 => shr_kind_r8   
-    use shr_assert_mod , only : shr_assert
     use shr_log_mod    , only : errMsg => shr_log_errMsg   
     use decompMod      , only : bounds_type
     use pftconMod      , only : pftcon

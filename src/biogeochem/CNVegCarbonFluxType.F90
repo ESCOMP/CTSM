@@ -134,6 +134,9 @@ module CNVegCarbonFluxType
      real(r8), pointer :: frootc_to_litter_patch                    (:)     ! fine root C litterfall (gC/m2/s)
      real(r8), pointer :: livestemc_to_litter_patch                 (:)     ! live stem C litterfall (gC/m2/s)
      real(r8), pointer :: grainc_to_food_patch                      (:)     ! grain C to food for prognostic crop(gC/m2/s)
+     
+     real(r8), pointer :: leafc_to_biofuelc_patch                   (:)     ! leaf C to biofuel C (gC/m2/s)
+     real(r8), pointer :: livestemc_to_biofuelc_patch               (:)     ! livestem C to biofuel C (gC/m2/s)
      real(r8), pointer :: grainc_to_seed_patch                      (:)     ! grain C to seed for prognostic crop(gC/m2/s)
 
      ! maintenance respiration fluxes     
@@ -186,6 +189,8 @@ module CNVegCarbonFluxType
 
      ! growth respiration fluxes                               
      real(r8), pointer :: xsmrpool_to_atm_patch                     (:)     ! excess MR pool harvest mortality (gC/m2/s)
+     real(r8), pointer :: xsmrpool_to_atm_col                       (:)     ! excess MR pool harvest mortality (gC/m2/s) (p2c)
+     real(r8), pointer :: xsmrpool_to_atm_grc                       (:)     ! excess MR pool harvest mortality (gC/m2/s) (p2g)
      real(r8), pointer :: cpool_leaf_gr_patch                       (:)     ! leaf growth respiration (gC/m2/s)
      real(r8), pointer :: cpool_leaf_storage_gr_patch               (:)     ! leaf growth respiration to storage (gC/m2/s)
      real(r8), pointer :: transfer_leaf_gr_patch                    (:)     ! leaf growth respiration from storage (gC/m2/s)
@@ -263,7 +268,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: dwt_conv_cflux_dribbled_grc               (:)     ! (gC/m2/s) dwt_conv_cflux_grc dribbled evenly throughout the year
      real(r8), pointer :: dwt_wood_productc_gain_patch              (:)     ! (gC/m2/s) addition to wood product pools from landcover change; although this is a patch-level flux, it is expressed per unit GRIDCELL area
      real(r8), pointer :: dwt_crop_productc_gain_patch              (:)     ! (gC/m2/s) addition to crop product pools from landcover change; although this is a patch-level flux, it is expressed per unit GRIDCELL area
-     real(r8), pointer :: dwt_slash_cflux_col                       (:)     ! (gC/m2/s) conversion slash flux due to landcover change
+     real(r8), pointer :: dwt_slash_cflux_patch                     (:)     ! (gC/m2/s) conversion slash flux due to landcover change
+     real(r8), pointer :: dwt_slash_cflux_grc                       (:)     ! (gC/m2/s) dwt_slash_cflux_patch summed to the gridcell-level
      real(r8), pointer :: dwt_frootc_to_litr_met_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootc_to_litr_cel_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_frootc_to_litr_lig_c_col              (:,:)   ! (gC/m3/s) fine root to litter due to landcover change
@@ -367,6 +373,7 @@ module CNVegCarbonFluxType
      ! that are dribbled throughout the year
      type(annual_flux_dribbler_type) :: dwt_conv_cflux_dribbler
      type(annual_flux_dribbler_type) :: hrv_xsmrpool_to_atm_dribbler
+     logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -389,12 +396,14 @@ module CNVegCarbonFluxType
 contains
    
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, carbon_type)
+  subroutine Init(this, bounds, carbon_type, dribble_crophrv_xsmrpool_2atm)
 
     class(cnveg_carbonflux_type) :: this
     type(bounds_type), intent(in) :: bounds  
     character(len=3) , intent(in) :: carbon_type ! one of ['c12', c13','c14']
+    logical          , intent(in) :: dribble_crophrv_xsmrpool_2atm
 
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
     call this%InitAllocate ( bounds, carbon_type)
     call this%InitHistory ( bounds, carbon_type )
     call this%InitCold (bounds )
@@ -460,7 +469,7 @@ contains
     allocate(this%hrv_deadcrootc_xfer_to_litter_patch       (begp:endp)) ; this%hrv_deadcrootc_xfer_to_litter_patch       (:) = nan
     allocate(this%hrv_gresp_storage_to_litter_patch         (begp:endp)) ; this%hrv_gresp_storage_to_litter_patch         (:) = nan
     allocate(this%hrv_gresp_xfer_to_litter_patch            (begp:endp)) ; this%hrv_gresp_xfer_to_litter_patch            (:) = nan
-    allocate(this%hrv_xsmrpool_to_atm_patch                 (begp:endp)) ; this%hrv_xsmrpool_to_atm_patch                 (:) = nan
+    allocate(this%hrv_xsmrpool_to_atm_patch                 (begp:endp)) ; this%hrv_xsmrpool_to_atm_patch                 (:) = 0.0_r8
     allocate(this%m_leafc_to_fire_patch                     (begp:endp)) ; this%m_leafc_to_fire_patch                     (:) = nan
     allocate(this%m_leafc_storage_to_fire_patch             (begp:endp)) ; this%m_leafc_storage_to_fire_patch             (:) = nan
     allocate(this%m_leafc_xfer_to_fire_patch                (begp:endp)) ; this%m_leafc_xfer_to_fire_patch                (:) = nan
@@ -595,12 +604,16 @@ contains
     allocate(this%cpool_to_grainc_storage_patch             (begp:endp)) ; this%cpool_to_grainc_storage_patch             (:) = nan
     allocate(this%livestemc_to_litter_patch                 (begp:endp)) ; this%livestemc_to_litter_patch                 (:) = nan
     allocate(this%grainc_to_food_patch                      (begp:endp)) ; this%grainc_to_food_patch                      (:) = nan
+    allocate(this%leafc_to_biofuelc_patch                   (begp:endp)) ; this%leafc_to_biofuelc_patch                   (:) = nan
+    allocate(this%livestemc_to_biofuelc_patch               (begp:endp)) ; this%livestemc_to_biofuelc_patch               (:) = nan
     allocate(this%grainc_to_seed_patch                      (begp:endp)) ; this%grainc_to_seed_patch                      (:) = nan
     allocate(this%grainc_xfer_to_grainc_patch               (begp:endp)) ; this%grainc_xfer_to_grainc_patch               (:) = nan
     allocate(this%cpool_grain_gr_patch                      (begp:endp)) ; this%cpool_grain_gr_patch                      (:) = nan
     allocate(this%cpool_grain_storage_gr_patch              (begp:endp)) ; this%cpool_grain_storage_gr_patch              (:) = nan
     allocate(this%transfer_grain_gr_patch                   (begp:endp)) ; this%transfer_grain_gr_patch                   (:) = nan
-    allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = nan
+    allocate(this%xsmrpool_to_atm_patch                     (begp:endp)) ; this%xsmrpool_to_atm_patch                     (:) = 0.0_r8
+    allocate(this%xsmrpool_to_atm_col                       (begc:endc)) ; this%xsmrpool_to_atm_col                       (:) = 0.0_r8
+    allocate(this%xsmrpool_to_atm_grc                       (begg:endg)) ; this%xsmrpool_to_atm_grc                       (:) = 0.0_r8
     allocate(this%grainc_storage_to_xfer_patch              (begp:endp)) ; this%grainc_storage_to_xfer_patch              (:) = nan
     allocate(this%frootc_alloc_patch                        (begp:endp)) ; this%frootc_alloc_patch                        (:) = nan
     allocate(this%frootc_loss_patch                         (begp:endp)) ; this%frootc_loss_patch                         (:) = nan
@@ -629,7 +642,8 @@ contains
     allocate(this%harvest_c_to_litr_lig_c_col       (begc:endc,1:nlevdecomp_full)); this%harvest_c_to_litr_lig_c_col  (:,:)=nan
     allocate(this%harvest_c_to_cwdc_col             (begc:endc,1:nlevdecomp_full)); this%harvest_c_to_cwdc_col        (:,:)=nan
 
-    allocate(this%dwt_slash_cflux_col               (begc:endc))                  ; this%dwt_slash_cflux_col (:) =nan
+    allocate(this%dwt_slash_cflux_patch             (begp:endp))                  ; this%dwt_slash_cflux_patch        (:) =nan
+    allocate(this%dwt_slash_cflux_grc               (begg:endg))                  ; this%dwt_slash_cflux_grc          (:) =nan
     allocate(this%dwt_frootc_to_litr_met_c_col      (begc:endc,1:nlevdecomp_full)); this%dwt_frootc_to_litr_met_c_col (:,:)=nan
     allocate(this%dwt_frootc_to_litr_cel_c_col      (begc:endc,1:nlevdecomp_full)); this%dwt_frootc_to_litr_cel_c_col (:,:)=nan
     allocate(this%dwt_frootc_to_litr_lig_c_col      (begc:endc,1:nlevdecomp_full)); this%dwt_frootc_to_litr_lig_c_col (:,:)=nan
@@ -696,7 +710,7 @@ contains
     allocate(this%fire_closs_p2c_col      (begc:endc)) ; this%fire_closs_p2c_col      (:) = nan
     allocate(this%fire_closs_col          (begc:endc)) ; this%fire_closs_col          (:) = nan
     allocate(this%wood_harvestc_col       (begc:endc)) ; this%wood_harvestc_col       (:) = nan
-    allocate(this%hrv_xsmrpool_to_atm_col (begc:endc)) ; this%hrv_xsmrpool_to_atm_col (:) = nan 
+    allocate(this%hrv_xsmrpool_to_atm_col (begc:endc)) ; this%hrv_xsmrpool_to_atm_col (:) = 0.0_r8
     allocate(this%tempsum_npp_patch       (begp:endp)) ; this%tempsum_npp_patch       (:) = nan
     allocate(this%annsum_npp_patch        (begp:endp)) ; this%annsum_npp_patch        (:) = nan
     allocate(this%tempsum_litfall_patch   (begp:endp)) ; this%tempsum_litfall_patch   (:) = nan
@@ -822,6 +836,16 @@ contains
           call hist_addfld1d (fname='GRAINC_TO_FOOD', units='gC/m^2/s', &
                avgflag='A', long_name='grain C to food', &
                ptr_patch=this%grainc_to_food_patch)
+
+          this%leafc_to_biofuelc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_TO_BIOFUELC', units='gC/m^2/s', &
+               avgflag='A', long_name='leaf C to biofuel C', &
+               ptr_patch=this%leafc_to_biofuelc_patch)
+
+          this%livestemc_to_biofuelc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_TO_BIOFUELC', units='gC/m^2/s', &
+               avgflag='A', long_name='livestem C to biofuel C', &
+               ptr_patch=this%livestemc_to_biofuelc_patch)
 
           this%grainc_to_seed_patch(begp:endp) = spval
           call hist_addfld1d (fname='GRAINC_TO_SEED', units='gC/m^2/s', &
@@ -2876,10 +2900,19 @@ contains
             '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
             ptr_patch=this%dwt_wood_productc_gain_patch, default='inactive')
 
-        this%dwt_slash_cflux_col(begc:endc) = spval
-        call hist_addfld1d (fname='DWT_SLASH_CFLUX', units='gC/m^2/s', &
-             avgflag='A', long_name='slash C flux to litter and CWD due to land use', &
-             ptr_col=this%dwt_slash_cflux_col)
+       this%dwt_slash_cflux_grc(begg:endg) = spval
+       call hist_addfld1d (fname='DWT_SLASH_CFLUX', units='gC/m^2/s', &
+            avgflag='A', &
+            long_name='slash C flux (to litter diagnostic only) (0 at all times except first timestep of year)', &
+            ptr_gcell=this%dwt_slash_cflux_grc)
+
+       this%dwt_slash_cflux_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DWT_SLASH_CFLUX_PATCH', units='gC/m^2/s', &
+            avgflag='A', &
+            long_name='patch-level slash C flux (to litter diagnostic only) ' // &
+            '(0 at all times except first timestep of year) ' // &
+            '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+            ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        this%dwt_frootc_to_litr_met_c_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='DWT_FROOTC_TO_LITR_MET_C', units='gC/m^2/s',  type2d='levdcmp', &
@@ -3050,10 +3083,19 @@ contains
             long_name='C13 conversion C flux (immediate loss to atm), dribbled throughout the year', &
             ptr_gcell=this%dwt_conv_cflux_dribbled_grc, default='inactive')
 
-       this%dwt_slash_cflux_col(begc:endc) = spval
-       call hist_addfld1d (fname='C13_DWT_SLASH_CFLUX', units='gC/m^2/s', &
-            avgflag='A', long_name='C13 slash C flux to litter and CWD due to land use', &
-            ptr_col=this%dwt_slash_cflux_col, default='inactive')
+       this%dwt_slash_cflux_grc(begg:endg) = spval
+       call hist_addfld1d (fname='C13_DWT_SLASH_CFLUX', units='gC13/m^2/s', &
+            avgflag='A', long_name='C13 slash C flux (to litter diagnostic only)' // &
+            '(0 at all times except first timestep of year)', &
+            ptr_gcell=this%dwt_slash_cflux_grc, default='inactive')
+
+       this%dwt_slash_cflux_patch(begp:endp) = spval
+       call hist_addfld1d (fname='C13_DWT_SLASH_CFLUX_PATCH', units='gC13/m^2/s', &
+            avgflag='A', &
+            long_name='patch-level C13 slash C flux (to litter diagnostic only) ' // &
+            '(0 at all times except first timestep of year) ' // &
+            '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+            ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        this%dwt_frootc_to_litr_met_c_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='C13_DWT_FROOTC_TO_LITR_MET_C', units='gC13/m^2/s',  type2d='levdcmp', &
@@ -3206,10 +3248,19 @@ contains
             long_name='C14 conversion C flux (immediate loss to atm), dribbled throughout the year', &
             ptr_gcell=this%dwt_conv_cflux_dribbled_grc, default='inactive')
 
-       this%dwt_slash_cflux_col(begc:endc) = spval
-       call hist_addfld1d (fname='C14_DWT_SLASH_CFLUX', units='gC/m^2/s', &
-            avgflag='A', long_name='C14 slash C flux to litter and CWD due to land use', &
-            ptr_col=this%dwt_slash_cflux_col, default='inactive')
+       this%dwt_slash_cflux_grc(begg:endg) = spval
+       call hist_addfld1d (fname='C14_DWT_SLASH_CFLUX', units='gC14/m^2/s', &
+            avgflag='A', long_name='C14 slash C flux (to litter diagnostic only)' // &
+            '(0 at all times except first timestep of year)', &
+            ptr_gcell=this%dwt_slash_cflux_grc, default='inactive')
+
+       this%dwt_slash_cflux_patch(begp:endp) = spval
+       call hist_addfld1d (fname='C14_DWT_SLASH_CFLUX_PATCH', units='gC14/m^2/s', &
+            avgflag='A', &
+            long_name='patch-level C14 slash C flux (to litter diagnostic only)' // &
+            '(0 at all times except first timestep of year) ' // &
+            '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
+            ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        this%dwt_frootc_to_litr_met_c_col(begc:endc,:) = spval
        call hist_addfld_decomp (fname='C14_DWT_FROOTC_TO_LITR_MET_C', units='gC14/m^2/s',  type2d='levdcmp', &
@@ -3364,7 +3415,6 @@ contains
        ! also initialize dynamic landcover fluxes so that they have
        ! real values on first timestep, prior to calling pftdyn_cnbal
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          this%dwt_slash_cflux_col(c) = 0._r8
           do j = 1, nlevdecomp_full
              this%dwt_frootc_to_litr_met_c_col(c,j) = 0._r8
              this%dwt_frootc_to_litr_cel_c_col(c,j) = 0._r8
@@ -3483,7 +3533,7 @@ contains
             dim1name='pft', &
             long_name='grain C to food', units='gC/m2/s', &
             interpinic_flag='interp', readvar=readvar, data=this%grainc_to_food_patch)
-
+            
        call restartvar(ncid=ncid, flag=flag,  varname='cpool_to_grainc', xtype=ncd_double,  &
             dim1name='pft', &
             long_name='allocation to grain C', units='gC/m2/s', &
@@ -3820,6 +3870,10 @@ contains
           this%xsmrpool_to_atm_patch(i)         = value_patch
           this%livestemc_to_litter_patch(i)     = value_patch
           this%grainc_to_food_patch(i)          = value_patch
+
+          this%leafc_to_biofuelc_patch(i)       = value_patch
+          this%livestemc_to_biofuelc_patch(i)   = value_patch
+          
           this%grainc_to_seed_patch(i)          = value_patch
           this%grainc_xfer_to_grainc_patch(i)   = value_patch
           this%cpool_to_grainc_patch(i)         = value_patch
@@ -3880,6 +3934,7 @@ contains
        this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
+
     end do
 
     do fi = 1,num_patch
@@ -3928,7 +3983,6 @@ contains
        this%litfire_col(i)             = value_column
        this%somfire_col(i)             = value_column
        this%totfire_col(i)             = value_column
-       this%fire_closs_col(i)          = value_column
 
        ! Zero p2c column fluxes
        this%rr_col(i)                  = value_column  
@@ -3938,8 +3992,10 @@ contains
        this%fire_closs_col(i)          = value_column 
        this%wood_harvestc_col(i)       = value_column 
        this%hrv_xsmrpool_to_atm_col(i) = value_column
-
        this%nep_col(i)                 = value_column
+       if ( use_crop )then
+          this%xsmrpool_to_atm_col(i)  = value_column
+       end if
 
     end do
 
@@ -3965,10 +4021,7 @@ contains
        this%dwt_seedc_to_leaf_grc(g)        = 0._r8
        this%dwt_seedc_to_deadstem_grc(g)    = 0._r8
        this%dwt_conv_cflux_grc(g)           = 0._r8
-    end do
-
-    do c = bounds%begc,bounds%endc
-       this%dwt_slash_cflux_col(c)              = 0._r8
+       this%dwt_slash_cflux_grc(g)           = 0._r8
     end do
 
     do j = 1, nlevdecomp_full
@@ -3994,7 +4047,7 @@ contains
     ! Perform patch and column-level carbon summary calculations
     !
     ! !USES:
-    use clm_time_manager                   , only: get_step_size
+    use clm_time_manager                   , only: get_step_size_real
     use clm_varcon                         , only: secspday
     use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c, c2g
@@ -4027,11 +4080,11 @@ contains
     real(r8) :: dwt_conv_cflux_delta_grc(bounds%begg:bounds%endg)    ! dwt_conv_cflux_grc expressed as a total delta (not a flux) (gC/m2)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(product_closs_grc) == (/bounds%endg/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(product_closs_grc) == (/bounds%endg/)), sourcefile, __LINE__)
 
     ! calculate patch-level summary carbon fluxes and states
 
-    dtime = get_step_size()
+    dtime = get_step_size_real()
 
     do fp = 1,num_soilp
        p = filter_soilp(fp)
@@ -4117,8 +4170,9 @@ contains
        if ( use_crop .and. patch%itype(p) >= npcropmin )then
           this%ar_patch(p) =           &
                this%mr_patch(p)      + &
-               this%gr_patch(p)      + &
-               this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
+               this%gr_patch(p)
+          if ( .not. this%dribble_crophrv_xsmrpool_2atm ) this%ar_patch(p) = this%ar_patch(p) + &
+                                             this%xsmrpool_to_atm_patch(p) ! xsmr... is -ve (slevis)
        else         
              this%ar_patch(p) =           &
                   this%mr_patch(p)      + &
@@ -4401,6 +4455,18 @@ contains
          this%hrv_xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
          this%hrv_xsmrpool_to_atm_col(bounds%begc:bounds%endc))
 
+    if (use_crop .and. this%dribble_crophrv_xsmrpool_2atm) then
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%xsmrpool_to_atm_patch(bounds%begp:bounds%endp), &
+            this%xsmrpool_to_atm_col(bounds%begc:bounds%endc))
+
+       call c2g( bounds = bounds, &
+            carr = this%xsmrpool_to_atm_col(bounds%begc:bounds%endc), &
+            garr = this%xsmrpool_to_atm_grc(bounds%begg:bounds%endg), &
+            c2l_scale_type = 'unity', &
+            l2g_scale_type = 'unity')
+    end if
+
     call p2c(bounds, num_soilc, filter_soilc, &
          this%fire_closs_patch(bounds%begp:bounds%endp), &
          this%fire_closs_p2c_col(bounds%begc:bounds%endc))
@@ -4545,6 +4611,7 @@ contains
        this%nbp_grc(g) = &
             -this%nee_grc(g)        - &
             this%landuseflux_grc(g)
+       if ( this%dribble_crophrv_xsmrpool_2atm ) this%nbp_grc(g) = this%nbp_grc(g) - this%xsmrpool_to_atm_grc(g)
     end do
 
     ! coarse woody debris C loss

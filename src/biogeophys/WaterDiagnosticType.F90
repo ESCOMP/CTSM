@@ -20,6 +20,7 @@ module WaterDiagnosticType
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d
   use WaterStateType, only : waterstate_type
+  use WaterFluxType, only : waterflux_type
   !
   implicit none
   save
@@ -177,7 +178,7 @@ contains
          units='kg/m2', &
          avgflag='A', &
          long_name=this%info%lname('soil liquid water + ice in top 10cm of soil (veg landunits only)'), &
-         ptr_col=this%h2osoi_liqice_10cm_col, set_urb=spval, set_lake=spval, l2g_scale_type='veg')
+         ptr_col=this%h2osoi_liqice_10cm_col, l2g_scale_type='veg')
 
     this%tws_grc(begg:endg) = spval
     call hist_addfld1d ( &
@@ -331,7 +332,10 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine Summary(this, bounds, num_soilp, filter_soilp, waterstate_inst)
+  subroutine Summary(this, bounds, &
+       num_soilp, filter_soilp, &
+       num_allc, filter_allc, &
+       waterstate_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
     ! Compute end-of-timestep summaries of water diagnostic terms
@@ -341,7 +345,10 @@ contains
     type(bounds_type)           , intent(in)    :: bounds
     integer                     , intent(in)    :: num_soilp       ! number of patches in soilp filter
     integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer                     , intent(in)    :: num_allc        ! number of columns in allc filter
+    integer                     , intent(in)    :: filter_allc(:)  ! filter for all columns
     class(waterstate_type)      , intent(in)    :: waterstate_inst
+    class(waterflux_type)       , intent(in)    :: waterflux_inst
     !
     ! !LOCAL VARIABLES:
     integer :: fp, p

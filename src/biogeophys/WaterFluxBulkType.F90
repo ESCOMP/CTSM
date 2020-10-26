@@ -29,9 +29,7 @@ module WaterFluxBulkType
      real(r8), pointer :: qflx_phs_neg_col         (:)   ! col sum of negative hydraulic redistribution fluxes (mm H2O/s) [+]
 
      real(r8), pointer :: qflx_snowindunload_patch (:)   ! patch canopy snow wind unloading (mm H2O /s)
-     real(r8), pointer :: qflx_snowindunload_col   (:)   ! col canopy snow wind unloading (mm H2O /s)
      real(r8), pointer :: qflx_snotempunload_patch (:)   ! patch canopy snow temp unloading (mm H2O /s) 
-     real(r8), pointer :: qflx_snotempunload_col   (:)   ! col canopy snow temp unloading (mm H2O /s) 
 
      real(r8), pointer :: qflx_ev_snow_patch       (:)   ! patch evaporation heat flux from snow       (mm H2O/s) [+ to atm]
      real(r8), pointer :: qflx_ev_snow_col         (:)   ! col evaporation heat flux from snow         (mm H2O/s) [+ to atm]
@@ -42,11 +40,11 @@ module WaterFluxBulkType
 
      real(r8), pointer :: qflx_adv_col             (:,:) ! col advective flux across different soil layer interfaces [mm H2O/s] [+ downward]
      real(r8), pointer :: qflx_rootsoi_col         (:,:) ! col root and soil water exchange [mm H2O/s] [+ into root]
+     real(r8), pointer :: qflx_hydr_redist_patch   (:)   ! patch hydraulic redistribution [mm H2O/s]
      real(r8), pointer :: qflx_sat_excess_surf_col (:)   ! col surface runoff due to saturated surface (mm H2O /s)
      real(r8), pointer :: qflx_infl_excess_col     (:)   ! col infiltration excess runoff (mm H2O /s)
      real(r8), pointer :: qflx_infl_excess_surf_col(:)   ! col surface runoff due to infiltration excess (mm H2O /s)
      real(r8), pointer :: qflx_h2osfc_surf_col     (:)   ! col surface water runoff (mm H2O /s)
-     real(r8), pointer :: qflx_rain_plus_snomelt_col(:)  ! col rain plus snow melt falling on the soil (mm/s)
      real(r8), pointer :: qflx_in_soil_col         (:)   ! col surface input to soil (mm/s)
      real(r8), pointer :: qflx_in_soil_limited_col (:)   ! col surface input to soil, limited by max infiltration rate (mm/s)
      real(r8), pointer :: qflx_h2osfc_drain_col    (:)   ! col bottom drainage from h2osfc (mm/s)
@@ -114,11 +112,9 @@ contains
 
 
     allocate(this%qflx_snowindunload_patch (begp:endp))              ; this%qflx_snowindunload_patch (:)   = nan
-    allocate(this%qflx_snowindunload_col   (begp:endp))              ; this%qflx_snowindunload_col   (:)   = nan
     allocate(this%qflx_snotempunload_patch (begp:endp))              ; this%qflx_snotempunload_patch (:)   = nan
-    allocate(this%qflx_snotempunload_col   (begp:endp))              ; this%qflx_snotempunload_col   (:)   = nan
-
-    allocate(this%qflx_phs_neg_col         (begc:endc))              ; this%qflx_phs_neg_col       (:)   = nan
+    allocate(this%qflx_hydr_redist_patch   (begp:endp))              ; this%qflx_hydr_redist_patch   (:)   = nan
+    allocate(this%qflx_phs_neg_col         (begc:endc))              ; this%qflx_phs_neg_col         (:)   = nan
 
     allocate( this%qflx_ev_snow_patch      (begp:endp))              ; this%qflx_ev_snow_patch       (:)   = nan
     allocate( this%qflx_ev_snow_col        (begc:endc))              ; this%qflx_ev_snow_col         (:)   = nan
@@ -132,7 +128,6 @@ contains
     allocate(this%qflx_rootsoi_col         (begc:endc,1:nlevsoi))    ; this%qflx_rootsoi_col         (:,:) = nan
     allocate(this%qflx_sat_excess_surf_col (begc:endc))              ; this%qflx_sat_excess_surf_col (:)   = nan
     allocate(this%qflx_infl_excess_col     (begc:endc))              ; this%qflx_infl_excess_col     (:)   = nan
-    allocate(this%qflx_rain_plus_snomelt_col(begc:endc))             ; this%qflx_rain_plus_snomelt_col(:)  = nan
     allocate(this%qflx_in_soil_col         (begc:endc))              ; this%qflx_in_soil_col         (:)   = nan
     allocate(this%qflx_in_soil_limited_col (begc:endc))              ; this%qflx_in_soil_limited_col (:)   = nan
     allocate(this%qflx_h2osfc_drain_col    (begc:endc))              ; this%qflx_h2osfc_drain_col    (:)   = nan
@@ -185,7 +180,6 @@ contains
          ptr_col=data2dptr, c2l_scale_type='urbanf',no_snow_behavior=no_snow_normal, &
          l2g_scale_type='ice', default='inactive')
 
-
     call hist_addfld2d ( &
          fname=this%info%fname('QROOTSINK'),  &
          units='mm/s', type2d='levsoi', &
@@ -193,7 +187,13 @@ contains
          long_name=this%info%lname('water flux from soil to root in each soil-layer'), &
          ptr_col=this%qflx_rootsoi_col, set_spec=spval, l2g_scale_type='veg', default='inactive')
 
-    this%qflx_ev_snow_patch(begp:endp) = spval
+    this%qflx_hydr_redist_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QHR'),  &
+         units='mm/s', &
+         avgflag='A', &
+         long_name=this%info%lname('hydraulic redistribution'), &
+         ptr_patch=this%qflx_hydr_redist_patch, set_spec=spval, l2g_scale_type='veg', default='active')
 
     this%qflx_snowindunload_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -210,6 +210,16 @@ contains
          avgflag='A', &
          long_name=this%info%lname('canopy snow temp unloading'), &
          ptr_patch=this%qflx_snotempunload_patch, set_lake=0._r8, c2l_scale_type='urbanf')
+
+    ! QSNOEVAP is evaporation from snow but only when snow is present (snl<0), otherwise, it is 
+    ! equivalent to qflx_ev_soil   
+    this%qflx_ev_snow_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSNOEVAP'), &
+         units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('evaporation from snow (only when snl<0, otherwise it is equal to qflx_ev_soil)'), &
+         ptr_col=this%qflx_ev_snow_col, c2l_scale_type='urbanf')
 
     this%qflx_h2osfc_surf_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -249,6 +259,9 @@ contains
     !
     ! !LOCAL VARIABLES:
     !-----------------------------------------------------------------------
+
+    this%qflx_snowindunload_patch(bounds%begp:bounds%endp) = 0.0_r8
+    this%qflx_snotempunload_patch(bounds%begp:bounds%endp) = 0.0_r8
 
     this%qflx_phs_neg_col(bounds%begc:bounds%endc)   = 0.0_r8
 

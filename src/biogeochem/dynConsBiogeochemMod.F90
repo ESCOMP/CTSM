@@ -60,7 +60,7 @@ contains
     use landunit_varcon    , only : istsoil, istcrop
     use clm_varpar         , only : nlevdecomp
     use clm_varcon         , only : c13ratio, c14ratio, c3_r2, c4_r2
-    use clm_time_manager   , only : get_step_size
+    use clm_time_manager   , only : get_step_size_real
     use dynPriorWeightsMod , only : prior_weights_type
     use dynPatchStateUpdaterMod, only : patch_state_updater_type
     !
@@ -310,7 +310,7 @@ contains
     endif
     
     ! Get time step
-    dt = real( get_step_size(), r8 )
+    dt = get_step_size_real()
 
     patch_initiating = patch_state_updater%patch_initiating(bounds)
 
@@ -587,36 +587,6 @@ contains
     end do
     
 
-    ! calculate patch-to-column slash fluxes into litter and CWD pools
-    do p = bounds%begp, bounds%endp
-       c = patch%column(p)
-
-       ! fine and coarse root to litter and CWD slash carbon fluxes
-       cnveg_carbonflux_inst%dwt_slash_cflux_col(c) = &
-               cnveg_carbonflux_inst%dwt_slash_cflux_col(c) + &
-               dwt_frootc_to_litter(p)/dt + &
-               dwt_livecrootc_to_litter(p)/dt + &
-               dwt_deadcrootc_to_litter(p)/dt
-
-       if ( use_c13 ) then
-          c13_cnveg_carbonflux_inst%dwt_slash_cflux_col(c) = &
-                  c13_cnveg_carbonflux_inst%dwt_slash_cflux_col(c) + &
-                  dwt_frootc13_to_litter(p)/dt + &
-                  dwt_livecrootc13_to_litter(p)/dt + &
-                  dwt_deadcrootc13_to_litter(p)/dt
-       endif
-
-       if ( use_c14 ) then
-          c14_cnveg_carbonflux_inst%dwt_slash_cflux_col(c) = &
-                  c14_cnveg_carbonflux_inst%dwt_slash_cflux_col(c) + &
-                  dwt_frootc14_to_litter(p)/dt + &
-                  dwt_livecrootc14_to_litter(p)/dt + &
-                  dwt_deadcrootc14_to_litter(p)/dt
-       endif
-
-    end do
-
-    
     ! calculate patch-to-column for fluxes into litter and CWD pools
     do j = 1, nlevdecomp
        do p = bounds%begp, bounds%endp
@@ -787,6 +757,46 @@ contains
 
     end do
 
+       ! calculate patch-to-gridcell slash fluxes into litter and CWD pools
+       ! Note that patch-level fluxes are stored per unit GRIDCELL area - thus, we don't
+       ! need to multiply by the patch's gridcell weight when translating patch-level
+       ! fluxes into gridcell-level fluxes.
+       
+    do p = bounds%begp, bounds%endp
+       g = patch%gridcell(p)
+
+       ! fine and coarse root to litter and CWD slash carbon fluxes
+       cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = &
+               dwt_frootc_to_litter(p)/dt + &
+               dwt_livecrootc_to_litter(p)/dt + &
+               dwt_deadcrootc_to_litter(p)/dt
+       cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) = &
+               cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) + &
+               cnveg_carbonflux_inst%dwt_slash_cflux_patch(p)
+
+       if ( use_c13 ) then
+          c13_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = &
+                  dwt_frootc13_to_litter(p)/dt + &
+                  dwt_livecrootc13_to_litter(p)/dt + &
+                  dwt_deadcrootc13_to_litter(p)/dt
+          c13_cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) = &
+                  c13_cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) + &
+                  c13_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p)
+       endif
+
+       if ( use_c14 ) then
+          c14_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = &
+                  dwt_frootc14_to_litter(p)/dt + &
+                  dwt_livecrootc14_to_litter(p)/dt + &
+                  dwt_deadcrootc14_to_litter(p)/dt
+          c14_cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) = &
+                  c14_cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) + &
+                  c14_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p)
+       endif
+
+    end do
+
+    
     ! Deallocate patch-level flux arrays
     deallocate(dwt)
     deallocate(dwt_leafc_seed)

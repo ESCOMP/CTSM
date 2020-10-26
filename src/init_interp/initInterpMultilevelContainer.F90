@@ -52,12 +52,10 @@ module initInterpMultilevelContainer
      type(interp_multilevel_snow_type), pointer   :: interp_multilevel_levsno1
      type(interp_multilevel_split_type), pointer  :: interp_multilevel_levtot_col
    contains
+     procedure :: init
      procedure :: find_interpolator
+     final :: destroy_interp_multilevel_container_type
   end type interp_multilevel_container_type
-
-  interface interp_multilevel_container_type
-     module procedure constructor
-  end interface interp_multilevel_container_type
 
   ! Private routines
 
@@ -73,18 +71,18 @@ module initInterpMultilevelContainer
 contains
 
   ! ========================================================================
-  ! Constructors
+  ! Public methods
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function constructor(ncid_source, ncid_dest, bounds_source, bounds_dest, &
-       pftindex, colindex) result(this)
+  subroutine init(this, ncid_source, ncid_dest, bounds_source, bounds_dest, &
+       pftindex, colindex)
     !
     ! !DESCRIPTION:
-    ! Create an interp_multilevel_container_type instance.
+    ! Initialize this interp_multilevel_container_type instance
     !
     ! !ARGUMENTS:
-    type(interp_multilevel_container_type) :: this  ! function result
+    class(interp_multilevel_container_type), intent(inout) :: this
     type(file_desc_t), target, intent(inout) :: ncid_source ! netcdf ID for source file
     type(file_desc_t), target, intent(inout) :: ncid_dest   ! netcdf ID for dest file
     type(interp_bounds_type), intent(in) :: bounds_source
@@ -100,7 +98,7 @@ contains
     integer :: levgrnd_dest   ! size of the levgrnd dimension in dest
     integer :: dimid          ! dimension id
 
-    character(len=*), parameter :: subname = 'constructor'
+    character(len=*), parameter :: subname = 'init'
     !-----------------------------------------------------------------------
 
     allocate(this%interp_multilevel_copy)
@@ -160,11 +158,7 @@ contains
          num_second_levels_source = this%interp_multilevel_levmaxurbgrnd_col%get_nlev_source(), &
          num_second_levels_dest = this%interp_multilevel_levmaxurbgrnd_col%get_nlev_dest())
 
-  end function constructor
-
-  ! ========================================================================
-  ! Public methods
-  ! ========================================================================
+  end subroutine init
 
   !-----------------------------------------------------------------------
   function find_interpolator(this, lev_dimname, vec_dimname) result(interpolator)
@@ -449,8 +443,8 @@ contains
          msg = 'dest '//level_class_varname//' dimension length does not match expected levmaxurbgrnd size', &
          file = sourcefile, &
          line = __LINE__)
-    SHR_ASSERT(level_class_dest%get_vec_beg() == beg_dest, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(level_class_dest%get_vec_end() == end_dest, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(level_class_dest%get_vec_beg() == beg_dest, sourcefile, __LINE__)
+    SHR_ASSERT_FL(level_class_dest%get_vec_end() == end_dest, sourcefile, __LINE__)
 
     ! NOTE(wjs, 2015-10-18) The following check is helpful while we still have old initial
     ! conditions files that do not have the necessary metadata. Once these old initial
@@ -498,10 +492,10 @@ contains
          bounds = bounds_source)
     call shr_assert(level_class_source%get_nlev() == levmaxurbgrnd_source, &
          msg = 'source '//level_class_varname//' dimension length does not match expected levmaxurbgrnd size', &
-         file = sourcefile, &
+         file = sourcefile, &    
          line = __LINE__)
-    SHR_ASSERT(level_class_source%get_vec_beg() == beg_source, errMsg(sourcefile, __LINE__))
-    SHR_ASSERT(level_class_source%get_vec_end() == end_source, errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL(level_class_source%get_vec_beg() == beg_source, sourcefile, __LINE__)
+    SHR_ASSERT_FL(level_class_source%get_vec_end() == end_source, sourcefile, __LINE__)
     allocate(level_class_data_source(beg_dest:end_dest, nlev_source))
     allocate(level_class_data_source_sgrid_1d(beg_source:end_source))
     do level = 1, nlev_source
@@ -653,6 +647,34 @@ contains
     deallocate(snlsno_source_plus_1)
 
   end subroutine create_snow_interpolators
+
+  ! ========================================================================
+  ! Finalizers
+  ! ========================================================================
+
+  !-----------------------------------------------------------------------
+  subroutine destroy_interp_multilevel_container_type(this)
+    !
+    ! !DESCRIPTION:
+    ! Finalize routine for interp_multilevel_container_type
+    !
+    ! !ARGUMENTS:
+    type(interp_multilevel_container_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'destroy_interp_multilevel_container_type'
+    !-----------------------------------------------------------------------
+
+    deallocate(this%interp_multilevel_copy)
+    deallocate(this%interp_multilevel_levgrnd_col)
+    deallocate(this%interp_multilevel_levmaxurbgrnd_col)
+    deallocate(this%interp_multilevel_levgrnd_pft)
+    deallocate(this%interp_multilevel_levsno)
+    deallocate(this%interp_multilevel_levsno1)
+    deallocate(this%interp_multilevel_levtot_col)
+
+  end subroutine destroy_interp_multilevel_container_type
 
 
 end module initInterpMultilevelContainer

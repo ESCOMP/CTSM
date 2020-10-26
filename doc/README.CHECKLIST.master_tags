@@ -25,6 +25,8 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    3b -- update the ExpectedFails list if expected fails changes in 1a
         $EDITOR cime_config/testdefs/ExpectedTestFails.xml
    3c -- make sure you understand any changes to the baselines -- to document in ChangeLog
+   3d -- Check the log file for run_sys_tests (../run_sys_test.log), to make sure that 
+         externals are correct (see 2c above)
 
 (4) Use diff and status to make sure any new files are in the repo and only the correct
     changes are on the branch
@@ -43,6 +45,7 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    5c -- Update date stamp on ChangeLog
         ./UpDateChangeLog.pl -update
    5d -- Commit new change files
+   5e -- Push all the changes on your local branches to the branch on your fork
 
 (6) Submit a pull request (PR) for the changes
     Have someone review it if you are able. At minimum review it youself. The PR mechanism

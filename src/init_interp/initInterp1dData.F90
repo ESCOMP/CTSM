@@ -7,7 +7,6 @@ module initInterp1dData
   ! ------------------------------------------------------------------------
 
 #include "shr_assert.h"
-  use shr_log_mod    , only: errMsg => shr_log_errMsg
   use shr_kind_mod   , only: r8 => shr_kind_r8
   use shr_infnan_mod , only: shr_infnan_isnan
   use clm_varcon     , only: spval, ispval
@@ -57,9 +56,9 @@ contains
     character(len=*), parameter :: subname = 'interp_1d_data_double'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(data_in) == (/endi/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(data_out) == (/endo/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(sgridindex) == (/endo/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(data_in) == (/endi/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(data_out) == (/endo/)), sourcefile, __LINE__)
 
     if (.not. keep_existing) then
        data_out(bego:endo) = spval
@@ -106,9 +105,9 @@ contains
     character(len=*), parameter :: subname = 'interp_1d_data_int'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(sgridindex) == (/endo/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(data_in) == (/endi/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(data_out) == (/endo/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(sgridindex) == (/endo/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(data_in) == (/endi/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(data_out) == (/endo/)), sourcefile, __LINE__)
 
     if (.not. keep_existing) then
        data_out(bego:endo) = ispval

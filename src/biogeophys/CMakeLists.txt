@@ -12,9 +12,11 @@ list(APPEND clm_sources
   InfiltrationExcessRunoffMod.F90
   IrrigationMod.F90
   LakeCon.F90
+  LakeStateType.F90
   QSatMod.F90
   RootBiophysMod.F90
   SaturatedExcessRunoffMod.F90
+  SnowCoverFractionBaseMod.F90
   SnowHydrologyMod.F90
   SnowSnicarMod.F90
   SoilHydrologyMod.F90

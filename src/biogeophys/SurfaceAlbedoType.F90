@@ -4,7 +4,6 @@ module SurfaceAlbedoType
 
   !-----------------------------------------------------------------------
   use shr_kind_mod   , only : r8 => shr_kind_r8
-  use shr_log_mod    , only : errMsg => shr_log_errMsg
   use decompMod      , only : bounds_type
   use clm_varpar     , only : numrad, nlevcan, nlevsno
   use abortutils     , only : endrun
@@ -304,8 +303,8 @@ contains
     integer :: begc, endc
     !---------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(tlai_patch)  == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(tsai_patch)  == (/bounds%endp/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(tlai_patch)  == (/bounds%endp/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tsai_patch)  == (/bounds%endp/)), sourcefile, __LINE__)
 
     begp = bounds%begp; endp = bounds%endp
     begc = bounds%begc; endc = bounds%endc

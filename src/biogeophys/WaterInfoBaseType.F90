@@ -20,6 +20,9 @@ module WaterInfoBaseType
      real(r8) :: ratio
 
    contains
+     ! Get the name of this tracer (or bulk)
+     procedure(get_name_interface), public, deferred :: get_name
+
      ! Get a history/restart field name for this tracer (or bulk)
      procedure(fname_interface), public, deferred :: fname
 
@@ -35,6 +38,14 @@ module WaterInfoBaseType
   end type water_info_base_type
 
   abstract interface
+     pure function get_name_interface(this) result(name)
+       ! Get the name of this tracer (or bulk)
+       import :: water_info_base_type
+
+       character(len=:), allocatable :: name
+       class(water_info_base_type), intent(in) :: this
+     end function get_name_interface
+
      pure function fname_interface(this, basename) result(fname)
        ! Get a history/restart field name for this tracer (or bulk)
        !

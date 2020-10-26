@@ -67,7 +67,7 @@ contains
     character(len=*), parameter :: subname = 'initialize_new_columns'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT_ALL((ubound(cactive_prior) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cactive_prior) == (/bounds%endc/)), sourcefile, __LINE__)
 
     do c = bounds%begc, bounds%endc
        ! If this column is newly-active, then we need to initialize it using the routines in this module
@@ -112,7 +112,7 @@ contains
     character(len=*), parameter :: subname = 'initial_template_col_dispatcher'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT_ALL((ubound(cactive_prior) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cactive_prior) == (/bounds%endc/)), sourcefile, __LINE__)
 
     l = col%landunit(c_new)
     ltype = lun%itype(l)
@@ -196,7 +196,7 @@ contains
     character(len=*), parameter :: subname = 'initial_template_col_crop'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(cactive_prior) == (/bounds%endc/)), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(cactive_prior) == (/bounds%endc/)), sourcefile, __LINE__)
     
     ! First try to find an active column on the vegetated landunit; if there is none, then
     ! find the first active column on the crop landunit; if there is none, then

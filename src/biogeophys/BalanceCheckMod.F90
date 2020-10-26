@@ -20,6 +20,7 @@ module BalanceCheckMod
   use SoilHydrologyType  , only : soilhydrology_type
   use SurfaceAlbedoType  , only : surfalb_type
   use WaterStateType     , only : waterstate_type
+  use LakestateType      , only : lakestate_type
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use WaterDiagnosticType, only : waterdiagnostic_type
   use Wateratm2lndType   , only : wateratm2lnd_type
@@ -71,13 +72,13 @@ contains
     !
     ! !USES:
     use spmdMod           , only : masterproc
-    use clm_time_manager  , only : get_step_size
+    use clm_time_manager  , only : get_step_size_real
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
     real(r8) :: dtime                    ! land model time step (sec)
     !-----------------------------------------------------------------------
-    dtime = get_step_size()
+    dtime = get_step_size_real()
     ! Skip a minimum of two time steps, but otherwise skip the number of time-steps in the skip_size rounded to the nearest integer
     skip_steps = max(2, nint( (skip_size / dtime) ) )
 
@@ -122,7 +123,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       water_inst, soilhydrology_inst, &
+       water_inst, soilhydrology_inst, lakestate_inst, &
        use_aquifer_layer)
     !
     ! !DESCRIPTION:
@@ -136,6 +137,7 @@ contains
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(water_type)          , intent(inout) :: water_inst
+    type(lakestate_type)      , intent(in)    :: lakestate_inst
     type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
     logical                   , intent(in)    :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
@@ -150,6 +152,7 @@ contains
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
             soilhydrology_inst, &
+            lakestate_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
             water_inst%bulk_and_tracers(i)%waterbalance_inst, &
@@ -161,7 +164,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstate_inst, waterdiagnostic_inst, waterbalance_inst, &
+       soilhydrology_inst, lakestate_inst, waterstate_inst, & 
+       waterdiagnostic_inst, waterbalance_inst, &
        use_aquifer_layer)
     !
     ! !DESCRIPTION:
@@ -175,6 +179,7 @@ contains
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
+    type(lakestate_type)      , intent(in)    :: lakestate_inst
     class(waterstate_type)    , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)   :: waterdiagnostic_inst
     class(waterbalance_type)  , intent(inout) :: waterbalance_inst
@@ -187,7 +192,6 @@ contains
     associate(                                               &
          zi         => col%zi                           , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
          zwt        => soilhydrology_inst%zwt_col       , & ! Input:  [real(r8) (:)   ]  water table depth (m)
-         h2osno     => waterstate_inst%h2osno_col       , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)
          aquifer_water_baseline => waterstate_inst%aquifer_water_baseline, & ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
          wa         => waterstate_inst%wa_col           , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)
          begwb      => waterbalance_inst%begwb_col      , & ! Output: [real(r8) (:)   ]  water mass begining of the time step
@@ -211,13 +215,16 @@ contains
          water_mass = begwb(bounds%begc:bounds%endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-         waterstate_inst, &
-         subtract_dynbal_baselines = .false., &
+         waterstate_inst, lakestate_inst, &
+         add_lake_water_and_subtract_dynbal_baselines = .false., &
          water_mass = begwb(bounds%begc:bounds%endc))
 
-    do c = bounds%begc, bounds%endc
-       h2osno_old(c) = h2osno(c)
-    end do
+    call waterstate_inst%CalculateTotalH2osno(bounds, num_nolakec, filter_nolakec, &
+         caller = 'BeginWaterBalanceSingle-nolake', &
+         h2osno_total = h2osno_old(bounds%begc:bounds%endc))
+    call waterstate_inst%CalculateTotalH2osno(bounds, num_lakec, filter_lakec, &
+         caller = 'BeginWaterBalanceSingle-lake', &
+         h2osno_total = h2osno_old(bounds%begc:bounds%endc))
 
     end associate 
 
@@ -225,6 +232,7 @@ contains
 
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
+        num_allc, filter_allc, &
         atm2lnd_inst, solarabs_inst, waterflux_inst, waterstate_inst, &
         waterdiagnosticbulk_inst, waterbalance_inst, wateratm2lnd_inst, &
         surfalb_inst, energyflux_inst, canopystate_inst)
@@ -245,13 +253,15 @@ contains
      !
      ! !USES:
      use clm_varcon        , only : spval
-     use clm_time_manager  , only : get_step_size, get_nstep
+     use clm_time_manager  , only : get_step_size_real, get_nstep
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod
      !
      ! !ARGUMENTS:
      type(bounds_type)     , intent(in)    :: bounds  
+     integer               , intent(in)    :: num_allc        ! number of columns in allc filter
+     integer               , intent(in)    :: filter_allc(:)  ! filter for all columns
      type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
      type(solarabs_type)   , intent(in)    :: solarabs_inst
      class(waterflux_type) , intent(in)    :: waterflux_inst
@@ -271,6 +281,7 @@ contains
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
      real(r8) :: forc_snow_col(bounds%begc:bounds%endc) ! column level snow rate [mm/s]
+     real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water [mm H2O]
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
@@ -292,7 +303,6 @@ contains
           forc_snow               =>    wateratm2lnd_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]
           forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
-          h2osno                  =>    waterstate_inst%h2osno_col              , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O)                     
           h2osno_old              =>    waterbalance_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
           frac_sno_eff            =>    waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
           frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
@@ -303,18 +313,18 @@ contains
           endwb                   =>    waterbalance_inst%endwb_col               , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
           snow_sources            =>    waterbalance_inst%snow_sources_col         , & ! Output: [real(r8) (:)   ]  snow sources (mm H2O /s)
           snow_sinks              =>    waterbalance_inst%snow_sinks_col           , & ! Output: [real(r8) (:)   ]  snow sinks (mm H2O /s)
-          qflx_rain_grnd_col      =>    waterflux_inst%qflx_rain_grnd_col       , & ! Input:  [real(r8) (:)   ]  rain on ground after interception (mm H2O/s) [+]
+          qflx_liq_grnd_col       =>    waterflux_inst%qflx_liq_grnd_col        , & ! Input:  [real(r8) (:)   ]  liquid on ground after interception (mm H2O/s) [+]
           qflx_snow_grnd_col      =>    waterflux_inst%qflx_snow_grnd_col       , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_snwcp_liq          =>    waterflux_inst%qflx_snwcp_liq_col       , & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
           qflx_snwcp_ice          =>    waterflux_inst%qflx_snwcp_ice_col       , & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
           qflx_snwcp_discarded_liq =>   waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
           qflx_snwcp_discarded_ice =>   waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
           qflx_evap_tot           =>    waterflux_inst%qflx_evap_tot_col        , & ! Input:  [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-          qflx_dew_snow           =>    waterflux_inst%qflx_dew_snow_col        , & ! Input:  [real(r8) (:)   ]  surface dew added to snow pack (mm H2O /s) [+]
-          qflx_sub_snow           =>    waterflux_inst%qflx_sub_snow_col        , & ! Input:  [real(r8) (:)   ]  sublimation rate from snow pack (mm H2O /s) [+]
-          qflx_evap_grnd          =>    waterflux_inst%qflx_evap_grnd_col       , & ! Input:  [real(r8) (:)   ]  ground surface evaporation rate (mm H2O/s) [+]
-          qflx_dew_grnd           =>    waterflux_inst%qflx_dew_grnd_col        , & ! Input:  [real(r8) (:)   ]  ground surface dew formation (mm H2O /s) [+]
-          qflx_prec_grnd          =>    waterflux_inst%qflx_prec_grnd_col       , & ! Input:  [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
+          qflx_soliddew_to_top_layer    => waterflux_inst%qflx_soliddew_to_top_layer_col   , & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
+          qflx_solidevap_from_top_layer => waterflux_inst%qflx_solidevap_from_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
+          qflx_liqevap_from_top_layer   => waterflux_inst%qflx_liqevap_from_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
+          qflx_liqdew_to_top_layer      => waterflux_inst%qflx_liqdew_to_top_layer_col     , & ! Input:  [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]
+          qflx_prec_grnd          =>    waterdiagnosticbulk_inst%qflx_prec_grnd_col, & ! Input:  [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  snow falling on surface water (mm/s)
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
           qflx_drain_perched      =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
@@ -370,7 +380,7 @@ contains
 
        nstep = get_nstep()
        DAnstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
-       dtime = get_step_size()
+       dtime = get_step_size_real()
 
        ! Determine column level incoming snow and rain
        ! Assume no incident precipitation on urban wall columns (as in CanopyHydrologyMod.F90).
@@ -470,6 +480,10 @@ contains
 
        ! Snow balance check
 
+       call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
+            caller = 'BalanceCheck', &
+            h2osno_total = h2osno_total(bounds%begc:bounds%endc))
+
        do c = bounds%begc,bounds%endc
           if (col%active(c)) then
              g = col%gridcell(c)
@@ -481,18 +495,19 @@ contains
              ! only created if h2osno > 10mm).
 
              if (col%snl(c) < 0) then
-                snow_sources(c) = qflx_prec_grnd(c) + qflx_dew_snow(c) + qflx_dew_grnd(c)
-                snow_sinks(c)  = qflx_sub_snow(c) + qflx_evap_grnd(c) + qflx_snow_drain(c) &
-                     + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
+                snow_sources(c) = qflx_prec_grnd(c) + qflx_soliddew_to_top_layer(c) &
+                     + qflx_liqdew_to_top_layer(c)
+                snow_sinks(c)  = qflx_solidevap_from_top_layer(c) + qflx_liqevap_from_top_layer(c) &
+                     + qflx_snow_drain(c) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
                      + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c) &
                      + qflx_sl_top_soil(c)
 
                 if (lun%itype(l) == istdlak) then 
                    snow_sources(c) = qflx_snow_grnd_col(c) &
-                        + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
-                        +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) 
-                   snow_sinks(c)   = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c) ) &
-                        + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)  &
+                        + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
+                        +  qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) 
+                   snow_sinks(c)   = frac_sno_eff(c) * (qflx_solidevap_from_top_layer(c) &
+                        + qflx_liqevap_from_top_layer(c) ) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)  &
                         + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c)  &
                         + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
                 endif
@@ -501,15 +516,16 @@ contains
                       lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
                       lun%itype(l) == istice_mec) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
-                          + frac_sno_eff(c) * (qflx_rain_grnd_col(c) &
-                          +  qflx_dew_snow(c) + qflx_dew_grnd(c) ) + qflx_h2osfc_to_ice(c)
-                   snow_sinks(c) = frac_sno_eff(c) * (qflx_sub_snow(c) + qflx_evap_grnd(c)) &
-                          + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
+                          + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
+                          + qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) &
+                          + qflx_h2osfc_to_ice(c)
+                   snow_sinks(c) = frac_sno_eff(c) * (qflx_solidevap_from_top_layer(c) &
+                          + qflx_liqevap_from_top_layer(c)) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
                           + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c) &
                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                 endif
 
-                errh2osno(c) = (h2osno(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
+                errh2osno(c) = (h2osno_total(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
              else
                 snow_sources(c) = 0._r8
                 snow_sinks(c) = 0._r8
@@ -540,18 +556,18 @@ contains
                  write(iulog,*)'snl                = ',col%snl(indexc)
                  write(iulog,*)'snow_depth         = ',snow_depth(indexc)
                  write(iulog,*)'frac_sno_eff       = ',frac_sno_eff(indexc)
-                 write(iulog,*)'h2osno             = ',h2osno(indexc)
+                 write(iulog,*)'h2osno             = ',h2osno_total(indexc)
                  write(iulog,*)'h2osno_old         = ',h2osno_old(indexc)
                  write(iulog,*)'snow_sources       = ',snow_sources(indexc)*dtime
                  write(iulog,*)'snow_sinks         = ',snow_sinks(indexc)*dtime
                  write(iulog,*)'qflx_prec_grnd     = ',qflx_prec_grnd(indexc)*dtime
                  write(iulog,*)'qflx_snow_grnd_col = ',qflx_snow_grnd_col(indexc)*dtime
-                 write(iulog,*)'qflx_rain_grnd_col = ',qflx_rain_grnd_col(indexc)*dtime
-                 write(iulog,*)'qflx_sub_snow      = ',qflx_sub_snow(indexc)*dtime
+                 write(iulog,*)'qflx_liq_grnd_col  = ',qflx_liq_grnd_col(indexc)*dtime
+                 write(iulog,*)'qflx_solidevap_from_top_layer = ',qflx_solidevap_from_top_layer(indexc)*dtime
                  write(iulog,*)'qflx_snow_drain    = ',qflx_snow_drain(indexc)*dtime
-                 write(iulog,*)'qflx_evap_grnd     = ',qflx_evap_grnd(indexc)*dtime
-                 write(iulog,*)'qflx_dew_snow      = ',qflx_dew_snow(indexc)*dtime
-                 write(iulog,*)'qflx_dew_grnd      = ',qflx_dew_grnd(indexc)*dtime
+                 write(iulog,*)'qflx_liqevap_from_top_layer = ',qflx_liqevap_from_top_layer(indexc)*dtime
+                 write(iulog,*)'qflx_soliddew_to_top_layer  = ',qflx_soliddew_to_top_layer(indexc)*dtime
+                 write(iulog,*)'qflx_liqdew_to_top_layer    = ',qflx_liqdew_to_top_layer(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_liq     = ',qflx_snwcp_liq(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime

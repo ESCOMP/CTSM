@@ -13,7 +13,6 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     CNratio_floating
     all_active
     allowlakeprod
-    anoxia_wtsat
     carbon_resp_opt
     ch4offline
     downreg_opt
@@ -31,6 +30,7 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     urban_traffic
     use_extralakelayers
     use_lai_streams
+    use_cndv
     use_snicar_frc
     use_vichydro
     usefrootc

@@ -18,8 +18,9 @@ module controlMod
   use spmdMod                          , only: masterproc, mpicom
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
-  use clm_varcon                       , only: h2osno_max, int_snow_max, n_melt_glcmec
-  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
+  use clm_varcon                       , only: h2osno_max
+  use clm_varpar                       , only: maxpatch_glcmec, numrad, nlevsno
+  use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
@@ -38,12 +39,12 @@ module controlMod
   use UrbanParamsType                  , only: UrbanReadNML
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
-  use CNSharedParamsMod                , only: anoxia_wtsat, use_fun
+  use CNSharedParamsMod                , only: use_fun
   use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp 
-  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif, nitrifReadNML
+  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
   use SoilHydrologyMod                 , only: soilHydReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
@@ -108,28 +109,27 @@ contains
   end subroutine control_setNL
 
   !------------------------------------------------------------------------
-  subroutine control_init( )
+
+  subroutine control_init(dtime)
     !
     ! !DESCRIPTION:
     ! Initialize CLM run control information
     !
     ! !USES:
-    use clm_time_manager                 , only : set_timemgr_init
-    use fileutils                        , only : getavu, relavu
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
-    use FrictionVelocityMod              , only : FrictionVelReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
     !
+    ! ARGUMENTS
+    integer, intent(in) :: dtime    ! model time step (seconds)
+
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
-    integer :: dtime                ! Integer time-step
-    integer :: override_nsrest      ! If want to override the startup type sent from driver
     logical :: use_init_interp      ! Apply initInterp to the file given by finidat
     !------------------------------------------------------------------------
 
@@ -137,16 +137,12 @@ contains
     ! Namelist Variables
     ! ----------------------------------------------------------------------
 
-    ! Time step
-    namelist / clm_inparm/ &
-    dtime
-
     ! CLM namelist settings
 
-    namelist /clm_inparm / &
+    namelist /clm_inparm/ &
          fatmlndfrc, finidat, nrevsn, &
          finidat_interp_dest, &
-         use_init_interp
+         use_init_interp, compname
 
     ! Input datasets
 
@@ -186,7 +182,7 @@ contains
          perchroot, perchroot_alt
 
     namelist /clm_inparm / &
-         anoxia, anoxia_wtsat, use_fun
+         anoxia, use_fun
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
@@ -196,16 +192,17 @@ contains
     namelist /clm_inparm/ &    
          maxpatch_glcmec, glc_do_dynglacier, &
          glc_snow_persistence_max_days, &
-         nlevsno, h2osno_max, int_snow_max, n_melt_glcmec
+         nlevsno, h2osno_max
 
     ! Other options
 
     namelist /clm_inparm/  &
          clump_pproc, wrtdia, &
-         create_crop_landunit, nsegspc, co2_ppmv, override_nsrest, &
-         albice, soil_layerstruct, subgridflag, &
+         create_crop_landunit, nsegspc, co2_ppmv, &
+         albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
+         soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero
+         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -226,7 +223,8 @@ contains
           use_fates_planthydro, use_fates_ed_st3,       &
           use_fates_ed_prescribed_phys,                 &
           use_fates_inventory_init,                     &
-          fates_inventory_ctrl_filename
+          fates_inventory_ctrl_filename,                &
+          fates_parteh_mode
 
 
     ! CLM 5.0 nitrogen flags
@@ -236,6 +234,8 @@ contains
          plant_ndemand_opt, substrate_term_opt, nscalar_opt, temp_scalar_opt, &
          CNratio_floating, lnc_opt, reduce_dayl_factor, vcmax_opt, CN_residual_opt, &
          CN_partition_opt, CN_evergreen_phenology_opt, carbon_resp_opt  
+
+    namelist /clm_inparm/ use_soil_moisture_streams
 
     namelist /clm_inparm/ use_lai_streams
 
@@ -249,10 +249,6 @@ contains
          use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
-
-    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
-    ! maxpatch_pft will eventually be removed from the perl and the namelist
-    namelist /clm_inparm/ maxpatch_pft
 
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
@@ -300,8 +296,6 @@ contains
     clump_pproc = 1
 #endif
 
-    override_nsrest = nsrest
-
     use_init_interp = .false.
 
     if (masterproc) then
@@ -341,29 +335,15 @@ contains
        ! Process some namelist variables, and perform consistency checks
        ! ----------------------------------------------------------------------
 
-       call set_timemgr_init( dtime_in=dtime )
-
-       if (use_init_interp) then
-          call apply_use_init_interp(finidat, finidat_interp_source)
-       end if
-
-       ! History and restart files
-
+       ! History and restart files (dependent on settings of dtime)
        do i = 1, max_tapes
           if (hist_nhtfrq(i) < 0) then
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
 
-       ! Override start-type (can only override to branch (3)  and only 
-       ! if the driver is a startup type
-       if ( override_nsrest /= nsrest )then
-           if ( override_nsrest /= nsrBranch .and. nsrest /= nsrStartup )then
-              call endrun(msg= ' ERROR: can ONLY override clm start-type ' // &
-                   'to branch type and ONLY if driver is a startup type'// &
-                   errMsg(sourcefile, __LINE__))
-           end if
-           call clm_varctl_set( nsrest_in=override_nsrest )
+       if (use_init_interp) then
+          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
        end if
 
        if (maxpatch_glcmec <= 0) then
@@ -493,7 +473,7 @@ contains
           end if
        end if
 
-       ! If nlevsno, h2osno_max, int_snow_max or n_melt_glcmec are equal to their junk
+       ! If nlevsno or h2osno_max are equal to their junk
        ! default value, then they were not specified by the user namelist and we generate
        ! an error message. Also check nlevsno for bounds.
        if (nlevsno < 3 .or. nlevsno > 12)  then
@@ -504,16 +484,6 @@ contains
        if (h2osno_max <= 0.0_r8) then
           write(iulog,*)'ERROR: h2osno_max = ',h2osno_max,' is not supported, must be greater than 0.0.'
           call endrun(msg=' ERROR: invalid value for h2osno_max in CLM namelist. '//&
-               errMsg(sourcefile, __LINE__))
-       endif
-       if (int_snow_max <= 0.0_r8) then
-          write(iulog,*)'ERROR: int_snow_max = ',int_snow_max,' is not supported, must be greater than 0.0.'
-          call endrun(msg=' ERROR: invalid value for int_snow_max in CLM namelist. '//&
-               errMsg(sourcefile, __LINE__))
-       endif
-       if (n_melt_glcmec <= 0.0_r8) then
-          write(iulog,*)'ERROR: n_melt_glcmec = ',n_melt_glcmec,' is not supported, must be greater than 0.0.'
-          call endrun(msg=' ERROR: invalid value for n_melt_glcmec in CLM namelist. '//&
                errMsg(sourcefile, __LINE__))
        endif
 
@@ -541,7 +511,6 @@ contains
     call UrbanReadNML           ( NLFilename )
     call HumanIndexReadNML      ( NLFilename )
     call LunaReadNML            ( NLFilename )
-    call FrictionVelReadNML     ( NLFilename )
 
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
@@ -559,7 +528,6 @@ contains
 
     call soilHydReadNML(   NLFilename )
     if ( use_cn ) then
-       call nitrifReadNML(             NLFilename )
        call CNFireReadNML(             NLFilename )
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
@@ -646,6 +614,7 @@ contains
     ! run control variables
     call mpi_bcast (caseid, len(caseid), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (ctitle, len(ctitle), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (compname, len(compname), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (version, len(version), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hostname, len(hostname), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (username, len(username), MPI_CHARACTER, 0, mpicom, ier)
@@ -687,6 +656,9 @@ contains
     ! Crop saturated excess runoff
     call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    ! Whether to run tests of ncdio_pio
+    call mpi_bcast(for_testing_run_ncdiopio_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -694,16 +666,11 @@ contains
     call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
-    ! maxpatch_pft will eventually be removed from the perl and the namelist
-    call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
-
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
     ! active landunits to n_dom_landunits.
     ! Also choose to collapse the urban landunits to the dominant urban
     ! landunit by setting collapse_urban = .true.
-    ! slevis: maxpatch_pft is MPI_LOGICAL? Doesn't matter since obsolete.
     call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast(n_dom_landunits, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast(collapse_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -741,6 +708,7 @@ contains
     call mpi_bcast (use_fates_inventory_init, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! flexibleCN nitrogen model
     call mpi_bcast (use_flexibleCN, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -761,6 +729,8 @@ contains
     call mpi_bcast (carbon_resp_opt, 1, MPI_INTEGER, 0, mpicom, ier) 
 
     call mpi_bcast (use_luna, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_soil_moisture_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -795,7 +765,6 @@ contains
     call mpi_bcast (perchroot_alt, 1, MPI_LOGICAL, 0, mpicom, ier)
     if (use_lch4) then
        call mpi_bcast (anoxia, 1, MPI_LOGICAL, 0, mpicom, ier)
-       call mpi_bcast (anoxia_wtsat, 1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
     ! lakes
@@ -805,20 +774,21 @@ contains
 
     ! physics variables
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (subgridflag , 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (wrtdia, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (scmlon, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (co2_ppmv, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (albice, 2, MPI_REAL8,0, mpicom, ier)
-    call mpi_bcast (soil_layerstruct,len(soil_layerstruct), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_predefined,len(soil_layerstruct_predefined), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_userdefined,size(soil_layerstruct_userdefined), MPI_REAL8, 0, mpicom, ier)
+    call mpi_bcast (soil_layerstruct_userdefined_nlevsoi, 1, MPI_INTEGER, 0, mpicom, ier)
 
     ! snow pack variables
     call mpi_bcast (nlevsno, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (h2osno_max, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (int_snow_max, 1, MPI_REAL8, 0, mpicom, ier)
-    call mpi_bcast (n_melt_glcmec, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! glacier_mec variables
     call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -991,9 +961,6 @@ contains
 
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
-    write(iulog,*) '   Limit applied to integrated snowfall when determining changes in'
-    write(iulog,*) '       snow-covered fraction during melt (mm) =', int_snow_max
-    write(iulog,*) '   SCA shape parameter for glc_mec columns (n_melt_glcmec) =', n_melt_glcmec
 
     write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
     if (glc_do_dynglacier) then
@@ -1028,7 +995,9 @@ contains
     end if
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
-    write(iulog,*) '   soil layer structure = ', soil_layerstruct
+    write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
+    write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
+    write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
     write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then
@@ -1047,7 +1016,6 @@ contains
     write(iulog,*) ' perchroot (plant water stress based on time-integrated active layer only) = ',perchroot
     if (use_lch4) then
        write(iulog,*) ' anoxia (applied to soil decomposition)             = ',anoxia
-       write(iulog,*) ' anoxia_wtsat (weight anoxia by inundated fraction) = ',anoxia_wtsat
     end if
     ! Lakes
     write(iulog,*)
@@ -1084,6 +1052,7 @@ contains
        write(iulog, *) '    use_fates_spitfire = ', use_fates_spitfire
        write(iulog, *) '    use_fates_logging = ', use_fates_logging
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
+       write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
        write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
@@ -1094,7 +1063,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine apply_use_init_interp(finidat, finidat_interp_source)
+  subroutine apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
     !
     ! !DESCRIPTION:
     ! Applies the use_init_interp option, setting finidat_interp_source to finidat
@@ -1107,6 +1076,7 @@ contains
     ! !USES:
     !
     ! !ARGUMENTS:
+    character(len=*), intent(in)    :: finidat_interp_dest
     character(len=*), intent(inout) :: finidat
     character(len=*), intent(inout) :: finidat_interp_source
     !
@@ -1116,12 +1086,24 @@ contains
     !-----------------------------------------------------------------------
 
     if (finidat == ' ') then
-       call endrun(msg=' ERROR: Can only set use_init_interp if finidat is set')
+       write(iulog,*)' WARNING: Setting use_init_interp has no effect if finidat is not also set'
     end if
 
     if (finidat_interp_source /= ' ') then
        call endrun(msg=' ERROR: Cannot set use_init_interp if finidat_interp_source is &
             &already set')
+    end if
+
+    if (get_filename(finidat) == &
+         get_filename(finidat_interp_dest)) then
+       write(iulog,*) 'ERROR: With use_init_interp, cannot use the same filename for source and dest'
+       write(iulog,*) '(because this will lead to the source being overwritten before it is read).'
+       write(iulog,*) 'finidat             = ', trim(get_filename(finidat))
+       write(iulog,*) 'finidat_interp_dest = ', trim(get_filename(finidat_interp_dest))
+       write(iulog,*) '(Even if the two files are in different directories, you cannot use the same filename'
+       write(iulog,*) 'due to problems related to <https://github.com/ESCOMP/ctsm/issues/329>.)'
+       write(iulog,*) 'As a workaround, copy or move the finidat file to a different name.'
+       call endrun(msg=' ERROR: With use_init_interp, cannot use the same filename for source and dest')
     end if
 
     finidat_interp_source = finidat
