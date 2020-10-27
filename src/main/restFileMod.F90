@@ -21,7 +21,7 @@ module restFileMod
   use clm_varctl       , only : create_crop_landunit, irrigate
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
-  use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
+  use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim_size
   use ncdio_pio        , only : check_att, ncd_getatt
   use glcBehaviorMod   , only : glc_behavior_type
   use reweightMod      , only : reweight_wrapup
@@ -784,17 +784,17 @@ contains
             'or a non-transient run using an initial conditions file from a transient run,' // &
             new_line('x') // &
             'or when running a resolution or configuration that differs from the initial conditions.)'
-       call check_dim(ncid, nameg, numg, msg=msg)
-       call check_dim(ncid, namel, numl, msg=msg)
-       call check_dim(ncid, namec, numc, msg=msg)
-       call check_dim(ncid, namep, nump, msg=msg)
-       if ( use_fates ) call check_dim(ncid, nameCohort  , numCohort, msg=msg)
+       call check_dim_size(ncid, nameg, numg, msg=msg)
+       call check_dim_size(ncid, namel, numl, msg=msg)
+       call check_dim_size(ncid, namec, numc, msg=msg)
+       call check_dim_size(ncid, namep, nump, msg=msg)
+       if ( use_fates ) call check_dim_size(ncid, nameCohort  , numCohort, msg=msg)
     end if
     msg = 'You can deal with this mismatch by rerunning with ' // &
          'use_init_interp = .true. in user_nl_clm'
-    call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
-    call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
-    call check_dim(ncid, 'levlak'  , nlevlak) 
+    call check_dim_size(ncid, 'levsno'  , nlevsno, msg=msg)
+    call check_dim_size(ncid, 'levgrnd' , nlevgrnd, msg=msg)
+    call check_dim_size(ncid, 'levlak'  , nlevlak) 
     ! NOTE(wjs, 2020-10-21) We deliberately do NOT check 'levmaxurbgrnd' against
     ! nlevmaxurbgrnd. This is largely for the sake of backwards compatibility (to support
     ! old restart files that do not have 'levmaxurbgrnd'). But in addition, that check

@@ -17,7 +17,7 @@ module surfrdMod
   use clm_varctl      , only : use_cndv, use_crop
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
-  use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
+  use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
   use pio
   use spmdMod
   !
@@ -551,7 +551,7 @@ contains
     allocate(urban_region_id(begg:endg))
     allocate(pctspec(begg:endg))
 
-    call check_dim(ncid, 'nlevsoi', nlevsoifl)
+    call check_dim_size(ncid, 'nlevsoi', nlevsoifl)
 
        ! Obtain non-grid surface properties of surface dataset other than percent patch
 
@@ -602,8 +602,8 @@ contains
 
     ! Read glacier info
 
-    call check_dim(ncid, 'nglcec',   maxpatch_glcmec   )
-    call check_dim(ncid, 'nglcecp1', maxpatch_glcmec+1 )
+    call check_dim_size(ncid, 'nglcec',   maxpatch_glcmec   )
+    call check_dim_size(ncid, 'nglcecp1', maxpatch_glcmec+1 )
 
     call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=wt_glc_mec, &
          dim1name=grlnd, readvar=readvar)
@@ -691,8 +691,8 @@ contains
     SHR_ASSERT_ALL_FL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
-    call check_dim(ncid, 'cft',    cftsize)
-    call check_dim(ncid, 'natpft', natpft_size)
+    call check_dim_size(ncid, 'cft',    cftsize)
+    call check_dim_size(ncid, 'natpft', natpft_size)
 
     call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
             dim1name=grlnd, readvar=readvar)
@@ -754,7 +754,7 @@ contains
 !-----------------------------------------------------------------------
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
-    call check_dim(ncid, 'natpft', natpft_size)
+    call check_dim_size(ncid, 'natpft', natpft_size)
     ! If cft_size == 0, then we expect to be running with a surface dataset
     ! that does
     ! NOT have a PCT_CFT array (or CONST_FERTNITRO_CFT array), and thus does not have a 'cft' dimension.

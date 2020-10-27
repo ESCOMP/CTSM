@@ -45,7 +45,7 @@ module ncdio_pio
   !
   public :: check_var          ! determine if variable is on netcdf file
   public :: check_att          ! check if attribute is on file
-  public :: check_dim          ! validity check on dimension
+  public :: check_dim_size     ! validity check on dimension
   public :: ncd_pio_openfile   ! open a file
   public :: ncd_pio_createfile ! create a new file
   public :: ncd_pio_closefile  ! close a file
@@ -355,7 +355,7 @@ contains
   end subroutine check_att
 
   !-----------------------------------------------------------------------
-  subroutine check_dim(ncid, dimname, value, msg)
+  subroutine check_dim_size(ncid, dimname, value, msg)
     !
     ! !DESCRIPTION:
     ! Validity check on dimension
@@ -370,7 +370,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: dimid, dimlen    ! temporaries
     integer :: status           ! error code
-    character(len=*),parameter :: subname='check_dim' ! subroutine name
+    character(len=*),parameter :: subname='check_dim_size' ! subroutine name
     !-----------------------------------------------------------------------
 
     status = pio_inq_dimid (ncid, trim(dimname), dimid)
@@ -384,7 +384,7 @@ contains
        call shr_sys_abort(errMsg(sourcefile, __LINE__))
     end if
 
-  end subroutine check_dim
+  end subroutine check_dim_size
 
   !-----------------------------------------------------------------------
   subroutine ncd_redef(ncid)
