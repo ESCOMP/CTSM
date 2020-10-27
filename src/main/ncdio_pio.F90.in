@@ -352,10 +352,10 @@ contains
     ! Check if variable or dimension is on netcdf file
     !
     ! !ARGUMENTS:
-    class(file_desc_t), intent(inout) :: ncid  ! PIO file descriptor
-    character(len=*), intent(in) :: name ! variable or dimension name to check
-    logical, intent(in) :: is_dim ! if true, check for dimension; if false, check for variable
-    logical, intent(out) :: exists ! whether the given variable or dimension exists on file
+    class(file_desc_t) , intent(inout) :: ncid   ! PIO file descriptor
+    character(len=*)   , intent(in)    :: name   ! variable or dimension name to check
+    logical            , intent(in)    :: is_dim ! if true, check for dimension; if false, check for variable
+    logical            , intent(out)   :: exists ! whether the given variable or dimension exists on file
     !
     ! !LOCAL VARIABLES:
 
