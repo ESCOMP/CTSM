@@ -29,6 +29,8 @@ Does this tag change answers significantly for any of the following physics conf
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
+[ ] clm5_1
+
 [ ] clm5_0
 
 [ ] ctsm5_0-nwp
@@ -55,9 +57,6 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing:
-
-Code reviewed by:
-
 
 CTSM testing:
 
@@ -104,8 +103,9 @@ Answer changes
 
 Changes answers relative to baseline:
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
 
   Summarize any changes to answers, i.e.,
     - what code configurations:
