@@ -545,19 +545,17 @@ contains
     ! !LOCAL VARIABLES:
     logical :: coord_on_source
     logical :: level_class_on_source
-    type(var_desc_t) :: coord_source_vardesc  ! unused, but needed for check_var interface
-    type(var_desc_t) :: level_class_source_vardesc  ! unused, but needed for check_var interface
     character(len=:), allocatable :: variables_missing
 
     character(len=*), parameter :: subname = 'interp_levgrnd_check_source_file'
     !-----------------------------------------------------------------------
 
     variables_missing = ' '
-    call check_var(ncid_source, coord_varname, coord_source_vardesc, coord_on_source)
+    call check_var(ncid_source, coord_varname, coord_on_source)
     if (.not. coord_on_source) then
        variables_missing = variables_missing // coord_varname // ' '
     end if
-    call check_var(ncid_source, level_class_varname, level_class_source_vardesc, level_class_on_source)
+    call check_var(ncid_source, level_class_varname, level_class_on_source)
     if (.not. level_class_on_source) then
        variables_missing = variables_missing // level_class_varname // ' '
     end if

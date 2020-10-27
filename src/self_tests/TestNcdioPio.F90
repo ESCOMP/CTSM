@@ -264,7 +264,7 @@ contains
     character(len=*), parameter :: subname = 'check_var_written'
     !-----------------------------------------------------------------------
 
-    call check_var(ncid, varname, vardesc, readvar)
+    call check_var(ncid, varname, readvar, vardesc=vardesc)
     if (.not. readvar) then
        call endrun(trim(varname)//' not found on file')
     end if

@@ -282,21 +282,22 @@ contains
   end subroutine ncd_pio_createfile
 
   !-----------------------------------------------------------------------
-  subroutine check_var(ncid, varname, vardesc, readvar, print_err )
+  subroutine check_var(ncid, varname, readvar, vardesc, print_err )
     !
     ! !DESCRIPTION:
     ! Check if variable is on netcdf file
     !
     ! !ARGUMENTS:
-    class(file_desc_t) , intent(inout)  :: ncid      ! PIO file descriptor
-    character(len=*)   , intent(in)     :: varname   ! Varible name to check
-    type(Var_desc_t)   , intent(out)    :: vardesc   ! Output variable descriptor
-    logical            , intent(out)    :: readvar   ! If variable exists or not
-    logical, optional  , intent(in)     :: print_err ! If should print about error
+    class(file_desc_t) , intent(inout)          :: ncid    ! PIO file descriptor
+    character(len=*)   , intent(in)             :: varname ! Varible name to check
+    logical            , intent(out)            :: readvar ! If variable exists or not
+    type(Var_desc_t)   , optional, intent(out)  :: vardesc ! Output variable descriptor (if desired)
+    logical            , optional, intent(in)   :: print_err ! If should print about error
     !
     ! !LOCAL VARIABLES:
     integer :: ret     ! return value
     logical :: log_err ! if should log error
+    type(Var_desc_t) :: vardesc_local
     character(len=*),parameter :: subname='check_var' ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -308,7 +309,10 @@ contains
     end if
     readvar = .true.
     call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-    ret = PIO_inq_varid (ncid, varname, vardesc)
+    ret = PIO_inq_varid (ncid, varname, vardesc_local)
+    if (present(vardesc)) then
+       vardesc = vardesc_local
+    end if
     if (ret /= PIO_noerr) then
        readvar = .false.
        if (masterproc .and. log_err) &
@@ -757,7 +761,7 @@ contains
     integer, parameter :: error_variable_not_found = 11
     !-----------------------------------------------------------------------
 
-    call check_var(ncid, varname, vardesc, readvar)
+    call check_var(ncid, varname, readvar, vardesc=vardesc)
     if (readvar) then
        call ncd_inqvdlen_byDesc(ncid, vardesc, dimnum, dlen, err_code)
     else
@@ -846,7 +850,7 @@ contains
     character(len=*), parameter :: subname = 'ncd_inqvdname_byName'
     !-----------------------------------------------------------------------
 
-    call check_var(ncid, varname, vardesc, readvar)
+    call check_var(ncid, varname, readvar, vardesc=vardesc)
     if (readvar) then
        call ncd_inqvdname_byDesc(ncid, vardesc, dimnum, dname, err_code)
     else

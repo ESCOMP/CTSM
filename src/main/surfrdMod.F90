@@ -71,7 +71,6 @@ contains
     integer :: n,i,j               ! index
     integer :: ier                 ! error status
     type(file_desc_t)  :: ncid     ! netcdf id
-    type(var_desc_t)   :: vardesc  ! variable descriptor
     character(len=256) :: varname  ! variable name
     character(len=256) :: locfn    ! local file name
     logical :: readvar             ! read variable in or not
@@ -154,7 +153,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid               ! netcdf id
-    type(var_desc_t)  :: vardesc            ! variable descriptor
     integer :: beg                          ! local beg index
     integer :: end                          ! local end index
     integer :: ni,nj,ns                     ! size of grid on file
@@ -189,7 +187,7 @@ contains
     call domain_init(ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=begg, nend=endg)
 
     ! Determine type of file - old style grid file or new style domain file
-    call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar)
+    call check_var(ncid=ncid, varname='xc', readvar=readvar)
     if (readvar)then
         istype_domain = .true.
     else
@@ -303,7 +301,6 @@ contains
     character(len=*), intent(in) :: lfsurdat    ! surface dataset filename
     !
     ! !LOCAL VARIABLES:
-    type(var_desc_t)  :: vardesc              ! pio variable descriptor
     type(domain_type) :: surfdata_domain      ! local domain associated with surface dataset
     character(len=256):: locfn                ! local file name
     integer, parameter :: n_dom_urban = 1     ! # of dominant urban landunits
@@ -344,11 +341,11 @@ contains
 
     ! Check if fsurdat grid is "close" to fatmlndfrc grid, exit if lats/lon > 0.001
 
-    call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar)
+    call check_var(ncid=ncid, varname='xc', readvar=readvar)
     if (readvar) then
        istype_domain = .true.
     else
-       call check_var(ncid=ncid, varname='LONGXY', vardesc=vardesc, readvar=readvar)
+       call check_var(ncid=ncid, varname='LONGXY', readvar=readvar)
        if (readvar) then
           istype_domain = .false.
        else
