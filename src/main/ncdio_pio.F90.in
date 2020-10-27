@@ -45,6 +45,7 @@ module ncdio_pio
   !
   public :: check_var          ! determine if variable is on netcdf file
   public :: check_dim          ! determine if dimension is on netcdf file
+  public :: check_var_or_dim   ! determine if variable or dimension is on netcdf file
   public :: check_att          ! check if attribute is on file
   public :: check_dim_size     ! validity check on dimension
   public :: ncd_pio_openfile   ! open a file
@@ -343,6 +344,31 @@ contains
     call ncd_inqdid(ncid, dimname, dimid, dimexist)
 
   end subroutine check_dim
+
+  !-----------------------------------------------------------------------
+  subroutine check_var_or_dim(ncid, name, is_dim, exists)
+    !
+    ! !DESCRIPTION:
+    ! Check if variable or dimension is on netcdf file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(inout) :: ncid  ! PIO file descriptor
+    character(len=*), intent(in) :: name ! variable or dimension name to check
+    logical, intent(in) :: is_dim ! if true, check for dimension; if false, check for variable
+    logical, intent(out) :: exists ! whether the given variable or dimension exists on file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'check_var_or_dim'
+    !-----------------------------------------------------------------------
+
+    if (is_dim) then
+       call check_dim(ncid, name, exists)
+    else
+       call check_var(ncid, name, exists, print_err=.false.)
+    end if
+
+  end subroutine check_var_or_dim
 
   !-----------------------------------------------------------------------
   subroutine check_att(ncid, varid, attrib, att_found)
