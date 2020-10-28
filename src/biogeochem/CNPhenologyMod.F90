@@ -101,6 +101,9 @@ module CNPhenologyMod
   integer, allocatable :: maxplantjday(:,:) ! maximum planting julian day
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
+  logical,parameter :: matrixcheck_ph = .True.          ! Matrix check
+  logical,parameter :: acc_ph = .False.                 ! Another matrix check
+
   real(r8), private :: initial_seed_at_planting = 3._r8 ! Initial seed at planting
 
   character(len=*), parameter, private :: sourcefile = &
@@ -2701,6 +2704,7 @@ contains
     real(r8):: denom        ! temporary variable for divisor
     real(r8) :: ntovr_leaf  
     real(r8) :: fr_leafn_to_litter ! fraction of the nitrogen turnover that goes to litter; remaining fraction is retranslocated
+    real(r8) :: grainc_to_out, grainn_to_out ! Temporary for grain Carbon and grain Nitrogen output
     !-----------------------------------------------------------------------
 
     associate(                                                                           & 
@@ -3058,7 +3062,7 @@ contains
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
                livestemn_to_litter(p) = livestemn(p) / dt * (1 - biofuel_harvfrac(ivt(p)))
                if(use_matrixcn)then
-                  livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p))/dt, &
+                  livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p))/dt), &
                                                                             dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                end if
             end if

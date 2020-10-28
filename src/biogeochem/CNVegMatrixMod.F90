@@ -52,6 +52,8 @@ module CNVegMatrixMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public:: CNVegMatrix
+  public:: matrix_update_phc,matrix_update_gmc,matrix_update_fic
+  public:: matrix_update_phn,matrix_update_gmn,matrix_update_fin
   !-----------------------------------------------------------------------
 
 contains
@@ -3518,5 +3520,249 @@ contains
    end associate
    end associate
  end subroutine CNVegMatrix
+
+ function matrix_update_phc(p,itransfer,rate,dt,cnveg_carbonflux_inst,matrixcheck,acc)
+
+   integer ,intent(in) :: p
+   integer ,intent(in) :: itransfer
+   real(r8),intent(in) :: rate
+   real(r8),intent(in) :: dt
+   type(cnveg_carbonflux_type)  , intent(inout) :: cnveg_carbonflux_inst 
+   logical ,intent(in),optional :: matrixcheck
+   logical ,intent(in),optional :: acc
+   real(r8)            :: matrix_update_phc
+
+   associate(                          &
+     matrix_phtransfer                   => cnveg_carbonflux_inst%matrix_phtransfer_patch , &
+     matrix_phturnover                   => cnveg_carbonflux_inst%matrix_phturnover_patch , &
+     doner_phc                           => cnveg_carbonflux_inst%matrix_phtransfer_doner_patch&
+   )
+      if(.not. present(matrixcheck) .or. matrixcheck)then
+         if((.not. present(acc) .or. acc) .and. matrix_phturnover(p,doner_phc(itransfer)) + rate * dt .ge. 1)then
+            matrix_update_phc = amax1(0._r8,(1._r8 - matrix_phturnover(p,doner_phc(itransfer))) / dt)
+         else
+            matrix_update_phc = rate
+         end if
+      else
+         matrix_update_phc = rate
+      end if
+      if(.not. present(acc) .or. acc)then
+         matrix_phturnover(p,doner_phc(itransfer)) = matrix_phturnover(p,doner_phc(itransfer)) + matrix_update_phc * dt
+         matrix_phtransfer(p,itransfer) = matrix_phtransfer(p,itransfer) + matrix_update_phc
+      else
+         matrix_phturnover(p,doner_phc(itransfer)) = matrix_phturnover(p,doner_phc(itransfer)) - matrix_phtransfer(p,itransfer) * dt + matrix_update_phc * dt
+         matrix_phtransfer(p,itransfer) = matrix_update_phc
+      end if
+
+      return
+   end associate
+
+ end function matrix_update_phc
+
+ function matrix_update_gmc(p,itransfer,rate,dt,cnveg_carbonflux_inst,matrixcheck,acc)
+
+   integer,intent(in) :: p
+   integer,intent(in) :: itransfer
+   real(r8),intent(in) :: rate
+   real(r8),intent(in) :: dt
+   type(cnveg_carbonflux_type)  , intent(inout) :: cnveg_carbonflux_inst 
+   logical ,intent(in),optional :: matrixcheck
+   logical ,intent(in),optional :: acc
+   real(r8)            :: matrix_update_gmc
+
+   associate(                          &
+   matrix_phturnover                   => cnveg_carbonflux_inst%matrix_phturnover_patch , &
+   matrix_gmtransfer                   => cnveg_carbonflux_inst%matrix_gmtransfer_patch , &
+   matrix_gmturnover                   => cnveg_carbonflux_inst%matrix_gmturnover_patch , &
+   doner_gmc                           => cnveg_carbonflux_inst%matrix_gmtransfer_doner_patch  & ! Input:  [integer (:)] Doners of gap mortality related C transfer
+   )
+
+      if(.not. present(matrixcheck) .or. matrixcheck)then
+         if((.not. present(acc) .or. acc) .and. matrix_phturnover(p,doner_gmc(itransfer)) + matrix_gmturnover(p,doner_gmc(itransfer)) + rate * dt .ge. 1)then
+            matrix_update_gmc = amax1(0._r8,(1._r8 - matrix_phturnover(p,doner_gmc(itransfer)) - matrix_gmturnover(p,doner_gmc(itransfer))) / dt)
+         else
+            matrix_update_gmc = rate
+         end if
+      else
+         matrix_update_gmc = rate
+      end if
+      if(.not. present(acc) .or. acc)then
+         matrix_gmturnover(p,doner_gmc(itransfer)) = matrix_gmturnover(p,doner_gmc(itransfer)) + matrix_update_gmc * dt
+         matrix_gmtransfer(p,itransfer) = matrix_gmtransfer(p,itransfer) + matrix_update_gmc
+      else
+         matrix_gmturnover(p,doner_gmc(itransfer)) = matrix_gmturnover(p,doner_gmc(itransfer)) - matrix_gmtransfer(p,itransfer) * dt + matrix_update_gmc * dt
+         matrix_gmtransfer(p,itransfer) = matrix_update_gmc
+      end if
+      return
+   end associate
+
+ end function matrix_update_gmc
+
+
+ function matrix_update_fic(p,itransfer,rate,dt,cnveg_carbonflux_inst,matrixcheck,acc)
+
+   integer,intent(in) :: p
+   integer,intent(in) :: itransfer
+   real(r8),intent(in) :: rate
+   real(r8),intent(in) :: dt
+   type(cnveg_carbonflux_type)  , intent(inout) :: cnveg_carbonflux_inst 
+   logical ,intent(in),optional :: matrixcheck
+   logical ,intent(in),optional :: acc
+   real(r8)            :: matrix_update_fic
+
+   associate(                          &
+   matrix_phturnover                   => cnveg_carbonflux_inst%matrix_phturnover_patch , &
+   matrix_gmturnover                   => cnveg_carbonflux_inst%matrix_gmturnover_patch , &
+   matrix_fitransfer                   => cnveg_carbonflux_inst%matrix_fitransfer_patch , &
+   matrix_fiturnover                   => cnveg_carbonflux_inst%matrix_fiturnover_patch , &
+   doner_fic                           => cnveg_carbonflux_inst%matrix_fitransfer_doner_patch &
+   )
+
+      if(.not. present(matrixcheck) .or. matrixcheck)then
+         if((.not. present(acc) .or. acc) .and. matrix_phturnover(p,doner_fic(itransfer)) + matrix_gmturnover(p,doner_fic(itransfer)) &
+           + matrix_fiturnover(p,doner_fic(itransfer)) + rate * dt .ge. 1)then
+            matrix_update_fic = amax1(0._r8,(1._r8 - matrix_phturnover(p,doner_fic(itransfer)) &
+                              - matrix_gmturnover(p,doner_fic(itransfer)) - matrix_fiturnover(p,doner_fic(itransfer))) / dt)
+         else
+            matrix_update_fic = rate
+         end if
+      else
+         matrix_update_fic = rate
+      end if
+      if(.not. present(acc) .or. acc)then
+         matrix_fiturnover(p,doner_fic(itransfer)) = matrix_fiturnover(p,doner_fic(itransfer)) + matrix_update_fic * dt
+         matrix_fitransfer(p,itransfer) = matrix_fitransfer(p,itransfer) + matrix_update_fic
+      else
+         matrix_fiturnover(p,doner_fic(itransfer)) = matrix_fiturnover(p,doner_fic(itransfer)) - matrix_fitransfer(p,itransfer) * dt + matrix_update_fic * dt
+         matrix_fitransfer(p,itransfer) = matrix_update_fic
+      end if
+
+      return
+   end associate
+
+end function matrix_update_fic
+
+ function matrix_update_phn(p,itransfer,rate,dt,cnveg_nitrogenflux_inst,matrixcheck,acc)
+
+   integer,intent(in) :: p
+   integer,intent(in) :: itransfer
+   real(r8),intent(in) :: rate
+   real(r8),intent(in) :: dt
+   type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst 
+   logical ,intent(in),optional :: matrixcheck
+   logical ,intent(in),optional :: acc
+   real(r8)            :: matrix_update_phn
+
+   associate(                          &
+     matrix_nphtransfer                   => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch , &
+     matrix_nphturnover                   => cnveg_nitrogenflux_inst%matrix_nphturnover_patch , &
+     doner_phn                            => cnveg_nitrogenflux_inst%matrix_nphtransfer_doner_patch & ! Input:  [integer (:)] Doners of phenology related N transfer
+   )
+
+      if(.not. present(matrixcheck) .or. matrixcheck)then
+         if((.not. present(acc) .or. acc) .and. matrix_nphturnover(p,doner_phn(itransfer)) + rate * dt .ge. 1)then
+            matrix_update_phn = amax1(0._r8,(1._r8 - matrix_nphturnover(p,doner_phn(itransfer))) / dt)
+         else
+            matrix_update_phn = rate
+         end if
+      else
+         matrix_update_phn = rate
+      end if
+      if(.not. present(acc) .or. acc)then
+         matrix_nphturnover(p,doner_phn(itransfer)) = matrix_nphturnover(p,doner_phn(itransfer)) + matrix_update_phn * dt
+         matrix_nphtransfer(p,itransfer) = matrix_nphtransfer(p,itransfer) + matrix_update_phn
+      else
+         matrix_nphturnover(p,doner_phn(itransfer)) = matrix_nphturnover(p,doner_phn(itransfer)) - matrix_nphtransfer(p,itransfer) * dt + matrix_update_phn * dt
+         matrix_nphtransfer(p,itransfer) = matrix_update_phn
+      end if
+
+      return
+   end associate
+
+ end function matrix_update_phn
+
+ function matrix_update_gmn(p,itransfer,rate,dt,cnveg_nitrogenflux_inst,matrixcheck,acc)
+
+   integer ,intent(in) :: p
+   integer ,intent(in) :: itransfer
+   real(r8),intent(in) :: rate
+   real(r8),intent(in) :: dt
+   type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst 
+   logical ,intent(in),optional :: matrixcheck
+   logical ,intent(in),optional :: acc
+   real(r8)            :: matrix_update_gmn
+
+   associate(                          &
+   matrix_nphturnover                   => cnveg_nitrogenflux_inst%matrix_nphturnover_patch , &
+   matrix_ngmtransfer                   => cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch , &
+   matrix_ngmturnover                   => cnveg_nitrogenflux_inst%matrix_ngmturnover_patch , &
+   doner_gmn                            => cnveg_nitrogenflux_inst%matrix_ngmtransfer_doner_patch & ! Input:  [integer (:)] Doners of gap mortality related N transfer
+   )
+
+      if(.not. present(matrixcheck) .or. matrixcheck)then
+         if((.not. present(acc) .or. acc) .and. matrix_nphturnover(p,doner_gmn(itransfer)) + matrix_ngmturnover(p,doner_gmn(itransfer)) + rate * dt .ge. 1)then
+            matrix_update_gmn = amax1(0._r8,(1._r8 - matrix_nphturnover(p,doner_gmn(itransfer)) - matrix_ngmturnover(p,doner_gmn(itransfer))) / dt)
+         else
+            matrix_update_gmn = rate
+         end if
+      else
+         matrix_update_gmn = rate
+      end if
+      if(.not. present(acc) .or. acc)then
+         matrix_ngmturnover(p,doner_gmn(itransfer)) = matrix_ngmturnover(p,doner_gmn(itransfer)) + matrix_update_gmn * dt
+         matrix_ngmtransfer(p,itransfer) = matrix_ngmtransfer(p,itransfer) + matrix_update_gmn
+      else
+         matrix_ngmturnover(p,doner_gmn(itransfer)) = matrix_ngmturnover(p,doner_gmn(itransfer)) - matrix_ngmtransfer(p,itransfer) * dt + matrix_update_gmn * dt
+         matrix_ngmtransfer(p,itransfer) = matrix_update_gmn
+      end if
+
+      return
+   end associate
+
+ end function matrix_update_gmn
+
+
+ function matrix_update_fin(p,itransfer,rate,dt,cnveg_nitrogenflux_inst,matrixcheck,acc)
+
+   integer ,intent(in) :: p
+   integer ,intent(in) :: itransfer
+   real(r8),intent(in) :: rate
+   real(r8),intent(in) :: dt
+   type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst 
+   logical ,intent(in),optional :: matrixcheck
+   logical ,intent(in),optional :: acc
+   real(r8)            :: matrix_update_fin
+
+   associate(                          &
+   matrix_nphturnover                   => cnveg_nitrogenflux_inst%matrix_nphturnover_patch , &
+   matrix_ngmturnover                   => cnveg_nitrogenflux_inst%matrix_ngmturnover_patch , &
+   matrix_nfitransfer                   => cnveg_nitrogenflux_inst%matrix_nfitransfer_patch , &
+   matrix_nfiturnover                   => cnveg_nitrogenflux_inst%matrix_nfiturnover_patch , &
+   doner_fin                           => cnveg_nitrogenflux_inst%matrix_nfitransfer_doner_patch &
+   )
+
+      if(.not. present(matrixcheck) .or. matrixcheck)then
+         if((.not. present(acc) .or. acc) .and. matrix_nphturnover(p,doner_fin(itransfer)) + matrix_ngmturnover(p,doner_fin(itransfer)) &
+           + matrix_nfiturnover(p,doner_fin(itransfer)) + rate * dt .ge. 1)then
+            matrix_update_fin = amax1(0._r8,(1._r8 - matrix_nphturnover(p,doner_fin(itransfer)) &
+                              - matrix_ngmturnover(p,doner_fin(itransfer)) - matrix_nfiturnover(p,doner_fin(itransfer))) / dt)
+         else
+            matrix_update_fin = rate
+         end if
+      else
+         matrix_update_fin = rate
+      end if
+      if(.not. present(acc) .or. acc)then
+         matrix_nfiturnover(p,doner_fin(itransfer)) = matrix_nfiturnover(p,doner_fin(itransfer)) + matrix_update_fin * dt
+         matrix_nfitransfer(p,itransfer) = matrix_nfitransfer(p,itransfer) + matrix_update_fin
+      else
+         matrix_nfiturnover(p,doner_fin(itransfer)) = matrix_nfiturnover(p,doner_fin(itransfer)) - matrix_nfitransfer(p,itransfer) * dt + matrix_update_fin * dt
+         matrix_nfitransfer(p,itransfer) = matrix_update_fin
+      end if
+
+      return
+   end associate
+
+ end function matrix_update_fin
 
 end module CNVegMatrixMod

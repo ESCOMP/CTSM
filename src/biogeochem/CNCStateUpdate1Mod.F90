@@ -149,7 +149,8 @@ contains
     ! On the radiation time step, update all the prognostic carbon state
     ! variables (except for gap-phase mortality and fire fluxes)
     !
-    use clm_varctl, only : carbon_resp_opt
+    use clm_varctl    , only : carbon_resp_opt
+    use CNVegMatrixMod, only : matrix_update_phc
     ! !ARGUMENTS:
     integer                              , intent(in)    :: num_soilc       ! number of soil columns filter
     integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
