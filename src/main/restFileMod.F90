@@ -21,8 +21,9 @@ module restFileMod
   use clm_varctl       , only : create_crop_landunit, irrigate
   use clm_varcon       , only : nameg, namel, namec, namep, nameCohort
   use ncdio_pio        , only : file_desc_t, ncd_pio_createfile, ncd_pio_openfile, ncd_global
-  use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim
+  use ncdio_pio        , only : ncd_pio_closefile, ncd_defdim, ncd_putatt, ncd_enddef, check_dim_size
   use ncdio_pio        , only : check_att, ncd_getatt
+  use ncdio_utils      , only : find_var_on_file
   use glcBehaviorMod   , only : glc_behavior_type
   use reweightMod      , only : reweight_wrapup
   use IssueFixedMetadataHandler, only : write_issue_fixed_metadata, read_issue_fixed_metadata
@@ -767,6 +768,7 @@ contains
     integer :: numc      ! total number of columns across all processors
     integer :: nump      ! total number of pfts across all processors
     integer :: numCohort ! total number of cohorts across all processors
+    character(len=64) :: dimname
     character(len=:), allocatable :: msg  ! diagnostic message
     character(len=32) :: subname='restFile_dimcheck' ! subroutine name
     !-----------------------------------------------------------------------
@@ -784,21 +786,24 @@ contains
             'or a non-transient run using an initial conditions file from a transient run,' // &
             new_line('x') // &
             'or when running a resolution or configuration that differs from the initial conditions.)'
-       call check_dim(ncid, nameg, numg, msg=msg)
-       call check_dim(ncid, namel, numl, msg=msg)
-       call check_dim(ncid, namec, numc, msg=msg)
-       call check_dim(ncid, namep, nump, msg=msg)
-       if ( use_fates ) call check_dim(ncid, nameCohort  , numCohort, msg=msg)
+       call check_dim_size(ncid, nameg, numg, msg=msg)
+       call check_dim_size(ncid, namel, numl, msg=msg)
+       call check_dim_size(ncid, namec, numc, msg=msg)
+       call check_dim_size(ncid, namep, nump, msg=msg)
+       if ( use_fates ) call check_dim_size(ncid, nameCohort  , numCohort, msg=msg)
     end if
     msg = 'You can deal with this mismatch by rerunning with ' // &
          'use_init_interp = .true. in user_nl_clm'
-    call check_dim(ncid, 'levsno'  , nlevsno, msg=msg)
-    call check_dim(ncid, 'levgrnd' , nlevgrnd, msg=msg)
-    call check_dim(ncid, 'levlak'  , nlevlak) 
-    ! NOTE(wjs, 2020-10-21) We deliberately do NOT check 'levmaxurbgrnd' against
-    ! nlevmaxurbgrnd. This is largely for the sake of backwards compatibility (to support
-    ! old restart files that do not have 'levmaxurbgrnd'). But in addition, that check
-    ! seems unnecessary since we already check both levgrnd and levurb.
+    call check_dim_size(ncid, 'levsno'  , nlevsno, msg=msg)
+    call check_dim_size(ncid, 'levgrnd' , nlevgrnd, msg=msg)
+    call check_dim_size(ncid, 'levlak'  , nlevlak)
+
+    ! BACKWARDS_COMPATIBILITY(wjs, 2020-10-27) The possibility of falling back on levgrnd
+    ! is needed for backwards compatibility with older restart files that do not have a
+    ! levmaxurbgrnd dimension. On these old restart files, we expect the levgrnd dimension
+    ! to give the implicit value of levmaxurbgrnd.
+    call find_var_on_file(ncid, 'levmaxurbgrnd:levgrnd', is_dim=.true., varname_on_file=dimname)
+    call check_dim_size(ncid, dimname, nlevmaxurbgrnd)
 
   end subroutine restFile_dimcheck
 
