@@ -42,6 +42,7 @@ module CNPhenologyMod
   use GridcellType                    , only : grc                
   use PatchType                       , only : patch   
   use atm2lndType                     , only : atm2lnd_type             
+  use CNVegMatrixMod                  , only : matrix_update_phc, matrix_update_phn
   !
   implicit none
   private
@@ -2855,20 +2856,22 @@ contains
 
                   if(use_matrixcn)then
                      if(grainc(p) .gt. 0)then
-                        matrix_phtransfer(p,igrain_to_iout_phc)  = (grainc_to_seed(p) + grainc_to_food(p)) / grainc(p)
+                        grainc_to_out = grainc(p) * matrix_update_phc(p,igrain_to_iout_phc,(grainc_to_seed(p) + grainc_to_food(p)) / &
+                                        grainc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
                         grainc_to_seed(p) = 0
                         grainc_to_food(p) = 0
                      end if
                      if(grainn(p) .gt. 0)then
-                        matrix_nphtransfer(p,igrain_to_iout_phn) = (grainn_to_seed(p) + grainn_to_food(p)) / grainn(p)
+                        grainn_to_out = grainn(p) * matrix_update_phn(p,igrain_to_iout_phn,(grainn_to_seed(p) + grainn_to_food(p)) / &
+                                        grainn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
                         grainn_to_seed(p) = 0
                         grainn_to_food(p) = 0
                      end if
                      if(livestemc(p) .gt. 0)then
-                        matrix_phtransfer(p,ilivestem_to_iout_phc) = (livestemc_to_litter(p) + livestemc_to_biofuelc(p)) &
-                                                                     / livestemc(p)
+                        livestemc_to_litter(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_litter(p) / &
+                                                 livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
                         livestemc_to_litter(p) = 0
                      end if
@@ -3055,7 +3058,8 @@ contains
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
                livestemn_to_litter(p) = livestemn(p) / dt * (1 - biofuel_harvfrac(ivt(p)))
                if(use_matrixcn)then
-                  matrix_nphtransfer(p,ilivestem_to_iout_phn) = (1.0_r8 - biofuel_harvfrac(ivt(p)) ) / dt
+                  livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p))/dt, &
+                                                                            dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                end if
             end if
 
@@ -3406,7 +3410,9 @@ ptch: do fp = 1,num_soilp
 
                if (use_matrixcn)then 
                   if (livestemn(p) .gt. 0.0_r8) then
-                     matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = livestemn_to_deadstemn(p) / livestemn(p)
+                     livestemn_to_deadstemn(p) = livestemn(p) * &
+                                                 matrix_update_phn(p,ilivestem_to_ideadstem_phn,livestemn_to_deadstemn(p) / &
+                                                 livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   else
                      livestemn_to_deadstemn(p) = 0
                   end if
@@ -3452,12 +3458,14 @@ ptch: do fp = 1,num_soilp
                livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
                if(use_matrixcn)then
                   if(livecrootn(p) .gt. 0.0_r8) then
-                     matrix_nphtransfer(p,ilivecroot_to_iretransn_phn) = livecrootn_to_retransn(p) / livecrootn(p)
+                     livecrootn_to_retransn(p) = matrix_update_phn(p,ilivecroot_to_iretransn_phn,livecrootn_to_retransn(p) / &
+                                                 livecrootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livecrootn(p)
                   else
                      livecrootn_to_retransn(p) = 0
                   end if
                   if(livestemn(p) .gt. 0.0_r8) then
-                     matrix_nphtransfer(p,ilivestem_to_iretransn_phn)  = livestemn_to_retransn(p) / livestemn(p)
+                     livestemn_to_retransn(p) = matrix_update_phn(p,ilivestem_to_iretransn_phn,livestemn_to_retransn(p) / &
+                                                livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livestemn(p)
                   else
                      livestemn_to_retransn(p)  = 0
                   end if

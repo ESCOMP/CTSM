@@ -1026,66 +1026,7 @@ contains
       
       call t_stopf('CN veg matrix-init')
 
-  ! Assign matrix turnover variables
       call t_startf('CN veg matrix-assigning matrix')
-
-      do i = 1,nvegcpool
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            matrix_phturnover(p,i) = 0._r8
-            matrix_gmturnover(p,i) = 0._r8
-            matrix_fiturnover(p,i) = 0._r8
-            matrix_nphturnover(p,i) = 0._r8
-            matrix_ngmturnover(p,i) = 0._r8
-            matrix_nfiturnover(p,i) = 0._r8
-         end do
-      end do
-
-      do k=1,ncphtrans
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            matrix_phturnover(p,doner_phc(k)) = matrix_phturnover(p,doner_phc(k)) + matrix_phtransfer(p,k) * dt
-         end do
-      end do
-
-      do k=1,ncgmtrans
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            matrix_gmturnover(p,doner_gmc(k)) = matrix_gmturnover(p,doner_gmc(k)) + matrix_gmtransfer(p,k) * dt
-         end do
-      end do
-
-      do k=1,ncfitrans
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            matrix_fiturnover(p,doner_fic(k)) = matrix_fiturnover(p,doner_fic(k)) + matrix_fitransfer(p,k)* dt
-            if(use_c14)then
-               matrix_c14fitransfer(p,k) = matrix_c14fitransfer(p,k) + matrix_fitransfer(p,k)  ! Combine fire c14 loss and c14 decay together
-               matrix_c14fiturnover(p,doner_fic(k)) = matrix_c14fiturnover(p,doner_fic(k)) + matrix_c14fitransfer(p,k)* dt
-            end if
-         end do
-      end do
-      
-      do k=1,nnphtrans
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            matrix_nphturnover(p,doner_phn(k)) = matrix_nphturnover(p,doner_phn(k)) + matrix_nphtransfer(p,k)* dt
-         end do
-      end do
-
-      do k=1,nngmtrans
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            matrix_ngmturnover(p,doner_gmn(k)) = matrix_ngmturnover(p,doner_gmn(k)) + matrix_ngmtransfer(p,k)* dt
-         end do
-      end do
-
-      do k=1,nnfitrans
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            matrix_nfiturnover(p,doner_fin(k)) = matrix_nfiturnover(p,doner_fin(k)) + matrix_nfitransfer(p,k)* dt
-         end do
-      end do
 
   ! Calculate A matrices from C transfers and C turnovers      
       if(ncphtrans .gt. ncphouttrans)then
