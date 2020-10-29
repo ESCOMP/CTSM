@@ -1609,6 +1609,11 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_bgc_shared($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ##################################
+  # namelist group: cnphenology
+  ##################################
+  setup_logic_cnphenology($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+
   #############################################
   # namelist group: soilwater_movement_inparm #
   #############################################
@@ -2677,6 +2682,24 @@ sub setup_logic_bgc_shared {
   # workaround.
   if ( &value_is_true($nl_flags->{'use_century_decomp'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnphenology {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  my @list  = (  "onset_thresh_depends_on_veg", "min_crtical_dayl_depends_on_lat" );
+  foreach my $var ( @list ) {
+    if (  &value_is_true($nl_flags->{'use_cn'}) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
+                   'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'} );
+    } else {
+       if ( defined($nl->get_value($var)) ) {
+          $log->fatal_error("$var should only be set if use_cn is on");
+       }
+    }
   }
 }
 

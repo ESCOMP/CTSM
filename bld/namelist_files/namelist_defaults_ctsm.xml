@@ -467,9 +467,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c200905.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c200905.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c200905.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c200923b.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c200923b.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c200923b.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -543,6 +543,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <initial_seed_at_planting use_crop=".true." phys="clm5_0" >3.d00</initial_seed_at_planting>
 <initial_seed_at_planting use_crop=".true." phys="clm4_5" >1.d00</initial_seed_at_planting>
 
+<!-- CN Phenology -->
+<onset_thresh_depends_on_veg     use_cn=".true." phys="clm5_1" >.true.</onset_thresh_depends_on_veg>
+<min_crtical_dayl_depends_on_lat use_cn=".true." phys="clm5_1" >.true.</min_crtical_dayl_depends_on_lat>
+<onset_thresh_depends_on_veg                                   >.false.</onset_thresh_depends_on_veg>
+<min_crtical_dayl_depends_on_lat                               >.false.</min_crtical_dayl_depends_on_lat>
 
 <!-- turnover time modifications    -->
 <decomp_depth_efolding phys="clm4_5" >0.5</decomp_depth_efolding>
