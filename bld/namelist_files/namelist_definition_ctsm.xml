@@ -2607,11 +2607,6 @@ Snow compaction overburden exponential factor (1/K)
 Not used for snow_overburden_compaction_method=Vionnet2012
 </entry>
 
-<entry id="min_wind_snowcompact" type="real" category="clm_physics"
-       group="clm_snowhydrology_inparm"   >
-Minimum wind speed tht results in compaction (m/s)
-</entry>
-
 <entry id="fresh_snw_rds_max" type="real" category="clm_physics"
        group="aerosol"   >
 maximum warm (at freezing) fresh snow effective radius [microns]
