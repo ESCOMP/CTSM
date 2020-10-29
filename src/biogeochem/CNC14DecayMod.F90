@@ -33,7 +33,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine C14Decay( bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
        c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-       cnveg_carbonflux_inst, c14_cnveg_carbonflux_inst, c14_soilbiogeochem_carbonflux_inst)
+       c14_cnveg_carbonflux_inst, c14_soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
     ! On the radiation time step, calculate the radioactive decay of C14
@@ -45,7 +45,6 @@ contains
     integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(CNVeg_carbonstate_type)          , intent(inout) :: c14_cnveg_carbonstate_inst
-    type(CNVeg_carbonflux_type)           , intent(inout) :: cnveg_carbonflux_inst
     type(CNVeg_carbonflux_type)           , intent(inout) :: c14_cnveg_carbonflux_inst
     type(soilbiogeochem_carbonstate_type) , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonflux_type)  , intent(inout) :: c14_soilbiogeochem_carbonflux_inst

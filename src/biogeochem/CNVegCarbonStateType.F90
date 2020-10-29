@@ -10,7 +10,6 @@ module CNVegCarbonStateType
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
-  use clm_varpar     , only : nvegcpool
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop, use_matrixcn
   use decompMod      , only : bounds_type
@@ -237,7 +236,7 @@ module CNVegCarbonStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, nvegcpool, carbon_type, ratio, NLFilename, &
+  subroutine Init(this, bounds, carbon_type, ratio, NLFilename, &
                   dribble_crophrv_xsmrpool_2atm, c12_cnveg_carbonstate_inst)
 
     class(cnveg_carbonstate_type)                       :: this
@@ -247,7 +246,6 @@ contains
     character(len=*)             , intent(in)           :: NLFilename                 ! Namelist filename
     logical                      , intent(in)           :: dribble_crophrv_xsmrpool_2atm
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst ! cnveg_carbonstate for C12 (if C13 or C14)
-    integer                      , intent(in)           :: nvegcpool
     !-----------------------------------------------------------------------
 
     this%species = species_from_string(carbon_type)
@@ -258,9 +256,9 @@ contains
     call this%InitReadNML  ( NLFilename )
     call this%InitHistory ( bounds, carbon_type)
     if (present(c12_cnveg_carbonstate_inst)) then
-       call this%InitCold  ( nvegcpool,bounds, ratio, carbon_type, c12_cnveg_carbonstate_inst )
+       call this%InitCold  ( bounds, ratio, carbon_type, c12_cnveg_carbonstate_inst )
     else
-       call this%InitCold  ( nvegcpool,bounds, ratio, carbon_type )
+       call this%InitCold  ( bounds, ratio, carbon_type )
     end if
 
   end subroutine Init
@@ -611,12 +609,12 @@ contains
        this%leafc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='leaf C storage', &
-            ptr_patch=this%leafc_storage_patch)!, default='inactive')    
+            ptr_patch=this%leafc_storage_patch, default='inactive')    
 
        this%leafc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFC_XFER', units='gC/m^2', &
             avgflag='A', long_name='leaf C transfer', &
-            ptr_patch=this%leafc_xfer_patch)!, default='inactive')    
+            ptr_patch=this%leafc_xfer_patch, default='inactive')    
 
        if(use_matrixcn)then
           this%matrix_cap_leafc_patch(begp:endp) = spval
@@ -627,12 +625,12 @@ contains
           this%matrix_cap_leafc_storage_patch(begp:endp) = spval
           call hist_addfld1d (fname='LEAFC_STORAGE_CAP', units='gC/m^2', &
                avgflag='I', long_name='leaf C storage capacity', &
-               ptr_patch=this%matrix_cap_leafc_storage_patch)!, default='inactive')    
+               ptr_patch=this%matrix_cap_leafc_storage_patch, default='inactive')    
 
           this%matrix_cap_leafc_xfer_patch(begp:endp) = spval
           call hist_addfld1d (fname='LEAFC_XFER_CAP', units='gC/m^2', &
                avgflag='I', long_name='leaf C transfer capacity', &
-               ptr_patch=this%matrix_cap_leafc_xfer_patch)!, default='inactive')    
+               ptr_patch=this%matrix_cap_leafc_xfer_patch, default='inactive')    
        end if
 
        this%leafc_storage_xfer_acc_patch(begp:endp) = spval
@@ -653,12 +651,12 @@ contains
        this%frootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='FROOTC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='fine root C storage', &
-            ptr_patch=this%frootc_storage_patch)!, default='inactive')   
+            ptr_patch=this%frootc_storage_patch, default='inactive')   
 
        this%frootc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='FROOTC_XFER', units='gC/m^2', &
             avgflag='A', long_name='fine root C transfer', &
-            ptr_patch=this%frootc_xfer_patch)!, default='inactive')    
+            ptr_patch=this%frootc_xfer_patch, default='inactive')    
 
        if(use_matrixcn)then
           this%matrix_cap_frootc_patch(begp:endp) = spval
@@ -669,12 +667,12 @@ contains
           this%matrix_cap_frootc_storage_patch(begp:endp) = spval
           call hist_addfld1d (fname='FROOTC_STORAGE_CAP', units='gC/m^2', &
                avgflag='I', long_name='fine root C storage capacity', &
-               ptr_patch=this%matrix_cap_frootc_storage_patch)!, default='inactive')   
+               ptr_patch=this%matrix_cap_frootc_storage_patch, default='inactive')   
 
           this%matrix_cap_frootc_xfer_patch(begp:endp) = spval
           call hist_addfld1d (fname='FROOTC_XFER_CAP', units='gC/m^2', &
                avgflag='I', long_name='fine root C transfer capacity', &
-               ptr_patch=this%matrix_cap_frootc_xfer_patch)!, default='inactive')    
+               ptr_patch=this%matrix_cap_frootc_xfer_patch, default='inactive')    
        end if
 
        this%livestemc_patch(begp:endp) = spval
@@ -685,12 +683,12 @@ contains
        this%livestemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='live stem C storage', &
-            ptr_patch=this%livestemc_storage_patch)!, default='inactive')    
+            ptr_patch=this%livestemc_storage_patch, default='inactive')    
 
        this%livestemc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC_XFER', units='gC/m^2', &
             avgflag='A', long_name='live stem C transfer', &
-            ptr_patch=this%livestemc_xfer_patch)!, default='inactive')     
+            ptr_patch=this%livestemc_xfer_patch, default='inactive')     
 
        if(use_matrixcn)then
           this%matrix_cap_livestemc_patch(begp:endp) = spval
@@ -701,12 +699,12 @@ contains
           this%matrix_cap_livestemc_storage_patch(begp:endp) = spval
           call hist_addfld1d (fname='LIVESTEMC_STORAGE_CAP', units='gC/m^2', &
                avgflag='I', long_name='live stem C storage capcity', &
-               ptr_patch=this%matrix_cap_livestemc_storage_patch)!, default='inactive')    
+               ptr_patch=this%matrix_cap_livestemc_storage_patch, default='inactive')    
 
           this%matrix_cap_livestemc_xfer_patch(begp:endp) = spval
           call hist_addfld1d (fname='LIVESTEMC_XFER_CAP', units='gC/m^2', &
                avgflag='I', long_name='live stem C transfer capacity', &
-               ptr_patch=this%matrix_cap_livestemc_xfer_patch)!, default='inactive')     
+               ptr_patch=this%matrix_cap_livestemc_xfer_patch, default='inactive')     
        end if
 
        this%deadstemc_patch(begp:endp) = spval
@@ -717,12 +715,12 @@ contains
        this%deadstemc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='dead stem C storage', &
-            ptr_patch=this%deadstemc_storage_patch)!, default='inactive')    
+            ptr_patch=this%deadstemc_storage_patch, default='inactive')    
 
        this%deadstemc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC_XFER', units='gC/m^2', &
             avgflag='A', long_name='dead stem C transfer', &
-            ptr_patch=this%deadstemc_xfer_patch)!, default='inactive')    
+            ptr_patch=this%deadstemc_xfer_patch, default='inactive')    
 
        if(use_matrixcn)then
           this%matrix_cap_deadstemc_patch(begp:endp) = spval
@@ -733,12 +731,12 @@ contains
           this%matrix_cap_deadstemc_storage_patch(begp:endp) = spval
           call hist_addfld1d (fname='DEADSTEMC_STORAGE_CAP', units='gC/m^2', &
                avgflag='I', long_name='dead stem C storage capacity', &
-               ptr_patch=this%matrix_cap_deadstemc_storage_patch)!, default='inactive')    
+               ptr_patch=this%matrix_cap_deadstemc_storage_patch, default='inactive')    
 
           this%matrix_cap_deadstemc_xfer_patch(begp:endp) = spval
           call hist_addfld1d (fname='DEADSTEMC_XFER_CAP', units='gC/m^2', &
                avgflag='I', long_name='dead stem C transfer capacity', &
-               ptr_patch=this%matrix_cap_deadstemc_xfer_patch)!, default='inactive')    
+               ptr_patch=this%matrix_cap_deadstemc_xfer_patch, default='inactive')    
        end if
 
        this%livecrootc_patch(begp:endp) = spval
@@ -749,12 +747,12 @@ contains
        this%livecrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='live coarse root C storage', &
-            ptr_patch=this%livecrootc_storage_patch)!, default='inactive')     
+            ptr_patch=this%livecrootc_storage_patch, default='inactive')     
 
        this%livecrootc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC_XFER', units='gC/m^2', &
             avgflag='A', long_name='live coarse root C transfer', &
-            ptr_patch=this%livecrootc_xfer_patch)!, default='inactive')    
+            ptr_patch=this%livecrootc_xfer_patch, default='inactive')    
 
        if(use_matrixcn)then
           this%matrix_cap_livecrootc_patch(begp:endp) = spval
@@ -765,12 +763,12 @@ contains
           this%matrix_cap_livecrootc_storage_patch(begp:endp) = spval
           call hist_addfld1d (fname='LIVECROOTC_STORAGE_CAP', units='gC/m^2', &
                avgflag='I', long_name='live coarse root C storage capacity', &
-            ptr_patch=this%matrix_cap_livecrootc_storage_patch)!, default='inactive')     
+            ptr_patch=this%matrix_cap_livecrootc_storage_patch, default='inactive')     
 
           this%matrix_cap_livecrootc_xfer_patch(begp:endp) = spval
           call hist_addfld1d (fname='LIVECROOTC_XFER_CAP', units='gC/m^2', &
                avgflag='I', long_name='live coarse root C transfer capacity', &
-               ptr_patch=this%matrix_cap_livecrootc_xfer_patch)!, default='inactive')    
+               ptr_patch=this%matrix_cap_livecrootc_xfer_patch, default='inactive')    
        end if
 
        this%deadcrootc_patch(begp:endp) = spval
@@ -781,12 +779,12 @@ contains
        this%deadcrootc_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTC_STORAGE', units='gC/m^2', &
             avgflag='A', long_name='dead coarse root C storage', &
-            ptr_patch=this%deadcrootc_storage_patch)!, default='inactive')   
+            ptr_patch=this%deadcrootc_storage_patch, default='inactive')   
 
        this%deadcrootc_xfer_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTC_XFER', units='gC/m^2', &
             avgflag='A', long_name='dead coarse root C transfer', &
-            ptr_patch=this%deadcrootc_xfer_patch)!, default='inactive')   
+            ptr_patch=this%deadcrootc_xfer_patch, default='inactive')   
 
        if(use_matrixcn)then
           this%matrix_cap_deadcrootc_patch(begp:endp) = spval
@@ -797,12 +795,12 @@ contains
           this%matrix_cap_deadcrootc_storage_patch(begp:endp) = spval
           call hist_addfld1d (fname='DEADCROOTC_STORAGE_CAP', units='gC/m^2', &
                avgflag='I', long_name='dead coarse root C storage capacity', &
-               ptr_patch=this%matrix_cap_deadcrootc_storage_patch)!, default='inactive')   
+               ptr_patch=this%matrix_cap_deadcrootc_storage_patch, default='inactive')   
 
           this%matrix_cap_deadcrootc_xfer_patch(begp:endp) = spval
           call hist_addfld1d (fname='DEADCROOTC_XFER_CAP', units='gC/m^2', &
                avgflag='I', long_name='dead coarse root C transfer capacity', &
-               ptr_patch=this%matrix_cap_deadcrootc_xfer_patch)!, default='inactive')   
+               ptr_patch=this%matrix_cap_deadcrootc_xfer_patch, default='inactive')   
        end if
 
        this%gresp_storage_patch(begp:endp) = spval
@@ -1439,7 +1437,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitCold(this,nvegcpool, bounds, ratio, carbon_type, c12_cnveg_carbonstate_inst)
+  subroutine InitCold(this, bounds, ratio, carbon_type, c12_cnveg_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Initializes time varying variables used only in coupled carbon-nitrogen mode (CN):
@@ -1455,7 +1453,6 @@ contains
     real(r8)                     , intent(in)           :: ratio              ! Standard isotope ratio
     character(len=*)             , intent(in)           :: carbon_type        ! 'c12' or 'c13' or 'c14'
     type(cnveg_carbonstate_type) , optional, intent(in) :: c12_cnveg_carbonstate_inst
-    integer           , intent(in) :: nvegcpool
     !
     ! !LOCAL VARIABLES:
     integer  :: p,c,l,g,j,k,i
@@ -1774,7 +1771,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (nvegcpool=18,&
+    call this%SetValues (&
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -4217,7 +4214,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this,nvegcpool, &
+  subroutine SetValues ( this, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -4232,7 +4229,6 @@ contains
     integer , intent(in) :: num_column
     integer , intent(in) :: filter_column(:)
     real(r8), intent(in) :: value_column
-    integer , intent(in) :: nvegcpool
     !
     ! !LOCAL VARIABLES:
     integer :: fi,i,j,k,l     ! loop index

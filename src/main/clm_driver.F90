@@ -137,10 +137,6 @@ contains
     integer              :: mon                     ! month (1, ..., 12)
     integer              :: day                     ! day of month (1, ..., 31)
     integer              :: sec                     ! seconds of the day
-    integer              :: yr_prev                 ! year (0, ...) at start of timestep
-    integer              :: mon_prev                ! month (1, ..., 12) at start of timestep
-    integer              :: day_prev                ! day of month (1, ..., 31) at start of timestep
-    integer              :: sec_prev                ! seconds of the day at start of timestep
     character(len=256)   :: filer                   ! restart file name
     integer              :: ier                     ! error code
     logical              :: need_glacier_initialization ! true if we need to initialize glacier areas in this time step
@@ -166,6 +162,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Determine processor bounds and clumps for this processor
+
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
@@ -390,7 +387,6 @@ contains
             water_inst, soilhydrology_inst, lakestate_inst, &
             use_aquifer_layer = use_aquifer_layer())
 
-
        call t_stopf('begwbal')
 
        call t_startf('begcnbal_col')
@@ -448,9 +444,6 @@ contains
     ! of foliage that is dry and transpiring. Initialize snow layer if the
     ! snow accumulation exceeds 10 mm.
     ! ============================================================================
-
-    ! Get time as of beginning of time step
-    call get_prev_date(yr_prev, mon_prev, day_prev, sec_prev)
 
     !$OMP PARALLEL DO PRIVATE (nc,l,c, bounds_clump, downreg_patch, leafn_patch, agnpp_patch, bgnpp_patch, annsum_npp_patch, rr_patch, froot_carbon, croot_carbon)
     do nc = 1,nclumps
@@ -673,6 +666,7 @@ contains
             bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
        croot_carbon = bgc_vegetation_inst%get_croot_carbon_patch( &
             bounds_clump, canopystate_inst%tlai_patch(bounds_clump%begp:bounds_clump%endp))
+
        call CanopyFluxes(bounds_clump,                                                      &
             filter(nc)%num_exposedvegp, filter(nc)%exposedvegp,                             &
             clm_fates,nc,                                                                   &
@@ -1053,6 +1047,7 @@ contains
           call t_stopf('EcosysDynPostDrainage')
 
        end if
+
        if ( use_fates  .and. is_beg_curr_day() ) then ! run fates at the start of each day
 
           if ( masterproc ) then
@@ -1109,6 +1104,7 @@ contains
        ! ============================================================================
        ! Check the energy and water balance
        ! ============================================================================
+
        call t_startf('balchk')
        call BalanceCheck(bounds_clump, &
             filter(nc)%num_allc, filter(nc)%allc, &
@@ -1121,6 +1117,7 @@ contains
        ! ============================================================================
        ! Check the carbon and nitrogen balance
        ! ============================================================================
+
        if (use_cn) then
           call t_startf('cnbalchk')
           call bgc_vegetation_inst%BalanceCheck( &
@@ -1213,6 +1210,7 @@ contains
           end if
 
        end if
+
     end do
     !$OMP END PARALLEL DO
 
@@ -1250,11 +1248,9 @@ contains
          vocemis_inst, fireemis_inst, dust_inst, ch4_inst, glc_behavior, &
          lnd2atm_inst, &
          net_carbon_exchange_grc = net_carbon_exchange_grc(bounds_proc%begg:bounds_proc%endg))
-         
     deallocate(net_carbon_exchange_grc)
     call t_stopf('lnd2atm')
 
-      
     ! ============================================================================
     ! Determine gridcell averaged properties to send to glc
     ! ============================================================================
@@ -1369,7 +1365,6 @@ contains
        if (use_cn) then
           call bgc_vegetation_inst%WriteHistory(bounds_proc)
        end if
-
 
        ! Write restart/initial files if appropriate
        if (rstwr) then

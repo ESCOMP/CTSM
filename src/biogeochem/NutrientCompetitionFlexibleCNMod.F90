@@ -697,6 +697,7 @@ contains
             npool_to_leafn_storage_demand(p)  = (nlc / cnl) * (1._r8 - fcur)
             npool_to_leafn_storage_supply(p)  = npool(p)/dt * (1._r8 - fcur) - npool_to_frootn_storage(p)
             npool_to_leafn_storage(p)  = max(min(npool_to_leafn_storage_supply(p),npool_to_leafn_storage_demand(p)),0.0_r8)
+
             if (CN_residual_opt == 1) then
                npool_to_leafn(p)   = max(npool_to_leafn_supply(p),0.0_r8)
                npool_to_leafn_storage(p)  = max(npool_to_leafn_storage_supply(p),0.0_r8)
@@ -862,6 +863,7 @@ contains
             gresp_storage = gresp_storage + cpool_to_grainc_storage(p)
          end if
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
+
 
          ! computing 1.) fractional N demand and 2.) N allocation after uptake for different plant parts
          !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1111,6 +1113,7 @@ contains
                
                   cpool_to_leafc_resp(p)          = frac_resp * cpool_to_leafc(p) 
                   cpool_to_leafc_storage_resp(p)  = frac_resp * cpool_to_leafc_storage(p)
+
                   !cpool_to_leafc(p) = cpool_to_leafc(p) - cpool_to_leafc_resp(p) 
                   !cpool_to_leafc_storage(p) = cpool_to_leafc_storage(p) - cpool_to_leafc_storage_resp(p)
                   
@@ -1740,6 +1743,8 @@ contains
                           huigrain(p))/((gddmaturity(p)*declfact(ivt(p)))- &
                           huigrain(p)),1._r8)**allconss(ivt(p)) )))
                   end if
+
+                  ! If crops have hit peaklai, then set leaf allocation to small value
                   if (peaklai(p) == 1) then 
                      aleaf(p) = 1.e-5_r8
                   else if (aleafi(p) > aleaff(ivt(p))) then
@@ -1807,6 +1812,7 @@ contains
                f3 = astem(p) / aleaf(p)
                f5 = arepr(p) / aleaf(p)
                g1 = 0.25_r8
+
 
             else   ! .not croplive
                f1 = 0._r8
@@ -1925,6 +1931,7 @@ contains
 
 	         end if
          end if  !FUN
+
          !if (leafn(p) < n_min ) then
             !! to set leafcn to missing value for history files
             !this%actual_leafcn(p) = spval

@@ -45,7 +45,6 @@ module CNVegetationFacade
   use perf_mod                        , only : t_startf, t_stopf
   use decompMod                       , only : bounds_type
   use clm_varctl                      , only : iulog, use_cn, use_cndv, use_c13, use_c14
-  use clm_varpar                      , only :nvegcpool,nvegnpool
   use abortutils                      , only : endrun
   use spmdMod                         , only : masterproc
   use clm_time_manager                , only : get_curr_date, get_ref_date
@@ -234,15 +233,15 @@ contains
        ! Read in the general CN namelist
        call this%CNReadNML( NLFilename )    ! MUST be called first as passes down control information to others
 
-       call this%cnveg_carbonstate_inst%Init(bounds, nvegcpool=nvegcpool, carbon_type='c12', ratio=1._r8, &
+       call this%cnveg_carbonstate_inst%Init(bounds, carbon_type='c12', ratio=1._r8, &
                                              NLFilename=NLFilename,  dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm )
        if (use_c13) then
-          call this%c13_cnveg_carbonstate_inst%Init(bounds, nvegcpool=nvegcpool, carbon_type='c13', ratio=c13ratio, &
+          call this%c13_cnveg_carbonstate_inst%Init(bounds, carbon_type='c13', ratio=c13ratio, &
                NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
                c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
        if (use_c14) then
-          call this%c14_cnveg_carbonstate_inst%Init(bounds, nvegcpool=nvegcpool, carbon_type='c14', ratio=c14ratio, &
+          call this%c14_cnveg_carbonstate_inst%Init(bounds, carbon_type='c14', ratio=c14ratio, &
                NLFilename=NLFilename, dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm,        &
                c12_cnveg_carbonstate_inst=this%cnveg_carbonstate_inst)
        end if
@@ -253,7 +252,7 @@ contains
        if (use_c14) then
           call this%c14_cnveg_carbonflux_inst%Init(bounds, carbon_type='c14', dribble_crophrv_xsmrpool_2atm=this%dribble_crophrv_xsmrpool_2atm)
        end if
-       call this%cnveg_nitrogenstate_inst%Init(bounds,nvegnpool,     &
+       call this%cnveg_nitrogenstate_inst%Init(bounds,    &
             this%cnveg_carbonstate_inst%leafc_patch(begp:endp),          &
             this%cnveg_carbonstate_inst%leafc_storage_patch(begp:endp),  &
             this%cnveg_carbonstate_inst%frootc_patch(begp:endp),         &

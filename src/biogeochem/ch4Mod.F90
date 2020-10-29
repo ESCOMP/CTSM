@@ -3987,7 +3987,6 @@ contains
 
          errch4(c) = errch4(c) + (ch4_surf_aere(c) + ch4_surf_ebul(c) + ch4_surf_diff(c))*dtime
 
-!         if (abs(errch4(c)) < 100._r8) then !1.e-8_r8 zgdu
          if (abs(errch4(c)) < 1.e-8_r8) then 
             ch4_surf_diff(c) = ch4_surf_diff(c) - errch4(c)/dtime
          else ! errch4 > 1e-8 mol / m^2 / timestep

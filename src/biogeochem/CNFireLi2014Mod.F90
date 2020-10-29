@@ -1442,7 +1442,8 @@ contains
                  end if
               end if
               if ( is_cwd(l) ) then
-                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (f-baf_crop(c)) * 0.25_r8
+                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
+                      (f-baf_crop(c)) * 0.25_r8
                  if(use_soil_matrixcn)then
                     matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) - (f-baf_crop(c)) * 0.25_r8 * dt
                  end if

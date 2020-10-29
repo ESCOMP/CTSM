@@ -5,7 +5,7 @@ module CNVegNitrogenStateType
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nvegnpool
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
   use landunit_varcon                    , only : istcrop, istsoil 
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
@@ -234,7 +234,7 @@ module CNVegNitrogenStateType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds,  nvegnpool,                      &
+  subroutine Init(this, bounds,  &
        leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
 
     class(cnveg_nitrogenstate_type)   :: this
@@ -244,11 +244,10 @@ contains
     real(r8)          , intent(in)    :: frootc_patch         (bounds%begp:)     
     real(r8)          , intent(in)    :: frootc_storage_patch (bounds%begp:)     
     real(r8)          , intent(in)    :: deadstemc_patch      (bounds%begp:)
-    integer , intent(in) :: nvegnpool
 
     call this%InitAllocate (bounds )
     call this%InitHistory (bounds)
-    call this%InitCold ( bounds,nvegnpool, &
+    call this%InitCold ( bounds, &
          leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
 
   end subroutine Init
@@ -769,7 +768,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitCold(this, bounds,nvegnpool, &
+  subroutine InitCold(this, bounds, &
        leafc_patch, leafc_storage_patch, frootc_patch, frootc_storage_patch, deadstemc_patch)
     !
     ! !DESCRIPTION:
@@ -784,7 +783,6 @@ contains
     real(r8)          , intent(in) :: frootc_patch(bounds%begp:)            
     real(r8)          , intent(in) :: frootc_storage_patch(bounds%begp:)    
     real(r8)          , intent(in) :: deadstemc_patch(bounds%begp:)
-    integer           , intent(in) :: nvegnpool
     !
     ! !LOCAL VARIABLES:
     integer :: fc,fp,g,l,c,p,j,k                       ! indices
@@ -1094,7 +1092,7 @@ contains
 
     ! initialize fields for special filters
 
-    call this%SetValues (nvegnpool=nvegnpool,&
+    call this%SetValues (&
          num_patch=num_special_patch, filter_patch=special_patch, value_patch=0._r8, &
          num_column=num_special_col, filter_column=special_col, value_column=0._r8)
 
@@ -1928,7 +1926,7 @@ contains
   end subroutine Restart
 
   !-----------------------------------------------------------------------
-  subroutine SetValues ( this,nvegnpool, &
+  subroutine SetValues ( this, &
        num_patch, filter_patch, value_patch, &
        num_column, filter_column, value_column)
     !
@@ -1943,7 +1941,6 @@ contains
     integer , intent(in) :: num_column
     integer , intent(in) :: filter_column(:)
     real(r8), intent(in) :: value_column
-    integer , intent(in) :: nvegnpool
     !
     ! !LOCAL VARIABLES:
     integer :: fi,i     ! loop index

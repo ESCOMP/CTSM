@@ -1173,7 +1173,7 @@ contains
     this%m_retransn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_RETRANSN_TO_LITTER', units='gN/m^2/s', &
          avgflag='A', long_name='retranslocated N pool mortality', &
-         ptr_patch=this%m_retransn_to_litter_patch)!, default='inactive')
+         ptr_patch=this%m_retransn_to_litter_patch, default='inactive')
 
     this%m_leafn_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_LEAFN_TO_FIRE', units='gN/m^2/s', &
@@ -1278,7 +1278,7 @@ contains
     this%m_retransn_to_fire_patch(begp:endp) = spval
     call hist_addfld1d (fname='M_RETRANSN_TO_FIRE', units='gN/m^2/s', &
          avgflag='A', long_name='retranslocated N pool fire loss', &
-         ptr_patch=this%m_retransn_to_fire_patch)!, default='inactive')
+         ptr_patch=this%m_retransn_to_fire_patch, default='inactive')
 
     this%leafn_xfer_to_leafn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_XFER_TO_LEAFN', units='gN/m^2/s', &
@@ -1318,7 +1318,7 @@ contains
     this%leafn_to_retransn_patch(begp:endp) = spval
     call hist_addfld1d (fname='LEAFN_TO_RETRANSN', units='gN/m^2/s', &
          avgflag='A', long_name='leaf N to retranslocated N pool', &
-         ptr_patch=this%leafn_to_retransn_patch)!, default='inactive')
+         ptr_patch=this%leafn_to_retransn_patch, default='inactive')
 
     this%frootn_to_litter_patch(begp:endp) = spval
     call hist_addfld1d (fname='FROOTN_TO_LITTER', units='gN/m^2/s', &

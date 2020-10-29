@@ -1188,7 +1188,7 @@ contains
          bounds = bounds, &
          name = 'hrv_xsmrpool_to_atm_' // carbon_type_suffix, &
          units = 'gC/m^2', &
-         allows_non_annual_delta = .false.) !zgdu false->true. Set to True now but is not tested.
+         allows_non_annual_delta = .false.)
 
   end subroutine InitAllocate
 
@@ -1901,7 +1901,7 @@ contains
        this%gpp_before_downreg_patch(begp:endp) = spval
        call hist_addfld1d (fname='INIT_GPP', units='gC/m^2/s', &
             avgflag='A', long_name='GPP flux before downregulation', &
-            ptr_patch=this%gpp_before_downreg_patch)!, default='inactive')
+            ptr_patch=this%gpp_before_downreg_patch, default='inactive')
 
        this%current_gr_patch(begp:endp) = spval
        call hist_addfld1d (fname='CURRENT_GR', units='gC/m^2/s', &
@@ -1921,17 +1921,17 @@ contains
        this%availc_patch(begp:endp) = spval
        call hist_addfld1d (fname='AVAILC', units='gC/m^2/s', &
             avgflag='A', long_name='C flux available for allocation', &
-            ptr_patch=this%availc_patch)!, default='inactive')
+            ptr_patch=this%availc_patch, default='inactive')
 
        this%plant_calloc_patch(begp:endp) = spval
        call hist_addfld1d (fname='PLANT_CALLOC', units='gC/m^2/s', &
             avgflag='A', long_name='total allocated C flux', &
-            ptr_patch=this%plant_calloc_patch)!, default='inactive')
+            ptr_patch=this%plant_calloc_patch, default='inactive')
 
        this%excess_cflux_patch(begp:endp) = spval
        call hist_addfld1d (fname='EXCESS_CFLUX', units='gC/m^2/s', &
             avgflag='A', long_name='C flux not allocated due to downregulation', &
-            ptr_patch=this%excess_cflux_patch)!, default='inactive')
+            ptr_patch=this%excess_cflux_patch, default='inactive')
 
        this%prev_leafc_to_litter_patch(begp:endp) = spval
        call hist_addfld1d (fname='PREV_LEAFC_TO_LITTER', units='gC/m^2/s', &

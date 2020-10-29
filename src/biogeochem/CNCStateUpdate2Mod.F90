@@ -95,10 +95,10 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
-         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p)                 &
-              - cf_veg%m_gresp_xfer_to_litter_patch(p) * dt
          cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p)           &
               - cf_veg%m_gresp_storage_to_litter_patch(p) * dt
+         cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p)                 &
+              - cf_veg%m_gresp_xfer_to_litter_patch(p) * dt
          if(.not.  use_matrixcn)then
          ! patch-level carbon fluxes from gap-phase mortality
          ! displayed pools
@@ -220,6 +220,10 @@ contains
       do fp = 1,num_soilp
          p = filter_soilp(fp)
 
+         ! xsmrpool
+         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p)                     &
+              - cf_veg%hrv_xsmrpool_to_atm_patch(p) * dt
+
          ! patch-level carbon fluxes from harvest mortality
          ! storage pools
          cs_veg%gresp_storage_patch(p) = cs_veg%gresp_storage_patch(p)           &
@@ -229,9 +233,6 @@ contains
          cs_veg%gresp_xfer_patch(p) = cs_veg%gresp_xfer_patch(p)                 &
               - cf_veg%hrv_gresp_xfer_to_litter_patch(p) * dt
 
-         ! xsmrpool
-         cs_veg%xsmrpool_patch(p) = cs_veg%xsmrpool_patch(p)                     &
-              - cf_veg%hrv_xsmrpool_to_atm_patch(p) * dt
 
          if(.not. use_matrixcn)then
          ! displayed pools
