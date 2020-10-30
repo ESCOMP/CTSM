@@ -46,20 +46,20 @@ is described in here.
 
 3. Create ESMF mapping files by running ``regridbatch.sh``::
 
-   qsub regridbatch.sh
+     qsub regridbatch.sh
 
 4. In your ctsm repository directory, build::
 
-   ../../../configure --macros-format Makefile --mpilib mpi-serial
+     ../../../configure --macros-format Makefile --mpilib mpi-serial
 
 
 5. Generate CTSM domain files using ``get_domain`` tool::
 
-   ./gen_domain -m /glade/work/$USER/ctsm/nldas_grid/scrip/wrf2clm_mapping_noneg.nc -o wrf2clm_ocn_noneg -l wrf2clm_lnd_noneg
+     ./gen_domain -m /glade/work/$USER/ctsm/nldas_grid/scrip/wrf2clm_mapping_noneg.nc -o wrf2clm_ocn_noneg -l wrf2clm_lnd_noneg
 
 6. Create surface datasets in ``tools/mksurfdata_map``::
 
-   ./mksurfdata.pl -res usrspec -usr_gname "nldas" -usr_gdate "190124" -usr_mapdir "/glade/work/$USER/ctsm/nldas_grid/map" -y 2000 -exedir "/glade/u/home/$USER/src/ctsm/ctsm_surfdata/tools/mksurfdata_map" -no-crop
+     ./mksurfdata.pl -res usrspec -usr_gname "nldas" -usr_gdate "190124" -usr_mapdir "/glade/work/$USER/ctsm/nldas_grid/map" -y 2000 -exedir "/glade/u/home/$USER/src/ctsm/ctsm_surfdata/tools/mksurfdata_map" -no-crop
 
 
 
