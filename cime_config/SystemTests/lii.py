@@ -1,5 +1,4 @@
-"""
-Implementation of the CIME LII test.
+"""Implementation of the CIME LII test.
 
 This is a CLM specific test:
 Verifies that interpolation of initial conditions onto an identical
@@ -25,8 +24,9 @@ no_interp test fails.
 space. Rename this to be similar to the name of the file pointed to in this
 test's user_nl_ctsm file, but with a new creation date.
 
-(3) Update this test's user_nl_ctsm file (in the appropriate testmods directory)
-to point to the new finidat file.
+(3) Update this test's user_nl_ctsm file (in the appropriate testmods directory, or in
+namelist_defaults if the test is using an out-of-the-box initial conditions file and it is
+acceptable to update that file) to point to the new finidat file.
 """
 
 from CIME.SystemTests.system_tests_compare_two import SystemTestsCompareTwo
