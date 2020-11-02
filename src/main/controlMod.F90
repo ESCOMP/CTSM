@@ -44,7 +44,7 @@ module controlMod
   use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp 
-  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif, nitrifReadNML
+  use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
   use SoilHydrologyMod                 , only: soilHydReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
@@ -109,13 +109,13 @@ contains
   end subroutine control_setNL
 
   !------------------------------------------------------------------------
-  subroutine control_init( )
+
+  subroutine control_init(dtime)
     !
     ! !DESCRIPTION:
     ! Initialize CLM run control information
     !
     ! !USES:
-    use clm_time_manager                 , only : set_timemgr_init
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
@@ -123,21 +123,19 @@ contains
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
     !
+    ! ARGUMENTS
+    integer, intent(in) :: dtime    ! model time step (seconds)
+
     ! !LOCAL VARIABLES:
     integer :: i                    ! loop indices
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
-    integer :: dtime                ! Integer time-step
     logical :: use_init_interp      ! Apply initInterp to the file given by finidat
     !------------------------------------------------------------------------
 
     ! ----------------------------------------------------------------------
     ! Namelist Variables
     ! ----------------------------------------------------------------------
-
-    ! Time step
-    namelist / clm_inparm/ &
-    dtime
 
     ! CLM namelist settings
 
@@ -343,19 +341,16 @@ contains
        ! Process some namelist variables, and perform consistency checks
        ! ----------------------------------------------------------------------
 
-       call set_timemgr_init( dtime_in=dtime )
-
-       if (use_init_interp) then
-          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
-       end if
-
-       ! History and restart files
-
+       ! History and restart files (dependent on settings of dtime)
        do i = 1, max_tapes
           if (hist_nhtfrq(i) < 0) then
              hist_nhtfrq(i) = nint(-hist_nhtfrq(i)*SHR_CONST_CDAY/(24._r8*dtime))
           endif
        end do
+
+       if (use_init_interp) then
+          call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
+       end if
 
        if (maxpatch_glcmec <= 0) then
           call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
@@ -539,7 +534,6 @@ contains
 
     call soilHydReadNML(   NLFilename )
     if ( use_cn ) then
-       call nitrifReadNML(             NLFilename )
        call CNFireReadNML(             NLFilename )
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )

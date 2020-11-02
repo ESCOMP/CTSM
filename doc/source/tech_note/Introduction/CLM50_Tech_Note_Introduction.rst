@@ -13,7 +13,7 @@
 
 ***Contributing Authors***
 
-**Ashehad Ali, Andrew Badger, Gautam Bisht, Patrick Broxton, Michael Brunke, Jonathan Buzan, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Jan Lenaerts, Sam Levis,
+**Ashehad Ali, Andrew Badger, Gautam Bisht, Patrick Broxton, Michael Brunke, Jonathan Buzan, Yanyan Cheng, Martyn Clark, Tony Craig, Kyla Dahlin, Beth Drewniak, Louisa Emmons, Josh Fisher, Mark Flanner, Pierre Gentine, Maoyi Huang, Jan Lenaerts, Sam Levis,
 L. Ruby Leung, William Lipscomb, Jon Pelletier, Daniel M. Ricciuto, Ben Sanderson, Jacquelyn Shuman, Andrew Slater, Zachary Subin, Jinyun Tang, Ahmed Tawfik, Quinn Thomas, Simone Tilmes, Francis Vitt, Xubin Zeng**
 
 
@@ -524,11 +524,17 @@ light capture, carboxylation, and respiration are co-limiting.
 
 CLM5 applies a fixed allocation scheme for woody vegetation.  The decision to use a fixed allocation scheme in CLM5, rather than a dynamic NPP-based allocation scheme, as was used in CLM4 and CLM4.5, was driven by the fact that observations indicate that biomass saturates with increasing productivity, in contrast to the behavior in CLM4 and CLM4.5 where biomass continuously increases with increasing productivity (:ref:`Negron-Juarez et al., 2015<NegronJuarezetal2015>`).  Soil carbon decomposition processes are unchanged in CLM5, but a new metric for apparent soil carbon turnover times (:ref:`Koven et al., 2017 <Kovenetal2017>`) suggested parameter changes that produce a weak intrinsic depth limitation on soil carbon turnover rates (rather than the strong depth limitaiton in CLM4.5) and that the thresholds for soil moisture limitation on soil carbon turnover rates in dry soils should be set at a wetter soil moisture level than that used in CLM4.5.
 
-Representation of human management of the land (agriculture, wood harvest) is augmented in several ways. The CLM4.5 crop model is extended to operate globally through the addition of rice and sugarcane as well as tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerandDirmeyer2015>` and :ref:`Levis et al., 2016)<Levisetal2016>`.  These crop types are added to the existing temperate corn, temperature soybean, spring wheat, and cotton crop types.
-Fertilization rates and irrigation equipped area updated annually based on crop type and geographic region through an input dataset.  The irrigation trigger is updated.  Additional minor changes include crop phenological triggers that
+Representation of human management of the land (agriculture, wood harvest) is augmented in several ways. 
+The CLM4.5 crop model is extended to operate globally through the addition of rice, sugarcane,  
+tropical varieties of corn and soybean :ref:`(Badger and Dirmeyer, 2015<BadgerandDirmeyer2015>` and :ref:`Levis et al., 2016)<Levisetal2016>`, 
+and perennial bioenergy crops :ref:`(Cheng et al., 2019)<Chengetal2019>`.
+These crop types are added to the existing temperate corn, temperate soybean, spring wheat, and cotton crop types.
+Fertilization rates and irrigation equipped area updated annually based on crop type and geographic region through an input dataset.  
+The irrigation trigger is updated.  Additional minor changes include crop phenological triggers that
 vary by latitude for selected crop types, grain C and N is now removed at harvest to a 1-year product pool with
-the carbon for the next season's crop seed removed from the grain carbon at harvest.  Through the introduction of
-the capability to dynamically adjust landunit weights during a simulation, the crop model can now be run coincidentally
+the carbon for the next season's crop seed removed from the grain carbon at harvest.
+A fraction of leaf/livestem C and N from bioenergy crops is removed at harvest to the biofuel feedstock pools and added to the 1-year product pool.
+Through the introduction of the capability to dynamically adjust landunit weights during a simulation, the crop model can now be run coincidentally
 with prescribed land use, which significantly expands the capabilities of the model.  Mass-based rather than area-based wood harvest is applied. Several heat stress indices for both urban and rural areas are calculated and output by default :ref:`(Buzan et al., 2015)<Buzanetal2015>`.   A more sophisticated and realistic building space heating and air conditioning submodel that prognoses interior building air temperature and includes more realistic space heating and air conditioning wasteheat factors
 is incorporated.
 
