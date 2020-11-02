@@ -249,8 +249,6 @@ contains
                .and. col%itype(c) /= icol_roof) then
              tssbef(c,j) = t_soisno(c,j)
           end if
-          ! record t_h2osfc prior to updating
-          t_h2osfc_bef(c) = t_h2osfc(c)   
        end do
     end do
 
@@ -265,14 +263,15 @@ contains
                 tssbef(c,j) = t_soisno(c,j)
              end if
           end if
-          ! record t_h2osfc prior to updating
-          t_h2osfc_bef(c) = t_h2osfc(c)   
        end do
     end do
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        l = col%landunit(c)
+
+       ! record t_h2osfc prior to updating
+       t_h2osfc_bef(c) = t_h2osfc(c)
 
        ! ground temperature is weighted average of exposed soil, snow, and h2osfc
        if (snl(c) < 0) then
