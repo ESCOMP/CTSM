@@ -278,7 +278,7 @@ contains
       ! Thermal conductivity and Heat capacity
 
       tk_h2osfc(begc:endc) = nan
-      call SoilThermProp(bounds, num_nolakec, filter_nolakec, &
+      call SoilThermProp(bounds, num_urbanc, filter_urbanc, num_nolakec, filter_nolakec, &
            tk(begc:endc, :), &
            cv(begc:endc, :), &
            tk_h2osfc(begc:endc), &
@@ -548,7 +548,7 @@ contains
   end subroutine SoilTemperature
 
   !-----------------------------------------------------------------------
-  subroutine SoilThermProp (bounds,  num_nolakec, filter_nolakec, &
+  subroutine SoilThermProp (bounds, num_urbanc, filter_urbanc, num_nolakec, filter_nolakec, &
        tk, cv, tk_h2osfc, &
        urbanparams_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, soilstate_inst)
 
@@ -576,6 +576,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds 
+    integer                , intent(in)    :: num_urbanc        ! number of urban columns in clump
+    integer                , intent(in)    :: filter_urbanc(:)  ! urban column filter
     integer                , intent(in)    :: num_nolakec                      ! number of column non-lake points in column filter
     integer                , intent(in)    :: filter_nolakec(:)                ! column filter for non-lake points
     real(r8)               , intent(out)   :: cv( bounds%begc: , -nlevsno+1: ) ! heat capacity [J/(m2 K)                              ] [col, lev]
@@ -692,8 +694,8 @@ contains
       end do
 
       do j = 1,nlevurb
-         do fc = 1, num_nolakec
-            c = filter_nolakec(fc)
+         do fc = 1, num_urbanc
+            c = filter_urbanc(fc)
             l = col%landunit(c)
 
             if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
@@ -762,18 +764,12 @@ contains
             else if (lun%itype(l) == istice_mec) then
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
             endif
-            if (j == 1 .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
-               col%itype(c) /= icol_roof  .and. col%itype(c) /= icol_road_imperv) then
-               if (h2osno_no_layers(c) > 0._r8) then
-                  cv(c,j) = cv(c,j) + cpice*h2osno_no_layers(c)
-               end if
-            end if
          enddo
       end do
 
       do j = 1, nlevurb
-         do fc = 1,num_nolakec
-            c = filter_nolakec(fc)
+         do fc = 1,num_urbanc
+            c = filter_urbanc(fc)
             l = col%landunit(c)
             if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
                cv(c,j) = cv_wall(l,j) * dz(c,j)
@@ -782,14 +778,14 @@ contains
             else if (col%itype(c) == icol_road_imperv .and. j <= nlev_improad(l)) then
                cv(c,j) = cv_improad(l,j) * dz(c,j)
             endif
-            if (j == 1 .and. (col%itype(c) == icol_sunwall .or. &
-               col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof .or. &
-               col%itype(c) == icol_road_imperv)) then
-               if (h2osno_no_layers(c) > 0._r8) then
-                  cv(c,j) = cv(c,j) + cpice*h2osno_no_layers(c)
-               end if
-            end if
           end do
+      end do
+
+      do fc = 1, num_nolakec
+         c = filter_nolakec(fc)
+         if (h2osno_no_layers(c) > 0._r8) then
+            cv(c,1) = cv(c,1) + cpice*h2osno_no_layers(c)
+         end if
       end do
 
       ! Snow heat capacity
