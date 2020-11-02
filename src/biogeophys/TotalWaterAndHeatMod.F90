@@ -349,7 +349,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: c, j, fc  ! indices
     logical :: has_h2o   ! whether this point potentially has water to add
-    integer  :: nlev     ! greater of nlevgrnd and nlevurb
 
     character(len=*), parameter :: subname = 'AccumulateSoilLiqIceMassNonLake'
     !-----------------------------------------------------------------------
@@ -801,7 +800,6 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fc
     integer :: l, c, j
-    integer  :: nlev     ! greater of nlevgrnd and nlevurb
     logical  :: has_h2o  ! whether this point potentially has water to add
 
     real(r8) :: soil_heat_liquid(bounds%begc:bounds%endc)        ! sum of heat content: liquid water in soil, excluding latent heat [J/m^2]
