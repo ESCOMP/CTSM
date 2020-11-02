@@ -1771,6 +1771,16 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="I1850Clm50Bgc" testmods="clm/nlevgrnd_small">
+    <machines>
+      <machine name="izumi" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">0:20:00</option>
+          <option name="comment">The main point of this test is to exercise the case where nlevgrnd is less than nlevurb. See the README file in its testmod directory for details.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
   <test name="SMS_Lm13" grid="f19_g17" compset="I2000Clm51BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
