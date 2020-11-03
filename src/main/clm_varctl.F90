@@ -215,9 +215,9 @@ module clm_varctl
   ! CN matrix
   !----------------------------------------------------------  
   logical, public :: use_matrixcn = .true. !.false.              ! true => use cn matrix
-  logical, public :: use_soil_matrixcn = .true.! true => use cn matrix  
+  logical, public :: use_soil_matrixcn = .false.! true => use cn matrix  
   logical, public :: isspinup = .false.  !.false.              ! true => use acc spinup
-  logical, public :: is_outmatrix = .true. !.false.              ! true => use acc spinup
+  logical, public :: is_outmatrix = .false.!.false.              ! true => use acc spinup
   ! SASU 
   integer, public :: nyr_forcing  = 10   ! length of forcing years for the spin up. eg. if DATM_CLMNCEP_YR_START=1901;DATM_CLMNCEP_YR_END=1920, then nyr_forcing = 20
   integer, public :: nyr_SASU     = 1    ! length of each semi-analytic solution. eg. nyr_SASU=5, analytic solutions will be calculated every five years.
