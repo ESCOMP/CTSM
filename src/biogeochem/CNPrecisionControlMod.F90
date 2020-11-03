@@ -22,9 +22,9 @@ module CNPrecisionControlMod
 
   ! !PUBLIC DATA:
   real(r8), public :: ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
-  real(r8), public :: cnegcrit = -6.e+6_r8      ! -6.e+1_r8        ! critical negative carbon state value for abort (gC/m2)
+  real(r8), public :: cnegcrit =  -6.e+1_r8             ! critical negative carbon state value for abort (gC/m2)
   real(r8), public :: ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)
-  real(r8), public :: nnegcrit = -7.e+5_r8      ! -7.e+0_r8        ! critical negative nitrogen state value for abort (gN/m2)
+  real(r8), public :: nnegcrit =  -7.e+0_r8             ! critical negative nitrogen state value for abort (gN/m2)
   real(r8), public, parameter :: n_min = 0.000000001_r8 ! Minimum Nitrogen value to use when calculating CN ratio (gN/m2)
 
   ! !PRIVATE DATA:
