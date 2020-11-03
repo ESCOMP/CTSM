@@ -4,6 +4,7 @@ module TestNcdioPio
   ! !DESCRIPTION:
   ! This module contains tests of ncdio_pio
 
+#include "shr_assert.h"
   use ncdio_pio
   use shr_kind_mod, only : r8 => shr_kind_r8
   use Assertions, only : assert_equal
@@ -78,6 +79,9 @@ contains
 
     call write_to_log(subname//': test_write_vars')
     call test_write_vars
+
+    call write_to_log(subname//': test_check_var_or_dim')
+    call test_check_var_or_dim
 
     call write_to_log(subname//': test_read_vars')
     call test_read_vars
@@ -264,7 +268,7 @@ contains
     character(len=*), parameter :: subname = 'check_var_written'
     !-----------------------------------------------------------------------
 
-    call check_var(ncid, varname, vardesc, readvar)
+    call check_var(ncid, varname, readvar, vardesc=vardesc)
     if (.not. readvar) then
        call endrun(trim(varname)//' not found on file')
     end if
@@ -275,6 +279,48 @@ contains
     end if
 
   end subroutine confirm_var_on_file
+
+  !-----------------------------------------------------------------------
+  subroutine test_check_var_or_dim()
+    !
+    ! !DESCRIPTION:
+    ! Test the check_var_or_dim subroutine with variables and dimensions, returning true
+    ! and false
+    !
+    ! This also covers check_var and check_dim
+    !
+    ! !ARGUMENTS:
+    !
+    ! !LOCAL VARIABLES:
+    type(file_desc_t) :: ncid
+    logical :: exists
+
+    character(len=*), parameter :: var_to_check = 'data_double_1d_grc'
+    character(len=*), parameter :: dim_to_check = lev1_name
+
+    character(len=*), parameter :: subname = 'test_check_var_or_dim'
+    !-----------------------------------------------------------------------
+
+    call ncd_pio_openfile(ncid, testfilename, 0)
+
+    call check_var_or_dim(ncid, var_to_check, is_dim=.false., exists=exists)
+    call shr_assert(exists, 'check_var_or_dim: var exists')
+
+    ! Make sure that check_var_or_dim returns false when the given variable doesn't exist
+    ! - even if it is an existing dimension
+    call check_var_or_dim(ncid, dim_to_check, is_dim=.false., exists=exists)
+    call shr_assert(.not. exists, 'check_var_or_dim: var does not exist')
+
+    call check_var_or_dim(ncid, dim_to_check, is_dim=.true., exists=exists)
+    call shr_assert(exists, 'check_var_or_dim: dim exists')
+
+    ! Make sure that check_var_or_dim returns false when the given dimension doesn't
+    ! exist - even if it is an existing variable
+    call check_var_or_dim(ncid, var_to_check, is_dim=.true., exists=exists)
+    call shr_assert(.not. exists, 'check_var_or_dim: dim does not exist')
+
+    call ncd_pio_closefile(ncid)
+  end subroutine test_check_var_or_dim
 
   !-----------------------------------------------------------------------
   subroutine test_read_vars()

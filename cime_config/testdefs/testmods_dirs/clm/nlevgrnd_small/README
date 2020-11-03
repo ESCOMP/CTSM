@@ -1,0 +1,13 @@
+The main point of this testmod is to exercise the case where nlevgrnd <
+nlevurb (connected with
+https://github.com/ESCOMP/CTSM/issues/674). If/when we have an
+out-of-the-box configuration with nlevgrnd < nlevurb (such as the NWP
+configuration once nlevurb = 10 is the standard) then we can remove this
+test.
+
+A secondary consideration is having a test that interpolates from a
+configuration with nlevgrnd > nlevurb onto one with lower nlevgrnd and
+nlevgrnd < nlevurb. But I don't think it's critical to maintain this
+test just for that purpose - e.g., if we start having an out-of-the-box
+configuration with nlevgrnd < nlevurb but where the finidat file also
+has nlevgrnd < nlevurb, then I feel it will be okay to remove this test.

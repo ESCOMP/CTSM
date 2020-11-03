@@ -1895,7 +1895,7 @@ contains
     ! wrapper calls to define the history file contents.
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, nlevcan, nvegwcs,nlevsoi
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
@@ -2042,6 +2042,7 @@ contains
     if (nlevurb > 0) then
        call ncd_defdim(lnfid, 'levurb' , nlevurb, dimid)
     end if
+    call ncd_defdim(lnfid, 'levmaxurbgrnd' , nlevmaxurbgrnd, dimid)
     call ncd_defdim(lnfid, 'levlak' , nlevlak, dimid)
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
     call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
@@ -2227,7 +2228,7 @@ contains
     !
     ! !USES:
     use subgridAveMod  , only : c2g
-    use clm_varpar     , only : nlevgrnd ,nlevlak
+    use clm_varpar     , only : nlevgrnd ,nlevlak, nlevmaxurbgrnd
     use shr_string_mod , only : shr_string_listAppend
     use domainMod      , only : ldomain
     !
@@ -2269,7 +2270,7 @@ contains
                                                       /)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
@@ -2494,6 +2495,7 @@ contains
     ! contents.
     !
     ! !USES:
+    use clm_varpar      , only : nlevsoi
     use clm_varcon      , only : zsoi, zlak, secspday, isecspday, isecsphr, isecspmin
     use domainMod       , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
@@ -2573,12 +2575,15 @@ contains
        if (mode == 'define') then
           call ncd_defvar(varname='levgrnd', xtype=tape(t)%ncprec, &
                dim1name='levgrnd', &
-               long_name='coordinate soil levels', units='m', ncid=nfid(t))
+               long_name='coordinate ground levels', units='m', ncid=nfid(t))
+          call ncd_defvar(varname='levsoi', xtype=tape(t)%ncprec, &
+               dim1name='levsoi', &
+               long_name='coordinate soil levels (equivalent to top nlevsoi levels of levgrnd)', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levlak', xtype=tape(t)%ncprec, &
                dim1name='levlak', &
                long_name='coordinate lake levels', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
-               long_name='coordinate soil levels', units='m', ncid=nfid(t))
+               long_name='coordinate levels for soil decomposition variables', units='m', ncid=nfid(t))
 
           if(use_fates)then
 
@@ -2631,6 +2636,7 @@ contains
        elseif (mode == 'write') then
           if ( masterproc ) write(iulog, *) ' zsoi:',zsoi
           call ncd_io(varname='levgrnd', data=zsoi, ncid=nfid(t), flag='write')
+          call ncd_io(varname='levsoi', data=zsoi(1:nlevsoi), ncid=nfid(t), flag='write')
           call ncd_io(varname='levlak' , data=zlak, ncid=nfid(t), flag='write')
           if (use_vertsoilc) then
              call ncd_io(varname='levdcmp', data=zsoi, ncid=nfid(t), flag='write')
@@ -3379,7 +3385,7 @@ contains
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use clm_varcon      , only : secspday
     use perf_mod        , only : t_startf, t_stopf
-    use clm_varpar      , only : nlevgrnd
+    use clm_varpar      , only : nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     logical, intent(in) :: rstwr    ! true => write restart file this step
@@ -3412,7 +3418,7 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)

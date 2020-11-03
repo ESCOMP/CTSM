@@ -209,7 +209,7 @@ contains
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl      , only : iulog
     use abortutils      , only : endrun
-    use clm_varpar      , only : nlevurb, nlevsno, nlevgrnd
+    use clm_varpar      , only : nlevurb, nlevsno, nlevmaxurbgrnd
     use UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on
 !
 ! !ARGUMENTS:
@@ -302,7 +302,7 @@ contains
 !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
-    SHR_ASSERT_ALL_FL((ubound(tk)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(tk)  == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
 
     associate(&
     clandunit         => col%landunit                      , & ! Input:  [integer (:)]  column's landunit
