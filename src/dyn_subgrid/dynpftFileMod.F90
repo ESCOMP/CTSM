@@ -78,7 +78,7 @@ contains
     dynpft_file = dyn_file_type(dynpft_filename, YEAR_POSITION_START_OF_TIMESTEP)
 
     ! Consistency checks
-    call check_dim(dynpft_file, 'natpft', natpft_size)
+    call check_dim_size(dynpft_file, 'natpft', natpft_size)
     call dynpft_check_consistency(bounds)
 
     ! read data PCT_NAT_PFT corresponding to correct year
