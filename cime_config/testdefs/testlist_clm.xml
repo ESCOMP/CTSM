@@ -307,7 +307,7 @@
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:10:00</option>
       <option name="comment">Want one C96 test in the aux_clm test suite; just a short smoke test to make sure it can get off the ground</option>
     </options>
   </test>
@@ -1016,7 +1016,7 @@
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:10:00</option>
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No need to run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing. decStart doesn't accomplish a lot in this very short test, but we're using it anyway to be consistent with other Hist tests.</option>
     </options>
   </test>
