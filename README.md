@@ -56,3 +56,4 @@ Science team:
 - [Sean Swenson](https://github.com/swensosc)
 - [Mike Barlage](https://github.com/barlage)
 - [Rosie Fisher](https://github.com/rosiealice)
+- [Peter Lawrence](https://github.com/lawrencepj1)
