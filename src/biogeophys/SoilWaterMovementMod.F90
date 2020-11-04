@@ -2209,42 +2209,20 @@ contains
     bet = b(jtop)
 
     do j = lbj, ubj
-       if ((col%itype(ci) == icol_sunwall .or. col%itype(ci) == icol_shadewall &
-            .or. col%itype(ci) == icol_roof) .and. j <= nlevurb) then
-          if (j >= jtop) then
-             if (j == jtop) then
-                u(j) = r(j) / bet
-             else
-                gam(j) = c(j-1) / bet
-                bet = b(j) - a(j) * gam(j)
-                u(j) = (r(j) - a(j)*u(j-1)) / bet
-             end if
-          end if
-       else if (col%itype(ci) /= icol_sunwall .and. col%itype(ci) /= icol_shadewall &
-            .and. col%itype(ci) /= icol_roof) then
-          if (j >= jtop) then
-             if (j == jtop) then
-                u(j) = r(j) / bet
-             else
-                gam(j) = c(j-1) / bet
-                bet = b(j) - a(j) * gam(j)
-                u(j) = (r(j) - a(j)*u(j-1)) / bet
-             end if
+       if (j >= jtop) then
+          if (j == jtop) then
+             u(j) = r(j) / bet
+          else
+             gam(j) = c(j-1) / bet
+             bet = b(j) - a(j) * gam(j)
+             u(j) = (r(j) - a(j)*u(j-1)) / bet
           end if
        end if
     end do
 
     do j = ubj-1,lbj,-1
-       if ((col%itype(ci) == icol_sunwall .or. col%itype(ci) == icol_shadewall &
-            .or. col%itype(ci) == icol_roof) .and. j <= nlevurb-1) then
-          if (j >= jtop) then
-             u(j) = u(j) - gam(j+1) * u(j+1)
-          end if
-       else if (col%itype(ci) /= icol_sunwall .and. col%itype(ci) /= icol_shadewall &
-            .and. col%itype(ci) /= icol_roof) then
-          if (j >= jtop) then
-             u(j) = u(j) - gam(j+1) * u(j+1)
-          end if
+       if (j >= jtop) then
+          u(j) = u(j) - gam(j+1) * u(j+1)
        end if
     end do
     

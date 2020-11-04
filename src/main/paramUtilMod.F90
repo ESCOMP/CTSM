@@ -265,7 +265,7 @@ contains
      integer            :: d, num_dims
      character(len=256) :: msg
 
-     call check_var(ncid, varName, var_desc, readvar)
+     call check_var(ncid, varName, readvar, vardesc=var_desc)
      if (readvar) then
         call ncd_inqvdims(ncid, num_dims, var_desc)
         if (num_dims /= expected_numDims) then
