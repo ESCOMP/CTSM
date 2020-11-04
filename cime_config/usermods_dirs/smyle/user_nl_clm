@@ -3,7 +3,6 @@ flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.31/lan
 fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/release-clm5.0.24/surfdata_0.9x1.25_hist_78pfts_TRENDY_simyr1700_c190814.nc'
 
  model_year_align_ndep = 1850
- ndep_taxmode = 'limit'
  stream_year_first_ndep = 1850
  stream_year_last_ndep = 2025
  model_year_align_popdens = 1850
