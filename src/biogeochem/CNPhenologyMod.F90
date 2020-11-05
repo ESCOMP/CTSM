@@ -102,7 +102,7 @@ module CNPhenologyMod
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
   logical,parameter :: matrixcheck_ph = .True.          ! Matrix check
-  logical,parameter :: acc_ph = .False.                 ! Another matrix check
+  logical,parameter :: acc_ph = .True.                  ! Another matrix check
 
   real(r8), private :: initial_seed_at_planting = 3._r8 ! Initial seed at planting
 

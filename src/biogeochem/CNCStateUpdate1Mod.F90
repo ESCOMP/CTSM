@@ -545,7 +545,7 @@ ptch: do fp = 1,num_soilp
                      cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + cs_veg%frootc_patch(p)
                   else
                      cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) &
-                       + cs_veg%frootc_patch(p) * matrix_update_phc(p,cf_veg%ifroot_to_iout_ph,1._r8/dt,dt,cnveg_carbonflux_inst,.true.,.true.)
+                       + cs_veg%frootc_patch(p) * matrix_update_phc(p,cf_veg%ifroot_to_iout_ph,1._r8,dt,cnveg_carbonflux_inst,.true.,.true.)
                   end if
                end if
                cs_veg%frootc_patch(p)          = 0._r8
