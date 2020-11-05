@@ -1008,24 +1008,6 @@ sub setup_cmdl_maxpft {
   }
   $nl_flags->{'maxpft'} = $val;
 
-  $var = "maxpatch_pft";
-  my $group = $definition->get_group_name($var);
-  if ( ! defined($nl->get_variable_value($group, $var)) ) {
-    $val = $nl_flags->{'maxpft'};
-    $nl->set_variable_value($group, $var, $val);
-  }
-  $val = $nl->get_variable_value($group, $var);
-  my @valid_values   = ($maxpatchpft{'.true.'}, $maxpatchpft{'.false.'}  );
-  my $found = 0;
-  foreach my $valid_val ( @valid_values ) {
-     if ( $val == $valid_val ) {
-       $found = 1;
-       last;
-     }
-  }
-  if ( ! $found ) {
-     $log->warning("$var has a value ($val) that is normally NOT valid. Normal valid values are: @valid_values");
-  }
 }
 
 #-------------------------------------------------------------------------------
@@ -1207,7 +1189,8 @@ sub setup_cmdl_run_type {
     if ($opts->{$var} eq "default" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
                   'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                  'sim_year'=>$st_year );
+                  'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, 
+                  'bgc_spinup'=>$nl_flags->{'bgc_spinup'} );
     } else {
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, quote_string( $opts->{$var} ) );
@@ -1485,7 +1468,7 @@ sub process_namelist_inline_logic {
   ##############################
   # namelist group: clm_inparm #
   ##############################
-  setup_logic_site_specific($nl_flags, $definition, $nl);
+  setup_logic_site_specific($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_lnd_frac($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1513,6 +1496,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -1569,6 +1553,11 @@ sub process_namelist_inline_logic {
   # namelist group: nitrif_inparm #
   #################################
   setup_logic_nitrif_params( $nl_flags, $definition, $defaults, $nl );
+
+  #############################################
+  # namelist group: mineral_nitrogen_dynamics #
+  #############################################
+  setup_logic_mineral_nitrogen_dynamics( $opts, $nl_flags, $definition, $defaults, $nl );
 
   ####################################
   # namelist group: photosyns_inparm #
@@ -1709,7 +1698,7 @@ sub process_namelist_inline_logic {
 
 sub setup_logic_site_specific {
   # site specific requirements
-  my ($nl_flags, $definition, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   # res check prevents polluting the namelist with an unnecessary
   # false variable for every run
@@ -1740,6 +1729,9 @@ sub setup_logic_site_specific {
       $log->fatal_error("1x1_numaIA grids must use a compset with CN and CROP turned on.");
     }
   }
+  #  Set compname
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'compname',
+              'phys'=>$nl_flags->{'phys'} );
 }
 
 #-------------------------------------------------------------------------------
@@ -1978,7 +1970,8 @@ sub setup_logic_cnfire {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   my @fire_consts = ( "rh_low", "rh_hgh", "bt_min", "bt_max", "cli_scale", "boreal_peatfire_c", "non_boreal_peatfire_c",
-                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", "cmb_cmplt_fact" );
+                      "pot_hmn_ign_counts_alpha", "cropfire_a1", "occur_hi_gdp_tree", "lfuel", "ufuel", 
+                      "cmb_cmplt_fact_litter", "cmb_cmplt_fact_cwd" );
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      foreach my $item ( @fire_consts ) {
         if ( ! &value_is_true($nl_flags->{'cnfireson'} ) ) {
@@ -2372,6 +2365,7 @@ sub setup_logic_dynamic_subgrid {
 
    setup_logic_do_transient_pfts($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_transient_crops($opts, $nl_flags, $definition, $defaults, $nl);
+   setup_logic_do_transient_lakes($opts, $nl_flags, $definition, $defaults, $nl);
    setup_logic_do_harvest($opts, $nl_flags, $definition, $defaults, $nl);
 
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'reset_dynbal_baselines');
@@ -2534,6 +2528,69 @@ sub setup_logic_do_transient_crops {
    if ( (  &value_is_true($nl->get_value($var))) && (! &value_is_true($nl->get_value($dopft))) ||
         (! &value_is_true($nl->get_value($var))) && (  &value_is_true($nl->get_value($dopft))) ) {
       $log->fatal_error("$var and $dopft do NOT agree and need to");
+   }
+}
+
+sub setup_logic_do_transient_lakes {
+   #
+   # Set do_transient_lakes default value, and perform error checking on do_transient_lakes
+   #
+   # Assumes the following are already set in the namelist (although it's okay
+   # for them to be unset if that will be their final state):
+   # - flanduse_timeseries
+   #
+   # NOTE(wjs, 2020-08-23) I based this function on setup_logic_do_transient_crops. I'm
+   # not sure if all of the checks here are truly important for transient lakes (in
+   # particular, my guess is that collapse_urban could probably be done with transient
+   # lakes - as well as transient pfts and transient crops for that matter), but some of
+   # the checks probably are needed, and it seems best to keep transient lakes consistent
+   # with other transient areas in this respect.
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   my $var = 'do_transient_lakes';
+
+   # cannot_be_true will be set to a non-empty string in any case where
+   # do_transient_lakes should not be true; if it turns out that
+   # do_transient_lakes IS true in any of these cases, a fatal error will be
+   # generated
+   my $cannot_be_true = "";
+
+   my $n_dom_pfts = $nl->get_value( 'n_dom_pfts' );
+   my $n_dom_landunits = $nl->get_value( 'n_dom_landunits' );
+   my $toosmall_soil = $nl->get_value( 'toosmall_soil' );
+   my $toosmall_crop = $nl->get_value( 'toosmall_crop' );
+   my $toosmall_glacier = $nl->get_value( 'toosmall_glacier' );
+   my $toosmall_lake = $nl->get_value( 'toosmall_lake' );
+   my $toosmall_wetland = $nl->get_value( 'toosmall_wetland' );
+   my $toosmall_urban = $nl->get_value( 'toosmall_urban' );
+
+   if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+      $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+   }
+
+   if (!$cannot_be_true) {
+      # Note that, if the variable cannot be true, we don't call add_default
+      # - so that we don't clutter up the namelist with variables that don't
+      # matter for this case
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
+   }
+
+   # Make sure the value is false when it needs to be false - i.e., that the
+   # user hasn't tried to set a true value at an inappropriate time.
+
+   if (&value_is_true($nl->get_value($var)) && $cannot_be_true) {
+      $log->fatal_error($cannot_be_true);
+   }
+
+   # if do_transient_lakes is .true. and any of these (n_dom_* or toosmall_*)
+   # are > 0 or collapse_urban = .true., then give fatal error
+   if (&value_is_true($nl->get_value($var))) {
+      if (&value_is_true($nl->get_value('collapse_urban'))) {
+         $log->fatal_error("$var cannot be combined with collapse_urban");
+      }
+      if ($n_dom_pfts > 0 || $n_dom_landunits > 0 || $toosmall_soil > 0 || $toosmall_crop > 0 || $toosmall_glacier > 0 || $toosmall_lake > 0 || $toosmall_wetland > 0 || $toosmall_urban > 0) {
+         $log->fatal_error("$var cannot be combined with any of the of the following > 0: n_dom_pfts > 0, n_dom_landunit > 0, toosmall_soil > 0._r8, toosmall_crop > 0._r8, toosmall_glacier > 0._r8, toosmall_lake > 0._r8, toosmall_wetland > 0._r8, toosmall_urban > 0._r8");
+      }
    }
 }
 
@@ -2740,8 +2797,7 @@ sub setup_logic_nitrif_params {
   my ($nl_flags, $definition, $defaults, $nl) = @_;
 
   if ( !  &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) {
-    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent",
-                 "denitrif_nitrateconc_coefficient", "denitrif_nitrateconc_exponent" );
+    my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent");
     foreach my $var ( @vars ) {
        if ( defined($nl->get_value( $var ) ) ) {
          $log->fatal_error("$var is only used when use_nitrif_denitrif is turned on");
@@ -2749,6 +2805,30 @@ sub setup_logic_nitrif_params {
     }
   }
 }
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_mineral_nitrogen_dynamics {
+  #
+  # Logic for mineral_nitrogen_dynamics
+  #
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  my @vars = ( "freelivfix_slope_wet", "freelivfix_intercept" );
+  if (  &value_is_true($nl_flags->{'use_cn'}) && &value_is_true($nl->get_value('use_fun')) ) {
+    foreach my $var ( @vars ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                'use_cn'=>$nl_flags->{'use_cn'}, 'use_fun'=>$nl->get_value('use_fun') );
+    }
+  } else {
+    foreach my $var ( @vars ) {
+       if ( defined($nl->get_value( $var ) ) ) {
+         $log->fatal_error("$var is only used when use_cn and use_fun are both turned on");
+       }
+    }
+  }
+}
+
 
 #-------------------------------------------------------------------------------
 
@@ -3391,7 +3471,7 @@ sub setup_logic_megan {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_soilm_streams {
-  # prescribed soil moisture streams require clm4_5/clm5_0
+  # prescribed soil moisture streams require clm4_5/clm5_0/clm5_1
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_soil_moisture_streams');
@@ -3800,6 +3880,17 @@ sub setup_logic_fates {
            }
         }
     }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_misc {
+   #
+   # Set some misc options
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
 }
 
 #-------------------------------------------------------------------------------

@@ -552,7 +552,7 @@ contains
        write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    call check_dim(ncid, 'lsmpft', maxsoil_patches)
+    call check_dim_size(ncid, 'lsmpft', maxsoil_patches)
 
     if (single_column) then
        call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &

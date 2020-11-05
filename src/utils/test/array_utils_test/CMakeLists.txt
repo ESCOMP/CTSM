@@ -1,5 +1,7 @@
 set (pfunit_sources
-  test_find_k_max_indices.pf)
+  test_find_k_max_indices.pf
+  test_convert_to_logical.pf
+  )
 
 set (extra_sources
   )

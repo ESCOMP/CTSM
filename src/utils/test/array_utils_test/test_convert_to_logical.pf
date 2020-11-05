@@ -1,0 +1,94 @@
+module test_convert_to_logical
+
+  ! Tests of array_utils: convert_to_logical
+
+  use pfunit_mod
+  use array_utils
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestUtils, only : endrun_msg
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestCTL
+     character(len=:), allocatable :: expected_msg  ! expected error message for failures
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestCTL
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestCTL), intent(inout) :: this
+
+    this%expected_msg = endrun_msg('convert_to_logical: bad value(s) for logical data')
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestCTL), intent(inout) :: this
+  end subroutine tearDown
+
+  @Test
+  subroutine test_convertToLogical_2dint(this)
+    class(TestCTL), intent(inout) :: this
+    integer :: my_int(2,3)
+    logical :: my_log(2,3)
+    logical :: expected(2,3)
+
+    my_int = reshape([0,1,0,1,0,1], [2,3])
+    expected = reshape([.false., .true., .false., .true., .false., .true.], [2, 3])
+
+    call convert_to_logical(my_int, my_log)
+
+    ! assertEquivalent only handles 1-d arrays, so we need to reshape the 2-d arrays to
+    ! be 1-d for this comparison
+    @assertEquivalent(reshape(expected, [6]), reshape(my_log, [6]))
+  end subroutine test_convertToLogical_2dint
+
+  @Test
+  subroutine test_convertToLogical_2ddouble(this)
+    class(TestCTL), intent(inout) :: this
+    real(r8) :: my_double(2,3)
+    logical :: my_log(2,3)
+    logical :: expected(2,3)
+
+    my_double = reshape([0.,1.,0.,1.,0.,1.], [2,3])
+    expected = reshape([.false., .true., .false., .true., .false., .true.], [2, 3])
+
+    call convert_to_logical(my_double, my_log)
+
+    ! assertEquivalent only handles 1-d arrays, so we need to reshape the 2-d arrays to
+    ! be 1-d for this comparison
+    @assertEquivalent(reshape(expected, [6]), reshape(my_log, [6]))
+  end subroutine test_convertToLogical_2ddouble
+
+  @Test
+  subroutine test_convertToLogical_2dint_fails(this)
+    class(TestCTL), intent(inout) :: this
+    integer :: my_int(2,3)
+    logical :: my_log(2,3)
+
+    my_int = reshape([0,1,2,1,0,1], [2,3])
+
+    call convert_to_logical(my_int, my_log)
+
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine test_convertToLogical_2dint_fails
+
+  @Test
+  subroutine test_convertToLogical_2ddouble_fails(this)
+    class(TestCTL), intent(inout) :: this
+    real(r8) :: my_double(2,3)
+    logical :: my_log(2,3)
+
+    my_double = reshape([0.,1.,0.1,1.,0.,1.], [2,3])
+
+    call convert_to_logical(my_double, my_log)
+
+    @assertExceptionRaised(this%expected_msg)
+  end subroutine test_convertToLogical_2ddouble_fails
+
+end module test_convert_to_logical

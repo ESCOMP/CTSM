@@ -32,6 +32,7 @@ module clm_varpar
   integer, public    :: nlevgrnd              ! number of ground layers 
                                               ! (includes lower layers that are hydrologically inactive)
   integer, public    :: nlevurb               ! number of urban layers
+  integer, public    :: nlevmaxurbgrnd        ! maximum of the number of ground and urban layers
   integer, public    :: nlevlak               ! number of lake layers
   integer, public    :: nlevdecomp            ! number of biogeochemically active soil layers
   integer, public    :: nlevdecomp_full       ! number of biogeochemical layers 
@@ -58,7 +59,6 @@ module clm_varpar
   integer, public :: maxveg           ! # of pfts + cfts
   integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
 
-  integer, public :: maxpatch_pft     ! obsolete: max number of plant functional types in naturally vegetated landunit (namelist setting)
   integer, public :: maxsoil_patches  ! # of pfts + cfts + bare ground; replaces maxpatch_pft, which is obsolete
 
   ! constants for decomposition cascade
@@ -194,6 +194,7 @@ contains
           call shr_sys_abort(subname//' ERROR: Unrecognized pre-defined soil layer structure')
        end if
     endif
+    nlevmaxurbgrnd = max0(nlevurb,nlevgrnd)
     if ( masterproc ) write(iulog, *) 'nlevsoi, nlevgrnd varpar ', nlevsoi, nlevgrnd
 
     if (use_vichydro) then
