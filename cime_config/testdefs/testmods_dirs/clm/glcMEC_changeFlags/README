@@ -1,4 +1,10 @@
 This testmods directory switches some glc_mec-related flags in CLM, in order to
 test different branches than are tested with the default options.
 
-It also turns off the feedback from CISM to CLM, to test that option.
+It also turns off the feedback from CISM to CLM, to test that
+option. For this piece of the test to be useful, it should be used in a
+test that uses CISM rather than SGLC, and ideally should be in a test
+where CISM's glacier areas change within the test (though that last
+piece may not be strictly necessary, since the relevant logic will still
+be exercised in the first time step of the run even with a non-evolving
+CISM).

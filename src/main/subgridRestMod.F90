@@ -12,7 +12,7 @@ module subgridRestMod
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
   use clm_varcon         , only : nameg, namel, namec, namep
-  use clm_varpar         , only : nlevsno, nlevgrnd
+  use clm_varpar         , only : nlevsno, nlevmaxurbgrnd
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
   use GetGlobalValuesMod , only : GetGlobalIndexArray
@@ -298,14 +298,14 @@ contains
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
     call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS', xtype=ncd_int,   &
-         dim1name='column', dim2name='levgrnd', switchdim=.true.,                   &
+         dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true.,                   &
          long_name='class in which each layer falls', units=' ',                    &
          interpinic_flag='skip', readvar=readvar, data=col%levgrnd_class)
 
-    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevgrnd))
-    temp2d_r(bounds%begc:bounds%endc, 1:nlevgrnd) = col%z(bounds%begc:bounds%endc, 1:nlevgrnd)
+    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd))
+    temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd) = col%z(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd)
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z', xtype=ncd_double,  & 
-         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='layer depth, excluding snow layers', units='m', &
          interpinic_flag='skip', readvar=readvar, data=temp2d_r)
     deallocate(temp2d_r)
@@ -401,24 +401,24 @@ contains
          long_name='pft active flag (1=active, 0=inactive)', units='',            &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    allocate(temp2d_i(bounds%begp:bounds%endp, 1:nlevgrnd))
+    allocate(temp2d_i(bounds%begp:bounds%endp, 1:nlevmaxurbgrnd))
     do p=bounds%begp,bounds%endp
        c = patch%column(p)
-       temp2d_i(p, 1:nlevgrnd) = col%levgrnd_class(c, 1:nlevgrnd)
+       temp2d_i(p, 1:nlevmaxurbgrnd) = col%levgrnd_class(c, 1:nlevmaxurbgrnd)
     end do
     call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS_p', xtype=ncd_int, &
-         dim1name='pft', dim2name='levgrnd', switchdim=.true., &
+         dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='class in which each layer falls, patch-level', units=' ', &
          interpinic_flag='skip', readvar=readvar, data=temp2d_i)
     deallocate(temp2d_i)
 
-    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevgrnd))
+    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevmaxurbgrnd))
     do p=bounds%begp,bounds%endp
        c = patch%column(p)
-       temp2d_r(p, 1:nlevgrnd) = col%z(c, 1:nlevgrnd)
+       temp2d_r(p, 1:nlevmaxurbgrnd) = col%z(c, 1:nlevmaxurbgrnd)
     end do
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z_p', xtype=ncd_double, &
-         dim1name='pft', dim2name='levgrnd', switchdim=.true., &
+         dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='layer depth, excluding snow layers, patch-level', units='m', &
          interpinic_flag='skip', readvar=readvar, data=temp2d_r)
     deallocate(temp2d_r)

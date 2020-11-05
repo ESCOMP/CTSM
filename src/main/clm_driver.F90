@@ -603,6 +603,7 @@ contains
        call BiogeophysPreFluxCalcs(bounds_clump,                                   &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                       &
             filter(nc)%num_nolakep, filter(nc)%nolakep,                       &
+            filter(nc)%num_urbanc, filter(nc)%urbanc,                         &
             clm_fates,                                                        &
             atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
             soilstate_inst, temperature_inst, &
@@ -796,6 +797,7 @@ contains
        call t_startf('soiltemperature')
        call SoilTemperature(bounds_clump,                                                      &
             filter(nc)%num_urbanl  , filter(nc)%urbanl,                                        &
+            filter(nc)%num_urbanc  , filter(nc)%urbanc,                                        &
             filter(nc)%num_nolakec , filter(nc)%nolakec,                                       &
             atm2lnd_inst, urbanparams_inst, canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst, &

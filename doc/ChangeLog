@@ -1,4 +1,294 @@
 ===============================================================
+Tag name:  ctsm5.1.dev012
+Originator(s): oleson (Keith Oleson) / sacks (Bill Sacks)
+Date:  Tue Nov  3 09:31:41 MST 2020
+One-line Summary: Allow nlevgrnd < nlevurb
+
+Purpose of changes
+------------------
+
+Allow nlevgrnd < nlevurb. This will become more important soon, when
+nlevurb is increased to 10, yet we want to allow simple soil layer
+structures, e.g., for NWP applications.
+
+Also some additions to ncdio-related utilities to support this,
+including extending find_var_on_file to support dimensions as well as
+variables.
+
+Also add levsoi coordinate variable on history files.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#674 (Allow nlevgrnd less than nlevurb)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Removed the no-longer-useful snowlayers_3_monthly test
+- Added a test with nlevgrnd < nlevurb
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1195
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev011
+Originator(s):  sacks (Bill Sacks)
+Date:  Mon Nov  2 10:28:35 MST 2020
+One-line Summary: Change CISM2%NOEVOLVE compsets to use SGLC; documentation updates
+
+Purpose of changes
+------------------
+
+(1) Change CISM2%NOEVOLVE compsets to use SGLC.
+
+The use of CISM2%NOEVOLVE adds complexity and (perhaps most importantly)
+increases the turnaround time of CTSM software testing, while adding
+only marginal scientific value. Therefore, we are changing I compsets to
+use a stub glacier (SGLC) rather than CISM2%NOEVOLVE for now. Within the
+next year, we'd like to have these use a data glc model, but that will
+most likely wait until we switch to using NUOPC by default (so we can
+use a data glc in CDEPS: ESCOMP/CDEPS#25).
+
+This tag changes the meaning of compset aliases that previously had
+neither a Gs (for stub glacier) or G (for CISM2%EVOLVE), so that they
+now use a stub glacier (SGLC) rather than CISM2%NOEVOLVE. Compset
+aliases that previously had Gs (so were already using a stub glacier)
+have been changed so that there is no longer a Gs in the alias: stub
+glacier is now the implied default.
+
+This change reduces our test build time to 40% of what it previously
+was! When I ran the test suite for ctsm5.1.dev010, the cheyenne-intel
+test suite (by far the largest of our test suites) took 5 hours, 8 min
+to build. In yesterday's run of the test suite with this change in
+place, the cheyenne-intel test suite took only 2 hours, 6 min to build!
+The final test in this test suite finished running just 2 hours, 29 min
+after I started the test suite. This may not be a completely fair
+comparison, because the machine may have been relatively lightly loaded
+during this Sunday afternoon run, but I wouldn't expect the test suite
+build time (which is what I'm reporting here) to be hugely impacted by
+that.
+
+Changes due to using SGLC in place of CISM2%NOEVOLVE are documented
+here:
+<https://escomp.github.io/cism-docs/cism-in-cesm/versions/master/html/clm-cism-coupling.html?highlight=sglc#stub-glc-model-cism-absent>.
+
+(2) Documentation updates
+
+Brings in a new optional external, doc-builder, to assist with building
+the documentation, specifically with a new Docker-based workflow
+documented here
+<https://github.com/ESCOMP/CTSM/wiki/Directions-for-editing-CLM-documentation-on-github-and-sphinx>.
+
+Also updates LILAC documentation and a bit more.
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1135 (Replace CISM2%NOEVOLVE compsets with SGLC)
+
+Known bugs introduced in this tag (include github issue ID):
+- See ESCOMP/CTSM#1136 (Use data glc model where we used to use CISM2%NOEVOLVE)
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- This tag changes the meaning of compset aliases that previously had
+  neither a Gs (for stub glacier) or G (for CISM2%EVOLVE), so that they
+  now use a stub glacier (SGLC) rather than CISM2%NOEVOLVE. Compset
+  aliases that previously had Gs (so were already using a stub glacier)
+  have been changed so that there is no longer a Gs in the alias: stub
+  glacier is now the implied default.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing:
+- Changed compsets used in testing according to the above notes. In
+  particular, this involved removing the 'Gs' from compset names in
+  tests.
+- No longer need a specific testmod for the LII test (see commit
+  f75335a45)
+- Changed the glcMEC_changeFlags test to be more useful (see commit
+  e350beced)
+- Removed _gl4 from resolution in tests that no longer use CISM
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok: tests pass, baselines fail as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Larger than roundoff; potentially new climate regionally, over Greenland
+
+      The changes arise from changes in the meaning of
+      compsets. Configurations that used to use a stub GLC (compsets
+      with Gs in their alias) have the same meaning as before, but a
+      different compset alias (so in testing, this resulted in BFAILs
+      due to missing baselines). Configurations that previously used
+      CISM2%NOEVOLVE (which included most of our standard
+      configurations) now instead use a stub GLC. This results in
+      differences over Greenland (in ways described here:
+      <https://escomp.github.io/cism-docs/cism-in-cesm/versions/master/html/clm-cism-coupling.html?highlight=sglc#stub-glc-model-cism-absent>).
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate: N/A
+	
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- New doc-builder external (at v1.0.2)
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev010
 Originator(s):  sacks (Bill Sacks), jedwards (Jim Edwards)
 Date:  Fri Oct 23 14:36:03 MDT 2020
