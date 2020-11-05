@@ -1,17 +1,11 @@
-"""
-Implementation of the LII2FINIDATAREAS test.
+"""Implementation of the LII2FINIDATAREAS test.
 
 This is similar to the LII test, but tests init_interp with mode
 'use_finidat_areas'.
 
-As with the standard LII test, this must be used in a configuration for
-which we have a compatible out-of-the-box finidat file (so that the run
-with use_init_interp = .false. runs successfully). In constrast to our
-standard LII test (which uses glcMEC_spunup_1way), this one can use a
-standard CISM2%NOEVOLVE configuration: we do *not* need to set
-GLC_TWO_WAY_COUPLING=FALSE; in fact, it's a better test if we have
-GLC_TWO_WAY_COUPLING=TRUE: with this mode of operation, areas should
-match between the two runs.
+As with the standard LII test, this must be used in a configuration for which we have a
+compatible out-of-the-box finidat file (so that the run with use_init_interp =
+.false. runs successfully).
 
 It may not be totally necessary to have a system test covering this
 init_interp_method: between unit tests and inline checks, we have quite

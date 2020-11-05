@@ -44,8 +44,10 @@ module ncdio_pio
   ! !PUBLIC MEMBER FUNCTIONS:
   !
   public :: check_var          ! determine if variable is on netcdf file
+  public :: check_dim          ! determine if dimension is on netcdf file
+  public :: check_var_or_dim   ! determine if variable or dimension is on netcdf file
   public :: check_att          ! check if attribute is on file
-  public :: check_dim          ! validity check on dimension
+  public :: check_dim_size     ! validity check on dimension
   public :: ncd_pio_openfile   ! open a file
   public :: ncd_pio_createfile ! create a new file
   public :: ncd_pio_closefile  ! close a file
@@ -282,21 +284,22 @@ contains
   end subroutine ncd_pio_createfile
 
   !-----------------------------------------------------------------------
-  subroutine check_var(ncid, varname, vardesc, readvar, print_err )
+  subroutine check_var(ncid, varname, readvar, vardesc, print_err )
     !
     ! !DESCRIPTION:
     ! Check if variable is on netcdf file
     !
     ! !ARGUMENTS:
-    class(file_desc_t) , intent(inout)  :: ncid      ! PIO file descriptor
-    character(len=*)   , intent(in)     :: varname   ! Varible name to check
-    type(Var_desc_t)   , intent(out)    :: vardesc   ! Output variable descriptor
-    logical            , intent(out)    :: readvar   ! If variable exists or not
-    logical, optional  , intent(in)     :: print_err ! If should print about error
+    class(file_desc_t) , intent(inout)          :: ncid    ! PIO file descriptor
+    character(len=*)   , intent(in)             :: varname ! Varible name to check
+    logical            , intent(out)            :: readvar ! If variable exists or not
+    type(Var_desc_t)   , optional, intent(out)  :: vardesc ! Output variable descriptor (if desired)
+    logical            , optional, intent(in)   :: print_err ! If should print about error
     !
     ! !LOCAL VARIABLES:
     integer :: ret     ! return value
     logical :: log_err ! if should log error
+    type(Var_desc_t) :: vardesc_local
     character(len=*),parameter :: subname='check_var' ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -308,7 +311,10 @@ contains
     end if
     readvar = .true.
     call pio_seterrorhandling(ncid, PIO_BCAST_ERROR)
-    ret = PIO_inq_varid (ncid, varname, vardesc)
+    ret = PIO_inq_varid (ncid, varname, vardesc_local)
+    if (present(vardesc)) then
+       vardesc = vardesc_local
+    end if
     if (ret /= PIO_noerr) then
        readvar = .false.
        if (masterproc .and. log_err) &
@@ -317,6 +323,52 @@ contains
     call pio_seterrorhandling(ncid, PIO_INTERNAL_ERROR)
 
   end subroutine check_var
+
+  !-----------------------------------------------------------------------
+  subroutine check_dim(ncid, dimname, dimexist)
+    !
+    ! !DESCRIPTION:
+    ! Check if dimension is on netcdf file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid     ! PIO file descriptor
+    character(len=*)   , intent(in)    :: dimname  ! dimension name
+    logical            , intent(out)   :: dimexist ! if this dimension exists or not
+    !
+    ! !LOCAL VARIABLES:
+    integer :: dimid
+
+    character(len=*), parameter :: subname = 'check_dim'
+    !-----------------------------------------------------------------------
+
+    call ncd_inqdid(ncid, dimname, dimid, dimexist)
+
+  end subroutine check_dim
+
+  !-----------------------------------------------------------------------
+  subroutine check_var_or_dim(ncid, name, is_dim, exists)
+    !
+    ! !DESCRIPTION:
+    ! Check if variable or dimension is on netcdf file
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid   ! PIO file descriptor
+    character(len=*)   , intent(in)    :: name   ! variable or dimension name to check
+    logical            , intent(in)    :: is_dim ! if true, check for dimension; if false, check for variable
+    logical            , intent(out)   :: exists ! whether the given variable or dimension exists on file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'check_var_or_dim'
+    !-----------------------------------------------------------------------
+
+    if (is_dim) then
+       call check_dim(ncid, name, exists)
+    else
+       call check_var(ncid, name, exists, print_err=.false.)
+    end if
+
+  end subroutine check_var_or_dim
 
   !-----------------------------------------------------------------------
   subroutine check_att(ncid, varid, attrib, att_found)
@@ -351,7 +403,7 @@ contains
   end subroutine check_att
 
   !-----------------------------------------------------------------------
-  subroutine check_dim(ncid, dimname, value, msg)
+  subroutine check_dim_size(ncid, dimname, value, msg)
     !
     ! !DESCRIPTION:
     ! Validity check on dimension
@@ -366,7 +418,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: dimid, dimlen    ! temporaries
     integer :: status           ! error code
-    character(len=*),parameter :: subname='check_dim' ! subroutine name
+    character(len=*),parameter :: subname='check_dim_size' ! subroutine name
     !-----------------------------------------------------------------------
 
     status = pio_inq_dimid (ncid, trim(dimname), dimid)
@@ -380,7 +432,7 @@ contains
        call shr_sys_abort(errMsg(sourcefile, __LINE__))
     end if
 
-  end subroutine check_dim
+  end subroutine check_dim_size
 
   !-----------------------------------------------------------------------
   subroutine ncd_redef(ncid)
@@ -757,7 +809,7 @@ contains
     integer, parameter :: error_variable_not_found = 11
     !-----------------------------------------------------------------------
 
-    call check_var(ncid, varname, vardesc, readvar)
+    call check_var(ncid, varname, readvar, vardesc=vardesc)
     if (readvar) then
        call ncd_inqvdlen_byDesc(ncid, vardesc, dimnum, dlen, err_code)
     else
@@ -846,7 +898,7 @@ contains
     character(len=*), parameter :: subname = 'ncd_inqvdname_byName'
     !-----------------------------------------------------------------------
 
-    call check_var(ncid, varname, vardesc, readvar)
+    call check_var(ncid, varname, readvar, vardesc=vardesc)
     if (readvar) then
        call ncd_inqvdname_byDesc(ncid, vardesc, dimnum, dname, err_code)
     else

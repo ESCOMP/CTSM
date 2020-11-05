@@ -8,7 +8,7 @@ module TemperatureType
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop
-  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb
+  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb, nlevmaxurbgrnd
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
   use LandunitType    , only : lun
@@ -205,8 +205,8 @@ contains
     endif
     allocate(this%t_h2osfc_col             (begc:endc))                      ; this%t_h2osfc_col             (:)   = nan
     allocate(this%t_h2osfc_bef_col         (begc:endc))                      ; this%t_h2osfc_bef_col         (:)   = nan
-    allocate(this%t_ssbef_col              (begc:endc,-nlevsno+1:nlevgrnd))  ; this%t_ssbef_col              (:,:) = nan
-    allocate(this%t_soisno_col             (begc:endc,-nlevsno+1:nlevgrnd))  ; this%t_soisno_col             (:,:) = nan
+    allocate(this%t_ssbef_col              (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%t_ssbef_col              (:,:) = nan
+    allocate(this%t_soisno_col             (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%t_soisno_col             (:,:) = nan
     allocate(this%t_lake_col               (begc:endc,1:nlevlak))            ; this%t_lake_col               (:,:) = nan
     allocate(this%t_grnd_col               (begc:endc))                      ; this%t_grnd_col               (:)   = nan
     allocate(this%t_grnd_r_col             (begc:endc))                      ; this%t_grnd_r_col             (:)   = nan
@@ -270,7 +270,7 @@ contains
     allocate(this%liquid_water_temp2_grc   (begg:endg))                      ; this%liquid_water_temp2_grc   (:)   = nan
 
     ! flags
-    allocate(this%imelt_col                (begc:endc,-nlevsno+1:nlevgrnd))  ; this%imelt_col                (:,:) = huge(1)
+    allocate(this%imelt_col                (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%imelt_col                (:,:) = huge(1)
 
     ! emissivities
     allocate(this%emv_patch                (begp:endp))                      ; this%emv_patch                (:)   = nan
@@ -278,7 +278,7 @@ contains
 
     allocate(this%xmf_col                  (begc:endc))                      ; this%xmf_col                  (:)   = nan
     allocate(this%xmf_h2osfc_col           (begc:endc))                      ; this%xmf_h2osfc_col           (:)   = nan
-    allocate(this%fact_col                 (begc:endc, -nlevsno+1:nlevgrnd)) ; this%fact_col                 (:,:) = nan
+    allocate(this%fact_col                 (begc:endc, -nlevsno+1:nlevmaxurbgrnd)) ; this%fact_col                 (:,:) = nan
     allocate(this%c_h2osfc_col             (begc:endc))                      ; this%c_h2osfc_col             (:)   = nan
 
   end subroutine InitAllocate
@@ -676,7 +676,7 @@ contains
       do c = bounds%begc,bounds%endc
          l = col%landunit(c)
 
-         this%t_soisno_col(c,-nlevsno+1:nlevgrnd) = spval
+         this%t_soisno_col(c,-nlevsno+1:nlevmaxurbgrnd) = spval
 
          ! Snow level temperatures - all land points
          if (snl(c) < 0) then
