@@ -12,12 +12,12 @@ BUILDDIR      = build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-# Before building html or pdf, obtain all of the images. This is needed
-# because we have configured this repository (via an .lfsconfig file at
-# the top level) to NOT automatically fetch any of the large files when
-# cloning / fetching.
-html: fetch-images
-latexpdf: fetch-images
+# 'make fetch-images' should be run before building the
+# documentation. (If building via https://github.com/ESMCI/doc-builder,
+# this is run automatically for you.) This is needed because we have
+# configured this repository (via an .lfsconfig file at the top level)
+# to NOT automatically fetch any of the large files when cloning /
+# fetching.
 fetch-images:
 	git lfs pull --exclude=""
 
