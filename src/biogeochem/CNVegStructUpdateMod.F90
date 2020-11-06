@@ -74,8 +74,10 @@ contains
     real(r8) :: tsai_min   ! PATCH derived minimum tsai
     real(r8) :: tsai_alpha ! monthly decay rate of tsai
     real(r8) :: dt         ! radiation time step (sec)
+    real(r8) :: frac_sno_adjusted ! frac_sno adjusted per frac_sno_threshold
 
     real(r8), parameter :: dtsmonth = 2592000._r8 ! number of seconds in a 30 day month (60x60x24x30)
+    real(r8), parameter :: frac_sno_threshold = 0.999_r8  ! frac_sno values greater than this are treated as 1
     !-----------------------------------------------------------------------
     ! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835
     !
@@ -297,8 +299,15 @@ contains
             !depth of snow required for complete burial of grasses
          endif
 
-         elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
-         esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
+         if (frac_sno(c) <= frac_sno_threshold) then
+            frac_sno_adjusted = frac_sno(c)
+         else
+            ! avoid tiny but non-zero elai and esai that can cause radiation and/or photosynthesis code to blow up
+            frac_sno_adjusted = 1._r8
+         end if
+
+         elai(p) = max(tlai(p)*(1.0_r8 - frac_sno_adjusted) + tlai(p)*fb*frac_sno_adjusted, 0.0_r8)
+         esai(p) = max(tsai(p)*(1.0_r8 - frac_sno_adjusted) + tsai(p)*fb*frac_sno_adjusted, 0.0_r8)
 
          ! Fraction of vegetation free of snow
          if ((elai(p) + esai(p)) > 0._r8) then
