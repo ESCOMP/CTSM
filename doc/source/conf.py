@@ -66,7 +66,7 @@ version = u'CLM5.0'
 # The full version, including alpha/beta/rc tags.
 release = u'release-clm5.0'
 # CTSM-specific: version label used at the top of some pages.
-version_label = 'the latest development code'
+version_label = 'CLM5.0 (CESM2.1)'
 
 # version_label is not a standard sphinx variable, so we need some custom rst to allow
 # pages to use it. We need a separate replacement for the bolded version because it
