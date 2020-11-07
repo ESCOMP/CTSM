@@ -9,8 +9,9 @@ Welcome to the CTSM documentation for |version_label|
 .. important::
 
    **You are viewing the documentation for** |version_label_bold|. **There are separate
-   versions of this documentation for each maintained CTSM release. Use the menu at the
-   top left to select the version of CTSM you are using.**
+   versions of this documentation for each maintained CTSM release (e.g., CLM5.0) and for
+   the latest development code. Use the menu at the top left to select the version of CTSM
+   you are using.**
 
 This document has three major sections.
 
