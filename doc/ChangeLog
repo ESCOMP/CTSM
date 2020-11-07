@@ -1,4 +1,151 @@
 ===============================================================
+Tag name:  ctsm5.1.dev014
+Originator(s): dll (Danica Lombardozzi) / oleson (Keith Oleson) / sacks (Bill Sacks)
+Date:  Sat Nov  7 12:19:14 MST 2020
+One-line Summary: Grass/crop snow burial fraction fix, and some other fixes
+
+Purpose of changes
+------------------
+
+(1) Crop/grass snow burial changed based on height and lodging (Danica
+    Lombardozzi) - resolves ESCOMP/CTSM#516. Updates grass and crop snow
+    burial ('fb' in SatellitePhenologyMod.F90) from being 0.2m to change
+    with PFT height and accounts for 20% lodging (falling over).
+
+(2) In BGC code, make elai and esai depend on frac_sno (Danica
+    Lombardozzi, Keith Oleson & Bill Sacks) - resolves ESCOMP/CTSM#1116
+
+(3) Fix to quadratic solution error bug caused by negative shaded
+    photosynthesis (Danica Lombardozzi & Keith Oleson) - resolves
+    ESCOMP/CTSM#756
+
+(4) Point to cime branch tag that avoids building CDEPS with LILAC, to
+    avoid dependence on unreleased ESMF code (Bill Sacks) - resolves
+    ESCOMP/CTSM#1203
+
+(5) Some tweaks to documentation and how the documentation is built
+    (Bill Sacks)
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#516 (crop and grass snow burial)
+- Resolves ESCOMP/CTSM#1116 (elai and esai for non-SP runs should use
+  frac_sno)
+- Resolves ESCOMP/CTSM#756 (Quadratic solution error)
+- Resolves ESCOMP/CTSM#1203 (Rework LILAC build to avoid dependence on
+  unreleased ESMF code)
+
+CIME Issues fixed (include issue #):
+- https://github.com/ESMCI/cime/issues/3769 (Avoid building CDEPS with
+  CTSM's LILAC)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): none
+
+Changes to tests or testing: none
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+    ok: tests pass, baselines fail as expected
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all (or at least most)
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      new climate, at least to some extent
+
+      Changes arise from (1) & (2) (large changes) and from (3) (small
+      changes). The change in snow burial parameterizations results in
+      changes to albedo and water & energy fluxes.
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename: N/A
+
+   URL for LMWG diagnostics output used to validate new climate:
+       For analysis of diffs, see
+       https://github.com/danicalombardozzi/ctsm_py/blob/7543b0f3b413bae9974c11b467fdbc0413c3b7fa/notebooks/SnowBurial.ipynb
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.8.32 -> branch_tags/cime5.8.32_a01
+- doc-builder: v1.0.2 -> v1.0.4
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1112
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev013
 Originator(s): jedwards (Jim Edwards) / sacks (Bill Sacks)
 Date:  Wed Nov  4 14:24:55 MST 2020

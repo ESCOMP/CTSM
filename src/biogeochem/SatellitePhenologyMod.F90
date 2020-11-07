@@ -403,19 +403,20 @@ contains
          ! are less than 0.05, set equal to zero to prevent numerical
          ! problems associated with very small lai and sai.
 
-         ! snow burial fraction for short vegetation (e.g. grasses) as in
-         ! Wang and Zeng, 2007. 
+         ! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height 
+         ! accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
+
+         ! NOTE: The following snow burial code is duplicated in CNVegStructUpdateMod.
+         ! Changes in one place should be accompanied by similar changes in the other.
 
          if (patch%itype(p) > noveg .and. patch%itype(p) <= nbrdlf_dcd_brl_shrub ) then
             ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
             fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
          else
-            fb = 1._r8 - max(min(snow_depth(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
-            !depth of snow required for complete burial of grasses
+            fb = 1._r8 - (max(min(snow_depth(c),max(0.05,htop(p)*0.8_r8)),0._r8)/(max(0.05,htop(p)*0.8_r8)))
          endif
 
          ! area weight by snow covered fraction
-
          elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
          esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
          if (elai(p) < 0.05_r8) elai(p) = 0._r8
