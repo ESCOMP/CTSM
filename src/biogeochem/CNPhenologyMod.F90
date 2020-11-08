@@ -3459,7 +3459,6 @@ ptch: do fp = 1,num_soilp
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
             
-               livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
                if(use_matrixcn)then
                   if(livecrootn(p) .gt. 0.0_r8) then
                      livecrootn_to_retransn(p) = matrix_update_phn(p,ilivecroot_to_iretransn_phn,livecrootn_to_retransn(p) / &
@@ -3474,9 +3473,11 @@ ptch: do fp = 1,num_soilp
                      livestemn_to_retransn(p)  = 0
                   end if
                end if !use_matrixcn
-            end if
 
-         end if !woody
+            end if
+            livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
+
+         end if
 
       end do ptch
 
