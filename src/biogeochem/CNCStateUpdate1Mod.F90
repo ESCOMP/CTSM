@@ -538,6 +538,9 @@ ptch: do fp = 1,num_soilp
                   ! Save xsmrpool, cpool, frootc to loss state variable for
                   ! dribbling
                else
+                  ! EBK: 10/08/2020 this could potentially change answers by
+                  ! roundoff relative to the baseline (becuase frootc isn't
+                  ! alsto subtracted here)
                   cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) + &
                                                   cs_veg%xsmrpool_patch(p) + &
                                                   cs_veg%cpool_patch(p)
@@ -551,14 +554,14 @@ ptch: do fp = 1,num_soilp
                cs_veg%frootc_patch(p)          = 0._r8
                cs_veg%xsmrpool_patch(p)        = 0._r8
                cs_veg%cpool_patch(p)           = 0._r8
-               ! Slowly release xsmrpool to atmosphere
-               if ( dribble_crophrv_xsmrpool_2atm ) then
-                  ! calculate flux of xsmrpool loss to atm
-                  cf_veg%xsmrpool_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
+            end if
+            ! Slowly release xsmrpool to atmosphere
+            if ( dribble_crophrv_xsmrpool_2atm ) then
+               ! calculate flux of xsmrpool loss to atm
+               cf_veg%xsmrpool_to_atm_patch(p) = cs_veg%xsmrpool_loss_patch(p) * kprod05
 
-                  ! update xsmrpool loss state
-                  cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) - cf_veg%xsmrpool_to_atm_patch(p) * dt
-               end if
+               ! update xsmrpool loss state
+               cs_veg%xsmrpool_loss_patch(p) = cs_veg%xsmrpool_loss_patch(p) - cf_veg%xsmrpool_to_atm_patch(p) * dt
             end if
          end if
 
