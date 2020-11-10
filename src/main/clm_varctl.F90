@@ -79,6 +79,7 @@ module clm_varctl
   !----------------------------------------------------------
   !
   integer, public :: iulog = 6        ! "stdout" log file unit number, default is 6
+  integer, public :: master_list_file = 9  ! unit number for optional output file containing master history list in tabular form
 
   !----------------------------------------------------------
   ! Output NetCDF files
@@ -346,6 +347,9 @@ module clm_varctl
   ! moved hist_wrtch4diag from histFileMod.F90 to here - caused compiler error with intel
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
+
+  ! namelist: write history master list to a file for use in documentation
+  logical, public :: hist_master_list_file = .false.
 
   !----------------------------------------------------------
   ! FATES
