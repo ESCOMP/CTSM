@@ -38,7 +38,7 @@ class SSPMATRIXCN(SystemTestsCommon):
     twice  = 2 * nyr_forcing
     thrice = 3 * nyr_forcing
     # Define the settings that will be used for each step
-    steps  = ["0",       "3",      "4"      ]
+    steps  = ["0",       "0",      "1"      ]
     desc   = ["AD-cold", "slow",   "normal" ]
     runtyp = ["startup", "branch", "branch" ]
     spin   = [False,     True,     False    ]
@@ -104,7 +104,8 @@ class SSPMATRIXCN(SystemTestsCommon):
         contents_to_append = "hist_nhtfrq = -8760"
         contents_to_append = contents_to_append + ", hist_mfilt = "+str(self.nyr_forcing)
         # For all but last step turn extra matrix output to off
-        if ( n < 4 ):
+        b4last = self.n_steps() - 1
+        if ( n < b4last ):
            contents_to_append = contents_to_append + ", is_outmatrix = .False."
         # For matrix spinup steps, set the matrix spinup and other variables associated with it
         if ( self.spin[n] ):
