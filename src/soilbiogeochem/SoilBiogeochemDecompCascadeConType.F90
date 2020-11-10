@@ -138,8 +138,13 @@ contains
     decomp_cascade_con%is_lignin(ibeg:ndecomp_pools)                      = .false.
     decomp_cascade_con%spinup_factor(1:ndecomp_pools)                     = nan
 
-    decomp_cascade_con%Ntrans_setup = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
-    decomp_cascade_con%Ntri_setup   = (3*nlevdecomp-2)*(ndecomp_pools - 1) !exclude one cwd 
+    if(use_soil_matrixcn)then
+       decomp_cascade_con%Ntrans_setup = (ndecomp_cascade_transitions-ndecomp_cascade_outtransitions)*nlevdecomp
+       decomp_cascade_con%Ntri_setup   = (3*nlevdecomp-2)*(ndecomp_pools - 1) !exclude one cwd 
+    else
+       decomp_cascade_con%Ntrans_setup = -9999
+       decomp_cascade_con%Ntri_setup   = -9999
+    end if
   end subroutine init_decomp_cascade_constants
 
  subroutine InitSoilTransfer()

@@ -906,8 +906,8 @@ contains
              call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
                   dim1name='column', long_name='',  units='', fill_value=spval, &
                   interpinic_flag='interp' , readvar=readvar, data=ptr1d)
-             ptr1d => this%matrix_cap_decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
              if(use_soil_matrixcn)then
+                ptr1d => this%matrix_cap_decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
                 call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//'_Cap', xtype=ncd_double,  &
                      dim1name='column', long_name='',  units='', fill_value=spval, &
                      interpinic_flag='interp' , readvar=readvar, data=ptr1d)
@@ -1439,27 +1439,25 @@ contains
        end do
     end do
 
-    do j = 1,nlevdecomp
-       do k = 1, ndecomp_pools
-          do fi = 1, num_column
-             i = filter_column(fi)
-             if(use_soil_matrixcn)then
+    if(use_soil_matrixcn)then
+       do j = 1,nlevdecomp
+          do k = 1, ndecomp_pools
+             do fi = 1, num_column
+                i = filter_column(fi)
                 this%in_acc_2d(i,j,k)          = value_column
                 this%vert_up_tran_acc(i,j,k)   = value_column
                 this%vert_down_tran_acc(i,j,k) = value_column
                 this%exit_acc(i,j,k) = value_column
-             end if
+             end do
           end do
-       end do
-       do k = 1, ndecomp_cascade_transitions
-          do fi = 1, num_column
-             i = filter_column(fi)
-             if(use_soil_matrixcn)then
+          do k = 1, ndecomp_cascade_transitions
+             do fi = 1, num_column
+                i = filter_column(fi)
                 this%hori_tran_acc(i,j,k)   = value_column
-             end if
+             end do
           end do
        end do
-    end do
+    end if
     
     if(use_soil_matrixcn)then
        do j = 1,decomp_cascade_con%n_all_entries
