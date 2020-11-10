@@ -7,8 +7,8 @@ Verifies that spinup works correctly
 this test is only valid for CLM compsets
 
 Step 0: Run a AD cold-start with matrix and matrix spinup off
-Step 1: Run a fast-mode spinup
-Step 2: Run a 2-loop fast-mode spinup
+        Fast mode and fast-mode 2-loop spinup steps are now skipped
+        These were labeled as Step 1 and Step 2.
 Step 3: Run a slow-mode spinup
 Step 4: matrix Spinup off
 """
@@ -38,14 +38,14 @@ class SSPMATRIXCN(SystemTestsCommon):
     twice  = 2 * nyr_forcing
     thrice = 3 * nyr_forcing
     # Define the settings that will be used for each step
-    steps  = ["0",       "1",      "2",      "3",      "4"      ]
-    desc   = ["AD-cold", "fast",   "trans",  "slow",   "normal" ]
-    runtyp = ["startup", "branch", "branch", "branch", "branch" ]
-    spin   = [False,     True,     True,     True,     False    ]
-    stop_n = [5,         thrice,   twice,    thrice,   thrice   ]
-    cold   = [True,      False,    False,    False,    False    ]
-    iloop  = [-999,      -999,     2,        -999,     -999     ]
-    sasu   = [-999,      1,        1,        full,     -999     ]
+    steps  = ["0",       "3",      "4"      ]
+    desc   = ["AD-cold", "slow",   "normal" ]
+    runtyp = ["startup", "branch", "branch" ]
+    spin   = [False,     True,     False    ]
+    stop_n = [5,         thrice,   thrice   ]
+    cold   = [True,      False,    False    ]
+    iloop  = [-999,      -999,     -999     ]
+    sasu   = [-999,      full,     -999     ]
 
     def __init__(self, case=None):
         """
@@ -276,7 +276,7 @@ class test_ssp_matrixcn(unittest.TestCase):
      logger.removeHandler(stream_handler)
 
    def test_n_steps( self ):
-       self.assertTrue( self.ssp.n_steps() == 5)
+       self.assertTrue( self.ssp.n_steps() == 3)
 
    def test_valid_n( self ):
        for n in range(self.ssp.n_steps()):
