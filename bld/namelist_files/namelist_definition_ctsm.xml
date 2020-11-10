@@ -2045,12 +2045,13 @@ How close in years to use when looking for an initial condition file (finidat) i
 Simulation years you can look for in initial condition files (finidat) if interpolation is turned on (use_init_interp is .true.)
 </entry>
 
-<entry id="clm_accelerated_spinup" type="char*3" category="default_settings"
-       group="default_settings" valid_values="on,off" >
+<entry id="clm_accelerated_spinup" type="char*4" category="default_settings"
+       group="default_settings" valid_values="on,sasu,off" >
 Command line argument for setting up your simulation in a mode for faster
 throughput. By default turns off some options, and sets up for a lower level
 of output. When bgc_mode is some level of prognostic BGC (so NOT Satellite Phenology)
-it also sets up for accelerated decomposition.
+it also sets up for accelerated decomposition. The "sasu" mode sets up
+for using the CN-matrix mode with Semi-Analytic Spin Up.
 NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
       Set the env_run variable, rather than setting this directly.
 </entry>
