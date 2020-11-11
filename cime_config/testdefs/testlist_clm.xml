@@ -1053,6 +1053,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Among other extra outputs, ensure that writing the history field master list to a separate file does not cause failure"</option>
     </options>
   </test>
   <test name="ERS_D_Ld3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -1798,15 +1799,6 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     <options>
       <option name="wallclock">01:30:00</option>
       <option name="comment"  >Long enough test for SMB to be generated in bare land areas; add a month beyond the 3rd year to allow time for CLM to respond to CISM forcing from the 3rd year. (Note: if we had spun-up initial conditions for an IG compset, we could test this with much shorter test, if it also used the glc override options - much of the need for this long test is to allow the snow pack to spin up.)</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCrop" testmods="clm/write_hist_master_list">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Ensure that writing the history field master list to a separate file does not cause failure"</option>
     </options>
   </test>
   <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/clm50dynroots">

@@ -1,1 +1,2 @@
 calc_human_stress_indices = 'ALL'
+hist_master_list_file = .true.
