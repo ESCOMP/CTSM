@@ -302,12 +302,14 @@ contains
     ! Print summary of master field list.
     !
     ! !USES:
-    use clm_varctl, only: master_list_file, hist_master_list_file
+    use clm_varctl, only: hist_master_list_file
+    use fileutils, only: getavu, relavu
     !
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
     integer nf, i  ! do-loop counters
+    integer master_list_file  ! file unit number
     integer width_col_1  ! widths of table columns 1...
     integer width_col_2  ! ...2
     integer width_col_3  ! ...3
@@ -350,7 +352,8 @@ contains
        write(str_w_col_sum,'(i3)') width_col_sum
 
        ! Open master_list_file
-       open(unit = master_list_file, file = 'master_list_file.txt',  &
+       master_list_file = getavu()  ! get next available file unit number
+       open(unit = master_list_file, file = 'master_list_file.rst',  &
             status = 'new', action = 'write', form = 'formatted')
 
        ! File header
@@ -400,6 +403,7 @@ contains
 
        call shr_sys_flush(master_list_file)
        close(unit = master_list_file)
+       call relavu(master_list_file)  ! close and release file unit number
     end if
 
   end subroutine hist_printflds

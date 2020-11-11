@@ -79,7 +79,6 @@ module clm_varctl
   !----------------------------------------------------------
   !
   integer, public :: iulog = 6        ! "stdout" log file unit number, default is 6
-  integer, public :: master_list_file = 9  ! unit number for optional output file containing master history list in tabular form
 
   !----------------------------------------------------------
   ! Output NetCDF files
