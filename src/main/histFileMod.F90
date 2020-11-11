@@ -315,10 +315,10 @@ contains
     integer width_col_3  ! ...3
     integer width_col_4  ! ...and 4
     integer width_col_sum  ! widths of columns summed, including spaces
-    character(len=1) str_w_col_1  ! string versions of width_col_1 through 4
-    character(len=2) str_w_col_2, str_w_col_3, str_w_col_4
+    character(len=3) str_w_col_1  ! string versions of width_col_1 through 4
+    character(len=3) str_w_col_2, str_w_col_3, str_w_col_4
     character(len=3) str_w_col_sum  ! string version of width_col_sum
-    character(len=25) fmt_txt  ! format statement
+    character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
 
@@ -345,11 +345,11 @@ contains
 
        ! Convert integer widths to strings for use in format statements
        ! These write statements are not outputting to files
-       write(str_w_col_1,'(i1)') width_col_1
-       write(str_w_col_2,'(i2)') width_col_2
-       write(str_w_col_3,'(i2)') width_col_3
-       write(str_w_col_4,'(i2)') width_col_4
-       write(str_w_col_sum,'(i3)') width_col_sum
+       write(str_w_col_1,'(i0)') width_col_1
+       write(str_w_col_2,'(i0)') width_col_2
+       write(str_w_col_3,'(i0)') width_col_3
+       write(str_w_col_4,'(i0)') width_col_4
+       write(str_w_col_sum,'(i0)') width_col_sum
 
        ! Open master_list_file
        master_list_file = getavu()  ! get next available file unit number
