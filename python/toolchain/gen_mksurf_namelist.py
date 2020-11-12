@@ -5,17 +5,24 @@
 import subprocess
 import os
 import argparse
-import glob
 import re
-import datetime 
 from datetime import datetime
 
+valid_opts = {
+        'res' :
+        ['512x1024','360x720cru','128x256','64x128','48x96','94x192','0.23x0.31','0.47x0.63','0.9x1.25','1.9x2.5','2.5x3.33',
+        '4x5,10x15','0.125nldas2','5x5_amazon','1x1_camdenNJ','1x1_vancouverCAN','1x1_mexicocityMEX',
+        '1x1_asphaltjungleNJ','1x1_brazil,1x1_urbanc_alpha','1x1_numaIA,1x1_smallvilleIA','0.1x0.1','0.25x0.25','0.5x0.5',
+        '3x3min','5x5min','10x10min','0.33x0.33','0.125x0.125','ne4np4,ne16np4','ne30np4.pg2','ne30np4.pg3','ne30np4','ne60np4','ne120np4']
+        }
 
-def mk_dir(dir):
-        cmd_line  = "mkdir "+ dir 
-        #print cmd_line
-        subprocess.call(["mkdir", dir]) 
-
+class ctsm_case:
+    def __init__ (self, res, glc_nec, ssp_rcp):
+        self.res = res
+        self.glc_nec = glc_nec
+        self_ssp_rcp = ssp_rcp
+    def name_nl  (self):
+        print ("testing")
 
 def get_parser():
         """Get parser object for this script."""
@@ -30,7 +37,6 @@ def get_parser():
                     , dest="res"
                     , required=False
                     , default="4x5")
-
         parser.add_argument('-y','--year',
                     help='Simulation year to run over.', 
                     action="store",
@@ -38,19 +44,19 @@ def get_parser():
                     required=False,
                     choices = ['1885','1895','1980','1982','2000'],
                     default='2000')
-
         parser.add_argument('--range',
                     help='Simulation years to run over.', 
                     action="store",
                     dest="sim_range",
                     required=False,
                     choices = ['1850-2000','1850-2005','1850-2100'])
-
         parser.add_argument('-ge','--glc_nec',
                     help='Number of glacier elevation classes to use' ,
                     action="store",
                     dest="glc_nec",
+# it can be any number greater than 0 
                     default = "10")
+
         parser.add_argument('--rundir', 
                     help='Directory to run in.' ,
                     action="store",
@@ -64,14 +70,16 @@ def get_parser():
                     required = False,
                     choices = ["hist","SSP1-2.6","SSP3-7.0","SSP5-3.4","SSP2-4.5","SSP1-1.9","SSP4-3.4","SSP4-6.0","SSP5-8.5"],
                     default = "hist")
-
-        parser.add_argument('-l','--dinlc', 
+        parser.add_argument('-l','--dinlc',  #--raw_dir or --rawdata_dir
                     help='/path/of/root/of/input/data',  
                     action="store",
                     dest="input_path",
                     default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/")
-        parser.add_argument('-d','--debug', help='Just print out what would happen if ran'
-                ,action="store_true", dest="debug", default=False)
+        parser.add_argument('-d','--debug', 
+                    help='Just print out what would happen if ran', 
+                    action="store_true", 
+                    dest="debug", 
+                    default=False)
         return parser
 
 def name_nl  (start_year,end_year, res, ssp_rcp, num_pft):
