@@ -43,7 +43,7 @@ Included in the table are the following pieces of information:
 
 Table 1-3. CLM History Fields
 -----------------------------
-Table goes here.
+Table `master_list_file`
 
 
 ---------------------------------------------

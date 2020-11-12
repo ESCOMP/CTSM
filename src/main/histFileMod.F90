@@ -335,7 +335,9 @@ contains
     ! Print master field list in separate file if namelist variable
     ! requests it
     if (masterproc .and. hist_master_list_file) then
-       ! hardwired table column widths
+       ! hardwired table column widths to fit table on a computer
+       ! screen; TODO test whether text will wrap around in available
+       ! space in sphinx
        width_col_1 = 4  ! column that shows the variable number, nf
        width_col_2 = 39  ! variable name column
        width_col_3 = 94  ! long description column
