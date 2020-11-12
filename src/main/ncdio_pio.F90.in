@@ -1381,7 +1381,8 @@ contains
              call scam_field_offsets(ncid,'undefined', vardesc,&
                   start, count, found=found, posNOTonfile=posNOTonfile)
              if ( found )then
-                status = pio_get_var(ncid, varid, start, count, idata1d)
+                status = pio_inq_varndims(ncid, vardesc, ndims)
+                status = pio_get_var(ncid, varid, start(1:ndims), count(1:ndims), idata1d)
              else
                 status = pio_get_var(ncid, varid, idata1d)
              end if
