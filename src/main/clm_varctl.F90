@@ -53,6 +53,9 @@ module clm_varctl
   !true => no valid land points -- do NOT run
   logical, public :: noland = .false.                                    
 
+  ! true => run tests of ncdio_pio
+  logical, public :: for_testing_run_ncdiopio_tests = .false.
+
   ! Hostname of machine running on
   character(len=256), public :: hostname = ' '                           
 
@@ -67,6 +70,9 @@ module clm_varctl
 
   ! dataset conventions
   character(len=256), public :: conventions = "CF-1.0"                   
+
+  ! component name for filenames (history or restart files)
+  character(len=8), public :: compname = 'clm2'
 
   !----------------------------------------------------------
   ! Unit Numbers

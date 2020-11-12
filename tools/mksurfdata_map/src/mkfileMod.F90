@@ -8,9 +8,9 @@ contains
     use shr_kind_mod , only : r8 => shr_kind_r8
     use shr_sys_mod  , only : shr_sys_getenv
     use fileutils    , only : get_filename
-    use mkvarpar     , only : nlevsoi, nlevurb, numrad, numstdpft
+    use mkvarpar     , only : nlevsoi, numrad, numstdpft
     use mkvarctl
-    use mkurbanparMod, only : numurbl
+    use mkurbanparMod, only : numurbl, nlevurb
     use mkglcmecMod  , only : nglcec
     use mkpftMod     , only : mkpftAtt
     use mksoilMod    , only : mksoilAtt

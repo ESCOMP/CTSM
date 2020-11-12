@@ -17,7 +17,7 @@ module ncdio_utils
 contains
 
   !-----------------------------------------------------------------------
-  subroutine find_var_on_file(ncid, varname_list, varname_on_file)
+  subroutine find_var_on_file(ncid, varname_list, is_dim, varname_on_file)
     !
     ! !DESCRIPTION:
     ! Given a colon-delimited list of possible variable names, return the first one that
@@ -33,6 +33,7 @@ contains
     ! !ARGUMENTS:
     type(file_desc_t) , intent(inout) :: ncid            ! netcdf file id
     character(len=*)  , intent(in)    :: varname_list    ! colon-delimited list of possible variable names
+    logical           , intent(in)    :: is_dim          ! if .true., then look at dimensions rather than variables
     character(len=*)  , intent(out)   :: varname_on_file ! first variable from the list that was found on file
     !
     ! !LOCAL VARIABLES:
@@ -41,8 +42,6 @@ contains
     logical :: found
     logical :: readvar
     character(len=len(varname_on_file)) :: cur_varname
-    integer :: varid
-    type(var_desc_t) :: vardesc
 
     character(len=*), parameter :: subname = 'find_var_on_file'
     !-----------------------------------------------------------------------
@@ -53,8 +52,7 @@ contains
     n = 1
     do while ((.not. found) .and. (n <= num_vars))
        call shr_string_listGetName(varname_list, n, cur_varname)
-       call ncd_inqvid(ncid, cur_varname, varid, vardesc, readvar=readvar)
-       found = readvar
+       call check_var_or_dim(ncid, cur_varname, is_dim=is_dim, exists=found)
        n = n + 1
     end do
 
