@@ -56,6 +56,7 @@ def get_parser():
                     action="store",
                     dest="glc_nec",
 # it can be any number greater than 0 
+                    type = glc_nec_type,
                     default = "10")
 
         parser.add_argument('--rundir', 
@@ -82,9 +83,32 @@ def get_parser():
                     dest="debug", 
                     default=False)
         parser.add_argument('-vic','--vic', 
-                    help='', 
+                    help='Add the fields required for the VIC model', 
                     action="store_true", 
-                    dest="debug", 
+                    dest="vic_flag", 
+                    default=False)
+        parser.add_argument('-glc','--glc', 
+                    help='Add the optional 3D glacier fields for verification of the glacier model', 
+                    action="store_true", 
+                    dest="glc_flag", 
+                    default=False)
+        parser.add_argument('-hirespft','--hirespft', 
+                    help='If you want to use the high-resolution pft dataset rather \n' 
+                        'than the default lower resolution dataset \n'
+                        '(low resolution is at half-degree, high resolution at 3minute)\n'
+                        '(hires only available for present-day [2000]))', 
+                    action="store_true", 
+                    dest="hres_flag", 
+                    default=False)
+        parser.add_argument('-nocrop','--nocrop', 
+                    help='Create datasets without the extensive list of prognostic crop types', 
+                    action="store_false", 
+                    dest="crop_flag", 
+                    default=True)
+        parser.add_argument('-f','--fast', 
+                    help='Toggle fast mode which does not user the large mapping file', 
+                    action="store_true", 
+                    dest="fast_flag", 
                     default=False)
         return parser
 
@@ -112,27 +136,31 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path):
     print (label)
     nl_template = ( \
             "&clmexp\n"                                                                                                                                                                  
-            "nglcec         =  "+glc_nec + "\n"
-            "mksrf_fsoitex  =  "+input_path+"mksrf_soitex.10level.c010119.nc"+"\n"
-            "mksrf_forganic =  "+input_path+"mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc"+"\n"
-            "mksrf_flakwat  =  "+input_path+"mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"+"\n"
-            "mksrf_fwetlnd  =  "+input_path+"mksrf_lanwat.050425.nc"+"\n"
-            "mksrf_fmax     =  "+input_path+"mksrf_fmax_3x3min_USGS_c120911.nc"+"\n"
-            "mksrf_fglacier =  "+input_path+"mksrf_glacier_3x3min_simyr2000.c120926.nc"+"\n"
-            "mksrf_fvocef   =  "+input_path+"mksrf_vocef_0.5x0.5_simyr2000.c110531.nc" +"\n"
-            "mksrf_furbtopo =  "+input_path+"mksrf_topo.10min.c080912.nc"+"\n"
-            "mksrf_fgdp     =  "+input_path+"mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc"+"\n"
-            "mksrf_fpeat    =  "+input_path+"mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc"+"\n"
-            "mksrf_fsoildepth ="+input_path+"mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc"+"\n"
-            "mksrf_fabm     =  "+input_path+"mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc"+"\n"
-            "outnc_double   =  .true. \n"
-            "all_urban      = .false.\n"
-            "no_inlandwet   = .true.\n"
-            "mksrf_furban   =  "+input_path+"mksrf_urban_0.05x0.05_simyr2000.c170724.nc"+"\n"
-            "gitdescribe    =  "+label+"\n"
-            "mksrf_fdynuse  = ''\n"
-            "fdyndat        = ''\n"
-            #"numpft         =  "+num_pft+"\n"
+            "nglcec           = "+glc_nec + "\n"
+            "mksrf_fsoitex    = "+input_path+"mksrf_soitex.10level.c010119.nc"+"\n"
+            "mksrf_forganic   = "+input_path+"mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc"+"\n"
+            "mksrf_flakwat    = "+input_path+"mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"+"\n"
+            "mksrf_fwetlnd    = "+input_path+"mksrf_lanwat.050425.nc"+"\n"
+            "mksrf_fmax       = "+input_path+"mksrf_fmax_3x3min_USGS_c120911.nc"+"\n"
+            "mksrf_fglacier   = "+input_path+"mksrf_glacier_3x3min_simyr2000.c120926.nc"+"\n"
+            "mksrf_fvocef     = "+input_path+"mksrf_vocef_0.5x0.5_simyr2000.c110531.nc" +"\n"
+            "mksrf_furbtopo   = "+input_path+"mksrf_topo.10min.c080912.nc"+"\n"
+            "mksrf_fgdp       = "+input_path+"mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc"+"\n"
+            "mksrf_fpeat      = "+input_path+"mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc"+"\n"
+            "mksrf_fsoildepth = "+input_path+"mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc"+"\n"
+            "mksrf_fabm       = "+input_path+"mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc"+"\n"
+            "outnc_double     = .true. \n"
+            "all_urban        = .false.\n"
+            "no_inlandwet     = .true. \n"
+            "mksrf_furban     = "+input_path+"mksrf_urban_0.05x0.05_simyr2000.c170724.nc"+"\n"
+            "gitdescribe      = "+label+"\n"
+            "mksrf_ftopostats = " +input_path+"mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc"+"\n"
+            "mksrf_fvegtyp    = "+input_path + "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_1850.c170629.nc"+"\n"
+            "mksrf_fsoicol    = "+input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc"+"\n"
+            "mksrf_flai       = "+input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc" +"\n"
+            "mksrf_fdynuse    = ''\n"
+            "fdyndat          = ''\n"
+            #"numpft          = "+num_pft+"\n"
             "/\n"
             )
 
@@ -144,6 +172,12 @@ def tag_describe ():
     label = subprocess.check_output(["git", "describe"]).strip()
     return label.decode()
 
+def glc_nec_type(x):
+    x = int(x)
+    if (x <= 0):
+        raise argparse.ArgumentTypeError("ERROR: glc_nec must be at least 1")
+    return x
+
 
 def main ():
     print ('Testing gen_mksurf_namelist')
@@ -151,7 +185,7 @@ def main ():
     args         = get_parser().parse_args()
 
     res          = args.res
-    glc_nec      = args.glc_nec
+    glc_nec      = args.glc_nec.__str__()
     num_pft      = "78"
     input_path   = args.input_path
     ssp_rcp      = args.ssp_rcp
