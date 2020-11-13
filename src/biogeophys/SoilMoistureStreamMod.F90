@@ -1,5 +1,14 @@
 module SoilMoistureStreamMod
 
+  ! **********************************************************************
+  ! --------------------------- IMPORTANT NOTE ---------------------------
+  !
+  ! In cases using the NUOPC driver/mediator, we use a different version of this module,
+  ! based on CDEPS, which resides in src/cpl/nuopc/. Changes to the science here should
+  ! also be made in the similar file in src/cpl/nuopc. Once we start using CDEPS by
+  ! default, we can remove this version and move the CDEPS-based version into its place.
+  ! **********************************************************************
+
 #include "shr_assert.h"
 
   !-----------------------------------------------------------------------
