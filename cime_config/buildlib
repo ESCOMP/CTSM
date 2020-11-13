@@ -94,7 +94,6 @@ def _main_func():
         gmake = case.get_value("GMAKE")
         gmake_opts = get_standard_makefile_args(case)
         driver = case.get_value("COMP_INTERFACE").lower()
-        cimeroot = case.get_value("CIMEROOT")
         lilac_mode = case.get_value("LILAC_MODE")
 
         if lilac_mode == 'on':
@@ -127,8 +126,6 @@ def _main_func():
                      os.path.join(lnd_root,"src","utils"),
                      os.path.join(lnd_root,"src","cpl"),
                      os.path.join(lnd_root,"src","cpl","utils")]
-            if driver == 'nuopc':
-                paths.append(os.path.join(cimeroot,"src","drivers","nuopc","nuopc_cap_share"))
 
             if lilac_mode == 'on':
                 paths.append(os.path.join(lnd_root,"lilac","src"))
