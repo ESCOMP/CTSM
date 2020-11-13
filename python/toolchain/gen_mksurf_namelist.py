@@ -31,12 +31,13 @@ def get_parser():
                             formatter_class=ArgumentDefaultsHelpFormatter)
         parser = argparse.ArgumentParser(description='Setting the flags and input files.')
 
-        parser.add_argument('-r','--res'
-                    , help='Resolution is the supported resolution(s) to use for files.'
-                    , action="store"
-                    , dest="res"
-                    , required=False
-                    , default="4x5")
+        parser.add_argument('-r','--res',
+                    help='Resolution is the supported resolution(s) to use for files.',
+                    action="store", 
+                    dest="res", 
+                    choices=valid_opts['res'], 
+                    required=False, 
+                    default="4x5")
         parser.add_argument('-y','--year',
                     help='Simulation year to run over.', 
                     action="store",
@@ -77,6 +78,11 @@ def get_parser():
                     default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/")
         parser.add_argument('-d','--debug', 
                     help='Just print out what would happen if ran', 
+                    action="store_true", 
+                    dest="debug", 
+                    default=False)
+        parser.add_argument('-vic','--vic', 
+                    help='', 
                     action="store_true", 
                     dest="debug", 
                     default=False)
