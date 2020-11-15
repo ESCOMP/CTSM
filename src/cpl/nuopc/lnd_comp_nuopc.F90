@@ -667,9 +667,16 @@ contains
        mesh =  ESMF_MeshCreate(lgrid, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+       ! TODO: is the mask by default set to 1 if created from a grid?
        ! reset the global mask (which is 1) to the land/ocean mask
-       call ESMF_MeshSet(mesh, elementMask=mask, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       !
+       ! Currently, this call requires that the information has
+       ! already been added to the mesh during creation. For example,
+       ! you can only change the element mask information, if the mesh
+       ! was initially created with element masking.
+       !!! call ESMF_MeshSet(mesh, elementMask=mask, rc=rc)
+       !!! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
        deallocate(mask)
 
     else
