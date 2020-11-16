@@ -28,7 +28,6 @@ module WaterStateBulkType
      real(r8), pointer :: snow_persistence_col   (:)   ! col length of time that ground has had non-zero snow thickness (sec)
      real(r8), pointer :: int_snow_col           (:)   ! col integrated snowfall (mm H2O)
 
-
    contains
 
      procedure          :: InitBulk         
@@ -104,8 +103,6 @@ contains
 
     allocate(this%snow_persistence_col   (begc:endc))                     ; this%snow_persistence_col   (:)   = nan
     allocate(this%int_snow_col           (begc:endc))                     ; this%int_snow_col           (:)   = nan   
-
-
 
   end subroutine InitBulkAllocate
 
