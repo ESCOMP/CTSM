@@ -335,9 +335,11 @@ contains
     ! Print master field list in separate file if namelist variable
     ! requests it
     if (masterproc .and. hist_master_list_file) then
-       ! hardwired table column widths to fit table on a computer
-       ! screen; TODO test whether text will wrap around in available
-       ! space in sphinx
+       ! Hardwired table column widths to fit the table on a computer
+       ! screen. Some strings will be truncated as a result of the
+       ! current choices (4, 39, 94, 65). In sphinx (ie the web-based
+       ! documentation), text that has not been truncated will wrap
+       ! around in the available space.
        width_col_1 = 4  ! column that shows the variable number, nf
        width_col_2 = 39  ! variable name column
        width_col_3 = 94  ! long description column
