@@ -332,8 +332,10 @@ contains
        call shr_sys_flush(iulog)
     end if
 
-    ! Print master field list in separate file if namelist variable
-    ! requests it
+    ! Print master field list in separate text file when namelist
+    ! variable requests it. Text file is formatted in the .rst
+    ! (reStructuredText) format for easy introduction of the file to
+    ! the CTSM's web-based documentation.
     if (masterproc .and. hist_master_list_file) then
        ! Hardwired table column widths to fit the table on a computer
        ! screen. Some strings will be truncated as a result of the
