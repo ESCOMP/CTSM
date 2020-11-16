@@ -1114,37 +1114,37 @@ If true, this directs the model to collapse the urban landunits to the dominant 
 </entry>
 
 <entry id="toosmall_soil" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the soil landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_crop" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the crop landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_glacier" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the glacier landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_lake" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the lake landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_wetland" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the wetland landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_urban" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the urban landunits. Selecting the value 0 means DO NOTHING. If collapse_urban = .false., the same threshold will apply to all three urban landunits if they are present. If collapse_urban = .true., this threshold will apply to the single collapsed urban landunit if presnet.
 <default>Default: 0</default>
 </entry>
