@@ -223,6 +223,7 @@ contains
     call get_component_instance(gcomp, inst_suffix, inst_index, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     inst_name = 'LND'
+
     !----------------------------------------------------------------------------
     ! advertise fields
     !----------------------------------------------------------------------------
