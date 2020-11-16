@@ -1,4 +1,132 @@
 ===============================================================
+Tag name:  ctsm5.1.dev016
+Originator(s):  slevis (Samuel Levis,303-665-1310)
+Date:  Mon Nov 16 09:50:47 MST 2020
+One-line Summary: Write history filds master list to separate optional file
+
+Purpose of changes
+------------------
+
+ User can choose to write the history fields master list in a separate
+ text file by setting hist_master_list_file = .true. in CTSM's namelist.
+
+ File contents follow recommended reStructuredText "simple table"
+ formatting (see
+ https://docutils.sourceforge.io/docs/user/rst/quickref.html#tables)
+ for use in CTSM documentation in the sphinx environment.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #34 #941 #29 TODO: CONFIRM LAST ONE***
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New namelist option hist_master_list_file. Setting to true generates a
+ new text output file containing the history fields master list.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Default for hist_master_list_file = .false.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ None
+
+Substantial timing or memory changes:
+ No
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ None
+
+Changes to tests or testing:
+ Introduced testing for the new namelist option within the existing test
+ ERP_P36x2_D_Ld3.f10_f10_musgs.I1850Clm50BgcCrop.cheyenne_gnu.clm-extra_outputs
+ by adding hist_master_list_file = .true. to the test's user_nl_clm
+
+CTSM testing:
+
+[... Remove before making master tag.  Available test levels:
+
+    a) regular (must be run before handing off a tag to SEs and must be run
+     before committing a tag)
+    b) build_namelist (if namelists and/or build_system changed))
+    c) tools (only if tools are modified and no CTSM source is modified)
+    d) short (for use during development and in rare cases where only a small
+          change with known behavior is added ... eg. a minor bug fix)
+    e) doc (no source testing required)
+
+... ]
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- TODO
+    izumi ------- TODO
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No
+
+Detailed list of changes
+------------------------
+
+ Added section to subr. hist_printflds (called by subr. initialize2).
+ The new section runs when hist_master_list_file = .true.
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+ None
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1209
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev015
 Originator(s):  sacks (Bill Sacks)
 Date:  Fri Nov 13 11:52:34 MST 2020
