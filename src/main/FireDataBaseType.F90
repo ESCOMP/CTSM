@@ -11,7 +11,7 @@ module FireDataBaseType
   use shr_strdata_mod                    , only : shr_strdata_type, shr_strdata_create, shr_strdata_print
   use shr_strdata_mod                    , only : shr_strdata_advance
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varctl                         , only : iulog
+  use clm_varctl                         , only : iulog, inst_name
   use spmdMod                            , only : masterproc, mpicom, comp_id
   use fileutils                          , only : getavu, relavu
   use decompMod                          , only : gsmap_lnd_gdc2glo
@@ -102,7 +102,7 @@ contains
     !
     ! !ARGUMENTS:
     class(fire_base_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     character(len=*),  intent(in) :: NLFilename
     !-----------------------------------------------------------------------
 
@@ -130,7 +130,7 @@ contains
     !
     ! !ARGUMENTS:
     class(fire_base_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !-----------------------------------------------------------------------
 
     if ( this%need_lightning_and_popdens() ) then
@@ -157,16 +157,16 @@ contains
    ! !ARGUMENTS:
    implicit none
    class(fire_base_type)       :: this
-   type(bounds_type), intent(in) :: bounds  
+   type(bounds_type), intent(in) :: bounds
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !
    ! !LOCAL VARIABLES:
    integer            :: stream_year_first_popdens   ! first year in pop. dens. stream to use
    integer            :: stream_year_last_popdens    ! last year in pop. dens. stream to use
-   integer            :: model_year_align_popdens    ! align stream_year_first_hdm with 
+   integer            :: model_year_align_popdens    ! align stream_year_first_hdm with
    integer            :: nu_nml                      ! unit for namelist file
    integer            :: nml_error                   ! namelist i/o error flag
-   type(mct_ggrid)    :: dom_clm                     ! domain information 
+   type(mct_ggrid)    :: dom_clm                     ! domain information
    character(len=CL)  :: stream_fldFileName_popdens  ! population density streams filename
    character(len=CL)  :: popdensmapalgo = 'bilinear' ! mapping alogrithm for population density
    character(len=CL)  :: popdens_tintalgo = 'nearest'! time interpolation alogrithm for population density
@@ -212,9 +212,9 @@ contains
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) 'popdens_streams settings:'
-      write(iulog,*) '  stream_year_first_popdens  = ',stream_year_first_popdens  
-      write(iulog,*) '  stream_year_last_popdens   = ',stream_year_last_popdens   
-      write(iulog,*) '  model_year_align_popdens   = ',model_year_align_popdens   
+      write(iulog,*) '  stream_year_first_popdens  = ',stream_year_first_popdens
+      write(iulog,*) '  stream_year_last_popdens   = ',stream_year_last_popdens
+      write(iulog,*) '  model_year_align_popdens   = ',model_year_align_popdens
       write(iulog,*) '  stream_fldFileName_popdens = ',stream_fldFileName_popdens
       write(iulog,*) '  popdens_tintalgo           = ',popdens_tintalgo
       write(iulog,*) ' '
@@ -223,8 +223,8 @@ contains
    call clm_domain_mct (bounds, dom_clm)
 
    call shr_strdata_create(this%sdat_hdm,name="clmhdm",     &
-        pio_subsystem=pio_subsystem,                   & 
-        pio_iotype=shr_pio_getiotype('LND'),           &
+        pio_subsystem=pio_subsystem,                   &
+        pio_iotype=shr_pio_getiotype(inst_name),           &
         mpicom=mpicom, compid=comp_id,                 &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,        &
         nxg=ldomain%ni, nyg=ldomain%nj,                &
@@ -236,7 +236,7 @@ contains
         domFileName=trim(stream_fldFileName_popdens),  &
         domTvarName='time',                            &
         domXvarName='lon' ,                            &
-        domYvarName='lat' ,                            &  
+        domYvarName='lat' ,                            &
         domAreaName='area',                            &
         domMaskName='mask',                            &
         filePath='',                                   &
@@ -259,7 +259,7 @@ contains
          ptr_lnd=this%forc_hdm, default='inactive')
 
   end subroutine hdm_init
-  
+
   !-----------------------------------------------------------------------
   subroutine hdm_interp( this, bounds)
   !
@@ -271,7 +271,7 @@ contains
   !
   ! !ARGUMENTS:
   class(fire_base_type)       :: this
-  type(bounds_type), intent(in) :: bounds  
+  type(bounds_type), intent(in) :: bounds
   !
   ! !LOCAL VARIABLES:
   integer :: g, ig
@@ -292,7 +292,7 @@ contains
       ig = ig+1
       this%forc_hdm(g) = this%sdat_hdm%avs(1)%rAttr(1,ig)
    end do
-   
+
   end subroutine hdm_interp
 
   !-----------------------------------------------------------------------
@@ -313,16 +313,16 @@ contains
   ! !ARGUMENTS:
   implicit none
   class(fire_base_type)       :: this
-  type(bounds_type), intent(in) :: bounds  
+  type(bounds_type), intent(in) :: bounds
   character(len=*),  intent(in) :: NLFilename
   !
   ! !LOCAL VARIABLES:
   integer            :: stream_year_first_lightng  ! first year in Lightning stream to use
   integer            :: stream_year_last_lightng   ! last year in Lightning stream to use
-  integer            :: model_year_align_lightng   ! align stream_year_first_lnfm with 
+  integer            :: model_year_align_lightng   ! align stream_year_first_lnfm with
   integer            :: nu_nml                     ! unit for namelist file
   integer            :: nml_error                  ! namelist i/o error flag
-  type(mct_ggrid)    :: dom_clm                    ! domain information 
+  type(mct_ggrid)    :: dom_clm                    ! domain information
   character(len=CL)  :: stream_fldFileName_lightng ! lightning stream filename to read
   character(len=CL)  :: lightng_tintalgo = 'linear'! time interpolation alogrithm
   character(len=CL)  :: lightngmapalgo = 'bilinear'! Mapping alogrithm
@@ -368,9 +368,9 @@ contains
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) 'light_stream settings:'
-      write(iulog,*) '  stream_year_first_lightng  = ',stream_year_first_lightng  
-      write(iulog,*) '  stream_year_last_lightng   = ',stream_year_last_lightng   
-      write(iulog,*) '  model_year_align_lightng   = ',model_year_align_lightng   
+      write(iulog,*) '  stream_year_first_lightng  = ',stream_year_first_lightng
+      write(iulog,*) '  stream_year_last_lightng   = ',stream_year_last_lightng
+      write(iulog,*) '  model_year_align_lightng   = ',model_year_align_lightng
       write(iulog,*) '  stream_fldFileName_lightng = ',stream_fldFileName_lightng
       write(iulog,*) '  lightng_tintalgo           = ',lightng_tintalgo
       write(iulog,*) ' '
@@ -379,8 +379,8 @@ contains
    call clm_domain_mct (bounds, dom_clm)
 
    call shr_strdata_create(this%sdat_lnfm,name="clmlnfm",  &
-        pio_subsystem=pio_subsystem,                  & 
-        pio_iotype=shr_pio_getiotype('LND'),          &
+        pio_subsystem=pio_subsystem,                  &
+        pio_iotype=shr_pio_getiotype(inst_name),          &
         mpicom=mpicom, compid=comp_id,                &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,       &
         nxg=ldomain%ni, nyg=ldomain%nj,               &
@@ -392,7 +392,7 @@ contains
         domFileName=trim(stream_fldFileName_lightng), &
         domTvarName='time',                           &
         domXvarName='lon' ,                           &
-        domYvarName='lat' ,                           &  
+        domYvarName='lat' ,                           &
         domAreaName='area',                           &
         domMaskName='mask',                           &
         filePath='',                                  &
@@ -415,7 +415,7 @@ contains
          ptr_lnd=this%forc_lnfm, default='inactive')
 
   end subroutine lnfm_init
-  
+
   !-----------------------------------------------------------------------
   subroutine lnfm_interp(this, bounds )
   !
@@ -427,7 +427,7 @@ contains
   !
   ! !ARGUMENTS:
   class(fire_base_type)       :: this
-  type(bounds_type), intent(in) :: bounds  
+  type(bounds_type), intent(in) :: bounds
   !
   ! !LOCAL VARIABLES:
   integer :: g, ig
@@ -448,7 +448,7 @@ contains
       ig = ig+1
       this%forc_lnfm(g) = this%sdat_lnfm%avs(1)%rAttr(1,ig)
    end do
-   
+
   end subroutine lnfm_interp
 
 end module FireDataBaseType
