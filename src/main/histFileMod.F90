@@ -363,7 +363,7 @@ contains
             status = 'new', action = 'write', form = 'formatted')
 
        ! File title
-       fmt_txt = '(19a)'
+       fmt_txt = '(a)'
        write(master_list_file,fmt_txt) '==================='
        write(master_list_file,fmt_txt) 'CTSM History Fields'
        write(master_list_file,fmt_txt) '==================='
