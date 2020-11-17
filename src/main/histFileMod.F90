@@ -362,9 +362,16 @@ contains
        open(unit = master_list_file, file = 'master_list_file.rst',  &
             status = 'new', action = 'write', form = 'formatted')
 
-       ! File header
+       ! File title
+       fmt_txt = '(19a)'
+       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,fmt_txt) 'CTSM History Fields'
+       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,*)
+
+       ! Table header
        ! Concatenate strings needed in format statement
-       fmt_txt = '('//str_w_col_1//'a,1x,'//str_w_col_2//'a,1x,'//str_w_col_3//'a,1x,'//str_w_col_4//'a)'
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
        write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
                                        ('=', i=1, width_col_2),  &
                                        ('=', i=1, width_col_3),  &
@@ -377,13 +384,13 @@ contains
        fmt_txt = '('//str_w_col_sum//'a)'
        write(master_list_file,fmt_txt) ('-', i=1, width_col_sum)
        ! Concatenate strings needed in format statement
-       fmt_txt = '('//'a'//str_w_col_1//',1x,a'//str_w_col_2//',1x,a'//str_w_col_3//',1x,a'//str_w_col_4//')'
+       fmt_txt = '('//'a'//str_w_col_1//',x,a'//str_w_col_2//',x,a'//str_w_col_3//',x,a'//str_w_col_4//')'
        write(master_list_file,fmt_txt) '#', 'Variable Name',  &
                                     'Long Description', 'Units'
 
        ! End header, same as header
        ! Concatenate strings needed in format statement
-       fmt_txt = '('//str_w_col_1//'a,1x,'//str_w_col_2//'a,1x,'//str_w_col_3//'a,1x,'//str_w_col_4//'a)'
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
        write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
                                        ('=', i=1, width_col_2),  &
                                        ('=', i=1, width_col_3),  &
@@ -391,7 +398,7 @@ contains
 
        ! Main table
        ! Concatenate strings needed in format statement
-       fmt_txt = '('//'i'//str_w_col_1//',1x,a'//str_w_col_2//',1x,a'//str_w_col_3//',1x,a'//str_w_col_4//')'
+       fmt_txt = '('//'i'//str_w_col_1//',x,a'//str_w_col_2//',x,a'//str_w_col_3//',x,a'//str_w_col_4//')'
        do nf = 1,nfmaster
           write(master_list_file,fmt_txt) nf,  &
              masterlist(nf)%field%name,  &
@@ -399,9 +406,9 @@ contains
              masterlist(nf)%field%units
        end do
 
-       ! File footer, same as header
+       ! Table footer, same as header
        ! Concatenate strings needed in format statement
-       fmt_txt = '('//str_w_col_1//'a,1x,'//str_w_col_2//'a,1x,'//str_w_col_3//'a,1x,'//str_w_col_4//'a)'
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
        write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
                                        ('=', i=1, width_col_2),  &
                                        ('=', i=1, width_col_3),  &

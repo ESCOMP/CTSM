@@ -1,7 +1,6 @@
-
-====================
- CTSM History Fields
-====================
+===================
+CTSM History Fields
+===================
 
 ==== ======================================= ============================================================================================== =================================================================
  CTSM History Fields
@@ -431,7 +430,7 @@
  421 VCMX25T                                 canopy profile of vcmax25                                                                      umol/m2/s                                                        
  422 JMX25T                                  canopy profile of jmax                                                                         umol/m2/s                                                        
  423 TPU25T                                  canopy profile of tpu                                                                          umol/m2/s                                                        
- 424 FPSN24                                  24 hour accumulative patch photosynthesis starting from mid-night                              umol CO2/m**2 ground/day                                         
+ 424 FPSN24                                  24 hour accumulative patch photosynthesis starting from mid-night                              umol CO2/m^2 ground/day                                          
  425 QCHARGE                                 aquifer recharge rate (natural vegetated and crop landunits only)                              mm/s                                                             
  426 NSUBSTEPS                               number of adaptive timesteps in CLM timestep                                                   unitless                                                         
  427 FROST_TABLE                             frost table depth (natural vegetated and crop landunits only)                                  m                                                                
