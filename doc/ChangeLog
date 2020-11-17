@@ -127,6 +127,108 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
+Tag name:  ctsm5.1.dev016
+Originator(s): mvertens (Mariana Vertenstein), jedwards (Jim Edwards),
+               sacks (Bill Sacks), erik (Erik Kluzek)
+Date:  Tue Nov 17 10:49:40 MST 2020
+One-line Summary: Updates for nuopc
+
+Purpose of changes
+------------------
+
+Various updates needed for NUOPC.
+
+Also adds mizuRoute as an external component.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: none
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- SoilMoistureStreamMod now is duplicated: the version used with mct is
+  still in src/biogeochem, but there is a new version used with nuopc
+  and the CDEPS data models in src/cpl/nuopc. The latter has just been
+  introduced for testing purposes. Eventually, once we switch everything
+  to use CDEPS, we'll remove this duplicated version.
+
+Changes to tests or testing: none
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - not run
+
+  tools-tests (test/tools):
+
+    cheyenne - not run
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - not run
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - not run
+
+  regular tests (aux_clm):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- Added mizuRoute (at 34723c2)
+- cime: branch_tags/cime5.8.32_a01 -> branch_tags/cime5.8.32_a02
+- (Some other rearrangement of Externals files, but versions stayed the
+  same)
+
+Pull Requests that document the changes (include PR ids): none
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev015
 Originator(s):  sacks (Bill Sacks)
 Date:  Fri Nov 13 11:52:34 MST 2020

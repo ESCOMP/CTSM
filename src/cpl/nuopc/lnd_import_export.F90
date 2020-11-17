@@ -18,12 +18,12 @@ module lnd_import_export
   use glc2lndMod            , only : glc2lnd_type
   use domainMod             , only : ldomain
   use spmdMod               , only : masterproc
-  use seq_drydep_mod        , only : seq_drydep_readnl, n_drydep, seq_drydep_init
+  use seq_drydep_mod        , only : seq_drydep_readnl, n_drydep
   use shr_megan_mod         , only : shr_megan_readnl, shr_megan_mechcomps_n
   use shr_fire_emis_mod     , only : shr_fire_emis_readnl
   use shr_carma_mod         , only : shr_carma_readnl
   use shr_ndep_mod          , only : shr_ndep_readnl
-  use lnd_shr_methods       , only : chkerr
+  use nuopc_shr_methods     , only : chkerr
   use lnd_import_export_utils, only : derive_quantities, check_for_errors, check_for_nans
 
   implicit none
@@ -54,7 +54,7 @@ module lnd_import_export
   integer, parameter     :: gridTofieldMap = 2 ! ungridded dimension is innermost
 
   ! from atm->lnd
-  integer                :: ndep_nflds       ! number  of nitrogen deposition fields from atm->lnd/ocn 
+  integer                :: ndep_nflds       ! number  of nitrogen deposition fields from atm->lnd/ocn
 
   ! from lnd->atm
   character(len=cx)      :: carma_fields     ! List of CARMA fields from lnd->atm
@@ -65,7 +65,7 @@ module lnd_import_export
   logical                :: flds_co2a        ! use case
   logical                :: flds_co2b        ! use case
   logical                :: flds_co2c        ! use case
-  integer                :: glc_nec          ! number of glc elevation classes 
+  integer                :: glc_nec          ! number of glc elevation classes
   integer, parameter     :: debug = 0        ! internal debug level
 
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
@@ -185,7 +185,6 @@ contains
     if (drydep_nflds > 0) then
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, 'Sl_ddvel', ungridded_lbound=1, ungridded_ubound=drydep_nflds)
     end if
-    call seq_drydep_init( )
 
     ! MEGAN VOC emissions fluxes from land
     call shr_megan_readnl('drv_flds_in', megan_nflds)
@@ -261,7 +260,7 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_ocph',  ungridded_lbound=1, ungridded_ubound=3)
 
     ! from atm - wet dust deposition frluxes (4 sizes)
-    ! (1) => dstwet1, (2) => dstwet2, (3) => dstwet3, (4) => dstwet4 
+    ! (1) => dstwet1, (2) => dstwet2, (3) => dstwet3, (4) => dstwet4
     call fldlist_add(fldsToLnd_num, fldsToLnd, 'Faxa_dstwet', ungridded_lbound=1, ungridded_ubound=4)
 
     ! from - atm dry dust deposition frluxes (4 sizes)
@@ -289,10 +288,10 @@ contains
     end if
 
     if (glc_present) then
-       ! from land-ice (glc) - no elevation classes 
+       ! from land-ice (glc) - no elevation classes
        call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask'               ) ! mask of where cism is running
-       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask_coupled_fluxes') ! 
-       
+       call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_icemask_coupled_fluxes') !
+
        ! from land-ice (glc) - fields for all glc->lnd elevation classes (1:glc_nec) plus bare land (index 0)
        call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_ice_covered_elev', ungridded_lbound=1, ungridded_ubound=glc_nec+1)
        call fldlist_add(fldsToLnd_num, fldsToLnd, 'Sg_topo_elev'       , ungridded_lbound=1, ungridded_ubound=glc_nec+1)
@@ -318,7 +317,7 @@ contains
     type(ESMF_GridComp) , intent(inout) :: gcomp
     type(ESMF_Mesh)     , intent(in)    :: Emesh
     character(len=*)    , intent(in)    :: flds_scalar_name
-    integer             , intent(in)    :: flds_scalar_num 
+    integer             , intent(in)    :: flds_scalar_num
     integer             , intent(out)   :: rc
 
     ! local variables
@@ -629,12 +628,12 @@ contains
     !--------------------------
     ! Land-ice (glc) fields
     !--------------------------
-       
+
     if (glc_present) then
        ! We could avoid setting these fields if glc_present is .false., if that would
        ! help with performance. (The downside would be that we wouldn't have these fields
        ! available for diagnostic purposes or to force a later T compset with dlnd.)
-       
+
        do num = 0,glc_nec
           call state_getimport(importState, 'Sg_ice_covered_elev', bounds, frac_grc(:,num), ungridded_index=num+1, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
