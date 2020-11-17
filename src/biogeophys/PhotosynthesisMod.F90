@@ -586,7 +586,7 @@ contains
 
        endif
        this%fpsn24_patch = spval 
-       call hist_addfld1d (fname='FPSN24', units='umol CO2/m**2 ground/day',&
+       call hist_addfld1d (fname='FPSN24', units='umol CO2/m^2 ground/day',&
            avgflag='A', long_name='24 hour accumulative patch photosynthesis starting from mid-night', &
            ptr_patch=this%fpsn24_patch, default='inactive')
    
