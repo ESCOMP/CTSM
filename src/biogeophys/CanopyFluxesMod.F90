@@ -22,7 +22,6 @@ module CanopyFluxesMod
   use ActiveLayerMod        , only : active_layer_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-  use EDBtranMod            , only : btran_ed
   use SoilMoistStressMod    , only : calc_effective_soilporosity, calc_volumetric_h2oliq
   use SoilMoistStressMod    , only : calc_root_moist_stress, set_perchroot_opt
   use SimpleMathMod         , only : array_div_vector
@@ -59,12 +58,13 @@ module CanopyFluxesMod
   public :: readParams
 
   type, private :: params_type
-     real(r8) :: lai_dl  ! Plant litter area index (m2/m2)
-     real(r8) :: z_dl  ! Litter layer thickness (m)
-     real(r8) :: a_coef  ! Drag coefficient under less dense canopy (unitless)
-     real(r8) :: a_exp  ! Drag exponent under less dense canopy (unitless)
-     real(r8) :: csoilc  ! Soil drag coefficient under dense canopy (unitless)
-     real(r8) :: cv  ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
+     real(r8) :: lai_dl   ! Plant litter area index (m2/m2)
+     real(r8) :: z_dl     ! Litter layer thickness (m)
+     real(r8) :: a_coef   ! Drag coefficient under less dense canopy (unitless)
+     real(r8) :: a_exp    ! Drag exponent under less dense canopy (unitless)
+     real(r8) :: csoilc   ! Soil drag coefficient under dense canopy (unitless)
+     real(r8) :: cv       ! Turbulent transfer coeff. between canopy surface and canopy air (m/s^(1/2))
+     real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -177,6 +177,8 @@ contains
     call readNcdioScalar(ncid, 'csoilc', subname, params_inst%csoilc)
     ! Turbulent transfer coeff between canopy surface and canopy air (m/s^(1/2))
     call readNcdioScalar(ncid, 'cv', subname, params_inst%cv)
+    ! Minimum wind speed at the atmospheric forcing height (m/s)
+    call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
 
   end subroutine readParams
 
@@ -756,7 +758,7 @@ contains
          taf(p) = (t_grnd(c) + thm(p))/2._r8
          qaf(p) = (forc_q(c)+qg(c))/2._r8
 
-         ur(p) = max(1.0_r8,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
+         ur(p) = max(params_inst%wind_min,sqrt(forc_u(g)*forc_u(g)+forc_v(g)*forc_v(g)))
          dth(p) = thm(p)-taf(p)
          dqh(p) = forc_q(c)-qaf(p)
          delq(p) = qg(c) - qaf(p)

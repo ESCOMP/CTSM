@@ -10,7 +10,7 @@ module SoilHydrologyMod
   use abortutils        , only : endrun
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
-  use clm_varcon        , only : e_ice, denh2o, denice, rpi
+  use clm_varcon        , only : denh2o, denice, rpi
   use clm_varcon        , only : pondmx_urban
   use clm_varpar        , only : nlevsoi, nlevgrnd, nlayer, nlayert
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
@@ -57,7 +57,10 @@ module SoilHydrologyMod
   public :: readParams
 
   type, private :: params_type
-     real(r8) :: aq_sp_yield_min  ! Minimum aquifer specific yield (unitless)
+     real(r8) :: aq_sp_yield_min         ! Minimum aquifer specific yield (unitless)
+     real(r8) :: n_baseflow              ! Drainage power law exponent (unitless)
+     real(r8) :: perched_baseflow_scalar ! Scalar multiplier for perched base flow rate (kg/m2/s)
+     real(r8) :: e_ice                   ! Soil ice impedance factor (unitless)
   end type params_type
   type(params_type), private ::  params_inst
   
@@ -86,6 +89,12 @@ contains
 
     ! Minimum aquifer specific yield (unitless)
     call readNcdioScalar(ncid, 'aq_sp_yield_min', subname, params_inst%aq_sp_yield_min)
+    ! Drainage power law exponent (unitless)
+    call readNcdioScalar(ncid, 'n_baseflow', subname, params_inst%n_baseflow)
+    ! Scalar multiplier for perched base flow rate (kg/m2/s)
+    call readNcdioScalar(ncid, 'perched_baseflow_scalar', subname, params_inst%perched_baseflow_scalar)
+    ! Soil ice impedance factor (unitless)
+    call readNcdioScalar(ncid, 'e_ice', subname, params_inst%e_ice)
 
   end subroutine readParams
 
@@ -1050,7 +1059,7 @@ contains
           c = filter_hydrologyc(fc)
 
           !  specify maximum drainage rate
-          q_perch_max = 1.e-5_r8 * sin(col%topo_slope(c) * (rpi/180._r8))
+          q_perch_max = params_inst%perched_baseflow_scalar * sin(col%topo_slope(c) * (rpi/180._r8))
 
           ! if layer containing water table is frozen, compute the following:
           !     frost table, perched water table, and drainage from perched saturated layer
@@ -1084,7 +1093,7 @@ contains
              wtsub = 0._r8
              q_perch = 0._r8
              do k = jwt(c)+1, k_frz
-                imped=10._r8**(-e_ice*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
+                imped=10._r8**(-params_inst%e_ice*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
                 q_perch = q_perch + imped*hksat(c,k)*dzmm(c,k)
                 wtsub = wtsub + dzmm(c,k)
              end do
@@ -1160,7 +1169,7 @@ contains
                 wtsub = 0._r8
                 q_perch = 0._r8
                 do k = k_perch, k_frz
-                   imped=10._r8**(-e_ice*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
+                   imped=10._r8**(-params_inst%e_ice*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
                    q_perch = q_perch + imped*hksat(c,k)*dzmm(c,k)
                    wtsub = wtsub + dzmm(c,k)
                 end do
@@ -1218,11 +1227,11 @@ contains
                 end if
              else
                 if (use_vichydro) then
-                   imped=10._r8**(-e_ice*min(1.0_r8,ice(c,nlayer)/max_moist(c,nlayer)))
+                   imped=10._r8**(-params_inst%e_ice*min(1.0_r8,ice(c,nlayer)/max_moist(c,nlayer)))
                    dsmax_tmp(c) = Dsmax(c) * dtime/ secspday !mm/day->mm/dtime
                    rsub_top_max = dsmax_tmp(c)
                 else
-                   imped=10._r8**(-e_ice*(icefracsum/dzsum))
+                   imped=10._r8**(-params_inst%e_ice*(icefracsum/dzsum))
                    rsub_top_max = 10._r8 * sin((rpi/180.) * col%topo_slope(c))
                 end if
              endif
@@ -1787,7 +1796,7 @@ contains
              wtsub = 0._r8
              q_perch = 0._r8
              do k = k_perch, k_frz
-                imped=10._r8**(-e_ice*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
+                imped=10._r8**(-params_inst%e_ice*(0.5_r8*(icefrac(c,k)+icefrac(c,min(nlevsoi, k+1)))))
                 q_perch = q_perch + imped*hksat(c,k)*dzmm(c,k)
                 wtsub = wtsub + dzmm(c,k)
              end do
@@ -1994,7 +2003,6 @@ contains
      real(r8) :: rel_moist                ! relative moisture, temporary variable
      real(r8) :: wtsub_vic                ! summation of hk*dzmm for layers in the third VIC layer
      integer :: g
-     real(r8), parameter :: n_baseflow = 1 !drainage power law exponent
      !-----------------------------------------------------------------------
 
      associate(                                                            & 
@@ -2091,12 +2099,12 @@ contains
              dzsum  = dzsum + dzmm(c,j)
              icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
           end do
-          imped=10._r8**(-e_ice*(icefracsum/dzsum))
+          imped=10._r8**(-params_inst%e_ice*(icefracsum/dzsum))
           !@@
           ! baseflow is power law expression relative to bedrock layer
           if(zwt(c) <= zi(c,nbedrock(c))) then 
              rsub_top(c)    = imped * baseflow_scalar * tan(rpi/180._r8*col%topo_slope(c))* &
-                              (zi(c,nbedrock(c)) - zwt(c))**(n_baseflow)
+                              (zi(c,nbedrock(c)) - zwt(c))**(params_inst%n_baseflow)
           else
              rsub_top(c) = 0._r8
           endif

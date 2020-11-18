@@ -1,9 +1,11 @@
 module SatellitePhenologyMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation).
-  ! Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN)
+  ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation). 
+  ! Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN) 
   ! so that DryDeposition code can get estimates of LAI differences between months.
   !
   ! !USES:
@@ -22,14 +24,14 @@ module SatellitePhenologyMod
   use decompMod       , only : gsmap_lnd_gdc2glo
   use domainMod       , only : ldomain
   use fileutils       , only : getavu, relavu
-  use PatchType       , only : patch
+  use PatchType       , only : patch                
   use CanopyStateType , only : canopystate_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
   use perf_mod        , only : t_startf, t_stopf
   use spmdMod         , only : masterproc
   use spmdMod         , only : mpicom, comp_id
   use mct_mod
-  use ncdio_pio
+  use ncdio_pio   
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -40,16 +42,18 @@ module SatellitePhenologyMod
   public :: SatellitePhenologyInit ! Dynamically allocate memory
   public :: interpMonthlyVeg       ! interpolate monthly vegetation data
   public :: readAnnualVegetation   ! Read in annual vegetation (needed for Dry-deposition)
+  public :: lai_advance            ! Advance the LAI streams (outside of a Open-MP threading loop)
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: readMonthlyVegetation   ! read monthly vegetation data for two months
-  private :: lai_init    ! position datasets for LAI
-  private :: lai_interp  ! interpolates between two years of LAI data
+  private :: lai_init                ! position datasets for LAI
+  private :: lai_interp              ! interpolates between two years of LAI data (when LAI streams are being used)
 
   ! !PRIVATE MEMBER DATA:
   type(shr_strdata_type) :: sdat_lai           ! LAI input data stream
   !
   ! !PRIVATE TYPES:
+  integer, allocatable :: g_to_ig(:)            ! Array matching gridcell index to data index
   integer , private :: InterpMonths1            ! saved month index
   real(r8), private :: timwt(2)                 ! time weights for month 1 and month 2
   real(r8), private, allocatable :: mlai2t(:,:) ! lai for interpolation (2 months)
@@ -62,7 +66,7 @@ module SatellitePhenologyMod
   !-----------------------------------------------------------------------
 
 contains
-
+  
   !-----------------------------------------------------------------------
   !
   ! lai_init
@@ -91,12 +95,13 @@ contains
     integer            :: i                          ! index
     integer            :: stream_year_first_lai      ! first year in Lai stream to use
     integer            :: stream_year_last_lai       ! last year in Lai stream to use
-    integer            :: model_year_align_lai       ! align stream_year_first_lai with
+    integer            :: model_year_align_lai       ! align stream_year_first_lai with 
     integer            :: nu_nml                     ! unit for namelist file
     integer            :: nml_error                  ! namelist i/o error flag
-    type(mct_ggrid)    :: dom_clm                    ! domain information
+    type(mct_ggrid)    :: dom_clm                    ! domain information 
     character(len=CL)  :: stream_fldFileName_lai     ! lai stream filename to read
     character(len=CL)  :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
+    character(len=CL)  :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
 
     character(*), parameter    :: subName = "('laidyn_init')"
     character(*), parameter    :: F00 = "('(laidyn_init) ',4a)"
@@ -112,7 +117,8 @@ contains
          stream_year_last_lai,     &
          model_year_align_lai,     &
          lai_mapalgo,              &
-         stream_fldFileName_lai
+         stream_fldFileName_lai,   &
+         lai_tintalgo
 
     ! Default values for namelist
     stream_year_first_lai     = 1      ! first year in stream to use
@@ -141,15 +147,17 @@ contains
     call shr_mpi_bcast(stream_year_last_lai, mpicom)
     call shr_mpi_bcast(model_year_align_lai, mpicom)
     call shr_mpi_bcast(stream_fldFileName_lai, mpicom)
+    call shr_mpi_bcast(lai_tintalgo, mpicom)
 
     if (masterproc) then
 
        write(iulog,*) ' '
        write(iulog,*) 'lai_stream settings:'
-       write(iulog,*) '  stream_year_first_lai  = ',stream_year_first_lai
-       write(iulog,*) '  stream_year_last_lai   = ',stream_year_last_lai
-       write(iulog,*) '  model_year_align_lai   = ',model_year_align_lai
+       write(iulog,*) '  stream_year_first_lai  = ',stream_year_first_lai  
+       write(iulog,*) '  stream_year_last_lai   = ',stream_year_last_lai   
+       write(iulog,*) '  model_year_align_lai   = ',model_year_align_lai   
        write(iulog,*) '  stream_fldFileName_lai = ',trim(stream_fldFileName_lai)
+       write(iulog,*) '  lai_tintalgo           = ',trim(lai_tintalgo)
 
     endif
 
@@ -161,8 +169,8 @@ contains
     fldList = shr_string_listCreateField( numLaiFields, laiString )
 
     call shr_strdata_create(sdat_lai,name="laidyn",    &
-         pio_subsystem=pio_subsystem,                  &
-         pio_iotype=shr_pio_getiotype('LND'),      &
+         pio_subsystem=pio_subsystem,                  & 
+         pio_iotype=shr_pio_getiotype('LND'),          &
          mpicom=mpicom, compid=comp_id,                &
          gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,       &
          nxg=ldomain%ni, nyg=ldomain%nj,               &
@@ -171,10 +179,10 @@ contains
          yearAlign=model_year_align_lai,               &
          offset=0,                                     &
          domFilePath='',                               &
-         domFileName=trim(stream_fldFileName_lai),  &
+         domFileName=trim(stream_fldFileName_lai),     &
          domTvarName='time',                           &
          domXvarName='lon' ,                           &
-         domYvarName='lat' ,                           &
+         domYvarName='lat' ,                           &  
          domAreaName='area',                           &
          domMaskName='mask',                           &
          filePath='',                                  &
@@ -183,6 +191,7 @@ contains
          fldListModel=fldList,                         &
          fillalgo='none',                              &
          mapalgo=lai_mapalgo,                          &
+         tintalgo=lai_tintalgo,                        &
          calendar=get_calendar(),                      &
          taxmode='cycle'                               )
 
@@ -194,6 +203,48 @@ contains
 
   !-----------------------------------------------------------------------
   !
+  ! lai_advance
+  !
+  !-----------------------------------------------------------------------
+  subroutine lai_advance( bounds )
+    !
+    ! Advance LAI streams
+    !
+    ! !USES:
+    use clm_time_manager, only : get_curr_date
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(bounds_type)      , intent(in)    :: bounds                          
+    !
+    ! !LOCAL VARIABLES:
+    integer :: g, ig   ! Indices
+    integer :: year    ! year (0, ...) for nstep+1
+    integer :: mon     ! month (1, ..., 12) for nstep+1
+    integer :: day     ! day of month (1, ..., 31) for nstep+1
+    integer :: sec     ! seconds into current date for nstep+1
+    integer :: mcdate  ! Current model date (yyyymmdd)
+    !-----------------------------------------------------------------------
+
+    call get_curr_date(year, mon, day, sec)
+    mcdate = year*10000 + mon*100 + day
+
+    call shr_strdata_advance(sdat_lai, mcdate, sec, mpicom, 'laidyn')
+    if ( .not. allocated(g_to_ig) )then
+       allocate (g_to_ig(bounds%begg:bounds%endg) )
+
+       ig = 0
+       do g = bounds%begg,bounds%endg
+          ig = ig+1
+          g_to_ig(g) = ig
+       end do
+    end if
+
+  end subroutine lai_advance
+
+
+  !-----------------------------------------------------------------------
+  !
   ! lai_interp
   !
   !-----------------------------------------------------------------------
@@ -202,29 +253,21 @@ contains
     ! Interpolate data stream information for Lai.
     !
     ! !USES:
-    use clm_time_manager, only : get_curr_date
     use pftconMod       , only : noveg
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type)      , intent(in)    :: bounds
+    type(bounds_type)      , intent(in)    :: bounds                          
     type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: ivt, p, g, ip, ig, gpft
-    integer :: year    ! year (0, ...) for nstep+1
-    integer :: mon     ! month (1, ..., 12) for nstep+1
-    integer :: day     ! day of month (1, ..., 31) for nstep+1
-    integer :: sec     ! seconds into current date for nstep+1
-    integer :: mcdate  ! Current model date (yyyymmdd)
+    integer :: ivt, p, ip, ig
     character(len=CL)  :: stream_var_name
     !-----------------------------------------------------------------------
-
-    call get_curr_date(year, mon, day, sec)
-    mcdate = year*10000 + mon*100 + day
-
-    call shr_strdata_advance(sdat_lai, mcdate, sec, mpicom, 'laidyn')
-
+    SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(sdat_lai%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_lai%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
     do p = bounds%begp, bounds%endp
        ivt = patch%itype(p)
        if (ivt /= noveg) then     ! vegetated pft
@@ -232,17 +275,7 @@ contains
           stream_var_name = 'LAI_'//trim(adjustl(stream_var_name))
           ip = mct_aVect_indexRA(sdat_lai%avs(1),trim(stream_var_name))
        endif
-       gpft = patch%gridcell(p)
-
-       !
-       ! Determine vector index corresponding to gpft
-       !
-       ig = 0
-       do g = bounds%begg,bounds%endg
-          ig = ig+1
-          if (g == gpft) exit
-       end do
-
+       ig = g_to_ig(patch%gridcell(p))
        !
        ! Set lai for each gridcell/patch combination
        !
@@ -265,7 +298,7 @@ contains
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in) :: bounds  
     !
     ! !LOCAL VARIABLES:
     integer :: ier    ! error code
@@ -308,7 +341,7 @@ contains
     use pftconMod, only : noveg, nbrdlf_dcd_brl_shrub
     !
     ! !ARGUMENTS:
-    type(bounds_type)      , intent(in)    :: bounds
+    type(bounds_type)      , intent(in)    :: bounds                          
     integer                , intent(in)    :: num_nolakep                               ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(bounds%endp-bounds%begp+1) ! patch filter for non-lake points
     type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
@@ -321,20 +354,21 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                           &
-         frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   ,          & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
-         snow_depth         => waterdiagnosticbulk_inst%snow_depth_col ,          & ! Input:  [real(r8) (:) ] snow height (m)
-         tlai               => canopystate_inst%tlai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow
+         frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   ,          & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)       
+         snow_depth         => waterdiagnosticbulk_inst%snow_depth_col ,          & ! Input:  [real(r8) (:) ] snow height (m)                                                       
+         tlai               => canopystate_inst%tlai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow 
          tsai               => canopystate_inst%tsai_patch    ,          & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow
          elai               => canopystate_inst%elai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index with burying by snow
          esai               => canopystate_inst%esai_patch    ,          & ! Output: [real(r8) (:) ] one-sided stem area index with burying by snow
-         htop               => canopystate_inst%htop_patch    ,          & ! Output: [real(r8) (:) ] canopy top (m)
-         hbot               => canopystate_inst%hbot_patch    ,          & ! Output: [real(r8) (:) ] canopy bottom (m)
+         htop               => canopystate_inst%htop_patch    ,          & ! Output: [real(r8) (:) ] canopy top (m)                           
+         hbot               => canopystate_inst%hbot_patch    ,          & ! Output: [real(r8) (:) ] canopy bottom (m)                           
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
          )
 
       if (use_lai_streams) then
          call lai_interp(bounds, canopystate_inst)
       endif
+
 
       do fp = 1, num_nolakep
          p = filter_nolakep(fp)
@@ -369,7 +403,7 @@ contains
          ! problems associated with very small lai and sai.
 
          ! snow burial fraction for short vegetation (e.g. grasses) as in
-         ! Wang and Zeng, 2007.
+         ! Wang and Zeng, 2007. 
 
          if (patch%itype(p) > noveg .and. patch%itype(p) <= nbrdlf_dcd_brl_shrub ) then
             ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
@@ -411,7 +445,7 @@ contains
     use clm_time_manager, only : get_curr_date, get_step_size_real, get_nstep
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in) :: bounds  
     type(canopystate_type), intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
@@ -469,12 +503,12 @@ contains
     use shr_scam_mod, only : shr_scam_getCloseLatLon
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in) :: bounds  
     type(canopystate_type), intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid             ! netcdf id
-    real(r8), pointer :: annlai(:,:)      ! 12 months of monthly lai from input data set
+    real(r8), pointer :: annlai(:,:)      ! 12 months of monthly lai from input data set 
     real(r8), pointer :: mlai(:,:)        ! lai read from input files
     real(r8):: closelat,closelon          ! single column vars
     integer :: ier                        ! error code
@@ -491,13 +525,13 @@ contains
     character(len=32) :: subname = 'readAnnualVegetation'
     !-----------------------------------------------------------------------
 
-    annlai    => canopystate_inst%annlai_patch
+    annlai    => canopystate_inst%annlai_patch 
 
     ! Determine necessary indices
 
     allocate(mlai(bounds%begg:bounds%endg,0:maxveg), stat=ier)
     if (ier /= 0) then
-       write(iulog,*)subname, 'allocation error '
+       write(iulog,*)subname, 'allocation error ' 
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -543,7 +577,7 @@ contains
           else                       !! non-vegetated pft
              annlai(k,p) = 0._r8
           end if
-       end do   ! end of loop over patches
+       end do   ! end of loop over patches  
 
     enddo ! months loop
 
@@ -570,7 +604,7 @@ contains
     use netcdf
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in) :: bounds
+    type(bounds_type) , intent(in) :: bounds  
     character(len=*)  , intent(in) :: fveg      ! file with monthly vegetation data
     integer           , intent(in) :: months(2) ! months to be interpolated (1 to 12)
     type(canopystate_type), intent(inout) :: canopystate_inst

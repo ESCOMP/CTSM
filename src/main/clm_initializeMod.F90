@@ -13,6 +13,7 @@ module clm_initializeMod
   use clm_varctl      , only : is_cold_start, is_interpolated_start
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl      , only : use_soil_moisture_streams
   use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec
   use perf_mod        , only : t_startf, t_stopf
   use readParamsMod   , only : readParameters
@@ -27,7 +28,8 @@ module clm_initializeMod
   use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
 
   use clm_instMod
-  !
+  use SoilMoistureStreamMod, only : PrescribedSoilMoistureInit
+  ! 
   implicit none
   private  ! By default everything is private
 
@@ -39,18 +41,18 @@ module clm_initializeMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine initialize1(gindex_ocn)
+  subroutine initialize1(dtime, gindex_ocn)
     !
     ! !DESCRIPTION:
     ! CLM initialization first phase
     !
     ! !USES:
-    use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
+    use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec, nlevsoi
     use clm_varcon       , only: clm_varcon_init
     use landunit_varcon  , only: landunit_varcon_init, max_lunit
-    use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version
-    use pftconMod        , only: pftcon
-    use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp
+    use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
+    use pftconMod        , only: pftcon       
+    use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp, decompInit_lnd3D
     use decompInitMod    , only: decompInit_ocn
     use domainMod        , only: domain_check, ldomain, domain_init
     use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
@@ -61,7 +63,14 @@ contains
     use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
     !
     ! !ARGUMENTS
-    integer, pointer, optional, intent(out) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
+    integer, intent(in) :: dtime    ! model time step (seconds)
+
+    ! COMPILER_BUG(wjs, 2020-02-20, intel18.0.3) Although gindex_ocn could be
+    ! intent(out), intel18.0.3 generates a runtime segmentation fault in runs that don't
+    ! have this argument present when this is declared intent(out). (It works fine on
+    ! intel 19.0.2 when declared as intent(out).) See also
+    ! https://github.com/ESCOMP/CTSM/issues/930.
+    integer, pointer, optional, intent(inout) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -93,7 +102,7 @@ contains
        call shr_sys_flush(iulog)
     endif
 
-    call control_init()
+    call control_init(dtime)
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
@@ -133,6 +142,7 @@ contains
     end if
     deallocate(amask)
 
+    if(use_soil_moisture_streams) call decompInit_lnd3D(ni, nj, nlevsoi)
     ! *** Get JUST gridcell processor bounds ***
     ! Remaining bounds (landunits, columns, patches) will be determined
     ! after the call to decompInit_glcp - so get_proc_bounds is called
@@ -260,7 +270,6 @@ contains
     call t_stopf('clm_init1')
 
   end subroutine initialize1
-
 
   !-----------------------------------------------------------------------
   subroutine initialize2( )
@@ -506,6 +515,9 @@ contains
        call SatellitePhenologyInit(bounds_proc)
     end if
 
+    if(use_soil_moisture_streams) then 
+       call PrescribedSoilMoistureInit(bounds_proc)
+    endif
 
 
 
