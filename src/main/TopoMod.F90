@@ -226,6 +226,8 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begc, endc
     integer :: c, l, g
+    real(r8), allocatable :: mean_hillslope_elevation(:)
+    real(r8):: mhe_norm
 
     character(len=*), parameter :: subname = 'UpdateTopo'
     !-----------------------------------------------------------------------
@@ -247,6 +249,25 @@ contains
          this%topo_col(begc:endc), &
          this%needs_downscaling_col(begc:endc))
 
+    ! calculate area-weighted mean hillslope elevation on each landunit
+    if (use_hillslope) then
+       allocate(mean_hillslope_elevation(bounds%begl:bounds%endl))
+       mean_hillslope_elevation(:) = 0._r8
+       do l = bounds%begl, bounds%endl
+          if (lun%itype(l) == istsoil) then
+             mhe_norm = 0._r8
+             do c = lun%coli(l), lun%colf(l)
+                mean_hillslope_elevation(l) = mean_hillslope_elevation(l) &
+                     + col%hill_elev(c)*col%hill_area(c)
+                mhe_norm = mhe_norm + col%hill_area(c)
+             enddo
+             if (mhe_norm > 0) then
+                mean_hillslope_elevation(l) = mean_hillslope_elevation(l)/mhe_norm
+             endif
+          endif
+       enddo
+    endif
+       
     ! For any point that isn't downscaled, set its topo value to the atmosphere's
     ! topographic height. This shouldn't matter, but is useful if topo_col is written to
     ! the history file.
@@ -259,7 +280,8 @@ contains
           g = col%gridcell(c)
           l = col%landunit(c)
           if (lun%itype(l) == istsoil .and. use_hillslope) then
-             this%topo_col(c) = col%hill_elev(c)
+             this%topo_col(c) = atm_topo(g) &
+                  + (col%hill_elev(c) - mean_hillslope_elevation(l))
              this%needs_downscaling_col(c) = .true.
           else
              this%topo_col(c) = atm_topo(g)

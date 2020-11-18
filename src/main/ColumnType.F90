@@ -69,6 +69,7 @@ module ColumnType
      integer,  pointer :: colu                 (:)   ! column index of uphill column (hillslope hydrology)
      integer,  pointer :: cold                 (:)   ! column index of downhill column (hillslope hydrology)
      integer,  pointer :: hillslope_ndx        (:)   ! hillslope identifier
+     integer,  pointer :: hill_pftndx          (:)   ! specified (single) pft index of column
      real(r8), pointer :: hill_elev            (:)   ! mean elevation of column relative to mean gridcell elevation
      real(r8), pointer :: hill_slope           (:)   ! mean along-hill slope
      real(r8), pointer :: hill_area            (:)   ! mean surface area
@@ -139,6 +140,7 @@ contains
     allocate(this%colu       (begc:endc))                      ; this%colu   (:) = ispval  
     allocate(this%cold       (begc:endc))                      ; this%cold   (:) = ispval  
     allocate(this%hillslope_ndx(begc:endc))                    ; this%hillslope_ndx (:) = ispval  
+    allocate(this%hill_pftndx(begc:endc))                      ; this%hill_pftndx (:)   = ispval  
     allocate(this%hill_elev(begc:endc))                        ; this%hill_elev     (:) = spval  
     allocate(this%hill_slope(begc:endc))                       ; this%hill_slope    (:) = spval  
     allocate(this%hill_area(begc:endc))                        ; this%hill_area     (:) = spval  
@@ -190,7 +192,15 @@ contains
     deallocate(this%col_ndx    )
     deallocate(this%colu       )
     deallocate(this%cold       )
-    deallocate(this%urbpoi)
+    deallocate(this%hillslope_ndx)
+    deallocate(this%hill_pftndx  )
+    deallocate(this%hill_elev    )
+    deallocate(this%hill_slope   )
+    deallocate(this%hill_area    )
+    deallocate(this%hill_width   )
+    deallocate(this%hill_distance)
+    deallocate(this%hill_aspect  )
+    deallocate(this%urbpoi     )
   end subroutine Clean
 
   !-----------------------------------------------------------------------
