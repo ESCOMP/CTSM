@@ -2537,6 +2537,8 @@ contains
     use FatesInterfaceTypesMod, only : fates_hdim_cwdmap_levelcwd
     use FatesInterfaceTypesMod, only : fates_hdim_elmap_levelage
     use FatesInterfaceTypesMod, only : fates_hdim_agemap_levelage
+    use FatesInterfaceTypesMod, only : fates_hdim_agmap_levagefuel
+    use FatesInterfaceTypesMod, only : fates_hdim_fscmap_levagefuel
 
 
     !
