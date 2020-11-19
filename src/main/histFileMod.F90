@@ -301,10 +301,24 @@ contains
     ! !DESCRIPTION:
     ! Print summary of master field list.
     !
+    ! !USES:
+    use clm_varctl, only: hist_master_list_file
+    use fileutils, only: getavu, relavu
+    !
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer nf
+    integer nf, i  ! do-loop counters
+    integer master_list_file  ! file unit number
+    integer width_col_1  ! widths of table columns 1...
+    integer width_col_2  ! ...2
+    integer width_col_3  ! ...3
+    integer width_col_4  ! ...and 4
+    integer width_col_sum  ! widths of columns summed, including spaces
+    character(len=3) str_w_col_1  ! string versions of width_col_1 through 4
+    character(len=3) str_w_col_2, str_w_col_3, str_w_col_4
+    character(len=3) str_w_col_sum  ! string version of width_col_sum
+    character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
 
@@ -316,6 +330,93 @@ contains
 9000      format (i5,1x,a32,1x,a16)
        end do
        call shr_sys_flush(iulog)
+    end if
+
+    ! Print master field list in separate text file when namelist
+    ! variable requests it. Text file is formatted in the .rst
+    ! (reStructuredText) format for easy introduction of the file to
+    ! the CTSM's web-based documentation.
+    if (masterproc .and. hist_master_list_file) then
+       ! Hardwired table column widths to fit the table on a computer
+       ! screen. Some strings will be truncated as a result of the
+       ! current choices (4, 39, 94, 65). In sphinx (ie the web-based
+       ! documentation), text that has not been truncated will wrap
+       ! around in the available space.
+       width_col_1 = 4  ! column that shows the variable number, nf
+       width_col_2 = 39  ! variable name column
+       width_col_3 = 94  ! long description column
+       width_col_4 = 65  ! units column
+       width_col_sum = width_col_1 + width_col_2 +  &  ! sum of widths plus
+                       width_col_3 + width_col_4 + 3  ! ...3 blank spaces
+
+       ! Convert integer widths to strings for use in format statements
+       ! These write statements are not outputting to files
+       write(str_w_col_1,'(i0)') width_col_1
+       write(str_w_col_2,'(i0)') width_col_2
+       write(str_w_col_3,'(i0)') width_col_3
+       write(str_w_col_4,'(i0)') width_col_4
+       write(str_w_col_sum,'(i0)') width_col_sum
+
+       ! Open master_list_file
+       master_list_file = getavu()  ! get next available file unit number
+       open(unit = master_list_file, file = 'master_list_file.rst',  &
+            status = 'new', action = 'write', form = 'formatted')
+
+       ! File title
+       fmt_txt = '(a)'
+       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,fmt_txt) 'CTSM History Fields'
+       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,*)
+
+       ! Table header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
+       write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
+                                       ('=', i=1, width_col_2),  &
+                                       ('=', i=1, width_col_3),  &
+                                       ('=', i=1, width_col_4)
+       ! Table's title
+       write(master_list_file,*) 'CTSM History Fields'
+
+       ! Sub-header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_sum//'a)'
+       write(master_list_file,fmt_txt) ('-', i=1, width_col_sum)
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//'a'//str_w_col_1//',x,a'//str_w_col_2//',x,a'//str_w_col_3//',x,a'//str_w_col_4//')'
+       write(master_list_file,fmt_txt) '#', 'Variable Name',  &
+                                    'Long Description', 'Units'
+
+       ! End header, same as header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
+       write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
+                                       ('=', i=1, width_col_2),  &
+                                       ('=', i=1, width_col_3),  &
+                                       ('=', i=1, width_col_4)
+
+       ! Main table
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//'i'//str_w_col_1//',x,a'//str_w_col_2//',x,a'//str_w_col_3//',x,a'//str_w_col_4//')'
+       do nf = 1,nfmaster
+          write(master_list_file,fmt_txt) nf,  &
+             masterlist(nf)%field%name,  &
+             masterlist(nf)%field%long_name,  &
+             masterlist(nf)%field%units
+       end do
+
+       ! Table footer, same as header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
+       write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
+                                       ('=', i=1, width_col_2),  &
+                                       ('=', i=1, width_col_3),  &
+                                       ('=', i=1, width_col_4)
+
+       call shr_sys_flush(master_list_file)
+       close(unit = master_list_file)
+       call relavu(master_list_file)  ! close and release file unit number
     end if
 
   end subroutine hist_printflds

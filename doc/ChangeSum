@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev017   slevis 11/17/2020 Write history filds master list to separate optional file
   ctsm5.1.dev016 multiple 11/17/2020 Updates for nuopc
   ctsm5.1.dev015    sacks 11/13/2020 A few small fixes
   ctsm5.1.dev014 dll/oles 11/07/2020 Grass/crop snow burial fraction fix, and some other fixes
