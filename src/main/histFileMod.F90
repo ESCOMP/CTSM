@@ -2092,6 +2092,7 @@ contains
        call ncd_defdim(lnfid, 'fates_levelpft', num_elements_fates * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelcwd', num_elements_fates * ncwd, dimid)
        call ncd_defdim(lnfid, 'fates_levelage', num_elements_fates * nlevage, dimid)
+       call ncd_defdim(lnfid, 'fates_levagenfsc', nlevage * nfsc, dimid)
     end if
 
     if ( .not. lhistrest )then
@@ -2640,6 +2641,12 @@ contains
                    long_name='FATES pft map into patch age x pft', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_agmap_levagepft', xtype=ncd_int, dim1name='fates_levagepft', &
                    long_name='FATES age-class map into patch age x pft', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_agmap_levagenfsc', xtype=ncd_int, dim1name='fates_levagenfsc', &
+                   long_name='FATES age-class map into patch age x fuel size', units='-', ncid=nfid(t))
+             call ncd_defvar(varname='fates_fscmap_levagenfsc', xtype=ncd_int, dim1name='fates_levagenfsc', &
+                   long_name='FATES fuel size-class map into patch age x fuel size', units='-', ncid=nfid(t))
+
+
 
           end if
 
@@ -2679,6 +2686,8 @@ contains
              call ncd_io(varname='fates_pftmap_levscagpft',data=fates_hdim_pftmap_levscagpft, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_pftmap_levagepft',data=fates_hdim_pftmap_levagepft, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_agmap_levagepft',data=fates_hdim_agmap_levagepft, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_agmap_levagenfsc',data=fates_hdim_agmap_levagenfsc, ncid=nfid(t), flag='write')
+             call ncd_io(varname='fates_fscmap_levagenfsc',data=fates_hdim_fscmap_levagenfsc, ncid=nfid(t), flag='write')
           end if
 
        endif
@@ -4946,6 +4955,8 @@ contains
        num2d = num_elements_fates*ncwd
     case ('fates_levelage')
        num2d = num_elements_fates*nlevage
+    case ('fates_levagenfsc')
+       num2d = nlevage*nfsc
     case('cft')
        if (cft_size > 0) then
           num2d = cft_size

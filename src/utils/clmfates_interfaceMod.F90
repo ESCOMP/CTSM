@@ -2363,7 +2363,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
-   use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8
+   use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agenfsc_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2502,7 +2502,7 @@ module CLMFatesInterfaceMod
              site_fuel_r8, site_cwdsc_r8, &
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, & 
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
-             site_elcwd_r8, site_elage_r8)
+             site_elcwd_r8, site_elage_r8, site_agenfsc_r8)
 
 
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
@@ -2875,6 +2875,10 @@ module CLMFatesInterfaceMod
 
    fates%elage_begin = 1
    fates%elage_end   = num_elements * nlevage
+
+   fates%agenfsc_begin = 1
+   fates%agenfsc_end   = nlevage * nfsc
+
 
    call t_stopf('fates_hlm2fatesbnds')
    
