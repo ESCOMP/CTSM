@@ -1,0 +1,2 @@
+use_fates_sp = .true.
+use_fates_nocomp = .true.
