@@ -56,6 +56,7 @@ def get_parser():
                     action="store",
                     dest="glc_nec",
 # it can be any number greater than 0 
+# smaller than 99 
                     type = glc_nec_type,
                     default = "10")
 
@@ -77,6 +78,7 @@ def get_parser():
                     action="store",
                     dest="input_path",
                     default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/")
+#maybe a verbose option and removing debug
         parser.add_argument('-d','--debug', 
                     help='Just print out what would happen if ran', 
                     action="store_true", 
@@ -95,8 +97,9 @@ def get_parser():
         parser.add_argument('-hirespft','--hirespft', 
                     help='If you want to use the high-resolution pft dataset rather \n' 
                         'than the default lower resolution dataset \n'
-                        '(low resolution is at half-degree, high resolution at 3minute)\n'
-                        '(hires only available for present-day [2000]))', 
+#add error check for hi-res and years if they are 1850 and 2005.
+                        '(low resolution is at quarter-degree, high resolution at 3minute)\n'
+                        '(hires only available for 1850 and 2005))', 
                     action="store_true", 
                     dest="hres_flag", 
                     default=False)
@@ -160,7 +163,21 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path):
             "mksrf_flai       = "+input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc" +"\n"
             "mksrf_fdynuse    = ''\n"
             "fdyndat          = ''\n"
-            #"numpft          = "+num_pft+"\n"
+            "numpft           = "+num_pft+"\n"
+            "dst_mesh_file    = \n"
+            "\n&transient\n"
+            "use_transient    = \n"
+            "mksrf_fdynuse    = \n"
+            "start_year       = \n"
+            "end_year         = \n"
+            "mksrf_dyn_lu     = "+input_path+"\n"
+            "\n&vic\n"
+            "use_vic          = false\n"
+            "mksrf_fvic       = "+input_path+"mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc\n"
+            "outnc_vic        = \n"
+            "\n&glc\n"
+            "use_glc          = false\n"
+            "outnc_3dglc      = \n"
             "/\n"
             )
 
@@ -186,9 +203,14 @@ def main ():
 
     res          = args.res
     glc_nec      = args.glc_nec.__str__()
-    num_pft      = "78"
     input_path   = args.input_path
     ssp_rcp      = args.ssp_rcp
+
+    crop_flag    = args.crop_flag()
+    if crop_flag:
+        num_pft      = "78"
+    else:
+        num_pft      = "16"
 
     sim_year         = args.sim_year
     if args.sim_range:
