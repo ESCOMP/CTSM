@@ -628,88 +628,88 @@ contains
          tranr=0.0002_r8   
          ! set carbon fluxes for shifting storage pools to transfer pools    
          if (use_matrixcn) then    
-            matrix_phtransfer(p,ileafst_to_ileafxf_phc)   =  matrix_phtransfer(p,ileafst_to_ileafxf_phc) + tranr/dt
-            matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) =  matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + tranr/dt 
+            leafc_storage_to_xfer(p)  = leafc_storage(p)  * matrix_update_phc(p,ileafst_to_ileafxf_phc,tranr/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+            frootc_storage_to_xfer(p) = frootc_storage(p) * matrix_update_phc(p,ifrootst_to_ifrootxf_phc,tranr/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
             if (woody(ivt(p)) == 1.0_r8) then   
-               matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc)   = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + tranr/dt
-               matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc)   = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + tranr/dt
-               matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + tranr/dt
-               matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + tranr/dt
+               livestemc_storage_to_xfer(p)   = livestemc_storage(p)  * matrix_update_phc(p,ilivestemst_to_ilivestemxf_phc,tranr/dt ,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               deadstemc_storage_to_xfer(p)   = deadstemc_storage(p)  * matrix_update_phc(p,ideadstemst_to_ideadstemxf_phc,tranr/dt ,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               livecrootc_storage_to_xfer(p)  = livecrootc_storage(p) * matrix_update_phc(p,ilivecrootst_to_ilivecrootxf_phc,tranr/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               deadcrootc_storage_to_xfer(p)  = deadcrootc_storage(p) * matrix_update_phc(p,ideadcrootst_to_ideadcrootxf_phc,tranr/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
             end if
          else
             ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+            leafc_storage_to_xfer(p)  = tranr * leafc_storage(p)/dt    
+            frootc_storage_to_xfer(p) = tranr * frootc_storage(p)/dt
+            if (woody(ivt(p)) == 1.0_r8) then    
+               livestemc_storage_to_xfer(p)  = tranr * livestemc_storage(p)/dt    
+               deadstemc_storage_to_xfer(p)  = tranr * deadstemc_storage(p)/dt    
+               livecrootc_storage_to_xfer(p) = tranr * livecrootc_storage(p)/dt   
+               deadcrootc_storage_to_xfer(p) = tranr * deadcrootc_storage(p)/dt   
+               gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt        
+            end if    
          end if !use_matrixcn
-         leafc_storage_to_xfer(p)  = tranr * leafc_storage(p)/dt    
-         frootc_storage_to_xfer(p) = tranr * frootc_storage(p)/dt    
-         if (woody(ivt(p)) == 1.0_r8) then    
-            livestemc_storage_to_xfer(p)  = tranr * livestemc_storage(p)/dt    
-            deadstemc_storage_to_xfer(p)  = tranr * deadstemc_storage(p)/dt    
-            livecrootc_storage_to_xfer(p) = tranr * livecrootc_storage(p)/dt   
-            deadcrootc_storage_to_xfer(p) = tranr * deadcrootc_storage(p)/dt   
-            gresp_storage_to_xfer(p)      = tranr * gresp_storage(p)/dt        
-         end if    
 
         ! set nitrogen fluxes for shifting storage pools to transfer pools    
         if (use_matrixcn) then    
-           matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   =  matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + tranr/dt
-           matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) =  matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + tranr/dt 
+           leafn_storage_to_xfer(p)  = leafn_storage(p)  * matrix_update_phn(p,ileafst_to_ileafxf_phn,tranr/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           frootn_storage_to_xfer(p) = frootn_storage(p) * matrix_update_phn(p,ifrootst_to_ifrootxf_phn,tranr/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
            if (woody(ivt(p)) == 1.0_r8) then   
-              matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + tranr/dt
-              matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + tranr/dt
-              matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + tranr/dt
-              matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + tranr/dt
+              livestemn_storage_to_xfer(p)  = livestemn_storage(p)  * matrix_update_phn(p,ilivestemst_to_ilivestemxf_phn,tranr/dt ,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              deadstemn_storage_to_xfer(p)  = deadstemn_storage(p)  * matrix_update_phn(p,ideadstemst_to_ideadstemxf_phn,tranr/dt ,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * matrix_update_phn(p,ilivecrootst_to_ilivecrootxf_phn,tranr/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * matrix_update_phn(p,ideadcrootst_to_ideadcrootxf_phn,tranr/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
            end if
         else
            ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
+           leafn_storage_to_xfer(p)  = tranr * leafn_storage(p)/dt    
+           frootn_storage_to_xfer(p) = tranr * frootn_storage(p)/dt   
+           if (woody(ivt(p)) == 1.0_r8) then    
+               livestemn_storage_to_xfer(p)  = tranr * livestemn_storage(p)/dt    
+               deadstemn_storage_to_xfer(p)  = tranr * deadstemn_storage(p)/dt    
+               livecrootn_storage_to_xfer(p) = tranr * livecrootn_storage(p)/dt   
+               deadcrootn_storage_to_xfer(p) = tranr * deadcrootn_storage(p)/dt   
+           end if    
         end if !use_matrixcn  
-        leafn_storage_to_xfer(p)  = tranr * leafn_storage(p)/dt    
-        frootn_storage_to_xfer(p) = tranr * frootn_storage(p)/dt   
-        if (woody(ivt(p)) == 1.0_r8) then    
-            livestemn_storage_to_xfer(p)  = tranr * livestemn_storage(p)/dt    
-            deadstemn_storage_to_xfer(p)  = tranr * deadstemn_storage(p)/dt    
-            livecrootn_storage_to_xfer(p) = tranr * livecrootn_storage(p)/dt   
-            deadcrootn_storage_to_xfer(p) = tranr * deadcrootn_storage(p)/dt   
-        end if    
                         
         t1 = 1.0_r8 / dt   
 
         if (use_matrixcn) then
-           matrix_phtransfer(p,ileafxf_to_ileaf_phc)   = matrix_phtransfer(p,ileafxf_to_ileaf_phc) + t1
-           matrix_phtransfer(p,ifrootxf_to_ifroot_phc) = matrix_phtransfer(p,ifrootxf_to_ifroot_phc) + t1
-   
-           matrix_nphtransfer(p,ileafxf_to_ileaf_phn)   = matrix_nphtransfer(p,ileafxf_to_ileaf_phn) + t1
-           matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) = matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) + t1  
-           if (woody(ivt(p)) == 1.0_r8) then 
-              matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc)   = matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc) + t1
-              matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc)   = matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc) + t1
-              matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) = matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) + t1
-              matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) = matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) + t1
+           leafc_xfer_to_leafc(p)   = leafc_xfer(p)  * matrix_update_phc(p,ileafxf_to_ileaf_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+           frootc_xfer_to_frootc(p) = frootc_xfer(p) * matrix_update_phc(p,ifrootxf_to_ifroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
 
-              matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)   = matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn) + t1
-              matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn)   = matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn) + t1
-              matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + t1
-              matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
+           leafn_xfer_to_leafn(p)   = leafn_xfer(p)  * matrix_update_phn(p,ileafxf_to_ileaf_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           frootn_xfer_to_frootn(p) = frootn_xfer(p) * matrix_update_phn(p,ifrootxf_to_ifroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+           if (woody(ivt(p)) == 1.0_r8) then
+              livestemc_xfer_to_livestemc(p)   = livestemc_xfer(p)  * matrix_update_phc(p,ilivestemxf_to_ilivestem_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+              deadstemc_xfer_to_deadstemc(p)   = deadstemc_xfer(p)  * matrix_update_phc(p,ideadstemxf_to_ideadstem_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+              livecrootc_xfer_to_livecrootc(p) = livecrootc_xfer(p) * matrix_update_phc(p,ilivecrootxf_to_ilivecroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+              deadcrootc_xfer_to_deadcrootc(p) = deadcrootc_xfer(p) * matrix_update_phc(p,ideadcrootxf_to_ideadcroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+
+              livestemn_xfer_to_livestemn(p)   = livestemn_xfer(p)  * matrix_update_phn(p,ilivestemxf_to_ilivestem_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              deadstemn_xfer_to_deadstemn(p)   = deadstemn_xfer(p)  * matrix_update_phn(p,ideadstemxf_to_ideadstem_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) * matrix_update_phn(p,ilivecrootxf_to_ilivecroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+              deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) * matrix_update_phn(p,ideadcrootxf_to_ideadcroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
            end if
         else
            ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
            !                                        and CNNStateUpdate1::NStateUpdate1
-        end if !use_matrixcn
-        leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)    
-        frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)   
+           leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)    
+           frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)   
             
-        leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)    
-        frootn_xfer_to_frootn(p) = t1 * frootn_xfer(p)   
-        if (woody(ivt(p)) == 1.0_r8) then   
-            livestemc_xfer_to_livestemc(p)   = t1 * livestemc_xfer(p)   
-            deadstemc_xfer_to_deadstemc(p)   = t1 * deadstemc_xfer(p)   
-            livecrootc_xfer_to_livecrootc(p) = t1 * livecrootc_xfer(p)  
-            deadcrootc_xfer_to_deadcrootc(p) = t1 * deadcrootc_xfer(p)  
+           leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)    
+           frootn_xfer_to_frootn(p) = t1 * frootn_xfer(p)   
+           if (woody(ivt(p)) == 1.0_r8) then   
+               livestemc_xfer_to_livestemc(p)   = t1 * livestemc_xfer(p)   
+               deadstemc_xfer_to_deadstemc(p)   = t1 * deadstemc_xfer(p)   
+               livecrootc_xfer_to_livecrootc(p) = t1 * livecrootc_xfer(p)  
+               deadcrootc_xfer_to_deadcrootc(p) = t1 * deadcrootc_xfer(p)  
                 
-            livestemn_xfer_to_livestemn(p)   = t1 * livestemn_xfer(p)   
-            deadstemn_xfer_to_deadstemn(p)   = t1 * deadstemn_xfer(p)   
-            livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)  
-            deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)  
-        end if
+               livestemn_xfer_to_livestemn(p)   = t1 * livestemn_xfer(p)   
+               deadstemn_xfer_to_deadstemn(p)   = t1 * deadstemn_xfer(p)   
+               livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)  
+               deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)  
+           end if
+        end if !use_matrixcn
                 
       end if ! end of if (evergreen(ivt(p)) == 1._r8) then    
      
@@ -1019,44 +1019,48 @@ contains
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
                   if(use_matrixcn)then
-                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
-                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt
+                     leafc_storage_to_xfer(p)  = leafc_storage(p)  * matrix_update_phc(p,ileafst_to_ileafxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     frootc_storage_to_xfer(p) = frootc_storage(p) * matrix_update_phc(p,ifrootst_to_ifrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
 
-                     matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
-                     matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
                      if (woody(ivt(p)) == 1.0_r8) then
-                          matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
-                          matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
-                          matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
-                          matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt
-                          matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
-                          matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
-                          matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
-                          matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt
+                       livestemc_storage_to_xfer(p)  = livestemc_storage(p)  * matrix_update_phc(p,ilivestemst_to_ilivestemxf_phc ,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        deadstemc_storage_to_xfer(p)  = deadstemc_storage(p)  * matrix_update_phc(p,ideadstemst_to_ideadstemxf_phc ,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * matrix_update_phc(p,ilivecrootst_to_ilivecrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * matrix_update_phc(p,ideadcrootst_to_ideadcrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
+                     end if
+                     leafn_storage_to_xfer(p)  = leafn_storage(p)  * matrix_update_phn(p,ileafst_to_ileafxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     frootn_storage_to_xfer(p) = frootn_storage(p) * matrix_update_phn(p,ifrootst_to_ifrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemn_storage_to_xfer(p)  = livestemn_storage(p)  * matrix_update_phn(p,ilivestemst_to_ilivestemxf_phn ,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        deadstemn_storage_to_xfer(p)  = deadstemn_storage(p)  * matrix_update_phn(p,ideadstemst_to_ideadstemxf_phn ,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * matrix_update_phn(p,ilivecrootst_to_ilivecrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * matrix_update_phn(p,ideadcrootst_to_ideadcrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                      !                                        and CNNStateUpdate1::NStateUpdate1
-                  end if  ! use_matrixcn
-                  leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
-                  frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
-                  if (woody(ivt(p)) == 1.0_r8) then
-                     livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
-                     deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
-                     livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
-                     deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
-                     gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
-                  end if
+                     leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
+                     frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
+                        deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
+                        livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
+                        deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
+                        gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
+                     end if
 
-                  ! set nitrogen fluxes for shifting storage pools to transfer pools
-                  leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
-                  frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
-                  if (woody(ivt(p)) == 1.0_r8) then
-                     livestemn_storage_to_xfer(p)  = fstor2tran * livestemn_storage(p)/dt
-                     deadstemn_storage_to_xfer(p)  = fstor2tran * deadstemn_storage(p)/dt
-                     livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
-                     deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
-                  end if
+                     ! set nitrogen fluxes for shifting storage pools to transfer pools
+                     leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
+                     frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemn_storage_to_xfer(p)  = fstor2tran * livestemn_storage(p)/dt
+                        deadstemn_storage_to_xfer(p)  = fstor2tran * deadstemn_storage(p)/dt
+                        livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
+                        deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
+                     end if
+                  end if  ! use_matrixcn
                end if
 
                ! test for switching from growth period to offset period
@@ -1433,43 +1437,45 @@ contains
 
                   ! set carbon fluxes for shifting storage pools to transfer pools
                   if (use_matrixcn) then 
-                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) + fstor2tran/dt
-                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) + fstor2tran/dt  
-                     matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) + fstor2tran/dt
-                     matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) + fstor2tran/dt
+                     leafc_storage_to_xfer(p)  = leafc_storage(p)  * matrix_update_phc(p,ileafst_to_ileafxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     frootc_storage_to_xfer(p) = frootc_storage(p) * matrix_update_phc(p,ifrootst_to_ifrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      if (woody(ivt(p)) == 1.0_r8) then
-                        matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + fstor2tran/dt
-                        matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + fstor2tran/dt
-                        matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + fstor2tran/dt
-                        matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + fstor2tran/dt 
+                        livestemc_storage_to_xfer(p)  = livestemc_storage(p)  * matrix_update_phc(p,ilivestemst_to_ilivestemxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        deadstemc_storage_to_xfer(p)  = deadstemc_storage(p)  * matrix_update_phc(p,ideadstemst_to_ideadstemxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * matrix_update_phc(p,ilivecrootst_to_ilivecrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * matrix_update_phc(p,ideadcrootst_to_ideadcrootxf_phc,fstor2tran/dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     end if
 
-                        matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + fstor2tran/dt
-                        matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + fstor2tran/dt
-                        matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + fstor2tran/dt
-                        matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + fstor2tran/dt 
+                     leafn_storage_to_xfer(p)  = leafn_storage(p)  * matrix_update_phn(p,ileafst_to_ileafxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     frootn_storage_to_xfer(p) = frootn_storage(p) * matrix_update_phn(p,ifrootst_to_ifrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemn_storage_to_xfer(p)  = livestemn_storage(p)  * matrix_update_phn(p,ilivestemst_to_ilivestemxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        deadstemn_storage_to_xfer(p)  = deadstemn_storage(p)  * matrix_update_phn(p,ideadstemst_to_ideadstemxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * matrix_update_phn(p,ilivecrootst_to_ilivecrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * matrix_update_phn(p,ideadcrootst_to_ideadcrootxf_phn,fstor2tran/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                      !                                        and CNNStateUpdate1::NStateUpdate1
-                  end if
-                  leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
-                  frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
-                  if (woody(ivt(p)) == 1.0_r8) then
-                     livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
-                     deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
-                     livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
-                     deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
-                     gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
-                  end if
+                     leafc_storage_to_xfer(p)  = fstor2tran * leafc_storage(p)/dt
+                     frootc_storage_to_xfer(p) = fstor2tran * frootc_storage(p)/dt
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemc_storage_to_xfer(p)  = fstor2tran * livestemc_storage(p)/dt
+                        deadstemc_storage_to_xfer(p)  = fstor2tran * deadstemc_storage(p)/dt
+                        livecrootc_storage_to_xfer(p) = fstor2tran * livecrootc_storage(p)/dt
+                        deadcrootc_storage_to_xfer(p) = fstor2tran * deadcrootc_storage(p)/dt
+                        gresp_storage_to_xfer(p)      = fstor2tran * gresp_storage(p)/dt
+                     end if
 
-                  ! set nitrogen fluxes for shifting storage pools to transfer pools
-                  leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
-                  frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
-                  if (woody(ivt(p)) == 1.0_r8) then
-                     livestemn_storage_to_xfer(p)  = fstor2tran * livestemn_storage(p)/dt
-                     deadstemn_storage_to_xfer(p)  = fstor2tran * deadstemn_storage(p)/dt
-                     livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
-                     deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
+                     ! set nitrogen fluxes for shifting storage pools to transfer pools
+                     leafn_storage_to_xfer(p)  = fstor2tran * leafn_storage(p)/dt
+                     frootn_storage_to_xfer(p) = fstor2tran * frootn_storage(p)/dt
+                     if (woody(ivt(p)) == 1.0_r8) then
+                        livestemn_storage_to_xfer(p)  = fstor2tran * livestemn_storage(p)/dt
+                        deadstemn_storage_to_xfer(p)  = fstor2tran * deadstemn_storage(p)/dt
+                        livecrootn_storage_to_xfer(p) = fstor2tran * livecrootn_storage(p)/dt
+                        deadcrootn_storage_to_xfer(p) = fstor2tran * deadcrootn_storage(p)/dt
+                     end if
                   end if
                end if
 
@@ -1573,59 +1579,57 @@ contains
                frootc_storage_to_xfer(p) = max(0.0_r8,(frootc_storage(p)-frootc(p))) * bgtr(p)
                if (use_matrixcn) then
                   if(leafc_storage(p) .gt. 0)then
-                     matrix_phtransfer(p,ileafst_to_ileafxf_phc)   = matrix_phtransfer(p,ileafst_to_ileafxf_phc) &
-                                                            + leafc_storage_to_xfer(p) / leafc_storage(p) 
+                     leafc_storage_to_xfer(p) = leafc_storage(p) * matrix_update_phc(p,ileafst_to_ileafxf_phc,&
+                                                leafc_storage_to_xfer(p) / leafc_storage(p), dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                   else
                      leafc_storage_to_xfer(p) = 0
                   end if
                   if(frootc_storage(p) .gt. 0)then
-                     matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) = matrix_phtransfer(p,ifrootst_to_ifrootxf_phc) &
-                                                            + frootc_storage_to_xfer(p) / frootc_storage(p)
+                     frootc_storage_to_xfer(p) = frootc_storage(p) * matrix_update_phc(p,ifrootst_to_ifrootxf_phc,&
+                                                 frootc_storage_to_xfer(p) / frootc_storage(p), dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                   else
                      frootc_storage_to_xfer(p) = 0   
                   end if
                 if (woody(ivt(p)) == 1.0_r8) then
-                    matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) = matrix_phtransfer(p,ilivestemst_to_ilivestemxf_phc) + bgtr(p) 
-                    matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) = matrix_phtransfer(p,ideadstemst_to_ideadstemxf_phc) + bgtr(p) 
-                    matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) = matrix_phtransfer(p,ilivecrootst_to_ilivecrootxf_phc) + bgtr(p) 
-                    matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) = matrix_phtransfer(p,ideadcrootst_to_ideadcrootxf_phc) + bgtr(p)
+                     livestemc_storage_to_xfer(p)  = livestemc_storage(p)  * matrix_update_phc(p,ilivestemst_to_ilivestemxf_phc ,bgtr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     deadstemc_storage_to_xfer(p)  = deadstemc_storage(p)  * matrix_update_phc(p,ideadstemst_to_ideadstemxf_phc ,bgtr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * matrix_update_phc(p,ilivecrootst_to_ilivecrootxf_phc,bgtr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * matrix_update_phc(p,ideadcrootst_to_ideadcrootxf_phc,bgtr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                  end if
               else
                  ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                  !                                        and CNNStateUpdate1::NStateUpdate1
+                 if (woody(ivt(p)) == 1.0_r8) then
+                    livestemc_storage_to_xfer(p)  = livestemc_storage(p) * bgtr(p)
+                    deadstemc_storage_to_xfer(p)  = deadstemc_storage(p) * bgtr(p)
+                    livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * bgtr(p)
+                    deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * bgtr(p)
+                    gresp_storage_to_xfer(p)      = gresp_storage(p) * bgtr(p)
+                 end if
               end if !use_matrixcn
-               if (woody(ivt(p)) == 1.0_r8) then
-                  livestemc_storage_to_xfer(p)  = livestemc_storage(p) * bgtr(p)
-                  deadstemc_storage_to_xfer(p)  = deadstemc_storage(p) * bgtr(p)
-                  livecrootc_storage_to_xfer(p) = livecrootc_storage(p) * bgtr(p)
-                  deadcrootc_storage_to_xfer(p) = deadcrootc_storage(p) * bgtr(p)
-                  gresp_storage_to_xfer(p)      = gresp_storage(p) * bgtr(p)
-               end if
 
                ! set nitrogen fluxes for shifting storage pools to transfer pools
-               leafn_storage_to_xfer(p)  = leafn_storage(p) * bgtr(p)
-               frootn_storage_to_xfer(p) = frootn_storage(p) * bgtr(p)
                if (use_matrixcn) then 
-                  matrix_nphtransfer(p,ileafst_to_ileafxf_phn)   = matrix_nphtransfer(p,ileafst_to_ileafxf_phn) &
-                                                            + bgtr(p)
-                  matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) = matrix_nphtransfer(p,ifrootst_to_ifrootxf_phn) &
-                                                            + bgtr(p)
+                  leafn_storage_to_xfer(p)  = leafn_storage(p)  * matrix_update_phn(p,ileafst_to_ileafxf_phn,bgtr(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  frootn_storage_to_xfer(p) = frootn_storage(p) * matrix_update_phn(p,ifrootst_to_ifrootxf_phn,bgtr(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   if (woody(ivt(p)) == 1.0_r8) then
-                     matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) = matrix_nphtransfer(p,ilivestemst_to_ilivestemxf_phn) + bgtr(p) 
-                     matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) = matrix_nphtransfer(p,ideadstemst_to_ideadstemxf_phn) + bgtr(p) 
-                     matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) = matrix_nphtransfer(p,ilivecrootst_to_ilivecrootxf_phn) + bgtr(p) 
-                     matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) = matrix_nphtransfer(p,ideadcrootst_to_ideadcrootxf_phn) + bgtr(p)
+                     livestemn_storage_to_xfer(p)  = livestemn_storage(p)  * matrix_update_phn(p,ilivestemst_to_ilivestemxf_phn,bgtr(p) ,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     deadstemn_storage_to_xfer(p)  = deadstemn_storage(p)  * matrix_update_phn(p,ideadstemst_to_ideadstemxf_phn,bgtr(p) ,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * matrix_update_phn(p,ilivecrootst_to_ilivecrootxf_phn,bgtr(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * matrix_update_phn(p,ideadcrootst_to_ideadcrootxf_phn,bgtr(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   end if
                else
-                 ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
-                 !                                        and CNNStateUpdate1::NStateUpdate1
+                  ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
+                  !                                        and CNNStateUpdate1::NStateUpdate1
+                  leafn_storage_to_xfer(p)  = leafn_storage(p) * bgtr(p)
+                  frootn_storage_to_xfer(p) = frootn_storage(p) * bgtr(p)
+                  if (woody(ivt(p)) == 1.0_r8) then
+                     livestemn_storage_to_xfer(p)  = livestemn_storage(p) * bgtr(p)
+                     deadstemn_storage_to_xfer(p)  = deadstemn_storage(p) * bgtr(p)
+                     livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * bgtr(p)
+                     deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * bgtr(p)
+                  end if
                end if !use_matrixcn
-               if (woody(ivt(p)) == 1.0_r8) then
-                  livestemn_storage_to_xfer(p)  = livestemn_storage(p) * bgtr(p)
-                  deadstemn_storage_to_xfer(p)  = deadstemn_storage(p) * bgtr(p)
-                  livecrootn_storage_to_xfer(p) = livecrootn_storage(p) * bgtr(p)
-                  deadcrootn_storage_to_xfer(p) = deadcrootn_storage(p) * bgtr(p)
-               end if
             end if
 
          end if ! end if stress deciduous
@@ -2588,40 +2592,40 @@ contains
                t1 = 2.0_r8 / (onset_counter(p))
             end if
             if (use_matrixcn)then
-               matrix_phtransfer(p,ileafxf_to_ileaf_phc)   = matrix_phtransfer(p,ileafxf_to_ileaf_phc) + t1
-               matrix_phtransfer(p,ifrootxf_to_ifroot_phc) = matrix_phtransfer(p,ifrootxf_to_ifroot_phc) + t1
-               matrix_nphtransfer(p,ileafxf_to_ileaf_phn)   = matrix_nphtransfer(p,ileafxf_to_ileaf_phn) + t1
-               matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) = matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) + t1
+               leafc_xfer_to_leafc(p)   = leafc_xfer(p) * matrix_update_phc(p,ileafxf_to_ileaf_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               frootc_xfer_to_frootc(p) = frootc_xfer(p) * matrix_update_phc(p,ifrootxf_to_ifroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               leafn_xfer_to_leafn(p)   = leafn_xfer(p) * matrix_update_phn(p,ileafxf_to_ileaf_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               frootn_xfer_to_frootn(p) = frootn_xfer(p) * matrix_update_phn(p,ifrootxf_to_ifroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                if (woody(ivt(p)) == 1.0_r8) then
 
-                  matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc)   = matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc) + t1
-                  matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc)   = matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc) + t1
-                  matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) = matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) + t1
-                  matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) = matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) + t1
+                  livestemc_xfer_to_livestemc(p)   = livestemc_xfer(p)  * matrix_update_phc(p,ilivestemxf_to_ilivestem_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  deadstemc_xfer_to_deadstemc(p)   = deadstemc_xfer(p)  * matrix_update_phc(p,ideadstemxf_to_ideadstem_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  livecrootc_xfer_to_livecrootc(p) = livecrootc_xfer(p) * matrix_update_phc(p,ilivecrootxf_to_ilivecroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  deadcrootc_xfer_to_deadcrootc(p) = deadcrootc_xfer(p) * matrix_update_phc(p,ideadcrootxf_to_ideadcroot_phc,t1,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
 
-                  matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)   = matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn) + t1
-                  matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn)   = matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn) + t1
-                  matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + t1
-                  matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + t1
+                  livestemn_xfer_to_livestemn(p)   = livestemn_xfer(p)  * matrix_update_phn(p,ilivestemxf_to_ilivestem_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  deadstemn_xfer_to_deadstemn(p)   = deadstemn_xfer(p)  * matrix_update_phn(p,ideadstemxf_to_ideadstem_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) * matrix_update_phn(p,ilivecrootxf_to_ilivecroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) * matrix_update_phn(p,ideadcrootxf_to_ideadcroot_phn,t1,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                end if
             else
                ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                !                                        and CNNStateUpdate1::NStateUpdate1
+               leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)
+               frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
+               leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)
+               frootn_xfer_to_frootn(p) = t1 * frootn_xfer(p)
+               if (woody(ivt(p)) == 1.0_r8) then
+                  livestemc_xfer_to_livestemc(p)   = t1 * livestemc_xfer(p)
+                  deadstemc_xfer_to_deadstemc(p)   = t1 * deadstemc_xfer(p)
+                  livecrootc_xfer_to_livecrootc(p) = t1 * livecrootc_xfer(p)
+                  deadcrootc_xfer_to_deadcrootc(p) = t1 * deadcrootc_xfer(p)
+                  livestemn_xfer_to_livestemn(p)   = t1 * livestemn_xfer(p)
+                  deadstemn_xfer_to_deadstemn(p)   = t1 * deadstemn_xfer(p)
+                  livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)
+                  deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)
+               end if
             end if !use_matrixcn
-            leafc_xfer_to_leafc(p)   = t1 * leafc_xfer(p)
-            frootc_xfer_to_frootc(p) = t1 * frootc_xfer(p)
-            leafn_xfer_to_leafn(p)   = t1 * leafn_xfer(p)
-            frootn_xfer_to_frootn(p) = t1 * frootn_xfer(p)
-            if (woody(ivt(p)) == 1.0_r8) then
-               livestemc_xfer_to_livestemc(p)   = t1 * livestemc_xfer(p)
-               deadstemc_xfer_to_deadstemc(p)   = t1 * deadstemc_xfer(p)
-               livecrootc_xfer_to_livecrootc(p) = t1 * livecrootc_xfer(p)
-               deadcrootc_xfer_to_deadcrootc(p) = t1 * deadcrootc_xfer(p)
-               livestemn_xfer_to_livestemn(p)   = t1 * livestemn_xfer(p)
-               deadstemn_xfer_to_deadstemn(p)   = t1 * deadstemn_xfer(p)
-               livecrootn_xfer_to_livecrootn(p) = t1 * livecrootn_xfer(p)
-               deadcrootn_xfer_to_deadcrootn(p) = t1 * deadcrootn_xfer(p)
-            end if
 
          end if ! end if onset period
 
@@ -2631,40 +2635,40 @@ contains
 
          if (bgtr(p) > 0._r8) then
             if(use_matrixcn)then
-               matrix_phtransfer(p,ileafxf_to_ileaf_phc) = matrix_phtransfer(p,ileafxf_to_ileaf_phc) + 1.0_r8 / dt
-               matrix_phtransfer(p,ifrootxf_to_ifroot_phc) = matrix_phtransfer(p,ifrootxf_to_ifroot_phc) + 1.0_r8 / dt
-               matrix_nphtransfer(p,ileafxf_to_ileaf_phn) = matrix_nphtransfer(p,ileafxf_to_ileaf_phn) + 1.0_r8 / dt
-               matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) = matrix_nphtransfer(p,ifrootxf_to_ifroot_phn) + 1.0_r8 / dt
+               leafc_xfer_to_leafc(p)   = leafc_xfer(p)  * matrix_update_phc(p,ileafxf_to_ileaf_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               frootc_xfer_to_frootc(p) = frootc_xfer(p) * matrix_update_phc(p,ifrootxf_to_ifroot_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               leafn_xfer_to_leafn(p)   = leafn_xfer(p)  * matrix_update_phn(p,ileafxf_to_ileaf_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               frootn_xfer_to_frootn(p) = frootn_xfer(p) * matrix_update_phn(p,ifrootxf_to_ifroot_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                if (woody(ivt(p)) == 1.0_r8) then
-   
-                  matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc)   = matrix_phtransfer(p,ilivestemxf_to_ilivestem_phc) + 1.0_r8 / dt
-                  matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc)   = matrix_phtransfer(p,ideadstemxf_to_ideadstem_phc) + 1.0_r8 / dt
-                  matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) = matrix_phtransfer(p,ilivecrootxf_to_ilivecroot_phc) + 1.0_r8 / dt
-                  matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) = matrix_phtransfer(p,ideadcrootxf_to_ideadcroot_phc) + 1.0_r8 / dt
-   
-                  matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn)   = matrix_nphtransfer(p,ilivestemxf_to_ilivestem_phn) + 1.0_r8 / dt
-                  matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn)   = matrix_nphtransfer(p,ideadstemxf_to_ideadstem_phn) + 1.0_r8 / dt
-                  matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) = matrix_nphtransfer(p,ilivecrootxf_to_ilivecroot_phn) + 1.0_r8 / dt
-                  matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) = matrix_nphtransfer(p,ideadcrootxf_to_ideadcroot_phn) + 1.0_r8 / dt
+
+                  livestemc_xfer_to_livestemc(p)   = livestemc_xfer(p)  * matrix_update_phc(p,ilivestemxf_to_ilivestem_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  deadstemc_xfer_to_deadstemc(p)   = deadstemc_xfer(p)  * matrix_update_phc(p,ideadstemxf_to_ideadstem_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  livecrootc_xfer_to_livecrootc(p) = livecrootc_xfer(p)  * matrix_update_phc(p,ilivecrootxf_to_ilivecroot_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                  deadcrootc_xfer_to_deadcrootc(p) = deadcrootc_xfer(p)  * matrix_update_phc(p,ideadcrootxf_to_ideadcroot_phc,1._r8 / dt,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+
+                  livestemn_xfer_to_livestemn(p)   = livestemn_xfer(p)  * matrix_update_phn(p,ilivestemxf_to_ilivestem_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  deadstemn_xfer_to_deadstemn(p)   = deadstemn_xfer(p)  * matrix_update_phn(p,ideadstemxf_to_ideadstem_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p)  * matrix_update_phn(p,ilivecrootxf_to_ilivecroot_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p)  * matrix_update_phn(p,ideadcrootxf_to_ideadcroot_phn,1._r8 / dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                end if
             else
                ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                !                                        and CNNStateUpdate1::NStateUpdate1
+               leafc_xfer_to_leafc(p)   = leafc_xfer(p) / dt
+               frootc_xfer_to_frootc(p) = frootc_xfer(p) / dt
+               leafn_xfer_to_leafn(p)   = leafn_xfer(p) / dt
+               frootn_xfer_to_frootn(p) = frootn_xfer(p) / dt
+               if (woody(ivt(p)) == 1.0_r8) then
+                  livestemc_xfer_to_livestemc(p)   = livestemc_xfer(p) / dt
+                  deadstemc_xfer_to_deadstemc(p)   = deadstemc_xfer(p) / dt
+                  livecrootc_xfer_to_livecrootc(p) = livecrootc_xfer(p) / dt
+                  deadcrootc_xfer_to_deadcrootc(p) = deadcrootc_xfer(p) / dt
+                  livestemn_xfer_to_livestemn(p)   = livestemn_xfer(p) / dt
+                  deadstemn_xfer_to_deadstemn(p)   = deadstemn_xfer(p) / dt
+                  livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) / dt
+                  deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) / dt
+               end if
             end if !use_matrixcn
-            leafc_xfer_to_leafc(p)   = leafc_xfer(p) / dt
-            frootc_xfer_to_frootc(p) = frootc_xfer(p) / dt
-            leafn_xfer_to_leafn(p)   = leafn_xfer(p) / dt
-            frootn_xfer_to_frootn(p) = frootn_xfer(p) / dt
-            if (woody(ivt(p)) == 1.0_r8) then
-               livestemc_xfer_to_livestemc(p)   = livestemc_xfer(p) / dt
-               deadstemc_xfer_to_deadstemc(p)   = deadstemc_xfer(p) / dt
-               livecrootc_xfer_to_livecrootc(p) = livecrootc_xfer(p) / dt
-               deadcrootc_xfer_to_deadcrootc(p) = deadcrootc_xfer(p) / dt
-               livestemn_xfer_to_livestemn(p)   = livestemn_xfer(p) / dt
-               deadstemn_xfer_to_deadstemn(p)   = deadstemn_xfer(p) / dt
-               livecrootn_xfer_to_livecrootn(p) = livecrootn_xfer(p) / dt
-               deadcrootn_xfer_to_deadcrootn(p) = deadcrootn_xfer(p) / dt
-            end if
          end if ! end if bgtr
 
       end do ! end patch loop
@@ -2821,12 +2825,12 @@ contains
 
                if (use_matrixcn) then
                   if(leafc(p) .gt. 0)then
-                     matrix_phtransfer(p,ileaf_to_iout_phc)  = leafc_to_litter(p) / leafc(p)
+                     leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                   else
                      leafc_to_litter(p) = 0
                   end if
                   if(frootc(p) .gt. 0)then
-                     matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
+                     frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,frootc_to_litter(p) / frootc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                   else
                      frootc_to_litter(p) = 0
                   end if
@@ -2860,31 +2864,32 @@ contains
 
                   if(use_matrixcn)then
                      if(grainc(p) .gt. 0)then
-                        grainc_to_out = grainc(p) * matrix_update_phc(p,igrain_to_iout_phc,(grainc_to_seed(p) + grainc_to_food(p)) / &
-                                        grainc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        grainc_to_out = grainc(p) * matrix_update_phc(p,igrain_to_iout_phc,(grainc_to_seed(p) + grainc_to_food(p)) / grainc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
                         grainc_to_seed(p) = 0
                         grainc_to_food(p) = 0
                      end if
                      if(grainn(p) .gt. 0)then
-                        grainn_to_out = grainn(p) * matrix_update_phn(p,igrain_to_iout_phn,(grainn_to_seed(p) + grainn_to_food(p)) / &
-                                        grainn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        grainn_to_out = grainn(p) * matrix_update_phn(p,igrain_to_iout_phn,(grainn_to_seed(p) + grainn_to_food(p)) / grainn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
                         grainn_to_seed(p) = 0
                         grainn_to_food(p) = 0
                      end if
                      if(livestemc(p) .gt. 0)then
-                        livestemc_to_litter(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_litter(p) / &
-                                                 livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                        livestemc_to_litter(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_litter(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
                         livestemc_to_litter(p) = 0
                      end if
+                     ! This should be updated to use the form with the matrix_update_phn function
                      if(livestemn(p) .gt. 0)then
+                        !livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn,livestemn_to_biofueln(p) / livestemn(p),dt,matrixcheck_ph,acc_ph)
                         matrix_nphtransfer(p,ilivestem_to_iout_phn) = livestemn_to_biofueln(p) / livestemn(p)
                      else
                         livestemn_to_litter(p) = 0
                      end if
+                     ! This should be updated to use the form with the matrix_update_phn function
                      if(leafn(p) > 0)then
+                        !leafn_to_litter(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_biofueln(p) / leafn(p),dt,matrixcheck_ph,acc_ph)
                         matrix_nphtransfer(p,ileaf_to_iout_phn)  = leafn_to_biofueln(p) / leafn(p)
                      else
                         leafn_to_litter(p) = 0
@@ -2901,12 +2906,12 @@ contains
 
                if (use_matrixcn) then
                   if(leafc(p) .gt. 0)then
-                     matrix_phtransfer(p,ileaf_to_iout_phc)  = leafc_to_litter(p) / leafc(p)
+                     leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                   else
                      leafc_to_litter(p) = 0
                   end if
                   if(frootc(p) .gt. 0)then
-                     matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
+                     frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,frootc_to_litter(p) / frootc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                   else
                      frootc_to_litter(p) = 0
                   end if
@@ -2921,7 +2926,7 @@ contains
                    leafc_to_litter(p) = leafc(p)/dt + cpool_to_leafc(p)
                   if (use_matrixcn) then
                      if(leafc(p) .gt. 0)then
-                        matrix_phtransfer(p,ileaf_to_iout_phc) = leafc_to_litter(p) / leafc(p)
+                        leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
                         leafc_to_litter(p) = 0
                      end if
@@ -2933,7 +2938,7 @@ contains
                    frootc_to_litter(p) = frootc(p)/dt + cpool_to_frootc(p)
                   if (use_matrixcn) then
                      if(frootc(p) .gt. 0)then
-                        matrix_phtransfer(p,ifroot_to_iout_phc) = frootc_to_litter(p) / frootc(p)
+                        frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,frootc_to_litter(p) / frootc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
                      else
                         frootc_to_litter(p) = 0
                      end if
@@ -2960,8 +2965,8 @@ contains
                leafn_to_litter(p)          =  max(leafn_to_litter(p),0._r8)
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                      matrix_nphtransfer(p,ileaf_to_iout_phn)       = (leafn_to_litter(p)) / leafn(p)
-                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p)) / leafn(p)
+                      leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                      leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   else
                       leafn_to_litter(p)   = 0
                       leafn_to_retransn(p) = 0
@@ -2990,8 +2995,8 @@ contains
 
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                      matrix_nphtransfer(p,ileaf_to_iout_phn)       = (leafn_to_litter(p))/ leafn(p)
-                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)   = (leafn_to_retransn(p))/ leafn(p)
+                      leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                      leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   else
                       leafn_to_litter(p)   = 0
                       leafn_to_retransn(p) = 0
@@ -3005,7 +3010,7 @@ contains
             frootn_to_litter(p) = frootc_to_litter(p) / frootcn(ivt(p))
             if (use_matrixcn) then   
                if(frootn(p) .gt. 0)then
-                  matrix_nphtransfer(p,ifroot_to_iout_phn)  = frootn_to_litter(p) / frootn(p)
+                  frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,frootn_to_litter(p) / frootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                else
                   frootn_to_litter(p) = 0
                end if
@@ -3024,8 +3029,8 @@ contains
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                      matrix_nphtransfer(p,ileaf_to_iout_phn)  = (leafn_to_litter(p))/ leafn(p)
-                      matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
+                      leafn_to_litter(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                      leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   else
                       leafn_to_litter(p)   = 0
                       leafn_to_retransn(p) = 0
@@ -3038,7 +3043,7 @@ contains
                 end if   
                if (use_matrixcn) then   
                   if(frootn(p) .gt. 0)then
-                     matrix_nphtransfer(p,ifroot_to_iout_phn)  = frootn_to_litter(p) / frootn(p)
+                     frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,frootn_to_litter(p) / frootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   else
                      frootn_to_litter(p) = 0
                   end if
@@ -3049,9 +3054,10 @@ contains
             
             if ( use_fun ) then
                if(frootn_to_litter(p)*dt.gt.frootn(p))then
-                   frootn_to_litter(p) = frootn(p)/dt
-                  if (use_matrixcn) then   
-                     matrix_nphtransfer(p,ifroot_to_iout_phn) = 1.0_r8 / dt
+                  if (.not. use_matrixcn) then   
+                     frootn_to_litter(p) = frootn(p)/dt
+                  else
+                     frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,1._r8/dt,dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   end if
                endif    
             end if
@@ -3062,8 +3068,7 @@ contains
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
                livestemn_to_litter(p) = livestemn(p) / dt * (1 - biofuel_harvfrac(ivt(p)))
                if(use_matrixcn)then
-                  livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p))/dt), &
-                                                                            dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                  livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p))/dt), dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                end if
             end if
 
@@ -3187,8 +3192,8 @@ contains
             leafc_to_litter(p)  = bglfr(p) * leafc(p)
             frootc_to_litter(p) = bglfr(p) * frootc(p)
             if (use_matrixcn) then
-               matrix_phtransfer(p,ileaf_to_iout_phc)  = bglfr(p)
-               matrix_phtransfer(p,ifroot_to_iout_phc) = bglfr(p)
+               leafc_to_litter(p)  = leafc(p)  * matrix_update_phc(p,ileaf_to_iout_phc,bglfr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               frootc_to_litter(p) = frootc(p) * matrix_update_phc(p,ifroot_to_iout_phc,bglfr(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
             end if
             if ( use_fun ) then
                leafc_to_litter_fun(p)     = leafc_to_litter(p)
@@ -3206,8 +3211,8 @@ contains
                leafn_to_litter(p)         = max(leafn_to_litter(p),0._r8)
                if(use_matrixcn)then
                   if(leafn(p) .ne. 0._r8)then
-                     matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p))/ leafn(p)
-                     matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
+                     leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p)        / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
@@ -3233,8 +3238,8 @@ contains
 
                if (use_matrixcn) then   
                   if(leafn(p) .ne. 0)then
-                     matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p)) / leafn(p)
-                     matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
+                     leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p)        / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
@@ -3255,8 +3260,8 @@ contains
                leafn_to_retransn(p) = ntovr_leaf - leafn_to_litter(p)
                if (use_matrixcn) then   
                   if(leafn(p) .gt. 0)then
-                     matrix_nphtransfer(p,ileaf_to_iout_phn)      = (leafn_to_litter(p))/ leafn(p)
-                     matrix_nphtransfer(p,ileaf_to_iretransn_phn)  = (leafn_to_retransn(p))/ leafn(p)
+                     leafn_to_litter(p)   = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_litter(p)        / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn_phn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   else
                      leafn_to_litter(p)   = 0
                      leafn_to_retransn(p) = 0
@@ -3279,7 +3284,7 @@ contains
 
             if (use_matrixcn) then   
                if(frootn(p) .ne. 0)then
-                  matrix_nphtransfer(p,ifroot_to_iout_phn) = frootn_to_litter(p) / frootn(p)
+                  frootn_to_litter(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iout_phn,frootn_to_litter(p) / frootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                end if
             else
                ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
@@ -3395,10 +3400,13 @@ ptch: do fp = 1,num_soilp
             ntovr = ctovr / livewdcn(ivt(p))
             livestemc_to_deadstemc(p) = ctovr
             livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p))
-
-            if(use_matrixcn)then
-               matrix_phtransfer(p,ilivestem_to_ideadstem_phc)  = lwtop
-               matrix_nphtransfer(p,ilivestem_to_ideadstem_phn) = lwtop / deadwdcn(ivt(p))
+            if( use_matrixcn)then
+               livestemc_to_deadstemc(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_ideadstem_phc,lwtop,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               if (livestemn(p) .gt. 0.0_r8) then
+                  livestemn_to_deadstemn(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_ideadstem_phn,livestemn_to_deadstemn(p)/livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+               else
+                  livestemn_to_deadstemn(p) = 0
+               end if
             else
                ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                !                                        and CNNStateUpdate1::NStateUpdate1
@@ -3414,9 +3422,8 @@ ptch: do fp = 1,num_soilp
 
                if (use_matrixcn)then 
                   if (livestemn(p) .gt. 0.0_r8) then
-                     livestemn_to_deadstemn(p) = livestemn(p) * &
-                                                 matrix_update_phn(p,ilivestem_to_ideadstem_phn,livestemn_to_deadstemn(p) / &
-                                                 livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                     livestemn_to_deadstemn(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_ideadstem_phn,&
+                                                 livestemn_to_deadstemn(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                   else
                      livestemn_to_deadstemn(p) = 0
                   end if
@@ -3432,14 +3439,14 @@ ptch: do fp = 1,num_soilp
 
             ctovr = livecrootc(p) * lwtop
             ntovr = ctovr / livewdcn(ivt(p))
-            livecrootc_to_deadcrootc(p) = ctovr
-            livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
-            if(use_matrixcn)then
-               matrix_phtransfer(p,ilivecroot_to_ideadcroot_phc)  = lwtop
-               matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = lwtop / deadwdcn(ivt(p))
-            else
+            if(.not. use_matrixcn)then
                ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                !                                        and CNNStateUpdate1::NStateUpdate1
+               livecrootc_to_deadcrootc(p) = ctovr
+               livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p))
+            else
+               livecrootc_to_deadcrootc(p) = livecrootc(p) * matrix_update_phc(p,ilivecroot_to_ideadcroot_phc,lwtop,dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+               livecrootn_to_deadcrootn(p) = livecrootn(p) * matrix_update_phn(p,ilivecroot_to_ideadcroot_phn,lwtop/deadwdcn(ivt(p)),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
             end if !use_matrixcn
             
             if (CNratio_floating .eqv. .true.) then    
@@ -3448,34 +3455,34 @@ ptch: do fp = 1,num_soilp
                   livecrootn_to_deadcrootn(p) = 0.0_r8 
                else    
                   ntovr = ctovr * (livecrootn(p) / livecrootc(p))   
-                   livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p)) 
+                  livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p)) 
                end if   
 
                if (use_matrixcn)then 
                   if (livecrootn(p) .ne.0.0_r8 )then
-                     matrix_nphtransfer(p,ilivecroot_to_ideadcroot_phn) = livecrootn_to_deadcrootn(p) / livecrootn(p)
+                     livecrootn_to_deadcrootn(p) = matrix_update_phn(p,ilivecroot_to_ideadcroot_phn,&
+                                                   livecrootn_to_deadcrootn(p) / livecrootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livecrootn(p)
                   end if
                else
                   ! NOTE: The non matrix version of this is in CNNStateUpdate1::NStateUpdate1 EBK (11/26/2019)
                end if !use_matrixcn
-            
+            end if
+
+            livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
                if(use_matrixcn)then
                   if(livecrootn(p) .gt. 0.0_r8) then
-                     livecrootn_to_retransn(p) = matrix_update_phn(p,ilivecroot_to_iretransn_phn,livecrootn_to_retransn(p) / &
-                                                 livecrootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livecrootn(p)
+                     livecrootn_to_retransn(p) = matrix_update_phn(p,ilivecroot_to_iretransn_phn,&
+                                                 livecrootn_to_retransn(p) / livecrootn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livecrootn(p)
                   else
                      livecrootn_to_retransn(p) = 0
                   end if
                   if(livestemn(p) .gt. 0.0_r8) then
-                     livestemn_to_retransn(p) = matrix_update_phn(p,ilivestem_to_iretransn_phn,livestemn_to_retransn(p) / &
-                                                livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livestemn(p)
+                     livestemn_to_retransn(p) = matrix_update_phn(p,ilivestem_to_iretransn_phn,&
+                                                livestemn_to_retransn(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livestemn(p)
                   else
                      livestemn_to_retransn(p)  = 0
                   end if
                end if !use_matrixcn
-
-            end if
-            livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
 
          end if
 
