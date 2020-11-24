@@ -768,9 +768,10 @@ sub setup_cmdl_fates_mode {
       }
     } else {
        # dis-allow fates specific namelist items with non-fates runs
-	my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-		       "use_fates_cohort_age_tracking", 
+       my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
+                      "use_fates_cohort_age_tracking", 
                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
+       # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
               $log->fatal_error("$var is being set, but can ONLY be set when -bgc fates option is used.\n");
@@ -3773,10 +3774,32 @@ sub setup_logic_fates {
 
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_sp', 'use_fates'=>$nl_flags->{'use_fates'} );
+        if ( &value_is_true($nl->get_value('use_fates_sp')) ) {
+           $nl_flags->{'use_fates_sp'} = ".true.";
+        } else {
+           $nl_flags->{'use_fates_sp'} = ".false.";
+        }
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
-                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","use_fates_sp","use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
+                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp",
+                       "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
         foreach my $var ( @list ) {
- 	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'} );
+ 	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'}, 
+                      'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+        }
+        #
+        # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
+        #
+        my $var = "use_fates_sp";
+        if ( defined($nl->get_value($var))  ) {
+           if ( &value_is_true($nl->get_value($var)) ) {
+              my @list = ( "use_fates_nocomp", "use_fates_fixed_biogeog" );
+              foreach my $var ( @list ) {
+                 if ( ! &value_is_true($nl->get_value($var)) ) {
+                    $log->fatal_error("$var is required when FATES SP is on (use_fates_sp)" );
+                 }
+              }
+           }
         }
         my $var = "use_fates_inventory_init";
         if ( defined($nl->get_value($var))  ) {
