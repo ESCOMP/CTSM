@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-	my $ntests = 830;
+	my $ntests = 831;
 if ( defined($opts{'compare'}) ) {
    $ntests += 501;
 }
@@ -846,6 +846,11 @@ my %failtest = (
                                    },
      "useFATESSPWONOCOMP"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_sp=T,use_fates_nocomp=F",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "useFATESTRANSWdynPFT"      =>{ options=>"-bgc fates -envxml_dir . -use_case 20thC_transient -no-megan",
+                                     namelst=>"do_transient_pfts=T",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
