@@ -209,12 +209,34 @@ module histFileMod
      integer :: no_snow_behavior               ! for multi-layer snow fields, flag saying how to treat times when a given snow layer is absent
   end type field_info
 
-  type history_entry
+  type, abstract :: entry_base
      type (field_info) :: field                ! field information
-     logical :: actflag                        ! active/inactive flag
+  contains
+     procedure(copy_entry_interface), deferred :: copy
+  end type entry_base
+
+  abstract interface
+     subroutine copy_entry_interface(this, other)
+        ! set this = other
+        import :: entry_base
+        class(entry_base), intent(out) :: this
+        class(entry_base), intent(in) :: other
+     end subroutine copy_entry_interface
+  end interface
+
+  type, extends(entry_base) :: master_entry
+     logical :: actflag(max_tapes)  ! active/inactive flag
+     character(len=avgflag_strlen) :: avgflag(max_tapes)  ! time averaging flag
+  contains
+     procedure :: copy => copy_master_entry
+  end type master_entry
+
+  type, extends(entry_base) :: history_entry
      character(len=avgflag_strlen) :: avgflag  ! time averaging flag ("X","A","M","I","SUM")
      real(r8), pointer :: hbuf(:,:)            ! history buffer (dimensions: dim1d x num2d)
      integer , pointer :: nacs(:,:)            ! accumulation counter (dimensions: dim1d x num2d)
+  contains
+     procedure :: copy => copy_history_entry
   end type history_entry
 
   type history_tape
@@ -227,7 +249,6 @@ module histFileMod
      logical  :: is_endhist                    ! true => current time step is end of history interval
      real(r8) :: begtime                       ! time at beginning of history averaging interval
      type (history_entry) :: hlist(max_flds)   ! array of active history tape entries
-     type (history_entry) :: masterlist(max_flds)  ! master field list
   end type history_tape
 
   type clmpoint_rs                             ! Pointer to real scalar data (1D)
@@ -241,6 +262,10 @@ module histFileMod
   integer, parameter :: max_mapflds = 2500     ! Maximum number of fields to track
   type (clmpoint_rs) :: clmptr_rs(max_mapflds) ! Real scalar data (1D)
   type (clmpoint_ra) :: clmptr_ra(max_mapflds) ! Real array data (2D)
+  !
+  ! Master list: an array of master_entry entities
+  !
+  type (master_entry) :: masterlist(max_flds)  ! master field list
   !
   ! Whether each history tape is in use in this run. If history_tape_in_use(i) is false,
   ! then data in tape(i) is undefined and should not be referenced.
@@ -315,7 +340,7 @@ contains
        write(iulog,*) trim(subname),' : number of master fields = ',nfmaster
        write(iulog,*)' ******* MASTER FIELD LIST *******'
        do nf = 1,nfmaster
-          write(iulog,9000)nf, tape(1)%masterlist(nf)%field%name, tape(1)%masterlist(nf)%field%units
+          write(iulog,9000)nf, masterlist(nf)%field%name, masterlist(nf)%field%units
 9000      format (i5,1x,a32,1x,a16)
        end do
        call shr_sys_flush(iulog)
@@ -327,7 +352,7 @@ contains
     ! the CTSM's web-based documentation.
 
     ! First sort the list to be in alphabetical order
-    call sort_hist_list(1, nfmaster, tape(1)%masterlist)
+    call sort_hist_list(1, nfmaster, masterlist)
 
     if (masterproc .and. hist_master_list_file) then
        ! Hardwired table column widths to fit the table on a computer
@@ -395,10 +420,10 @@ contains
        fmt_txt = '(i'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//')'
        do nf = 1,nfmaster
           write(master_list_file,fmt_txt) nf,  &
-             tape(1)%masterlist(nf)%field%name,  &
-             tape(1)%masterlist(nf)%field%long_name,  &
-             tape(1)%masterlist(nf)%field%units,  &
-             tape(1)%masterlist(nf)%actflag
+             masterlist(nf)%field%name,  &
+             masterlist(nf)%field%long_name,  &
+             masterlist(nf)%field%units,  &
+             masterlist(nf)%actflag(1)
        end do
 
        ! Table footer, same as header
@@ -484,7 +509,7 @@ contains
     ! Ensure that new field doesn't already exist
 
     do n = 1,nfmaster
-       if (tape(1)%masterlist(n)%field%name == fname) then
+       if (masterlist(n)%field%name == fname) then
           write(iulog,*) trim(subname),' ERROR:', fname, ' already on list'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
@@ -505,49 +530,49 @@ contains
 
     ! Add field to master list
 
-    tape(1)%masterlist(f)%field%name           = fname
-    tape(1)%masterlist(f)%field%long_name      = long_name
-    tape(1)%masterlist(f)%field%units          = units
-    tape(1)%masterlist(f)%field%type1d         = type1d
-    tape(1)%masterlist(f)%field%type1d_out     = type1d_out
-    tape(1)%masterlist(f)%field%type2d         = type2d
-    tape(1)%masterlist(f)%field%numdims        = numdims
-    tape(1)%masterlist(f)%field%num2d          = num2d
-    tape(1)%masterlist(f)%field%hpindex        = hpindex
-    tape(1)%masterlist(f)%field%p2c_scale_type = p2c_scale_type
-    tape(1)%masterlist(f)%field%c2l_scale_type = c2l_scale_type
-    tape(1)%masterlist(f)%field%l2g_scale_type = l2g_scale_type
+    masterlist(f)%field%name           = fname
+    masterlist(f)%field%long_name      = long_name
+    masterlist(f)%field%units          = units
+    masterlist(f)%field%type1d         = type1d
+    masterlist(f)%field%type1d_out     = type1d_out
+    masterlist(f)%field%type2d         = type2d
+    masterlist(f)%field%numdims        = numdims
+    masterlist(f)%field%num2d          = num2d
+    masterlist(f)%field%hpindex        = hpindex
+    masterlist(f)%field%p2c_scale_type = p2c_scale_type
+    masterlist(f)%field%c2l_scale_type = c2l_scale_type
+    masterlist(f)%field%l2g_scale_type = l2g_scale_type
 
     select case (type1d)
     case (grlnd)
-       tape(1)%masterlist(f)%field%beg1d = bounds%begg
-       tape(1)%masterlist(f)%field%end1d = bounds%endg
-       tape(1)%masterlist(f)%field%num1d = numg
+       masterlist(f)%field%beg1d = bounds%begg
+       masterlist(f)%field%end1d = bounds%endg
+       masterlist(f)%field%num1d = numg
     case (nameg)
-       tape(1)%masterlist(f)%field%beg1d = bounds%begg
-       tape(1)%masterlist(f)%field%end1d = bounds%endg
-       tape(1)%masterlist(f)%field%num1d = numg
+       masterlist(f)%field%beg1d = bounds%begg
+       masterlist(f)%field%end1d = bounds%endg
+       masterlist(f)%field%num1d = numg
     case (namel)
-       tape(1)%masterlist(f)%field%beg1d = bounds%begl
-       tape(1)%masterlist(f)%field%end1d = bounds%endl
-       tape(1)%masterlist(f)%field%num1d = numl
+       masterlist(f)%field%beg1d = bounds%begl
+       masterlist(f)%field%end1d = bounds%endl
+       masterlist(f)%field%num1d = numl
     case (namec)
-       tape(1)%masterlist(f)%field%beg1d = bounds%begc
-       tape(1)%masterlist(f)%field%end1d = bounds%endc
-       tape(1)%masterlist(f)%field%num1d = numc
+       masterlist(f)%field%beg1d = bounds%begc
+       masterlist(f)%field%end1d = bounds%endc
+       masterlist(f)%field%num1d = numc
     case (namep)
-       tape(1)%masterlist(f)%field%beg1d = bounds%begp
-       tape(1)%masterlist(f)%field%end1d = bounds%endp
-       tape(1)%masterlist(f)%field%num1d = nump
+       masterlist(f)%field%beg1d = bounds%begp
+       masterlist(f)%field%end1d = bounds%endp
+       masterlist(f)%field%num1d = nump
     case default
        write(iulog,*) trim(subname),' ERROR: unknown 1d output type= ',type1d
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 
     if (present(no_snow_behavior)) then
-       tape(1)%masterlist(f)%field%no_snow_behavior = no_snow_behavior
+       masterlist(f)%field%no_snow_behavior = no_snow_behavior
     else
-       tape(1)%masterlist(f)%field%no_snow_behavior = no_snow_unset
+       masterlist(f)%field%no_snow_behavior = no_snow_unset
     end if
 
     ! The following two fields are used only in master field list,
@@ -555,8 +580,8 @@ contains
     ! ALL FIELDS IN THE MASTER LIST ARE INITIALIZED WITH THE ACTIVE
     ! FLAG SET TO FALSE
 
-    tape(:)%masterlist(f)%avgflag = avgflag
-    tape(:)%masterlist(f)%actflag = .false.
+    masterlist(f)%avgflag(:) = avgflag
+    masterlist(f)%actflag(:) = .false.
 
   end subroutine masterlist_addfld
 
@@ -679,10 +704,10 @@ contains
 
     found = .false.
     do f = 1,nfmaster
-       if (trim(name) == trim(tape(1)%masterlist(f)%field%name)) then
-          tape(tape_index)%masterlist(f)%actflag = .true.
+       if (trim(name) == trim(masterlist(f)%field%name)) then
+          masterlist(f)%actflag(tape_index) = .true.
           if (present(avgflag)) then
-             if (avgflag/= ' ') tape(tape_index)%masterlist(f)%avgflag = avgflag
+             if (avgflag/= ' ') masterlist(f)%avgflag(tape_index) = avgflag
           end if
           found = .true.
           exit
@@ -718,7 +743,7 @@ contains
     end if
 
     do f = 1,nfmaster
-       tape(t)%masterlist(f)%avgflag = avgflag
+       masterlist(f)%avgflag(t) = avgflag
     end do
 
   end subroutine masterlist_change_timeavg
@@ -784,7 +809,7 @@ contains
        do while (f < max_flds .and. fincl(f,t) /= ' ')
           name = getname (fincl(f,t))
           do ff = 1,nfmaster
-             mastername = tape(1)%masterlist(ff)%field%name
+             mastername = masterlist(ff)%field%name
              if (name == mastername) exit
           end do
           if (name /= mastername) then
@@ -798,7 +823,7 @@ contains
        f = 1
        do while (f < max_flds .and. fexcl(f,t) /= ' ')
           do ff = 1,nfmaster
-             mastername = tape(1)%masterlist(ff)%field%name
+             mastername = masterlist(ff)%field%name
              if (fexcl(f,t) == mastername) exit
           end do
           if (fexcl(f,t) /= mastername) then
@@ -822,7 +847,7 @@ contains
        ! or if it is on by default and was not excluded via namelist (FEXCL[1-max_tapes]).
 
        do f = 1,nfmaster
-          mastername = tape(1)%masterlist(f)%field%name
+          mastername = masterlist(f)%field%name
           call list_index (fincl(1,t), mastername, ff)
 
           if (ff > 0) then
@@ -846,7 +871,7 @@ contains
              ! called below only if field is not in exclude list OR in
              ! include list
 
-             if (ff == 0 .and. tape(t)%masterlist(f)%actflag) then
+             if (ff == 0 .and. masterlist(f)%actflag(t)) then
                 call htape_addfld (t, f, ' ')
              end if
 
@@ -855,10 +880,7 @@ contains
 
        ! Specification of tape contents now complete.
        ! Sort each list of active entries
-       associate(n_fields => tape(t)%nflds,  &
-                 hist_list => tape(t)%hlist)
-       call sort_hist_list(t, n_fields, hist_list)
-       end associate
+       call sort_hist_list(t, tape(t)%nflds, tape(t)%hlist)
 
        if (masterproc) then
           if (tape(t)%nflds > 0) then
@@ -937,6 +959,44 @@ contains
   end subroutine htapes_fieldlist
 
   !-----------------------------------------------------------------------
+  subroutine copy_master_entry(this, other)
+    ! set this = other
+    class(master_entry), intent(out) :: this
+    class(entry_base), intent(in) :: other
+
+    select type(this)
+    type is (master_entry)
+       select type(other)
+       type is (master_entry)
+          this = other
+       class default
+          call endrun('Unexpected type of "other" in copy_master_entry')
+       end select
+    class default
+       call endrun('Unexpected type of "this" in copy_master_entry')
+    end select
+  end subroutine copy_master_entry
+
+  !-----------------------------------------------------------------------
+  subroutine copy_history_entry(this, other)
+    ! set this = other
+    class(history_entry), intent(out) :: this
+    class(entry_base), intent(in) :: other
+
+    select type(this)
+    type is (history_entry)
+       select type(other)
+       type is (history_entry)
+          this = other
+       class default
+          call endrun('Unexpected type of "other" in copy_history_entry')
+       end select
+    class default
+       call endrun('Unexpected type of "this" in copy_history_entry')
+    end select
+  end subroutine copy_history_entry
+
+  !-----------------------------------------------------------------------
   subroutine sort_hist_list(t, n_fields, hist_list)
 
     ! !DESCRIPTION:
@@ -944,22 +1004,30 @@ contains
     ! !ARGUMENTS:
     integer, intent(in) :: t  ! tape index
     integer, intent(in) :: n_fields  ! number of fields
-    type (history_entry), intent(inout) :: hist_list(n_fields)  ! array of history tape entries
+    class(entry_base), intent(inout) :: hist_list(:)
 
     ! !LOCAL VARIABLES:
     integer :: f, ff  ! field indices
-    type (history_entry) :: tmp  ! temporary used for swapping
+    class(entry_base), allocatable :: tmp
 
     character(len=*), parameter :: subname = 'sort_hist_list'
     !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL(size(hist_list) >= n_fields, sourcefile, __LINE__)
+
+    if (n_fields < 2) then
+       return
+    end if
+
+    allocate(tmp, source = hist_list(1))
 
     do f = n_fields-1, 1, -1
        do ff = 1, f
           if (hist_list(ff)%field%name > hist_list(ff+1)%field%name) then
 
-             tmp = hist_list(ff)
-             hist_list(ff  ) = hist_list(ff+1)
-             hist_list(ff+1) = tmp
+             call tmp%copy(hist_list(ff))
+             call hist_list(ff  )%copy(hist_list(ff+1))
+             call hist_list(ff+1)%copy(tmp)
 
           else if (hist_list(ff)%field%name == hist_list(ff+1)%field%name) then
 
@@ -967,7 +1035,6 @@ contains
                 hist_list(ff)%field%name, &
                 't,ff,name=',t,ff,hist_list(ff+1)%field%name
              call endrun(msg=errMsg(sourcefile, __LINE__))
-
           end if
        end do
     end do
@@ -1042,7 +1109,7 @@ contains
 
     if (htapes_defined) then
        write(iulog,*) trim(subname),' ERROR: attempt to add field ', &
-            tape(1)%masterlist(f)%field%name, ' after history files are set'
+            masterlist(f)%field%name, ' after history files are set'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -1051,7 +1118,7 @@ contains
 
     ! Copy field information
 
-    tape(t)%hlist(n)%field = tape(1)%masterlist(f)%field
+    tape(t)%hlist(n)%field = masterlist(f)%field
 
     ! Determine bounds
 
@@ -1135,8 +1202,8 @@ contains
     tape(t)%hlist(n)%field%num1d_out = num1d_out
 
     ! Fields native bounds
-    beg1d = tape(1)%masterlist(f)%field%beg1d
-    end1d = tape(1)%masterlist(f)%field%end1d
+    beg1d = masterlist(f)%field%beg1d
+    end1d = masterlist(f)%field%end1d
 
     ! Alloccate and initialize history buffer and related info
 
@@ -1160,7 +1227,7 @@ contains
     end if
 
     if (avgflag == ' ') then
-       tape(t)%hlist(n)%avgflag = tape(t)%masterlist(f)%avgflag
+       tape(t)%hlist(n)%avgflag = masterlist(f)%avgflag(t)
     else
        tape(t)%hlist(n)%avgflag = avgflag
     end if
