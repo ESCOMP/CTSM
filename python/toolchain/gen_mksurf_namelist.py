@@ -38,6 +38,20 @@ def get_parser():
                     choices=valid_opts['res'], 
                     required=False, 
                     default="4x5")
+        parser.add_argument('-sy','--start_year',
+                    help='Simulation start year.', 
+                    action="store",
+                    dest="start_year",
+                    required=False,
+                    type = start_year_type,
+                    default=2000)
+        parser.add_argument('-ey','--end_year',
+                    help='Simulation end year.', 
+                    action="store",
+                    dest="end_year",
+                    required=False,
+                    #type = end_year_type,
+                    default="start_year")
         parser.add_argument('-y','--year',
                     help='Simulation year to run over.', 
                     action="store",
@@ -191,10 +205,15 @@ def tag_describe ():
 
 def glc_nec_type(x):
     x = int(x)
-    if (x <= 0):
-        raise argparse.ArgumentTypeError("ERROR: glc_nec must be at least 1")
+    if (x <= 0) or (x >= 99):
+        raise argparse.ArgumentTypeError("ERROR: glc_nec must be between 1 and 99.")
     return x
 
+def start_year_type(x):
+    x = int(x)
+    if (x <= 850) or (x >= 2105):
+        raise argparse.ArgumentTypeError("ERROR: Simulation start year should be between 850 and 2105.")
+    return x
 
 def main ():
     print ('Testing gen_mksurf_namelist')
@@ -206,7 +225,7 @@ def main ():
     input_path   = args.input_path
     ssp_rcp      = args.ssp_rcp
 
-    crop_flag    = args.crop_flag()
+    crop_flag    = args.crop_flag
     if crop_flag:
         num_pft      = "78"
     else:
