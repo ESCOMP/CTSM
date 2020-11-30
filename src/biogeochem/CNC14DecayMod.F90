@@ -12,8 +12,10 @@ module CNC14DecayMod
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
+  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use PatchType                          , only : patch
   use ColumnType                         , only : col
   use GridcellType                       , only : grc
@@ -30,7 +32,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine C14Decay( bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst)
+       c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+       c14_cnveg_carbonflux_inst,  c14_soilbiogeochem_carbonflux_inst )
     !
     ! !DESCRIPTION:
     ! On the radiation time step, calculate the radioactive decay of C14
@@ -43,6 +46,8 @@ contains
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(CNVeg_carbonstate_type)          , intent(inout) :: c14_cnveg_carbonstate_inst
     type(soilbiogeochem_carbonstate_type) , intent(inout) :: c14_soilbiogeochem_carbonstate_inst
+    type(CNVeg_carbonflux_type)           , intent(inout) :: c14_cnveg_carbonflux_inst
+    type(soilbiogeochem_carbonflux_type)  , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
     integer  :: fp,j,g,l,p,fc,c,i
