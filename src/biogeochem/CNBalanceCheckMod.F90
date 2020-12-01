@@ -364,11 +364,11 @@ contains
                         (grc_endcb(g) - grc_begcb(g))
 
          ! check for significant errors
-         if (abs(grc_errcb(g)) > 1e-7_r8) then
+         if (abs(grc_errcb(g)) > this%cerror) then
             err_found = .true.
             err_index = g
          end if
-         if (abs(grc_errcb(g)) > 1e-8_r8) then
+         if (abs(grc_errcb(g)) > this%cwarning) then
             write(iulog,*) 'cbalance warning at g =', g, grc_errcb(g), grc_endcb(g)
          end if
       end do ! end of gridcell loop
@@ -598,12 +598,12 @@ contains
          grc_errnb(g) = (grc_ninputs(g) - grc_noutputs(g)) * dt - &
                         (grc_endnb(g) - grc_begnb(g))
 
-         if (abs(grc_errnb(g)) > 1e-3_r8) then
+         if (abs(grc_errnb(g)) > this%nerror) then
             err_found = .true.
             err_index = g
          end if
 
-         if (abs(grc_errnb(g)) > 1e-7_r8) then
+         if (abs(grc_errnb(g)) > this%nwarning) then
             write(iulog,*) 'nbalance warning at g =', g, grc_errnb(g), grc_endnb(g)
          end if
       end do
