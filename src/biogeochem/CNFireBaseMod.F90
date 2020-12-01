@@ -454,6 +454,7 @@ contains
                                     ideadstem,ideadstem_st,ideadstem_xf,&
                                     ilivecroot,ilivecroot_st,ilivecroot_xf,&
                                     ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
+   use CNVegMatrixMod       , only: matrix_update_fic, matrix_update_fin
    !
    ! !ARGUMENTS:
    class(cnfire_base_type)                              :: this
@@ -832,44 +833,44 @@ contains
            m_retransn_to_fire(p)            =  retransn(p)           * f * cc_other(patch%itype(p))
 
         else
-           matrix_fitransfer(p,ileaf_to_iout_fic)        = matrix_fitransfer(p,ileaf_to_iout_fic)          + f * cc_leaf(patch%itype(p))
-           matrix_fitransfer(p,ileafst_to_iout_fic)      = matrix_fitransfer(p,ileafst_to_iout_fic)        + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ileafxf_to_iout_fic)      = matrix_fitransfer(p,ileafxf_to_iout_fic)        + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ilivestem_to_iout_fic)    = matrix_fitransfer(p,ilivestem_to_iout_fic)      + f * cc_lstem(patch%itype(p))
-           matrix_fitransfer(p,ilivestemst_to_iout_fic)  = matrix_fitransfer(p,ilivestemst_to_iout_fic)    + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ilivestemxf_to_iout_fic)  = matrix_fitransfer(p,ilivestemxf_to_iout_fic)    + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ideadstem_to_iout_fic)    = matrix_fitransfer(p,ideadstem_to_iout_fic)      + f * cc_dstem(patch%itype(p))*m
-           matrix_fitransfer(p,ideadstemst_to_iout_fic)  = matrix_fitransfer(p,ideadstemst_to_iout_fic)    + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ideadstemxf_to_iout_fic)  = matrix_fitransfer(p,ideadstemxf_to_iout_fic)    + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ifroot_to_iout_fic)       = matrix_fitransfer(p,ifroot_to_iout_fic)         + f * 0._r8
-           matrix_fitransfer(p,ifrootst_to_iout_fic)     = matrix_fitransfer(p,ifrootst_to_iout_fic)       + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ifrootxf_to_iout_fic)     = matrix_fitransfer(p,ifrootxf_to_iout_fic)       + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ilivecroot_to_iout_fic)   = matrix_fitransfer(p,ilivecroot_to_iout_fic)     + f * 0._r8
-           matrix_fitransfer(p,ilivecrootst_to_iout_fic) = matrix_fitransfer(p,ilivecrootst_to_iout_fic)   + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ilivecrootxf_to_iout_fic) = matrix_fitransfer(p,ilivecrootxf_to_iout_fic)   + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ideadcroot_to_iout_fic)   = matrix_fitransfer(p,ideadcroot_to_iout_fic)     + f * 0._r8
-           matrix_fitransfer(p,ideadcrootst_to_iout_fic) = matrix_fitransfer(p,ideadcrootst_to_iout_fic)   + f * cc_other(patch%itype(p))
-           matrix_fitransfer(p,ideadcrootxf_to_iout_fic) = matrix_fitransfer(p,ideadcrootxf_to_iout_fic)   + f * cc_other(patch%itype(p))
+           m_leafc_to_fire(p)               =  leafc(p)              * matrix_update_fic(p,ileaf_to_iout_fic        ,f * cc_leaf(patch%itype(p))   ,dt,cnveg_carbonflux_inst)
+           m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * matrix_update_fic(p,ileafst_to_iout_fic      ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * matrix_update_fic(p,ileafxf_to_iout_fic      ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_livestemc_to_fire(p)           =  livestemc(p)          * matrix_update_fic(p,ilivestem_to_iout_fic    ,f * cc_lstem(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_livestemc_storage_to_fire(p)   =  livestemc_storage(p)  * matrix_update_fic(p,ilivestemst_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_livestemc_xfer_to_fire(p)      =  livestemc_xfer(p)     * matrix_update_fic(p,ilivestemxf_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_deadstemc_to_fire(p)           =  deadstemc(p)          * matrix_update_fic(p,ideadstem_to_iout_fic    ,f * cc_dstem(patch%itype(p)*m),dt,cnveg_carbonflux_inst)
+           m_deadstemc_storage_to_fire(p)   =  deadstemc_storage(p)  * matrix_update_fic(p,ideadstemst_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_deadstemc_xfer_to_fire(p)      =  deadstemc_xfer(p)     * matrix_update_fic(p,ideadstemxf_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_frootc_to_fire(p)              =  frootc(p)             * matrix_update_fic(p,ifroot_to_iout_fic       ,f * 0._r8                     ,dt,cnveg_carbonflux_inst)
+           m_frootc_storage_to_fire(p)      =  frootc_storage(p)     * matrix_update_fic(p,ifrootst_to_iout_fic     ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_frootc_xfer_to_fire(p)         =  frootc_xfer(p)        * matrix_update_fic(p,ifrootxf_to_iout_fic     ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_livecrootc_to_fire(p)          =  livecrootc(p)         * matrix_update_fic(p,ilivecroot_to_iout_fic   ,f * 0._r8                     ,dt,cnveg_carbonflux_inst)
+           m_livecrootc_storage_to_fire(p)  =  livecrootc_storage(p) * matrix_update_fic(p,ilivecrootst_to_iout_fic ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_livecrootc_xfer_to_fire(p)     =  livecrootc_xfer(p)    * matrix_update_fic(p,ilivecrootxf_to_iout_fic ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_deadcrootc_to_fire(p)          =  deadcrootc(p)         * matrix_update_fic(p,ideadcroot_to_iout_fic   ,f * 0._r8                     ,dt,cnveg_carbonflux_inst)
+           m_deadcrootc_storage_to_fire(p)  =  deadcrootc_storage(p) * matrix_update_fic(p,ideadcrootst_to_iout_fic ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
+           m_deadcrootc_xfer_to_fire(p)     =  deadcrootc_xfer(p)    * matrix_update_fic(p,ideadcrootxf_to_iout_fic ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst)
 
-           matrix_nfitransfer(p,ileaf_to_iout_fin)        = matrix_nfitransfer(p,ileaf_to_iout_fin)        + f * cc_leaf(patch%itype(p))
-           matrix_nfitransfer(p,ileafst_to_iout_fin)      = matrix_nfitransfer(p,ileafst_to_iout_fin)      + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ileafxf_to_iout_fin)      = matrix_nfitransfer(p,ileafxf_to_iout_fin)      + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ilivestem_to_iout_fin)    = matrix_nfitransfer(p,ilivestem_to_iout_fin)    + f * cc_lstem(patch%itype(p))
-           matrix_nfitransfer(p,ilivestemst_to_iout_fin)  = matrix_nfitransfer(p,ilivestemst_to_iout_fin)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ilivestemxf_to_iout_fin)  = matrix_nfitransfer(p,ilivestemxf_to_iout_fin)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ideadstem_to_iout_fin)    = matrix_nfitransfer(p,ideadstem_to_iout_fin)    + f * cc_dstem(patch%itype(p))*m
-           matrix_nfitransfer(p,ideadstemst_to_iout_fin)  = matrix_nfitransfer(p,ideadstemst_to_iout_fin)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ideadstemxf_to_iout_fin)  = matrix_nfitransfer(p,ideadstemxf_to_iout_fin)  + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ifroot_to_iout_fin)       = matrix_nfitransfer(p,ifroot_to_iout_fin)       + f * 0._r8
-           matrix_nfitransfer(p,ifrootst_to_iout_fin)     = matrix_nfitransfer(p,ifrootst_to_iout_fin)     + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ifrootxf_to_iout_fin)     = matrix_nfitransfer(p,ifrootxf_to_iout_fin)     + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ilivecroot_to_iout_fin)   = matrix_nfitransfer(p,ilivecroot_to_iout_fin)   + f * 0._r8
-           matrix_nfitransfer(p,ilivecrootst_to_iout_fin) = matrix_nfitransfer(p,ilivecrootst_to_iout_fin) + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ilivecrootxf_to_iout_fin) = matrix_nfitransfer(p,ilivecrootxf_to_iout_fin) + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ideadcroot_to_iout_fin)   = matrix_nfitransfer(p,ideadcroot_to_iout_fin)   + f * 0._r8
-           matrix_nfitransfer(p,ideadcrootst_to_iout_fin) = matrix_nfitransfer(p,ideadcrootst_to_iout_fin) + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,ideadcrootxf_to_iout_fin) = matrix_nfitransfer(p,ideadcrootxf_to_iout_fin) + f * cc_other(patch%itype(p))
-           matrix_nfitransfer(p,iretransn_to_iout_fin)    = matrix_nfitransfer(p,iretransn_to_iout_fin)    + f * cc_other(patch%itype(p))
+           m_leafn_to_fire(p)               =  leafn(p)              * matrix_update_fin(p,ileaf_to_iout_fin        ,f * cc_leaf(patch%itype(p))   ,dt,cnveg_nitrogenflux_inst)
+           m_leafn_storage_to_fire(p)       =  leafn_storage(p)      * matrix_update_fin(p,ileafst_to_iout_fin      ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_leafn_xfer_to_fire(p)          =  leafn_xfer(p)         * matrix_update_fin(p,ileafxf_to_iout_fin      ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_livestemn_to_fire(p)           =  livestemn(p)          * matrix_update_fin(p,ilivestem_to_iout_fin    ,f * cc_lstem(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_livestemn_storage_to_fire(p)   =  livestemn_storage(p)  * matrix_update_fin(p,ilivestemst_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_livestemn_xfer_to_fire(p)      =  livestemn_xfer(p)     * matrix_update_fin(p,ilivestemxf_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_deadstemn_to_fire(p)           =  deadstemn(p)          * matrix_update_fin(p,ideadstem_to_iout_fin    ,f * cc_dstem(patch%itype(p)*m),dt,cnveg_nitrogenflux_inst)
+           m_deadstemn_storage_to_fire(p)   =  deadstemn_storage(p)  * matrix_update_fin(p,ideadstemst_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_deadstemn_xfer_to_fire(p)      =  deadstemn_xfer(p)     * matrix_update_fin(p,ideadstemxf_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_frootn_to_fire(p)              =  frootn(p)             * matrix_update_fin(p,ifroot_to_iout_fin       ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst)
+           m_frootn_storage_to_fire(p)      =  frootn_storage(p)     * matrix_update_fin(p,ifrootst_to_iout_fin     ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_frootn_xfer_to_fire(p)         =  frootn_xfer(p)        * matrix_update_fin(p,ifrootxf_to_iout_fin     ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_livecrootn_to_fire(p)          =  livecrootn(p)         * matrix_update_fin(p,ilivecroot_to_iout_fin   ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst)
+           m_livecrootn_storage_to_fire(p)  =  livecrootn_storage(p) * matrix_update_fin(p,ilivecrootst_to_iout_fin ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_livecrootn_xfer_to_fire(p)     =  livecrootn_xfer(p)    * matrix_update_fin(p,ilivecrootxf_to_iout_fin ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_deadcrootn_to_fire(p)          =  deadcrootn(p)         * matrix_update_fin(p,ideadcroot_to_iout_fin   ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst)
+           m_deadcrootn_storage_to_fire(p)  =  deadcrootn_storage(p) * matrix_update_fin(p,ideadcrootst_to_iout_fin ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_deadcrootn_xfer_to_fire(p)     =  deadcrootn_xfer(p)    * matrix_update_fin(p,ideadcrootxf_to_iout_fin ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst)
+           m_retransn_to_fire(p)            =  retransn(p)           * matrix_update_fin(p,iretransn_to_iout_fin    ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst)
         end if
         ! mortality due to fire
         ! carbon pools
@@ -1018,89 +1019,87 @@ contains
                 fm_other(patch%itype(p)) 
 
         else
-           matrix_fitransfer(p,ileaf_to_iout_fic)             = matrix_fitransfer(p,ileaf_to_iout_fic) &
-             + f * (1._r8 - cc_leaf(patch%itype(p)))    * fm_leaf(patch%itype(p))
-           matrix_fitransfer(p,ileafst_to_iout_fic)           = matrix_fitransfer(p,ileafst_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ileafxf_to_iout_fic)           = matrix_fitransfer(p,ileafxf_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ilivestem_to_iout_fic)         = matrix_fitransfer(p,ilivestem_to_iout_fic) &
-             + f * (1._r8 - cc_lstem(patch%itype(p)))   * fm_droot(patch%itype(p))
-           matrix_fitransfer(p,ilivestemst_to_iout_fic)       = matrix_fitransfer(p,ilivestemst_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ilivestemxf_to_iout_fic)       = matrix_fitransfer(p,ilivestemxf_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ilivestem_to_ideadstem_fic)    = matrix_fitransfer(p,ilivestem_to_ideadstem_fic) &
-             + f * (1._r8 - cc_lstem(patch%itype(p)))   * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-           matrix_fitransfer(p,ideadstem_to_iout_fic)         = matrix_fitransfer(p,ideadstem_to_iout_fic) &
-             + f * m*(1._r8 - cc_dstem(patch%itype(p))) * fm_droot(patch%itype(p))
-           matrix_fitransfer(p,ideadstemst_to_iout_fic)       = matrix_fitransfer(p,ideadstemst_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ideadstemxf_to_iout_fic)       = matrix_fitransfer(p,ideadstemxf_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ifroot_to_iout_fic)            = matrix_fitransfer(p,ifroot_to_iout_fic) &
-             + f * fm_root(patch%itype(p))
-           matrix_fitransfer(p,ifrootst_to_iout_fic)          = matrix_fitransfer(p,ifrootst_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ifrootxf_to_iout_fic)          = matrix_fitransfer(p,ifrootxf_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_fitransfer(p,ilivecroot_to_iout_fic)        = matrix_fitransfer(p,ilivecroot_to_iout_fic) &
-             + f * fm_droot(patch%itype(p))
-           matrix_fitransfer(p,ilivecrootst_to_iout_fic)      = matrix_fitransfer(p,ilivecrootst_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
-           matrix_fitransfer(p,ilivecrootxf_to_iout_fic)      = matrix_fitransfer(p,ilivecrootxf_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
-           matrix_fitransfer(p,ilivecroot_to_ideadcroot_fic)  = matrix_fitransfer(p,ilivecroot_to_ideadcroot_fic) &
-             + f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-           matrix_fitransfer(p,ideadcroot_to_iout_fic)        = matrix_fitransfer(p,ideadcroot_to_iout_fic) &
-             + f * m * fm_droot(patch%itype(p))
-           matrix_fitransfer(p,ideadcrootst_to_iout_fic)      = matrix_fitransfer(p,ideadcrootst_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
-           matrix_fitransfer(p,ideadcrootxf_to_iout_fic)      = matrix_fitransfer(p,ideadcrootxf_to_iout_fic) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
+           m_leafc_to_litter_fire(p)              = leafc(p) * matrix_update_fic(p,ileaf_to_iout_fic, &
+                                                  f * (1._r8 - cc_leaf(patch%itype(p)))     * fm_leaf(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_leafc_storage_to_litter_fire(p)      = leafc_storage(p) * matrix_update_fic(p,ileafst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_leafc_xfer_to_litter_fire(p)         = leafc_xfer(p) * matrix_update_fic(p,ileafxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_livestemc_to_litter_fire(p)          = livestemc(p) * matrix_update_fic(p,ilivestem_to_iout_fic, &
+                                                  f * (1._r8 - cc_lstem(patch%itype(p)))    * fm_droot(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_livestemc_storage_to_litter_fire(p)  = livestemc_storage(p) * matrix_update_fic(p,ilivestemst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_livestemc_xfer_to_litter_fire(p)     = livestemc_xfer(p) * matrix_update_fic(p,ilivestemxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_livestemc_to_deadstemc_fire(p)       = livestemc(p) * matrix_update_fic(p,ilivestem_to_ideadstem_fic,&
+                                                  f * (1._r8 - cc_lstem(patch%itype(p)))    * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p))),dt,cnveg_carbonflux_inst)
+           m_deadstemc_to_litter_fire(p)          = deadstemc(p) * matrix_update_fic(p,ideadstem_to_iout_fic, &
+                                                  f * (1._r8 - cc_dstem(patch%itype(p)))    * fm_droot(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_deadstemc_storage_to_litter_fire(p)  = deadstemc_storage(p) * matrix_update_fic(p,ideadstemst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_deadstemc_xfer_to_litter_fire(p)     = deadstemc_xfer(p) * matrix_update_fic(p,ideadstemxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_frootc_to_litter_fire(p)             = frootc(p) * matrix_update_fic(p,ifroot_to_iout_fic, &
+                                                  f * fm_root(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_frootc_storage_to_litter_fire(p)     = frootc_storage(p) * matrix_update_fic(p,ifrootst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_frootc_xfer_to_litter_fire(p)        = frootc_xfer(p) * matrix_update_fic(p,ifrootxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_livecrootc_to_litter_fire(p)         = livecrootc(p) * matrix_update_fic(p,ilivecroot_to_iout_fic, &
+                                                  f * fm_droot(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_livecrootc_storage_to_litter_fire(p) = livecrootc_storage(p) * matrix_update_fic(p,ilivecrootst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_livecrootc_xfer_to_litter_fire(p)    = livecrootc_xfer(p) * matrix_update_fic(p,ilivecrootxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_livecrootc_to_deadcrootc_fire(p)     = livecrootc(p) * matrix_update_fic(p,ilivecroot_to_ideadcroot_fic,&
+                                                  f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p))),dt,cnveg_carbonflux_inst)
+           m_deadcrootc_to_litter_fire(p)         = deadcrootc(p) * matrix_update_fic(p,ideadcroot_to_iout_fic, &
+                                                  f * m * fm_droot(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_deadcrootc_storage_to_litter_fire(p) = deadcrootc_storage(p) * matrix_update_fic(p,ideadcrootst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
+           m_deadcrootc_xfer_to_litter_fire(p)    = deadcrootc_xfer(p) * matrix_update_fic(p,ideadcrootxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst)
 
-           matrix_nfitransfer(p,ileaf_to_iout_fin)            = matrix_nfitransfer(p,ileaf_to_iout_fin) &
-             + f * (1._r8 - cc_leaf(patch%itype(p)))    * fm_leaf(patch%itype(p))
-           matrix_nfitransfer(p,ileafst_to_iout_fin)          = matrix_nfitransfer(p,ileafst_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ileafxf_to_iout_fin)          = matrix_nfitransfer(p,ileafxf_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ilivestem_to_iout_fin)        = matrix_nfitransfer(p,ilivestem_to_iout_fin) &
-             + f * (1._r8 - cc_lstem(patch%itype(p)))   * fm_droot(patch%itype(p))
-           matrix_nfitransfer(p,ilivestemst_to_iout_fin)      = matrix_nfitransfer(p,ilivestemst_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ilivestemxf_to_iout_fin)      = matrix_nfitransfer(p,ilivestemxf_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ilivestem_to_ideadstem_fin)   = matrix_nfitransfer(p,ilivestem_to_ideadstem_fin) &
-             + f * (1._r8 - cc_lstem(patch%itype(p)))   * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-           matrix_nfitransfer(p,ideadstem_to_iout_fin)        = matrix_nfitransfer(p,ideadstem_to_iout_fin) &
-             + f * m*(1._r8 - cc_dstem(patch%itype(p))) * fm_droot(patch%itype(p))
-           matrix_nfitransfer(p,ideadstemst_to_iout_fin)      = matrix_nfitransfer(p,ideadstemst_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ideadstemxf_to_iout_fin)      = matrix_nfitransfer(p,ideadstemxf_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ifroot_to_iout_fin)           = matrix_nfitransfer(p,ifroot_to_iout_fin) &
-             + f * fm_root(patch%itype(p))
-           matrix_nfitransfer(p,ifrootst_to_iout_fin)         = matrix_nfitransfer(p,ifrootst_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ifrootxf_to_iout_fin)         = matrix_nfitransfer(p,ifrootxf_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p))
-           matrix_nfitransfer(p,ilivecroot_to_iout_fin)       = matrix_nfitransfer(p,ilivecroot_to_iout_fin) &
-             + f * fm_droot(patch%itype(p))
-           matrix_nfitransfer(p,ilivecrootst_to_iout_fin)     = matrix_nfitransfer(p,ilivecrootst_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
-           matrix_nfitransfer(p,ilivecrootxf_to_iout_fin)     = matrix_nfitransfer(p,ilivecrootxf_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
-           matrix_nfitransfer(p,ilivecroot_to_ideadcroot_fin) = matrix_nfitransfer(p,ilivecroot_to_ideadcroot_fin) &
-             + f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-           matrix_nfitransfer(p,ideadcroot_to_iout_fin)       = matrix_nfitransfer(p,ideadcroot_to_iout_fin) &
-             + f * m * fm_droot(patch%itype(p))
-           matrix_nfitransfer(p,ideadcrootst_to_iout_fin)     = matrix_nfitransfer(p,ideadcrootst_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
-           matrix_nfitransfer(p,ideadcrootxf_to_iout_fin)     = matrix_nfitransfer(p,ideadcrootxf_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
-           matrix_nfitransfer(p,iretransn_to_iout_fin)        = matrix_nfitransfer(p,iretransn_to_iout_fin) &
-             + f * (1._r8 - cc_other(patch%itype(p)))   * fm_other(patch%itype(p)) 
+           m_leafn_to_litter_fire(p)              = leafn(p) * matrix_update_fin(p,ileaf_to_iout_fin, &
+                                                  f * (1._r8 - cc_leaf(patch%itype(p)))     * fm_leaf(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_leafn_storage_to_litter_fire(p)      = leafn_storage(p) * matrix_update_fin(p,ileafst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_leafn_xfer_to_litter_fire(p)         = leafn_xfer(p) * matrix_update_fin(p,ileafxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_livestemn_to_litter_fire(p)          = livestemn(p) * matrix_update_fin(p,ilivestem_to_iout_fin, &
+                                                  f * (1._r8 - cc_lstem(patch%itype(p)))    * fm_droot(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_livestemn_storage_to_litter_fire(p)  = livestemn_storage(p) * matrix_update_fin(p,ilivestemst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_livestemn_xfer_to_litter_fire(p)     = livestemn_xfer(p) * matrix_update_fin(p,ilivestemxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_livestemn_to_deadstemn_fire(p)       = livestemn(p) * matrix_update_fin(p,ilivestem_to_ideadstem_fin,&
+                                                  f * (1._r8 - cc_lstem(patch%itype(p)))    * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p))),dt,cnveg_nitrogenflux_inst)
+           m_deadstemn_to_litter_fire(p)          = deadstemn(p) * matrix_update_fin(p,ideadstem_to_iout_fin, &
+                                                  f * (1._r8 - cc_dstem(patch%itype(p)))    * fm_droot(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_deadstemn_storage_to_litter_fire(p)  = deadstemn_storage(p) * matrix_update_fin(p,ideadstemst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_deadstemn_xfer_to_litter_fire(p)     = deadstemn_xfer(p) * matrix_update_fin(p,ideadstemxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_frootn_to_litter_fire(p)             = frootn(p) * matrix_update_fin(p,ifroot_to_iout_fin, &
+                                                  f * fm_root(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_frootn_storage_to_litter_fire(p)     = frootn_storage(p) * matrix_update_fin(p,ifrootst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_frootn_xfer_to_litter_fire(p)        = frootn_xfer(p) * matrix_update_fin(p,ifrootxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_livecrootn_to_litter_fire(p)         = livecrootn(p) * matrix_update_fin(p,ilivecroot_to_iout_fin, &
+                                                  f * fm_droot(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_livecrootn_storage_to_litter_fire(p) = livecrootn_storage(p) * matrix_update_fin(p,ilivecrootst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_livecrootn_xfer_to_litter_fire(p)    = livecrootn_xfer(p) * matrix_update_fin(p,ilivecrootxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_livecrootn_to_deadcrootn_fire(p)     = livecrootn(p) * matrix_update_fin(p,ilivecroot_to_ideadcroot_fin,&
+                                                  f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p))),dt,cnveg_nitrogenflux_inst)
+           m_deadcrootn_to_litter_fire(p)         = deadcrootn(p) * matrix_update_fin(p,ideadcroot_to_iout_fin, &
+                                                  f * m * fm_droot(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_deadcrootn_storage_to_litter_fire(p) = deadcrootn_storage(p) * matrix_update_fin(p,ideadcrootst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
+           m_deadcrootn_xfer_to_litter_fire(p)    = deadcrootn_xfer(p) * matrix_update_fin(p,ideadcrootxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst)
         end if
 
         if (use_cndv) then
