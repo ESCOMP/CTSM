@@ -1,16 +1,15 @@
-
 module ch4FInundatedStreamType
 
 #include "shr_assert.h"
 
-  !----------------------------------------------------------------------- 
-  ! !DESCRIPTION: 
+  !-----------------------------------------------------------------------
+  ! !DESCRIPTION:
   ! Contains methods for reading in finundated streams file for methane code.
   !
   ! !USES
   use shr_kind_mod   , only: r8 => shr_kind_r8, CL => shr_kind_cl
   use spmdMod        , only: mpicom, masterproc
-  use clm_varctl     , only: iulog
+  use clm_varctl     , only: iulog, inst_name
   use abortutils     , only: endrun
   use decompMod      , only: bounds_type
   use ch4varcon      , only: finundation_mtd
@@ -60,11 +59,10 @@ contains
   !==============================================================================
 
   subroutine Init(this, bounds, NLFilename)
-   !    
+   !
    ! Initialize the ch4 finundated stream object
    !
    ! Uses:
-   use clm_varctl       , only : inst_name
    use clm_time_manager , only : get_calendar, get_curr_date
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
@@ -83,12 +81,12 @@ contains
    ! arguments
    implicit none
    class(ch4finundatedstream_type) :: this
-   type(bounds_type), intent(in) :: bounds  
+   type(bounds_type), intent(in) :: bounds
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !
    ! local variables
    integer            :: ig, g            ! Indices
-   type(mct_ggrid)    :: dom_clm          ! domain information 
+   type(mct_ggrid)    :: dom_clm          ! domain information
    type(shr_strdata_type) :: sdat         ! input data stream
    integer            :: index_ZWT0       = 0 ! Index of ZWT0 field
    integer            :: index_F0         = 0 ! Index of F0 field
@@ -111,8 +109,8 @@ contains
          call clm_domain_mct (bounds, dom_clm)
 
          call shr_strdata_create(sdat,name=stream_name,&
-           pio_subsystem=pio_subsystem,               & 
-           pio_iotype=shr_pio_getiotype(inst_name),   &
+           pio_subsystem=pio_subsystem,               &
+           pio_iotype=shr_pio_getiotype(inst_name),       &
            mpicom=mpicom, compid=comp_id,             &
            gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
            nxg=ldomain%ni, nyg=ldomain%nj,            &
@@ -124,7 +122,7 @@ contains
            domFileName=trim(control%stream_fldFileName_ch4finundated), &
            domTvarName='time',                        &
            domXvarName='LONGXY' ,                     &
-           domYvarName='LATIXY' ,                     &  
+           domYvarName='LATIXY' ,                     &
            domAreaName='AREA',                        &
            domMaskName='LANDMASK',                    &
            filePath='',                               &
@@ -191,7 +189,7 @@ contains
   logical function UseStreams(this)
     !
     ! !DESCRIPTION:
-    ! Return true if 
+    ! Return true if
     !
     ! !USES:
     !
@@ -201,9 +199,9 @@ contains
     !
     ! !LOCAL VARIABLES:
     if ( trim(control%stream_fldFileName_ch4finundated) == '' )then
-       UseStreams = .false. 
+       UseStreams = .false.
     else
-       UseStreams = .true. 
+       UseStreams = .true.
     end if
   end function UseStreams
 
@@ -246,7 +244,7 @@ contains
                             waterdiagnosticbulk_inst, qflx_surf_lag_col, finundated )
     !
     ! !DESCRIPTION:
-    ! 
+    !
     ! Calculate finundated according to the appropriate methodology
     !
     ! !USES:
@@ -312,11 +310,10 @@ contains
   !==============================================================================
 
   subroutine ReadNML(this, bounds, NLFilename)
-   !    
-   ! Read the namelist data stream information.  
+   !
+   ! Read the namelist data stream information.
    !
    ! Uses:
-   use clm_varctl       , only : inst_name
    use clm_time_manager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
@@ -329,7 +326,7 @@ contains
    ! arguments
    implicit none
    class(streamcontrol_type) :: this
-   type(bounds_type), intent(in) :: bounds  
+   type(bounds_type), intent(in) :: bounds
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !
    ! local variables

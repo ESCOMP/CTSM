@@ -452,9 +452,7 @@ contains
     end if
 
     ! Initialize instances of all derived types as well as time constant variables
-
     call clm_instInit(bounds_proc)
-
     ! Initialize SNICAR optical and aging parameters
 
     call SnowOptics_init( ) ! SNICAR optical parameters:

@@ -301,10 +301,24 @@ contains
     ! !DESCRIPTION:
     ! Print summary of master field list.
     !
+    ! !USES:
+    use clm_varctl, only: hist_master_list_file
+    use fileutils, only: getavu, relavu
+    !
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer nf
+    integer nf, i  ! do-loop counters
+    integer master_list_file  ! file unit number
+    integer width_col_1  ! widths of table columns 1...
+    integer width_col_2  ! ...2
+    integer width_col_3  ! ...3
+    integer width_col_4  ! ...and 4
+    integer width_col_sum  ! widths of columns summed, including spaces
+    character(len=3) str_w_col_1  ! string versions of width_col_1 through 4
+    character(len=3) str_w_col_2, str_w_col_3, str_w_col_4
+    character(len=3) str_w_col_sum  ! string version of width_col_sum
+    character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
 
@@ -316,6 +330,93 @@ contains
 9000      format (i5,1x,a32,1x,a16)
        end do
        call shr_sys_flush(iulog)
+    end if
+
+    ! Print master field list in separate text file when namelist
+    ! variable requests it. Text file is formatted in the .rst
+    ! (reStructuredText) format for easy introduction of the file to
+    ! the CTSM's web-based documentation.
+    if (masterproc .and. hist_master_list_file) then
+       ! Hardwired table column widths to fit the table on a computer
+       ! screen. Some strings will be truncated as a result of the
+       ! current choices (4, 39, 94, 65). In sphinx (ie the web-based
+       ! documentation), text that has not been truncated will wrap
+       ! around in the available space.
+       width_col_1 = 4  ! column that shows the variable number, nf
+       width_col_2 = 39  ! variable name column
+       width_col_3 = 94  ! long description column
+       width_col_4 = 65  ! units column
+       width_col_sum = width_col_1 + width_col_2 +  &  ! sum of widths plus
+                       width_col_3 + width_col_4 + 3  ! ...3 blank spaces
+
+       ! Convert integer widths to strings for use in format statements
+       ! These write statements are not outputting to files
+       write(str_w_col_1,'(i0)') width_col_1
+       write(str_w_col_2,'(i0)') width_col_2
+       write(str_w_col_3,'(i0)') width_col_3
+       write(str_w_col_4,'(i0)') width_col_4
+       write(str_w_col_sum,'(i0)') width_col_sum
+
+       ! Open master_list_file
+       master_list_file = getavu()  ! get next available file unit number
+       open(unit = master_list_file, file = 'master_list_file.rst',  &
+            status = 'new', action = 'write', form = 'formatted')
+
+       ! File title
+       fmt_txt = '(a)'
+       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,fmt_txt) 'CTSM History Fields'
+       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,*)
+
+       ! Table header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
+       write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
+                                       ('=', i=1, width_col_2),  &
+                                       ('=', i=1, width_col_3),  &
+                                       ('=', i=1, width_col_4)
+       ! Table's title
+       write(master_list_file,*) 'CTSM History Fields'
+
+       ! Sub-header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_sum//'a)'
+       write(master_list_file,fmt_txt) ('-', i=1, width_col_sum)
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//'a'//str_w_col_1//',x,a'//str_w_col_2//',x,a'//str_w_col_3//',x,a'//str_w_col_4//')'
+       write(master_list_file,fmt_txt) '#', 'Variable Name',  &
+                                    'Long Description', 'Units'
+
+       ! End header, same as header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
+       write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
+                                       ('=', i=1, width_col_2),  &
+                                       ('=', i=1, width_col_3),  &
+                                       ('=', i=1, width_col_4)
+
+       ! Main table
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//'i'//str_w_col_1//',x,a'//str_w_col_2//',x,a'//str_w_col_3//',x,a'//str_w_col_4//')'
+       do nf = 1,nfmaster
+          write(master_list_file,fmt_txt) nf,  &
+             masterlist(nf)%field%name,  &
+             masterlist(nf)%field%long_name,  &
+             masterlist(nf)%field%units
+       end do
+
+       ! Table footer, same as header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_1//'a,x,'//str_w_col_2//'a,x,'//str_w_col_3//'a,x,'//str_w_col_4//'a)'
+       write(master_list_file,fmt_txt) ('=', i=1, width_col_1),  &
+                                       ('=', i=1, width_col_2),  &
+                                       ('=', i=1, width_col_3),  &
+                                       ('=', i=1, width_col_4)
+
+       call shr_sys_flush(master_list_file)
+       close(unit = master_list_file)
+       call relavu(master_list_file)  ! close and release file unit number
     end if
 
   end subroutine hist_printflds
@@ -1895,7 +1996,7 @@ contains
     ! wrapper calls to define the history file contents.
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, nlevcan, nvegwcs,nlevsoi
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
@@ -1924,7 +2025,6 @@ contains
     integer :: numl                ! total number of landunits across all processors
     integer :: numg                ! total number of gridcells across all processors
     integer :: numa                ! total number of atm cells across all processors
-    logical :: avoid_pnetcdf       ! whether we should avoid using pnetcdf
     logical :: lhistrest           ! local history restart flag
     type(file_desc_t), pointer :: lnfid     ! local file id
     character(len=  8) :: curdate  ! current date
@@ -1954,17 +2054,6 @@ contains
        lnfid => nfid(t)
     endif
 
-    ! BUG(wjs, 2014-10-20, bugz 1730) Workaround for
-    ! http://bugs.cgd.ucar.edu/show_bug.cgi?id=1730
-    ! - 1-d hist files have problems with pnetcdf. A better workaround in terms of
-    ! performance is to keep pnetcdf, but set PIO_BUFFER_SIZE_LIMIT=0, but that can't be
-    ! done on a per-file basis.
-    if (.not. tape(t)%dov2xy) then
-       avoid_pnetcdf = .true.
-    else
-       avoid_pnetcdf = .false.
-    end if
-
     ! Create new netCDF file. It will be in define mode
 
     if ( .not. lhistrest )then
@@ -1973,7 +2062,7 @@ contains
                                       trim(locfnh(t))
           call shr_sys_flush(iulog)
        end if
-       call ncd_pio_createfile(lnfid, trim(locfnh(t)), avoid_pnetcdf=avoid_pnetcdf)
+       call ncd_pio_createfile(lnfid, trim(locfnh(t)))
        call ncd_putatt(lnfid, ncd_global, 'title', 'CLM History file information' )
        call ncd_putatt(lnfid, ncd_global, 'comment', &
           "NOTE: None of the variables are weighted by land fraction!" )
@@ -1983,7 +2072,7 @@ contains
                                       trim(locfnhr(t))
           call shr_sys_flush(iulog)
        end if
-       call ncd_pio_createfile(lnfid, trim(locfnhr(t)), avoid_pnetcdf=avoid_pnetcdf)
+       call ncd_pio_createfile(lnfid, trim(locfnhr(t)))
        call ncd_putatt(lnfid, ncd_global, 'title', &
           'CLM Restart History information, required to continue a simulation' )
        call ncd_putatt(lnfid, ncd_global, 'comment', &
@@ -2042,6 +2131,7 @@ contains
     if (nlevurb > 0) then
        call ncd_defdim(lnfid, 'levurb' , nlevurb, dimid)
     end if
+    call ncd_defdim(lnfid, 'levmaxurbgrnd' , nlevmaxurbgrnd, dimid)
     call ncd_defdim(lnfid, 'levlak' , nlevlak, dimid)
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
     call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
@@ -2227,7 +2317,7 @@ contains
     !
     ! !USES:
     use subgridAveMod  , only : c2g
-    use clm_varpar     , only : nlevgrnd ,nlevlak
+    use clm_varpar     , only : nlevgrnd ,nlevlak, nlevmaxurbgrnd
     use shr_string_mod , only : shr_string_listAppend
     use domainMod      , only : ldomain
     !
@@ -2269,7 +2359,7 @@ contains
                                                       /)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
@@ -2494,6 +2584,7 @@ contains
     ! contents.
     !
     ! !USES:
+    use clm_varpar      , only : nlevsoi
     use clm_varcon      , only : zsoi, zlak, secspday, isecspday, isecsphr, isecspmin
     use domainMod       , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
@@ -2573,12 +2664,15 @@ contains
        if (mode == 'define') then
           call ncd_defvar(varname='levgrnd', xtype=tape(t)%ncprec, &
                dim1name='levgrnd', &
-               long_name='coordinate soil levels', units='m', ncid=nfid(t))
+               long_name='coordinate ground levels', units='m', ncid=nfid(t))
+          call ncd_defvar(varname='levsoi', xtype=tape(t)%ncprec, &
+               dim1name='levsoi', &
+               long_name='coordinate soil levels (equivalent to top nlevsoi levels of levgrnd)', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levlak', xtype=tape(t)%ncprec, &
                dim1name='levlak', &
                long_name='coordinate lake levels', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
-               long_name='coordinate soil levels', units='m', ncid=nfid(t))
+               long_name='coordinate levels for soil decomposition variables', units='m', ncid=nfid(t))
 
           if(use_fates)then
 
@@ -2631,6 +2725,7 @@ contains
        elseif (mode == 'write') then
           if ( masterproc ) write(iulog, *) ' zsoi:',zsoi
           call ncd_io(varname='levgrnd', data=zsoi, ncid=nfid(t), flag='write')
+          call ncd_io(varname='levsoi', data=zsoi(1:nlevsoi), ncid=nfid(t), flag='write')
           call ncd_io(varname='levlak' , data=zlak, ncid=nfid(t), flag='write')
           if (use_vertsoilc) then
              call ncd_io(varname='levdcmp', data=zsoi, ncid=nfid(t), flag='write')
@@ -3379,7 +3474,7 @@ contains
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use clm_varcon      , only : secspday
     use perf_mod        , only : t_startf, t_stopf
-    use clm_varpar      , only : nlevgrnd
+    use clm_varpar      , only : nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     logical, intent(in) :: rstwr    ! true => write restart file this step
@@ -3412,7 +3507,7 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)

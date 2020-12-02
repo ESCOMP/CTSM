@@ -729,6 +729,11 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 </entry>
 
+<entry id="hist_master_list_file" type="logical" category="history"
+       group="clm_inparm" valid_values="" value=".false.">
+If TRUE, write master field list to separate file for documentation purposes
+</entry>
+
 <entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
        group="clm_inparm" valid_values="A,I,X,M" >
 Per file averaging flag.
@@ -1109,37 +1114,37 @@ If true, this directs the model to collapse the urban landunits to the dominant 
 </entry>
 
 <entry id="toosmall_soil" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the soil landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_crop" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the crop landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_glacier" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the glacier landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_lake" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the lake landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_wetland" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the wetland landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_urban" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the urban landunits. Selecting the value 0 means DO NOTHING. If collapse_urban = .false., the same threshold will apply to all three urban landunits if they are present. If collapse_urban = .true., this threshold will apply to the single collapsed urban landunit if presnet.
 <default>Default: 0</default>
 </entry>
