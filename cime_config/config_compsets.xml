@@ -18,7 +18,7 @@
     ICE  = [CICE, DICE, SICE]
     OCN  = [DOCN, ,AQUAP, SOCN]
     ROF  = [RTM, SROF]
-    GLC  = [CISM1, CISM2]
+    GLC  = [CISM2, SGLC]
     WAV  = [SWAV]
     BGC  = optional BGC scenario
 
