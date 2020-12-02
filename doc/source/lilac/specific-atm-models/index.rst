@@ -8,4 +8,5 @@
    :maxdepth: 2
 
    wrf.rst
+   wrf-nesting.rst
    wrf-tools.rst
