@@ -152,6 +152,7 @@ contains
          cpool(p)              = cpool(p)               * (1._r8 - decay_const * dt)
          xsmrpool(p)           = xsmrpool(p)            * (1._r8 - decay_const * dt)
          if(.not. use_matrixcn)then
+            ! NOTE: Any changes here need to be applied below
             deadcrootc(p)         = deadcrootc(p)          * (1._r8 - decay_const * dt)
             deadcrootc_storage(p) = deadcrootc_storage(p)  * (1._r8 - decay_const * dt)
             deadcrootc_xfer(p)    = deadcrootc_xfer(p)     * (1._r8 - decay_const * dt)
@@ -171,6 +172,8 @@ contains
             livestemc_storage(p)  = livestemc_storage(p)   * (1._r8 - decay_const * dt)
             livestemc_xfer(p)     = livestemc_xfer(p)      * (1._r8 - decay_const * dt)
          else
+            ! Each of these MUST correspond to the code above. Any changes in
+            ! code above need to apply here as well
             matrix_fitransfer(p,ideadcroot_to_iout_fic)   = decay_const
             matrix_fitransfer(p,ideadcrootst_to_iout_fic) = decay_const
             matrix_fitransfer(p,ideadcrootxf_to_iout_fic) = decay_const

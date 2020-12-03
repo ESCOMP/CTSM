@@ -269,6 +269,8 @@ ptch: do fp = 1,num_soilp
 
          ! phenology: transfer growth fluxes
         if(.not. use_matrixcn)then
+           ! NOTE: Any changes that go here MUST be applied to the matrix
+           ! version as well
            cs_veg%leafc_patch(p)           = cs_veg%leafc_patch(p)       + cf_veg%leafc_xfer_to_leafc_patch(p)*dt
            cs_veg%leafc_xfer_patch(p)      = cs_veg%leafc_xfer_patch(p)  - cf_veg%leafc_xfer_to_leafc_patch(p)*dt
            cs_veg%frootc_patch(p)          = cs_veg%frootc_patch(p)      + cf_veg%frootc_xfer_to_frootc_patch(p)*dt
@@ -313,7 +315,10 @@ ptch: do fp = 1,num_soilp
                    + cf_veg%grainc_to_seed_patch(p) * dt
            end if
         else
-           ! NOTE: Other changes for matrix code are in CNPhenology EBK (11/26/2019)
+           ! NOTE: Changes for above that apply for matrix code are in CNPhenology EBK (11/26/2019)
+
+           ! This part below MUST match exactly the code for the non-matrix part
+           ! above!
            if (ivt(p) >= npcropmin) then
               cs_veg%cropseedc_deficit_patch(p) = cs_veg%cropseedc_deficit_patch(p) &
                    - cf_veg%crop_seedc_to_leaf_patch(p) * dt &
