@@ -4,8 +4,8 @@ Originator(s):
 Date: 
 One-line Summary:
 
-Purpose of changes
-------------------
+Purpose and description of changes
+----------------------------------
 
 [Fill this in with details]
 
@@ -73,7 +73,7 @@ Testing summary
 [Remove any lines that don't apply.]
 
  [PASS means all tests PASS; OK means tests PASS other than
-  expected fails, including expected baseline failures.]
+  expected baseline failures.]
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
