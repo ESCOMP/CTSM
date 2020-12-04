@@ -10,17 +10,6 @@ Purpose of changes
 [Fill this in with details]
 
 
-Bugs fixed or introduced
-------------------------
-
-Issues fixed (include CTSM Issue #): [If none, remove this line]
-CIME Issues fixed (include issue #): [If none, remove this line]
-
-Known bugs introduced in this tag (include github issue ID): [If none, remove this line]
-
-Known bugs found since the previous tag (include github issue ID): [If none, remove this line]
-
-
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
 
@@ -37,8 +26,23 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+
+CIME Issues fixed (include issue #):
+
+Known bugs introduced in this tag (include issue #):
+
+Known bugs found since the previous tag (include issue #):
+
+
 Notes of particular relevance for users
 ---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for users (e.g., need to interpolate initial conditions):
 
@@ -48,37 +52,34 @@ Changes made to namelist defaults (e.g., changed parameter values):
 
 Changes to the datasets (e.g., parameter, surface or initial files):
 
-Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+Substantial timing or memory changes:
+[For timing changes, you should at least check the PFS test in the test
+ suite, whether or not you expect timing changes: ensure that its run
+ time has not increased significantly relative to the baseline.]
 
-Notes of particular relevance for developers: (including Code reviews and testing)
+
+Notes of particular relevance for developers:
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing:
 
-CTSM testing:
 
-[... Remove before making master tag.  Available test levels:
+Testing summary
+---------------
+[Remove any lines that don't apply.]
 
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CTSM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
+ [PASS means all tests PASS; OK means tests PASS other than
+  expected fails, including expected baseline failures.]
 
-... ]
-
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
-
-  build-namelist tests:
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
 
     cheyenne - 
 
-  tools-tests (test/tools):
+  tools-tests (test/tools) (if tools have been changed):
 
     cheyenne - 
 
@@ -86,7 +87,7 @@ CTSM testing:
 
     cheyenne - 
 
-  python testing (see instructions in python/README.md; document testing done):
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
     (any machine) - 
 
@@ -124,6 +125,7 @@ Changes answers relative to baseline:
 
 Detailed list of changes
 ------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 
