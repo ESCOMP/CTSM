@@ -68,8 +68,19 @@ Caveats for developers (e.g., code that is duplicated that requires double maint
 Changes to tests or testing:
 
 
-Testing summary
----------------
+Testing summary:
+----------------
+[... Remove before making master tag.  Available test levels:
+
+    a) regular (regular tests on normal machines if CTSM source is modified)
+    c) tools (if tools are modified)
+    d) minimal (for use in rare cases where only a small change with 
+                known behavior is added ... eg. a minor bug fix. This
+		might be to just run the "short" test list, or to run
+		a single test. Whatever makes sense for the particular case.)
+    e) doc (no source testing required)
+...]
+
 [Remove any lines that don't apply.]
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
@@ -82,7 +93,8 @@ Testing summary
 
     cheyenne - 
 
-  PTCLM testing (tools/shared/PTCLM/test):
+  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
+  (PTCLM is being deprecated, so we only expect this to be done on occasion)
 
     cheyenne - 
 
