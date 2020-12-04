@@ -72,8 +72,7 @@ Testing summary
 ---------------
 [Remove any lines that don't apply.]
 
- [PASS means all tests PASS; OK means tests PASS other than
-  expected baseline failures.]
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
