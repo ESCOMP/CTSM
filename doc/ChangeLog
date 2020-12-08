@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev018
 Originator(s):  slevis (Samuel Levis,,303-665-1310)
-Date:  Sat Nov 28 15:06:12 MST 2020
+Date:  Tue Dec  8 11:19:02 MST 2020
 One-line Summary: Add ACTIVE (T/F) column to master hist fields table and alphabetize
 
 Purpose of changes
@@ -9,7 +9,6 @@ Purpose of changes
 
  For convenience, added an ACTIVE column to the master fields table and
  alphabetized.
-
 
 Bugs fixed or introduced
 ------------------------
@@ -83,8 +82,8 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- WAIT
-    izumi ------- WAIT
+    cheyenne ---- PASS
+    izumi ------- PASS
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 

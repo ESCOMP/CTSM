@@ -1000,6 +1000,8 @@ contains
   subroutine sort_hist_list(t, n_fields, hist_list)
 
     ! !DESCRIPTION:
+    ! Sort list of history variable names hist_list in alphabetical
+    ! order.
 
     ! !ARGUMENTS:
     integer, intent(in) :: t  ! tape index
