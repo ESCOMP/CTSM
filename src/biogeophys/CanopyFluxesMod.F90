@@ -680,10 +680,9 @@ contains
       end do
 
       ! calculate biomass heat capacities
-      do f = 1, fn
-         p = filterp(f)
-
-         if(use_biomass_heat_storage) then
+      if(use_biomass_heat_storage) then
+bioms:   do f = 1, fn
+            p = filterp(f)
 
             ! fraction of stem receiving incoming radiation
             frac_rad_abs_by_stem(p) = (esai(p))/(elai(p)+esai(p))
@@ -750,18 +749,22 @@ contains
 
             ! resistance between internal stem temperature and canopy air 
             rstem(p) = rstem_per_dbh(patch%itype(p))*dbh(p)
-         else
-            ! use_biomass_heat_storage .false.
-            frac_rad_abs_by_stem(p)   = 0._r8
-            sa_stem(p) = 0._r8
-            sa_leaf(p) = (elai(p)+esai(p))
-            sa_internal(p) = 0._r8
-            cp_leaf(p)  = 0._r8
-            cp_stem(p) = 0._r8
-            rstem(p)  = 0._r8
-         endif
          
-      enddo
+         enddo bioms
+      else
+        ! Otherwise set biomass heat storage terms to zero
+        do f = 1, fn
+            p = filterp(f)
+            sa_leaf(p)              = (elai(p)+esai(p))
+            frac_rad_abs_by_stem(p) = 0._r8
+            sa_stem(p)              = 0._r8
+            sa_internal(p)          = 0._r8
+            cp_leaf(p)              = 0._r8
+            cp_stem(p)              = 0._r8
+            rstem(p)                = 0._r8
+        end do
+      end if
+
 
       ! calculate daylength control for Vcmax
       do f = 1, fn
