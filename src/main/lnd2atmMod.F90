@@ -405,10 +405,10 @@ contains
 
     call c2g( bounds, &
          water_inst%waterbalancebulk_inst%endwb_col(bounds%begc:bounds%endc), &
-         water_inst%waterdiagnosticbulk_inst%tws_grc  (bounds%begg:bounds%endg), &
+         water_inst%waterbalancebulk_inst%endwb_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     do g = bounds%begg, bounds%endg
-       water_inst%waterdiagnosticbulk_inst%tws_grc(g) = water_inst%waterdiagnosticbulk_inst%tws_grc(g) + water_inst%wateratm2lndbulk_inst%volr_grc(g) / grc%area(g) * 1.e-3_r8
+       water_inst%waterdiagnosticbulk_inst%tws_grc(g) = water_inst%waterbalancebulk_inst%endwb_grc(g) + water_inst%wateratm2lndbulk_inst%volr_grc(g) / grc%area(g) * 1.e-3_r8
     enddo
 
   end subroutine lnd2atm

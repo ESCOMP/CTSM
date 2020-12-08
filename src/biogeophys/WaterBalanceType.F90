@@ -36,10 +36,13 @@ module WaterBalanceType
 
      ! Balance Checks
 
-     real(r8), pointer :: begwb_col              (:)   ! water mass begining of the time step
-     real(r8), pointer :: endwb_col              (:)   ! water mass end of the time step
+     real(r8), pointer :: begwb_grc              (:)   ! grid cell-level water mass begining of the time step
+     real(r8), pointer :: endwb_grc              (:)   ! grid cell-level water mass end of the time step
+     real(r8), pointer :: begwb_col              (:)   ! column-level water mass begining of the time step
+     real(r8), pointer :: endwb_col              (:)   ! column-level water mass end of the time step
      real(r8), pointer :: errh2o_patch           (:)   ! water conservation error (mm H2O)
-     real(r8), pointer :: errh2o_col             (:)   ! water conservation error (mm H2O)
+     real(r8), pointer :: errh2o_col             (:)   ! column-level water conservation error (mm H2O)
+     real(r8), pointer :: errh2o_grc             (:)   ! grid cell-level water conservation error (mm H2O)
      real(r8), pointer :: errh2osno_col          (:)   ! snow water conservation error(mm H2O)
 
    contains
@@ -112,6 +115,12 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
+    call AllocateVar1d(var = this%begwb_grc, name = 'begwb_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+    call AllocateVar1d(var = this%endwb_grc, name = 'endwb_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
     call AllocateVar1d(var = this%begwb_col, name = 'begwb_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -124,6 +133,9 @@ contains
     call AllocateVar1d(var = this%errh2o_col, name = 'errh2o_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%errh2o_grc, name = 'errh2o_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
     call AllocateVar1d(var = this%errh2osno_col, name = 'errh2osno_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
