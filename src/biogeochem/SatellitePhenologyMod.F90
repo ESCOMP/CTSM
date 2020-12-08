@@ -4,8 +4,8 @@ module SatellitePhenologyMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation). 
-  ! Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN) 
+  ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation).
+  ! Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN)
   ! so that DryDeposition code can get estimates of LAI differences between months.
   !
   ! !USES:
@@ -18,20 +18,20 @@ module SatellitePhenologyMod
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use clm_varctl      , only : scmlat,scmlon,single_column
-  use clm_varctl      , only : iulog, use_lai_streams
+  use clm_varctl      , only : iulog, use_lai_streams, inst_name
   use clm_varcon      , only : grlnd
   use controlMod      , only : NLFilename
   use decompMod       , only : gsmap_lnd_gdc2glo
   use domainMod       , only : ldomain
   use fileutils       , only : getavu, relavu
-  use PatchType       , only : patch                
+  use PatchType       , only : patch
   use CanopyStateType , only : canopystate_type
   use WaterDiagnosticBulkType  , only : waterdiagnosticbulk_type
   use perf_mod        , only : t_startf, t_stopf
   use spmdMod         , only : masterproc
   use spmdMod         , only : mpicom, comp_id
   use mct_mod
-  use ncdio_pio   
+  use ncdio_pio
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -66,7 +66,7 @@ module SatellitePhenologyMod
   !-----------------------------------------------------------------------
 
 contains
-  
+
   !-----------------------------------------------------------------------
   !
   ! lai_init
@@ -78,7 +78,6 @@ contains
     !
     !
     ! !USES:
-    use clm_varctl       , only : inst_name
     use clm_time_manager , only : get_calendar
     use ncdio_pio        , only : pio_subsystem
     use shr_pio_mod      , only : shr_pio_getiotype
@@ -96,10 +95,10 @@ contains
     integer            :: i                          ! index
     integer            :: stream_year_first_lai      ! first year in Lai stream to use
     integer            :: stream_year_last_lai       ! last year in Lai stream to use
-    integer            :: model_year_align_lai       ! align stream_year_first_lai with 
+    integer            :: model_year_align_lai       ! align stream_year_first_lai with
     integer            :: nu_nml                     ! unit for namelist file
     integer            :: nml_error                  ! namelist i/o error flag
-    type(mct_ggrid)    :: dom_clm                    ! domain information 
+    type(mct_ggrid)    :: dom_clm                    ! domain information
     character(len=CL)  :: stream_fldFileName_lai     ! lai stream filename to read
     character(len=CL)  :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
     character(len=CL)  :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
@@ -154,9 +153,9 @@ contains
 
        write(iulog,*) ' '
        write(iulog,*) 'lai_stream settings:'
-       write(iulog,*) '  stream_year_first_lai  = ',stream_year_first_lai  
-       write(iulog,*) '  stream_year_last_lai   = ',stream_year_last_lai   
-       write(iulog,*) '  model_year_align_lai   = ',model_year_align_lai   
+       write(iulog,*) '  stream_year_first_lai  = ',stream_year_first_lai
+       write(iulog,*) '  stream_year_last_lai   = ',stream_year_last_lai
+       write(iulog,*) '  model_year_align_lai   = ',model_year_align_lai
        write(iulog,*) '  stream_fldFileName_lai = ',trim(stream_fldFileName_lai)
        write(iulog,*) '  lai_tintalgo           = ',trim(lai_tintalgo)
 
@@ -170,8 +169,8 @@ contains
     fldList = shr_string_listCreateField( numLaiFields, laiString )
 
     call shr_strdata_create(sdat_lai,name="laidyn",    &
-         pio_subsystem=pio_subsystem,                  & 
-         pio_iotype=shr_pio_getiotype(inst_name),      &
+         pio_subsystem=pio_subsystem,                  &
+         pio_iotype=shr_pio_getiotype(inst_name),          &
          mpicom=mpicom, compid=comp_id,                &
          gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,       &
          nxg=ldomain%ni, nyg=ldomain%nj,               &
@@ -180,10 +179,10 @@ contains
          yearAlign=model_year_align_lai,               &
          offset=0,                                     &
          domFilePath='',                               &
-         domFileName=trim(stream_fldFileName_lai),  &
+         domFileName=trim(stream_fldFileName_lai),     &
          domTvarName='time',                           &
          domXvarName='lon' ,                           &
-         domYvarName='lat' ,                           &  
+         domYvarName='lat' ,                           &
          domAreaName='area',                           &
          domMaskName='mask',                           &
          filePath='',                                  &
@@ -216,7 +215,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type)      , intent(in)    :: bounds                          
+    type(bounds_type)      , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: g, ig   ! Indices
@@ -258,7 +257,7 @@ contains
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type)      , intent(in)    :: bounds                          
+    type(bounds_type)      , intent(in)    :: bounds
     type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
@@ -299,7 +298,7 @@ contains
     use shr_infnan_mod, only : nan => shr_infnan_nan, assignment(=)
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: ier    ! error code
@@ -342,7 +341,7 @@ contains
     use pftconMod, only : noveg, nbrdlf_dcd_brl_shrub
     !
     ! !ARGUMENTS:
-    type(bounds_type)      , intent(in)    :: bounds                          
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: num_nolakep                               ! number of column non-lake points in patch filter
     integer                , intent(in)    :: filter_nolakep(bounds%endp-bounds%begp+1) ! patch filter for non-lake points
     type(waterdiagnosticbulk_type)  , intent(in)    :: waterdiagnosticbulk_inst
@@ -355,14 +354,14 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                           &
-         frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   ,          & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)       
-         snow_depth         => waterdiagnosticbulk_inst%snow_depth_col ,          & ! Input:  [real(r8) (:) ] snow height (m)                                                       
-         tlai               => canopystate_inst%tlai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow 
+         frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   ,          & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
+         snow_depth         => waterdiagnosticbulk_inst%snow_depth_col ,          & ! Input:  [real(r8) (:) ] snow height (m)
+         tlai               => canopystate_inst%tlai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow
          tsai               => canopystate_inst%tsai_patch    ,          & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow
          elai               => canopystate_inst%elai_patch    ,          & ! Output: [real(r8) (:) ] one-sided leaf area index with burying by snow
          esai               => canopystate_inst%esai_patch    ,          & ! Output: [real(r8) (:) ] one-sided stem area index with burying by snow
-         htop               => canopystate_inst%htop_patch    ,          & ! Output: [real(r8) (:) ] canopy top (m)                           
-         hbot               => canopystate_inst%hbot_patch    ,          & ! Output: [real(r8) (:) ] canopy bottom (m)                           
+         htop               => canopystate_inst%htop_patch    ,          & ! Output: [real(r8) (:) ] canopy top (m)
+         hbot               => canopystate_inst%hbot_patch    ,          & ! Output: [real(r8) (:) ] canopy bottom (m)
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
          )
 
@@ -403,19 +402,20 @@ contains
          ! are less than 0.05, set equal to zero to prevent numerical
          ! problems associated with very small lai and sai.
 
-         ! snow burial fraction for short vegetation (e.g. grasses) as in
-         ! Wang and Zeng, 2007. 
+         ! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height
+         ! accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
+
+         ! NOTE: The following snow burial code is duplicated in CNVegStructUpdateMod.
+         ! Changes in one place should be accompanied by similar changes in the other.
 
          if (patch%itype(p) > noveg .and. patch%itype(p) <= nbrdlf_dcd_brl_shrub ) then
             ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
             fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
          else
-            fb = 1._r8 - max(min(snow_depth(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
-            !depth of snow required for complete burial of grasses
+            fb = 1._r8 - (max(min(snow_depth(c),max(0.05,htop(p)*0.8_r8)),0._r8)/(max(0.05,htop(p)*0.8_r8)))
          endif
 
          ! area weight by snow covered fraction
-
          elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
          esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
          if (elai(p) < 0.05_r8) elai(p) = 0._r8
@@ -446,7 +446,7 @@ contains
     use clm_time_manager, only : get_curr_date, get_step_size_real, get_nstep
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     type(canopystate_type), intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
@@ -504,12 +504,12 @@ contains
     use shr_scam_mod, only : shr_scam_getCloseLatLon
     !
     ! !ARGUMENTS:
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     type(canopystate_type), intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid             ! netcdf id
-    real(r8), pointer :: annlai(:,:)      ! 12 months of monthly lai from input data set 
+    real(r8), pointer :: annlai(:,:)      ! 12 months of monthly lai from input data set
     real(r8), pointer :: mlai(:,:)        ! lai read from input files
     real(r8):: closelat,closelon          ! single column vars
     integer :: ier                        ! error code
@@ -526,13 +526,13 @@ contains
     character(len=32) :: subname = 'readAnnualVegetation'
     !-----------------------------------------------------------------------
 
-    annlai    => canopystate_inst%annlai_patch 
+    annlai    => canopystate_inst%annlai_patch
 
     ! Determine necessary indices
 
     allocate(mlai(bounds%begg:bounds%endg,0:maxveg), stat=ier)
     if (ier /= 0) then
-       write(iulog,*)subname, 'allocation error ' 
+       write(iulog,*)subname, 'allocation error '
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -551,7 +551,7 @@ contains
        write(iulog,*)trim(subname), 'ldomain%ns,ns,= ',ldomain%ns,ns
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    call check_dim(ncid, 'lsmpft', maxsoil_patches)
+    call check_dim_size(ncid, 'lsmpft', maxsoil_patches)
 
     if (single_column) then
        call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
@@ -578,7 +578,7 @@ contains
           else                       !! non-vegetated pft
              annlai(k,p) = 0._r8
           end if
-       end do   ! end of loop over patches  
+       end do   ! end of loop over patches
 
     enddo ! months loop
 
@@ -605,7 +605,7 @@ contains
     use netcdf
     !
     ! !ARGUMENTS:
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     character(len=*)  , intent(in) :: fveg      ! file with monthly vegetation data
     integer           , intent(in) :: months(2) ! months to be interpolated (1 to 12)
     type(canopystate_type), intent(inout) :: canopystate_inst

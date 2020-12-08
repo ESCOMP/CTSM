@@ -109,12 +109,14 @@ def _main_func():
             expect( ((compname == "clm") or (compname == "ctsm")), "Unexpected COMP_LND name: %s" % (compname))
 
             paths = [os.path.join(caseroot,"SourceMods","src."+compname),
+                     os.path.join(lnd_root,"src","cpl",driver),
                      os.path.join(lnd_root,"src","main"),
                      os.path.join(lnd_root,"src","biogeophys"),
                      os.path.join(lnd_root,"src","biogeochem"),
                      os.path.join(lnd_root,"src","soilbiogeochem"),
                      os.path.join(lnd_root,"src","dyn_subgrid"),
                      os.path.join(lnd_root,"src","init_interp"),
+                     os.path.join(lnd_root,"src","self_tests"),
                      os.path.join(lnd_root,"src","fates"),
                      os.path.join(lnd_root,"src","fates","main"),
                      os.path.join(lnd_root,"src","fates","biogeophys"),
@@ -123,8 +125,7 @@ def _main_func():
                      os.path.join(lnd_root,"src","fates","parteh"),
                      os.path.join(lnd_root,"src","utils"),
                      os.path.join(lnd_root,"src","cpl"),
-                     os.path.join(lnd_root,"src","cpl","utils"),
-                     os.path.join(lnd_root,"src","cpl",driver)]
+                     os.path.join(lnd_root,"src","cpl","utils")]
 
             if lilac_mode == 'on':
                 paths.append(os.path.join(lnd_root,"lilac","src"))

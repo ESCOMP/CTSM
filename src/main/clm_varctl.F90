@@ -53,6 +53,9 @@ module clm_varctl
   !true => no valid land points -- do NOT run
   logical, public :: noland = .false.                                    
 
+  ! true => run tests of ncdio_pio
+  logical, public :: for_testing_run_ncdiopio_tests = .false.
+
   ! Hostname of machine running on
   character(len=256), public :: hostname = ' '                           
 
@@ -349,6 +352,9 @@ module clm_varctl
   ! moved hist_wrtch4diag from histFileMod.F90 to here - caused compiler error with intel
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
+
+  ! namelist: write history master list to a file for use in documentation
+  logical, public :: hist_master_list_file = .false.
 
   !----------------------------------------------------------
   ! FATES

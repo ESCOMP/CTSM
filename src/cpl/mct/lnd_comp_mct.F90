@@ -74,7 +74,7 @@ contains
     character(len=*), optional, intent(in)    :: NLFilename       ! Namelist filename to read
     !
     ! !LOCAL VARIABLES:
-    integer                          :: LNDID	     ! Land identifyer
+    integer                          :: LNDID        ! Land identifyer
     integer                          :: mpicom_lnd   ! MPI communicator
     type(mct_gsMap),         pointer :: GSMap_lnd    ! Land model MCT GS map
     type(mct_gGrid),         pointer :: dom_l        ! Land model domain
@@ -130,7 +130,6 @@ contains
     inst_name   = seq_comm_name(LNDID)
     inst_index  = seq_comm_inst(LNDID)
     inst_suffix = seq_comm_suffix(LNDID)
-
     ! Initialize io log unit
 
     call shr_file_getLogUnit (shrlogunit)
@@ -430,7 +429,7 @@ contains
        nstep = get_nstep()
        caldayp1 = get_curr_calday(offset=dtime)
        if (nstep == 0) then
-	  doalb = .false.
+          doalb = .false.
        else if (nstep == 1) then
           doalb = (abs(nextsw_cday- caldayp1) < 1.e-10_r8)
        else

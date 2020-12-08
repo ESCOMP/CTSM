@@ -209,17 +209,34 @@ module histFileMod
      integer :: no_snow_behavior               ! for multi-layer snow fields, flag saying how to treat times when a given snow layer is absent
   end type field_info
 
-  type master_entry
-     type (field_info)  :: field               ! field information
-     logical            :: actflag(max_tapes)  ! active/inactive flag
-     character(len=avgflag_strlen) :: avgflag(max_tapes)  ! time averaging flag ("X","A","M","I","SUM")
+  type, abstract :: entry_base
+     type (field_info) :: field                ! field information
+  contains
+     procedure(copy_entry_interface), deferred :: copy
+  end type entry_base
+
+  abstract interface
+     subroutine copy_entry_interface(this, other)
+        ! set this = other
+        import :: entry_base
+        class(entry_base), intent(out) :: this
+        class(entry_base), intent(in) :: other
+     end subroutine copy_entry_interface
+  end interface
+
+  type, extends(entry_base) :: master_entry
+     logical :: actflag(max_tapes)  ! active/inactive flag
+     character(len=avgflag_strlen) :: avgflag(max_tapes)  ! time averaging flag
+  contains
+     procedure :: copy => copy_master_entry
   end type master_entry
 
-  type history_entry
-     type (field_info) :: field                ! field information
-     character(len=avgflag_strlen) :: avgflag  ! time averaging flag
+  type, extends(entry_base) :: history_entry
+     character(len=avgflag_strlen) :: avgflag  ! time averaging flag ("X","A","M","I","SUM")
      real(r8), pointer :: hbuf(:,:)            ! history buffer (dimensions: dim1d x num2d)
      integer , pointer :: nacs(:,:)            ! accumulation counter (dimensions: dim1d x num2d)
+  contains
+     procedure :: copy => copy_history_entry
   end type history_entry
 
   type history_tape
@@ -301,10 +318,21 @@ contains
     ! !DESCRIPTION:
     ! Print summary of master field list.
     !
+    ! !USES:
+    use clm_varctl, only: hist_master_list_file
+    use fileutils, only: getavu, relavu
+    !
     ! !ARGUMENTS:
     !
     ! !LOCAL VARIABLES:
-    integer nf
+    integer, parameter :: ncol = 5  ! number of table columns
+    integer nf, i, j  ! do-loop counters
+    integer master_list_file  ! file unit number
+    integer width_col(ncol)  ! widths of table columns
+    integer width_col_sum  ! widths of columns summed, including spaces
+    character(len=3) str_width_col(ncol)  ! string version of width_col
+    character(len=3) str_w_col_sum  ! string version of width_col_sum
+    character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
 
@@ -316,6 +344,98 @@ contains
 9000      format (i5,1x,a32,1x,a16)
        end do
        call shr_sys_flush(iulog)
+    end if
+
+    ! Print master field list in separate text file when namelist
+    ! variable requests it. Text file is formatted in the .rst
+    ! (reStructuredText) format for easy introduction of the file to
+    ! the CTSM's web-based documentation.
+
+    ! First sort the list to be in alphabetical order
+    call sort_hist_list(1, nfmaster, masterlist)
+
+    if (masterproc .and. hist_master_list_file) then
+       ! Hardwired table column widths to fit the table on a computer
+       ! screen. Some strings will be truncated as a result of the
+       ! current choices (4, 35, 94, 65, 7). In sphinx (ie the web-based
+       ! documentation), text that has not been truncated will wrap
+       ! around in the available space.
+       width_col(1) = 4  ! column that shows the variable number, nf
+       width_col(2) = 35  ! variable name column
+       width_col(3) = 94  ! long description column
+       width_col(4) = 65  ! units column
+       width_col(5) = 7  ! active (T or F) column
+       width_col_sum = sum(width_col) + ncol - 1  ! sum of widths & blank spaces
+
+       ! Convert integer widths to strings for use in format statements
+       ! These write statements are not outputting to files
+       do i = 1, ncol
+          write(str_width_col(i),'(i0)') width_col(i)
+       end do
+       write(str_w_col_sum,'(i0)') width_col_sum
+
+       ! Open master_list_file
+       master_list_file = getavu()  ! get next available file unit number
+       open(unit = master_list_file, file = 'master_list_file.rst',  &
+            status = 'new', action = 'write', form = 'formatted')
+
+       ! File title
+       fmt_txt = '(a)'
+       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,fmt_txt) 'CTSM History Fields'
+       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,*)
+
+       ! Table header
+       ! Concatenate strings needed in format statement
+       do i = 1, ncol
+          fmt_txt = '('//str_width_col(i)//'a,x)'
+          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+       end do
+       write(master_list_file,*)  ! next write statement will now appear in new line
+
+       ! Table title
+       fmt_txt = '(a)'
+       write(master_list_file,fmt_txt) 'CTSM History Fields'
+
+       ! Sub-header
+       ! Concatenate strings needed in format statement
+       fmt_txt = '('//str_w_col_sum//'a)'
+       write(master_list_file,fmt_txt) ('-', i=1, width_col_sum)
+       ! Concatenate strings needed in format statement
+       fmt_txt = '(a'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',x,a'//str_width_col(5)//')'
+       write(master_list_file,fmt_txt) '#', 'Variable Name',  &
+                                    'Long Description', 'Units', 'Active?'
+
+       ! End header, same as header
+       ! Concatenate strings needed in format statement
+       do i = 1, ncol
+          fmt_txt = '('//str_width_col(i)//'a,x)'
+          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+       end do
+       write(master_list_file,*)  ! next write statement will now appear in new line
+
+       ! Main table
+       ! Concatenate strings needed in format statement
+       fmt_txt = '(i'//str_width_col(1)//',x,a'//str_width_col(2)//',x,a'//str_width_col(3)//',x,a'//str_width_col(4)//',l'//str_width_col(5)//')'
+       do nf = 1,nfmaster
+          write(master_list_file,fmt_txt) nf,  &
+             masterlist(nf)%field%name,  &
+             masterlist(nf)%field%long_name,  &
+             masterlist(nf)%field%units,  &
+             masterlist(nf)%actflag(1)
+       end do
+
+       ! Table footer, same as header
+       ! Concatenate strings needed in format statement
+       do i = 1, ncol
+          fmt_txt = '('//str_width_col(i)//'a,x)'
+          write(master_list_file,fmt_txt,advance='no') ('=', j=1,width_col(i))
+       end do
+
+       call shr_sys_flush(master_list_file)
+       close(unit = master_list_file)
+       call relavu(master_list_file)  ! close and release file unit number
     end if
 
   end subroutine hist_printflds
@@ -647,7 +767,6 @@ contains
     character(len=avgflag_strlen) :: avgflag ! averaging flag
     character(len=1)  :: prec_acc           ! history buffer precision flag
     character(len=1)  :: prec_wrt           ! history buffer write precision flag
-    type (history_entry) :: tmp             ! temporary used for swapping
     character(len=*),parameter :: subname = 'htapes_fieldlist'
     !-----------------------------------------------------------------------
 
@@ -761,25 +880,7 @@ contains
 
        ! Specification of tape contents now complete.
        ! Sort each list of active entries
-
-       do f = tape(t)%nflds-1,1,-1
-          do ff = 1,f
-             if (tape(t)%hlist(ff)%field%name > tape(t)%hlist(ff+1)%field%name) then
-
-                tmp = tape(t)%hlist(ff)
-                tape(t)%hlist(ff  ) = tape(t)%hlist(ff+1)
-                tape(t)%hlist(ff+1) = tmp
-
-             else if (tape(t)%hlist(ff)%field%name == tape(t)%hlist(ff+1)%field%name) then
-
-                write(iulog,*) trim(subname),' ERROR: Duplicate field ', &
-                   tape(t)%hlist(ff)%field%name, &
-                   't,ff,name=',t,ff,tape(t)%hlist(ff+1)%field%name
-                call endrun(msg=errMsg(sourcefile, __LINE__))
-
-             end if
-          end do
-       end do
+       call sort_hist_list(t, tape(t)%nflds, tape(t)%hlist)
 
        if (masterproc) then
           if (tape(t)%nflds > 0) then
@@ -856,6 +957,91 @@ contains
 
 
   end subroutine htapes_fieldlist
+
+  !-----------------------------------------------------------------------
+  subroutine copy_master_entry(this, other)
+    ! set this = other
+    class(master_entry), intent(out) :: this
+    class(entry_base), intent(in) :: other
+
+    select type(this)
+    type is (master_entry)
+       select type(other)
+       type is (master_entry)
+          this = other
+       class default
+          call endrun('Unexpected type of "other" in copy_master_entry')
+       end select
+    class default
+       call endrun('Unexpected type of "this" in copy_master_entry')
+    end select
+  end subroutine copy_master_entry
+
+  !-----------------------------------------------------------------------
+  subroutine copy_history_entry(this, other)
+    ! set this = other
+    class(history_entry), intent(out) :: this
+    class(entry_base), intent(in) :: other
+
+    select type(this)
+    type is (history_entry)
+       select type(other)
+       type is (history_entry)
+          this = other
+       class default
+          call endrun('Unexpected type of "other" in copy_history_entry')
+       end select
+    class default
+       call endrun('Unexpected type of "this" in copy_history_entry')
+    end select
+  end subroutine copy_history_entry
+
+  !-----------------------------------------------------------------------
+  subroutine sort_hist_list(t, n_fields, hist_list)
+
+    ! !DESCRIPTION:
+    ! Sort list of history variable names hist_list in alphabetical
+    ! order.
+
+    ! !ARGUMENTS:
+    integer, intent(in) :: t  ! tape index
+    integer, intent(in) :: n_fields  ! number of fields
+    class(entry_base), intent(inout) :: hist_list(:)
+
+    ! !LOCAL VARIABLES:
+    integer :: f, ff  ! field indices
+    class(entry_base), allocatable :: tmp
+
+    character(len=*), parameter :: subname = 'sort_hist_list'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_FL(size(hist_list) >= n_fields, sourcefile, __LINE__)
+
+    if (n_fields < 2) then
+       return
+    end if
+
+    allocate(tmp, source = hist_list(1))
+
+    do f = n_fields-1, 1, -1
+       do ff = 1, f
+          if (hist_list(ff)%field%name > hist_list(ff+1)%field%name) then
+
+             call tmp%copy(hist_list(ff))
+             call hist_list(ff  )%copy(hist_list(ff+1))
+             call hist_list(ff+1)%copy(tmp)
+
+          else if (hist_list(ff)%field%name == hist_list(ff+1)%field%name) then
+
+             write(iulog,*) trim(subname),' ERROR: Duplicate field ', &
+                hist_list(ff)%field%name, &
+                't,ff,name=',t,ff,hist_list(ff+1)%field%name
+             call endrun(msg=errMsg(sourcefile, __LINE__))
+          end if
+       end do
+    end do
+
+  end subroutine sort_hist_list
 
   !-----------------------------------------------------------------------
   logical function is_mapping_upto_subgrid( type1d, type1d_out ) result ( mapping)
@@ -1895,7 +2081,7 @@ contains
     ! wrapper calls to define the history file contents.
     !
     ! !USES:
-    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, numrad, nlevcan, nvegwcs,nlevsoi
+    use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
@@ -1924,7 +2110,6 @@ contains
     integer :: numl                ! total number of landunits across all processors
     integer :: numg                ! total number of gridcells across all processors
     integer :: numa                ! total number of atm cells across all processors
-    logical :: avoid_pnetcdf       ! whether we should avoid using pnetcdf
     logical :: lhistrest           ! local history restart flag
     type(file_desc_t), pointer :: lnfid     ! local file id
     character(len=  8) :: curdate  ! current date
@@ -1954,17 +2139,6 @@ contains
        lnfid => nfid(t)
     endif
 
-    ! BUG(wjs, 2014-10-20, bugz 1730) Workaround for
-    ! http://bugs.cgd.ucar.edu/show_bug.cgi?id=1730
-    ! - 1-d hist files have problems with pnetcdf. A better workaround in terms of
-    ! performance is to keep pnetcdf, but set PIO_BUFFER_SIZE_LIMIT=0, but that can't be
-    ! done on a per-file basis.
-    if (.not. tape(t)%dov2xy) then
-       avoid_pnetcdf = .true.
-    else
-       avoid_pnetcdf = .false.
-    end if
-
     ! Create new netCDF file. It will be in define mode
 
     if ( .not. lhistrest )then
@@ -1973,7 +2147,7 @@ contains
                                       trim(locfnh(t))
           call shr_sys_flush(iulog)
        end if
-       call ncd_pio_createfile(lnfid, trim(locfnh(t)), avoid_pnetcdf=avoid_pnetcdf)
+       call ncd_pio_createfile(lnfid, trim(locfnh(t)))
        call ncd_putatt(lnfid, ncd_global, 'title', 'CLM History file information' )
        call ncd_putatt(lnfid, ncd_global, 'comment', &
           "NOTE: None of the variables are weighted by land fraction!" )
@@ -1983,7 +2157,7 @@ contains
                                       trim(locfnhr(t))
           call shr_sys_flush(iulog)
        end if
-       call ncd_pio_createfile(lnfid, trim(locfnhr(t)), avoid_pnetcdf=avoid_pnetcdf)
+       call ncd_pio_createfile(lnfid, trim(locfnhr(t)))
        call ncd_putatt(lnfid, ncd_global, 'title', &
           'CLM Restart History information, required to continue a simulation' )
        call ncd_putatt(lnfid, ncd_global, 'comment', &
@@ -2042,6 +2216,7 @@ contains
     if (nlevurb > 0) then
        call ncd_defdim(lnfid, 'levurb' , nlevurb, dimid)
     end if
+    call ncd_defdim(lnfid, 'levmaxurbgrnd' , nlevmaxurbgrnd, dimid)
     call ncd_defdim(lnfid, 'levlak' , nlevlak, dimid)
     call ncd_defdim(lnfid, 'numrad' , numrad , dimid)
     call ncd_defdim(lnfid, 'levsno' , nlevsno , dimid)
@@ -2227,7 +2402,7 @@ contains
     !
     ! !USES:
     use subgridAveMod  , only : c2g
-    use clm_varpar     , only : nlevgrnd ,nlevlak
+    use clm_varpar     , only : nlevgrnd ,nlevlak, nlevmaxurbgrnd
     use shr_string_mod , only : shr_string_listAppend
     use domainMod      , only : ldomain
     !
@@ -2269,7 +2444,7 @@ contains
                                                       /)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
@@ -2494,6 +2669,7 @@ contains
     ! contents.
     !
     ! !USES:
+    use clm_varpar      , only : nlevsoi
     use clm_varcon      , only : zsoi, zlak, secspday, isecspday, isecsphr, isecspmin
     use domainMod       , only : ldomain, lon1d, lat1d
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time
@@ -2573,12 +2749,15 @@ contains
        if (mode == 'define') then
           call ncd_defvar(varname='levgrnd', xtype=tape(t)%ncprec, &
                dim1name='levgrnd', &
-               long_name='coordinate soil levels', units='m', ncid=nfid(t))
+               long_name='coordinate ground levels', units='m', ncid=nfid(t))
+          call ncd_defvar(varname='levsoi', xtype=tape(t)%ncprec, &
+               dim1name='levsoi', &
+               long_name='coordinate soil levels (equivalent to top nlevsoi levels of levgrnd)', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levlak', xtype=tape(t)%ncprec, &
                dim1name='levlak', &
                long_name='coordinate lake levels', units='m', ncid=nfid(t))
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
-               long_name='coordinate soil levels', units='m', ncid=nfid(t))
+               long_name='coordinate levels for soil decomposition variables', units='m', ncid=nfid(t))
 
           if(use_fates)then
 
@@ -2631,6 +2810,7 @@ contains
        elseif (mode == 'write') then
           if ( masterproc ) write(iulog, *) ' zsoi:',zsoi
           call ncd_io(varname='levgrnd', data=zsoi, ncid=nfid(t), flag='write')
+          call ncd_io(varname='levsoi', data=zsoi(1:nlevsoi), ncid=nfid(t), flag='write')
           call ncd_io(varname='levlak' , data=zlak, ncid=nfid(t), flag='write')
           if (use_vertsoilc) then
              call ncd_io(varname='levdcmp', data=zsoi, ncid=nfid(t), flag='write')
@@ -3379,7 +3559,7 @@ contains
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use clm_varcon      , only : secspday
     use perf_mod        , only : t_startf, t_stopf
-    use clm_varpar      , only : nlevgrnd
+    use clm_varpar      , only : nlevgrnd, nlevmaxurbgrnd
     !
     ! !ARGUMENTS:
     logical, intent(in) :: rstwr    ! true => write restart file this step
@@ -3412,7 +3592,7 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)

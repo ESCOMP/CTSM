@@ -17,9 +17,9 @@ module surfrdMod
   use clm_varctl      , only : use_cndv, use_crop
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
-  use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
+  use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
   use pio
-  use spmdMod                         
+  use spmdMod
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -53,7 +53,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Read the surface dataset grid related information:
-    ! This is the first routine called by clm_initialize 
+    ! This is the first routine called by clm_initialize
     ! NO DOMAIN DECOMPOSITION  HAS BEEN SET YET
     !
     ! !USES:
@@ -61,17 +61,16 @@ contains
     !
     ! !ARGUMENTS:
     character(len=*), intent(in)    :: filename  ! grid filename
-    integer         , pointer       :: mask(:)   ! grid mask 
+    integer         , pointer       :: mask(:)   ! grid mask
     integer         , intent(out)   :: ni, nj    ! global grid sizes
     !
     ! !LOCAL VARIABLES:
     logical :: isgrid2d
     integer :: dimid,varid         ! netCDF id's
     integer :: ns                  ! size of grid on file
-    integer :: n,i,j               ! index 
+    integer :: n,i,j               ! index
     integer :: ier                 ! error status
     type(file_desc_t)  :: ncid     ! netcdf id
-    type(var_desc_t)   :: vardesc  ! variable descriptor
     character(len=256) :: varname  ! variable name
     character(len=256) :: locfn    ! local file name
     logical :: readvar             ! read variable in or not
@@ -106,7 +105,7 @@ contains
 
     if (isgrid2d) then
        allocate(idata2d(ni,nj))
-       idata2d(:,:) = 1	
+       idata2d(:,:) = 1
        call ncd_io(ncid=ncid, varname='LANDMASK', data=idata2d, flag='read', readvar=readvar)
        if (.not. readvar) then
           call ncd_io(ncid=ncid, varname='mask', data=idata2d, flag='read', readvar=readvar)
@@ -114,7 +113,7 @@ contains
        if (readvar) then
           do j = 1,nj
           do i = 1,ni
-             n = (j-1)*ni + i	
+             n = (j-1)*ni + i
              mask(n) = idata2d(i,j)
           enddo
           enddo
@@ -147,21 +146,20 @@ contains
     use fileutils , only : getfil
     !
     ! !ARGUMENTS:
-    integer          ,intent(in)    :: begg, endg 
+    integer          ,intent(in)    :: begg, endg
     type(domain_type),intent(inout) :: ldomain   ! domain to init
     character(len=*) ,intent(in)    :: filename  ! grid filename
     character(len=*) ,optional, intent(in) :: glcfilename ! glc mask filename
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid               ! netcdf id
-    type(var_desc_t)  :: vardesc            ! variable descriptor
     integer :: beg                          ! local beg index
     integer :: end                          ! local end index
     integer :: ni,nj,ns                     ! size of grid on file
     integer :: dimid,varid                  ! netCDF id's
     integer :: start(1), count(1)           ! 1d lat/lon array sections
     integer :: ier,ret                      ! error status
-    logical :: readvar                      ! true => variable is on input file 
+    logical :: readvar                      ! true => variable is on input file
     logical :: isgrid2d                     ! true => file is 2d lat/lon
     logical :: istype_domain                ! true => input file is of type domain
     real(r8), allocatable :: rdata2d(:,:)   ! temporary
@@ -189,7 +187,7 @@ contains
     call domain_init(ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=begg, nend=endg)
 
     ! Determine type of file - old style grid file or new style domain file
-    call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar) 
+    call check_var(ncid=ncid, varname='xc', readvar=readvar)
     if (readvar)then
         istype_domain = .true.
     else
@@ -204,11 +202,11 @@ contains
        ! convert from radians**2 to km**2
        ldomain%area = ldomain%area * (re**2)
        if (.not. readvar) call endrun( msg=' ERROR: area NOT on file'//errMsg(sourcefile, __LINE__))
-       
+
        call ncd_io(ncid=ncid, varname= 'xc', flag='read', data=ldomain%lonc, &
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) call endrun( msg=' ERROR: xc NOT on file'//errMsg(sourcefile, __LINE__))
-       
+
        call ncd_io(ncid=ncid, varname= 'yc', flag='read', data=ldomain%latc, &
             dim1name=grlnd, readvar=readvar)
        if (.not. readvar) call endrun( msg=' ERROR: yc NOT on file'//errMsg(sourcefile, __LINE__))
@@ -298,12 +296,11 @@ contains
 
     !
     ! !ARGUMENTS:
-    integer,          intent(in) :: begg, endg, actual_numcft      
+    integer,          intent(in) :: begg, endg, actual_numcft
     type(domain_type),intent(in) :: ldomain     ! land domain
     character(len=*), intent(in) :: lfsurdat    ! surface dataset filename
     !
     ! !LOCAL VARIABLES:
-    type(var_desc_t)  :: vardesc              ! pio variable descriptor
     type(domain_type) :: surfdata_domain      ! local domain associated with surface dataset
     character(len=256):: locfn                ! local file name
     integer, parameter :: n_dom_urban = 1     ! # of dominant urban landunits
@@ -314,7 +311,7 @@ contains
     real(r8)          :: rmaxlon,rmaxlat      ! local min/max vars
     type(file_desc_t) :: ncid                 ! netcdf id
     logical           :: istype_domain        ! true => input file is of type domain
-    logical           :: isgrid2d             ! true => intut grid is 2d 
+    logical           :: isgrid2d             ! true => intut grid is 2d
 
     character(len=32) :: subname = 'surfrd_get_data'    ! subroutine name
     !-----------------------------------------------------------------------
@@ -344,11 +341,11 @@ contains
 
     ! Check if fsurdat grid is "close" to fatmlndfrc grid, exit if lats/lon > 0.001
 
-    call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar) 
+    call check_var(ncid=ncid, varname='xc', readvar=readvar)
     if (readvar) then
        istype_domain = .true.
     else
-       call check_var(ncid=ncid, varname='LONGXY', vardesc=vardesc, readvar=readvar) 
+       call check_var(ncid=ncid, varname='LONGXY', readvar=readvar)
        if (readvar) then
           istype_domain = .false.
        else
@@ -440,7 +437,7 @@ contains
     !         mksurfdat.F90 toosmallPFT = 1.e-10
 
     call collapse_individual_lunits(wt_lunit, begg, endg, toosmall_soil, &
-                                    toosmall_crop, toosmall_glacier, & 
+                                    toosmall_crop, toosmall_glacier, &
                                     toosmall_lake, toosmall_wetland, &
                                     toosmall_urban)
 
@@ -448,12 +445,12 @@ contains
        write(iulog,*) 'Successfully read surface boundary data'
        write(iulog,*)
     end if
-    
+
     ! read the lakemask (necessary for initialisation of dynamical lakes)
     if (get_do_transient_lakes()) then
         call surfrd_lakemask(begg, endg)
     end if
-    
+
   end subroutine surfrd_get_data
 
 !-----------------------------------------------------------------------
@@ -521,7 +518,7 @@ contains
     use UrbanParamsType , only : CheckUrban
     !
     ! !ARGUMENTS:
-    integer          , intent(in)    :: begg, endg 
+    integer          , intent(in)    :: begg, endg
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     integer          , intent(in)    :: ns     ! domain size
     !
@@ -554,7 +551,7 @@ contains
     allocate(urban_region_id(begg:endg))
     allocate(pctspec(begg:endg))
 
-    call check_dim(ncid, 'nlevsoi', nlevsoifl)
+    call check_dim_size(ncid, 'nlevsoi', nlevsoifl)
 
        ! Obtain non-grid surface properties of surface dataset other than percent patch
 
@@ -572,7 +569,7 @@ contains
 
     ! Read urban info
     if (nlevurb == 0) then
-      ! If PCT_URBAN is not multi-density then set pcturb to zero 
+      ! If PCT_URBAN is not multi-density then set pcturb to zero
       pcturb = 0._r8
       urban_valid(begg:endg) = .false.
       write(iulog,*)'PCT_URBAN is not multi-density, pcturb set to 0'
@@ -605,8 +602,8 @@ contains
 
     ! Read glacier info
 
-    call check_dim(ncid, 'nglcec',   maxpatch_glcmec   )
-    call check_dim(ncid, 'nglcecp1', maxpatch_glcmec+1 )
+    call check_dim_size(ncid, 'nglcec',   maxpatch_glcmec   )
+    call check_dim_size(ncid, 'nglcecp1', maxpatch_glcmec+1 )
 
     call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=wt_glc_mec, &
          dim1name=grlnd, readvar=readvar)
@@ -694,12 +691,12 @@ contains
     SHR_ASSERT_ALL_FL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
-    call check_dim(ncid, 'cft',    cftsize)
-    call check_dim(ncid, 'natpft', natpft_size)
+    call check_dim_size(ncid, 'cft',    cftsize)
+    call check_dim_size(ncid, 'natpft', natpft_size)
 
     call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
             dim1name=grlnd, readvar=readvar)
-    if (.not. readvar) call endrun( msg=' ERROR: PCT_CFT NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
+    if (.not. readvar) call endrun( msg=' ERROR: PCT_CFT NOT on surfdata file'//errMsg(sourcefile, __LINE__))
 
     if ( cft_size > 0 )then
        call ncd_io(ncid=ncid, varname='CONST_FERTNITRO_CFT', flag='read', data=fert_cft, &
@@ -732,7 +729,7 @@ contains
     wt_nat_patch(begg:,natpft_lb:natpft_size-1+natpft_lb) = array2D(begg:,:)
     deallocate( array2D )
 
-  end subroutine surfrd_cftformat      
+  end subroutine surfrd_cftformat
 
 !-----------------------------------------------------------------------
   subroutine surfrd_pftformat( begg, endg, ncid )
@@ -757,7 +754,7 @@ contains
 !-----------------------------------------------------------------------
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
-    call check_dim(ncid, 'natpft', natpft_size)
+    call check_dim_size(ncid, 'natpft', natpft_size)
     ! If cft_size == 0, then we expect to be running with a surface dataset
     ! that does
     ! NOT have a PCT_CFT array (or CONST_FERTNITRO_CFT array), and thus does not have a 'cft' dimension.
@@ -881,12 +878,12 @@ contains
        if ( masterproc ) write(iulog,*) "WARNING: The PFT format is an unsupported format that will be removed in the future!"
        ! Check dimension size
        call surfrd_pftformat( begg, endg, ncid )                                 ! Format where crop is part of the natural veg. landunit
-    else 
+    else
        call endrun( msg=' ERROR: Problem figuring out format of input fsurdat file'//errMsg(sourcefile, __LINE__))
     end if
 
     ! Do some checking
-    
+
     if ( (cft_size == 0) .and. any(wt_lunit(begg:endg,istcrop) > 0._r8) ) then
        call endrun( msg=' ERROR: if PCT_CROP > 0 anywhere, then cft_size must be > 0'// &
                ' (if the surface dataset has a separate crop landunit, then the code'// &
@@ -941,7 +938,7 @@ contains
     use clm_instur, only : wt_nat_patch
     !
     ! !ARGUMENTS:
-    integer, intent(in) :: begg, endg  
+    integer, intent(in) :: begg, endg
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'surfrd_veg_dgvm'
@@ -970,21 +967,20 @@ contains
      use fileutils            , only : getfil
     !
     ! !ARGUMENTS:
-    integer,           intent(in)    :: begg, endg  
-    ! 
+    integer,           intent(in)    :: begg, endg
+    !
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t)         :: ncid_dynuse          ! netcdf id for landuse timeseries file
     character(len=256)        :: locfn                ! local file name
     character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
     logical                   :: readvar
-    real(r8),pointer          :: haslake_id(:)
     !
     character(len=*), parameter :: subname = 'surfrd_lakemask'
     !
     !-----------------------------------------------------------------------
 
-    ! get filename of landuse_timeseries file 
+    ! get filename of landuse_timeseries file
     fdynuse = get_flanduse_timeseries()
 
     if (masterproc) then
@@ -993,34 +989,22 @@ contains
           write(iulog,*)'fdynuse must be specified'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
-    end if   
-    
+    end if
+
     call getfil(fdynuse, locfn, 0 )
 
-   ! open landuse_timeseries file 
-    call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)    
-    
-    
-    allocate(haslake_id(begg:endg))
-    
+   ! open landuse_timeseries file
+    call ncd_pio_openfile (ncid_dynuse, trim(locfn), 0)
+
     ! read the lakemask
-    call ncd_io(ncid=ncid_dynuse, varname='HASLAKE'  , flag='read', data=haslake_id, &
+    call ncd_io(ncid=ncid_dynuse, varname='HASLAKE'  , flag='read', data=haslake, &
            dim1name=grlnd, readvar=readvar)
     if (.not. readvar) call endrun( msg=' ERROR: HASLAKE is not on landuse.timeseries file'//errMsg(sourcefile, __LINE__))
 
-    where (haslake_id == 1._r8)
-        haslake = .true.
-    elsewhere
-        haslake = .false.
-    end where
-
-    ! close landuse_timeseries file again 
+    ! close landuse_timeseries file again
     call ncd_pio_closefile(ncid_dynuse)
-    
-    deallocate(haslake_id)
 
-    
   end subroutine surfrd_lakemask
-  
-  
+
+
 end module surfrdMod

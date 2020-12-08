@@ -26,6 +26,7 @@ module clm_initializeMod
   use filterMod       , only : allocFilters, filter, filter_inactive_and_active
   use FatesInterfaceMod, only : set_fates_global_elements
   use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
+  use SelfTestDriver, only : self_test_driver
 
   use clm_instMod
   use SoilMoistureStreamMod, only : PrescribedSoilMoistureInit
@@ -261,6 +262,9 @@ contains
        call ch4conrd()
     end if
 
+    ! Run any requested self-tests
+    call self_test_driver(bounds_proc)
+
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking.
@@ -448,9 +452,7 @@ contains
     end if
 
     ! Initialize instances of all derived types as well as time constant variables
-
     call clm_instInit(bounds_proc)
-
     ! Initialize SNICAR optical and aging parameters
 
     call SnowOptics_init( ) ! SNICAR optical parameters:

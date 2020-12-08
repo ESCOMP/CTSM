@@ -21,7 +21,7 @@ module SnowHydrologyMod
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-  use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
+  use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd, nlevmaxurbgrnd
   use clm_varctl      , only : iulog, use_subgrid_fluxes
   use clm_varcon      , only : namec, h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz
   use clm_varcon      , only : cpice, cpliq
@@ -949,10 +949,10 @@ contains
     SHR_ASSERT_FL((ubound(forc_t, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(zi) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(dz) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(z) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(t_soisno) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(zi) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(z) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(frac_iceold) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
 
     do fc = 1, snowpack_initialized_filterc%num
@@ -2922,9 +2922,9 @@ contains
 
     associate( &
          snl => col%snl,   & ! Output: [integer (:)    ]  number of snow layers
-         dz  => col%dz,    & ! Output: [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevgrnd)
-         z   => col%z,     & ! Output: [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevgrnd)
-         zi  => col%zi     & ! Output: [real(r8) (:,:) ]  interface level below a "z" level (m) (-nlevsno+0:nlevgrnd)
+         dz  => col%dz,    & ! Output: [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevmaxurbgrnd)
+         z   => col%z,     & ! Output: [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevmaxurbgrnd)
+         zi  => col%zi     & ! Output: [real(r8) (:,:) ]  interface level below a "z" level (m) (-nlevsno+0:nlevmaxurbgrnd)
     )
 
     allocate(dzmin(1:nlevsno))

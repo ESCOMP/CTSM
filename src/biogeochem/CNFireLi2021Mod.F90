@@ -17,9 +17,8 @@ module CNFireLi2021Mod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
-  use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog
-  use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
+  use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full, nlevgrnd
   use clm_varcon                         , only : dzsoi_decomp
   use pftconMod                          , only : noveg, pftcon
   use abortutils                         , only : endrun
@@ -37,13 +36,15 @@ module CNFireLi2021Mod
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
   use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType               , only : wateratm2lndbulk_type
+  use WaterStateBulkType                 , only : waterstatebulk_type
+  use SoilStateType                      , only : soilstate_type
+  use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
   use GridcellType                       , only : grc                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   use FireMethodType                     , only : fire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
-  use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const
   !
   implicit none
   private
@@ -63,11 +64,11 @@ module CNFireLi2021Mod
   !
   ! !PRIVATE MEMBER DATA:
   !-----------------------------------------------------------------------
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
-
 
   !-----------------------------------------------------------------------
   function need_lightning_and_popdens(this)
@@ -85,15 +86,16 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
        atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, waterdiagnosticbulk_inst, &
-       wateratm2lndbulk_inst, cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+       wateratm2lndbulk_inst, waterstatebulk_inst, soilstate_inst, soil_water_retention_curve, &
+       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
     ! Computes column-level burned area 
     !
     ! !USES:
-    use clm_time_manager     , only: get_step_size, get_days_per_year, get_curr_date, get_nstep
-    use clm_varpar           , only: max_patch_per_col
+    use clm_time_manager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
     use clm_varcon           , only: secspday, secsphr
     use clm_varctl           , only: spinup_state
     use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
@@ -107,11 +109,18 @@ contains
     integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
+    integer                               , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
+    integer                               , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
+    integer                               , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                               , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
     type(waterdiagnosticbulk_type)        , intent(in)    :: waterdiagnosticbulk_inst
     type(wateratm2lndbulk_type)           , intent(in)    :: wateratm2lndbulk_inst
+    type(waterstatebulk_type)             , intent(in)    :: waterstatebulk_inst
+    type(soilstate_type)                  , intent(in)    :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in)    :: soil_water_retention_curve
     type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
     real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
@@ -148,9 +157,9 @@ contains
     real(r8), pointer :: rh30_col(:)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL((ubound(totlitc_col)           == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT_ALL((ubound(t_soi17cm_col)         == (/bounds%endc/))                              , errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_ALL_FL((ubound(totlitc_col)           == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soi17cm_col)         == (/bounds%endc/)), sourcefile, __LINE__)
 
     associate(                                                                      & 
          totlitc            => totlitc_col                                     , & ! Input:  [real(r8) (:)     ]  (gC/m2) total lit C (column-level mean)           
@@ -260,7 +269,7 @@ contains
      call get_curr_date (kyr, kmo, kda, mcsec)
      dayspyr = get_days_per_year()
      ! Get model step size
-     dt      = real( get_step_size(), r8 )
+     dt      = get_step_size_real()
      !
      ! On first time-step, just set area burned to zero and exit
      !
@@ -285,21 +294,17 @@ contains
         cropf_col(c) = 0._r8 
         lfwt(c)      = 0._r8   
      end do
-     do pi = 1,max_patch_per_col
-        do fc = 1,num_soilc
-           c = filter_soilc(fc)
-           if (pi <=  col%npatches(c)) then
-              p = col%patchi(c) + pi - 1
-              ! For crop veg types
-              if( patch%itype(p) > nc4_grass )then
-                 cropf_col(c) = cropf_col(c) + patch%wtcol(p)
-              end if
-              ! For natural vegetation (non-crop and non-bare-soil)
-              if( patch%itype(p) >= ndllf_evr_tmp_tree .and. patch%itype(p) <= nc4_grass )then
-                 lfwt(c) = lfwt(c) + patch%wtcol(p)
-              end if
-           end if
-        end do
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+        c = patch%column(p)
+        ! For crop veg types
+        if( patch%itype(p) > nc4_grass )then
+           cropf_col(c) = cropf_col(c) + patch%wtcol(p)
+        end if
+        ! For natural vegetation (non-crop and non-bare-soil)
+        if( patch%itype(p) >= ndllf_evr_tmp_tree .and. patch%itype(p) <= nc4_grass )then
+           lfwt(c) = lfwt(c) + patch%wtcol(p)
+        end if
      end do
      ! 
      ! Calculate crop fuel   
@@ -308,22 +313,18 @@ contains
         c = filter_soilc(fc)
         fuelc_crop(c)=0._r8
      end do
-     do pi = 1,max_patch_per_col
-        do fc = 1,num_soilc
-           c = filter_soilc(fc)
-           if (pi <=  col%npatches(c)) then
-              p = col%patchi(c) + pi - 1
-              ! For crop PFTs, fuel load includes leaf and litter; only
-              ! column-level litter carbon
-              ! is available, so we use leaf carbon to estimate the
-              ! litter carbon for crop PFTs
-              if( patch%itype(p) > nc4_grass .and. patch%wtcol(p) > 0._r8 .and. leafc_col(c) > 0._r8 )then
-                 fuelc_crop(c)=fuelc_crop(c) + (leafc(p) + leafc_storage(p) + &
-                      leafc_xfer(p))*patch%wtcol(p)/cropf_col(c)     + &
-                      totlitc(c)*leafc(p)/leafc_col(c)*patch%wtcol(p)/cropf_col(c)
-              end if
-           end if
-        end do
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+        c = patch%column(p)
+        ! For crop PFTs, fuel load includes leaf and litter; only
+        ! column-level litter carbon
+        ! is available, so we use leaf carbon to estimate the
+        ! litter carbon for crop PFTs
+        if( patch%itype(p) > nc4_grass .and. patch%wtcol(p) > 0._r8 .and. leafc_col(c) > 0._r8 )then
+           fuelc_crop(c)=fuelc_crop(c) + (leafc(p) + leafc_storage(p) + &
+                leafc_xfer(p))*patch%wtcol(p)/cropf_col(c)     + &
+                totlitc(c)*leafc(p)/leafc_col(c)*patch%wtcol(p)/cropf_col(c)
+        end if
      end do
      !   
      ! Calculate noncrop column variables
@@ -344,138 +345,143 @@ contains
            dtrotr_col(c)=0._r8
         end if
      end do
-     do pi = 1,max_patch_per_col
-        do fc = 1,num_soilc
-           c = filter_soilc(fc)
-           g = col%gridcell(c)
-           if (pi <=  col%npatches(c)) then
-              p = col%patchi(c) + pi - 1
 
-              ! For non-crop -- natural vegetation and bare-soil
-              if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1._r8 )then
-                 if( .not. shr_infnan_isnan(btran2(p))) then
-                    if (btran2(p)  <=  1._r8 ) then
-                       btran_col(c) = btran_col(c)+max(0._r8, min(1._r8, &
-                      (btran2(p)-rswf_min(patch%itype(p)))/(rswf_max(patch%itype(p)) &
-                      -rswf_min(patch%itype(p)))))*patch%wtcol(p)
-                        wtlf(c)      = wtlf(c)+patch%wtcol(p)
-                    end if
+     ! This subroutine calculates btran2
+     call this%CNFire_calc_fire_root_wetness_Li2021(bounds, &
+          num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
+          waterstatebulk_inst, soilstate_inst, soil_water_retention_curve)
+     do fp = 1, num_exposedvegp
+        p = filter_exposedvegp(fp)
+        c = patch%column(p)
+        ! For non-crop -- natural vegetation and bare-soil
+        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+           btran_col(c) = btran_col(c)+max(0._r8, min(1._r8, &
+                (btran2(p)-rswf_min(patch%itype(p)))/(rswf_max(patch%itype(p)) &
+                -rswf_min(patch%itype(p)))))*patch%wtcol(p)
+           wtlf(c)      = wtlf(c)+patch%wtcol(p)
+        end if
+     end do
+
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+        c = patch%column(p)
+        g = col%gridcell(c)
+
+        ! For non-crop -- natural vegetation and bare-soil
+        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+
+           ! NOTE(wjs, 2016-12-15) These calculations of the fraction of evergreen
+           ! and deciduous tropical trees (used to determine if a column is
+           ! tropical closed forest) use the current fractions. However, I think
+           ! they are used in code that applies to land cover change. Note that
+           ! land cover change is currently generated on the first time step of the
+           ! year (even though the fire code sees the annually-smoothed dwt). Thus,
+           ! I think that, for this to be totally consistent, this code should
+           ! consider the fractional coverage of each PFT prior to the relevant
+           ! land cover change event. (These fractions could be computed in the
+           ! code that handles land cover change, so that the fire code remains
+           ! agnostic to exactly how and when land cover change happens.)
+           !
+           ! For example, if a year started with fractional coverages of
+           ! nbrdlf_evr_trp_tree = 0.35 and nbrdlf_dcd_trp_tree = 0.35, but then
+           ! the start-of-year land cover change reduced both of these to 0.2: The
+           ! current code would consider the column to NOT be tropical closed
+           ! forest (because nbrdlf_evr_trp_tree+nbrdlf_dcd_trp_tree < 0.6),
+           ! whereas in fact the land cover change occurred when the column *was*
+           ! tropical closed forest.
+           if( patch%itype(p) == nbrdlf_evr_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
+              trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)
+           end if
+           if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
+              trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)
+           end if
+
+           if (transient_landcover) then
+              if( patch%itype(p) == nbrdlf_evr_trp_tree .or. patch%itype(p) == nbrdlf_dcd_trp_tree )then
+                 if(dwt_smoothed(p) < 0._r8)then
+                    ! Land cover change in CLM happens all at once on the first time
+                    ! step of the year. However, the fire code needs deforestation
+                    ! rates throughout the year, in order to combine these
+                    ! deforestation rates with the current season's climate. So we
+                    ! use a smoothed version of dwt.
+                    !
+                    ! This isn't ideal, because the carbon stocks that the fire code
+                    ! is operating on will have decreased by the full annual amount
+                    ! before the fire code does anything. But the biggest effect of
+                    ! these deforestation fires is as a trigger for other fires, and
+                    ! the C fluxes are merely diagnostic so don't need to be
+                    ! conservative, so this isn't a big issue.
+                    !
+                    ! (Actually, it would be even better if the fire code had a
+                    ! realistic breakdown of annual deforestation into the
+                    ! different seasons. But having deforestation spread evenly
+                    ! throughout the year is much better than having it all
+                    ! concentrated on January 1.)
+                    dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)
                  end if
-
-                 ! NOTE(wjs, 2016-12-15) These calculations of the fraction of evergreen
-                 ! and deciduous tropical trees (used to determine if a column is
-                 ! tropical closed forest) use the current fractions. However, I think
-                 ! they are used in code that applies to land cover change. Note that
-                 ! land cover change is currently generated on the first time step of the
-                 ! year (even though the fire code sees the annually-smoothed dwt). Thus,
-                 ! I think that, for this to be totally consistent, this code should
-                 ! consider the fractional coverage of each PFT prior to the relevant
-                 ! land cover change event. (These fractions could be computed in the
-                 ! code that handles land cover change, so that the fire code remains
-                 ! agnostic to exactly how and when land cover change happens.)
-                 !
-                 ! For example, if a year started with fractional coverages of
-                 ! nbrdlf_evr_trp_tree = 0.35 and nbrdlf_dcd_trp_tree = 0.35, but then
-                 ! the start-of-year land cover change reduced both of these to 0.2: The
-                 ! current code would consider the column to NOT be tropical closed
-                 ! forest (because nbrdlf_evr_trp_tree+nbrdlf_dcd_trp_tree < 0.6),
-                 ! whereas in fact the land cover change occurred when the column *was*
-                 ! tropical closed forest.
-                 if( patch%itype(p) == nbrdlf_evr_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr1_col(c)=trotr1_col(c)+patch%wtcol(p)*col%wtgcell(c)
-                 end if
-                 if( patch%itype(p) == nbrdlf_dcd_trp_tree .and. patch%wtcol(p)  >  0._r8 )then
-                    trotr2_col(c)=trotr2_col(c)+patch%wtcol(p)*col%wtgcell(c)
-                 end if
-
-                 if (transient_landcover) then
-                    if( patch%itype(p) == nbrdlf_evr_trp_tree .or. patch%itype(p) == nbrdlf_dcd_trp_tree )then
-                       if(dwt_smoothed(p) < 0._r8)then
-                          ! Land cover change in CLM happens all at once on the first time
-                          ! step of the year. However, the fire code needs deforestation
-                          ! rates throughout the year, in order to combine these
-                          ! deforestation rates with the current season's climate. So we
-                          ! use a smoothed version of dwt.
-                          !
-                          ! This isn't ideal, because the carbon stocks that the fire code
-                          ! is operating on will have decreased by the full annual amount
-                          ! before the fire code does anything. But the biggest effect of
-                          ! these deforestation fires is as a trigger for other fires, and
-                          ! the C fluxes are merely diagnostic so don't need to be
-                          ! conservative, so this isn't a big issue.
-                          !
-                          ! (Actually, it would be even better if the fire code had a
-                          ! realistic breakdown of annual deforestation into the
-                          ! different seasons. But having deforestation spread evenly
-                          ! throughout the year is much better than having it all
-                          ! concentrated on January 1.)
-                          dtrotr_col(c)=dtrotr_col(c)-dwt_smoothed(p)*col%wtgcell(c)
-                       end if
-                    end if
-                 end if
-                 if (spinup_state == 2) then         
-                    rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
-                         frootc_xfer(p) + deadcrootc(p) * 10._r8 +       &
-                         deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
-                         livecrootc(p)+livecrootc_storage(p) +           &
-                         livecrootc_xfer(p))*patch%wtcol(p)
-                 else
-                    rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
-                         frootc_xfer(p) + deadcrootc(p) +                &
-                         deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
-                         livecrootc(p)+livecrootc_storage(p) +           &
-                         livecrootc_xfer(p))*patch%wtcol(p)
-                 endif
-
-                 fsr_col(c) = fsr_col(c) + fsr_pft(patch%itype(p))*patch%wtcol(p)/(1.0_r8-cropf_col(c))
-
-                 hdmlf=this%forc_hdm(g)
-
-                    ! all these constants are in Li et al. BG (2012a,b;2013)
-
-                 if( hdmlf  >  0.1_r8 )then            
-                    ! For NOT bare-soil
-                    if( patch%itype(p)  /=  noveg )then
-                       ! For shrub and grass (crop already excluded above)
-                       if( patch%itype(p)  >=  nbrdlf_evr_shrub )then      !for shurb and grass
-                           lgdp_col(c)  = lgdp_col(c) + (0.1_r8 + 0.9_r8*    &
-                                  exp(-1._r8*SHR_CONST_PI* &
-                                  (gdp_lf(c)/8._r8)**0.5_r8))*patch%wtcol(p) &
-                                  /(1.0_r8 - cropf_col(c))
-                           lgdp1_col(c) = lgdp1_col(c) + (0.2_r8 + 0.8_r8*   &
-                                  exp(-1._r8*SHR_CONST_PI* &
-                                  (gdp_lf(c)/7._r8)))*patch%wtcol(p)/(1._r8 - cropf_col(c))
-                           lpop_col(c)  = lpop_col(c) + (0.2_r8 + 0.8_r8*    &
-                                  exp(-1._r8*SHR_CONST_PI* &
-                                  (hdmlf/450._r8)**0.5_r8))*patch%wtcol(p)/(1._r8 - cropf_col(c))
-                        else   ! for trees
-                           if( gdp_lf(c)  >  20._r8 )then
-                              lgdp_col(c) =lgdp_col(c)+cnfire_const%occur_hi_gdp_tree*patch%wtcol(p)/(1._r8 - cropf_col(c))
-                              lgdp1_col(c) =lgdp1_col(c)+0.62_r8*patch%wtcol(p)/(1._r8 - cropf_col(c)) 
-                           else
-                              if( gdp_lf(c) > 8._r8 )then
-                                 lgdp_col(c)=lgdp_col(c)+0.79_r8*patch%wtcol(p)/(1._r8 - cropf_col(c))
-                                 lgdp1_col(c)=lgdp1_col(c)+0.83_r8*patch%wtcol(p)/(1._r8 - cropf_col(c))
-                              else
-                                 lgdp_col(c) = lgdp_col(c)+patch%wtcol(p)/(1._r8 - cropf_col(c))
-                                 lgdp1_col(c)=lgdp1_col(c)+patch%wtcol(p)/(1._r8 - cropf_col(c))
-                              end if
-                           end if
-                           lpop_col(c) = lpop_col(c) + (0.4_r8 + 0.6_r8*    &
-                                  exp(-1._r8*SHR_CONST_PI* &
-                                  (hdmlf/125._r8)))*patch%wtcol(p)/(1._r8 -cropf_col(c))
-                         end if
-                       end if
-                  else
-                       lgdp_col(c)  = lgdp_col(c)+patch%wtcol(p)/(1.0_r8 - cropf_col(c))
-                       lgdp1_col(c) = lgdp1_col(c)+patch%wtcol(p)/(1.0_r8 -cropf_col(c))
-                       lpop_col(c)  = lpop_col(c)+patch%wtcol(p)/(1.0_r8 -cropf_col(c))
-                  end if
-
-                 fd_col(c) = fd_col(c) + fd_pft(patch%itype(p)) * patch%wtcol(p) * secsphr / (1.0_r8-cropf_col(c))         
               end if
            end if
-        end do
+           if (spinup_state == 2) then         
+              rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
+                   frootc_xfer(p) + deadcrootc(p) * 10._r8 +       &
+                   deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
+                   livecrootc(p)+livecrootc_storage(p) +           &
+                   livecrootc_xfer(p))*patch%wtcol(p)
+           else
+              rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
+                   frootc_xfer(p) + deadcrootc(p) +                &
+                   deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
+                   livecrootc(p)+livecrootc_storage(p) +           &
+                   livecrootc_xfer(p))*patch%wtcol(p)
+           endif
+
+           fsr_col(c) = fsr_col(c) + fsr_pft(patch%itype(p))*patch%wtcol(p)/(1.0_r8-cropf_col(c))
+
+           hdmlf=this%forc_hdm(g)
+
+           ! all these constants are in Li et al. BG (2012a,b;2013)
+
+           if( hdmlf  >  0.1_r8 )then            
+              ! For NOT bare-soil
+              if( patch%itype(p)  /=  noveg )then
+                 ! For shrub and grass (crop already excluded above)
+                 if( patch%itype(p)  >=  nbrdlf_evr_shrub )then      !for shurb and grass
+                    lgdp_col(c)  = lgdp_col(c) + (0.1_r8 + 0.9_r8*    &
+                         exp(-1._r8*SHR_CONST_PI* &
+                         (gdp_lf(c)/8._r8)**0.5_r8))*patch%wtcol(p) &
+                         /(1.0_r8 - cropf_col(c))
+                    lgdp1_col(c) = lgdp1_col(c) + (0.2_r8 + 0.8_r8*   &
+                         exp(-1._r8*SHR_CONST_PI* &
+                         (gdp_lf(c)/7._r8)))*patch%wtcol(p)/(1._r8 - cropf_col(c))
+                    lpop_col(c)  = lpop_col(c) + (0.2_r8 + 0.8_r8*    &
+                         exp(-1._r8*SHR_CONST_PI* &
+                         (hdmlf/450._r8)**0.5_r8))*patch%wtcol(p)/(1._r8 - cropf_col(c))
+                 else   ! for trees
+                    if( gdp_lf(c)  >  20._r8 )then
+                       lgdp_col(c) =lgdp_col(c)+cnfire_const%occur_hi_gdp_tree*patch%wtcol(p)/(1._r8 - cropf_col(c))
+                       lgdp1_col(c) =lgdp1_col(c)+0.62_r8*patch%wtcol(p)/(1._r8 - cropf_col(c)) 
+                    else
+                       if( gdp_lf(c) > 8._r8 )then
+                          lgdp_col(c)=lgdp_col(c)+0.79_r8*patch%wtcol(p)/(1._r8 - cropf_col(c))
+                          lgdp1_col(c)=lgdp1_col(c)+0.83_r8*patch%wtcol(p)/(1._r8 - cropf_col(c))
+                       else
+                          lgdp_col(c) = lgdp_col(c)+patch%wtcol(p)/(1._r8 - cropf_col(c))
+                          lgdp1_col(c)=lgdp1_col(c)+patch%wtcol(p)/(1._r8 - cropf_col(c))
+                       end if
+                    end if
+                    lpop_col(c) = lpop_col(c) + (0.4_r8 + 0.6_r8*    &
+                         exp(-1._r8*SHR_CONST_PI* &
+                         (hdmlf/125._r8)))*patch%wtcol(p)/(1._r8 -cropf_col(c))
+                 end if
+              end if
+           else
+              lgdp_col(c)  = lgdp_col(c)+patch%wtcol(p)/(1.0_r8 - cropf_col(c))
+              lgdp1_col(c) = lgdp1_col(c)+patch%wtcol(p)/(1.0_r8 -cropf_col(c))
+              lpop_col(c)  = lpop_col(c)+patch%wtcol(p)/(1.0_r8 -cropf_col(c))
+           end if
+
+           fd_col(c) = fd_col(c) + fd_pft(patch%itype(p)) * patch%wtcol(p) * secsphr / (1.0_r8-cropf_col(c))         
+        end if
      end do
 
      ! estimate annual decreased fractional coverage of BET+BDT
@@ -511,36 +517,34 @@ contains
         end if
      end do
 
-     do pi = 1,max_patch_per_col
-        do fc = 1,num_soilc
-           c = filter_soilc(fc)
-           g= col%gridcell(c)
-           hdmlf=this%forc_hdm(g)
-           if (pi <=  col%npatches(c)) then
-              p = col%patchi(c) + pi - 1
-              ! For crop
-              if( forc_t(c)  >=  SHR_CONST_TKFRZ .and. patch%itype(p)  >  nc4_grass .and.  &
-                   kmo == abm_lf(c) .and. &
-                   burndate(p) >= 999 .and. patch%wtcol(p)  >  0._r8 )then ! catch  crop burn time
+     do fp = 1, num_soilp
+        p = filter_soilp(fp)
+        c = patch%column(p)
+        g = col%gridcell(c)
 
-                 ! calculate human density impact on ag. fire
-                 fhd = 0.04_r8+0.96_r8*exp(-1._r8*SHR_CONST_PI*(hdmlf/350._r8)**0.5_r8)
+        ! For crop
+        if( forc_t(c)  >=  SHR_CONST_TKFRZ .and. patch%itype(p)  >  nc4_grass .and.  &
+             kmo == abm_lf(c) .and. &
+             burndate(p) >= 999 .and. patch%wtcol(p)  >  0._r8 )then ! catch  crop burn time
 
-                 ! calculate impact of GDP on ag. fire
-                 fgdp = 0.01_r8+0.99_r8*exp(-1._r8*SHR_CONST_PI*(gdp_lf(c)/10._r8))
+           hdmlf = this%forc_hdm(g)
 
-                 ! calculate burned area
-                 fb   = max(0.0_r8,min(1.0_r8,(fuelc_crop(c)-lfuel)/(ufuel-lfuel)))
+           ! calculate human density impact on ag. fire
+           fhd = 0.04_r8+0.96_r8*exp(-1._r8*SHR_CONST_PI*(hdmlf/350._r8)**0.5_r8)
 
-                 ! crop fire only for generic crop types at this time
-                 ! managed crops are treated as grasses if crop model is turned on
-                 baf_crop(c) = baf_crop(c) + cropfire_a1/secsphr*fhd*fgdp*patch%wtcol(p)
-                 if( fb*fhd*fgdp*patch%wtcol(p)  >  0._r8)then
-                    burndate(p)=kda
-                 end if
-              end if
+           ! calculate impact of GDP on ag. fire
+           fgdp = 0.01_r8+0.99_r8*exp(-1._r8*SHR_CONST_PI*(gdp_lf(c)/10._r8))
+
+           ! calculate burned area
+           fb   = max(0.0_r8,min(1.0_r8,(fuelc_crop(c)-lfuel)/(ufuel-lfuel)))
+
+           ! crop fire only for generic crop types at this time
+           ! managed crops are treated as grasses if crop model is turned on
+           baf_crop(c) = baf_crop(c) + cropfire_a1/secsphr*fhd*fgdp*patch%wtcol(p)
+           if( fb*fhd*fgdp*patch%wtcol(p)  >  0._r8)then
+              burndate(p)=kda
            end if
-        end do
+        end if
      end do
      !
      ! calculate peatland fire
@@ -581,6 +585,7 @@ contains
         c = filter_soilc(fc)
         g = col%gridcell(c)
         hdmlf=this%forc_hdm(g)
+        nfire(c) = 0._r8
         if( cropf_col(c)  <  1._r8 )then
            fuelc(c) = totlitc(c)+totvegc(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            if (spinup_state == 2) then
@@ -657,53 +662,5 @@ contains
    end associate
 
  end subroutine CNFireArea
-
- !----------------------------------------------------------------------
- subroutine CNFire_calc_fire_root_wetness( this, bounds, nlevgrnd, num_exposedvegp, filter_exposedvegp, &
-                                     waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
-    !
-    ! Calculate the root wetness term that will be used by the fire model
-    !
-    use pftconMod                 , only : pftcon
-    use PatchType                 , only : patch
-    use WaterStateBulkType        , only : waterstatebulk_type
-    use SoilStateType             , only : soilstate_type
-    use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    class(cnfire_base_type) :: this
-    type(bounds_type)      , intent(in)   :: bounds                         !bounds
-    integer                , intent(in)   :: nlevgrnd                       !number of vertical layers
-    integer                , intent(in)   :: num_exposedvegp                !number of filters
-    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
-    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
-    type(soilstate_type)   , intent(in)   :: soilstate_inst
-    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
-    ! !LOCAL VARIABLES:
-    real(r8) :: s_node  !temporary variables
-    integer :: p, f, j, c         !indices
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
-
-    associate(                                                &
-         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
-         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
-         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
-         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
-         )
-
-      do j = 1,nlevgrnd
-         do f = 1, num_exposedvegp
-            p = filter_exposedvegp(f)
-            c = patch%column(p)
-            s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
-
-            btran2(p)   = btran2(p) + rootfr(p,j)*s_node
-         end do
-      end do
-    end associate 
-
- end subroutine CNFire_calc_fire_root_wetness
- !----------------------------------------------------------------------
-
 
 end module CNFireLi2021Mod

@@ -45,10 +45,7 @@ contains
     ! samples that bound the initial model date)
     !
     ! !USES:
-    use ncdio_pio      , only : check_dim
     use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
-
-	
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds           ! proc-level bounds

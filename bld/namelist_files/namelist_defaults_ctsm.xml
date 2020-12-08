@@ -57,6 +57,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
 <spinup_state clm_accelerated_spinup="off"                               >0</spinup_state>
 
+<for_testing_run_ncdiopio_tests>.false.</for_testing_run_ncdiopio_tests>
+
+<!-- Set to .true. in namelist to write hist fields master list file -->
+<hist_master_list_file>.false.</hist_master_list_file>
+
 <!-- In accelerated spinup mode reduce the amount of history output -->
 <hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."
@@ -160,9 +165,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <urban_traffic>.false.</urban_traffic>
 
 <!-- Soil state settings -->
-<organic_frac_squared phys="clm5_1" >.true.</organic_frac_squared>
 <organic_frac_squared phys="clm4_5" >.true.</organic_frac_squared>
 <organic_frac_squared phys="clm5_0" >.false.</organic_frac_squared>
+<organic_frac_squared phys="clm5_1" >.false.</organic_frac_squared>
 
 <soil_layerstruct_predefined structure="fast">4SL_2m</soil_layerstruct_predefined>
 <soil_layerstruct_predefined structure="standard" phys="clm5_1" >20SL_8.5m</soil_layerstruct_predefined>
@@ -588,8 +593,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_hydrstress phys="clm5_1"  use_fates=".false." configuration="clm">.true.</use_hydrstress>
 
 <!-- General CN options -->
-<dribble_crophrv_xsmrpool_2atm co2_type="prognostic" use_crop=".true.">.true.</dribble_crophrv_xsmrpool_2atm>
-<dribble_crophrv_xsmrpool_2atm                       use_crop=".true.">.false.</dribble_crophrv_xsmrpool_2atm>
+<!-- Turn this on all of the time, eventually this namelist item should be removed -->
+<dribble_crophrv_xsmrpool_2atm use_crop=".true.">.true.</dribble_crophrv_xsmrpool_2atm>
  
 <!--
 
@@ -634,6 +639,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
                   maxpft="17"        use_cn=".false."    use_crop=".false." hgrid="ne0np4CONUS.ne30x8"      >.true.</use_init_interp>
 <!-- For an inexact match use either low resolution or high resolution match for SP or BGC mode CLM5.0 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  phys="clm5_0"                     >.true.</use_init_interp>
+<use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  phys="clm5_1"                     >.true.</use_init_interp>
 <!-- For an inexact match use either low resolution or high resolution match for SP or BGC mode CLM4.5 -->
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  lnd_tuning_mode="clm4_5_GSWP3v1"  >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  lnd_tuning_mode="clm4_5_CRUv7"    >.true.</use_init_interp>
@@ -719,6 +725,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_1_GSWP3v1"
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
 <!-- specific low reoslution grids should use the 1-degree file for just CLM5.0 -->
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
                         hgrid="0.9x1.25"
@@ -1526,17 +1535,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <model_year_align_soilm   >1997</model_year_align_soilm>
 
 <stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.climo1980-2014.MONS_c190709.nc</stream_fldfilename_soilm>
-
-<soilm_tintalgo>linear</soilm_tintalgo>
-
-<!-- Soilm moisture streams namelist defaults -->
-<!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->
-<use_soil_moisture_streams>.false.</use_soil_moisture_streams>
-<stream_year_first_soilm  >1997</stream_year_first_soilm>
-<stream_year_last_soilm   >1997</stream_year_last_soilm>
-<model_year_align_soilm   >1997</model_year_align_soilm>
-
-<stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.1980-2014.MONS_climo.c190716.nc</stream_fldfilename_soilm>
 
 <soilm_tintalgo>linear</soilm_tintalgo>
 <soilm_offset  >0</soilm_offset>

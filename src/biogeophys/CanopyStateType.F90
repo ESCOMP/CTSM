@@ -50,6 +50,8 @@ module CanopyStateType
      real(r8) , pointer :: rscanopy_patch           (:)   ! patch canopy stomatal resistance (s/m) (ED specific)
 
      real(r8) , pointer :: vegwp_patch              (:,:) ! patch vegetation water matric potential (mm)
+     real(r8) , pointer :: vegwp_ln_patch           (:,:) ! patch vegetation water matric potential at local noon (mm)
+     real(r8) , pointer :: vegwp_pd_patch           (:,:) ! patch predawn vegetation water matric potential (mm)
 
      real(r8)           :: leaf_mr_vcm = spval            ! Scalar constant of leaf respiration with Vcmax
 
@@ -135,7 +137,8 @@ contains
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
 !    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
     allocate(this%vegwp_patch              (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan
-
+    allocate(this%vegwp_ln_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_ln_patch           (:,:) = nan
+    allocate(this%vegwp_pd_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_pd_patch           (:,:) = nan
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -257,6 +260,14 @@ contains
        call hist_addfld2d (fname='VEGWP',  units='mm', type2d='nvegwcs', &
             avgflag='A', long_name='vegetation water matric potential for sun/sha canopy,xyl,root segments', &
             ptr_patch=this%vegwp_patch)
+       this%vegwp_ln_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='VEGWPLN',  units='mm', type2d='nvegwcs', &
+            avgflag='A', long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', &
+            ptr_patch=this%vegwp_ln_patch, default='active')
+       this%vegwp_pd_patch(begp:endp,:) = spval
+       call hist_addfld2d (fname='VEGWPPD',  units='mm', type2d='nvegwcs', avgflag='A', &
+            long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', &
+            ptr_patch=this%vegwp_pd_patch, default='active')
     end if
 
   end subroutine InitHistory
@@ -556,6 +567,8 @@ contains
          dim1name='pft', long_name='sunlit fraction of canopy', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%fsun_patch)
 
+
+
     if (flag=='read' )then
        do p = bounds%begp,bounds%endp
           if (shr_infnan_isnan(this%fsun_patch(p)) ) then
@@ -569,6 +582,16 @@ contains
             dim1name='pft', dim2name='vegwcs', switchdim=.true., &
             long_name='vegetation water matric potential', units='mm', &
             interpinic_flag='interp', readvar=readvar, data=this%vegwp_patch) 
+
+       call restartvar(ncid=ncid, flag=flag, varname='VEGWPLN', xtype=ncd_double,  &
+            dim1name='pft', dim2name='vegwcs', &                                                                                                                                        
+            long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', units='mm', &
+            interpinic_flag='skip', readvar=readvar, data=this%vegwp_ln_patch)
+
+       call restartvar(ncid=ncid, flag=flag, varname='VEGWPPD', xtype=ncd_double,  &
+            dim1name='pft', dim2name='vegwcs', &
+            long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', units='mm', &
+            interpinic_flag='skip', readvar=readvar, data=this%vegwp_pd_patch)
 
     end if
 

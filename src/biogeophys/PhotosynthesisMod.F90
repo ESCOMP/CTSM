@@ -17,7 +17,7 @@ module  PhotosynthesisMod
   use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_fates, use_luna, use_hydrstress
   use clm_varctl          , only : iulog
   use clm_varpar          , only : nlevcan, nvegwcs, mxpft
-  use clm_varcon          , only : namep, c14ratio, spval
+  use clm_varcon          , only : namep, c14ratio, spval, isecspday
   use decompMod           , only : bounds_type
   use QuadraticMod        , only : quadratic
   use pftconMod           , only : pftcon
@@ -148,7 +148,7 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: gs_mol_patch      (:,:) ! patch leaf stomatal conductance       (umol H2O/m**2/s)
      real(r8), pointer, private :: gb_mol_patch      (:)   ! patch leaf boundary layer conductance (umol H2O/m**2/s)
      real(r8), pointer, private :: rh_leaf_patch     (:)   ! patch fractional humidity at leaf surface (dimensionless)
-
+     real(r8), pointer, private :: vpd_can_patch     (:)   ! patch canopy vapor pressure deficit (kPa)
      real(r8), pointer, private :: alphapsnsun_patch (:)   ! patch sunlit 13c fractionation ([])
      real(r8), pointer, private :: alphapsnsha_patch (:)   ! patch shaded 13c fractionation ([])
 
@@ -293,7 +293,7 @@ contains
     allocate(this%mbb_patch         (begp:endp))           ; this%mbb_patch         (:)   = nan
     allocate(this%gb_mol_patch      (begp:endp))           ; this%gb_mol_patch      (:)   = nan
     allocate(this%rh_leaf_patch     (begp:endp))           ; this%rh_leaf_patch     (:)   = nan
-
+    allocate(this%vpd_can_patch     (begp:endp))           ; this%vpd_can_patch     (:)   = nan
     allocate(this%psnsun_patch      (begp:endp))           ; this%psnsun_patch      (:)   = nan
     allocate(this%psnsha_patch      (begp:endp))           ; this%psnsha_patch      (:)   = nan
     allocate(this%c13_psnsun_patch  (begp:endp))           ; this%c13_psnsun_patch  (:)   = nan
@@ -376,6 +376,14 @@ contains
     call hist_addfld1d (fname='RH_LEAF', units='fraction', &
          avgflag='A', long_name='fractional humidity at leaf surface', &
          ptr_patch=this%rh_leaf_patch, set_spec=spval, default='inactive')
+
+    this%vpd_can_patch(begp:endp) = spval
+    call hist_addfld1d (fname='VPD_CAN', units='kPa', &
+         avgflag='A', long_name='canopy vapor pressure deficit', &
+         ptr_patch=this%vpd_can_patch, set_spec=spval, default='active')
+
+
+
     this%lnca_patch(begp:endp) = spval
     call hist_addfld1d (fname='LNC', units='gN leaf/m^2', &
          avgflag='A', long_name='leaf N concentration', &
@@ -578,7 +586,7 @@ contains
 
        endif
        this%fpsn24_patch = spval 
-       call hist_addfld1d (fname='FPSN24', units='umol CO2/m**2 ground/day',&
+       call hist_addfld1d (fname='FPSN24', units='umol CO2/m^2 ground/day',&
            avgflag='A', long_name='24 hour accumulative patch photosynthesis starting from mid-night', &
            ptr_patch=this%fpsn24_patch, default='inactive')
    
@@ -927,6 +935,13 @@ contains
          units='umol/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%lutpu25top_patch)    
 
+   call restartvar(ncid=ncid, flag=flag, varname='VPD_CAN', xtype=ncd_double,  &
+         dim1name='pft', long_name='canopy vapor pressure deficit', &
+         units='kPa', &                                             
+         interpinic_flag='interp', readvar=readvar, data=this%vpd_can_patch)
+
+
+
   end subroutine Restart
 
   !------------------------------------------------------------------------------
@@ -1224,6 +1239,7 @@ contains
          bbb        => photosyns_inst%bbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
          mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
+         vpd_can    => photosyns_inst%vpd_can_patch          , & ! Output: [real(r8) (:)   ]  canopy vapor pressure deficit (kPa)
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
          light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
          leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
@@ -1646,6 +1662,7 @@ contains
                else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   ! Put some constraints on RH in the canopy when Medlyn stomatal conductance is being used
                   rh_can = max((esat_tv(p) - ceair), 50._r8) * 0.001_r8
+                  vpd_can(p) = rh_can
                end if
 
                ! Electron transport rate for C3 plants. Convert par from W/m2 to
@@ -2730,6 +2747,7 @@ contains
          bbb        => photosyns_inst%bbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry minimum leaf conductance (umol H2O/m**2/s)
          mbb        => photosyns_inst%mbb_patch              , & ! Output: [real(r8) (:)   ]  Ball-Berry slope of conductance-photosynthesis relationship
          rh_leaf    => photosyns_inst%rh_leaf_patch          , & ! Output: [real(r8) (:)   ]  fractional humidity at leaf surface (dimensionless)
+         vpd_can    => photosyns_inst%vpd_can_patch          , & ! Output: [real(r8) (:)   ]  canopy vapor pressure deficit (kPa)
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
          light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
          leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
@@ -3278,6 +3296,7 @@ contains
                else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   ! Put some constraints on RH in the canopy when Medlyn stomatal conductance is being used
                   rh_can = max((esat_tv(p) - ceair), 50._r8) * 0.001_r8
+                  vpd_can(p) = rh_can
                end if
 
                ! Electron transport rate for C3 plants. Convert par from W/m2 to
@@ -3310,7 +3329,7 @@ contains
                end if
 
                !find ci and stomatal conductance
-               call hybrid_PHS(ci_z_sun(p,iv), ci_z_sha(p,iv), p, iv, c, gb_mol(p), bsun(p),bsha(p), je_sun, &
+               call hybrid_PHS(ci_z_sun(p,iv), ci_z_sha(p,iv), p, iv, c, g, gb_mol(p), bsun(p),bsha(p), je_sun, &
                                je_sha, cair(p), oair(p), lmr_z_sun(p,iv), lmr_z_sha(p,iv), &
                                par_z_sun(p,iv), par_z_sha(p,iv), rh_can, gs_mol_sun(p,iv), gs_mol_sha(p,iv), &
                                qsatl(p), qaf(p), iter1, iter2, atm2lnd_inst, photosyns_inst, &
@@ -3534,7 +3553,7 @@ contains
   !------------------------------------------------------------------------------
 
   !--------------------------------------------------------------------------------
-  subroutine hybrid_PHS(x0sun, x0sha, p, iv, c, gb_mol, bsun, bsha, jesun, jesha, &
+  subroutine hybrid_PHS(x0sun, x0sha, p, iv, c, g, gb_mol, bsun, bsha, jesun, jesha, &
        cair, oair, lmr_z_sun, lmr_z_sha, par_z_sun, par_z_sha, rh_can, &
        gs_mol_sun, gs_mol_sha, qsatl, qaf, iter1, iter2, atm2lnd_inst, photosyns_inst, &
        canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst, waterfluxbulk_inst)
@@ -3551,6 +3570,7 @@ contains
     !
     !
     !!USES:
+    use clm_time_manager  , only : is_near_local_noon
     !
     !! ARGUMENTS:
     implicit none
@@ -3558,6 +3578,7 @@ contains
     integer , intent(in)    :: p                        ! pft index
     integer , intent(in)    :: iv                       ! radiation canopy layer index
     integer , intent(in)    :: c                        ! column index
+    integer , intent(in)    :: g                        ! gridcell index
     real(r8), intent(in)    :: gb_mol                   ! leaf boundary layer conductance (umol H2O/m**2/s)
     real(r8), intent(out)   :: bsun                     ! sunlit canopy transpiration wetness factor (0 to 1)
     real(r8), intent(out)   :: bsha                     ! shaded canopy transpiration wetness factor (0 to 1)
@@ -3618,7 +3639,8 @@ contains
     
     associate(                                                    &
          qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
-         vegwp         => canopystate_inst%vegwp_patch            & ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
+         vegwp         => canopystate_inst%vegwp_patch           ,& ! Input/Output: [real(r8) (:,:) ]  vegetation water matric potential (mm)
+         vegwp_ln      => canopystate_inst%vegwp_ln_patch         & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) at local noon
     )
 
     
@@ -3767,6 +3789,14 @@ contains
     call getvegwp(p, c, x, gb_mol, gs_mol_sun, gs_mol_sha, qsatl, qaf, soilflux, &
          atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
     vegwp(p,:)=x
+
+    !write out local noon vwp (within +/- 1hr)
+    if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
+       vegwp_ln(p,:) = vegwp(p,:)
+    else
+       vegwp_ln(p,:) = spval
+    end if
+
     if (soilflux<0._r8) soilflux = 0._r8
     qflx_tran_veg(p) = soilflux
     
@@ -4108,51 +4138,61 @@ contains
     ! With an <= 0, then gs_mol = bbb
     
     ! Sunlit
-    cs_sun = cair - 1.4_r8/gb_mol * an_sun(p,iv) * forc_pbot(c)
-    cs_sun = max(cs_sun,10.e-06_r8)
+    if (an_sun(p,iv) >= 0._r8) then
+       cs_sun = cair - 1.4_r8/gb_mol * an_sun(p,iv) * forc_pbot(c)
+       cs_sun = max(cs_sun,10.e-06_r8)
+    end if
 
     if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
-       term = 1.6_r8 * an_sun(p,iv) / (cs_sun / forc_pbot(c) * 1.e06_r8)
-       aquad = 1.0_r8
-       bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+       if (an_sun(p,iv) >= 0._r8) then
+          term = 1.6_r8 * an_sun(p,iv) / (cs_sun / forc_pbot(c) * 1.e06_r8)
+          aquad = 1.0_r8
+          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
-       cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
+          cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
                (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
                (1.0 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
 
-       call quadratic (aquad, bquad, cquad, r1, r2)
-       gs_mol_sun = max(r1,r2) * 1.e06_r8
-   
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol_sun = max(r1,r2) * 1.e06_r8
+       end if
+
        ! Shaded
-       cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
-       cs_sha = max(cs_sha,10.e-06_r8)
-   
-       term = 1.6_r8 * an_sha(p,iv) / (cs_sha / forc_pbot(c) * 1.e06_r8)
-       aquad = 1.0_r8
-       bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+       if (an_sha(p,iv) >= 0._r8) then
+          cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
+          cs_sha = max(cs_sha,10.e-06_r8)
+
+          term = 1.6_r8 * an_sha(p,iv) / (cs_sha / forc_pbot(c) * 1.e06_r8)
+          aquad = 1.0_r8
+          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
-       cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
+          cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
                (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * (1.0 - medlynslope(patch%itype(p))* &
                medlynslope(patch%itype(p)) / rh_can)) * term
 
-       call quadratic (aquad, bquad, cquad, r1, r2)
-       gs_mol_sha = max(r1,r2)* 1.e06_r8
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol_sha = max(r1,r2)* 1.e06_r8
+       end if
     else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
-       aquad = cs_sun
-       bquad = cs_sun*(gb_mol - max(bsun*bbb(p),1._r8)) - mbb(p)*an_sun(p,iv)*forc_pbot(c)
-       cquad = -gb_mol*(cs_sun*max(bsun*bbb(p),1._r8) + mbb(p)*an_sun(p,iv)*forc_pbot(c)*rh_can)
-       call quadratic (aquad, bquad, cquad, r1, r2)
-       gs_mol_sun = max(r1,r2)
-    
+       if (an_sun(p,iv) >= 0._r8) then
+          aquad = cs_sun
+          bquad = cs_sun*(gb_mol - max(bsun*bbb(p),1._r8)) - mbb(p)*an_sun(p,iv)*forc_pbot(c)
+          cquad = -gb_mol*(cs_sun*max(bsun*bbb(p),1._r8) + mbb(p)*an_sun(p,iv)*forc_pbot(c)*rh_can)
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol_sun = max(r1,r2)
+       end if
+
        ! Shaded
-       cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
-       cs_sha = max(cs_sha,10.e-06_r8)
-    
-       aquad = cs_sha
-       bquad = cs_sha*(gb_mol - max(bsha*bbb(p),1._r8)) - mbb(p)*an_sha(p,iv)*forc_pbot(c)
-       cquad = -gb_mol*(cs_sha*max(bsha*bbb(p),1._r8) + mbb(p)*an_sha(p,iv)*forc_pbot(c)*rh_can)
-       call quadratic (aquad, bquad, cquad, r1, r2)
-       gs_mol_sha = max(r1,r2)
+       if (an_sha(p,iv) >= 0._r8) then
+          cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
+          cs_sha = max(cs_sha,10.e-06_r8)
+
+          aquad = cs_sha
+          bquad = cs_sha*(gb_mol - max(bsha*bbb(p),1._r8)) - mbb(p)*an_sha(p,iv)*forc_pbot(c)
+          cquad = -gb_mol*(cs_sha*max(bsha*bbb(p),1._r8) + mbb(p)*an_sha(p,iv)*forc_pbot(c)*rh_can)
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol_sha = max(r1,r2)
+       end if
     end if
     
     ! Derive new estimate for cisun,cisha
@@ -4186,6 +4226,7 @@ contains
     ! USES
     use clm_varpar        , only : nlevsoi
     use clm_varcon        , only : rgas
+    use clm_time_manager  , only : get_local_time
     !!
     ! !ARGUMENTS:
     integer                , intent(in)  :: p               ! pft index
@@ -4218,6 +4259,7 @@ contains
     real(r8) :: gs0sun,gs0sha         ! local gs_mol copies
     real(r8) :: qsun,qsha             ! attenuated transpiration fluxes
     integer  :: j                     ! index
+    integer  :: g                     ! gridcell index
     real(r8) :: cf                    ! s m**2/umol -> s/m
     integer  :: iter                  ! newton's method iteration number
     logical  :: flag                  ! signal that matrix was not invertible
@@ -4241,6 +4283,7 @@ contains
          tgcm          => temperature_inst%thm_patch            , & ! Input:  [real(r8) (:)   ]  air temperature at agcm reference height (kelvin)
          bsw           => soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"
          qflx_tran_veg => waterfluxbulk_inst%qflx_tran_veg_patch    , & ! Input:  [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)
+         vegwp_pd      => canopystate_inst%vegwp_pd_patch       , & ! Output: [real(r8) (:,:) ]  vegetation water matric potential (mm) predawn
          sucsat        => soilstate_inst%sucsat_col               & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)
          )
 
@@ -4380,6 +4423,14 @@ contains
        if (soilflux<0._r8) soilflux = 0._r8
        qflx_tran_veg(p) = soilflux
     endif
+
+    !save predawn vegwp
+    g = patch%gridcell(p)
+    if (night .and. get_local_time(grc%londeg(g))<(isecspday/2)) then
+       vegwp_pd(p,:) = x
+    else
+       vegwp_pd(p,:) = spval
+    end if
     
     
     end associate
