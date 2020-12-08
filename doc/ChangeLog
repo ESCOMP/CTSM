@@ -1,4 +1,110 @@
 ===============================================================
+Tag name:  ctsm5.1.dev018
+Originator(s):  slevis (Samuel Levis,,303-665-1310)
+Date:  Tue Dec  8 11:19:02 MST 2020
+One-line Summary: Add ACTIVE (T/F) column to master hist fields table and alphabetize
+
+Purpose of changes
+------------------
+
+ For convenience, added an ACTIVE column to the master fields table and
+ alphabetized.
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #941
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ None
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ None
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ None
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ None
+
+Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+ None
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ None
+
+Changes to tests or testing:
+ None
+
+CTSM testing:
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - 
+
+  tools-tests (test/tools):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test):
+
+    cheyenne - 
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+ No
+
+Detailed list of changes
+------------------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+ None
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1222
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev017
 Originator(s):  slevis (Samuel Levis,303-665-1310)
 Date:  Tue Nov 17 18:19:20 MST 2020
