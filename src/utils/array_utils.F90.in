@@ -12,8 +12,9 @@ module array_utils
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
-  use abortutils  , only : endrun
+  use shr_kind_mod, only : r8 => shr_kind_r8, r4 => shr_kind_r4, i4=>shr_kind_i4
+  use shr_log_mod , only : errMsg => shr_log_errMsg
+  use shr_sys_mod , only : shr_sys_abort
 
   implicit none
   private
@@ -22,14 +23,23 @@ module array_utils
   ! Public routines
 
   public :: find_k_max_indices ! returns the indices of the maximum k values in data, in sorted order
+  public :: convert_to_logical ! convert a numeric array to logical array
   public :: transpose_wrapper  ! wrap the intrinsic transpose function, first allocating the destination array
   public :: pack_wrapper       ! wrap the intrinsic pack function, first allocating the destination array
+
+  interface convert_to_logical
+     !DIMS 1,2,3
+     !TYPE double,real,int
+     module procedure convert_to_logical_{DIMS}d_{TYPE}
+  end interface convert_to_logical
 
   interface transpose_wrapper
      !TYPE int,double
      module procedure transpose_wrapper_{TYPE}
   end interface transpose_wrapper
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
 contains
 
   !-----------------------------------------------------------------------
@@ -60,7 +70,7 @@ contains
     SHR_ASSERT_FL((size(max_indices) == k), subname, __LINE__)
 
     if (k < 1 .or. k > size(data)) then
-       call endrun(subname//': must have 1 <= k <= size(data)')
+       call shr_sys_abort(subname//': must have 1 <= k <= size(data)')
     end if
 
     max_indices(:) = lb - 1
@@ -92,6 +102,33 @@ contains
 
   end subroutine find_k_max_indices
 
+  !-----------------------------------------------------------------------
+  !DIMS 1,2,3
+  !TYPE double,real,int
+  subroutine convert_to_logical_{DIMS}d_{TYPE}(data_numeric, data_logical)
+    !
+    ! !DESCRIPTION:
+    ! Convert a numeric variable to logical
+    !
+    ! !ARGUMENTS:
+    {VTYPE}, intent(in)  :: data_numeric{DIMSTR}
+    logical, intent(out) :: data_logical{DIMSTR}
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'convert_to_logical_{DIMS}d_{TYPE}'
+    !-----------------------------------------------------------------------
+
+    if (any(data_numeric /= 0 .and. data_numeric /= 1)) then
+       call shr_sys_abort('convert_to_logical: bad value(s) for logical data')
+    end if
+
+    where (data_numeric == 1)
+       data_logical = .true.
+    elsewhere
+       data_logical = .false.
+    end where
+  end subroutine convert_to_logical_{DIMS}d_{TYPE}
 
   !-----------------------------------------------------------------------
   !TYPE int,double

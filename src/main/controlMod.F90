@@ -19,7 +19,7 @@ module controlMod
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
   use decompMod                        , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
-  use clm_varpar                       , only: maxpatch_pft, maxpatch_glcmec, numrad, nlevsno
+  use clm_varpar                       , only: maxpatch_glcmec, numrad, nlevsno
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
@@ -139,10 +139,10 @@ contains
 
     ! CLM namelist settings
 
-    namelist /clm_inparm / &
+    namelist /clm_inparm/ &
          fatmlndfrc, finidat, nrevsn, &
          finidat_interp_dest, &
-         use_init_interp
+         use_init_interp, compname
 
     ! Input datasets
 
@@ -164,7 +164,7 @@ contains
          hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
          hist_fexcl7,  hist_fexcl8,              &
          hist_fexcl9,  hist_fexcl10
-    namelist /clm_inparm/ hist_wrtch4diag
+    namelist /clm_inparm/ hist_wrtch4diag, hist_master_list_file
 
     ! BGC info
 
@@ -202,7 +202,7 @@ contains
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
-         crop_fsat_equals_zero
+         crop_fsat_equals_zero, for_testing_run_ncdiopio_tests
     
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -249,10 +249,6 @@ contains
          use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
 		 
     ! All old cpp-ifdefs are below and have been converted to namelist variables 
-
-    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
-    ! maxpatch_pft will eventually be removed from the perl and the namelist
-    namelist /clm_inparm/ maxpatch_pft
 
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
@@ -618,6 +614,7 @@ contains
     ! run control variables
     call mpi_bcast (caseid, len(caseid), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (ctitle, len(ctitle), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (compname, len(compname), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (version, len(version), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hostname, len(hostname), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (username, len(username), MPI_CHARACTER, 0, mpicom, ier)
@@ -659,6 +656,9 @@ contains
     ! Crop saturated excess runoff
     call mpi_bcast(crop_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    ! Whether to run tests of ncdio_pio
+    call mpi_bcast(for_testing_run_ncdiopio_tests, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     ! Landunit generation
     call mpi_bcast(create_crop_landunit, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -666,16 +666,11 @@ contains
     call mpi_bcast(run_zero_weight_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast(all_active, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    ! maxpatch_pft is obsolete and has been replaced with maxsoil_patches
-    ! maxpatch_pft will eventually be removed from the perl and the namelist
-    call mpi_bcast(maxpatch_pft, 1, MPI_LOGICAL, 0, mpicom, ier)
-
     ! Number of dominant pfts and landunits. Enhance ctsm performance by
     ! reducing the number of active pfts to n_dom_pfts and
     ! active landunits to n_dom_landunits.
     ! Also choose to collapse the urban landunits to the dominant urban
     ! landunit by setting collapse_urban = .true.
-    ! slevis: maxpatch_pft is MPI_LOGICAL? Doesn't matter since obsolete.
     call mpi_bcast(n_dom_pfts, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast(n_dom_landunits, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast(collapse_urban, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -806,11 +801,12 @@ contains
     call mpi_bcast (hist_nhtfrq, size(hist_nhtfrq), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_mfilt, size(hist_mfilt), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_ndens, size(hist_ndens), MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (hist_avgflag_pertape, size(hist_avgflag_pertape), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_avgflag_pertape, len(hist_avgflag_pertape)*size(hist_avgflag_pertape), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_type1d_pertape, max_namlen*size(hist_type1d_pertape), MPI_CHARACTER, 0, mpicom, ier)
     if (use_lch4) then
        call mpi_bcast (hist_wrtch4diag, 1, MPI_LOGICAL, 0, mpicom, ier)
     end if
+    call mpi_bcast (hist_master_list_file, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl1, max_namlen*size(hist_fexcl1), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl2, max_namlen*size(hist_fexcl2), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl3, max_namlen*size(hist_fexcl3), MPI_CHARACTER, 0, mpicom, ier)

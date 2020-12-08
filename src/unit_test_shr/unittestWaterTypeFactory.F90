@@ -23,7 +23,7 @@ module unittestWaterTypeFactory
 
 #include "shr_assert.h"
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use clm_varpar, only : nlevsoi, nlevgrnd, nlevsno
+  use clm_varpar, only : nlevsoi, nlevgrnd, nlevmaxurbgrnd, nlevsno
   use ColumnType, only : col
   use WaterType, only : water_type, water_params_type
   use unittestArrayMod, only : col_array
@@ -66,6 +66,7 @@ contains
 
     nlevsoi = my_nlevsoi
     nlevgrnd = nlevsoi + nlevgrnd_additional
+    nlevmaxurbgrnd = nlevgrnd
     nlevsno = my_nlevsno
   end subroutine setup_before_subgrid
 
