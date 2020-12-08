@@ -831,7 +831,6 @@ contains
 
        end if
 
-
        ! Energy balance checks
 
        do p = bounds%begp, bounds%endp
