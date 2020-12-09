@@ -126,7 +126,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterGridcellBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       water_inst, soilhydrology_inst, &
+       water_inst, soilhydrology_inst, lakestate_inst, &
        use_aquifer_layer)
     !
     ! !DESCRIPTION:
@@ -140,6 +140,7 @@ contains
     integer                 , intent(in)    :: num_lakec          ! number of column lake points in column filter
     integer                 , intent(in)    :: filter_lakec(:)    ! column filter for lake points
     type(water_type)        , intent(inout) :: water_inst
+    type(lakestate_type)    , intent(in)    :: lakestate_inst
     type(soilhydrology_type), intent(in)    :: soilhydrology_inst
     logical                 , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
     !
@@ -154,6 +155,7 @@ contains
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
             soilhydrology_inst, &
+            lakestate_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
             water_inst%bulk_and_tracers(i)%waterbalance_inst, &
@@ -206,7 +208,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterGridcellBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, waterstate_inst, waterdiagnostic_inst, waterbalance_inst, &
+       soilhydrology_inst, lakestate_inst, waterstate_inst, &
+       waterdiagnostic_inst, waterbalance_inst, &
        use_aquifer_layer)
     !
     ! !DESCRIPTION:
@@ -223,6 +226,7 @@ contains
     integer                    , intent(in)    :: num_lakec          ! number of column lake points in column filter
     integer                    , intent(in)    :: filter_lakec(:)    ! column filter for lake points
     type(soilhydrology_type)   , intent(in)    :: soilhydrology_inst
+    type(lakestate_type)       , intent(in)    :: lakestate_inst
     class(waterstate_type)     , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)    :: waterdiagnostic_inst
     class(waterbalance_type)   , intent(inout) :: waterbalance_inst
@@ -267,8 +271,8 @@ contains
          water_mass = begwb_col(begc:endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
-         waterstate_inst, &
-         subtract_dynbal_baselines = .false., &
+         waterstate_inst, lakestate_inst, &
+         add_lake_water_and_subtract_dynbal_baselines = .false., &
          water_mass = begwb_col(begc:endc))
 
     call c2g(bounds, begwb_col(begc:endc), begwb_grc(begg:endg), &

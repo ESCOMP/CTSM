@@ -327,10 +327,10 @@ contains
        call t_stopf('begcnbal_grc')
 
        call t_startf('begwbal')
-       call BeginWaterGridcellBalance(bounds_clump,           &
-            filter(nc)%num_nolakec, filter(nc)%nolakec,       &
-            filter(nc)%num_lakec, filter(nc)%lakec,           &
-            water_inst, soilhydrology_inst, &
+       call BeginWaterGridcellBalance(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            water_inst, soilhydrology_inst, lakestate_inst, &
             use_aquifer_layer = use_aquifer_layer())
        call t_stopf('begwbal')
     end do
