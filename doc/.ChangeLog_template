@@ -72,13 +72,18 @@ Testing summary:
 ----------------
 [... Remove before making master tag.  Available test levels:
 
+Model test levels one of the next three (one MUST be given):
     a) regular (regular tests on normal machines if CTSM source is modified)
-    c) tools (if tools are modified)
-    d) minimal (for use in rare cases where only a small change with 
+    b) minimal (for use in rare cases where only a small change with 
                 known behavior is added ... eg. a minor bug fix. This
 		might be to just run the "short" test list, or to run
 		a single test. Whatever makes sense for the particular case.)
-    e) doc (no source testing required)
+    c) doc (no source testing required)
+Optional Tools test level: add this if standard tools were changed:
+    d) tools (if tools are modified)
+    
+i.e. for regular testing with tools the test level would be: regular tools
+if JUST tools were changed it would be: tools
 ...]
 
 [Remove any lines that don't apply.]
