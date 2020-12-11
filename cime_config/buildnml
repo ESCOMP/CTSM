@@ -65,11 +65,7 @@ def buildnml(case, caseroot, compname):
     mask = case.get_value("MASK_GRID")
 
     # -----------------------------------------------------
-<<<<<<< HEAD
-    # Set clmconf
-=======
     # Set ctsmconf
->>>>>>> escomp_master
     # -----------------------------------------------------
 
     ctsmconf = os.path.join(caseroot, "Buildconf", compname+"conf")
