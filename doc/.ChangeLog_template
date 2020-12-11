@@ -89,7 +89,7 @@ Optional Tools test level: add this if standard tools were changed:
     
 i.e. for regular testing with tools the test level would be: regular tools
 if JUST tools were changed it would be: doc tools
-which says no testing of the source was done, but the tools tests were also done
+which says testing of the source was not required, but the tools tests were required
 ...]
 
 [Remove any lines that don't apply.]
