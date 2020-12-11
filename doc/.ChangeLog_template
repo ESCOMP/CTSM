@@ -70,26 +70,24 @@ Changes to tests or testing:
 
 Testing summary:
 ----------------
-[... Remove before making master tag.  Available test levels:
+[... Remove before making master tag.
 
-Model test levels one of the next five (one MUST be given):
+Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
+However, it occasionally makes sense to do more or less system testing;
+here is guidance on different available levels of system testing:
     a) doc (no source testing required)
     b) minimal (for use in rare cases where only a small change with 
                 known behavior is added ... eg. a minor bug fix. This
 		might be to just run the "short" test list, or to run
 		a single test. Whatever makes sense for the particular case.)
-    c) fates (Just run the fates test list on normal machines if CTSM source
-                only relating to fates is modified)
-    d) regular (regular tests on normal machines if CTSM source is modified)
-    e) release (regular tests plus the fates, ctsm_sci, aux_glc, mosart and rtm test lists
+    c) regular (regular tests on normal machines if CTSM source is modified)
+    d) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
                 and normally all of the ancillary tests (build-namelist, python, ptclm, etc.) 
 		would be run as well)
-Optional Tools test level: add this if standard tools were changed:
-    f) tools (if tools are modified)
-    
-i.e. for regular testing with tools the test level would be: regular tools
-if JUST tools were changed it would be: doc tools
-which says testing of the source was not required, but the tools tests were required
+
+In addition, various other tests of the tools, python and perl
+infrastructure should be run when appropriate, as described below.
+
 ...]
 
 [Remove any lines that don't apply.]
@@ -113,10 +111,12 @@ which says testing of the source was not required, but the tools tests were requ
 
     (any machine) - 
 
-  regular tests (aux_clm):
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- 
     izumi ------- 
+
+  any other testing (give details below):
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
