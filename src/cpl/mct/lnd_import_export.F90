@@ -26,6 +26,7 @@ contains
     ! !USES:
     use seq_flds_mod    , only: seq_flds_x2l_fields
     use clm_varctl      , only: co2_type, co2_ppmv, iulog, use_c13
+    use clm_varctl      , only: o3_type, o3_ppbv
     use clm_varctl      , only: ndep_from_cpl 
     use clm_varcon      , only: c13ratio
     use domainMod       , only: ldomain
@@ -52,6 +53,9 @@ contains
     real(r8) :: co2_ppmv_prog        ! temporary
     real(r8) :: co2_ppmv_val         ! temporary
     integer  :: co2_type_idx         ! integer flag for co2_type options
+    real(r8) :: o3_ppbv_diag         ! temporary
+    real(r8) :: o3_ppbv_val          ! temporary
+    integer  :: o3_type_idx          ! integer flag for o3_type options
     character(len=32) :: fname       ! name of field that is NaN
     character(len=32), parameter :: sub = 'lnd_import'
 
@@ -70,6 +74,14 @@ contains
        call endrun( sub//' ERROR: must have nonzero index_x2l_Sa_co2prog for co2_type equal to prognostic' )
     else if (co2_type == 'diagnostic' .and. index_x2l_Sa_co2diag == 0) then
        call endrun( sub//' ERROR: must have nonzero index_x2l_Sa_co2diag for co2_type equal to diagnostic' )
+    end if
+
+    o3_type_idx = 0
+    if (o3_type == 'diagnostic') then
+       o3_type_idx = 2
+    end if
+    if (o3_type == 'diagnostic' .and. index_x2l_Sa_o3diag == 0) then
+       call endrun( sub//' ERROR: must have nonzero index_x2l_Sa_o3diag for o3_type equal to diagnostic' )
     end if
 
     ! Note that the precipitation fluxes received  from the coupler
@@ -142,6 +154,12 @@ contains
           co2_ppmv_diag = co2_ppmv
        end if
 
+       if (index_x2l_Sa_o3diag /= 0) then
+          o3_ppbv_diag = x2l(index_x2l_Sa_o3diag,i)   ! o3 atm state diagnostic
+       else
+          o3_ppbv_diag = o3_ppbv
+       end if
+
        if (index_x2l_Sa_methane /= 0) then
           atm2lnd_inst%forc_pch4_grc(g) = x2l(index_x2l_Sa_methane,i)
        endif
@@ -186,6 +204,18 @@ contains
        if (use_c13) then
           atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
        end if
+
+       ! Note that the following does unit conversions from ppbv to partial pressures (Pa)
+       if (o3_type_idx == 2) then
+          o3_ppbv_val = o3_ppbv_diag 
+       else
+          o3_ppbv_val = o3_ppbv
+       end if
+       if ( (o3_ppbv_val < 0.0_r8) .or. (o3_ppbv_val > 300.0_r8) )then
+          call endrun( sub//' ERROR: O3 is outside of an expected range' )
+       end if
+       atm2lnd_inst%forc_po3_grc(g)   = o3_ppbv_val * 1.e-9_r8 * forc_pbot 
+       
 
        if (ndep_from_cpl) then
           ! The coupler is sending ndep in units if kgN/m2/s - and clm uses units of gN/m2/sec - so the

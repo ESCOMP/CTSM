@@ -89,6 +89,7 @@ module clm_cpl_indices
   integer, public ::index_x2l_Faxa_swvdf      ! sw: vis diffuse downward
   integer, public ::index_x2l_Sa_co2prog      ! bottom atm level prognostic co2
   integer, public ::index_x2l_Sa_co2diag      ! bottom atm level diagnostic co2
+  integer, public ::index_x2l_Sa_o3diag       ! bottom atm level diagnostic o3
   integer, public ::index_x2l_Faxa_bcphidry   ! flux: Black Carbon hydrophilic dry deposition
   integer, public ::index_x2l_Faxa_bcphodry   ! flux: Black Carbon hydrophobic dry deposition
   integer, public ::index_x2l_Faxa_bcphiwet   ! flux: Black Carbon hydrophilic wet deposition
@@ -242,6 +243,8 @@ contains
     index_x2l_Sa_shum       = mct_avect_indexra(x2l,'Sa_shum')
     index_x2l_Sa_co2prog    = mct_avect_indexra(x2l,'Sa_co2prog',perrwith='quiet')
     index_x2l_Sa_co2diag    = mct_avect_indexra(x2l,'Sa_co2diag',perrwith='quiet')
+
+    index_x2l_Sa_o3diag    = mct_avect_indexra(x2l,'Sa_o3diag',perrwith='quiet')
 
     index_x2l_Sa_methane    = mct_avect_indexra(x2l,'Sa_methane',perrWith='quiet')
 

@@ -25,6 +25,9 @@ module OzoneBaseMod
      real(r8), pointer, public :: o3coefvsun_patch(:)  ! ozone coefficient for photosynthesis, sunlit leaves (0 - 1)
      real(r8), pointer, public :: o3coefgsha_patch(:)  ! ozone coefficient for conductance, shaded leaves (0 - 1)
      real(r8), pointer, public :: o3coefgsun_patch(:)  ! ozone coefficient for conductance, sunlit leaves (0 - 1)
+     real(r8), pointer, public :: o3coefjmaxsha_patch(:)  ! ozone coefficient for max. electron transport rate, shaded leaves (0 - 1)
+     real(r8), pointer, public :: o3coefjmaxsun_patch(:)  ! ozone coefficient for max. electron transport rate, sunlit leaves (0 - 1)
+  
      
      
    contains
@@ -32,6 +35,7 @@ module OzoneBaseMod
      procedure(Init_interface)            , public, deferred :: Init
      procedure(Restart_interface)         , public, deferred :: Restart
      procedure(CalcOzoneStress_interface) , public, deferred :: CalcOzoneStress
+     procedure(Acc24_OzoneStress_Luna_interface) , public, deferred :: Acc24_OzoneStress_Luna
 
      ! The following routines should only be called by extensions of the ozone_base_type
      procedure, public :: InitAllocateBase
@@ -61,7 +65,7 @@ module OzoneBaseMod
      end subroutine Restart_interface
        
      subroutine CalcOzoneStress_interface(this, bounds, num_exposedvegp, filter_exposedvegp, &
-          forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
+          forc_po3, forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
        use decompMod    , only : bounds_type
        use shr_kind_mod , only : r8 => shr_kind_r8
        import :: ozone_base_type
@@ -70,6 +74,7 @@ module OzoneBaseMod
        type(bounds_type)      , intent(in)    :: bounds
        integer  , intent(in) :: num_exposedvegp           ! number of points in filter_exposedvegp
        integer  , intent(in) :: filter_exposedvegp(:)     ! patch filter for non-snow-covered veg
+       real(r8) , intent(in) :: forc_po3( bounds%begc: )  ! ozone concentration in partial pressure (Pa)
        real(r8) , intent(in) :: forc_pbot( bounds%begc: ) ! atmospheric pressure (Pa)
        real(r8) , intent(in) :: forc_th( bounds%begc: )   ! atmospheric potential temperature (K)
        real(r8) , intent(in) :: rssun( bounds%begp: )     ! leaf stomatal resistance, sunlit leaves (s/m)
@@ -78,6 +83,17 @@ module OzoneBaseMod
        real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
        real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
      end subroutine CalcOzoneStress_interface
+
+     subroutine Acc24_OzoneStress_Luna_interface(this, bounds, num_exposedvegp, filter_exposedvegp)
+       use shr_kind_mod , only : r8 => shr_kind_r8
+       use decompMod    , only : bounds_type
+       import :: ozone_base_type
+
+       class(ozone_base_type) , intent(inout) :: this
+       type(bounds_type)      , intent(in)    :: bounds
+       integer  , intent(in) :: num_exposedvegp           ! number of points in filter_exposedvegp
+       integer  , intent(in) :: filter_exposedvegp(:)     ! patch filter for non-snow-covered veg
+     end subroutine Acc24_OzoneStress_Luna_interface
 
   end interface
      
@@ -109,6 +125,9 @@ contains
     allocate(this%o3coefvsun_patch(begp:endp))  ; this%o3coefvsun_patch(:) = nan
     allocate(this%o3coefgsha_patch(begp:endp))  ; this%o3coefgsha_patch(:) = nan
     allocate(this%o3coefgsun_patch(begp:endp))  ; this%o3coefgsun_patch(:) = nan
+    allocate(this%o3coefjmaxsha_patch(begp:endp))  ; this%o3coefjmaxsha_patch(:) = nan
+    allocate(this%o3coefjmaxsun_patch(begp:endp))  ; this%o3coefjmaxsun_patch(:) = nan
+    
     
   end subroutine InitAllocateBase
 
@@ -140,6 +159,9 @@ contains
     this%o3coefvsun_patch(begp:endp) = 1._r8
     this%o3coefgsha_patch(begp:endp) = 1._r8
     this%o3coefgsun_patch(begp:endp) = 1._r8
+    this%o3coefjmaxsha_patch(begp:endp) = 1._r8
+    this%o3coefjmaxsun_patch(begp:endp) = 1._r8
+
 
   end subroutine InitColdBase
 

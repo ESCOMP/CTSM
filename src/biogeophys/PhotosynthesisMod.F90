@@ -191,9 +191,9 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: rssha_z_patch     (:,:) ! patch canopy layer: shaded leaf stomatal resistance (s/m)
      real(r8), pointer, public  :: rssun_patch       (:)   ! patch sunlit stomatal resistance (s/m)
      real(r8), pointer, public  :: rssha_patch       (:)   ! patch shaded stomatal resistance (s/m)
-     real(r8), pointer, public  :: luvcmax25top_patch (:)   ! vcmax25 !     (umol/m2/s)
-     real(r8), pointer, public  :: lujmax25top_patch  (:)   ! vcmax25 (umol/m2/s)
-     real(r8), pointer, public  :: lutpu25top_patch   (:)   ! vcmax25 (umol/m2/s)
+     real(r8), pointer, public  :: luvcmax25top_patch(:)   ! patch at canopy top vcmax25 (umol/m2/s)
+     real(r8), pointer, public  :: lujmax25top_patch (:)   ! patch at canopy top jmax25 (umol/m2/s)
+     real(r8), pointer, public  :: lutpu25top_patch  (:)   ! patch at canopy top tpumax25 (umol/m2/s)
 !!
 
 
@@ -334,9 +334,9 @@ contains
     allocate(this%rssha_z_patch     (begp:endp,1:nlevcan)) ; this%rssha_z_patch     (:,:) = nan
     allocate(this%rssun_patch       (begp:endp))           ; this%rssun_patch       (:)   = nan
     allocate(this%rssha_patch       (begp:endp))           ; this%rssha_patch       (:)   = nan
-    allocate(this%luvcmax25top_patch(begp:endp))           ; this%luvcmax25top_patch(:) = nan
-    allocate(this%lujmax25top_patch (begp:endp))           ; this%lujmax25top_patch(:)  = nan
-    allocate(this%lutpu25top_patch  (begp:endp))           ; this%lutpu25top_patch(:)   = nan
+    allocate(this%luvcmax25top_patch(begp:endp))           ; this%luvcmax25top_patch(:)   = nan
+    allocate(this%lujmax25top_patch (begp:endp))           ; this%lujmax25top_patch (:)   = nan
+    allocate(this%lutpu25top_patch  (begp:endp))           ; this%lutpu25top_patch  (:)   = nan
 !!
 !    allocate(this%psncanopy_patch   (begp:endp))           ; this%psncanopy_patch   (:)   = nan
 !    allocate(this%lmrcanopy_patch   (begp:endp))           ; this%lmrcanopy_patch   (:)   = nan
@@ -571,17 +571,17 @@ contains
 
          this%luvcmax25top_patch(begp:endp) = spval
          call hist_addfld1d (fname='VCMX25T', units='umol/m2/s',  &
-            avgflag='M', long_name='canopy profile of vcmax25', &
+            avgflag='M', long_name='canopy top patch vcmax25', &
             ptr_patch=this%luvcmax25top_patch, set_lake=spval, set_urb=spval)
 
          this%lujmax25top_patch(begp:endp) = spval
          call hist_addfld1d (fname='JMX25T', units='umol/m2/s',  &
-            avgflag='M', long_name='canopy profile of jmax', &
+            avgflag='M', long_name='canopy top patch jmax25', &
             ptr_patch=this%lujmax25top_patch, set_lake=spval, set_urb=spval)
 
             this%lutpu25top_patch(begp:endp) = spval
             call hist_addfld1d (fname='TPU25T', units='umol/m2/s',  &
-            avgflag='M', long_name='canopy profile of tpu', &
+            avgflag='M', long_name='canopy top patch tpu', &
             ptr_patch=this%lutpu25top_patch, set_lake=spval, set_urb=spval)
 
        endif
@@ -921,17 +921,17 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%fpsn24_patch)    
    endif
    call restartvar(ncid=ncid, flag=flag, varname='vcmx25t', xtype=ncd_double,  &
-         dim1name='pft', long_name='canopy profile of vcmax25', &
+         dim1name='pft', long_name='canopy top patch vcmax25', &
          units='umol/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%luvcmax25top_patch)    
 
    call restartvar(ncid=ncid, flag=flag, varname='jmx25t', xtype=ncd_double,  &
-         dim1name='pft', long_name='canopy profile of jmax', &
+         dim1name='pft', long_name='canopy top patch jmax25', &
          units='umol/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%lujmax25top_patch)    
 
    call restartvar(ncid=ncid, flag=flag, varname='tpu25t', xtype=ncd_double,  &
-         dim1name='pft', long_name='canopy profile of tpu', &
+         dim1name='pft', long_name='canopy top patch of tpu', &
          units='umol/m2/s', &
          interpinic_flag='interp', readvar=readvar, data=this%lutpu25top_patch)    
 
@@ -1289,7 +1289,7 @@ contains
       !==============================================================================!
 
       ! Determine seconds of current time step
-
+      
       dtime = get_step_size_real()
 
       ! Activation energy, from:
@@ -2733,9 +2733,9 @@ contains
          ap         => photosyns_inst%ap_phs_patch           , & ! Output: [real(r8) (:,:,:) ]  product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
          ag         => photosyns_inst%ag_phs_patch           , & ! Output: [real(r8) (:,:,:) ]  co-limited gross leaf photosynthesis (umol CO2/m**2/s)
          vcmax_z    => photosyns_inst%vcmax_z_phs_patch      , & ! Output: [real(r8) (:,:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)
-         luvcmax25top => photosyns_inst%luvcmax25top_patch   , & !  Output: [real(r8) (:) ]  maximum rate of carboxylation (umol co2/m**2/s)
-         lujmax25top  => photosyns_inst%lujmax25top_patch    , & ! Output: [real(r8) (:) ]  maximum rate of carboxylation (umol co2/m**2/s)
-         lutpu25top   => photosyns_inst%lutpu25top_patch     , & ! Output: [real(r8) (:) ]  maximum rate of carboxylation (umol co2/m**2/s)
+         luvcmax25top => photosyns_inst%luvcmax25top_patch   , & ! Output: [real(r8) (:) ]  maximum rate of carboxylation at canopy top (umol co2/m**2/s)
+         lujmax25top  => photosyns_inst%lujmax25top_patch    , & ! Output: [real(r8) (:) ]  maximum rate of electron transport at canopy top (umol co2/m**2/s)
+         lutpu25top   => photosyns_inst%lutpu25top_patch     , & ! Output: [real(r8) (:) ]  maximum rate of triose phosphate utilization at canopy top (umol co2/m**2/s)
 !!!
          tpu_z      => photosyns_inst%tpu_z_phs_patch        , & ! Output: [real(r8) (:,:,:) ]  triose phosphate utilization rate (umol CO2/m**2/s)
          kp_z       => photosyns_inst%kp_z_phs_patch         , & ! Output: [real(r8) (:,:,:) ]  initial slope of CO2 response curve (C4 plants)
@@ -3014,8 +3014,8 @@ contains
          tpu25top  = params_inst%tpu25ratio * vcmax25top
          kp25top   = params_inst%kp25ratio * vcmax25top
          luvcmax25top(p) = vcmax25top
-         lujmax25top(p) = jmax25top
-         lutpu25top(p)=tpu25top
+         lujmax25top(p)  = jmax25top
+         lutpu25top(p)   = tpu25top
 
          ! Nitrogen scaling factor. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593 used
          ! kn = 0.11. Here, derive kn from vcmax25 as in Lloyd et al (2010) Biogeosciences, 7, 1833-1859

@@ -26,10 +26,11 @@ contains
     ! particular type is determined based on the use_ozone namelist parameter.
     !
     ! !USES:
-    use clm_varctl   , only : use_ozone
+    use clm_varctl   , only : use_ozone, use_ozone_luna
     use OzoneBaseMod , only : ozone_base_type
     use OzoneOffMod  , only : ozone_off_type
     use OzoneMod     , only : ozone_type
+    use OzoneLunaMod , only : ozone_luna_type
     !
     ! !ARGUMENTS:
     class(ozone_base_type), allocatable :: ozone  ! function result
@@ -42,6 +43,8 @@ contains
 
     if (use_ozone) then
        allocate(ozone, source = ozone_type())
+    else if (use_ozone_luna) then
+       allocate(ozone, source = ozone_luna_type())
     else
        allocate(ozone, source = ozone_off_type())
     end if

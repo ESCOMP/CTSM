@@ -31,6 +31,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- CO2 type -->
 <co2_type>constant</co2_type>
 
+<!-- O3 volume mixing ratio -->
+<o3_ppbv>100.0</o3_ppbv>
+
+<!-- O3 type -->
+<o3_type>constant</o3_type>
+
 <!-- Default Biogeochemistry mode -->
 <bgc_mode >sp</bgc_mode>
 
@@ -456,6 +462,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Antarctica: remains_ice -->
 <glacier_region_ice_runoff_behavior>'melted','melted','remains_ice','remains_ice'</glacier_region_ice_runoff_behavior>
 
+<glacier_region_rain_to_snow_behavior>'converted_to_snow','converted_to_snow','converted_to_snow','converted_to_snow'</glacier_region_rain_to_snow_behavior>
+
 <!-- This parameter is tied (in a scientific sense) to h2osno_max: For large
      values of h2osno_max, glc_snow_persistence_max_days should be 0; for small
      values of h2osno_max, glc_snow_persistence_max_days should be non-zero. For
@@ -664,7 +672,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
 <!-- These two needs to specify use_cn=F/T since there is a version for both, other files just use the BGC version -->
@@ -686,7 +694,24 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
->hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.false. glc_nec=10
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<!-- present day -->
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_GSWP3v1"
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_CRUv7"
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_GSWP3v1"
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
 </init_interp_attributes>
 
 <!-- 1850 for CTSM5.1 -->
@@ -824,6 +849,23 @@ p
 </init_interp_attributes>
 
 
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+<!-- 2010 IC's... -->
+
+<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm4_5_cam6.0"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+
+<init_interp_attributes sim_year="2010" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
+>hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_nitrif_denitrif=.true. use_vertsoilc=.true. use_crop=.true. irrigate=.true. glc_nec=10
+</init_interp_attributes>
+
+
+
 <!--
      1850 preindustrial IC (if use_init_interp is added and set to .true. then MUST still interpolate even on an exact match)
                            (if it will work on an exact match, leave use_init_interp off)
@@ -880,6 +922,7 @@ p
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/initdata_map/clmi.B1850Clm50BgcCrop.0161-01-01.0.9x1.25_gx1v7_simyr1850_c200729.nc
+
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
@@ -931,6 +974,7 @@ p
          lnd_tuning_mode="clm5_0_GSWP3v1"
 >lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
 </finidat>
+
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20110101" use_nitrif_denitrif=".true." use_vertsoilc=".true." sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
@@ -1185,8 +1229,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- Potential vegetation land use dataset, crop is off, and zeroed, all areas are natural vegetation without human disturbance -->
 <fsurdat hgrid="0.9x1.25"     sim_year="PtVg" use_crop=".false." irrigate=".false."
 >lnd/clm2/surfdata_map/surfdata_0.9x1.25_hist_16pfts_nourb_CMIP6_simyrPtVg_c181114.nc</fsurdat>
-
-<!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
 
 <flanduse_timeseries hgrid="0.9x1.25"      sim_year_range="1850-2000" irrigate=".true."
  use_crop=".false." >lnd/clm2/surfdata_map/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c170824.nc</flanduse_timeseries>
@@ -3233,7 +3275,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 >lnd/clm2/mappingdata/maps/0.125x0.125/map_5x5min_nomask_to_0.125x0.125_nomask_aave_da_c140702.nc</map>
 
 <!-- mapping files for 0.125x0.125 END -->
-
 
 <!-- mapping files for 94x192 START added on Tue May 21 15:02:45 2019-->
 <!-- Created by lnd/clm/bld/namelist_files/createMapEntry.pl--> 

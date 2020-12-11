@@ -14,7 +14,7 @@ module CanopyFluxesMod
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
-                                     use_luna, use_hydrstress
+                                     use_luna, use_hydrstress, use_ozone_luna
   use clm_varpar            , only : nlevgrnd, nlevsno
   use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
@@ -228,6 +228,7 @@ contains
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
+    use FrictionVelocityMod, only : FrictionVelocity, MoninObukIni, frictionvel_parms_inst
     use HumanIndexMod      , only : all_human_stress_indices, fast_human_stress_indices, &
                                     Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
@@ -1333,6 +1334,7 @@ contains
          dummy_to_make_pgi_happy = ubound(atm2lnd_inst%forc_pbot_downscaled_col, 1)
          call ozone_inst%CalcOzoneStress( &
               bounds, fn, filterp, &
+              forc_po3  = atm2lnd_inst%forc_po3_grc(bounds%begc:bounds%endc),& 
               forc_pbot = atm2lnd_inst%forc_pbot_downscaled_col(bounds%begc:bounds%endc), &
               forc_th   = atm2lnd_inst%forc_th_downscaled_col(bounds%begc:bounds%endc), &
               rssun     = photosyns_inst%rssun_patch(bounds%begp:bounds%endp), &
@@ -1351,6 +1353,12 @@ contains
             
             if(is_end_day)then
                
+               if(use_ozone_luna) then
+                  ! Get damage on Jmax
+                  ! accumulated over one day
+                  call ozone_inst%Acc24_OzoneStress_Luna(bounds, fn, filterp)
+               end if
+
                call Acc240_Climate_LUNA(bounds, fn, filterp, &
                     o2(begp:endp), &
                     co2(begp:endp), &
@@ -1372,7 +1380,8 @@ contains
                     surfalb_inst, &
                     solarabs_inst, &
                     waterdiagnosticbulk_inst,&
-                    frictionvel_inst)        
+                    frictionvel_inst,&
+                    ozone_inst)        
                
                call Clear24_Climate_LUNA(bounds, fn, filterp, &
                     canopystate_inst, photosyns_inst, &

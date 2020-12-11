@@ -23,6 +23,7 @@ module OzoneOffMod
      procedure, public :: Init
      procedure, public :: Restart
      procedure, public :: CalcOzoneStress
+     procedure, public :: Acc24_OzoneStress_Luna
   end type ozone_off_type
 
   interface ozone_off_type
@@ -80,12 +81,13 @@ contains
   end subroutine Restart
 
   subroutine CalcOzoneStress(this, bounds, num_exposedvegp, filter_exposedvegp, &
-          forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
+          forc_po3, forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
 
     class(ozone_off_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
     integer  , intent(in) :: num_exposedvegp           ! number of points in filter_exposedvegp
     integer  , intent(in) :: filter_exposedvegp(:)     ! patch filter for non-snow-covered veg
+    real(r8) , intent(in) :: forc_po3( bounds%begc: )  ! ozone concentration in partial pressure (Pa)
     real(r8) , intent(in) :: forc_pbot( bounds%begc: ) ! atmospheric pressure (Pa)
     real(r8) , intent(in) :: forc_th( bounds%begc: )   ! atmospheric potential temperature (K)
     real(r8) , intent(in) :: rssun( bounds%begp: )     ! leaf stomatal resistance, sunlit leaves (s/m)
@@ -96,6 +98,7 @@ contains
 
     ! Enforce expected array sizes (mainly so that a debug-mode threaded test with
     ! ozone-off can pick up problems with the call to this routine)
+    SHR_ASSERT_ALL_FL((ubound(forc_po3) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(forc_pbot) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(forc_th) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rssun) == (/bounds%endp/)), sourcefile, __LINE__)
@@ -113,5 +116,20 @@ contains
     this%o3coefgsun_patch(bounds%begp:bounds%endp) = 1._r8
 
   end subroutine CalcOzoneStress
+
+  subroutine Acc24_OzoneStress_Luna(this, bounds, num_exposedvegp, filter_exposedvegp)
+
+    class(ozone_off_type) , intent(inout) :: this
+    type(bounds_type)      , intent(in)    :: bounds
+    integer  , intent(in) :: num_exposedvegp           ! number of points in filter_exposedvegp
+    integer  , intent(in) :: filter_exposedvegp(:)     ! patch filter for non-snow-covered veg
+    
+    ! Explicitly set outputs to 1. This isn't really needed, because they should still be
+    ! at 1 from cold-start initialization, but do this for clarity here.
+
+    this%o3coefjmaxsha_patch(bounds%begp:bounds%endp) = 1._r8
+    this%o3coefjmaxsun_patch(bounds%begp:bounds%endp) = 1._r8
+
+  end subroutine Acc24_OzoneStress_Luna
 
 end module OzoneOffMod

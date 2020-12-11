@@ -42,6 +42,8 @@ def buildnml(case, caseroot, compname):
     structure = case.get_value("CLM_STRUCTURE")
     ccsm_co2_ppmv = case.get_value("CCSM_CO2_PPMV")
     clm_co2_type = case.get_value("CLM_CO2_TYPE")
+    ccsm_o3_ppbv = case.get_value("CCSM_O3_PPBV")
+    clm_o3_type = case.get_value("CLM_O3_TYPE")
     clm_namelist_opts = case.get_value("CLM_NAMELIST_OPTS")
     clm_bldnml_opts = case.get_value("CLM_BLDNML_OPTS")
     clm_nml_use_case = case.get_value("CLM_NML_USE_CASE")
@@ -63,7 +65,11 @@ def buildnml(case, caseroot, compname):
     mask = case.get_value("MASK_GRID")
 
     # -----------------------------------------------------
+<<<<<<< HEAD
+    # Set clmconf
+=======
     # Set ctsmconf
+>>>>>>> escomp_master
     # -----------------------------------------------------
 
     ctsmconf = os.path.join(caseroot, "Buildconf", compname+"conf")
@@ -155,6 +161,13 @@ def buildnml(case, caseroot, compname):
     lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
     
     config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
+
+    # -----------------------------------------------------
+    # Clear out old data
+    # -----------------------------------------------------
+
+    if os.path.exists(inputdata_file):
+        os.remove(inputdata_file)
 
     # -----------------------------------------------------
     # Clear out old data

@@ -86,6 +86,19 @@ Type of CO2 feedback.
     diagnostic = use the diagnostic value sent from the atmosphere
 </entry>
 
+<entry id="o3_ppbv" type="real" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Atmospheric O3 molar ratio (by volume) only used when o3_type==constant (nmol/mol)
+(Set by CCSM_O3_PPBV)
+</entry>
+
+<entry id="o3_type" type="char*16" category="clm_physics"
+       group="clm_inparm" valid_values="constant,diagnostic" >
+Type of O3 feedback.
+    constant   = use the input o3_ppbv value
+    disgnostic = use diagnostic values from the atmosphere
+</entry>
+
 
 <entry id="suplnitro" type="char*15" category="clm_physics"
        group="clm_inparm" valid_values="NONE,ALL" >
@@ -560,6 +573,23 @@ Allowed values are:
    regions that have little iceberg calving in reality. This can be important to avoid unrealistic
    cooling of the ocean and consequent runaway sea ice growth.
 Only applies when melt_non_icesheet_ice_runoff is .true.
+</entry>
+
+<entry id="glacier_region_rain_to_snow_behavior" type="char*32(10)" category="clm_physics"
+       group="clm_glacier_behavior"
+       valid_values="converted_to_snow,runs_off" >
+When rain-snow repartitioning / downscaling results in rain being converted to
+snow, the behavior of the resulting additional snow.
+First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
+second to GLACIER_REGION with ID 1, etc.
+Allowed values are:
+'converted_to_snow': rain is converted to snow, with a corresponding sensible
+   heat flux correction
+'runs_off': rather than being converted to snow, the excess rain runs off
+   immediately
+IMPORTANT NOTE: Unlike other glacier_region*behavior namelist options, this
+option applies to all landunit types in the given regions.
+Only applies when repartition_rain_snow is .true.
 </entry>
 
 <entry id="glc_snow_persistence_max_days" type="integer" category="clm_physics"
@@ -1070,6 +1100,12 @@ Initial seed Carbon to use at planting
 <entry id="use_ozone" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on ozone stress
+</entry>
+
+<entry id="use_ozone_luna" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on ozone stress for LUNA. 
+NOT compatible with use_ozone! Needs use_luna=.true..
 </entry>
 
 <entry id="use_snicar_frc" type="logical" category="physics"
@@ -1875,7 +1911,7 @@ Mapping file to go from one resolution/land-mask to another resolution/land-mask
 
 <entry id="lmask" type="char*10" category="mksurfdata"
        group="default_settings"  
-       valid_values="nomask,navy,AVHRR,MODIS,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE,LandScan2004,GLOBE-Gardner,GLOBE-Gardner-mergeGIS,GRDC,HYDRO1K-merge-nomask,ORNL-Soil">
+       valid_values="nomask,navy,AVHRR,MODIS,MODISv2,USGS,IGBPmergeICESatGIS,IGBP-GSDP,ISRIC-WISE,LandScan2004,GLOBE-Gardner,GLOBE-Gardner-mergeGIS,GRDC,HYDRO1K-merge-nomask,ORNL-Soil">
 Land mask description for mksurfdata input files
 </entry> 
 
