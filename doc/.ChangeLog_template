@@ -75,7 +75,11 @@ Testing summary:
 Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
 However, it occasionally makes sense to do more or less system testing;
 here is guidance on different available levels of system testing:
-    a) doc (no source testing required)
+    a) no system testing (for use when the only changes are ones that
+                          have absolutely no impact on system runs; this
+                          includes documentation-only tags, tags that
+                          just change the tools or some python code that
+                          does not impact system runs, etc.)
     b) minimal (for use in rare cases where only a small change with 
                 known behavior is added ... eg. a minor bug fix. This
 		might be to just run the "short" test list, or to run
