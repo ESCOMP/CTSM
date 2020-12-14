@@ -236,6 +236,9 @@ contains
                   if (spinup_state == 2) then
                      stem_biomass(p) = 10._r8 * stem_biomass(p)
                   end if
+               else
+                  leaf_biomass(p) = 0_r8
+                  stem_biomass(p) = 0_r8
                end if
 
                ! Peter Thornton, 5/3/2004

@@ -693,9 +693,13 @@ bioms:   do f = 1, fn
             ! if using Satellite Phenology mode, use values in parameter file
             ! otherwise calculate dbh from stem biomass
             if(use_cn) then
-               dbh(p) = 2._r8 * sqrt(stem_biomass(p) * (1._r8 - fbw(patch%itype(p))) &
-                    / ( shr_const_pi * htop(p) * k_cyl_vol & 
-                    * nstem(patch%itype(p)) *  wood_density(patch%itype(p))))
+               if(stem_biomass(p) > 0._r8) then 
+                  dbh(p) = 2._r8 * sqrt(stem_biomass(p) * (1._r8 - fbw(patch%itype(p))) &
+                       / ( shr_const_pi * htop(p) * k_cyl_vol & 
+                       * nstem(patch%itype(p)) *  wood_density(patch%itype(p))))
+               else
+                  dbh(p) = 0._r8
+               endif
             else
                dbh(p) = dbh_param(patch%itype(p))
             endif
@@ -1121,7 +1125,7 @@ bioms:   do f = 1, fn
                canopy_cond(p) = (laisun(p)/(rb(p)+rssun(p)) + laisha(p)/(rb(p)+rssha(p)))/max(elai(p), 0.01_r8)
             end if
 
-            efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p)*(qsatl(p)-qaf(p))
+            efpot = forc_rho(c)*((elai(p)+esai(p))/rb(p))*(qsatl(p)-qaf(p))
             h2ocan = liqcan(p) + snocan(p)
 
             ! When the hydraulic stress parameterization is active calculate rpp
@@ -1243,7 +1247,7 @@ bioms:   do f = 1, fn
             ! result in an imbalance in "hvap*qflx_evap_veg" and
             ! "efe + dc2*wtgaq*qsatdt_veg"
 
-            efpot = forc_rho(c)*(elai(p)+esai(p))/rb(p) &
+            efpot = forc_rho(c)*((elai(p)+esai(p))/rb(p)) &
                  *(wtgaq*(qsatl(p)+qsatldT(p)*dt_veg(p)) &
                  -wtgq0*qg(c)-wtaq0(p)*forc_q(c))
             qflx_evap_veg(p) = rpp*efpot
@@ -1478,18 +1482,20 @@ bioms:   do f = 1, fn
          ! Downward longwave radiation below the canopy
 
          dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) &
-              + emv(p)*emg(c)*sb*(tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
-              *(1.-frac_rad_abs_by_stem(p))+ts_ini(p)**3*(ts_ini(p) &
-              + 4._r8*dt_stem(p))*frac_rad_abs_by_stem(p))
+              + emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
+              *(1.-frac_rad_abs_by_stem(p)) &
+              + emv(p)*emg(c)*sb*ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p)) &
+              *frac_rad_abs_by_stem(p)
 
          ! Upward longwave radiation above the canopy
 
          ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
-              *((1.-frac_rad_abs_by_stem(p))*tlbef(p)**3 &
-              *(tlbef(p) + 4._r8*dt_veg(p)) &
-              +frac_rad_abs_by_stem(p)*ts_ini(p)**3*(ts_ini(p)+ 4._r8*dt_stem(p))) &
+              *tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1.-frac_rad_abs_by_stem(p)) &
+              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
+              *ts_ini(p)**3*(ts_ini(p)+ 4._r8*dt_stem(p))*frac_rad_abs_by_stem(p) &
               + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
+ 
 
 
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
