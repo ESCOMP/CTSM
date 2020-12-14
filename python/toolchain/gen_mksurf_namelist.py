@@ -161,7 +161,9 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
         use_transient = ".true."
     else: 
         use_transient = ".false"
-    
+   
+    mesh = which_mesh (res)
+
     nl_template = ( \
             "&clmexp\n"                                                                                                                                                                  
             "nglcec           = "+glc_nec + "\n"
@@ -189,7 +191,7 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
             "mksrf_fdynuse    = ''\n"
             "fdyndat          = ''\n"
             "numpft           = "+num_pft+"\n"
-            "dst_mesh_file    = \n"
+            "dst_mesh_file    = "+"\n"
             "\n&transient\n"
             "use_transient    = "+use_transient + "\n"
             "mksrf_fdynuse    = \n"
@@ -208,6 +210,45 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
 
     namelist_file.write (nl_template)
     namelist_file.close ()
+
+def which_mesh(res):
+   '''
+   Figure out the dst mesh file for each res
+   '''
+   switcher = { 
+       "512x1024" : "lnd/clm2/mappingdata/grids/SCRIPgrid_512x1024_nomask_c110308.nc" , 
+       "128x256" : "lnd/clm2/mappingdata/grids/SCRIPgrid_128x256_nomask_c110308.nc" ,
+       "94x192" : "lnd/clm2/mappingdata/grids/SCRIPgrid_94x192_nomask_c110308.nc" ,
+       "64x128" : "lnd/clm2/mappingdata/grids/SCRIPgrid_64x128_nomask_c110308.nc" ,
+       "48x96"  : "lnd/clm2/mappingdata/grids/SCRIPgrid_48x96_nomask_c110308.nc" ,
+       "32x64"  : "lnd/clm2/mappingdata/grids/SCRIPgrid_32x64_nomask_c110308.nc",
+       "8x16"   : "lnd/clm2/mappingdata/grids/SCRIPgrid_8x16_nomask_c110308.nc" , 
+       "0.23x0.31" : "lnd/clm2/mappingdata/grids/SCRIPgrid_0.23x0.31_nomask_c110308.nc",
+       "0.47x0.63" : "lnd/clm2/mappingdata/grids/SCRIPgrid_0.47x0.63_nomask_c170914.nc",
+       "0.9x1.25" : "lnd/clm2/mappingdata/grids/0.9x1.25_c110307.nc",
+       "1.9x2.5" : "lnd/clm2/mappingdata/grids/1.9x2.5_c110308.nc",
+       "2.5x3.33" : "lnd/clm2/mappingdata/grids/SCRIPgrid_2.5x3.33_nomask_c110308.nc",
+       "4x5" : "lnd/clm2/mappingdata/grids/SCRIPgrid_4x5_nomask_c110308.nc",
+       "10x15" : "lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc",
+       "C384" : "atm/cam/coords/C384_SCRIP_desc.181018.nc",
+       "C192" : "atm/cam/coords/C192_SCRIP_desc.181018.nc",
+       "C96" : "atm/cam/coords/C96_SCRIP_desc.181018.nc" ,
+       "C48" : "atm/cam/coords/C48_SCRIP_desc.181018.nc" ,
+       "C24" : "atm/cam/coords/C24_SCRIP_desc.181018.nc" ,
+       "ne240np4" : "lnd/clm2/mappingdata/grids/SCRIPgrid_ne240np4_nomask_c091227.nc",
+       "ne120np4" : "lnd/clm2/mappingdata/grids/SCRIPgrid_ne120np4_nomask_c101123.nc",
+       "ne60np4" : "lnd/clm2/mappingdata/grids/SCRIPgrid_ne60np4_nomask_c100408.nc",
+       "ne30np4" : "lnd/clm2/mappingdata/grids/SCRIPgrid_ne30np4_nomask_c101123.nc",
+       "ne16np4" : "lnd/clm2/mappingdata/grids/SCRIPgrid_ne16np4_nomask_c110512.nc",
+       "360x720cru" : "lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc", 
+   }
+
+   return switcher.get(argument, "nothing") 
+
+
+
+
+
 
 
 def tag_describe ():
