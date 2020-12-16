@@ -70,6 +70,7 @@ module lnd_comp_nuopc
 
   logical                :: glc_present
   logical                :: rof_prognostic
+  logical                :: atm_prognostic
   integer, parameter     :: dbug = 0
   character(*),parameter :: modName =  "(lnd_comp_nuopc)"
   character(*),parameter :: u_FILE_u = &
@@ -290,6 +291,14 @@ contains
        rof_prognostic = .true.
     end if
 
+    call NUOPC_CompAttributeGet(gcomp, name='ATM_model', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (trim(cvalue) == 'satm' .or. trim(cvalue) == 'datm') then
+       atm_prognostic = .false.
+    else
+       atm_prognostic = .true.
+    end if
+
     call NUOPC_CompAttributeGet(gcomp, name='GLC_model', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     if (trim(cvalue) == 'sglc') then
@@ -312,14 +321,15 @@ contains
           call shr_sys_abort(subname//'Need to set cism_evolve if glc is present')
        endif
     end if
-
+    
     if (masterproc) then
+       write(iulog,*)' atm_prognostic = ',atm_prognostic
        write(iulog,*)' rof_prognostic = ',rof_prognostic
        write(iulog,*)' glc_present    = ',glc_present
        if (glc_present) write(iulog,*)' cism_evolve    = ',cism_evolve
     end if
 
-    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, rc)
+    call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------------------------------------------------------------
@@ -328,10 +338,10 @@ contains
 
     call shr_file_setLogUnit (shrlogunit)
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
+
   end subroutine InitializeAdvertise
 
   !===============================================================================
-
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
 
     use clm_instMod, only : lnd2atm_inst, lnd2glc_inst, water_inst
@@ -885,27 +895,22 @@ contains
     ! Determine time of next atmospheric shortwave calculation
     !--------------------------------
 
+    call t_startf(trim(subname)//' nextsw_cday')
     call State_GetScalar(importState, &
          flds_scalar_index_nextsw_cday, nextsw_cday, &
          flds_scalar_name, flds_scalar_num, rc)
     call set_nextsw_cday( nextsw_cday )
-
-    !----------------------
-    ! Get orbital values
-    !----------------------
-
+    call t_stopf(trim(subname)//' nextsw_cday')
 
     !--------------------------------
     ! Unpack import state
     !--------------------------------
 
     call t_startf ('lc_lnd_import')
-
     call get_proc_bounds(bounds)
     call import_fields( gcomp, bounds, glc_present, rof_prognostic, &
          atm2lnd_inst, glc2lnd_inst, water_inst%wateratm2lndbulk_inst, rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call t_stopf ('lc_lnd_import')
 
     !--------------------------------
@@ -974,32 +979,27 @@ contains
        ! Run CTSM
        !--------------------------------
 
-       call t_barrierf('sync_ctsm_run1', mpicom)
+       ! call ESMF_VMBarrier(vm, rc=rc)
+       ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        call t_startf ('shr_orb_decl')
-
        ! Note - the orbital inquiries set the values in clm_varorb via the module use statements
        call  clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
        calday = get_curr_calday()
        call shr_orb_decl( calday     , eccen, mvelpp, lambm0, obliqr, declin  , eccf )
        call shr_orb_decl( nextsw_cday, eccen, mvelpp, lambm0, obliqr, declinp1, eccf )
        call t_stopf ('shr_orb_decl')
 
        call t_startf ('ctsm_run')
-
        ! Restart File - use nexttimestr rather than currtimestr here since that is the time at the end of
        ! the timestep and is preferred for restart file names
-
        call ESMF_ClockGetNextTime(clock, nextTime=nextTime, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_TimeGet(nexttime, yy=yr_sync, mm=mon_sync, dd=day_sync, s=tod_sync, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        write(rdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr_sync, mon_sync, day_sync, tod_sync
-
        call clm_drv(doalb, nextsw_cday, declinp1, declin, rstwr, nlend, rdate, rof_prognostic)
-
        call t_stopf ('ctsm_run')
 
        !--------------------------------
@@ -1007,11 +1007,9 @@ contains
        !--------------------------------
 
        call t_startf ('lc_lnd_export')
-
        call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
             water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
        call t_stopf ('lc_lnd_export')
 
        !--------------------------------
