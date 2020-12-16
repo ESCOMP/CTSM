@@ -1084,7 +1084,7 @@ contains
     ! vegetation structure (LAI, SAI, height)
 
     if (doalb) then   
-       call CNVegStructUpdate(num_soilp, filter_soilp, &
+       call CNVegStructUpdate(bounds,num_soilp, filter_soilp, &
             waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
             crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
     end if
