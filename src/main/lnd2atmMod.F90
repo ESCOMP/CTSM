@@ -180,7 +180,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: c, g  ! indices
-    real(r8) :: qflx_ice_runoff_col(bounds%begc:bounds%endc) ! total column-level ice runoff
     real(r8) :: eflx_sh_ice_to_liq_grc(bounds%begg:bounds%endg) ! sensible heat flux generated from the ice to liquid conversion, averaged to gridcell
     real(r8), parameter :: amC   = 12.0_r8 ! Atomic mass number for Carbon
     real(r8), parameter :: amO   = 16.0_r8 ! Atomic mass number for Oxygen
@@ -193,7 +192,7 @@ contains
 
     call handle_ice_runoff(bounds, water_inst%waterfluxbulk_inst, glc_behavior, &
          melt_non_icesheet_ice_runoff = lnd2atm_inst%params%melt_non_icesheet_ice_runoff, &
-         qflx_ice_runoff_col = qflx_ice_runoff_col(bounds%begc:bounds%endc), &
+         qflx_ice_runoff_col = water_inst%waterlnd2atmbulk_inst%qflx_ice_runoff_col(bounds%begc:bounds%endc), &
          qflx_liq_from_ice_col = water_inst%waterlnd2atmbulk_inst%qflx_liq_from_ice_col(bounds%begc:bounds%endc), &
          eflx_sh_ice_to_liq_col = lnd2atm_inst%eflx_sh_ice_to_liq_col(bounds%begc:bounds%endc))
 
@@ -391,7 +390,7 @@ contains
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     call c2g( bounds, &
-         qflx_ice_runoff_col(bounds%begc:bounds%endc),  &
+         water_inst%waterlnd2atmbulk_inst%qflx_ice_runoff_col(bounds%begc:bounds%endc),  &
          water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(bounds%begg:bounds%endg),  & 
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     do g = bounds%begg, bounds%endg

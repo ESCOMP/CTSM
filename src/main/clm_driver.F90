@@ -1106,20 +1106,6 @@ contains
             filter(nc)%num_allc, filter(nc)%allc)
 
        ! ============================================================================
-       ! Check the energy and water balance
-       ! ============================================================================
-
-       call t_startf('balchk')
-       call BalanceCheck(bounds_clump, &
-            filter(nc)%num_allc, filter(nc)%allc, &
-            atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
-            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
-            surfalb_inst, energyflux_inst, canopystate_inst)
-!           water_inst%waterlnd2atmbulk_inst, surfalb_inst, energyflux_inst, canopystate_inst)
-       call t_stopf('balchk')
-
-       ! ============================================================================
        ! Check the carbon and nitrogen balance
        ! ============================================================================
 
@@ -1271,6 +1257,24 @@ contains
     end do
     !$OMP END PARALLEL DO
     call t_stopf('lnd2glc')
+
+    ! ==========================================================================
+    ! Check the energy and water balance
+    ! ==========================================================================
+
+    call t_startf('balchk')
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call BalanceCheck(bounds_clump, &
+            filter(nc)%num_allc, filter(nc)%allc, &
+            atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
+            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
+            water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
+            water_inst%waterlnd2atmbulk_inst, surfalb_inst, energyflux_inst, canopystate_inst)
+    end do
+    !$OMP END PARALLEL DO
+    call t_stopf('balchk')
 
     ! ============================================================================
     ! Write global average diagnostics to standard output

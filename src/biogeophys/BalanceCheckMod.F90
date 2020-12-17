@@ -24,7 +24,7 @@ module BalanceCheckMod
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   use WaterDiagnosticType, only : waterdiagnostic_type
   use Wateratm2lndType   , only : wateratm2lnd_type
-! use Waterlnd2atmType   , only : waterlnd2atm_type  ! slevis: place holder
+  use Waterlnd2atmType   , only : waterlnd2atm_type
   use WaterBalanceType   , only : waterbalance_type
   use WaterFluxType      , only : waterflux_type
   use WaterType          , only : water_type
@@ -356,8 +356,7 @@ contains
         num_allc, filter_allc, &
         atm2lnd_inst, solarabs_inst, waterflux_inst, waterstate_inst, &
         waterdiagnosticbulk_inst, waterbalance_inst, wateratm2lnd_inst, &
-        surfalb_inst, energyflux_inst, canopystate_inst)
-!       waterlnd2atm_inst, surfalb_inst, energyflux_inst, canopystate_inst)
+        waterlnd2atm_inst, surfalb_inst, energyflux_inst, canopystate_inst)
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -390,7 +389,7 @@ contains
      class(waterstate_type), intent(in)    :: waterstate_inst
      type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
      class(waterbalance_type), intent(inout) :: waterbalance_inst
-!    class(waterlnd2atm_type), intent(in) :: waterlnd2atm_inst
+     class(waterlnd2atm_type), intent(in) :: waterlnd2atm_inst
      class(wateratm2lnd_type) , intent(in) :: wateratm2lnd_inst
      type(surfalb_type)    , intent(in)    :: surfalb_inst
      type(energyflux_type) , intent(inout) :: energyflux_inst
@@ -405,18 +404,9 @@ contains
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
      real(r8) :: forc_snow_col(bounds%begc:bounds%endc) ! column level snow rate [mm/s]
      real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water [mm H2O]
-     real(r8) :: endwb_locgrc(bounds%begg:bounds%endg)  ! slevis: using local for now
-     real(r8) :: qflx_irrig_locgrc(bounds%begg:bounds%endg)  ! slevis: using local for now
-     real(r8) :: qflx_glcice_dyn_water_flux_locgrc(bounds%begg:bounds%endg)  ! water flux needed for balance check due to glc_dyn_runoff_routing [mm H2O/s] (positive means addition of water to the system)
-     real(r8) :: qflx_evap_tot_locgrc(bounds%begg:bounds%endg)  ! grid cell level total evapotranspiration [mm/s]
-     real(r8) :: qflx_surf_locgrc(bounds%begg:bounds%endg)  ! slevis: using local for now
-     real(r8) :: qflx_drain_locgrc(bounds%begg:bounds%endg)  ! slevis: using local for now
-     real(r8) :: qflx_drain_perched_locgrc(bounds%begg:bounds%endg)  ! slevis: using local for now
-     real(r8) :: qflx_qrgwl_locgrc(bounds%begg:bounds%endg)  ! slevis: using local for now
-     real(r8) :: qflx_ice_runoff_snwcp_locgrc(bounds%begg:bounds%endg)  ! slevis: using local for now
-     real(r8) :: qflx_ice_runoff_xs_locgrc(bounds%begg:bounds%endg)  ! slevis: using local for now
-     real(r8) :: qflx_snwcp_discarded_liq_locgrc(bounds%begg:bounds%endg)  ! excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
-     real(r8) :: qflx_snwcp_discarded_ice_locgrc(bounds%begg:bounds%endg)  ! excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
+     real(r8) :: qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg)  ! grid cell-level water flux needed for balance check due to glc_dyn_runoff_routing [mm H2O/s] (positive means addition of water to the system)
+     real(r8) :: qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg)  ! grid cell-level excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
+     real(r8) :: qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg)  ! grid cell-level excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
@@ -446,7 +436,7 @@ contains
           frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
           snow_depth              =>    waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
           begwb_grc               =>    waterbalance_inst%begwb_grc             , & ! Input:  [real(r8) (:)   ]  grid cell-level water mass begining of the time step
-!         endwb_grc               =>    waterbalance_inst%endwb_grc             , & ! Output: [real(r8) (:)   ]  grid cell-level water mass end of the time step
+          endwb_grc               =>    waterbalance_inst%endwb_grc             , & ! Output: [real(r8) (:)   ]  grid cell-level water mass end of the time step
           errh2o_grc              =>    waterbalance_inst%errh2o_grc            , & ! Output: [real(r8) (:)   ]  grid cell-level water conservation error (mm H2O)
           begwb_col               =>    waterbalance_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  column-level water mass begining of the time step
           endwb_col               =>    waterbalance_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  column-level water mass end of the time step
@@ -461,7 +451,7 @@ contains
           qflx_snwcp_discarded_liq =>   waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
           qflx_snwcp_discarded_ice =>   waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
           qflx_evap_tot           =>    waterflux_inst%qflx_evap_tot_col        , & ! Input:  [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-!         qflx_evap_tot_grc       =>    waterlnd2atm_inst%qflx_evap_tot_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_evap_soi + qflx_evap_can + qflx_tran_veg
+          qflx_evap_tot_grc       =>    waterlnd2atm_inst%qflx_evap_tot_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_evap_soi + qflx_evap_can + qflx_tran_veg
           qflx_soliddew_to_top_layer    => waterflux_inst%qflx_soliddew_to_top_layer_col   , & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
           qflx_solidevap_from_top_layer => waterflux_inst%qflx_solidevap_from_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
           qflx_liqevap_from_top_layer   => waterflux_inst%qflx_liqevap_from_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
@@ -470,24 +460,23 @@ contains
           qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  snow falling on surface water (mm/s)
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
           qflx_drain_perched      =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
-!         qflx_rofliq_drain_perched_grc =>  waterlnd2atm_inst%qflx_rofliq_drain_perched_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level sub-surface runoff (mm H2O /s)
+          qflx_drain_perched_grc  =>  waterlnd2atm_inst%qflx_rofliq_drain_perched_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level sub-surface runoff (mm H2O /s)
           qflx_floodc             =>    waterflux_inst%qflx_floodc_col          , & ! Input:  [real(r8) (:)   ]  total runoff due to flooding            
           qflx_snow_drain         =>    waterflux_inst%qflx_snow_drain_col      , & ! Input:  [real(r8) (:)   ]  drainage from snow pack                         
 !         qflx_liq_dynbal_grc     =>    waterflux_inst%qflx_liq_dynbal_grc      , & ! Input:  [real(r8) (:)   ]  slevis: place holder
 !         qflx_ice_dynbal_grc     =>    waterflux_inst%qflx_ice_dynbal_grc      , & ! Input:  [real(r8) (:)   ]  slevis: place holder
-!         qflx_runoff_col         =>    waterflux_inst%qflx_runoff_col          , & ! total runoff (mm H2O / s)  slevis: place holder
           qflx_surf               =>    waterflux_inst%qflx_surf_col            , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)              
-!         qflx_rofliq_qsur_grc    =>    waterlnd2atm_inst%qflx_rofliq_qsur_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level surface runoff (mm H20 /s)
+          qflx_surf_grc           =>    waterlnd2atm_inst%qflx_rofliq_qsur_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level surface runoff (mm H20 /s)
           qflx_qrgwl              =>    waterflux_inst%qflx_qrgwl_col           , & ! Input:  [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes  
-!         qflx_rofliq_qgwl_grc    =>    waterlnd2atm_inst%qflx_rofliq_qgwl_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_surf at glaciers, wetlands, lakes
+          qflx_qrgwl_grc          =>    waterlnd2atm_inst%qflx_rofliq_qgwl_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_surf at glaciers, wetlands, lakes
           qflx_drain              =>    waterflux_inst%qflx_drain_col           , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
-!         qflx_rofliq_qsub_grc    =>    waterlnd2atm_inst%qflx_rofliq_qsub_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level drainage (mm H20 /s)
-          qflx_ice_runoff_snwcp   =>    waterflux_inst%qflx_ice_runoff_snwcp_col, & ! Input:  [real(r8) (:)   ] solid runoff from snow capping (mm H2O /s)
-          qflx_ice_runoff_xs      =>    waterflux_inst%qflx_ice_runoff_xs_col   , & ! Input:  [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s)
+          qflx_drain_grc          =>    waterlnd2atm_inst%qflx_rofliq_qsub_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level drainage (mm H20 /s)
+          qflx_ice_runoff         =>    waterlnd2atm_inst%qflx_ice_runoff_col      , & ! Input:  [real(r8) (:)   ] column level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
+          qflx_ice_runoff_grc     =>    waterlnd2atm_inst%qflx_rofice_grc          , & ! Input:  [real(r8) (:)   ] grid cell-level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_sl_top_soil        =>    waterflux_inst%qflx_sl_top_soil_col     , & ! Input:  [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
 
           qflx_sfc_irrig          =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
-!         qirrig_grc              =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
+          qirrig_grc              =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
           qflx_glcice_dyn_water_flux => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
@@ -566,8 +555,7 @@ contains
                   - qflx_qrgwl(c)            &
                   - qflx_drain(c)            &
                   - qflx_drain_perched(c)    &
-                  - qflx_ice_runoff_snwcp(c) &
-                  - qflx_ice_runoff_xs(c)    &
+                  - qflx_ice_runoff(c)       &
                   - qflx_snwcp_discarded_liq(c) &
                   - qflx_snwcp_discarded_ice(c)) * dtime
 
@@ -605,8 +593,7 @@ contains
               write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl(indexc)*dtime
               write(iulog,*)'qflx_drain                = ',qflx_drain(indexc)*dtime
 
-              write(iulog,*)'qflx_ice_runoff_snwcp     = ',qflx_ice_runoff_snwcp(indexc)*dtime
-              write(iulog,*)'qflx_ice_runoff_xs        = ',qflx_ice_runoff_xs(indexc)*dtime
+              write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff(indexc)*dtime
 
               write(iulog,*)'qflx_snwcp_discarded_ice  = ',qflx_snwcp_discarded_ice(indexc)*dtime
               write(iulog,*)'qflx_snwcp_discarded_liq  = ',qflx_snwcp_discarded_liq(indexc)*dtime
@@ -630,71 +617,34 @@ contains
 
        ! Water balance check at the grid cell level
 
-       call c2g(bounds,  &
-         endwb_col(bounds%begc:bounds%endc),  &
-         endwb_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type='urbanf', l2g_scale_type='unity')
-       call c2g( bounds,  &
-         qflx_sfc_irrig(bounds%begc:bounds%endc),  &
-         qflx_irrig_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
        call c2g( bounds,  &
          qflx_glcice_dyn_water_flux(bounds%begc:bounds%endc),  &
-         qflx_glcice_dyn_water_flux_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       call c2g( bounds,  &
-         qflx_evap_tot(bounds%begc:bounds%endc),  &
-         qflx_evap_tot_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       call c2g( bounds,  &
-         qflx_surf(bounds%begc:bounds%endc),  &
-         qflx_surf_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       call c2g( bounds,  &
-         qflx_qrgwl(bounds%begc:bounds%endc),  &
-         qflx_qrgwl_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       call c2g( bounds,  &
-         qflx_drain(bounds%begc:bounds%endc),  &
-         qflx_drain_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       call c2g( bounds,  &
-         qflx_drain_perched(bounds%begc:bounds%endc),  &
-         qflx_drain_perched_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       call c2g( bounds,  &
-         qflx_ice_runoff_snwcp(bounds%begc:bounds%endc),  &
-         qflx_ice_runoff_snwcp_locgrc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       call c2g( bounds,  &
-         qflx_ice_runoff_xs(bounds%begc:bounds%endc),  &
-         qflx_ice_runoff_xs_locgrc(bounds%begg:bounds%endg),  &
+         qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
        call c2g( bounds,  &
          qflx_snwcp_discarded_liq(bounds%begc:bounds%endc),  &
-         qflx_snwcp_discarded_liq_locgrc(bounds%begg:bounds%endg),  &
+         qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
        call c2g( bounds,  &
          qflx_snwcp_discarded_ice(bounds%begc:bounds%endc),  &
-         qflx_snwcp_discarded_ice_locgrc(bounds%begg:bounds%endg),  &
+         qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
        do g = bounds%begg, bounds%endg
-          errh2o_grc(g) = endwb_locgrc(g) - begwb_grc(g)  &
+          errh2o_grc(g) = endwb_grc(g) - begwb_grc(g)  &
                - (forc_rain_grc(g)  &
                + forc_snow_grc(g)  &
                + qflx_flood_grc(g)  &
-               + qflx_irrig_locgrc(g)  &
-               + qflx_glcice_dyn_water_flux_locgrc(g)  &
-               - qflx_evap_tot_locgrc(g)  &
-               - qflx_surf_locgrc(g)  &
-               - qflx_qrgwl_locgrc(g)  &
-               - qflx_drain_locgrc(g)  &
-               - qflx_drain_perched_locgrc(g)  &
-               - qflx_ice_runoff_snwcp_locgrc(g)  &
-               - qflx_ice_runoff_xs_locgrc(g)  &
-               - qflx_snwcp_discarded_liq_locgrc(g)  &
-               - qflx_snwcp_discarded_ice_locgrc(g)) * dtime
+               + qirrig_grc(g)  &
+               + qflx_glcice_dyn_water_flux_grc(g)  &
+               - qflx_evap_tot_grc(g)  &
+               - qflx_surf_grc(g)  &
+               - qflx_qrgwl_grc(g)  &
+               - qflx_drain_grc(g)  &
+               - qflx_drain_perched_grc(g)  &
+               - qflx_ice_runoff_grc(g)  &
+               - qflx_snwcp_discarded_liq_grc(g)  &
+               - qflx_snwcp_discarded_ice_grc(g)) * dtime
        end do
 
        errh2o_max_val = maxval(abs(errh2o_grc(bounds%begg:bounds%endg)))
@@ -713,23 +663,22 @@ contains
              write(iulog,*)'errh2o_grc                = ',errh2o_grc(indexg)
              write(iulog,*)'forc_rain                 = ',forc_rain_grc(indexg)*dtime
              write(iulog,*)'forc_snow                 = ',forc_snow_grc(indexg)*dtime
-             write(iulog,*)'endwb_loc                 = ',endwb_locgrc(indexg)
+             write(iulog,*)'endwb_grc                 = ',endwb_grc(indexg)
              write(iulog,*)'begwb_grc                 = ',begwb_grc(indexg)
 
-             write(iulog,*)'qflx_evap_tot_loc         = ',qflx_evap_tot_locgrc(indexg)*dtime
-             write(iulog,*)'qflx_irrig_loc            = ',qflx_irrig_locgrc(indexg)*dtime
-             write(iulog,*)'qflx_surf_loc             = ',qflx_surf_locgrc(indexg)*dtime
-             write(iulog,*)'qflx_qrgwl_loc            = ',qflx_qrgwl_locgrc(indexg)*dtime
-             write(iulog,*)'qflx_drain_loc            = ',qflx_drain_locgrc(indexg)*dtime
-             write(iulog,*)'qflx_ice_runoff_snwcp_loc = ',qflx_ice_runoff_snwcp_locgrc(indexg)*dtime
-             write(iulog,*)'qflx_ice_runoff_xs_loc    = ',qflx_ice_runoff_xs_locgrc(indexg)*dtime
-             write(iulog,*)'qflx_snwcp_discarded_ice_loc = ',qflx_snwcp_discarded_ice_locgrc(indexg)*dtime
-             write(iulog,*)'qflx_snwcp_discarded_liq_loc = ',qflx_snwcp_discarded_liq_locgrc(indexg)*dtime
-             write(iulog,*)'deltawb                   = ',endwb_locgrc(indexg)-begwb_grc(indexg)
-             write(iulog,*)'deltawb/dtime             = ',(endwb_locgrc(indexg)-begwb_grc(indexg))/dtime
-             write(iulog,*)'qflx_drain_perched_loc    = ',qflx_drain_perched_locgrc(indexg)*dtime
+             write(iulog,*)'qflx_evap_tot             = ',qflx_evap_tot_grc(indexg)*dtime
+             write(iulog,*)'qirrig                    = ',qirrig_grc(indexg)*dtime
+             write(iulog,*)'qflx_surf                 = ',qflx_surf_grc(indexg)*dtime
+             write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_grc(indexg)*dtime
+             write(iulog,*)'qflx_drain                = ',qflx_drain_grc(indexg)*dtime
+             write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff_grc(indexg)*dtime
+             write(iulog,*)'qflx_snwcp_discarded_ice  = ',qflx_snwcp_discarded_ice_grc(indexg)*dtime
+             write(iulog,*)'qflx_snwcp_discarded_liq  = ',qflx_snwcp_discarded_liq_grc(indexg)*dtime
+             write(iulog,*)'deltawb                   = ',endwb_grc(indexg)-begwb_grc(indexg)
+             write(iulog,*)'deltawb/dtime             = ',(endwb_grc(indexg)-begwb_grc(indexg))/dtime
+             write(iulog,*)'qflx_drain_perched        = ',qflx_drain_perched_grc(indexg)*dtime
              write(iulog,*)'qflx_flood                = ',qflx_flood_grc(indexg)*dtime
-             write(iulog,*)'qflx_glcice_dyn_water_flux_grc_loc = ',qflx_glcice_dyn_water_flux_locgrc(indexg)*dtime
+             write(iulog,*)'qflx_glcice_dyn_water_flux_grc = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
 
              write(iulog,*)'clm model is stopping'
              call endrun(decomp_index=indexg, clmlevel=nameg, msg=errmsg(sourcefile, __LINE__))
