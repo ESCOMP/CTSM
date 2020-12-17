@@ -1043,11 +1043,11 @@ contains
        call ncd_io('wood_density',this%wood_density, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     else
-       this%dbh = 0.0
-       this%fbw = 0.0
-       this%nstem = 0.1 
-       this%rstem_per_dbh = 0.0
-       this%wood_density = 0.0
+       this%dbh = 0.0_r8
+       this%fbw = 0.0_r8
+       this%nstem = 1000._r8 / 10000._r8
+       this%rstem_per_dbh = 0.0_r8
+       this%wood_density = 0.0_r8
     end if
 
     call ncd_pio_closefile(ncid)
