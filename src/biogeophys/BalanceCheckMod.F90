@@ -377,7 +377,7 @@ contains
      use clm_time_manager  , only : get_step_size_real, get_nstep
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use CanopyStateType   , only : canopystate_type
-     use subgridAveMod   ! , only : c2g ?
+     use subgridAveMod     , only : c2g
      !
      ! !ARGUMENTS:
      type(bounds_type)     , intent(in)    :: bounds  
@@ -424,11 +424,10 @@ contains
      associate(                                                                   & 
           forc_solad              =>    atm2lnd_inst%forc_solad_grc             , & ! Input:  [real(r8) (:,:) ]  direct beam radiation (vis=forc_sols , nir=forc_soll )
           forc_solai              =>    atm2lnd_inst%forc_solai_grc             , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
-          forc_rain_grc           =>    wateratm2lnd_inst%forc_rain_not_downscaled_grc                                                                          , & ! Input:  [real(r8) (:)]  grid cell-level rain rate [mm/s]
-          forc_snow_grc           =>    wateratm2lnd_inst%forc_snow_not_downscaled_grc                                                                          , & ! Input:  [real(r8) (:)]  grid cell-level snow rate [mm/s]
-          qflx_flood_grc          =>    wateratm2lnd_inst%forc_flood_grc        , & ! Input:  [real(r8) (:)   ]  total grid cell-level runoff from river model
-          forc_rain               =>    wateratm2lnd_inst%forc_rain_downscaled_col   , & ! Input:  [real(r8) (:)   ]  rain rate [mm/s]
-          forc_snow               =>    wateratm2lnd_inst%forc_snow_downscaled_col   , & ! Input:  [real(r8) (:)   ]  snow rate [mm/s]
+          forc_rain         =>    wateratm2lnd_inst%forc_rain_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level rain rate [mm/s]
+          forc_rain_grc     =>    wateratm2lnd_inst%forc_rain_not_downscaled_grc, & ! Input:  [real(r8) (:)]  grid cell-level rain rate [mm/s]
+          forc_snow         =>    wateratm2lnd_inst%forc_snow_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level snow rate [mm/s]
+          forc_snow_grc     =>    wateratm2lnd_inst%forc_snow_not_downscaled_grc, & ! Input:  [real(r8) (:)]  grid cell-level snow rate [mm/s]
           forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
           h2osno_old              =>    waterbalance_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
@@ -448,10 +447,10 @@ contains
           qflx_snow_grnd_col      =>    waterflux_inst%qflx_snow_grnd_col       , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (mm H2O/s) [+]
           qflx_snwcp_liq          =>    waterflux_inst%qflx_snwcp_liq_col       , & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
           qflx_snwcp_ice          =>    waterflux_inst%qflx_snwcp_ice_col       , & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping (outgoing) (mm H2O /s) [+]`
-          qflx_snwcp_discarded_liq =>   waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Input:  [real(r8) (:)   ]  excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
-          qflx_snwcp_discarded_ice =>   waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input:  [real(r8) (:)   ]  excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]`
-          qflx_evap_tot           =>    waterflux_inst%qflx_evap_tot_col        , & ! Input:  [real(r8) (:)   ]  qflx_evap_soi + qflx_evap_can + qflx_tran_veg
-          qflx_evap_tot_grc       =>    waterlnd2atm_inst%qflx_evap_tot_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_evap_soi + qflx_evap_can + qflx_tran_veg
+          qflx_snwcp_discarded_liq_col => waterflux_inst%qflx_snwcp_discarded_liq_col, & ! Input:  [real(r8) (:)   ]  column level excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
+          qflx_snwcp_discarded_ice_col => waterflux_inst%qflx_snwcp_discarded_ice_col, & ! Input:  [real(r8) (:)   ]  column level excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack (mm H2O /s) [+]
+          qflx_evap_tot_col       =>    waterflux_inst%qflx_evap_tot_col        , & ! Input:  [real(r8) (:)   ]  column level qflx_evap_soi + qflx_evap_can + qflx_tran_veg
+          qflx_evap_tot_grc       =>    waterlnd2atm_inst%qflx_evap_tot_grc     , & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_evap_soi + qflx_evap_can + qflx_tran_veg
           qflx_soliddew_to_top_layer    => waterflux_inst%qflx_soliddew_to_top_layer_col   , & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
           qflx_solidevap_from_top_layer => waterflux_inst%qflx_solidevap_from_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]
           qflx_liqevap_from_top_layer   => waterflux_inst%qflx_liqevap_from_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
@@ -459,25 +458,26 @@ contains
           qflx_prec_grnd          =>    waterdiagnosticbulk_inst%qflx_prec_grnd_col, & ! Input:  [real(r8) (:)   ]  water onto ground including canopy runoff [kg/(m2 s)]
           qflx_snow_h2osfc        =>    waterflux_inst%qflx_snow_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  snow falling on surface water (mm/s)
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
-          qflx_drain_perched      =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
-          qflx_drain_perched_grc  =>  waterlnd2atm_inst%qflx_rofliq_drain_perched_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level sub-surface runoff (mm H2O /s)
-          qflx_floodc             =>    waterflux_inst%qflx_floodc_col          , & ! Input:  [real(r8) (:)   ]  total runoff due to flooding            
+          qflx_drain_perched_col  =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
+          qflx_drain_perched_grc  =>    waterlnd2atm_inst%qflx_rofliq_drain_perched_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level sub-surface runoff (mm H2O /s)
+          qflx_flood_col          =>    waterflux_inst%qflx_floodc_col          , & ! Input:  [real(r8) (:)   ]  column level total runoff due to flooding
+          forc_flood_grc          =>    wateratm2lnd_inst%forc_flood_grc        , & ! Input:  [real(r8) (:)   ]  grid cell-level total grid cell-level runoff from river model
           qflx_snow_drain         =>    waterflux_inst%qflx_snow_drain_col      , & ! Input:  [real(r8) (:)   ]  drainage from snow pack                         
 !         qflx_liq_dynbal_grc     =>    waterflux_inst%qflx_liq_dynbal_grc      , & ! Input:  [real(r8) (:)   ]  slevis: place holder
 !         qflx_ice_dynbal_grc     =>    waterflux_inst%qflx_ice_dynbal_grc      , & ! Input:  [real(r8) (:)   ]  slevis: place holder
-          qflx_surf               =>    waterflux_inst%qflx_surf_col            , & ! Input:  [real(r8) (:)   ]  surface runoff (mm H2O /s)              
+          qflx_surf_col           =>    waterflux_inst%qflx_surf_col            , & ! Input:  [real(r8) (:)   ]  column level surface runoff (mm H2O /s)
           qflx_surf_grc           =>    waterlnd2atm_inst%qflx_rofliq_qsur_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level surface runoff (mm H20 /s)
-          qflx_qrgwl              =>    waterflux_inst%qflx_qrgwl_col           , & ! Input:  [real(r8) (:)   ]  qflx_surf at glaciers, wetlands, lakes  
+          qflx_qrgwl_col          =>    waterflux_inst%qflx_qrgwl_col           , & ! Input:  [real(r8) (:)   ]  column level qflx_surf at glaciers, wetlands, lakes
           qflx_qrgwl_grc          =>    waterlnd2atm_inst%qflx_rofliq_qgwl_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level qflx_surf at glaciers, wetlands, lakes
-          qflx_drain              =>    waterflux_inst%qflx_drain_col           , & ! Input:  [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)          
+          qflx_drain_col          =>    waterflux_inst%qflx_drain_col           , & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
           qflx_drain_grc          =>    waterlnd2atm_inst%qflx_rofliq_qsub_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level drainage (mm H20 /s)
-          qflx_ice_runoff         =>    waterlnd2atm_inst%qflx_ice_runoff_col      , & ! Input:  [real(r8) (:)   ] column level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
+          qflx_ice_runoff_col     =>    waterlnd2atm_inst%qflx_ice_runoff_col      , & ! Input:  [real(r8) (:)   ] column level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_ice_runoff_grc     =>    waterlnd2atm_inst%qflx_rofice_grc          , & ! Input:  [real(r8) (:)   ] grid cell-level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
           qflx_sl_top_soil        =>    waterflux_inst%qflx_sl_top_soil_col     , & ! Input:  [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
 
-          qflx_sfc_irrig          =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  irrigation flux (mm H2O /s)             
-          qirrig_grc              =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
-          qflx_glcice_dyn_water_flux => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
+          qflx_sfc_irrig_col      =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  column level irrigation flux (mm H2O /s)
+          qflx_sfc_irrig_grc      =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
+          qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
 
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
           eflx_lwrad_net          =>    energyflux_inst%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]
@@ -547,17 +547,17 @@ contains
              errh2o_col(c) = endwb_col(c) - begwb_col(c) &
                   - (forc_rain_col(c)        &
                   + forc_snow_col(c)         &
-                  + qflx_floodc(c)           &
-                  + qflx_sfc_irrig(c)        &
-                  + qflx_glcice_dyn_water_flux(c) &
-                  - qflx_evap_tot(c)         &
-                  - qflx_surf(c)             &
-                  - qflx_qrgwl(c)            &
-                  - qflx_drain(c)            &
-                  - qflx_drain_perched(c)    &
-                  - qflx_ice_runoff(c)       &
-                  - qflx_snwcp_discarded_liq(c) &
-                  - qflx_snwcp_discarded_ice(c)) * dtime
+                  + qflx_flood_col(c)        &
+                  + qflx_sfc_irrig_col(c)    &
+                  + qflx_glcice_dyn_water_flux_col(c) &
+                  - qflx_evap_tot_col(c)     &
+                  - qflx_surf_col(c)         &
+                  - qflx_qrgwl_col(c)        &
+                  - qflx_drain_col(c)        &
+                  - qflx_drain_perched_col(c) &
+                  - qflx_ice_runoff_col(c)   &
+                  - qflx_snwcp_discarded_liq_col(c) &
+                  - qflx_snwcp_discarded_ice_col(c)) * dtime
 
           else
 
@@ -587,25 +587,25 @@ contains
               write(iulog,*)'endwb_col                 = ',endwb_col(indexc)
               write(iulog,*)'begwb_col                 = ',begwb_col(indexc)
 
-              write(iulog,*)'qflx_evap_tot             = ',qflx_evap_tot(indexc)*dtime
-              write(iulog,*)'qflx_sfc_irrig            = ',qflx_sfc_irrig(indexc)*dtime
-              write(iulog,*)'qflx_surf                 = ',qflx_surf(indexc)*dtime
-              write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl(indexc)*dtime
-              write(iulog,*)'qflx_drain                = ',qflx_drain(indexc)*dtime
+              write(iulog,*)'qflx_evap_tot             = ',qflx_evap_tot_col(indexc)*dtime
+              write(iulog,*)'qflx_sfc_irrig            = ',qflx_sfc_irrig_col(indexc)*dtime
+              write(iulog,*)'qflx_surf                 = ',qflx_surf_col(indexc)*dtime
+              write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_col(indexc)*dtime
+              write(iulog,*)'qflx_drain                = ',qflx_drain_col(indexc)*dtime
 
-              write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff(indexc)*dtime
+              write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff_col(indexc)*dtime
 
-              write(iulog,*)'qflx_snwcp_discarded_ice  = ',qflx_snwcp_discarded_ice(indexc)*dtime
-              write(iulog,*)'qflx_snwcp_discarded_liq  = ',qflx_snwcp_discarded_liq(indexc)*dtime
+              write(iulog,*)'qflx_snwcp_discarded_ice  = ',qflx_snwcp_discarded_ice_col(indexc)*dtime
+              write(iulog,*)'qflx_snwcp_discarded_liq  = ',qflx_snwcp_discarded_liq_col(indexc)*dtime
               write(iulog,*)'deltawb                   = ',endwb_col(indexc)-begwb_col(indexc)
               write(iulog,*)'deltawb/dtime             = ',(endwb_col(indexc)-begwb_col(indexc))/dtime
 
               if (.not.(col%itype(indexc) == icol_roof .or. &
                    col%itype(indexc) == icol_road_imperv .or. &
                    col%itype(indexc) == icol_road_perv)) then
-                   write(iulog,*)'qflx_drain_perched         = ',qflx_drain_perched(indexc)*dtime
-                   write(iulog,*)'qflx_flood                 = ',qflx_floodc(indexc)*dtime
-                   write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux(indexc)*dtime
+                   write(iulog,*)'qflx_drain_perched         = ',qflx_drain_perched_col(indexc)*dtime
+                   write(iulog,*)'qflx_flood                 = ',qflx_flood_col(indexc)*dtime
+                   write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux_col(indexc)*dtime
               end if
               
               write(iulog,*)'clm model is stopping'
@@ -618,15 +618,15 @@ contains
        ! Water balance check at the grid cell level
 
        call c2g( bounds,  &
-         qflx_glcice_dyn_water_flux(bounds%begc:bounds%endc),  &
+         qflx_glcice_dyn_water_flux_col(bounds%begc:bounds%endc),  &
          qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
        call c2g( bounds,  &
-         qflx_snwcp_discarded_liq(bounds%begc:bounds%endc),  &
+         qflx_snwcp_discarded_liq_col(bounds%begc:bounds%endc),  &
          qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
        call c2g( bounds,  &
-         qflx_snwcp_discarded_ice(bounds%begc:bounds%endc),  &
+         qflx_snwcp_discarded_ice_col(bounds%begc:bounds%endc),  &
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
@@ -634,8 +634,8 @@ contains
           errh2o_grc(g) = endwb_grc(g) - begwb_grc(g)  &
                - (forc_rain_grc(g)  &
                + forc_snow_grc(g)  &
-               + qflx_flood_grc(g)  &
-               + qirrig_grc(g)  &
+               + forc_flood_grc(g)  &
+               + qflx_sfc_irrig_grc(g)  &
                + qflx_glcice_dyn_water_flux_grc(g)  &
                - qflx_evap_tot_grc(g)  &
                - qflx_surf_grc(g)  &
@@ -667,7 +667,7 @@ contains
              write(iulog,*)'begwb_grc                 = ',begwb_grc(indexg)
 
              write(iulog,*)'qflx_evap_tot             = ',qflx_evap_tot_grc(indexg)*dtime
-             write(iulog,*)'qirrig                    = ',qirrig_grc(indexg)*dtime
+             write(iulog,*)'qflx_sfc_irrig            = ',qflx_sfc_irrig_grc(indexg)*dtime
              write(iulog,*)'qflx_surf                 = ',qflx_surf_grc(indexg)*dtime
              write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_grc(indexg)*dtime
              write(iulog,*)'qflx_drain                = ',qflx_drain_grc(indexg)*dtime
@@ -677,7 +677,7 @@ contains
              write(iulog,*)'deltawb                   = ',endwb_grc(indexg)-begwb_grc(indexg)
              write(iulog,*)'deltawb/dtime             = ',(endwb_grc(indexg)-begwb_grc(indexg))/dtime
              write(iulog,*)'qflx_drain_perched        = ',qflx_drain_perched_grc(indexg)*dtime
-             write(iulog,*)'qflx_flood                = ',qflx_flood_grc(indexg)*dtime
+             write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux_grc = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
 
              write(iulog,*)'clm model is stopping'
@@ -709,7 +709,7 @@ contains
                      + qflx_liqdew_to_top_layer(c)
                 snow_sinks(c)  = qflx_solidevap_from_top_layer(c) + qflx_liqevap_from_top_layer(c) &
                      + qflx_snow_drain(c) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
-                     + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c) &
+                     + qflx_snwcp_discarded_ice_col(c) + qflx_snwcp_discarded_liq_col(c) &
                      + qflx_sl_top_soil(c)
 
                 if (lun%itype(l) == istdlak) then 
@@ -718,7 +718,7 @@ contains
                         +  qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) 
                    snow_sinks(c)   = frac_sno_eff(c) * (qflx_solidevap_from_top_layer(c) &
                         + qflx_liqevap_from_top_layer(c) ) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)  &
-                        + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c)  &
+                        + qflx_snwcp_discarded_ice_col(c) + qflx_snwcp_discarded_liq_col(c)  &
                         + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
                 endif
 
@@ -731,7 +731,7 @@ contains
                           + qflx_h2osfc_to_ice(c)
                    snow_sinks(c) = frac_sno_eff(c) * (qflx_solidevap_from_top_layer(c) &
                           + qflx_liqevap_from_top_layer(c)) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
-                          + qflx_snwcp_discarded_ice(c) + qflx_snwcp_discarded_liq(c) &
+                          + qflx_snwcp_discarded_ice_col(c) + qflx_snwcp_discarded_liq_col(c) &
                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                 endif
 
@@ -780,8 +780,8 @@ contains
                  write(iulog,*)'qflx_liqdew_to_top_layer    = ',qflx_liqdew_to_top_layer(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_ice     = ',qflx_snwcp_ice(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_liq     = ',qflx_snwcp_liq(indexc)*dtime
-                 write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice(indexc)*dtime
-                 write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq(indexc)*dtime
+                 write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice_col(indexc)*dtime
+                 write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq_col(indexc)*dtime
                  write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
                  write(iulog,*)'clm model is stopping'
                  call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
