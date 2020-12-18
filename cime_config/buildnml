@@ -166,13 +166,6 @@ def buildnml(case, caseroot, compname):
         os.remove(inputdata_file)
 
     # -----------------------------------------------------
-    # Clear out old data
-    # -----------------------------------------------------
-
-    if os.path.exists(inputdata_file):
-        os.remove(inputdata_file)
-
-    # -----------------------------------------------------
     # loop over instances
     # -----------------------------------------------------
 
