@@ -17,7 +17,7 @@ module CNFireFactoryMod
   ! !PUBLIC ROUTINES:
   public :: CNFireReadNML         ! read the fire namelist
   public :: create_cnfire_method  ! create an object of class fire_method_type
-  public :: create_fates_fire_data_method  ! create an object of class cnfire_method_type
+  public :: create_fates_fire_data_method  ! create an object of class fates_fire_base_type
 
   ! These parameters set the ranges of the cases in subroutine
   ! create_fates_fire_data_method. We declare them public in order to
@@ -144,7 +144,6 @@ contains
     !
     ! !USES:
     use clm_varctl, only: fates_spitfire_mode
-    use CNFireMethodMod, only: cnfire_method_type
     use FATESFireBase,      only: fates_fire_base_type
     use FATESFireNoDataMod, only: fates_fire_no_data_type
     use FATESFireDataMod, only: fates_fire_data_type
