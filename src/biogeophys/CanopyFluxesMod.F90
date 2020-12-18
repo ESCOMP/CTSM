@@ -425,7 +425,7 @@ contains
     real(r8), parameter :: k_cyl_vol = 1.0         !departure from cylindrical volume
     real(r8), parameter :: k_cyl_area = 1.0        !departure from cylindrical area
     real(r8), parameter :: k_internal = 0.0        !self-absorbtion of leaf/stem longwave
-    real(r8), parameter :: min_stem_diameter = 0.01!minimum stem diameter for which to calculate stem interactions
+    real(r8), parameter :: min_stem_diameter = 0.05!minimum stem diameter for which to calculate stem interactions
     
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
