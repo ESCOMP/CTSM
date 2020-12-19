@@ -543,7 +543,6 @@ contains
 
     ! Atmosphere prognostic/prescribed aerosol fields
     if (fldchk(importState, 'Faxa_bcph')) then 
-       write(6,*)'i am here'
        call state_getfldptr(importState, 'Faxa_bcph', fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call check_for_nans(fldptr2d(1,:), 'Faxa_bcph(1)', begg)
