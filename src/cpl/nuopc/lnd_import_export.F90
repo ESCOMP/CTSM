@@ -94,7 +94,7 @@ contains
     character(ESMF_MAXSTR) :: cvalue
     character(len=2)       :: nec_str
     integer                :: n, num
-    character(len=128)     :: fldname
+    character(len=CS)      :: fldname
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
 
@@ -381,7 +381,7 @@ contains
     real(r8), pointer         :: dataPtr(:)
     real(r8), pointer         :: fldPtr1d(:)
     real(r8), pointer         :: fldPtr2d(:,:)
-    character(len=128)        :: fldname
+    character(len=CS)         :: fldname
     integer                   :: num
     integer                   :: begg, endg                          ! bounds
     integer                   :: g,i,k,n                             ! indices
@@ -423,131 +423,149 @@ contains
     ! Required atmosphere input fields
     !--------------------------
 
-    call state_getfldptr(importState, 'Sa_z', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sa_z'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Sa_z', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_hgt_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Sa_topo', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sa_topo'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Sa_topo', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_topo_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Sa_u', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sa_u'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Sa_u', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_u_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Sa_v', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sa_v'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Sa_v', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_v_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Sa_ptem', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sa_ptem'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Sa_ptem', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_th_not_downscaled_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Sa_shum', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sa_shum'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Sa_shum', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Sa_pbot', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sa_pbot'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Sa_pbot', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_pbot_not_downscaled_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Sa_tbot', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sa_tbot'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Sa_tbot', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_t_not_downscaled_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_rainc', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Faxa_rainc'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Faxa_rainc', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        forc_rainc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_rainl', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Faxa_rainl'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Faxa_rainl', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        forc_rainl(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_snowc', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Faxa_snowc'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Faxa_snowc', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        forc_snowc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_snowl', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Faxa_snowl'
+    call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Faxa_snowl', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        forc_snowl(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_lwdn', fldptr1d, rc=rc)
-    call check_for_nans(fldptr1d, 'Faxa_lwdn', begg)
+    fldname = 'Faxa_lwdn'
+    call state_getfldptr(importState, trim(fldname), fldptr1d, rc=rc)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_lwrad_not_downscaled_grc(g) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_swvdr', fldptr1d, rc=rc)
+    fldname = 'Faxa_swvdr'
+    call state_getfldptr(importState, trim(fldname), fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Faxa_swvdr', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_solad_grc(g,1) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_swndr', fldptr1d, rc=rc)
+    fldname = 'Faxa_swndr'
+    call state_getfldptr(importState, trim(fldname), fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Faxa_swndr', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_solad_grc(g,2) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_swvdf', fldptr1d, rc=rc)
+    fldname = 'Faxa_swvdf'
+    call state_getfldptr(importState, trim(fldname), fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Faxa_swvdf', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_solai_grc(g,1) = fldptr1d(g-begg+1)
     end do
 
-    call state_getfldptr(importState, 'Faxa_swndf', fldptr1d, rc=rc)
+    fldname = 'Faxa_swndf'
+    call state_getfldptr(importState, trim(fldname), fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call check_for_nans(fldptr1d, 'Faxa_swndf', begg)
+    call check_for_nans(fldptr1d, trim(fldname), begg)
     do g = begg, endg
        atm2lnd_inst%forc_solai_grc(g,2) = fldptr1d(g-begg+1)
     end do
 
     ! Atmosphere prognostic/prescribed aerosol fields
-    if (fldchk(importState, 'Faxa_bcph')) then 
-       call state_getfldptr(importState, 'Faxa_bcph', fldptr2d=fldptr2d, rc=rc)
+    fldname = 'Faxa_bcph'
+    if (fldchk(importState, trim(fldname))) then 
+       call state_getfldptr(importState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call check_for_nans(fldptr2d(1,:), 'Faxa_bcph(1)', begg)
-       call check_for_nans(fldptr2d(2,:), 'Faxa_bcph(2)', begg)
-       call check_for_nans(fldptr2d(3,:), 'Faxa_bcph(3)', begg)
+       call check_for_nans(fldptr2d(1,:), trim(fldname)//'(1)', begg)
+       call check_for_nans(fldptr2d(2,:), trim(fldname)//'(2)', begg)
+       call check_for_nans(fldptr2d(3,:), trim(fldname)//'(3)', begg)
        do g = begg, endg
           n = g - begg + 1
           atm2lnd_inst%forc_aer_grc(g,1) = fldptr2d(1,n) ! bcphidry
@@ -555,12 +573,13 @@ contains
           atm2lnd_inst%forc_aer_grc(g,3) = fldptr2d(3,n) ! bcphiwet
        end do
     end if
-    if (fldchk(importState, 'Faxa_ocph')) then 
-       call state_getfldptr(importState, 'Faxa_ocph', fldptr2d=fldptr2d, rc=rc)
+    fldname = 'Faxa_ocph'
+    if (fldchk(importState, trim(fldname))) then 
+       call state_getfldptr(importState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call check_for_nans(fldptr2d(1,:), 'Faxa_ocph(1)', begg)
-       call check_for_nans(fldptr2d(2,:), 'Faxa_ocph(2)', begg)
-       call check_for_nans(fldptr2d(3,:), 'Faxa_ocph(3)', begg)
+       call check_for_nans(fldptr2d(1,:), trim(fldname)//'(1)', begg)
+       call check_for_nans(fldptr2d(2,:), trim(fldname)//'(2)', begg)
+       call check_for_nans(fldptr2d(3,:), trim(fldname)//'(3)', begg)
        do g = begg, endg
           n = g - begg + 1
           atm2lnd_inst%forc_aer_grc(g,4) = fldptr2d(1,n) ! ocphidry
@@ -568,14 +587,14 @@ contains
           atm2lnd_inst%forc_aer_grc(g,6) = fldptr2d(3,n) ! ocphiwet
        end do
     end if
-
-    if (fldchk(importState, 'Faxa_dstwet')) then
-       call state_getfldptr(importState, 'Faxa_dstwet', fldptr2d=fldptr2d, rc=rc)
+    fldname = 'Faxa_dstwet'
+    if (fldchk(importState, trim(fldname))) then
+       call state_getfldptr(importState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call check_for_nans(fldptr2d(1,:), 'Faxa_dstwet(1)', begg)
-       call check_for_nans(fldptr2d(2,:), 'Faxa_dstwet(2)', begg)
-       call check_for_nans(fldptr2d(3,:), 'Faxa_dstwet(3)', begg)
-       call check_for_nans(fldptr2d(4,:), 'Faxa_dstwet(4)', begg)
+       call check_for_nans(fldptr2d(1,:), trim(fldname)//'(1)', begg)
+       call check_for_nans(fldptr2d(2,:), trim(fldname)//'(2)', begg)
+       call check_for_nans(fldptr2d(3,:), trim(fldname)//'(3)', begg)
+       call check_for_nans(fldptr2d(4,:), trim(fldname)//'(4)', begg)
        do g = begg, endg
           n = g - begg + 1
           atm2lnd_inst%forc_aer_grc(g,7)  = fldptr2d(1,n)
@@ -584,13 +603,14 @@ contains
           atm2lnd_inst%forc_aer_grc(g,13) = fldptr2d(4,n)
        end do
     end if
-    if (fldchk(importState, 'Faxa_dstdry')) then
-       call state_getfldptr(importState, 'Faxa_dstdry', fldptr2d=fldptr2d, rc=rc)
+    fldname = 'Faxa_dstdry'
+    if (fldchk(importState, trim(fldname))) then
+       call state_getfldptr(importState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call check_for_nans(fldptr2d(1,:), 'Faxa_dstdry(1)', begg)
-       call check_for_nans(fldptr2d(2,:), 'Faxa_dstdry(2)', begg)
-       call check_for_nans(fldptr2d(3,:), 'Faxa_dstdry(3)', begg)
-       call check_for_nans(fldptr2d(4,:), 'Faxa_dstdry(4)', begg)
+       call check_for_nans(fldptr2d(1,:), trim(fldname)//'(1)', begg)
+       call check_for_nans(fldptr2d(2,:), trim(fldname)//'(2)', begg)
+       call check_for_nans(fldptr2d(3,:), trim(fldname)//'(3)', begg)
+       call check_for_nans(fldptr2d(4,:), trim(fldname)//'(4)', begg)
        do g = begg, endg
           n = g - begg + 1
           atm2lnd_inst%forc_aer_grc(g,8)  = fldptr2d(1,n)
@@ -600,22 +620,23 @@ contains
        end do
     end if
 
-    if (fldchk(importState, 'Sa_methane')) then
-       call state_getfldptr(importState, 'Sa_methane', fldptr1d=fldptr1d, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call check_for_nans(fldptr1d, 'Sa_methane', begg)
+    fldname = 'Sa_methane'
+    if (fldchk(importState, trim(fldname))) then
+       call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc )
+       call check_for_nans(fldptr1d, trim(fldname), begg)
        do g = begg, endg
           atm2lnd_inst%forc_pch4_grc(g) = fldptr1d(g-begg+1)
        end do
     end if
 
-    if (fldchk(importState, 'Faxa_ndep')) then
+    fldname = 'Faxa_ndep'
+    if (fldchk(importState, trim(fldname))) then
        ! The mediator is sending ndep in units if kgN/m2/s - and ctsm
        ! uses units of gN/m2/sec so the following conversion needs to happen
-       call state_getfldptr(importState, 'Faxa_ndep', fldptr2d=fldptr2d, rc=rc)
+       call state_getfldptr(importState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call check_for_nans(fldptr2d(1,:), 'Faxa_ndep(1)', begg)
-       call check_for_nans(fldptr2d(2,:), 'Faxa_ndep(2)', begg)
+       call check_for_nans(fldptr2d(1,:), trim(fldname)//'(1)', begg)
+       call check_for_nans(fldptr2d(2,:), trim(fldname)//'(2)', begg)
        do g = begg, endg
           n = g - begg + 1
           atm2lnd_inst%forc_ndep_grc(g) = (fldptr2d(1,n) + fldptr2d(2,n))*1000._r8
@@ -678,8 +699,9 @@ contains
     ! so water sent from rof to land is negative,
     ! change the sign to indicate addition of water to system.
 
-    if (fldchk(importState, 'Flrr_flood')) then
-       call state_getfldptr(importState, 'Flrr_flood', fldptr1d=fldptr1d, rc=rc )
+    fldname = 'Flrr_flood'
+    if (fldchk(importState, trim(fldname))) then
+       call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
           wateratm2lndbulk_inst%forc_flood_grc(g) = -fldptr1d(g-begg+1)
@@ -688,8 +710,9 @@ contains
        wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
     end if
 
-    if (fldchk(importState, 'Flrr_volr')) then
-       call state_getfldptr(importState, 'Flrr_volr', fldptr1d=fldptr1d, rc=rc )
+    fldname = 'Flrr_volr'
+    if (fldchk(importState, trim(fldname))) then
+       call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
           wateratm2lndbulk_inst%volr_grc(g) = fldptr1d(g-begg+1) * (ldomain%area(g) * 1.e6_r8)
@@ -698,8 +721,9 @@ contains
        wateratm2lndbulk_inst%volr_grc(:) = 0._r8
     end if
 
-    if (fldchk(importState, 'Flrr_volrmch')) then
-       call state_getfldptr(importState, 'Flrr_volrmch', fldptr1d=fldptr1d, rc=rc )
+    fldname = 'Flrr_volrmch'
+    if (fldchk(importState, trim(fldname))) then
+       call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
           wateratm2lndbulk_inst%volrmch_grc(g) = fldptr1d(g-begg+1) * (ldomain%area(g) * 1.e6_r8)
@@ -717,8 +741,9 @@ contains
        ! help with performance. (The downside would be that we wouldn't have these fields
        ! available for diagnostic purposes or to force a later T compset with dlnd.)
 
-       if ( fldchk(importState, 'Sg_ice_covered_elev')) then
-          call state_getfldptr(importState, 'Sg_ice_covered_elev', fldptr2d=fldptr2d, rc=rc)
+       fldname = 'Sg_ice_covered_elev'
+       if ( fldchk(importState, trim(fldname))) then
+          call state_getfldptr(importState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           do g = begg, endg
              do num = 0,glc_nec
@@ -726,8 +751,10 @@ contains
              end do
           end do
        end if
-       if ( fldchk(importState, 'Sl_topo_elev')) then
-          call state_getfldptr(importState, 'Sg_topo_elev', fldptr2d=fldptr2d, rc=rc)
+
+       fldname = 'Sg_topo_elev'
+       if ( fldchk(importState, trim(fldname))) then
+          call state_getfldptr(importState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           do g = begg, endg
              do num = 0,glc_nec
@@ -735,8 +762,10 @@ contains
              end do
           end do
        end if
-       if ( fldchk(importState, 'Flgg_hflx_elev')) then
-          call state_getfldptr(importState, 'Flgg_hflx_elev', fldptr2d=fldptr2d, rc=rc)
+
+       fldname = 'Flgg_hflx_elev'
+       if ( fldchk(importState, trim(fldname))) then
+          call state_getfldptr(importState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           do g = begg, endg
              do num = 0,glc_nec
@@ -746,15 +775,18 @@ contains
        else
           hflx_grc(:,:) = 0._r8
        end if
-       if ( fldchk(importState, 'Sg_icemask')) then
-          call state_getfldptr(importState, 'Sg_icemask', fldptr1d=fldptr1d, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       fldname = 'Sg_icemask'
+       if ( fldchk(importState, trim(fldname))) then
+          call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
           do g = begg, endg
              icemask_grc(g) = fldptr1d(g-begg+1)
           end do
        end if
-       if ( fldchk(importState, 'Sg_icemask_coupled_fluxes')) then
-          call state_getfldptr(importState, 'Sg_icemask_coupled_fluxes', fldptr1d=fldptr1d, rc=rc)
+
+       fldname = 'Sg_icemask_coupled_fluxes'
+       if ( fldchk(importState, trim(fldname))) then
+          call state_getfldptr(importState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           do g = begg, endg
              icemask_coupled_fluxes_grc(g) = fldptr1d(g-begg+1)
