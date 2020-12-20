@@ -687,15 +687,17 @@ contains
     else
        wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
     end if
+
     if (fldchk(importState, 'Flrr_volr')) then
-       call state_getfldptr(importState, 'Flrr_flood', fldptr1d=fldptr1d, rc=rc )
+       call state_getfldptr(importState, 'Flrr_volr', fldptr1d=fldptr1d, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
-          wateratm2lndbulk_inst%forc_flood_grc(g) = fldptr1d(g-begg+1) * (ldomain%area(g) * 1.e6_r8)
+          wateratm2lndbulk_inst%volr_grc(g) = fldptr1d(g-begg+1) * (ldomain%area(g) * 1.e6_r8)
        end do
     else
        wateratm2lndbulk_inst%volr_grc(:) = 0._r8
     end if
+
     if (fldchk(importState, 'Flrr_volrmch')) then
        call state_getfldptr(importState, 'Flrr_volrmch', fldptr1d=fldptr1d, rc=rc )
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -733,7 +735,7 @@ contains
              end do
           end do
        end if
-       if ( fldchk(importState, 'Sl_topo_elev')) then
+       if ( fldchk(importState, 'Flgg_hflx_elev')) then
           call state_getfldptr(importState, 'Flgg_hflx_elev', fldptr2d=fldptr2d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           do g = begg, endg
@@ -752,7 +754,7 @@ contains
           end do
        end if
        if ( fldchk(importState, 'Sg_icemask_coupled_fluxes')) then
-          call state_getfldptr(importState, 'Sg_icemask', fldptr1d=fldptr1d, rc=rc)
+          call state_getfldptr(importState, 'Sg_icemask_coupled_fluxes', fldptr1d=fldptr1d, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           do g = begg, endg
              icemask_coupled_fluxes_grc(g) = fldptr1d(g-begg+1)
