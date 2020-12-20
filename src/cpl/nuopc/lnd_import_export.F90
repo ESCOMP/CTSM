@@ -400,7 +400,6 @@ contains
     real(r8)                  :: icemask_grc(bounds%begg:bounds%endg)
     real(r8)                  :: icemask_coupled_fluxes_grc(bounds%begg:bounds%endg)
     character(len=*), parameter :: subname='(lnd_import_export:import_fields)'
-
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -832,6 +831,7 @@ contains
     type(ESMF_State)  :: exportState
     real(r8), pointer :: fldPtr1d(:)
     real(r8), pointer :: fldPtr2d(:,:)
+    character(len=CS) :: fldname
     integer           :: begg, endg                          ! bounds
     integer           :: i, g, num
     real(r8)          :: array(bounds%begg:bounds%endg)
@@ -851,8 +851,9 @@ contains
     ! -----------------------
     ! output to mediator
     ! -----------------------
-    if (fldchk(exportState, 'Sl_lfrin')) then
-       call state_getfldptr(exportState, 'Sl_lfrin', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_lfrin'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
@@ -863,128 +864,144 @@ contains
     ! -----------------------
     ! output to atm
     ! -----------------------
-    if (fldchk(exportState, 'Sl_t')) then
-       call state_getfldptr(exportState, 'Sl_t', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_t'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%t_rad_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Sl_snowh')) then
-       call state_getfldptr(exportState, 'Sl_snowh', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_snowh'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = waterlnd2atmbulk_inst%h2osno_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Sl_avsdr')) then
-       call state_getfldptr(exportState, 'Sl_avsdr', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_avsdr'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%albd_grc(g,1)
        end do
     end if
-    if (fldchk(exportState, 'Sl_anidr')) then
-       call state_getfldptr(exportState, 'Sl_anidr', fldptr1d=fldptr1d, rc=rc)
+    fldname='Sl_anidr'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%albd_grc(g,2)
        end do
     end if
-    if (fldchk(exportState, 'Sl_avsdf')) then
-       call state_getfldptr(exportState, 'Sl_avsdf', fldptr1d=fldptr1d, rc=rc)
+    fldname= 'Sl_avsdf'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%albi_grc(g,1)
        end do
     end if
-    if (fldchk(exportState, 'Sl_anidf')) then
-       call state_getfldptr(exportState, 'Sl_anidf', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_anidf'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%albi_grc(g,2)
        end do
     end if
-    if (fldchk(exportState, 'Sl_tref')) then
-       call state_getfldptr(exportState, 'Sl_tref', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_tref'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%t_ref2m_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Sl_qref')) then
-       call state_getfldptr(exportState, 'Sl_qref', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_qref'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = waterlnd2atmbulk_inst%q_ref2m_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Fall_taux')) then
-       call state_getfldptr(exportState, 'Fall_taux', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_taux'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = -lnd2atm_inst%taux_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Fall_tauy')) then
-       call state_getfldptr(exportState, 'Fall_tauy', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_tauy'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = -lnd2atm_inst%tauy_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Fall_lat')) then
-       call state_getfldptr(exportState, 'Fall_lat', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_lat'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = -lnd2atm_inst%eflx_lh_tot_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Fall_sen')) then
-       call state_getfldptr(exportState, 'Fall_sen', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_sen'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = -lnd2atm_inst%eflx_sh_tot_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Fall_lwup')) then
-       call state_getfldptr(exportState, 'Fall_lwup', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_lwup'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = -lnd2atm_inst%eflx_lwrad_out_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Fall_evap')) then
-       call state_getfldptr(exportState, 'Fall_evap', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_evap'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = -waterlnd2atmbulk_inst%qflx_evap_tot_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Fall_swnet')) then
-       call state_getfldptr(exportState, 'Fall_swnet', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_swnet'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%fsa_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Fall_flxdst')) then
-       call state_getfldptr(exportState, 'Fall_flxdst', fldptr2d=fldptr2d, rc=rc)
+    fldname = 'Fall_flxdst'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr2d(:,:) = 0._r8
        do g = begg, endg
@@ -994,57 +1011,62 @@ contains
           fldptr2d(4,g-begg+1) = -lnd2atm_inst%flxdst_grc(g,4)
        end do
     end if
-    if (fldchk(exportState, 'Fall_methane')) then
-       call state_getfldptr(exportState, 'Fall_methane', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_methane'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = -lnd2atm_inst%ch4_surf_flux_tot_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Sl_u10')) then
-       call state_getfldptr(exportState, 'Sl_u10', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_u10'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%u_ref10m_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Sl_ram1')) then
-       call state_getfldptr(exportState, 'Sl_ram1', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_ram1'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%ram1_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Sl_fv')) then
-       call state_getfldptr(exportState, 'Sl_fv', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_fv'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = lnd2atm_inst%fv_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Sl_soilw')) then
-       call state_getfldptr(exportState, 'Sl_soilw', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Sl_soilw'
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
           fldptr1d(g-begg+1) = waterlnd2atmbulk_inst%h2osoi_vol_grc(g,1)
        end do
     end if
-    if (flds_co2b .or. flds_co2c) then
-       ! co2 from land
-       call state_getfldptr(exportState, 'Fall_fco2_lnd', fldptr1d=fldptr1d, rc=rc)
+    fldname = 'Fall_fco2_lnd'  ! co2 from land
+    if (fldchk(exportState, trim(fldname) )) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = -lnd2atm_inst%net_carbon_exchange_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Sl_ddvel')) then
-       ! dry dep velocities
-       call state_getfldptr(exportState, 'Sl_ddvel', fldptr2d=fldptr2d, rc=rc)
+    fldname = 'Sl_ddvel'  ! dry dep velocities
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr2d(:,:) = 0._r8
        do g = begg, endg
@@ -1053,9 +1075,9 @@ contains
           end do
        end do
     end if
-    if (fldchk(exportState, 'Fall_voc')) then
-       ! megan voc emis fluxes
-       call state_getfldptr(exportState, 'Fall_voc', fldptr2d=fldptr2d, rc=rc)
+    fldname = 'Fall_voc' ! megan voc emis fluxes
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr2d(:,:) = 0._r8
        do g = begg, endg
@@ -1064,25 +1086,26 @@ contains
           end do
        end do
     end if
-    if (fldchk(exportState, 'Fall_fire')) then
-       if (emis_nflds > 0) then
-          ! fire emis fluxes
-          call state_getfldptr(exportState, 'Fall_fire', fldptr2d=fldptr2d, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          fldptr2d(:,:) = 0._r8
-          do g = begg, endg
-             do num = 1, emis_nflds
-                fldptr2d(num,g-begg+1) = -lnd2atm_inst%fireflx_grc(g,num)
-             end do
+    fldname = 'Fall_fire' ! fire emis from land
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       fldptr2d(:,:) = 0._r8
+       do g = begg, endg
+          do num = 1, emis_nflds
+             fldptr2d(num,g-begg+1) = -lnd2atm_inst%fireflx_grc(g,num)
           end do
-          call state_getfldptr(exportState, 'Sl_fztop', fldptr1d=fldptr1d, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          fldptr1d(:) = 0._r8
-          do g = begg, endg
-             fldptr1d(g-begg+1) = lnd2atm_inst%fireztop_grc(g)
-          end do
-       end if
-    endif
+       end do
+    end if
+    fldname = 'Sl_fztop' ! fire emis from land
+    if (fldchk(exportState, trim(fldname))) then 
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       fldptr1d(:) = 0._r8
+       do g = begg, endg
+          fldptr1d(g-begg+1) = lnd2atm_inst%fireztop_grc(g)
+       end do
+    end if
 
     ! sign convention is positive downward with hierarchy of atm/glc/lnd/rof/ice/ocn.
     ! i.e. water sent from land to rof is positive
@@ -1096,17 +1119,20 @@ contains
     !    array(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(g) + &
     !               waterlnd2atmbulk_inst%qflx_rofliq_h2osfc_grc(g)
     ! end do
-    if (fldchk(exportState, 'Flrl_rofsur')) then
-       call state_getfldptr(exportState, 'Flrl_rofsur', fldptr1d=fldptr1d, rc=rc)
+
+    fldname = 'Flrl_rofsur' 
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Flrl_rofsub')) then
-       ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
-       call state_getfldptr(exportState, 'Flrl_rofsub', fldptr1d=fldptr1d, rc=rc)
+
+    fldname = 'Flrl_rofsub' ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
@@ -1114,27 +1140,30 @@ contains
                                waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Flrl_rofgwl')) then
-       ! qgwl sent individually to coupler
-       call state_getfldptr(exportState, 'Flrl_rofgwl', fldptr1d=fldptr1d, rc=rc)
+
+    fldname = 'Flrl_rofgwl' ! qgwl sent individually to mediator
+    if (fldchk(exportState, trim(fldname))) then 
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Flrl_rofi')) then
-       ! ice  sent individually to coupler
-       call state_getfldptr(exportState, 'Flrl_rofi', fldptr1d=fldptr1d, rc=rc)
+
+    fldname = 'Flrl_rofi' ! ice  sent individually to mediator
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
           fldptr1d(g-begg+1) = waterlnd2atmbulk_inst%qflx_rofice_grc(g)
        end do
     end if
-    if (fldchk(exportState, 'Flrl_irrig')) then
-       ! irrigation flux to be removed from main channel storage (negative)
-       call state_getfldptr(exportState, 'Flrl_irrig', fldptr1d=fldptr1d, rc=rc)
+
+    fldname = 'Flrl_irrig' ! irrigation flux to be removed from main channel storage (negative)
+    if (fldchk(exportState, trim(fldname))) then
+       call state_getfldptr(exportState, trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr1d(:) = 0._r8
        do g = begg, endg
@@ -1148,8 +1177,10 @@ contains
     ! We could avoid setting these fields if glc_present is .false., if that would
     ! help with performance. (The downside would be that we wouldn't have these fields
     ! available for diagnostic purposes or to force a later T compset with dlnd.)
-    if (fldchk(exportState, 'Sl_tsrf_elev')) then 
-       call state_getfldptr(exportState, 'Sl_tsrf_elev', fldptr2d=fldptr2d, rc=rc)
+
+    fldname = 'Sl_tsrf_elev'
+    if (fldchk(exportState, trim(fldname))) then 
+       call state_getfldptr(exportState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr2d(:,:) = 0._r8
        do g = begg, endg
@@ -1158,8 +1189,10 @@ contains
           end do
        end do
     end if
-    if (fldchk(exportState, 'Sl_topo_elev')) then 
-       call state_getfldptr(exportState, 'Sl_topo_elev', fldptr2d=fldptr2d, rc=rc)
+
+    fldname = 'Sl_topo_elev'
+    if (fldchk(exportState, trim(fldname))) then 
+       call state_getfldptr(exportState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr2d(:,:) = 0._r8
        do g = begg, endg
@@ -1168,8 +1201,10 @@ contains
           end do
        end do
     end if
-    if (fldchk(exportState, 'Flgl_qice_elev')) then 
-       call state_getfldptr(exportState, 'Flgl_qice_elev', fldptr2d=fldptr2d, rc=rc)
+
+    fldname = 'Flgl_qice_elev'
+    if (fldchk(exportState, trim(fldname))) then 
+       call state_getfldptr(exportState, trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        fldptr2d(:,:) = 0._r8
        do g = begg, endg
