@@ -1032,6 +1032,10 @@ contains
     ! Biomass heat storage variables
     !
     if (use_biomass_heat_storage ) then
+       !
+       ! These variables are used for stem biomass and only for tree and shrub
+       ! (They are effectively unused for other veg types)
+       !
        call ncd_io('dbh',this%dbh, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
        call ncd_io('fbw',this%fbw, 'read', ncid, readvar=readv)

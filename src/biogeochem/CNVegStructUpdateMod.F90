@@ -233,15 +233,17 @@ contains
 
                endif
 
+               !
                ! calculate vegetation physiological parameters used in biomass heat storage
+               !
                if (use_biomass_heat_storage) then
-                  ! Assumes fbw the same for leaves and stems
+                  ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
                   leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
                   stem_biomass(p) = (deadstemc(p) + livestemc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
-                  
+
                   if (spinup_state == 2) then
                      stem_biomass(p) = 10._r8 * stem_biomass(p)
                   end if

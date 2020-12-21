@@ -51,7 +51,7 @@ module CanopyFluxesMod
   !
   ! !PUBLIC TYPES:
   implicit none
-  ! 
+  !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyFluxesReadNML     ! Read in namelist settings
   public :: CanopyFluxes            ! Calculate canopy fluxes
@@ -299,8 +299,8 @@ contains
     real(r8) :: rppdry                               ! fraction of potential evaporation through transp [-]
     real(r8) :: cf                                   ! heat transfer coefficient from leaves [-]
     real(r8) :: rb(bounds%begp:bounds%endp)          ! leaf boundary layer resistance [s/m]
-    real(r8) :: rah(bounds%begp:bounds%endp,2)       ! thermal resistance [s/m]
-    real(r8) :: raw(bounds%begp:bounds%endp,2)       ! moisture resistance [s/m]
+    real(r8) :: rah(bounds%begp:bounds%endp,2)       ! thermal resistance [s/m]  (air, ground)
+    real(r8) :: raw(bounds%begp:bounds%endp,2)       ! moisture resistance [s/m] (air, ground)
     real(r8) :: wta                                  ! heat conductance for air [m/s]
     real(r8) :: wtg(bounds%begp:bounds%endp)         ! heat conductance for ground [m/s]
     real(r8) :: wtl                                  ! heat conductance for leaf [m/s]
@@ -418,15 +418,18 @@ contains
     real(r8) :: uuc(bounds%begp:bounds%endp)       ! undercanopy windspeed
     real(r8) :: carea_stem                         !cross-sectional area of stem
 
+    ! Indices for raw and rah
+    integer, parameter :: above_canopy = 1         ! Above canopy
+    integer, parameter :: below_canopy = 2         ! Below canopy
     ! Biomass heat storage tuning parameters
     ! These parameters can be used to account for differences
     ! in vegetation shape.
-    real(r8), parameter :: k_vert = 0.1            !vertical distribution of stem
-    real(r8), parameter :: k_cyl_vol = 1.0         !departure from cylindrical volume
-    real(r8), parameter :: k_cyl_area = 1.0        !departure from cylindrical area
-    real(r8), parameter :: k_internal = 0.0        !self-absorbtion of leaf/stem longwave
-    real(r8), parameter :: min_stem_diameter = 0.05!minimum stem diameter for which to calculate stem interactions
-    
+    real(r8), parameter :: k_vert     = 0.1         !vertical distribution of stem
+    real(r8), parameter :: k_cyl_vol  = 1.0         !departure from cylindrical volume
+    real(r8), parameter :: k_cyl_area = 1.0         !departure from cylindrical area
+    real(r8), parameter :: k_internal = 0.0         !self-absorbtion of leaf/stem longwave
+    real(r8), parameter :: min_stem_diameter = 0.05 !minimum stem diameter for which to calculate stem interactions
+
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
 
@@ -434,10 +437,10 @@ contains
     SHR_ASSERT_ALL_FL((ubound(leafn_patch) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate(                                                                    & 
-         t_stem                 => temperature_inst%t_stem_patch                , & ! Output: [real(r8) (:)   ]  stem temperature (Kelvin)                                       
-         dhsdt_canopy           => energyflux_inst%dhsdt_canopy_patch           , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm]                    
+         t_stem                 => temperature_inst%t_stem_patch                , & ! Output: [real(r8) (:)   ]  stem temperature (Kelvin)
+         dhsdt_canopy           => energyflux_inst%dhsdt_canopy_patch           , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm]
          soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance
-         snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
+         snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers
          dayl                   => grc%dayl                                     , & ! Input:  [real(r8) (:)   ]  daylength (s)
          max_dayl               => grc%max_dayl                                 , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
          is_tree                => pftcon%is_tree                               , & ! Input:  tree patch or not
@@ -446,11 +449,11 @@ contains
          dbh_param              => pftcon%dbh                                   , & ! Input:  diameter at brest height (m)
          fbw                    => pftcon%fbw                                   , & ! Input:  fraction of biomass that is water
          nstem                  => pftcon%nstem                                 , & ! Input:  stem number density (#ind/m2)
-         rstem_per_dbh          => pftcon%rstem_per_dbh                         , & ! Input:  stem resistance per stem diameter (s/m**2) 
+         rstem_per_dbh          => pftcon%rstem_per_dbh                         , & ! Input:  stem resistance per stem diameter (s/m**2)
          wood_density           => pftcon%wood_density                          , & ! Input:  dry wood density (kg/m3)
 
          forc_lwrad             => atm2lnd_inst%forc_lwrad_downscaled_col       , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)                       
-         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)                                 
+         forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)
          forc_pbot              => atm2lnd_inst%forc_pbot_downscaled_col        , & ! Input:  [real(r8) (:)   ]  atmospheric pressure (Pa)                                             
          forc_th                => atm2lnd_inst%forc_th_downscaled_col          , & ! Input:  [real(r8) (:)   ]  atmospheric potential temperature (Kelvin)                            
          forc_rho               => atm2lnd_inst%forc_rho_downscaled_col         , & ! Input:  [real(r8) (:)   ]  density (kg/m**3)                                                     
@@ -581,7 +584,7 @@ contains
          eflx_sh_snow           => energyflux_inst%eflx_sh_snow_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]                      
          eflx_sh_h2osfc         => energyflux_inst%eflx_sh_h2osfc_patch         , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
          eflx_sh_soil           => energyflux_inst%eflx_sh_soil_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]                      
-         eflx_sh_stem           => energyflux_inst%eflx_sh_stem_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]                    
+         eflx_sh_stem           => energyflux_inst%eflx_sh_stem_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]
          eflx_sh_veg            => energyflux_inst%eflx_sh_veg_patch            , & ! Output: [real(r8) (:)   ]  sensible heat flux from leaves (W/m**2) [+ to atm]                    
          eflx_sh_grnd           => energyflux_inst%eflx_sh_grnd_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]                    
          rah1                   => frictionvel_inst%rah1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical  resistance [s/m]
@@ -679,7 +682,9 @@ contains
          eflx_sh_stem(p) = 0._r8
       end do
 
-      ! calculate biomass heat capacities
+      !
+      ! Calculate biomass heat capacities
+      !
       if(use_biomass_heat_storage) then
 bioms:   do f = 1, fn
             p = filterp(f)
@@ -709,18 +714,21 @@ bioms:   do f = 1, fn
             ! double in spirit of full surface area for sensible heat
             sa_leaf(p) = 2.*sa_leaf(p)
 
+            ! Surface area for stem
             sa_stem(p) = nstem(patch%itype(p))*(htop(p)*shr_const_pi*dbh(p))
             ! adjust for departure of cylindrical stem model
             sa_stem(p) = k_cyl_area * sa_stem(p)
 
+            !
             ! only calculate separate leaf/stem heat capacity for trees
             ! and shrubs if dbh is greater than some minimum value
+            ! (set surface area for stem, and fraction absorbed by stem to zero)
             if(.not.(is_tree(patch%itype(p)) .or. is_shrub(patch%itype(p))) &
                  .or. dbh(p) < min_stem_diameter) then
                frac_rad_abs_by_stem(p) = 0.0
                sa_stem(p) = 0.0
             endif
-            
+
             ! cross-sectional area of stems
             carea_stem = shr_const_pi * (dbh(p)*0.5)**2
 
@@ -733,7 +741,7 @@ bioms:   do f = 1, fn
                     * nstem(patch%itype(p)) * wood_density(patch%itype(p)) &
                     /(1.-fbw(patch%itype(p)))
             endif
-          
+
             ! internal longwave fluxes between leaf and stem
             ! (use same area of interaction i.e. ignore leaf <-> leaf)
             sa_internal(p) = min(sa_leaf(p),sa_stem(p))
@@ -753,7 +761,7 @@ bioms:   do f = 1, fn
 
             ! resistance between internal stem temperature and canopy air 
             rstem(p) = rstem_per_dbh(patch%itype(p))*dbh(p)
-         
+
          enddo bioms
       else
         ! Otherwise set biomass heat storage terms to zero
@@ -847,7 +855,8 @@ bioms:   do f = 1, fn
      
       end if
 
-      ! Modify aerodynamic parameters for sparse/dense canopy (X. Zeng)
+      !! Modify aerodynamic parameters for sparse/dense canopy (X. Zeng)
+
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
@@ -1008,7 +1017,7 @@ bioms:   do f = 1, fn
             else
                csoilcn = csoilb*w + params_inst%csoilc*(1._r8-w)
             end if
-            
+
             !! Sakaguchi changes for stability formulation ends here
 
             if (use_biomass_heat_storage) then
@@ -1030,10 +1039,10 @@ bioms:   do f = 1, fn
             eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! pa
             rhaf(p) = eah(p)/svpts(p)
             ! variables for history fields
-            rah1(p)  = rah(p,1)                  
-            raw1(p)  = raw(p,1)                  
-            rah2(p)  = rah(p,2)                  
-            raw2(p)  = raw(p,2)                  
+            rah1(p)  = rah(p,1)
+            raw1(p)  = raw(p,1)
+            rah2(p)  = rah(p,2)
+            raw2(p)  = raw(p,2)
             vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8
 
          end do
@@ -1093,12 +1102,12 @@ bioms:   do f = 1, fn
             ! Sensible heat conductance for air, leaf and ground
             ! Moved the original subroutine in-line...
 
-            wta    = 1._r8/rah(p,1)      ! air
-            wtl    = sa_leaf(p)/rb(p)    ! leaf
-            wtg(p) = 1._r8/rah(p,2)      ! ground
-            wtstem = sa_stem(p)/(rstem(p) + rb(p))    ! stem
+            wta    = 1._r8/rah(p,1)                ! air
+            wtl    = sa_leaf(p)/rb(p)              ! leaf
+            wtg(p) = 1._r8/rah(p,2)                ! ground
+            wtstem = sa_stem(p)/(rstem(p) + rb(p)) ! stem
 
-            wtshi  = 1._r8/(wta+wtl+wtstem+wtg(p))
+            wtshi  = 1._r8/(wta+wtl+wtstem+wtg(p)) ! air, leaf, stem and ground
 
             wtl0(p) = wtl*wtshi         ! leaf
             wtg0    = wtg(p)*wtshi      ! ground
@@ -1111,7 +1120,7 @@ bioms:   do f = 1, fn
             ! internal longwave fluxes between leaf and stem
             lw_stem(p) = sa_internal(p) * emv(p) * sb * t_stem(p)**4
             lw_leaf(p) = sa_internal(p) * emv(p) * sb * t_veg(p)**4
-            
+
             ! Fraction of potential evaporation from leaf
 
             if (fdry(p) > 0._r8) then
@@ -1225,7 +1234,7 @@ bioms:   do f = 1, fn
                  +dc1*wtga(p) +dc2*wtgaq*qsatldT(p) + cp_leaf(p)/dtime)
 
             t_veg(p) = tlbef(p) + dt_veg(p)
-            
+
             dels = dt_veg(p)
             del(p)  = abs(dels)
             err(p) = 0._r8
@@ -1379,7 +1388,7 @@ bioms:   do f = 1, fn
               - ((t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime)
 
          !  Update stem temperature; adjust outgoing longwave
-         !  does not account for changes in SH or internal LW,  
+         !  does not account for changes in SH or internal LW,
          !  as that would change result for t_veg above
          if (use_biomass_heat_storage) then
             if (stem_biomass(p) > 0._r8) then
@@ -1390,10 +1399,10 @@ bioms:   do f = 1, fn
             else
                dt_stem(p) = 0._r8
             endif
-            
+
             dhsdt_canopy(p) = dt_stem(p)*cp_stem(p)/dtime &
                  +(t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime
-            
+
             t_stem(p) =  t_stem(p) + dt_stem(p)
          else
             dt_stem(p) = 0._r8
