@@ -145,16 +145,10 @@ contains
       ! constant allometric parameters
       taper(:) = 200._r8
 
-      if (use_biomass_heat_storage) then
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            stocking(p) = nstem(ivt(p))
-         enddo
-      else
-         stocking(:) = 1000._r8
-         ! convert from stems/ha -> stems/m^2
-         stocking(:) = stocking(:) / 10000._r8
-      endif
+      do fp = 1,num_soilp
+        p = filter_soilp(fp)
+        stocking(p) = nstem(ivt(p))
+      enddo
 
       ! patch loop
       do fp = 1,num_soilp
