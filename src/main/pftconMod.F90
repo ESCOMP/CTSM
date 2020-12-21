@@ -152,6 +152,7 @@ module pftconMod
      real(r8), allocatable :: dbh  (:)            ! diameter at breast height (m)
      real(r8), allocatable :: fbw  (:)            ! fraction of biomass that is water
      real(r8), allocatable :: nstem  (:)          ! stem density (#/m2)
+     real(r8), allocatable :: taper  (:)          ! tapering ratio of height:radius_breast_height
      real(r8), allocatable :: rstem_per_dbh  (:)  ! stem resistance per dbh (s/m/m)
      real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
 
@@ -480,6 +481,7 @@ contains
     allocate( this%dbh           (0:mxpft) )
     allocate( this%fbw           (0:mxpft) )
     allocate( this%nstem         (0:mxpft) )
+    allocate( this%taper         (0:mxpft) )
     allocate( this%rstem_per_dbh (0:mxpft) )
     allocate( this%wood_density  (0:mxpft) )
  
@@ -1053,6 +1055,7 @@ contains
        this%rstem_per_dbh = 0.0_r8
        this%wood_density = 0.0_r8
     end if
+    this%taper = 200._r8   ! Initialize taper to the same value everywhere (below change it for shrub)
 
     call ncd_pio_closefile(ncid)
 
@@ -1175,6 +1178,13 @@ contains
        else
           this%is_grass(m) = .false.
        endif
+
+       ! Set taper differently if shrub
+       if ( this%is_shrub(m) )then
+         this%taper(m) = 10._r8
+       else
+         this%taper(m) = 200._r8
+       end if
        
     end do
 

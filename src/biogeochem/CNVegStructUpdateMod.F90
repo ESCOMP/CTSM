@@ -68,7 +68,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: p,c,g      ! indices
     integer  :: fp         ! lake filter indices
-    real(r8) :: taper(bounds%begp:bounds%endp)      ! ratio of height:radius_breast_height (tree allometry)
     real(r8) :: stocking                            ! #stems / ha (stocking density)
     real(r8) :: ol         ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb         ! fraction of canopy layer covered by snow
@@ -105,6 +104,7 @@ contains
          ztopmx             =>  pftcon%ztopmx                           , & ! Input:
          laimx              =>  pftcon%laimx                            , & ! Input:
          nstem              =>  pftcon%nstem                            , & ! Input:  Tree number density (#ind/m2)
+         taper              =>  pftcon%taper                            , & ! Input:  ratio of height:radius_breast_height (tree allometry)
          fbw                =>  pftcon%fbw                              , & ! Input:  Fraction of fresh biomass that is water        
        
          allom2             =>  dgv_ecophyscon%allom2                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
@@ -141,9 +141,6 @@ contains
          )
 
       dt = real( get_rad_step_size(), r8 )
-
-      ! constant allometric parameters
-      taper(:) = 200._r8
 
       ! patch loop
       do fp = 1,num_soilp
@@ -186,16 +183,6 @@ contains
 
             if (woody(ivt(p)) == 1._r8) then
 
-               ! trees and shrubs
-
-               ! if shrubs have a squat taper 
-               if (ivt(p) >= nbrdlf_evr_shrub .and. ivt(p) <= nbrdlf_dcd_brl_shrub) then
-                  taper(p) = 10._r8
-                  ! otherwise have a tall taper
-               else
-                  taper(p) = 200._r8
-               end if
-
                ! trees and shrubs for now have a very simple allometry, with hard-wired
                ! stem taper (height:radius) and nstem from PFT parameter file
                if (use_cndv) then
@@ -204,7 +191,7 @@ contains
 
                      stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                      htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
-                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper(p)))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper(ivt(p))))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
 
                   else
                      htop(p) = 0._r8
@@ -213,10 +200,10 @@ contains
                else
                   !correct height calculation if doing accelerated spinup
                   if (spinup_state == 2) then
-                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(p) * taper(p))/ &
+                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
                          (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   else
-                    htop(p) = ((3._r8 * deadstemc(p) * taper(p) * taper(p))/ &
+                    htop(p) = ((3._r8 * deadstemc(p) * taper(ivt(p)) * taper(ivt(p)))/ &
                          (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   end if
 
