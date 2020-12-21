@@ -69,7 +69,7 @@ contains
     integer  :: p,c,g      ! indices
     integer  :: fp         ! lake filter indices
     real(r8) :: taper(bounds%begp:bounds%endp)      ! ratio of height:radius_breast_height (tree allometry)
-    real(r8) :: stocking(bounds%begp:bounds%endp)   ! #stems / ha (stocking density)
+    real(r8) :: stocking                            ! #stems / ha (stocking density)
     real(r8) :: ol         ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb         ! fraction of canopy layer covered by snow
     real(r8) :: tlai_old   ! for use in Zeng tsai formula
@@ -145,11 +145,6 @@ contains
       ! constant allometric parameters
       taper(:) = 200._r8
 
-      do fp = 1,num_soilp
-        p = filter_soilp(fp)
-        stocking(p) = nstem(ivt(p))
-      enddo
-
       ! patch loop
       do fp = 1,num_soilp
          p = filter_soilp(fp)
@@ -202,14 +197,14 @@ contains
                end if
 
                ! trees and shrubs for now have a very simple allometry, with hard-wired
-               ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
+               ! stem taper (height:radius) and nstem from PFT parameter file
                if (use_cndv) then
 
                   if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
 
-                     stocking(p) = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
+                     stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                      htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
-                          (SHR_CONST_PI * stocking(p) * dwood(ivt(p)) * taper(p)))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper(p)))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
 
                   else
                      htop(p) = 0._r8
@@ -219,10 +214,10 @@ contains
                   !correct height calculation if doing accelerated spinup
                   if (spinup_state == 2) then
                     htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(p) * taper(p))/ &
-                         (SHR_CONST_PI * stocking(p) * dwood(ivt(p))))**(1._r8/3._r8)
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   else
                     htop(p) = ((3._r8 * deadstemc(p) * taper(p) * taper(p))/ &
-                         (SHR_CONST_PI * stocking(p) * dwood(ivt(p))))**(1._r8/3._r8)
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   end if
 
                endif
