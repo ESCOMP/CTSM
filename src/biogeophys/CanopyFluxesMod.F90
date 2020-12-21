@@ -972,8 +972,8 @@ bioms:   do f = 1, fn
             ! Determine aerodynamic resistances
 
             ram1(p)  = 1._r8/(ustar(p)*ustar(p)/um(p))
-            rah(p,1) = 1._r8/(temp1(p)*ustar(p))
-            raw(p,1) = 1._r8/(temp2(p)*ustar(p))
+            rah(p,above_canopy) = 1._r8/(temp1(p)*ustar(p))
+            raw(p,above_canopy) = 1._r8/(temp2(p)*ustar(p))
 
             ! Bulk boundary layer resistance of leaves
 
@@ -1022,14 +1022,14 @@ bioms:   do f = 1, fn
 
             if (use_biomass_heat_storage) then
                ! use uuc for ground fluxes (keep uaf for canopy terms)
-               rah(p,2) = 1._r8/(csoilcn*uuc(p))
+               rah(p,below_canopy) = 1._r8/(csoilcn*uuc(p))
             else
-               rah(p,2) = 1._r8/(csoilcn*uaf(p))
+               rah(p,below_canopy) = 1._r8/(csoilcn*uaf(p))
             endif
 
-            raw(p,2) = rah(p,2)
+            raw(p,below_canopy) = rah(p,below_canopy)
             if (use_lch4) then
-               grnd_ch4_cond(p) = 1._r8/(raw(p,1)+raw(p,2))
+               grnd_ch4_cond(p) = 1._r8/(raw(p,above_canopy)+raw(p,below_canopy))
             end if
 
             ! Stomatal resistances for sunlit and shaded fractions of canopy.
@@ -1039,10 +1039,10 @@ bioms:   do f = 1, fn
             eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! pa
             rhaf(p) = eah(p)/svpts(p)
             ! variables for history fields
-            rah1(p)  = rah(p,1)
-            raw1(p)  = raw(p,1)
-            rah2(p)  = rah(p,2)
-            raw2(p)  = raw(p,2)
+            rah1(p)  = rah(p,above_canopy)
+            raw1(p)  = raw(p,above_canopy)
+            rah2(p)  = rah(p,below_canopy)
+            raw2(p)  = raw(p,below_canopy)
             vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8
 
          end do
@@ -1102,9 +1102,9 @@ bioms:   do f = 1, fn
             ! Sensible heat conductance for air, leaf and ground
             ! Moved the original subroutine in-line...
 
-            wta    = 1._r8/rah(p,1)                ! air
+            wta    = 1._r8/rah(p,above_canopy)     ! air
             wtl    = sa_leaf(p)/rb(p)              ! leaf
-            wtg(p) = 1._r8/rah(p,2)                ! ground
+            wtg(p) = 1._r8/rah(p,below_canopy)     ! ground
             wtstem = sa_stem(p)/(rstem(p) + rb(p)) ! stem
 
             wtshi  = 1._r8/(wta+wtl+wtstem+wtg(p)) ! air, leaf, stem and ground
@@ -1175,7 +1175,7 @@ bioms:   do f = 1, fn
             ! Air has same conductance for both sensible and latent heat.
             ! Moved the original subroutine in-line...
 
-            wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
+            wtaq    = frac_veg_nosno(p)/raw(p,above_canopy)             ! air
             wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
 
             !Litter layer resistance. Added by K.Sakaguchi
@@ -1186,13 +1186,13 @@ bioms:   do f = 1, fn
 
             ! add litter resistance and Lee and Pielke 1992 beta
             if (delq(p) < 0._r8) then  !dew. Do not apply beta for negative flux (follow old rsoil)
-               wtgq(p) = frac_veg_nosno(p)/(raw(p,2)+rdl)
+               wtgq(p) = frac_veg_nosno(p)/(raw(p,below_canopy)+rdl)
             else
                if (do_soilevap_beta()) then
-                  wtgq(p) = soilbeta(c)*frac_veg_nosno(p)/(raw(p,2)+rdl)
+                  wtgq(p) = soilbeta(c)*frac_veg_nosno(p)/(raw(p,below_canopy)+rdl)
                endif
                if (do_soil_resistance_sl14()) then
-                  wtgq(p) = frac_veg_nosno(p)/(raw(p,2)+soilresis(c))
+                  wtgq(p) = frac_veg_nosno(p)/(raw(p,below_canopy)+soilresis(c))
                endif
             end if
 
