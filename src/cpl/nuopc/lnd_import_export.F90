@@ -665,6 +665,7 @@ contains
        else
           hflx_grc(:,:) = 0._r8
        end if
+
        call glc2lnd_inst%set_glc2lnd_fields_nuopc( bounds, glc_present, &
             frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc )
     end if
@@ -869,8 +870,7 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
     if (fldchk(exportState, Flgl_qice_elev)) then 
-       call state_setexport_2d(exportState, Flgl_qice_elev, lnd2glc_inst%qice_grc(begg:,0:glc_nec), &
-            minus=.true., rc=rc)
+       call state_setexport_2d(exportState, Flgl_qice_elev, lnd2glc_inst%qice_grc(begg:,0:glc_nec), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
