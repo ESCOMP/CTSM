@@ -1103,15 +1103,24 @@ contains
     integer          , intent(out):: rc
 
     ! local variables
+    logical :: l_minus ! local version of minus
     real(r8), pointer :: fldPtr1d(:)
     integer           :: g
     character(len=*), parameter :: subname='(lnd_export_export:state_setexport_1d)'
     ! ----------------------------------------------
 
+    rc = ESMF_SUCCESS
+
+    if (present(minus)) then
+       l_minus = minus
+    else
+       l_minus = .false.
+    end if
+
     call state_getfldptr(state, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     fldptr1d(:) = 0._r8
-    if (present(minus)) then
+    if (l_minus) then
        do g = 1,size(ctsmdata)
           fldptr1d(g) = -ctsmdata(g)
        end do
@@ -1140,6 +1149,7 @@ contains
     integer          , intent(out):: rc
 
     ! local variables
+    logical :: l_minus ! local version of minus
     real(r8), pointer :: fldPtr2d(:,:)
     integer           :: g, n
     character(len=CS) :: cnum
@@ -1148,12 +1158,18 @@ contains
 
     rc = ESMF_SUCCESS
 
+    if (present(minus)) then
+       l_minus = minus
+    else
+       l_minus = .false.
+    end if
+
     call state_getfldptr(state, trim(fldname), fldptr2d=fldptr2d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     fldptr2d(:,:) = 0._r8
     do n = 1,size(ctsmdata, dim=2)
        write(cnum,'(i0)') n
-       if (present(minus)) then
+       if (l_minus) then
           do g = 1,size(ctsmdata, dim=1)
              fldptr2d(n,g) = -ctsmdata(g,n)
           end do
