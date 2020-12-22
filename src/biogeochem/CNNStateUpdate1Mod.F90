@@ -260,12 +260,7 @@ contains
             ns_veg%frootn_patch(p)          = ns_veg%frootn_patch(p)         + nf_veg%npool_to_frootn_patch(p)*dt
             ns_veg%frootn_storage_patch(p)  = ns_veg%frootn_storage_patch(p) + nf_veg%npool_to_frootn_storage_patch(p)*dt
          else
-            if(ns_veg%retransn_patch(p) .eq. 0)then
-               ns_veg%retransn_patch(p) = 1.e-7
-               nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) = nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) + 1./dt
-            end if
-            nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) = nf_veg%matrix_nphtransfer_patch(p,nf_veg%iretransn_to_iout_ph) &
-                  + nf_veg%free_retransn_to_npool_patch(p) / ns_veg%retransn_patch(p)
+            ! No matrix code needed here
          end if
 
          if (woody(ivt(p)) == 1._r8) then

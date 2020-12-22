@@ -102,7 +102,7 @@ module CNPhenologyMod
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
   logical,parameter :: matrixcheck_ph = .True.          ! Matrix check
-  logical,parameter :: acc_ph = .True.                  ! Another matrix check
+  logical,parameter :: acc_ph = .False.                 ! Another matrix check
 
   real(r8), private :: initial_seed_at_planting = 3._r8 ! Initial seed at planting
 
@@ -2880,17 +2880,13 @@ contains
                      else
                         livestemc_to_litter(p) = 0
                      end if
-                     ! This should be updated to use the form with the matrix_update_phn function
                      if(livestemn(p) .gt. 0)then
-                        !livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn,livestemn_to_biofueln(p) / livestemn(p),dt,matrixcheck_ph,acc_ph)
-                        matrix_nphtransfer(p,ilivestem_to_iout_phn) = livestemn_to_biofueln(p) / livestemn(p)
+                        livestemn_to_biofueln(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn,livestemn_to_biofueln(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
                         livestemn_to_litter(p) = 0
                      end if
-                     ! This should be updated to use the form with the matrix_update_phn function
                      if(leafn(p) > 0)then
-                        !leafn_to_litter(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_biofueln(p) / leafn(p),dt,matrixcheck_ph,acc_ph)
-                        matrix_nphtransfer(p,ileaf_to_iout_phn)  = leafn_to_biofueln(p) / leafn(p)
+                        leafn_to_biofueln(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_biofueln(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
                         leafn_to_litter(p) = 0
                      end if
@@ -3066,7 +3062,7 @@ contains
                ! NOTE(slevis, 2014-12) results in -ve livestemn and -ve totpftn
                !X! livestemn_to_litter(p) = livestemc_to_litter(p) / livewdcn(ivt(p))
                ! NOTE(slevis, 2014-12) Beth Drewniak suggested this instead
-               livestemn_to_litter(p) = livestemn(p) / dt * (1 - biofuel_harvfrac(ivt(p)))
+               livestemn_to_litter(p) = livestemn(p) / dt * (1._r8 - biofuel_harvfrac(ivt(p)))
                if(use_matrixcn)then
                   livestemn_to_litter(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn, (1._r8- biofuel_harvfrac(ivt(p))/dt), dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                end if
