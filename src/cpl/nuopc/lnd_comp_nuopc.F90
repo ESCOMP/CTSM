@@ -895,12 +895,10 @@ contains
     ! Determine time of next atmospheric shortwave calculation
     !--------------------------------
 
-    call t_startf(trim(subname)//' nextsw_cday')
     call State_GetScalar(importState, &
          flds_scalar_index_nextsw_cday, nextsw_cday, &
          flds_scalar_name, flds_scalar_num, rc)
     call set_nextsw_cday( nextsw_cday )
-    call t_stopf(trim(subname)//' nextsw_cday')
 
     !--------------------------------
     ! Unpack import state
