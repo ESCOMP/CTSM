@@ -170,6 +170,11 @@ contains
     type(ESMF_State)       :: exportState
     character(ESMF_MAXSTR) :: cvalue
     integer                :: n, num
+
+    ! BUG(wjs, 2020-12-22, ESCOMP/CTSM#1237) force_send_to_atm should be read from the
+    ! namelist rather than being hard-coded to true.
+    logical, parameter :: force_send_to_atm = .true.
+
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
 
@@ -182,7 +187,7 @@ contains
     ! determine necessary toggles for below
     !--------------------------------
 
-    if (atm_prognostic) then
+    if (atm_prognostic .or. force_send_to_atm) then
        send_to_atm = .true.
     else
        send_to_atm = .false.
