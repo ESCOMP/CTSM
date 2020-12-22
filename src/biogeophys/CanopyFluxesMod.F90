@@ -424,11 +424,11 @@ contains
     ! Biomass heat storage tuning parameters
     ! These parameters can be used to account for differences
     ! in vegetation shape.
-    real(r8), parameter :: k_vert     = 0.1         !vertical distribution of stem
-    real(r8), parameter :: k_cyl_vol  = 1.0         !departure from cylindrical volume
-    real(r8), parameter :: k_cyl_area = 1.0         !departure from cylindrical area
-    real(r8), parameter :: k_internal = 0.0         !self-absorbtion of leaf/stem longwave
-    real(r8), parameter :: min_stem_diameter = 0.05 !minimum stem diameter for which to calculate stem interactions
+    real(r8), parameter :: k_vert     = 0.1_r8         !vertical distribution of stem
+    real(r8), parameter :: k_cyl_vol  = 1.0_r8         !departure from cylindrical volume
+    real(r8), parameter :: k_cyl_area = 1.0_r8         !departure from cylindrical area
+    real(r8), parameter :: k_internal = 0.0_r8         !self-absorbtion of leaf/stem longwave
+    real(r8), parameter :: min_stem_diameter = 0.05_r8 !minimum stem diameter for which to calculate stem interactions
 
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
