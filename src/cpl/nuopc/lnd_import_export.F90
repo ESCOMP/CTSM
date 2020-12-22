@@ -36,6 +36,10 @@ module lnd_import_export
 
   private :: fldlist_add
   private :: fldlist_realize
+  private :: state_getimport_1d
+  private :: state_getimport_2d
+  private :: state_setexport_1d
+  private :: state_setexport_2d
   private :: state_getfldptr
   private :: fldchk
 
