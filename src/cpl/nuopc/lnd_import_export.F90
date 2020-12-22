@@ -138,6 +138,8 @@ module lnd_import_export
   character(*), parameter :: Sl_topo_elev   = 'Sl_topo_elev'
   character(*), parameter :: Flgl_qice_elev = 'Flgl_qice_elev'
 
+  logical :: send_to_atm = .false.
+
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
   character(*),parameter :: u_FILE_u = &
        __FILE__
@@ -162,11 +164,8 @@ contains
     ! local variables
     type(ESMF_State)       :: importState
     type(ESMF_State)       :: exportState
-    character(ESMF_MAXSTR) :: stdname
     character(ESMF_MAXSTR) :: cvalue
-    character(len=2)       :: nec_str
     integer                :: n, num
-    character(len=CS)      :: fldname
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
 
@@ -178,6 +177,12 @@ contains
     !--------------------------------
     ! determine necessary toggles for below
     !--------------------------------
+
+    if (atm_prognostic) then
+       send_to_atm = .true.
+    else
+       send_to_atm = .false.
+    end if
 
     call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -211,7 +216,7 @@ contains
     call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
 
     ! export to atm
-    !if (atm_prognostic) then
+    if (send_to_atm) then
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_t          )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_tref       )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_qref       )
@@ -265,7 +270,7 @@ contains
        if (carma_fields /= ' ') then
           call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_soilw) ! optional for carma
        end if
-    !end if
+    end if
 
     ! export to rof
     if (rof_prognostic) then
@@ -728,7 +733,7 @@ contains
     ! -----------------------
     ! output to atm
     ! -----------------------
-    !if (atm_prognostic) then
+    if (send_to_atm) then
        call state_setexport_1d(exportState, Sl_t      , lnd2atm_inst%t_rad_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_snowh  , waterlnd2atmbulk_inst%h2osno_grc(begg:), rc=rc)
@@ -810,7 +815,7 @@ contains
           call state_setexport_1d(exportState, Sl_fztop, lnd2atm_inst%fireztop_grc(begg:), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
-    !endif
+    endif
 
     ! -----------------------
     ! output to river
