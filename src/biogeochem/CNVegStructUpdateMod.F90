@@ -13,7 +13,7 @@ module CNVegStructUpdateMod
   use CNDVType             , only : dgvs_type
   use CNVegStateType       , only : cnveg_state_type
   use CropType             , only : crop_type
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType , only : cnveg_carbonstate_type, spinup_factor
   use CanopyStateType      , only : canopystate_type
   use PatchType            , only : patch                
   use decompMod            , only : bounds_type
@@ -217,12 +217,9 @@ contains
                   leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
-                  stem_biomass(p) = (deadstemc(p) + livestemc(p)) &
+                  stem_biomass(p) = (spinup_factor*deadstemc(p) + livestemc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
-                  if (spinup_state == 2) then
-                     stem_biomass(p) = 10._r8 * stem_biomass(p)
-                  end if
                else
                   leaf_biomass(p) = 0_r8
                   stem_biomass(p) = 0_r8

@@ -102,6 +102,8 @@ module CNVegCarbonStateType
 
   end type cnveg_carbonstate_type
 
+  real(r8), public  :: spinup_factor = 1.0_r8        ! Spinup factor used when in Accelerated Decomposition mode
+
   ! !PRIVATE DATA:
 
   type, private :: cnvegcarbonstate_const_type
