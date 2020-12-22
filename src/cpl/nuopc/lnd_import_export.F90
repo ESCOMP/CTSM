@@ -630,7 +630,7 @@ contains
        call state_getimport_1d(importState, Flrr_flood, wateratm2lndbulk_inst%forc_flood_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
-          wateratm2lndbulk_inst%forc_flood_grc(g) = wateratm2lndbulk_inst%forc_flood_grc(g) * (ldomain%area(g) * 1.e6_r8)
+          wateratm2lndbulk_inst%forc_flood_grc(g) = -wateratm2lndbulk_inst%forc_flood_grc(g)
        end do
     else
        wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
