@@ -410,7 +410,6 @@ contains
     real(r8) :: rstem(bounds%begp:bounds%endp)     !stem resistance to heat transfer
     real(r8) :: dt_stem(bounds%begp:bounds%endp)   !change in stem temperature
     real(r8) :: frac_rad_abs_by_stem(bounds%begp:bounds%endp)     !fraction of incoming radiation absorbed by stems
-    real(r8) :: frac_rad_abs_by_leaf               !fraction of incoming radiation absorbed by leaf
     real(r8) :: lw_stem(bounds%begp:bounds%endp)   !internal longwave stem
     real(r8) :: lw_leaf(bounds%begp:bounds%endp)   !internal longwave leaf
     real(r8) :: sa_stem(bounds%begp:bounds%endp)   !surface area stem m2/m2_ground
@@ -1486,11 +1485,6 @@ bioms:   do f = 1, fn
 !             emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
          dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) &
               + emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
-         if ( use_biomass_heat_storage )then
-            frac_rad_abs_by_leaf = 1._r8-frac_rad_abs_by_stem(p)
-         else
-            frac_rad_abs_by_leaf = 1._r8
-         end if
          dlrad(p) = dlrad(p) &
               *(1._r8-frac_rad_abs_by_stem(p)) &
               + emv(p)*emg(c)*sb*ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p)) &
