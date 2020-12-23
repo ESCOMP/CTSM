@@ -159,6 +159,7 @@ contains
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
             water_inst%bulk_and_tracers(i)%waterbalance_inst, &
+            water_inst%bulk_and_tracers(i)%waterflux_inst, &
             use_aquifer_layer = use_aquifer_layer)
     end do
 
@@ -209,7 +210,7 @@ contains
   subroutine BeginWaterGridcellBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
        soilhydrology_inst, lakestate_inst, waterstate_inst, &
-       waterdiagnostic_inst, waterbalance_inst, &
+       waterdiagnostic_inst, waterbalance_inst, waterflux_inst, &
        use_aquifer_layer)
     !
     ! !DESCRIPTION:
@@ -228,13 +229,16 @@ contains
     type(soilhydrology_type)   , intent(in)    :: soilhydrology_inst
     type(lakestate_type)       , intent(in)    :: lakestate_inst
     class(waterstate_type)     , intent(inout) :: waterstate_inst
+    class(waterflux_type)      , intent(inout) :: waterflux_inst
     class(waterdiagnostic_type), intent(in)    :: waterdiagnostic_inst
     class(waterbalance_type)   , intent(inout) :: waterbalance_inst
     logical                    , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
-    integer :: c, j, fc  ! indices
+    integer :: c, g, j, fc  ! indices
     integer :: begc, endc, begg, endg  ! bounds
+    real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux at beginning of time step
+    real(r8) :: qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc ice dynamic land cover change conversion runoff flux at beginning of time step
     !-----------------------------------------------------------------------
 
     associate(                                     &
@@ -277,6 +281,14 @@ contains
 
     call c2g(bounds, begwb_col(begc:endc), begwb_grc(begg:endg), &
              c2l_scale_type='urbanf', l2g_scale_type='unity')
+
+    call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_beg(bounds, qflx_liq_dynbal_left_to_dribble(begg:endg))
+    call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_beg(bounds, qflx_ice_dynbal_left_to_dribble(begg:endg))
+
+    do g = begg, endg
+       begwb_grc(g) = begwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
+                                   - qflx_ice_dynbal_left_to_dribble(g)
+    end do
 
     end associate
 
@@ -407,6 +419,8 @@ contains
      real(r8) :: qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg)  ! grid cell-level water flux needed for balance check due to glc_dyn_runoff_routing [mm H2O/s] (positive means addition of water to the system)
      real(r8) :: qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg)  ! grid cell-level excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
      real(r8) :: qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg)  ! grid cell-level excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
+     real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux at end of time step
+     real(r8) :: qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux at end of time step
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
@@ -630,7 +644,13 @@ contains
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
+       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_end(bounds, qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg))
+       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_end(bounds, qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg))
+
        do g = bounds%begg, bounds%endg
+          endwb_grc(g) = endwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
+                                      - qflx_ice_dynbal_left_to_dribble(g)
+
           errh2o_grc(g) = endwb_grc(g) - begwb_grc(g)  &
                - (forc_rain_grc(g)  &
                + forc_snow_grc(g)  &
