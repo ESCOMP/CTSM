@@ -410,6 +410,7 @@ contains
     real(r8) :: rstem(bounds%begp:bounds%endp)     !stem resistance to heat transfer
     real(r8) :: dt_stem(bounds%begp:bounds%endp)   !change in stem temperature
     real(r8) :: frac_rad_abs_by_stem(bounds%begp:bounds%endp)     !fraction of incoming radiation absorbed by stems
+    real(r8) :: frac_rad_abs_by_leaf               !fraction of incoming radiation absorbed by leaf
     real(r8) :: lw_stem(bounds%begp:bounds%endp)   !internal longwave stem
     real(r8) :: lw_leaf(bounds%begp:bounds%endp)   !internal longwave leaf
     real(r8) :: sa_stem(bounds%begp:bounds%endp)   !surface area stem m2/m2_ground
@@ -1216,13 +1217,13 @@ bioms:   do f = 1, fn
                  +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
                  +frac_h2osfc(c)*t_h2osfc(c)**4)
 
-            dt_veg(p) = ((1.-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
+            dt_veg(p) = ((1._r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
                  + bir(p)*t_veg(p)**4 + cir(p)*lw_grnd) &
                  - efsh - efe(p) - lw_leaf(p) + lw_stem(p) &
                  - (cp_leaf(p)/dtime)*(t_veg(p) - tl_ini(p))) &
-                 / ((1.-frac_rad_abs_by_stem(p))*(- 4._r8*bir(p)*t_veg(p)**3) &
+                 / (((1._r8-frac_rad_abs_by_stem(p))*(- 4._r8*bir(p)*t_veg(p)**3) &
                  + 4._r8*sa_internal(p)*emv(p)*sb*t_veg(p)**3 &
-                 +dc1*wtga(p) +dc2*wtgaq*qsatldT(p) + cp_leaf(p)/dtime)
+                 +dc1*wtga(p) +dc2*wtgaq*qsatldT(p)) + cp_leaf(p)/dtime)
 
             t_veg(p) = tlbef(p) + dt_veg(p)
             
@@ -1481,20 +1482,35 @@ bioms:   do f = 1, fn
 
          ! Downward longwave radiation below the canopy
 
+!        dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) + &
+!             emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
          dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) &
-              + emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
-              *(1.-frac_rad_abs_by_stem(p)) &
+              + emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
+         if ( use_biomass_heat_storage )then
+            frac_rad_abs_by_leaf = 1._r8-frac_rad_abs_by_stem(p)
+         else
+            frac_rad_abs_by_leaf = 1._r8
+         end if
+         dlrad(p) = dlrad(p) &
+              *(1._r8-frac_rad_abs_by_stem(p)) &
               + emv(p)*emg(c)*sb*ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p)) &
               *frac_rad_abs_by_stem(p)
 
          ! Upward longwave radiation above the canopy
 
-         ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
+         ulrad(p) = (1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c)
+         if ( .not. use_biomass_heat_storage )then
+            ulrad(p) = (ulrad(p) &
+                 + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*tlbef(p)**3*(tlbef(p) + &
+                 4._r8*dt_veg(p)) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
+         else
+            ulrad(p) = (ulrad(p) &
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
-              *tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1.-frac_rad_abs_by_stem(p)) &
+              *tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1._r8-frac_rad_abs_by_stem(p)) &
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
               *ts_ini(p)**3*(ts_ini(p)+ 4._r8*dt_stem(p))*frac_rad_abs_by_stem(p) &
               + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
+         end if
  
 
 
