@@ -417,6 +417,7 @@ contains
     real(r8) :: sa_internal(bounds%begp:bounds%endp)   !min(sa_stem,sa_leaf)
     real(r8) :: uuc(bounds%begp:bounds%endp)       ! undercanopy windspeed
     real(r8) :: carea_stem                         !cross-sectional area of stem
+    real(r8) :: dlrad_leaf                         !Downward longwave radition from leaf
 
     ! Biomass heat storage tuning parameters
     ! These parameters can be used to account for differences
@@ -1483,12 +1484,15 @@ bioms:   do f = 1, fn
 
 !        dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) + &
 !             emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
-         dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) &
-              + emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
-         dlrad(p) = dlrad(p) &
-              *(1._r8-frac_rad_abs_by_stem(p)) &
+         dlrad_leaf = emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
+         dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c)
+         if ( .not.  use_biomass_heat_storage )then
+            dlrad(p) = dlrad(p) + dlrad_leaf
+         else
+            dlrad(p) = dlrad(p) + dlrad_leaf *(1._r8-frac_rad_abs_by_stem(p)) &
               + emv(p)*emg(c)*sb*ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p)) &
               *frac_rad_abs_by_stem(p)
+         end if
 
          ! Upward longwave radiation above the canopy
 
