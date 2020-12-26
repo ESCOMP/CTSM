@@ -50,9 +50,6 @@ module clm_varctl
   ! by default this is not allowed
   logical, public :: brnch_retain_casename = .false.                     
 
-  !true => no valid land points -- do NOT run
-  logical, public :: noland = .false.                                    
-
   ! true => run tests of ncdio_pio
   logical, public :: for_testing_run_ncdiopio_tests = .false.
 

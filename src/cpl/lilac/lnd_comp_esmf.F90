@@ -35,7 +35,7 @@ module lnd_comp_esmf
   use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
   use clm_time_manager  , only : get_nstep, get_step_size
   use clm_time_manager  , only : get_curr_date, get_curr_calday
-  use clm_initializeMod , only : initialize1, initialize2
+  use clm_initializeMod , only : initialize1, initialize2, initialize3
   use clm_driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
@@ -320,36 +320,31 @@ contains
     call set_timemgr_init( &
          calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
          ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, dtime_in=dtime_lilac)
+    call ESMF_LogWrite(subname//"ctsm time manager initialized....", ESMF_LOGMSG_INFO)
 
     !----------------------
     ! Read namelist, grid and surface data
     !----------------------
-
     ! set default values for run control variables
     call clm_varctl_set(caseid_in=caseid, nsrest_in=nsrest)
-    call ESMF_LogWrite(subname//"default values for run control variables are set...", ESMF_LOGMSG_INFO)
-
-    !----------------------
     ! Initialize glc_elevclass module
-    !----------------------
-
     call glc_elevclass_init(glc_nec)
+    call ESMF_LogWrite(subname//"default values for run control variables are set...", ESMF_LOGMSG_INFO)
 
     !----------------------
     ! Call initialize1
     !----------------------
-
-    ! Note that the memory for gindex_ocn will be allocated in the following call
-
-    call initialize1(dtime=dtime_lilac, gindex_ocn=gindex_ocn)
-
-    call ESMF_LogWrite(subname//"ctsm time manager initialized....", ESMF_LOGMSG_INFO)
+    call initialize1(dtime=dtime_sync)
     call ESMF_LogWrite(subname//"ctsm initialize1 done...", ESMF_LOGMSG_INFO)
+
+    !----------------------
+    ! Initialize decomposition (ldecomp) and domain (ldomain) types
+    !----------------------
+    call lnd_set_decomp_and_domain_from_surfrd(noland, ni, nj)
 
     !--------------------------------
     ! generate the land mesh on ctsm distribution
     !--------------------------------
-
     ! obtain global index array for just land points which includes mask=0 or ocean points
     call get_proc_bounds( bounds )
 
@@ -359,7 +354,6 @@ contains
        n = 1 + (g - bounds%begg)
        gindex_lnd(n) = ldecomp%gdc2glo(g)
     end do
-
     call ESMF_LogWrite(subname//"obtained global index", ESMF_LOGMSG_INFO)
 
     ! create a global index that includes both land and ocean points
@@ -393,14 +387,13 @@ contains
     !--------------------------------
     ! Finish initializing ctsm
     !--------------------------------
-
-    call initialize2()
+    call initialize2(ni,nj)
+    call initialize3()
     call ESMF_LogWrite(subname//"ctsm initialize2 done...", ESMF_LOGMSG_INFO)
 
     !--------------------------------
     ! Create import state (only assume input from atm - not rof and glc)
     !--------------------------------
-
     ! create an empty field bundle for import of atm fields
     c2l_fb_atm = ESMF_FieldBundleCreate (name='c2l_fb_atm', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

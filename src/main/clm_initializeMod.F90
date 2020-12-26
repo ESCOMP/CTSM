@@ -2,76 +2,68 @@ module clm_initializeMod
 
   !-----------------------------------------------------------------------
   ! Performs land model initialization
-  !
-  use shr_kind_mod    , only : r8 => shr_kind_r8
-  use shr_sys_mod     , only : shr_sys_flush
-  use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use spmdMod         , only : masterproc
-  use decompMod       , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
-  use abortutils      , only : endrun
-  use clm_varctl      , only : nsrest, nsrStartup, nsrContinue, nsrBranch
-  use clm_varctl      , only : is_cold_start, is_interpolated_start
-  use clm_varctl      , only : iulog
-  use clm_varctl      , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
-  use clm_varctl      , only : use_soil_moisture_streams
-  use clm_instur      , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft, irrig_method, wt_glc_mec, topo_glc_mec, haslake
-  use perf_mod        , only : t_startf, t_stopf
-  use readParamsMod   , only : readParameters
-  use ncdio_pio       , only : file_desc_t
-  use GridcellType    , only : grc           ! instance
-  use LandunitType    , only : lun           ! instance
-  use ColumnType      , only : col           ! instance
-  use PatchType       , only : patch         ! instance
-  use reweightMod     , only : reweight_wrapup
-  use filterMod       , only : allocFilters, filter, filter_inactive_and_active
-  use FatesInterfaceMod, only : set_fates_global_elements
-  use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
-  use SelfTestDriver, only : self_test_driver
+  !-----------------------------------------------------------------------
 
+  use shr_kind_mod          , only : r8 => shr_kind_r8
+  use shr_sys_mod           , only : shr_sys_flush
+  use shr_log_mod           , only : errMsg => shr_log_errMsg
+  use spmdMod               , only : masterproc
+  use decompMod             , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
+  use abortutils            , only : endrun
+  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl            , only : is_cold_start, is_interpolated_start
+  use clm_varctl            , only : iulog
+  use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
+  use clm_varctl            , only : use_soil_moisture_streams
+  use clm_instur            , only : wt_lunit, urban_valid, wt_nat_patch, wt_cft, fert_cft
+  use clm_instur            , only : irrig_method, wt_glc_mec, topo_glc_mec, haslake
+  use perf_mod              , only : t_startf, t_stopf
+  use readParamsMod         , only : readParameters
+  use ncdio_pio             , only : file_desc_t
+  use GridcellType          , only : grc           ! instance
+  use LandunitType          , only : lun           ! instance
+  use ColumnType            , only : col           ! instance
+  use PatchType             , only : patch         ! instance
+  use reweightMod           , only : reweight_wrapup
+  use filterMod             , only : allocFilters, filter, filter_inactive_and_active
+  use FatesInterfaceMod     , only : set_fates_global_elements
+  use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
+  use SelfTestDriver        , only : self_test_driver
+  use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
   use clm_instMod
-  use SoilMoistureStreamMod, only : PrescribedSoilMoistureInit
   ! 
   implicit none
   private  ! By default everything is private
-
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
-  !-----------------------------------------------------------------------
+  public :: initialize3  ! Phase two initialization
 
+  integer :: actual_numcft  ! numcft from sfc dataset
+
+!-----------------------------------------------------------------------
 contains
+!-----------------------------------------------------------------------
 
-  !-----------------------------------------------------------------------
-  subroutine initialize1(dtime, gindex_ocn)
+  subroutine initialize1(dtime)
     !
     ! !DESCRIPTION:
     ! CLM initialization first phase
     !
     ! !USES:
-    use clm_varpar       , only: clm_varpar_init, natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec, nlevsoi
-    use clm_varcon       , only: clm_varcon_init
-    use landunit_varcon  , only: landunit_varcon_init, max_lunit
-    use clm_varctl       , only: fsurdat, fatmlndfrc, noland, version  
-    use pftconMod        , only: pftcon       
-    use decompInitMod    , only: decompInit_lnd, decompInit_clumps, decompInit_glcp, decompInit_lnd3D
-    use decompInitMod    , only: decompInit_ocn
-    use domainMod        , only: domain_check, ldomain, domain_init
-    use surfrdMod        , only: surfrd_get_globmask, surfrd_get_grid, surfrd_get_data, surfrd_get_num_patches
-    use controlMod       , only: control_init, control_print, NLFilename
-    use ncdio_pio        , only: ncd_pio_init
-    use initGridCellsMod , only: initGridCells
-    use ch4varcon        , only: ch4conrd
-    use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
+    use clm_varpar           , only: clm_varpar_init
+    use clm_varcon           , only: clm_varcon_init
+    use landunit_varcon      , only: landunit_varcon_init
+    use clm_varctl           , only: fsurdat, version
+    use surfrdMod            , only: surfrd_get_num_patches
+    use controlMod           , only: control_init, control_print, NLFilename
+    use ncdio_pio            , only: ncd_pio_init
+    use initGridCellsMod     , only: initGridCells
+    use UrbanParamsType      , only: IsSimpleBuildTemp
+    use dynSubgridControlMod , only: dynSubgridControl_init
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
-
-    ! COMPILER_BUG(wjs, 2020-02-20, intel18.0.3) Although gindex_ocn could be
-    ! intent(out), intel18.0.3 generates a runtime segmentation fault in runs that don't
-    ! have this argument present when this is declared intent(out). (It works fine on
-    ! intel 19.0.2 when declared as intent(out).) See also
-    ! https://github.com/ESCOMP/CTSM/issues/930.
-    integer, pointer, optional, intent(inout) :: gindex_ocn(:)  ! If present, this will hold the decomposition of ocean points (which is needed for the nuopc interface); note that this variable is allocated here, and is assumed to start unallocated
     !
     ! !LOCAL VARIABLES:
     integer           :: ier                     ! error status
@@ -84,16 +76,13 @@ contains
     integer           :: nclumps                 ! number of clumps on this processor
     integer           :: nc                      ! clump index
     integer           :: actual_maxsoil_patches  ! value from surface dataset
-    integer           :: actual_numcft           ! numcft from sfc dataset
     integer ,pointer  :: amask(:)                ! global land mask
     character(len=32) :: subname = 'initialize1' ! subroutine name
     !-----------------------------------------------------------------------
 
     call t_startf('clm_init1')
 
-    ! ------------------------------------------------------------------------
     ! Initialize run control variables, timestep
-    ! ------------------------------------------------------------------------
 
     if ( masterproc )then
        write(iulog,*) trim(version)
@@ -109,61 +98,50 @@ contains
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
-
     if (masterproc) call control_print()
-
     call dynSubgridControl_init(NLFilename)
 
-    ! ------------------------------------------------------------------------
-    ! Read in global land grid and land mask (amask)- needed to set decomposition
-    ! ------------------------------------------------------------------------
+    call t_stopf('clm_init1')
 
-    ! global memory for amask is allocate in surfrd_get_glomask - must be
-    ! deallocated below
-    if (masterproc) then
-       write(iulog,*) 'Attempting to read global land mask from ',trim(fatmlndfrc)
-       call shr_sys_flush(iulog)
-    endif
-    call surfrd_get_globmask(filename=fatmlndfrc, mask=amask, ni=ni, nj=nj)
+  end subroutine initialize1
 
-    ! Exit early if no valid land points
-    if ( all(amask == 0) )then
-       if (masterproc) write(iulog,*) trim(subname)//': no valid land points do NOT run clm'
-       noland = .true.
-       return
-    end if
-
-    ! ------------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  subroutine initialize2(ni,nj)
+    !
+    ! !DESCRIPTION:
+    ! CLM initialization second phase
     ! Determine clm gridcell decomposition and processor bounds for gridcells
-    ! ------------------------------------------------------------------------
+    !
+    ! !USES:
+    use clm_varpar       , only: natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
+    use landunit_varcon  , only: landunit_varcon_init, max_lunit
+    use clm_varctl       , only: fsurdat
+    use pftconMod        , only: pftcon       
+    use decompInitMod    , only: decompInit_clumps, decompInit_glcp
+    use domainMod        , only: domain_check, ldomain, domain_init
+    use surfrdMod        , only: surfrd_get_data
+    use controlMod       , only: NLFilename
+    use initGridCellsMod , only: initGridCells
+    use ch4varcon        , only: ch4conrd
+    use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: ni, nj                ! global grid sizes
+    !
+    ! !LOCAL VARIABLES:
+    integer           :: i,j,n,k,c,l,g           ! indices
+    integer           :: begg, endg              ! processor bounds
+    type(bounds_type) :: bounds_proc
+    type(bounds_type) :: bounds_clump
+    integer           :: nclumps                 ! number of clumps on this processor
+    integer           :: nc                      ! clump index
+    character(len=32) :: subname = 'initialize2' ! subroutine name
+    !-----------------------------------------------------------------------
 
-    call decompInit_lnd(ni, nj, amask)
-    if (present(gindex_ocn)) then
-       call decompInit_ocn(ni, nj, amask, gindex_ocn=gindex_ocn)
-    end if
-    deallocate(amask)
+    call t_startf('clm_init2')
 
-    if(use_soil_moisture_streams) call decompInit_lnd3D(ni, nj, nlevsoi)
-    ! *** Get JUST gridcell processor bounds ***
-    ! Remaining bounds (landunits, columns, patches) will be determined
-    ! after the call to decompInit_glcp - so get_proc_bounds is called
-    ! twice and the gridcell information is just filled in twice
-
+    ! Get processor bounds
     call get_proc_bounds(begg, endg)
-
-    ! ------------------------------------------------------------------------
-    ! Get grid and land fraction (set ldomain)
-    ! ------------------------------------------------------------------------
-
-    if (masterproc) then
-       write(iulog,*) 'Attempting to read ldomain from ',trim(fatmlndfrc)
-       call shr_sys_flush(iulog)
-    endif
-    call surfrd_get_grid(begg, endg, ldomain, fatmlndfrc)
-    if (masterproc) then
-       call domain_check(ldomain)
-    endif
-    ldomain%mask = 1  !!! TODO - is this needed?
 
     ! Initialize glc behavior
     call glc_behavior%Init(begg, endg, NLFilename)
@@ -171,59 +149,48 @@ contains
     ! Initialize urban model input (initialize urbinp data structure)
     ! This needs to be called BEFORE the call to surfrd_get_data since
     ! that will call surfrd_get_special which in turn calls check_urban
-
     call UrbanInput(begg, endg, mode='initialize')
 
     ! Allocate surface grid dynamic memory (just gridcell bounds dependent)
-
     allocate (wt_lunit     (begg:endg, max_lunit           ))
     allocate (urban_valid  (begg:endg                      ))
     allocate (wt_nat_patch (begg:endg, natpft_lb:natpft_ub ))
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
-    allocate (wt_glc_mec  (begg:endg, maxpatch_glcmec))
-    allocate (topo_glc_mec(begg:endg, maxpatch_glcmec))
+    allocate (wt_glc_mec   (begg:endg, maxpatch_glcmec     ))
+    allocate (topo_glc_mec (begg:endg, maxpatch_glcmec     ))
     allocate (haslake      (begg:endg                      ))
+
     ! Read list of Patches and their corresponding parameter values
     ! Independent of model resolution, Needs to stay before surfrd_get_data
-
     call pftcon%Init()
 
     ! Read surface dataset and set up subgrid weight arrays
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
-    ! ------------------------------------------------------------------------
     ! Ask Fates to evaluate its own dimensioning needs.
     ! This determines the total amount of space it requires in its largest
     ! dimension.  We are currently calling that the "cohort" dimension, but
     ! it is really a utility dimension that captures the models largest
     ! size need.
     ! Sets:
-    ! fates_maxElementsPerPatch
-    ! fates_maxElementsPerSite (where a site is roughly equivalent to a column)
-    !
+    !   fates_maxElementsPerPatch
+    !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
     ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
     ! to allocate space)
-    ! ------------------------------------------------------------------------
-
     call set_fates_global_elements(use_fates)
 
-    ! ------------------------------------------------------------------------
     ! Determine decomposition of subgrid scale landunits, columns, patches
-    ! ------------------------------------------------------------------------
-
-    call decompInit_clumps(ns, ni, nj, glc_behavior)
+    call decompInit_clumps(ni, nj, glc_behavior)
 
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
-
     call get_proc_bounds(bounds_proc)
 
     ! Allocate memory for subgrid data structures
     ! This is needed here BEFORE the following call to initGridcells
     ! Note that the assumption is made that none of the subgrid initialization
     ! can depend on other elements of the subgrid in the calls below
-
     call grc%Init  (bounds_proc%begg, bounds_proc%endg)
     call lun%Init  (bounds_proc%begl, bounds_proc%endl)
     call col%Init  (bounds_proc%begc, bounds_proc%endc)
@@ -231,15 +198,12 @@ contains
 
     ! Build hierarchy and topological info for derived types
     ! This is needed here for the following call to decompInit_glcp
-
     call initGridCells(glc_behavior)
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
-
-    call decompInit_glcp(ns, ni, nj, glc_behavior)
+    call decompInit_glcp(ni, nj, glc_behavior)
 
     ! Set filters
-
     call allocFilters()
 
     nclumps = get_proc_clumps()
@@ -250,14 +214,10 @@ contains
     end do
     !$OMP END PARALLEL DO
 
-    ! ------------------------------------------------------------------------
-    ! Remainder of initialization1
-    ! ------------------------------------------------------------------------
 
     ! Set CH4 Model Parameters from namelist.
     ! Need to do before initTimeConst so that it knows whether to
     ! look for several optional parameters on surfdata file.
-
     if (use_lch4) then
        call ch4conrd()
     end if
@@ -268,21 +228,19 @@ contains
     ! Deallocate surface grid dynamic memory for variables that aren't needed elsewhere.
     ! Some things are kept until the end of initialize2; urban_valid is kept through the
     ! end of the run for error checking.
-
     deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
 
-    call t_stopf('clm_init1')
+    call t_stopf('clm_init2')
 
-  end subroutine initialize1
+  end subroutine initialize2
 
   !-----------------------------------------------------------------------
-  subroutine initialize2( )
+  subroutine initialize3( )
     !
     ! !DESCRIPTION:
-    ! CLM initialization - second phase
+    ! CLM initialization - third phase
     !
     ! !USES:
-
     use shr_orb_mod           , only : shr_orb_decl
     use shr_scam_mod          , only : shr_scam_getCloseLatLon
     use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
@@ -349,10 +307,10 @@ contains
     integer               :: begc, endc
     integer               :: begl, endl
     real(r8), pointer     :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
-    character(len=32)     :: subname = 'initialize2'
+    character(len=32)     :: subname = 'initialize3'
     !----------------------------------------------------------------------
 
-    call t_startf('clm_init2')
+    call t_startf('clm_init3')
 
     ! ------------------------------------------------------------------------
     ! Determine processor bounds and clumps for this processor
@@ -510,29 +468,23 @@ contains
 
        ! NOTE(wjs, 2016-02-23) Maybe the rest of the body of this conditional should also
        ! be moved into bgc_vegetation_inst%Init2
-
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
           call SatellitePhenologyInit(bounds_proc)
        end if
-
        if ( use_c14 .and. use_c14_bombspike ) then
           call C14_init_BombSpike()
        end if
-
        if ( use_c13 .and. use_c13_timeseries ) then
           call C13_init_TimeSeries()
        end if
     else
        call SatellitePhenologyInit(bounds_proc)
     end if
-
-    if(use_soil_moisture_streams) then 
+    if (use_soil_moisture_streams) then 
        call PrescribedSoilMoistureInit(bounds_proc)
     endif
-
-
 
     ! ------------------------------------------------------------------------
     ! On restart only - process the history namelist.
@@ -803,8 +755,6 @@ contains
     endif
     call t_stopf('init_wlog')
 
-    call t_stopf('clm_init2')
-
     if (water_inst%DoConsistencyCheck()) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1,nclumps
@@ -814,6 +764,8 @@ contains
        !$OMP END PARALLEL DO
     end if
 
-  end subroutine initialize2
+    call t_stopf('clm_init3')
+
+  end subroutine initialize3
 
 end module clm_initializeMod

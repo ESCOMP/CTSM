@@ -11,7 +11,7 @@ module lnd_import_export
   use shr_sys_mod           , only : shr_sys_abort
   use clm_varctl            , only : iulog
   use clm_time_manager      , only : get_nstep
-  use decompmod             , only : bounds_type
+  use decompmod             , only : bounds_type, get_proc_bounds
   use lnd2atmType           , only : lnd2atm_type
   use lnd2glcMod            , only : lnd2glc_type
   use atm2lndType           , only : atm2lnd_type
@@ -183,6 +183,9 @@ contains
     else
        send_to_atm = .false.
     end if
+    !DEBUG:
+    send_to_atm = .true.
+    !DEBUG
 
     call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -305,7 +308,7 @@ contains
 
     call fldlist_add(fldsToLnd_num, fldsToLnd, trim(flds_scalar_name))
 
-    ! from atm 
+    ! from atm
     call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_z         )
     call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_topo      )
     call fldlist_add(fldsToLnd_num, fldsToLnd, Sa_u         )
@@ -442,11 +445,11 @@ contains
 
     ! input/output variabes
     type(ESMF_GridComp)                         :: gcomp
-    type(bounds_type)           , intent(in)    :: bounds       ! bounds
+    type(bounds_type)           , intent(in)    :: bounds         ! bounds
     logical                     , intent(in)    :: glc_present    ! .true. => running with a non-stub GLC model
     logical                     , intent(in)    :: rof_prognostic ! .true. => running with a prognostic ROF model
-    type(atm2lnd_type)          , intent(inout) :: atm2lnd_inst ! clm internal input data type
-    type(glc2lnd_type)          , intent(inout) :: glc2lnd_inst ! clm internal input data type
+    type(atm2lnd_type)          , intent(inout) :: atm2lnd_inst   ! clm internal input data type
+    type(glc2lnd_type)          , intent(inout) :: glc2lnd_inst   ! clm internal input data type
     type(Wateratm2lndbulk_type) , intent(inout) :: wateratm2lndbulk_inst
     integer                     , intent(out)   :: rc
 
@@ -458,10 +461,10 @@ contains
     real(r8), pointer         :: fldPtr2d(:,:)
     character(len=CS)         :: fldname
     integer                   :: num
-    integer                   :: begg, endg                          ! bounds
-    integer                   :: g,i,k,n                             ! indices
-    real(r8)                  :: qsat_kg_kg                          ! saturation specific humidity (kg/kg)
-    real(r8)                  :: forc_pbot                           ! atmospheric pressure (Pa)
+    integer                   :: begg, endg ! bounds
+    integer                   :: g,i,k,n    ! indices
+    real(r8)                  :: qsat_kg_kg ! saturation specific humidity (kg/kg)
+    real(r8)                  :: forc_pbot  ! atmospheric pressure (Pa)
     real(r8)                  :: co2_ppmv_input(bounds%begg:bounds%endg)   ! temporary
     real(r8)                  :: forc_ndep(bounds%begg:bounds%endg,2)
     real(r8)                  :: forc_rainc(bounds%begg:bounds%endg) ! rainxy Atm flux mm/s
@@ -696,7 +699,7 @@ contains
 
     ! input/output variables
     type(ESMF_GridComp)                         :: gcomp
-    type(bounds_type)           , intent(in)    :: bounds       ! bounds
+    type(bounds_type)           , intent(in)    :: bounds      
     logical                     , intent(in)    :: glc_present
     logical                     , intent(in)    :: rof_prognostic
     type(waterlnd2atmbulk_type) , intent(inout) :: waterlnd2atmbulk_inst
@@ -709,7 +712,7 @@ contains
     real(r8), pointer :: fldPtr1d(:)
     real(r8), pointer :: fldPtr2d(:,:)
     character(len=CS) :: fldname
-    integer           :: begg, endg                          ! bounds
+    integer           :: begg, endg
     integer           :: i, g, num
     real(r8)          :: data1d(bounds%begg:bounds%endg)
     character(len=*), parameter :: subname='(lnd_import_export:export_fields)'
@@ -728,6 +731,7 @@ contains
     ! -----------------------
     ! output to mediator
     ! -----------------------
+
     call state_setexport_1d(exportState, Sl_lfrin, ldomain%frac(begg:), rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -807,12 +811,12 @@ contains
                minus = .true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
-       if (fldchk(exportState, Fall_fire)) then ! fire emis from land 
+       if (fldchk(exportState, Fall_fire)) then ! fire emis from land
           call state_setexport_2d(exportState, Fall_fire, lnd2atm_inst%fireflx_grc(begg:,1:emis_nflds), &
                minus = .true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
-       if (fldchk(exportState, Sl_fztop)) then ! fire emis from land 
+       if (fldchk(exportState, Sl_fztop)) then ! fire emis from land
           call state_setexport_1d(exportState, Sl_fztop, lnd2atm_inst%fireztop_grc(begg:), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
@@ -861,15 +865,15 @@ contains
     ! help with performance. (The downside would be that we wouldn't have these fields
     ! available for diagnostic purposes or to force a later T compset with dlnd.)
 
-    if (fldchk(exportState, Sl_tsrf_elev)) then 
+    if (fldchk(exportState, Sl_tsrf_elev)) then
        call state_setexport_2d(exportState, Sl_tsrf_elev, lnd2glc_inst%tsrf_grc(begg:,0:glc_nec), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
-    if (fldchk(exportState, Sl_topo_elev)) then 
+    if (fldchk(exportState, Sl_topo_elev)) then
        call state_setexport_2d(exportState, Sl_topo_elev, lnd2glc_inst%topo_grc(begg:,0:glc_nec), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
-    if (fldchk(exportState, Flgl_qice_elev)) then 
+    if (fldchk(exportState, Flgl_qice_elev)) then
        call state_setexport_2d(exportState, Flgl_qice_elev, lnd2glc_inst%qice_grc(begg:,0:glc_nec), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
