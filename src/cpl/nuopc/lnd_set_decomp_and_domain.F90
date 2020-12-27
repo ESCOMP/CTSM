@@ -60,10 +60,8 @@ contains
     integer  , pointer     :: mask(:)        ! local land/ocean mask
     integer  , pointer     :: lndmask_loc(:)
     real(r8) , pointer     :: lndfrac_loc(:)
-    real(r8) , pointer     :: lndarea_loc(:)
     integer  , pointer     :: lndmask_glob(:)
     real(r8) , pointer     :: lndfrac_glob(:)
-    real(r8) , pointer     :: lndarea_glob(:)
     real(r8) , pointer     :: lndlats_glob(:)
     real(r8) , pointer     :: lndlons_glob(:)
     real(r8) , pointer     :: rtemp_glob(:)
