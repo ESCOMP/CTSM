@@ -29,7 +29,7 @@ module lnd_comp_nuopc
   use clm_time_manager       , only : set_nextsw_cday, update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
   use clm_time_manager       , only : get_curr_date, get_curr_calday
-  use clm_initializeMod      , only : initialize1, initialize2, initialize3
+  use clm_initializeMod      , only : initialize1, initialize2
   use nuopc_shr_methods      , only : chkerr, state_setscalar, state_getscalar, state_diagnose, alarmInit
   use nuopc_shr_methods      , only : set_component_logging, get_component_instance, log_clock_advance
   use lnd_import_export      , only : advertise_fields, realize_fields, import_fields, export_fields
@@ -561,9 +561,7 @@ contains
     ! if ( noland ) then
     !    call shr_sys_abort(trim(subname)//"ERROR: Currently cannot handle case of single column with non-land")
     ! end if
-
     call initialize2(ni, nj)
-    call initialize3()
 
     !--------------------------------
     ! Create land export state

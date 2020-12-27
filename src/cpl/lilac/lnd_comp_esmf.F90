@@ -35,7 +35,7 @@ module lnd_comp_esmf
   use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
   use clm_time_manager  , only : get_nstep, get_step_size
   use clm_time_manager  , only : get_curr_date, get_curr_calday
-  use clm_initializeMod , only : initialize1, initialize2, initialize3
+  use clm_initializeMod , only : initialize1, initialize2
   use clm_driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
@@ -346,8 +346,7 @@ contains
     ! Finish initializing ctsm
     !--------------------------------
     call initialize2(ni,nj)
-    call initialize3()
-    call ESMF_LogWrite(subname//"ctsm initialize done...", ESMF_LOGMSG_INFO)
+    call ESMF_LogWrite(subname//"ctsm initialize2 done...", ESMF_LOGMSG_INFO)
 
     !--------------------------------
     ! Create import state (only assume input from atm - not rof and glc)

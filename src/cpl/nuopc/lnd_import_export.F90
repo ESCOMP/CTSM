@@ -1,30 +1,27 @@
 module lnd_import_export
 
-  use ESMF                  , only : ESMF_GridComp, ESMF_State, ESMF_Mesh, ESMF_StateGet
-  use ESMF                  , only : ESMF_KIND_R8, ESMF_SUCCESS, ESMF_MAXSTR, ESMF_LOGMSG_INFO
-  use ESMF                  , only : ESMF_LogWrite, ESMF_LOGMSG_ERROR, ESMF_LogFoundError
-  use ESMF                  , only : ESMF_STATEITEM_NOTFOUND, ESMF_StateItem_Flag
-  use ESMF                  , only : operator(/=), operator(==)
-  use NUOPC                 , only : NUOPC_CompAttributeGet, NUOPC_Advertise, NUOPC_IsConnected
-  use NUOPC_Model           , only : NUOPC_ModelGet
-  use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
-  use shr_sys_mod           , only : shr_sys_abort
-  use clm_varctl            , only : iulog
-  use clm_time_manager      , only : get_nstep
-  use decompmod             , only : bounds_type, get_proc_bounds
-  use lnd2atmType           , only : lnd2atm_type
-  use lnd2glcMod            , only : lnd2glc_type
-  use atm2lndType           , only : atm2lnd_type
-  use glc2lndMod            , only : glc2lnd_type
-  use domainMod             , only : ldomain
-  use spmdMod               , only : masterproc
-  use seq_drydep_mod        , only : seq_drydep_readnl, n_drydep
-  use shr_megan_mod         , only : shr_megan_readnl, shr_megan_mechcomps_n
-  use shr_fire_emis_mod     , only : shr_fire_emis_readnl
-  use shr_carma_mod         , only : shr_carma_readnl
-  use shr_ndep_mod          , only : shr_ndep_readnl
-  use nuopc_shr_methods     , only : chkerr
-  use lnd_import_export_utils, only : derive_quantities, check_for_errors, check_for_nans
+  use ESMF                    , only : ESMF_GridComp, ESMF_State, ESMF_Mesh, ESMF_StateGet
+  use ESMF                    , only : ESMF_KIND_R8, ESMF_SUCCESS, ESMF_MAXSTR, ESMF_LOGMSG_INFO
+  use ESMF                    , only : ESMF_LogWrite, ESMF_LOGMSG_ERROR, ESMF_LogFoundError
+  use ESMF                    , only : ESMF_STATEITEM_NOTFOUND, ESMF_StateItem_Flag
+  use ESMF                    , only : operator(/=), operator(==)
+  use NUOPC                   , only : NUOPC_CompAttributeGet, NUOPC_Advertise, NUOPC_IsConnected
+  use NUOPC_Model             , only : NUOPC_ModelGet
+  use shr_kind_mod            , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
+  use shr_sys_mod             , only : shr_sys_abort
+  use clm_varctl              , only : iulog
+  use clm_time_manager        , only : get_nstep
+  use decompmod               , only : bounds_type, get_proc_bounds
+  use lnd2atmType             , only : lnd2atm_type
+  use lnd2glcMod              , only : lnd2glc_type
+  use atm2lndType             , only : atm2lnd_type
+  use glc2lndMod              , only : glc2lnd_type
+  use domainMod               , only : ldomain
+  use spmdMod                 , only : masterproc
+  use seq_drydep_mod          , only : seq_drydep_readnl, n_drydep
+  use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
+  use nuopc_shr_methods       , only : chkerr
+  use lnd_import_export_utils , only : check_for_errors, check_for_nans
 
   implicit none
   private ! except
@@ -150,7 +147,10 @@ contains
 
   subroutine advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
 
-    use clm_varctl, only : ndep_from_cpl
+    use shr_carma_mod     , only : shr_carma_readnl
+    use shr_ndep_mod      , only : shr_ndep_readnl
+    use shr_fire_emis_mod , only : shr_fire_emis_readnl
+    use clm_varctl        , only : ndep_from_cpl
 
     ! input/output variables
     type(ESMF_GridComp)            :: gcomp
@@ -183,9 +183,6 @@ contains
     else
        send_to_atm = .false.
     end if
-    !DEBUG:
-    send_to_atm = .true.
-    !DEBUG
 
     call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -437,11 +434,12 @@ contains
     ! Convert the input data from the mediator to the land model
     !---------------------------------------------------------------------------
 
-    use clm_varctl           , only: co2_type, co2_ppmv, use_c13, ndep_from_cpl
-    use clm_varcon           , only: rair, o2_molar_const, c13ratio
-    use shr_const_mod        , only: SHR_CONST_TKFRZ
-    use Wateratm2lndBulkType , only: wateratm2lndbulk_type
-    use QSatMod              , only: QSat
+    use clm_varctl              , only: co2_type, co2_ppmv, use_c13, ndep_from_cpl
+    use clm_varcon              , only: rair, o2_molar_const, c13ratio
+    use shr_const_mod           , only: SHR_CONST_TKFRZ
+    use Wateratm2lndBulkType    , only: wateratm2lndbulk_type
+    use QSatMod                 , only: QSat
+    use lnd_import_export_utils , only: derive_quantities, check_for_errors
 
     ! input/output variabes
     type(ESMF_GridComp)                         :: gcomp

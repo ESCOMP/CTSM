@@ -71,7 +71,7 @@ contains
     ! Remaining bounds (landunits, columns, patches) will be determined
     ! after the call to decompInit_glcp - so get_proc_bounds is called
     ! twice and the gridcell information is just filled in twice
-    call get_proc_bounds(bounds) 
+    call get_proc_bounds(bounds)
 
     ! Get grid cell bounds values
     begg = bounds%begg
@@ -91,24 +91,21 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine surfrd_get_globmask(filename, mask, ni, nj)
-    !
-    ! !DESCRIPTION:
-    ! Read the surface dataset grid related information:
-    ! This is the first routine called by clm_initialize
-    ! NO DOMAIN DECOMPOSITION  HAS BEEN SET YET
-    !
-    ! !USES:
+
+    ! Read the surface dataset grid related information
+    ! This is used to set the domain decomposition - so global data is read here
+
     use fileutils  , only : getfil
     use ncdio_pio  , only : ncd_io, ncd_pio_openfile, ncd_pio_closefile, ncd_inqfdims, file_desc_t
     use abortutils , only : endrun
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    !
-    ! !ARGUMENTS:
+
+    ! input/output variables
     character(len=*), intent(in)    :: filename  ! grid filename
     integer         , pointer       :: mask(:)   ! grid mask
     integer         , intent(out)   :: ni, nj    ! global grid sizes
-    !
-    ! !LOCAL VARIABLES:
+
+    ! local variables
     logical               :: isgrid2d
     integer               :: dimid,varid ! netCDF id's
     integer               :: ns          ! size of grid on file
@@ -178,30 +175,30 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine surfrd_get_grid(begg, endg, ldomain, filename, glcfilename)
-    !
-    ! !DESCRIPTION:
-    ! THIS IS CALLED AFTER THE DOMAIN DECOMPOSITION HAS BEEN CREATED
+
     ! Read the surface dataset grid related information:
-    ! o real latitude  of grid cell (degrees)
-    ! o real longitude of grid cell (degrees)
-    !
-    ! !USES:
-    use clm_varcon , only : spval, re, grlnd
-    use domainMod  , only : domain_type, domain_init, domain_clean, lon1d, lat1d
-    use fileutils  , only : getfil
-    use abortutils , only : endrun
-    use shr_log_mod, only : errMsg => shr_log_errMsg
-    use ncdio_pio  , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
-    use ncdio_pio  , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
+    ! This is called after the domain decomposition has been created
+    ! - real latitude  of grid cell (degrees)
+    ! - real longitude of grid cell (degrees)
+
+    use clm_varcon   , only : spval, re, grlnd
+    use domainMod    , only : domain_type, domain_init, domain_clean, lon1d, lat1d
+    use fileutils    , only : getfil
+    use abortutils   , only : endrun
+    use shr_log_mod  , only : errMsg => shr_log_errMsg
+    use ncdio_pio    , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
+    use ncdio_pio    , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
+    use clm_varctl   , only : single_column, scmlat, scmlon
+    use shr_scam_mod , only : shr_scam_getCloseLatLon
     use pio
-    !
-    ! !ARGUMENTS:
+
+    ! input/output variables
     integer                    , intent(in)    :: begg, endg
     type(domain_type)          , intent(inout) :: ldomain     ! domain to init
     character(len=*)           , intent(in)    :: filename    ! grid filename
     character(len=*) ,optional , intent(in)    :: glcfilename ! glc mask filename
-    !
-    ! !LOCAL VARIABLES:
+
+    ! local variables
     type(file_desc_t)     :: ncid               ! netcdf id
     integer               :: beg                ! local beg index
     integer               :: end                ! local end index
@@ -216,6 +213,10 @@ contains
     character(len=16)     :: vname              ! temporary
     character(len=256)    :: locfn              ! local file name
     integer               :: n                  ! indices
+    integer               :: closelatidx
+    integer               :: closelonidx
+    real(r8)              :: closelat
+    real(r8)              :: closelon
     character(len=32) :: subname = 'surfrd_get_grid'     ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -290,6 +291,11 @@ contains
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
        call endrun( msg=' ERROR: LANDFRAC NOT on fracdata file'//errMsg(sourcefile, __LINE__))
+    end if
+
+    if (single_column) then
+       call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
+            closelat, closelon, closelatidx, closelonidx)
     end if
 
     call ncd_pio_closefile(ncid)

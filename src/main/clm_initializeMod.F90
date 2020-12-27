@@ -31,13 +31,12 @@ module clm_initializeMod
   use SelfTestDriver        , only : self_test_driver
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
   use clm_instMod
-  ! 
+  !
   implicit none
   private  ! By default everything is private
   !
   public :: initialize1  ! Phase one initialization
   public :: initialize2  ! Phase two initialization
-  public :: initialize3  ! Phase two initialization
 
   integer :: actual_numcft  ! numcft from sfc dataset
 
@@ -110,31 +109,84 @@ contains
     !
     ! !DESCRIPTION:
     ! CLM initialization second phase
-    ! Determine clm gridcell decomposition and processor bounds for gridcells
     !
     ! !USES:
-    use clm_varpar       , only: natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
-    use landunit_varcon  , only: landunit_varcon_init, max_lunit
-    use clm_varctl       , only: fsurdat
-    use pftconMod        , only: pftcon       
-    use decompInitMod    , only: decompInit_clumps, decompInit_glcp
-    use domainMod        , only: domain_check, ldomain, domain_init
-    use surfrdMod        , only: surfrd_get_data
-    use controlMod       , only: NLFilename
-    use initGridCellsMod , only: initGridCells
-    use ch4varcon        , only: ch4conrd
-    use UrbanParamsType  , only: UrbanInput, IsSimpleBuildTemp
+    use clm_varcon                    , only : spval
+    use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
+    use clm_varpar                    , only : nlevsno
+    use clm_varctl                    , only : fsurdat
+    use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
+    use clm_varctl                    , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
+    use clm_varctl                    , only : use_crop, ndep_from_cpl
+    use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
+    use landunit_varcon               , only : landunit_varcon_init, max_lunit
+    use pftconMod                     , only : pftcon
+    use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
+    use domainMod                     , only : domain_check, ldomain, domain_init
+    use surfrdMod                     , only : surfrd_get_data
+    use controlMod                    , only : NLFilename
+    use initGridCellsMod              , only : initGridCells
+    use ch4varcon                     , only : ch4conrd
+    use UrbanParamsType               , only : UrbanInput, IsSimpleBuildTemp
+    use shr_orb_mod                   , only : shr_orb_decl
+    use seq_drydep_mod                , only : n_drydep, drydep_method, DD_XLND
+    use accumulMod                    , only : print_accum_fields
+    use clm_time_manager              , only : get_step_size_real, get_curr_calday
+    use clm_time_manager              , only : get_curr_date, get_nstep, advance_timestep
+    use clm_time_manager              , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
+    use CIsoAtmTimeseriesMod          , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
+    use DaylengthMod                  , only : InitDaylength
+    use dynSubgridDriverMod           , only : dynSubgrid_init
+    use dynConsBiogeophysMod          , only : dyn_hwcontent_set_baselines
+    use fileutils                     , only : getfil
+    use initInterpMod                 , only : initInterp
+    use subgridWeightsMod             , only : init_subgrid_weights_mod
+    use histFileMod                   , only : hist_htapes_build, htapes_fieldlist, hist_printflds
+    use histFileMod                   , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use restFileMod                   , only : restFile_getfile, restFile_open, restFile_close
+    use restFileMod                   , only : restFile_read, restFile_write
+    use ndepStreamMod                 , only : ndep_init, ndep_interp
+    use LakeCon                       , only : LakeConInit
+    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
+    use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
+    use lnd2atmMod                    , only : lnd2atm_minimal
+    use controlMod                    , only : NLFilename
+    use clm_instMod                   , only : clm_fates
+    use BalanceCheckMod               , only : BalanceCheckInit
+    use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj                ! global grid sizes
     !
     ! !LOCAL VARIABLES:
-    integer           :: i,j,n,k,c,l,g           ! indices
-    integer           :: begg, endg              ! processor bounds
-    type(bounds_type) :: bounds_proc
-    type(bounds_type) :: bounds_clump
-    integer           :: nclumps                 ! number of clumps on this processor
-    integer           :: nc                      ! clump index
+    integer            :: c,g,i,j,k,l,n,p ! indices
+    integer            :: yr              ! current year (0, ...)
+    integer            :: mon             ! current month (1 -> 12)
+    integer            :: day             ! current day (1 -> 31)
+    integer            :: ncsec           ! current time of day [seconds]
+    character(len=256) :: fnamer          ! name of netcdf restart file
+    character(len=256) :: pnamer          ! full pathname of netcdf restart file
+    character(len=256) :: locfn           ! local file name
+    type(file_desc_t)  :: ncid            ! netcdf id
+    real(r8)           :: dtime           ! time step increment (sec)
+    integer            :: nstep           ! model time step
+    real(r8)           :: calday          ! calendar day for nstep
+    real(r8)           :: caldaym1        ! calendar day for nstep-1
+    real(r8)           :: declin          ! solar declination angle in radians for nstep
+    real(r8)           :: declinm1        ! solar declination angle in radians for nstep-1
+    real(r8)           :: eccf            ! earth orbit eccentricity factor
+    type(bounds_type)  :: bounds_proc     ! processor bounds
+    type(bounds_type)  :: bounds_clump    ! clump bounds
+    integer            :: nclumps         ! number of clumps on this processor
+    integer            :: nc              ! clump index
+    logical            :: lexist
+    logical            :: reset_dynbal_baselines_all_columns
+    logical            :: reset_dynbal_baselines_lake_columns
+    integer            :: begg, endg
+    integer            :: begp, endp
+    integer            :: begc, endc
+    integer            :: begl, endl
+    real(r8), pointer  :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
     character(len=32) :: subname = 'initialize2' ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -214,7 +266,6 @@ contains
     end do
     !$OMP END PARALLEL DO
 
-
     ! Set CH4 Model Parameters from namelist.
     ! Need to do before initTimeConst so that it knows whether to
     ! look for several optional parameters on surfdata file.
@@ -230,109 +281,17 @@ contains
     ! end of the run for error checking.
     deallocate (wt_lunit, wt_cft, wt_glc_mec, haslake)
 
-    call t_stopf('clm_init2')
-
-  end subroutine initialize2
-
-  !-----------------------------------------------------------------------
-  subroutine initialize3( )
-    !
-    ! !DESCRIPTION:
-    ! CLM initialization - third phase
-    !
-    ! !USES:
-    use shr_orb_mod           , only : shr_orb_decl
-    use shr_scam_mod          , only : shr_scam_getCloseLatLon
-    use seq_drydep_mod        , only : n_drydep, drydep_method, DD_XLND
-    use accumulMod            , only : print_accum_fields
-    use clm_varpar            , only : nlevsno
-    use clm_varcon            , only : spval
-    use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
-    use clm_varctl            , only : use_crop, ndep_from_cpl
-    use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
-    use clm_time_manager      , only : get_step_size_real, get_curr_calday
-    use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep
-    use clm_time_manager      , only : timemgr_init, timemgr_restart_io, timemgr_restart, is_restart
-    use CIsoAtmTimeseriesMod  , only : C14_init_BombSpike, use_c14_bombspike, C13_init_TimeSeries, use_c13_timeseries
-    use DaylengthMod          , only : InitDaylength
-    use dynSubgridDriverMod   , only : dynSubgrid_init
-    use dynConsBiogeophysMod  , only : dyn_hwcontent_set_baselines
-    use fileutils             , only : getfil
-    use initInterpMod         , only : initInterp
-    use subgridWeightsMod     , only : init_subgrid_weights_mod
-    use histFileMod           , only : hist_htapes_build, htapes_fieldlist, hist_printflds
-    use histFileMod           , only : hist_addfld1d, hist_addfld2d, no_snow_normal
-    use restFileMod           , only : restFile_getfile, restFile_open, restFile_close
-    use restFileMod           , only : restFile_read, restFile_write
-    use ndepStreamMod         , only : ndep_init, ndep_interp
-    use LakeCon               , only : LakeConInit
-    use SatellitePhenologyMod , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
-    use SnowSnicarMod         , only : SnowAge_init, SnowOptics_init
-    use lnd2atmMod            , only : lnd2atm_minimal
-    use NutrientCompetitionFactoryMod, only : create_nutrient_competition_method
-    use controlMod            , only : NLFilename
-    use clm_instMod           , only : clm_fates
-    use BalanceCheckMod       , only : BalanceCheckInit
-    !
-    ! !ARGUMENTS
-    !
-    ! !LOCAL VARIABLES:
-    integer               :: c,i,j,k,l,p! indices
-    integer               :: yr           ! current year (0, ...)
-    integer               :: mon          ! current month (1 -> 12)
-    integer               :: day          ! current day (1 -> 31)
-    integer               :: ncsec        ! current time of day [seconds]
-    integer               :: nc           ! clump index
-    integer               :: nclumps      ! number of clumps on this processor
-    character(len=256)    :: fnamer       ! name of netcdf restart file
-    character(len=256)    :: pnamer       ! full pathname of netcdf restart file
-    character(len=256)    :: locfn        ! local file name
-    type(file_desc_t)     :: ncid         ! netcdf id
-    real(r8)              :: dtime        ! time step increment (sec)
-    integer               :: nstep        ! model time step
-    real(r8)              :: calday       ! calendar day for nstep
-    real(r8)              :: caldaym1     ! calendar day for nstep-1
-    real(r8)              :: declin       ! solar declination angle in radians for nstep
-    real(r8)              :: declinm1     ! solar declination angle in radians for nstep-1
-    real(r8)              :: eccf         ! earth orbit eccentricity factor
-    type(bounds_type)     :: bounds_proc  ! processor bounds
-    type(bounds_type)     :: bounds_clump ! clump bounds
-    logical               :: lexist
-    integer               :: closelatidx,closelonidx
-    real(r8)              :: closelat,closelon
-    logical               :: reset_dynbal_baselines_all_columns
-    logical               :: reset_dynbal_baselines_lake_columns
-    integer               :: begp, endp
-    integer               :: begc, endc
-    integer               :: begl, endl
-    real(r8), pointer     :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
-    character(len=32)     :: subname = 'initialize3'
-    !----------------------------------------------------------------------
-
-    call t_startf('clm_init3')
-
-    ! ------------------------------------------------------------------------
     ! Determine processor bounds and clumps for this processor
-    ! ------------------------------------------------------------------------
-
     call get_proc_bounds(bounds_proc)
     nclumps = get_proc_clumps()
 
-    ! ------------------------------------------------------------------------
     ! Read in parameters files
-    ! ------------------------------------------------------------------------
-
     call clm_instReadNML( NLFilename )
     allocate(nutrient_competition_method, &
          source=create_nutrient_competition_method(bounds_proc))
-
     call readParameters(nutrient_competition_method, photosyns_inst)
 
-    ! ------------------------------------------------------------------------
     ! Initialize time manager
-    ! ------------------------------------------------------------------------
-
     if (nsrest == nsrStartup) then
        call timemgr_init()
     else
@@ -343,28 +302,20 @@ contains
        call timemgr_restart()
     end if
 
-    ! ------------------------------------------------------------------------
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
-    ! ------------------------------------------------------------------------
-
     call t_startf('init_orbd')
-
     calday = get_curr_calday()
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
-
     dtime = get_step_size_real()
     caldaym1 = get_curr_calday(offset=-int(dtime))
     call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
-
     call t_stopf('init_orbd')
-
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
 
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
     ! History file variables
-
     if (use_cn) then
        call hist_addfld1d (fname='DAYL',  units='s', &
             avgflag='A', long_name='daylength', &
@@ -375,13 +326,9 @@ contains
             ptr_gcell=grc%prev_dayl, default='inactive')
     end if
 
-    ! ------------------------------------------------------------------------
     ! Initialize component data structures
-    ! ------------------------------------------------------------------------
-
     ! Note: new logic is in place that sets all the history fields to spval so
     ! there is no guesswork in the initialization to nans of the allocated variables
-
     ! First put in history calls for subgrid data structures - these cannot appear in the
     ! module for the subgrid data definition due to circular dependencies that are introduced
 
@@ -402,47 +349,41 @@ contains
          ptr_col=col%zii, default='inactive')
 
     ! If single-column determine closest latitude and longitude
-
-    if (single_column) then
-       call getfil (fsurdat, locfn, 0)
-       call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
-            closelat, closelon, closelatidx, closelonidx)
-    end if
+    ! TODO: for mct this should use fatmlnd file - for nuopc should use esmf functionality for nearest neighbor,
+    ! for lilac not applicable
+    ! TODO: these values are never used - is scam even working for ctsm?
+    ! if (single_column) then
+    !    call getfil (fsurdat, locfn, 0)
+    !    call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
+    !         closelat, closelon, closelatidx, closelonidx)
+    ! end if
 
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
-    ! Initialize SNICAR optical and aging parameters
 
+    ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
+    ! Print history field info to standard out
     call hist_printflds()
 
-    ! ------------------------------------------------------------------------
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
-    ! and/or dynamic landunits); note that these will be overwritten in a
-    ! restart run
-    ! ------------------------------------------------------------------------
-
+    ! and/or dynamic landunits); note that these will be overwritten in a restart run
     call t_startf('init_dyn_subgrid')
     call init_subgrid_weights_mod(bounds_proc)
     call dynSubgrid_init(bounds_proc, glc_behavior, crop_inst)
     call t_stopf('init_dyn_subgrid')
 
-    ! ------------------------------------------------------------------------
     ! Initialize baseline water and energy states needed for dynamic subgrid operation
-    !
     ! This will be overwritten by the restart file, but needs to be done for a cold start
     ! case.
-    !
     ! BACKWARDS_COMPATIBILITY(wjs, 2019-03-05) dyn_hwcontent_set_baselines is called again
     ! later in initialization if reset_dynbal_baselines is set. I think we could just have
     ! a single call in that location (adding some logic to also do the call if we're doing
     ! a cold start) once we can assume that all finidat files have the necessary restart
     ! fields on them. But for now, having the extra call here handles the case where the
     ! relevant restart fields are missing from an old finidat file.
-    ! ------------------------------------------------------------------------
-
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
@@ -459,10 +400,7 @@ contains
     end do
     !$OMP END PARALLEL DO
 
-    ! ------------------------------------------------------------------------
     ! Initialize modules (after time-manager initialization in most cases)
-    ! ------------------------------------------------------------------------
-
     if (use_cn) then
        call bgc_vegetation_inst%Init2(bounds_proc, NLFilename)
 
@@ -482,31 +420,22 @@ contains
     else
        call SatellitePhenologyInit(bounds_proc)
     end if
-    if (use_soil_moisture_streams) then 
+    if (use_soil_moisture_streams) then
        call PrescribedSoilMoistureInit(bounds_proc)
     endif
 
-    ! ------------------------------------------------------------------------
     ! On restart only - process the history namelist.
-    ! ------------------------------------------------------------------------
-
     ! Later the namelist from the restart file will be used.  This allows basic
     ! checking to make sure you didn't try to change the history namelist on restart.
-
     if (nsrest == nsrContinue ) then
        call htapes_fieldlist()
     end if
 
-    ! ------------------------------------------------------------------------
     ! Read restart/initial info
-    ! ------------------------------------------------------------------------
-
     is_cold_start = .false.
     is_interpolated_start = .false.
     reset_dynbal_baselines_lake_columns = .false.
-
     if (nsrest == nsrStartup) then
-
        if (finidat == ' ') then
           if (finidat_interp_source == ' ') then
              is_cold_start = .true.
@@ -527,9 +456,7 @@ contains
           call restFile_read(bounds_proc, fnamer, glc_behavior, &
                reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
        end if
-
     else if ((nsrest == nsrContinue) .or. (nsrest == nsrBranch)) then
-
        if (masterproc) then
           write(iulog,*)'Reading restart file ',trim(fnamer)
        end if
@@ -537,12 +464,8 @@ contains
             reset_dynbal_baselines_lake_columns = reset_dynbal_baselines_lake_columns)
     end if
 
-    ! ------------------------------------------------------------------------
     ! If appropriate, create interpolated initial conditions
-    ! ------------------------------------------------------------------------
-
     if (nsrest == nsrStartup .and. finidat_interp_source /= ' ') then
-
        is_interpolated_start = .true.
 
        ! Check that finidat is not cold start - abort if it is
@@ -566,16 +489,11 @@ contains
        ! Reset finidat to now be finidat_interp_dest
        ! (to be compatible with routines still using finidat)
        finidat = trim(finidat_interp_dest)
-
     end if
 
-    ! ------------------------------------------------------------------------
     ! If requested, reset dynbal baselines
-    !
     ! This needs to happen after reading the restart file (including after reading the
     ! interpolated restart file, if applicable).
-    ! ------------------------------------------------------------------------
-
     reset_dynbal_baselines_all_columns = get_reset_dynbal_baselines()
     if (nsrest == nsrBranch) then
        if (reset_dynbal_baselines_all_columns) then
@@ -620,10 +538,7 @@ contains
     end do
     !$OMP END PARALLEL DO
 
-    ! ------------------------------------------------------------------------
     ! Initialize nitrogen deposition
-    ! ------------------------------------------------------------------------
-
     if (use_cn) then
        call t_startf('init_ndep')
        if (.not. ndep_from_cpl) then
@@ -633,45 +548,31 @@ contains
        call t_stopf('init_ndep')
     end if
 
-    ! ------------------------------------------------------------------------
     ! Initialize active history fields.
-    ! ------------------------------------------------------------------------
-
     ! This is only done if not a restart run. If a restart run, then this
     ! information has already been obtained from the restart data read above.
     ! Note that routine hist_htapes_build needs time manager information,
     ! so this call must be made after the restart information has been read.
-
     if (nsrest /= nsrContinue) then
        call hist_htapes_build()
     end if
 
-    ! ------------------------------------------------------------------------
     ! Initialize variables that are associated with accumulated fields.
-    ! ------------------------------------------------------------------------
-
     ! The following is called for both initial and restart runs and must
     ! must be called after the restart file is read
-
     call atm2lnd_inst%initAccVars(bounds_proc)
     call temperature_inst%initAccVars(bounds_proc)
     call water_inst%initAccVars(bounds_proc)
     call energyflux_inst%initAccVars(bounds_proc)
     call canopystate_inst%initAccVars(bounds_proc)
-
     call bgc_vegetation_inst%initAccVars(bounds_proc)
-
     if (use_crop) then
        call crop_inst%initAccVars(bounds_proc)
     end if
 
-    !------------------------------------------------------------
     ! Read monthly vegetation
-    !------------------------------------------------------------
-
     ! Even if CN is on, and dry-deposition is active, read CLMSP annual vegetation
     ! to get estimates of monthly LAI
-
     if ( n_drydep > 0 .and. drydep_method == DD_XLND )then
        call readAnnualVegetation(bounds_proc, canopystate_inst)
        if (nsrest == nsrStartup .and. finidat /= ' ') then
@@ -681,10 +582,7 @@ contains
        end if
     end if
 
-    !------------------------------------------------------------
     ! Determine gridcell averaged properties to send to atm
-    !------------------------------------------------------------
-
     if (nsrest == nsrStartup) then
        call t_startf('init_map2gc')
        call lnd2atm_minimal(bounds_proc, &
@@ -692,10 +590,7 @@ contains
        call t_stopf('init_map2gc')
     end if
 
-    !------------------------------------------------------------
     ! Initialize sno export state to send to glc
-    !------------------------------------------------------------
-
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
@@ -709,19 +604,12 @@ contains
     end do
     !$OMP END PARALLEL DO
 
-    !------------------------------------------------------------
     ! Deallocate wt_nat_patch
-    !------------------------------------------------------------
-
     ! wt_nat_patch was allocated in initialize1, but needed to be kept around through
     ! initialize2 for some consistency checking; now it can be deallocated
-
     deallocate(wt_nat_patch)
 
-    ! --------------------------------------------------------------
     ! Initialise the fates model state structure
-    ! --------------------------------------------------------------
-
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
@@ -729,15 +617,10 @@ contains
     end if
 
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
-    ! initialize2 because it is used to initialize other variables; now it can be
-    ! deallocated
-
+    ! initialize2 because it is used to initialize other variables; now it can be deallocated
     deallocate(topo_glc_mec, fert_cft, irrig_method)
 
-    !------------------------------------------------------------
     ! Write log output for end of initialization
-    !------------------------------------------------------------
-
     call t_startf('init_wlog')
     if (masterproc) then
        write(iulog,*) 'Successfully initialized the land model'
@@ -764,8 +647,8 @@ contains
        !$OMP END PARALLEL DO
     end if
 
-    call t_stopf('clm_init3')
+    call t_stopf('clm_init2')
 
-  end subroutine initialize3
+  end subroutine initialize2
 
 end module clm_initializeMod

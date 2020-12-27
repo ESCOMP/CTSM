@@ -42,7 +42,7 @@ contains
     use shr_kind_mod     , only : shr_kind_cl
     use abortutils       , only : endrun
     use clm_time_manager , only : get_nstep, set_timemgr_init, set_nextsw_cday
-    use clm_initializeMod, only : initialize1, initialize2, initialize3
+    use clm_initializeMod, only : initialize1, initialize2
     use clm_instMod      , only : water_inst, lnd2atm_inst, lnd2glc_inst
     use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog
     use clm_varctl       , only : inst_index, inst_suffix, inst_name
@@ -156,7 +156,7 @@ contains
     ! Initialize clm
     ! initialize1 reads namelists
     ! decomp and domain are set in lnd_set_decomp_and_domain_from_surfrd
-    ! initialize2 and initialize3 perform rest of initialization
+    ! initialize2 performs the rest of initialization
     call seq_timemgr_EClockGetData(EClock,                               &
                                    start_ymd=start_ymd,                  &
                                    start_tod=start_tod, ref_ymd=ref_ymd, &
@@ -227,7 +227,6 @@ contains
 
        ! Finish initializing clm
        call initialize2(ni,nj)
-       call initialize3()
 
        ! Create land export state
        call lnd_export(bounds, water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, l2x_l%rattr)
