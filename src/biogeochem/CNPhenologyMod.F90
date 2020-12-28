@@ -43,6 +43,7 @@ module CNPhenologyMod
   use PatchType                       , only : patch   
   use atm2lndType                     , only : atm2lnd_type             
   use CNVegMatrixMod                  , only : matrix_update_phc, matrix_update_phn
+  use CNVegMatrixMod                  , only : matrix_update_gmc, matrix_update_gmn
   !
   implicit none
   private
@@ -2883,12 +2884,22 @@ contains
                      if(livestemn(p) .gt. 0)then
                         livestemn_to_biofueln(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn,livestemn_to_biofueln(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
-                        livestemn_to_litter(p) = 0
+                        livestemn_to_biofueln(p) = 0
                      end if
                      if(leafn(p) > 0)then
                         leafn_to_biofueln(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_biofueln(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
                      else
-                        leafn_to_litter(p) = 0
+                        leafn_to_biofueln(p) = 0
+                     end if
+                     if (leafc(p) > 0)then
+                       leafc_to_biofuelc(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_biofuelc(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                     else
+                       leafc_to_biofuelc(p) = 0
+                     end if
+                     if(livestemc(p) .gt. 0)then
+                        livestemc_to_biofuelc(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_biofuelc(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                     else
+                        livestemc_to_biofuelc(p) = 0
                      end if
                   else
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
