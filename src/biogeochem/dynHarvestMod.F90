@@ -433,91 +433,91 @@ contains
             ! NOTE: The non-matrix part of this update is in CNCStatUpdate2 CStateUpdate2h (EBK 11/25/2019)
             !   and for Nitrogen The non-matrix part of this update is in CNNStatUpdate2 NStateUpdate2h (EBK 11/25/2019)
             else
-               hrv_leafc_to_litter(p)      = matrix_update_gmc(p,ileaf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)      * &
+               hrv_leafc_to_litter(p)      = matrix_update_gmc(p,ileaf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)      * &
                                              leafc(p)
-               hrv_frootc_to_litter(p)     = matrix_update_gmc(p,ifroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)     * &
+               hrv_frootc_to_litter(p)     = matrix_update_gmc(p,ifroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)     * &
                                              frootc(p)
-               hrv_livestemc_to_litter(p)  = matrix_update_gmc(p,ilivestem_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)  * &
+               hrv_livestemc_to_litter(p)  = matrix_update_gmc(p,ilivestem_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)  * &
                                              livestemc(p)
-               wood_harvestc(p)            = matrix_update_gmc(p,ideadstem_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)  * &
+               wood_harvestc(p)            = matrix_update_gmc(p,ideadstem_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)  * &
                                              deadstemc(p)
-               hrv_livecrootc_to_litter(p) = matrix_update_gmc(p,ilivecroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst) * &
+               hrv_livecrootc_to_litter(p) = matrix_update_gmc(p,ilivecroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
                                              livecrootc(p)
-               hrv_deadcrootc_to_litter(p) = matrix_update_gmc(p,ideadcroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst) * &
+               hrv_deadcrootc_to_litter(p) = matrix_update_gmc(p,ideadcroot_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
                                              deadcrootc(p)
                hrv_xsmrpool_to_atm(p)      = xsmrpool(p)            * m
 
          ! storage pools
-               hrv_leafc_storage_to_litter(p)      = matrix_update_gmc(p,ileafst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)      * &
+               hrv_leafc_storage_to_litter(p)      = matrix_update_gmc(p,ileafst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)      * &
                                                      leafc_storage(p)
-               hrv_frootc_storage_to_litter(p)     = matrix_update_gmc(p,ifrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)     * &
+               hrv_frootc_storage_to_litter(p)     = matrix_update_gmc(p,ifrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)     * &
                                                      frootc_storage(p)
-               hrv_livestemc_storage_to_litter(p)  = matrix_update_gmc(p,ilivestemst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)  * &
+               hrv_livestemc_storage_to_litter(p)  = matrix_update_gmc(p,ilivestemst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)  * &
                                                      livestemc_storage(p)
-               hrv_deadstemc_storage_to_litter(p)  = matrix_update_gmc(p,ideadstemst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)  * &
+               hrv_deadstemc_storage_to_litter(p)  = matrix_update_gmc(p,ideadstemst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)  * &
                                                      deadstemc_storage(p)
-               hrv_livecrootc_storage_to_litter(p) = matrix_update_gmc(p,ilivecrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst) * &
+               hrv_livecrootc_storage_to_litter(p) = matrix_update_gmc(p,ilivecrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
                                                      livecrootc_storage(p)
-               hrv_deadcrootc_storage_to_litter(p) = matrix_update_gmc(p,ideadcrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst) * &
+               hrv_deadcrootc_storage_to_litter(p) = matrix_update_gmc(p,ideadcrootst_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
                                                      deadcrootc_storage(p)
                hrv_gresp_storage_to_litter(p)      = gresp_storage(p)       * m
 
 
          ! transfer pools
-               hrv_leafc_xfer_to_litter(p)      = matrix_update_gmc(p,ileafxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)      * &
+               hrv_leafc_xfer_to_litter(p)      = matrix_update_gmc(p,ileafxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)      * &
                                                   leafc_xfer(p)
-               hrv_frootc_xfer_to_litter(p)     = matrix_update_gmc(p,ifrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)     * &
+               hrv_frootc_xfer_to_litter(p)     = matrix_update_gmc(p,ifrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)     * &
                                                   frootc_xfer(p)
-               hrv_livestemc_xfer_to_litter(p)  = matrix_update_gmc(p,ilivestemxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)  * &
+               hrv_livestemc_xfer_to_litter(p)  = matrix_update_gmc(p,ilivestemxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)  * &
                                                   livestemc_xfer(p)
-               hrv_deadstemc_xfer_to_litter(p)  = matrix_update_gmc(p,ideadstemxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst)  * &
+               hrv_deadstemc_xfer_to_litter(p)  = matrix_update_gmc(p,ideadstemxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.)  * &
                                                   deadstemc_xfer(p)
-               hrv_livecrootc_xfer_to_litter(p) = matrix_update_gmc(p,ilivecrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst) * &
+               hrv_livecrootc_xfer_to_litter(p) = matrix_update_gmc(p,ilivecrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
                                                   livecrootc_xfer(p)
-               hrv_deadcrootc_xfer_to_litter(p) = matrix_update_gmc(p,ideadcrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst) * &
+               hrv_deadcrootc_xfer_to_litter(p) = matrix_update_gmc(p,ideadcrootxf_to_iout_gmc,m,dtime,cnveg_carbonflux_inst,.True.,.True.) * &
                                                   deadcrootc_xfer(p)
                hrv_gresp_xfer_to_litter(p)      = gresp_xfer(p)          * m
 
-               hrv_leafn_to_litter(p)      = matrix_update_gmn(p,ileaf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)      * &
+               hrv_leafn_to_litter(p)      = matrix_update_gmn(p,ileaf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)      * &
                                              leafn(p)
-               hrv_frootn_to_litter(p)     = matrix_update_gmn(p,ifroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)     * &
+               hrv_frootn_to_litter(p)     = matrix_update_gmn(p,ifroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)     * &
                                              frootn(p)
-               hrv_livestemn_to_litter(p)  = matrix_update_gmn(p,ilivestem_to_iout_gmc,m,dtime,cnveg_nitrogenflux_inst)  * &
+               hrv_livestemn_to_litter(p)  = matrix_update_gmn(p,ilivestem_to_iout_gmc,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
                                              livestemn(p)
-               wood_harvestn(p)            = matrix_update_gmn(p,ideadstem_to_iout_gmc,m,dtime,cnveg_nitrogenflux_inst)  * &
+               wood_harvestn(p)            = matrix_update_gmn(p,ideadstem_to_iout_gmc,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
                                              deadstemn(p)
-               hrv_livecrootn_to_litter(p) = matrix_update_gmn(p,ilivecroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst) * &
+               hrv_livecrootn_to_litter(p) = matrix_update_gmn(p,ilivecroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
                                              livecrootn(p)
-               hrv_deadcrootn_to_litter(p) = matrix_update_gmn(p,ideadcroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst) * &
+               hrv_deadcrootn_to_litter(p) = matrix_update_gmn(p,ideadcroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
                                              deadcrootn(p)
-               hrv_retransn_to_litter(p)   = matrix_update_gmn(p,iretransn_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst) * &
+               hrv_retransn_to_litter(p)   = matrix_update_gmn(p,iretransn_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
                                              retransn(p)
 
          ! storage pools
-               hrv_leafn_storage_to_litter(p)      = matrix_update_gmn(p,ileafst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)     *&
+               hrv_leafn_storage_to_litter(p)      = matrix_update_gmn(p,ileafst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)     *&
                                                      leafn_storage(p)
-               hrv_frootn_storage_to_litter(p)     = matrix_update_gmn(p,ifrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)    *&
+               hrv_frootn_storage_to_litter(p)     = matrix_update_gmn(p,ifrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)    *&
                                                      frootn_storage(p)
-               hrv_livestemn_storage_to_litter(p)  = matrix_update_gmn(p,ilivestemst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst) *&
+               hrv_livestemn_storage_to_litter(p)  = matrix_update_gmn(p,ilivestemst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) *&
                                                      livestemn_storage(p)
-               hrv_deadstemn_storage_to_litter(p)  = matrix_update_gmn(p,ideadstemst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst) *&
+               hrv_deadstemn_storage_to_litter(p)  = matrix_update_gmn(p,ideadstemst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) *&
                                                      deadstemn_storage(p)
-               hrv_livecrootn_storage_to_litter(p) = matrix_update_gmn(p,ilivecrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)*&
+               hrv_livecrootn_storage_to_litter(p) = matrix_update_gmn(p,ilivecrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)*&
                                                      livecrootn_storage(p)
-               hrv_deadcrootn_storage_to_litter(p) = matrix_update_gmn(p,ideadcrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)*&
+               hrv_deadcrootn_storage_to_litter(p) = matrix_update_gmn(p,ideadcrootst_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)*&
                                                      deadcrootn_storage(p)
          ! transfer pools
-               hrv_leafn_xfer_to_litter(p)      = matrix_update_gmn(p,ileafxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)      * &
+               hrv_leafn_xfer_to_litter(p)      = matrix_update_gmn(p,ileafxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)      * &
                                                   leafn_xfer(p)
-               hrv_frootn_xfer_to_litter(p)     = matrix_update_gmn(p,ifrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)     * &
+               hrv_frootn_xfer_to_litter(p)     = matrix_update_gmn(p,ifrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)     * &
                                                   frootn_xfer(p)
-               hrv_livestemn_xfer_to_litter(p)  = matrix_update_gmn(p,ilivestemxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)  * &
+               hrv_livestemn_xfer_to_litter(p)  = matrix_update_gmn(p,ilivestemxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
                                                   livestemn_xfer(p)
-               hrv_deadstemn_xfer_to_litter(p)  = matrix_update_gmn(p,ideadstemxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst)  * &
+               hrv_deadstemn_xfer_to_litter(p)  = matrix_update_gmn(p,ideadstemxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
                                                   deadstemn_xfer(p)
-               hrv_livecrootn_xfer_to_litter(p) = matrix_update_gmn(p,ilivecrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst) * &
+               hrv_livecrootn_xfer_to_litter(p) = matrix_update_gmn(p,ilivecrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
                                                   livecrootn_xfer(p)
-               hrv_deadcrootn_xfer_to_litter(p) = matrix_update_gmn(p,ideadcrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst) * &
+               hrv_deadcrootn_xfer_to_litter(p) = matrix_update_gmn(p,ideadcrootxf_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
                                                   deadcrootn_xfer(p)
 
             end if
