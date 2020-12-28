@@ -183,6 +183,9 @@ contains
     else
        send_to_atm = .false.
     end if
+    !DEBUG
+    send_to_atm = .true.
+    !DEBUG
 
     call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return

@@ -25,7 +25,7 @@ module lnd_set_decomp_and_domain
 contains
 !===============================================================================
 
-  subroutine lnd_set_decomp_and_domain_from_meshinfo(gcomp, mesh, ni, nj, rc)
+  subroutine lnd_set_decomp_and_domain_from_meshinfo(gcomp, mesh_ctsm, ni, nj, rc)
 
     use NUOPC         , only : NUOPC_CompAttributeGet
     use decompInitMod , only : decompInit_ocn, decompInit_lnd, decompInit_lnd3D
@@ -38,26 +38,27 @@ contains
 
     ! input/output variables
     type(ESMF_GridComp) , intent(inout) :: gcomp
-    type(ESMF_Mesh)     , intent(out)   :: mesh
+    type(ESMF_Mesh)     , intent(out)   :: mesh_ctsm
     integer             , intent(out)   :: ni,nj ! global grid dimensions
     integer             , intent(out)   :: rc
 
     ! local variables
     type(ESMF_VM)          :: vm
-    type(ESMF_Mesh)        :: mesh_lnd
-    type(ESMF_Mesh)        :: mesh_ocn
-    type(ESMF_DistGrid)    :: distgrid_mesh
-    type(ESMF_DistGrid)    :: distgrid_lnd
-    character(CL)          :: cvalue         ! config data
-    integer                :: nlnd, nocn     ! local size of arrays
-    integer                :: g,n            ! indices
-    type(bounds_type)      :: bounds         ! bounds
+    type(ESMF_Mesh)        :: mesh_ocninput
+    type(ESMF_Mesh)        :: mesh_lndinput
+    type(ESMF_DistGrid)    :: distgrid_lndinput
+    type(ESMF_DistGrid)    :: distgrid_ctsm
+    character(CL)          :: cvalue          ! config data
+    integer                :: nlnd, nocn      ! local size of arrays
+    integer                :: g,n             ! indices
+    type(bounds_type)      :: bounds          ! bounds
     integer                :: begg,endg
     character(CL)          :: meshfile_ocn
-    integer  , pointer     :: gindex_lnd(:)  ! global index space for just land points
-    integer  , pointer     :: gindex_ocn(:)  ! global index space for just ocean points
-    integer  , pointer     :: gindex(:)      ! global index space for land and ocean points
-    integer  , pointer     :: mask(:)        ! local land/ocean mask
+    integer  , pointer     :: gindex_lnd(:)   ! global index space for just land points
+    integer  , pointer     :: gindex_ocn(:)   ! global index space for just ocean points
+    integer  , pointer     :: gindex_ctsm(:)  ! global index space for land and ocean points
+    integer  , pointer     :: gindex_input(:) ! global index space for land and ocean points
+    integer  , pointer     :: mask(:)         ! local land/ocean mask
     integer  , pointer     :: lndmask_loc(:)
     real(r8) , pointer     :: lndfrac_loc(:)
     integer  , pointer     :: lndmask_glob(:)
@@ -66,9 +67,11 @@ contains
     real(r8) , pointer     :: lndlons_glob(:)
     real(r8) , pointer     :: rtemp_glob(:)
     integer  , pointer     :: itemp_glob(:)
+    integer                :: numownedelements
     real(r8) , pointer     :: ownedElemCoords(:)
     real(r8) , pointer     :: dataptr1d(:)
-    integer                :: lsize, gsize
+    integer                :: lsize_input
+    integer                :: gsize
     logical                :: isgrid2d
     integer                :: spatialDim
     type(ESMF_Field)       :: areaField
@@ -87,7 +90,7 @@ contains
     call NUOPC_CompAttributeGet(gcomp, name='lnd_nj', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) nj
-    gsize = ni*nj  
+    gsize = ni*nj
     if (single_column) then
        isgrid2d = .true.
     else if (nj == 1) then
@@ -105,7 +108,7 @@ contains
     end if
 
     ! read in the land mesh from the file
-    mesh_lnd = ESMF_MeshCreate(filename=trim(model_meshfile), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    mesh_lndinput = ESMF_MeshCreate(filename=trim(model_meshfile), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     if (masterproc) then
        write(iulog,'(a)')'land mesh file ',trim(model_meshfile)
@@ -114,31 +117,34 @@ contains
     ! read in ocn mask meshfile
     call NUOPC_CompAttributeGet(gcomp, name='mesh_ocnmask', value=meshfile_ocn, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    mesh_ocn = ESMF_MeshCreate(filename=trim(meshfile_ocn), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+    mesh_ocninput = ESMF_MeshCreate(filename=trim(meshfile_ocn), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     if (masterproc) then
        write(iulog,'(a)')'ocean mesh file ',trim(meshfile_ocn)
     end if
 
     ! set local land fraction and land mask for input read decomposition
-    ! Note that lndmask_loc and lndfrac_loc are allocated in the following calls and lsize is returned
+    ! Note that lndmask_loc and lndfrac_loc are
+    ! - allocated in the following calls and lsize is returned
+    ! - on the input decomposition (gindex_input)
+    ! - lsize references to the local size of the input decomposition
     if (trim(meshfile_ocn) == 'null') then
        ! obtain land mask from land mesh file - assume that land frac is identical to land mask
-       call clm_getlandmask_from_lndmesh(mesh_lnd, lsize, lndmask_loc, lndfrac_loc, distgrid_lnd, rc)
+       call clm_getlandmask_from_lndmesh(mesh_lndinput, lsize_input, lndmask_loc, lndfrac_loc, distgrid_lndinput, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
-       call clm_getlandmask_from_ocnmesh(mesh_lnd, mesh_ocn, lsize, lndmask_loc, lndfrac_loc, distgrid_lnd, rc)
+       call clm_getlandmask_from_ocnmesh(mesh_lndinput, mesh_ocninput, lsize_input, lndmask_loc, lndfrac_loc, distgrid_lndinput, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
     ! determine global landmask_glob - needed to determine the ctsm decomposition
     ! land frac, lats, lons and areas will be done below
-    allocate(gindex(lsize))
-    call ESMF_DistGridGet(distgrid_lnd, 0, seqIndexList=gindex, rc=rc)
+    allocate(gindex_input(lsize_input))
+    call ESMF_DistGridGet(distgrid_lndinput, 0, seqIndexList=gindex_input, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     allocate(lndmask_glob(gsize)); lndmask_glob(:) = 0
-    do n = 1,lsize
-       lndmask_glob(gindex(n)) = lndmask_loc(n)
+    do n = 1,lsize_input
+       lndmask_glob(gindex_input(n)) = lndmask_loc(n)
     end do
     allocate(itemp_glob(gsize))
     call ESMF_VMAllReduce(vm, sendData=lndmask_glob, recvData=itemp_glob, count=gsize, reduceflag=ESMF_REDUCE_SUM, rc=rc)
@@ -162,7 +168,7 @@ contains
     begg = bounds%begg
     endg = bounds%endg
 
-    ! Create gindex_lnd 
+    ! Create ctsm gindex_lnd
     nlnd = endg - begg + 1
     allocate(gindex_lnd(nlnd))
     do g = begg, endg
@@ -173,92 +179,64 @@ contains
     ! Initialize domain data structure
     call domain_init(domain=ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=begg, nend=endg)
 
-    ! Determine ldomain%mask
+    ! Determine ldomain%mask using ctsm decomposition
     do g = begg, endg
        n = 1 + (g - begg)
        ldomain%mask(g) = lndmask_glob(gindex_lnd(n))
     end do
     deallocate(lndmask_glob)
 
-    ! Determine ldomain%frac
+    ! Determine ldomain%frac using both input and ctsm decompositions
+    ! lndfrac_glob is filled using the input decomposition and
+    ! ldomin%frac is set using the ctsm decomposition
     allocate(rtemp_glob(gsize))
     allocate(lndfrac_glob(gsize))
     lndfrac_glob(:) = 0._r8
-    do n = 1,lsize
-       lndfrac_glob(gindex(n)) = lndfrac_loc(n)
+    do n = 1,lsize_input
+       lndfrac_glob(gindex_input(n)) = lndfrac_loc(n)
     end do
-    call ESMF_VMAllReduce(vm, sendData=lndfrac_glob, recvData=rtemp_glob, count=gsize, reduceflag=ESMF_REDUCE_SUM, rc=rc)
+    call ESMF_VMAllReduce(vm, sendData=lndfrac_glob, recvData=rtemp_glob, count=gsize, &
+         reduceflag=ESMF_REDUCE_SUM, rc=rc)
     lndfrac_glob(:) = rtemp_glob(:)
     do g = begg, endg
        ldomain%frac(g) = lndfrac_glob(gindex_lnd(g-begg+1))
     end do
     deallocate(lndfrac_glob)
 
-    ! Get ownedElemCords from the mesh to be used to obtain ldoman%latc and ldomain%lonc
-    call ESMF_MeshGet(mesh_lnd, spatialDim=spatialDim, rc=rc)
-    allocate(ownedElemCoords(spatialDim*lsize))
-    call ESMF_MeshGet(mesh_lnd, ownedElemCoords=ownedElemCoords)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Determine ldomain%latc and global lat1d
-    allocate(lndlats_glob(gsize))
-    lndlats_glob(:) = 0._r8
-    do n = 1,lsize
-       lndlats_glob(gindex(n)) = ownedElemCoords(2*n)
-    end do
-    call ESMF_VMAllReduce(vm, sendData=lndlats_glob, recvData=rtemp_glob, count=gsize, reduceflag=ESMF_REDUCE_SUM, rc=rc)
-    lndlats_glob(:) = rtemp_glob(:)
-    do g = begg, endg
-       ldomain%latc(g) = lndlats_glob(gindex_lnd(g-begg+1))
-    end do
-    if (isgrid2d) then
-       allocate(lat1d(nj))
-       do n = 1,nj
-          lat1d(n) = lndlats_glob((n-1)*ni + 1)
-       end do
-    end if
-    deallocate(lndlats_glob)
-
-    ! Determine ldomain%lonc and global lon1d
-    allocate(lndlons_glob(gsize))
-    lndlons_glob(:) = 0._r8
-    do n = 1,lsize
-       lndlons_glob(gindex(n)) = ownedElemCoords(2*n-1)
-    end do
-    call ESMF_VMAllReduce(vm, sendData=lndlons_glob, recvData=rtemp_glob, count=gsize, reduceflag=ESMF_REDUCE_SUM, rc=rc)
-    lndlons_glob(:) = rtemp_glob(:)
-    do g = begg, endg
-       ldomain%lonc(g) = lndlons_glob(gindex_lnd(g-begg+1))
-    end do
-    if (isgrid2d) then
-       allocate(lon1d(ni))
-       do n = 1,ni
-          lon1d(n) = lndlons_glob(n)
-       end do
-    end if
-    deallocate(lndlons_glob)
-    deallocate(rtemp_glob)
-
-    ! Create a global index that includes both land and ocean points
+    ! Generate a ctsm global index that includes both land and ocean points
     nocn = size(gindex_ocn)
-    allocate(gindex(nlnd + nocn))
+    allocate(gindex_ctsm(nlnd + nocn))
     do n = 1,nlnd+nocn
        if (n <= nlnd) then
-          gindex(n) = gindex_lnd(n)
+          gindex_ctsm(n) = gindex_lnd(n)
        else
-          gindex(n) = gindex_ocn(n-nlnd)
+          gindex_ctsm(n) = gindex_ocn(n-nlnd)
        end if
     end do
 
     ! Generate a new mesh on the gindex decomposition
-    distGrid_mesh = ESMF_DistGridCreate(arbSeqIndexList=gindex, rc=rc)
+    distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    deallocate(gindex)
-    mesh = ESMF_MeshCreate(mesh_lnd, elementDistGrid=distgrid_mesh, rc=rc)
+    mesh_ctsm = ESMF_MeshCreate(mesh_lndinput, elementDistGrid=distgrid_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
+    ! Determine ldoman%latc and ldomain%lonc
+    call ESMF_MeshGet(mesh_ctsm, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    allocate(ownedElemCoords(spatialDim*numownedelements))
+    call ESMF_MeshGet(mesh_ctsm, ownedElemCoords=ownedElemCoords)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_MeshGet(mesh_ctsm, ownedElemCoords=ownedElemCoords, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    do g = begg,endg
+       n = g - begg + 1
+       ldomain%lonc(g) = ownedElemCoords(2*n-1)
+       if (ldomain%lonc(g) == 360._r8) ldomain%lonc(g) = 0._r8 ! TODO: why the difference?
+       ldomain%latc(g) = ownedElemCoords(2*n)
+    end do
+
     ! Create ldomain%area by querying the mesh on the ctsm decomposition
-    areaField = ESMF_FieldCreate(mesh, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
+    areaField = ESMF_FieldCreate(mesh_ctsm, ESMF_TYPEKIND_R8, meshloc=ESMF_MESHLOC_ELEMENT, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call ESMF_FieldRegridGetArea(areaField, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -269,10 +247,48 @@ contains
     end do
     call ESMF_FieldDestroy(areaField)
 
+    ! If grid is 2d, determine lon1d and lat1d
+    if (isgrid2d) then
+       ! Determine lon1d
+       allocate(lndlons_glob(gsize))
+       lndlons_glob(:) = 0._r8
+       do n = 1,numownedelements
+          if (ownedElemCoords(2*n-1) == 360._r8) then ! TODO: why is this needed?
+             lndlons_glob(gindex_ctsm(n)) = 0._r8
+          else
+             lndlons_glob(gindex_ctsm(n)) = ownedElemCoords(2*n-1)
+          end if
+       end do
+       call ESMF_VMAllReduce(vm, sendData=lndlons_glob, recvData=rtemp_glob, count=gsize, reduceflag=ESMF_REDUCE_SUM, rc=rc)
+       deallocate(lndlons_glob)
+       allocate(lon1d(ni))
+       do n = 1,ni
+          lon1d(n) = rtemp_glob(n)
+       end do
+
+       ! Determine lat1d
+       allocate(lndlats_glob(gsize))
+       lndlats_glob(:) = 0._r8
+       do n = 1,numownedelements
+          lndlats_glob(gindex_ctsm(n)) = ownedElemCoords(2*n)
+       end do
+       call ESMF_VMAllReduce(vm, sendData=lndlats_glob, recvData=rtemp_glob, count=gsize, reduceflag=ESMF_REDUCE_SUM, rc=rc)
+       deallocate(lndlats_glob)
+       allocate(lat1d(nj))
+       do n = 1,nj
+          lat1d(n) = rtemp_glob((n-1)*ni + 1)
+       end do
+    end if
+
+    deallocate(gindex_ctsm)
+    deallocate(rtemp_glob)
+
   end subroutine lnd_set_decomp_and_domain_from_meshinfo
 
   !===============================================================================
   subroutine lnd_set_decomp_and_domain_from_newmesh(gcomp, mesh, ni, nj, rc)
+
+    ! Generate a new mesh from the global 2d sizes and set the mask to 1
 
     use NUOPC      , only : NUOPC_CompAttributeGet
     use clm_varctl , only : single_column
@@ -299,6 +315,8 @@ contains
     character(len=CL)       :: cvalue
     integer                 :: gsize
     logical                 :: isgrid2d
+    integer                 :: numownedelements
+    integer, allocatable    :: mask(:)
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -310,7 +328,7 @@ contains
     call NUOPC_CompAttributeGet(gcomp, name='lnd_nj', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) nj
-    gsize = ni*nj  
+    gsize = ni*nj
     if (single_column) then
        isgrid2d = .true.
     else if (nj == 1) then
@@ -378,14 +396,14 @@ contains
     mesh =  ESMF_MeshCreate(lgrid, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! TODO: initialize the decomposition
-    ! initialize ldomain
-    ! initialize the mask and mesh
-    ! for created meshes assume the mask is 1
-    ! create a pointer for mask and set it to 1
-    ! call ESMF_MeshSet(mesh, elementMask=mask, rc=rc)
-    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    ! deallocate(mask)
+    ! Set the mesh mask to 1
+    call ESMF_MeshGet(mesh, numOwnedElements=numOwnedElements, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    allocate(mask(numownedelements))
+    mask(:) = 1
+    call ESMF_MeshSet(mesh, elementMask=mask, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    deallocate(mask)
 
   end subroutine lnd_set_decomp_and_domain_from_newmesh
 
@@ -441,7 +459,7 @@ contains
          srcTermProcessing=srcTermProcessing_Value, &
          ignoreDegenerate=.true., unmappedaction=ESMF_UNMAPPEDACTION_IGNORE, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-          
+
     ! fill in values for field_ocn with mask on ocn mesh
     call ESMF_MeshGet(mesh_ocn, elementdistGrid=distgrid_ocn, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
