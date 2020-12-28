@@ -339,7 +339,10 @@ contains
     !----------------------
     ! Initialize decomposition (ldecomp) and domain (ldomain) types and generate land mesh
     !----------------------
-    call lnd_set_decomp_and_domain_from_meshinfo(lnd_mesh_filename, lnd_mesh, ni, nj, rc)
+    call ESMF_VMGetCurrent(vm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    call lnd_set_decomp_and_domain_from_meshinfo(mode='lilac', vm=vm, &
+         meshfile_lnd=lnd_mesh_filename, meshfile_ocn='null', mesh_ctsm=lnd_mesh, ni=ni, nj=nj, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
     !--------------------------------

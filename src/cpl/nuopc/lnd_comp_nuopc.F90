@@ -346,7 +346,7 @@ contains
     use domainMod                 , only : ldomain
     use decompMod                 , only : ldecomp, bounds_type, get_proc_bounds
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_newmesh
-    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_meshinfo
+    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -390,6 +390,8 @@ contains
     integer                 :: shrlogunit            ! original log unit
     type(bounds_type)       :: bounds                ! bounds
     integer                 :: ni, nj
+    character(len=CL)       :: meshfile_ocn
+    character(len=CL)       :: domain_file
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
@@ -414,7 +416,7 @@ contains
     call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-!$  call omp_set_num_threads(localPeCount)
+    !$  call omp_set_num_threads(localPeCount)
 
     !----------------------
     ! Obtain attribute values
@@ -541,10 +543,21 @@ contains
     call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=model_meshfile, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     if (single_column) model_meshfile = 'create_mesh'
+
     if (trim(model_meshfile) == 'create_mesh') then
-       call lnd_set_decomp_and_domain_from_newmesh(gcomp, mesh, ni, nj, rc)
+       ! TODO: can't this just be fatmlndfrc
+       call NUOPC_CompAttributeGet(gcomp, name='domain_lnd', value=domain_file, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call lnd_set_decomp_and_domain_from_newmesh(domain_file, mesh, ni, nj, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
-       call lnd_set_decomp_and_domain_from_meshinfo(gcomp, mesh, ni, nj, rc)
+       call NUOPC_CompAttributeGet(gcomp, name='mesh_ocnmask', value=meshfile_ocn, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call lnd_set_decomp_and_domain_from_readmesh(mode='nuopc', vm=vm, &
+            meshfile_lnd=model_meshfile, meshfile_ocn=meshfile_ocn, mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
     ! ---------------------
