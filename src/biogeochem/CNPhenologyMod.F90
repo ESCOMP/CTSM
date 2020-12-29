@@ -2782,6 +2782,8 @@ contains
          ilivestem_to_ideadstem_phc          =>    cnveg_carbonflux_inst%ilivestem_to_ideadstem_ph             , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to dead stem pool
          ilivecroot_to_ideadcroot_phc        =>    cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root to dead coarse root pool
          ileaf_to_iout_phc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_ph                      , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
+         ileaf_to_iout_gmc                   =>    cnveg_carbonflux_inst%ileaf_to_iout_gm                      , & ! Input: [integer (:)] Index of gap mortality related C transfer from leaf pool to outside of vegetation pools
+         ileaf_to_iout_gmn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_gm                    , & ! Input: [integer (:)] Index of gap mortality related N transfer from leaf pool to outside of vegetation pools
          ifroot_to_iout_phc                  =>    cnveg_carbonflux_inst%ifroot_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
          ilivestem_to_iout_phc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_ph                  , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
          igrain_to_iout_phc                  =>    cnveg_carbonflux_inst%igrain_to_iout_ph                     , & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
@@ -2802,6 +2804,8 @@ contains
          ileaf_to_iout_phn                   =>    cnveg_nitrogenflux_inst%ileaf_to_iout_ph                    , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to outside of vegetation pools
          ifroot_to_iout_phn                  =>    cnveg_nitrogenflux_inst%ifroot_to_iout_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from fine root pool to outside of vegetation pools
          ilivestem_to_iout_phn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_ph                , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to outside of vegetation pools
+         ilivestem_to_iout_gmc               =>    cnveg_carbonflux_inst%ilivestem_to_iout_gm                  , & ! Input: [integer (:)] Index of gap mortality related C transfer from live stem pool to outside of vegetation pools
+         ilivestem_to_iout_gmn               =>    cnveg_nitrogenflux_inst%ilivestem_to_iout_gm                , & ! Input: [integer (:)] Index of gap mortality related N transfer from live stem pool to outside of vegetation pools
          ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
          ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
          ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
@@ -2882,22 +2886,22 @@ contains
                         livestemc_to_litter(p) = 0
                      end if
                      if(livestemn(p) .gt. 0)then
-                        livestemn_to_biofueln(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iout_phn,livestemn_to_biofueln(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        livestemn_to_biofueln(p) = livestemn(p) * matrix_update_gmn(p,ilivestem_to_iout_gmn,livestemn_to_biofueln(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                      else
                         livestemn_to_biofueln(p) = 0
                      end if
                      if(leafn(p) > 0)then
-                        leafn_to_biofueln(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iout_phn,leafn_to_biofueln(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph)
+                        leafn_to_biofueln(p) =  leafn(p) * matrix_update_gmn(p,ileaf_to_iout_gmn,leafn_to_biofueln(p) / leafn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,.True.)
                      else
                         leafn_to_biofueln(p) = 0
                      end if
                      if (leafc(p) > 0)then
-                       leafc_to_biofuelc(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_biofuelc(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                       leafc_to_biofuelc(p) =  leafc(p) * matrix_update_gmc(p,ileaf_to_iout_gmc,leafc_to_biofuelc(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
                      else
                        leafc_to_biofuelc(p) = 0
                      end if
                      if(livestemc(p) .gt. 0)then
-                        livestemc_to_biofuelc(p) = livestemc(p) * matrix_update_phc(p,ilivestem_to_iout_phc,livestemc_to_biofuelc(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
+                        livestemc_to_biofuelc(p) = livestemc(p) * matrix_update_gmc(p,ilivestem_to_iout_gmc,livestemc_to_biofuelc(p) / livestemc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,.True.)
                      else
                         livestemc_to_biofuelc(p) = 0
                      end if
