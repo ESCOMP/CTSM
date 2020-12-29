@@ -39,7 +39,7 @@ module lnd_comp_esmf
   use clm_driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
-  use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_meshinfo
+  use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_readmesh
 
   implicit none
   private                         ! By default make data private except
@@ -341,7 +341,7 @@ contains
     !----------------------
     call ESMF_VMGetCurrent(vm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call lnd_set_decomp_and_domain_from_meshinfo(mode='lilac', vm=vm, &
+    call lnd_set_decomp_and_domain_from_readmesh(mode='lilac', vm=vm, &
          meshfile_lnd=lnd_mesh_filename, meshfile_ocn='null', mesh_ctsm=lnd_mesh, ni=ni, nj=nj, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
 
@@ -814,15 +814,6 @@ contains
     !--------------------------------
     ! diagnostics
     !--------------------------------
-
-    !if (dbug > 1) then
-    !   call State_diagnose(exportState,subname//':ES',rc=rc)
-    !   if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    !   if (masterproc) then
-    !      call log_clock_advance(clock, 'CTSM', iulog, rc)
-    !      if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    !   end if
-    !end if
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
