@@ -402,9 +402,14 @@ contains
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
     logical  :: is_end_day                               ! is end of current day
+    real(r8) :: tl_ini                                   ! leaf temperature from beginning of time step [K]
+    real(r8) :: ts_ini                                   ! stem temperature from beginning of time step [K]
+    real(r8) :: cp_leaf                                  !heat capacity of leaves
+    real(r8) :: dt_stem                                  !change in stem temperature
     real(r8) :: frac_rad_abs_by_stem                     !fraction of incoming radiation absorbed by stems
     real(r8) :: lw_stem                                  !internal longwave stem
     real(r8) :: lw_leaf                                  !internal longwave leaf
+    real(r8) :: sa_internal                              !min(sa_stem,sa_leaf)
     real(r8) :: temp
 
     integer :: dummy_to_make_pgi_happy
@@ -633,7 +638,12 @@ contains
       end do
       frac_rad_abs_by_stem = 0._r8
       lw_leaf              = 0._r8
+      cp_leaf              = 0._r8
       lw_stem              = 0._r8
+      sa_internal          = 0._r8
+      dt_stem              = 0._r8
+      tl_ini               = 0._r8
+      ts_ini               = 0._r8
 
       ! calculate daylength control for Vcmax
       do f = 1, fn
@@ -1059,10 +1069,12 @@ contains
             temp = dt_veg(p)
             dt_veg(p) = ((1._r8-frac_rad_abs_by_stem)*(sabv(p) + air(p) &
                   + bir(p)*t_veg(p)**4 + cir(p)*lw_grnd) &
-                  - efsh - efe(p) - lw_leaf + lw_stem ) &
+                  - efsh - efe(p) - lw_leaf + lw_stem &
+                  - (cp_leaf/dtime)*(t_veg(p) - tl_ini)) &
                   / ((1._r8-frac_rad_abs_by_stem)*(- 4._r8*bir(p)*t_veg(p)**3 &
-                  +dc1*wtga+dc2*wtgaq*qsatldT(p)))
-            if ( abs(temp - dt_veg(p) ) > 1.e-13 )then
+                  + 4._r8*sa_internal*emv(p)*sb*t_veg(p)**3 &
+                  +dc1*wtga+dc2*wtgaq*qsatldT(p))+ cp_leaf/dtime)
+            if ( abs(temp - dt_veg(p) ) > 1.e-12 )then
                call endrun( "Difference greater than roundoff" )
             end if
             t_veg(p) = tlbef(p) + dt_veg(p)
@@ -1080,10 +1092,12 @@ contains
                err(p) = (1._r8-frac_rad_abs_by_stem)*(sabv(p) + air(p) &
                     + bir(p)*tlbef(p)**3*(tlbef(p) + &
                     4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
+                    -sa_internal*emv(p)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
                     + lw_stem &
                     - (efsh + dc1*wtga*dt_veg(p)) - (efe(p) + &
-                    dc2*wtgaq*qsatldT(p)*dt_veg(p))
-               if ( abs(temp - err(p) ) > 1.e-13 )then
+                    dc2*wtgaq*qsatldT(p)*dt_veg(p)) &
+                    - (cp_leaf/dtime)*(t_veg(p) - tl_ini)
+               if ( abs(temp - err(p) ) > 1.e-12 )then
                   call endrun( "Difference greater than roundoff" )
                end if
             end if
@@ -1215,8 +1229,9 @@ contains
          temp = err(p)
          err(p) = (1.0_r8-frac_rad_abs_by_stem)*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
               *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
-                - lw_leaf + lw_stem - eflx_sh_veg(p) - hvap*qflx_evap_veg(p)
-         if ( abs(temp - err(p) ) > 1.e-13 )then
+                - lw_leaf + lw_stem - eflx_sh_veg(p) - hvap*qflx_evap_veg(p) &
+                - ((t_veg(p)-tl_ini)*cp_leaf/dtime)
+         if ( abs(temp - err(p) ) > 1.e-11 )then
             write(iulog,*) 'Difference = ', temp - err(p)
             call endrun( "Difference greater than roundoff" )
          end if
@@ -1308,8 +1323,10 @@ contains
          temp = dlrad(p)
          dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) &
               + emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
-              *(1.0_r8-frac_rad_abs_by_stem)
-         if ( abs(temp - dlrad(p) ) > 1.e-13 )then
+              *(1.0_r8-frac_rad_abs_by_stem) &
+              + emv(p)*emg(c)*sb*ts_ini**3*(ts_ini + 4._r8*dt_stem) &
+              *frac_rad_abs_by_stem
+         if ( abs(temp - dlrad(p) ) > 1.e-12 )then
             call endrun( "Difference greater than roundoff" )
          end if
 
@@ -1322,8 +1339,10 @@ contains
          ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
               *tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1._r8-frac_rad_abs_by_stem) &
+              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
+              *ts_ini**3*(ts_ini+ 4._r8*dt_stem)*frac_rad_abs_by_stem &
               + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
-         if ( abs(temp - ulrad(p) ) > 1.e-13 )then
+         if ( abs(temp - ulrad(p) ) > 1.e-11 )then
             write(iulog,*) 'Difference = ', temp - ulrad(p)
             call endrun( "Difference greater than roundoff" )
          end if
