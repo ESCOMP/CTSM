@@ -94,28 +94,29 @@ contains
     end if
 
     ! Set global land fraction and global land mask across all processors
-    if (trim(meshfile_ocn) /= 'null') then
-       ! read in ocn mask meshfile
-       mesh_ocninput = ESMF_MeshCreate(filename=trim(meshfile_ocn), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       if (masterproc) then
-          write(iulog,'(a)')'ocean mesh file ',trim(meshfile_ocn)
-       end if
-
-       ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
-       call lnd_get_lndmask_from_ocnmesh(mesh_lndinput, mesh_ocninput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (mode == 'lilac' .and. trim(fatmlndfrc) /= 'null') then
+       ! Note that is just for backwards compatibility 
+       ! Read in global land mask and land fraction from fatmlndfrc
+       call getfil( trim(fatmlndfrc), locfn, 0 )
+       call ncd_pio_openfile (ncid, trim(locfn), 0)
+       call ncd_io(ncid=ncid, varname='mask', data=lndmask_glob, flag='read', readvar=readvar)
+       if (.not. readvar) call endrun( msg=' ERROR: variable mask not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
+       allocate(lndfrac_glob(ni*nj)); lndfrac_glob(:) = 0._r8
+       call ncd_io(ncid=ncid, varname='frac', data=lndfrac_glob, flag='read', readvar=readvar)
+       if (.not. readvar) call endrun( msg=' ERROR: variable frac not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
+       call ncd_pio_closefile(ncid)
     else
-       if (mode == 'lilac' .and. trim(fatmlndfrc) /= 'null') then
-          ! Read in global land mask and land fraction from fatmlndfrc
-          call getfil( trim(fatmlndfrc), locfn, 0 )
-          call ncd_pio_openfile (ncid, trim(locfn), 0)
-          call ncd_io(ncid=ncid, varname='mask', data=lndmask_glob, flag='read', readvar=readvar)
-          if (.not. readvar) call endrun( msg=' ERROR: variable mask not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
-          allocate(lndfrac_glob(ni*nj)); lndfrac_glob(:) = 0._r8
-          call ncd_io(ncid=ncid, varname='frac', data=lndfrac_glob, flag='read', readvar=readvar)
-          if (.not. readvar) call endrun( msg=' ERROR: variable frac not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
-          call ncd_pio_closefile(ncid)
+       if (trim(meshfile_ocn) /= 'null') then
+          ! read in ocn mask meshfile
+          mesh_ocninput = ESMF_MeshCreate(filename=trim(meshfile_ocn), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          if (masterproc) then
+             write(iulog,'(a)')'ocean mesh file ',trim(meshfile_ocn)
+          end if
+
+          ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
+          call lnd_get_lndmask_from_ocnmesh(mesh_lndinput, mesh_ocninput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
        else
           ! obtain land mask from land mesh file - assume that land frac is identical to land mask
           call lnd_get_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
