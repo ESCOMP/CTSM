@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev020
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Tue Dec 29 17:47:30 MST 2020
+Date: Tue Dec 29 23:31:47 MST 2020
 One-line Summary: Potential roundoff changes in preparation for bio-mass heat storage option
 
 Purpose of changes
@@ -90,6 +90,12 @@ Changes answers relative to baseline:
 
     Earlier commit tested the new terms versus the old and showed they were
     order e-11 for absolute difference and e-14 relative difference.
+
+   Tests that change from baseline....
+
+   ERS_Ly5_P144x1.f10_f10_musgs.IHistClm51BgcCrop.cheyenne_intel.clm-cropMonthOutput
+   SMS.f10_f10_musgs.I2000Clm50BgcCrop.izumi_pgi.clm-crop
+   SMS_D.f10_f10_musgs.I2000Clm51BgcCrop.izumi_pgi.clm-crop
 
 Detailed list of changes
 ------------------------
