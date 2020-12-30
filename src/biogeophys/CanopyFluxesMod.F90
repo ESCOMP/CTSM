@@ -402,6 +402,14 @@ contains
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
     logical  :: is_end_day                               ! is end of current day
+    real(r8) :: tl_ini                                   ! leaf temperature from beginning of time step [K]
+    real(r8) :: ts_ini                                   ! stem temperature from beginning of time step [K]
+    real(r8) :: cp_leaf                                  !heat capacity of leaves
+    real(r8) :: dt_stem                                  !change in stem temperature
+    real(r8) :: frac_rad_abs_by_stem                     !fraction of incoming radiation absorbed by stems
+    real(r8) :: lw_stem                                  !internal longwave stem
+    real(r8) :: lw_leaf                                  !internal longwave leaf
+    real(r8) :: sa_internal                              !min(sa_stem,sa_leaf)
 
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
@@ -627,6 +635,14 @@ contains
          obuold(p) = 0._r8
          btran(p)  = btran0
       end do
+      frac_rad_abs_by_stem = 0._r8
+      lw_leaf              = 0._r8
+      cp_leaf              = 0._r8
+      lw_stem              = 0._r8
+      sa_internal          = 0._r8
+      dt_stem              = 0._r8
+      tl_ini               = 0._r8
+      ts_ini               = 0._r8
 
       ! calculate daylength control for Vcmax
       do f = 1, fn
@@ -1046,9 +1062,13 @@ contains
                  +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
                  +frac_h2osfc(c)*t_h2osfc(c)**4)
 
-            dt_veg(p) = (sabv(p) + air(p) + bir(p)*t_veg(p)**4 + &
-                 cir(p)*lw_grnd - efsh - efe(p)) / &
-                 (- 4._r8*bir(p)*t_veg(p)**3 +dc1*wtga +dc2*wtgaq*qsatldT(p))
+            dt_veg(p) = ((1._r8-frac_rad_abs_by_stem)*(sabv(p) + air(p) &
+                  + bir(p)*t_veg(p)**4 + cir(p)*lw_grnd) &
+                  - efsh - efe(p) - lw_leaf + lw_stem &
+                  - (cp_leaf/dtime)*(t_veg(p) - tl_ini)) &
+                  / ((1._r8-frac_rad_abs_by_stem)*(- 4._r8*bir(p)*t_veg(p)**3 &
+                  + 4._r8*sa_internal*emv(p)*sb*t_veg(p)**3 &
+                  +dc1*wtga+dc2*wtgaq*qsatldT(p))+ cp_leaf/dtime)
             t_veg(p) = tlbef(p) + dt_veg(p)
             dels = dt_veg(p)
             del(p)  = abs(dels)
@@ -1056,10 +1076,14 @@ contains
             if (del(p) > delmax) then
                dt_veg(p) = delmax*dels/del(p)
                t_veg(p) = tlbef(p) + dt_veg(p)
-               err(p) = sabv(p) + air(p) + bir(p)*tlbef(p)**3*(tlbef(p) + &
-                    4._r8*dt_veg(p)) + cir(p)*lw_grnd - &
-                    (efsh + dc1*wtga*dt_veg(p)) - (efe(p) + &
-                    dc2*wtgaq*qsatldT(p)*dt_veg(p))
+               err(p) = (1._r8-frac_rad_abs_by_stem)*(sabv(p) + air(p) &
+                    + bir(p)*tlbef(p)**3*(tlbef(p) + &
+                    4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
+                    -sa_internal*emv(p)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
+                    + lw_stem &
+                    - (efsh + dc1*wtga*dt_veg(p)) - (efe(p) + &
+                    dc2*wtgaq*qsatldT(p)*dt_veg(p)) &
+                    - (cp_leaf/dtime)*(t_veg(p) - tl_ini)
             end if
 
             ! Fluxes from leaves to canopy space
@@ -1183,9 +1207,10 @@ contains
               +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
               +frac_h2osfc(c)*t_h2osfc(c)**4)
 
-         err(p) = sabv(p) + air(p) + bir(p)*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
-                                !+ cir(p)*t_grnd(c)**4 - eflx_sh_veg(p) - hvap*qflx_evap_veg(p)
-              + cir(p)*lw_grnd - eflx_sh_veg(p) - hvap*qflx_evap_veg(p)
+         err(p) = (1.0_r8-frac_rad_abs_by_stem)*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
+              *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
+                - lw_leaf + lw_stem - eflx_sh_veg(p) - hvap*qflx_evap_veg(p) &
+                - ((t_veg(p)-tl_ini)*cp_leaf/dtime)
 
          ! Fluxes from ground to canopy space
 
@@ -1269,14 +1294,20 @@ contains
 
          ! Downward longwave radiation below the canopy
 
-         dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) + &
-              emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
+         dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) &
+              + emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
+              *(1.0_r8-frac_rad_abs_by_stem) &
+              + emv(p)*emg(c)*sb*ts_ini**3*(ts_ini + 4._r8*dt_stem) &
+              *frac_rad_abs_by_stem
 
          ! Upward longwave radiation above the canopy
 
          ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
-              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*tlbef(p)**3*(tlbef(p) + &
-              4._r8*dt_veg(p)) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
+              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
+              *tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1._r8-frac_rad_abs_by_stem) &
+              + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
+              *ts_ini**3*(ts_ini+ 4._r8*dt_stem)*frac_rad_abs_by_stem &
+              + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
 
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
          ! The weight is the so-called vegetation emissivity, but not that emv is actually an attentuation 
