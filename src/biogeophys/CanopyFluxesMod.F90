@@ -403,7 +403,6 @@ contains
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
     logical  :: is_end_day                               ! is end of current day
-
     real(r8) :: dbh(bounds%begp:bounds%endp)       !diameter at breast height of vegetation
     real(r8) :: cp_leaf(bounds%begp:bounds%endp)   !heat capacity of leaves
     real(r8) :: cp_stem(bounds%begp:bounds%endp)   !heat capacity of stems
@@ -682,7 +681,6 @@ contains
          dhsdt_canopy(p) = 0._r8
          eflx_sh_stem(p) = 0._r8
       end do
-
       !
       ! Calculate biomass heat capacities
       !
@@ -1227,12 +1225,12 @@ bioms:   do f = 1, fn
                  +frac_h2osfc(c)*t_h2osfc(c)**4)
 
             dt_veg(p) = ((1._r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
-                 + bir(p)*t_veg(p)**4 + cir(p)*lw_grnd) &
-                 - efsh - efe(p) - lw_leaf(p) + lw_stem(p) &
-                 - (cp_leaf(p)/dtime)*(t_veg(p) - tl_ini(p))) &
-                 / (((1._r8-frac_rad_abs_by_stem(p))*(- 4._r8*bir(p)*t_veg(p)**3) &
-                 + 4._r8*sa_internal(p)*emv(p)*sb*t_veg(p)**3 &
-                 +dc1*wtga(p) +dc2*wtgaq*qsatldT(p)) + cp_leaf(p)/dtime)
+                  + bir(p)*t_veg(p)**4 + cir(p)*lw_grnd) &
+                  - efsh - efe(p) - lw_leaf(p) + lw_stem(p) &
+                  - (cp_leaf(p)/dtime)*(t_veg(p) - tl_ini(p))) &
+                  / ((1._r8-frac_rad_abs_by_stem(p))*(- 4._r8*bir(p)*t_veg(p)**3 &
+                  + 4._r8*sa_internal(p)*emv(p)*sb*t_veg(p)**3 &
+                  +dc1*wtga(p) +dc2*wtgaq*qsatldT(p))+ cp_leaf(p)/dtime)
 
             t_veg(p) = tlbef(p) + dt_veg(p)
 
@@ -1242,7 +1240,7 @@ bioms:   do f = 1, fn
             if (del(p) > delmax) then
                dt_veg(p) = delmax*dels/del(p)
                t_veg(p) = tlbef(p) + dt_veg(p)
-                err(p) = (1.-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
+               err(p) = (1._r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
                     + bir(p)*tlbef(p)**3*(tlbef(p) + &
                     4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
                     -sa_internal(p)*emv(p)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
@@ -1383,10 +1381,10 @@ bioms:   do f = 1, fn
               +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
               +frac_h2osfc(c)*t_h2osfc(c)**4)
 
-         err(p) = (1.-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
+         err(p) = (1.0_r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
               *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
-              - lw_leaf(p) + lw_stem(p) - eflx_sh_veg(p) - hvap*qflx_evap_veg(p) &
-              - ((t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime)
+                - lw_leaf(p) + lw_stem(p) - eflx_sh_veg(p) - hvap*qflx_evap_veg(p) &
+                - ((t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime)
 
          !  Update stem temperature; adjust outgoing longwave
          !  does not account for changes in SH or internal LW,
@@ -1491,35 +1489,20 @@ bioms:   do f = 1, fn
 
          ! Downward longwave radiation below the canopy
 
-!        dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) + &
-!             emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
-         dlrad_leaf = emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))
-         dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c)
-         if ( .not.  use_biomass_heat_storage )then
-            dlrad(p) = dlrad(p) + dlrad_leaf
-         else
-            dlrad(p) = dlrad(p) + dlrad_leaf *(1._r8-frac_rad_abs_by_stem(p)) &
+         dlrad(p) = (1._r8-emv(p))*emg(c)*forc_lwrad(c) &
+              + emv(p)*emg(c)*sb*tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p)) &
+              *(1.0_r8-frac_rad_abs_by_stem(p)) &
               + emv(p)*emg(c)*sb*ts_ini(p)**3*(ts_ini(p) + 4._r8*dt_stem(p)) &
               *frac_rad_abs_by_stem(p)
-         end if
 
          ! Upward longwave radiation above the canopy
 
-         ulrad(p) = (1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c)
-         if ( .not. use_biomass_heat_storage )then
-            ulrad(p) = (ulrad(p) &
-                 + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb*tlbef(p)**3*(tlbef(p) + &
-                 4._r8*dt_veg(p)) + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
-         else
-            ulrad(p) = (ulrad(p) &
+         ulrad(p) = ((1._r8-emg(c))*(1._r8-emv(p))*(1._r8-emv(p))*forc_lwrad(c) &
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
               *tlbef(p)**3*(tlbef(p) + 4._r8*dt_veg(p))*(1._r8-frac_rad_abs_by_stem(p)) &
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
               *ts_ini(p)**3*(ts_ini(p)+ 4._r8*dt_stem(p))*frac_rad_abs_by_stem(p) &
               + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
-         end if
- 
-
 
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
          ! The weight is the so-called vegetation emissivity, but not that emv is actually an attentuation 
