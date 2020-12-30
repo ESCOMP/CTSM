@@ -13,7 +13,7 @@ module CNVegStructUpdateMod
   use CNDVType             , only : dgvs_type
   use CNVegStateType       , only : cnveg_state_type
   use CropType             , only : crop_type
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType , only : cnveg_carbonstate_type, spinup_factor
   use CanopyStateType      , only : canopystate_type
   use PatchType            , only : patch                
   use decompMod            , only : bounds_type
@@ -68,8 +68,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: p,c,g      ! indices
     integer  :: fp         ! lake filter indices
-    real(r8) :: taper(bounds%begp:bounds%endp)      ! ratio of height:radius_breast_height (tree allometry)
-    real(r8) :: stocking(bounds%begp:bounds%endp)   ! #stems / ha (stocking density)
+    real(r8) :: stocking                            ! #stems / ha (stocking density)
     real(r8) :: ol         ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb         ! fraction of canopy layer covered by snow
     real(r8) :: tlai_old   ! for use in Zeng tsai formula
@@ -105,6 +104,7 @@ contains
          ztopmx             =>  pftcon%ztopmx                           , & ! Input:
          laimx              =>  pftcon%laimx                            , & ! Input:
          nstem              =>  pftcon%nstem                            , & ! Input:  Tree number density (#ind/m2)
+         taper              =>  pftcon%taper                            , & ! Input:  ratio of height:radius_breast_height (tree allometry)
          fbw                =>  pftcon%fbw                              , & ! Input:  Fraction of fresh biomass that is water        
        
          allom2             =>  dgv_ecophyscon%allom2                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
@@ -141,20 +141,6 @@ contains
          )
 
       dt = real( get_rad_step_size(), r8 )
-
-      ! constant allometric parameters
-      taper(:) = 200._r8
-
-      if (use_biomass_heat_storage) then
-         do fp = 1,num_soilp
-            p = filter_soilp(fp)
-            stocking(p) = nstem(ivt(p))
-         enddo
-      else
-         stocking(:) = 1000._r8
-         ! convert from stems/ha -> stems/m^2
-         stocking(:) = stocking(:) / 10000._r8
-      endif
 
       ! patch loop
       do fp = 1,num_soilp
@@ -197,25 +183,15 @@ contains
 
             if (woody(ivt(p)) == 1._r8) then
 
-               ! trees and shrubs
-
-               ! if shrubs have a squat taper 
-               if (ivt(p) >= nbrdlf_evr_shrub .and. ivt(p) <= nbrdlf_dcd_brl_shrub) then
-                  taper(p) = 10._r8
-                  ! otherwise have a tall taper
-               else
-                  taper(p) = 200._r8
-               end if
-
                ! trees and shrubs for now have a very simple allometry, with hard-wired
-               ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
+               ! stem taper (height:radius) and nstem from PFT parameter file
                if (use_cndv) then
 
                   if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
 
-                     stocking(p) = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
+                     stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                      htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
-                          (SHR_CONST_PI * stocking(p) * dwood(ivt(p)) * taper(p)))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper(ivt(p))))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
 
                   else
                      htop(p) = 0._r8
@@ -224,27 +200,26 @@ contains
                else
                   !correct height calculation if doing accelerated spinup
                   if (spinup_state == 2) then
-                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(p) * taper(p))/ &
-                         (SHR_CONST_PI * stocking(p) * dwood(ivt(p))))**(1._r8/3._r8)
+                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   else
-                    htop(p) = ((3._r8 * deadstemc(p) * taper(p) * taper(p))/ &
-                         (SHR_CONST_PI * stocking(p) * dwood(ivt(p))))**(1._r8/3._r8)
+                    htop(p) = ((3._r8 * deadstemc(p) * taper(ivt(p)) * taper(ivt(p)))/ &
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
                   end if
 
                endif
 
+               !
                ! calculate vegetation physiological parameters used in biomass heat storage
+               !
                if (use_biomass_heat_storage) then
-                  ! Assumes fbw the same for leaves and stems
+                  ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
                   leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
-                  stem_biomass(p) = (deadstemc(p) + livestemc(p)) &
+                  stem_biomass(p) = (spinup_factor*deadstemc(p) + livestemc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
-                  
-                  if (spinup_state == 2) then
-                     stem_biomass(p) = 10._r8 * stem_biomass(p)
-                  end if
+
                else
                   leaf_biomass(p) = 0_r8
                   stem_biomass(p) = 0_r8
