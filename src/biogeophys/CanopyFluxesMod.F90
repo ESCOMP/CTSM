@@ -1074,8 +1074,12 @@ contains
                   / ((1._r8-frac_rad_abs_by_stem)*(- 4._r8*bir(p)*t_veg(p)**3 &
                   + 4._r8*sa_internal*emv(p)*sb*t_veg(p)**3 &
                   +dc1*wtga+dc2*wtgaq*qsatldT(p))+ cp_leaf/dtime)
-            if ( abs(temp - dt_veg(p) ) > 1.e-12 )then
+            if( temp /= 0._r8 )then
+            if ( abs(temp - dt_veg(p) )/abs(temp) > 1.d-14 )then
+               write(iulog,*) 'Difference = ', temp - dt_veg(p)
+               write(iulog,*) 'R Difference = ', (temp - dt_veg(p))/temp
                call endrun( "Difference greater than roundoff" )
+            end if
             end if
             t_veg(p) = tlbef(p) + dt_veg(p)
             dels = dt_veg(p)
@@ -1097,8 +1101,10 @@ contains
                     - (efsh + dc1*wtga*dt_veg(p)) - (efe(p) + &
                     dc2*wtgaq*qsatldT(p)*dt_veg(p)) &
                     - (cp_leaf/dtime)*(t_veg(p) - tl_ini)
-               if ( abs(temp - err(p) ) > 1.e-12 )then
+               if( temp /= 0._r8 )then
+               if ( abs(temp - err(p) )/abs(temp) > 1.d-14 )then
                   call endrun( "Difference greater than roundoff" )
+               end if
                end if
             end if
 
@@ -1231,9 +1237,11 @@ contains
               *(tlbef(p) + 4._r8*dt_veg(p)) + cir(p)*lw_grnd) &
                 - lw_leaf + lw_stem - eflx_sh_veg(p) - hvap*qflx_evap_veg(p) &
                 - ((t_veg(p)-tl_ini)*cp_leaf/dtime)
-         if ( abs(temp - err(p) ) > 1.e-11 )then
+         if( temp /= 0._r8 )then
+         if ( abs(temp - err(p) )/abs(temp) > 1.d-14 )then
             write(iulog,*) 'Difference = ', temp - err(p)
             call endrun( "Difference greater than roundoff" )
+         end if
          end if
 
          ! Fluxes from ground to canopy space
@@ -1326,8 +1334,10 @@ contains
               *(1.0_r8-frac_rad_abs_by_stem) &
               + emv(p)*emg(c)*sb*ts_ini**3*(ts_ini + 4._r8*dt_stem) &
               *frac_rad_abs_by_stem
-         if ( abs(temp - dlrad(p) ) > 1.e-12 )then
+         if( temp /= 0._r8 )then
+         if ( abs(temp - dlrad(p) ) > 1.d-14*temp )then
             call endrun( "Difference greater than roundoff" )
+         end if
          end if
 
          ! Upward longwave radiation above the canopy
@@ -1342,9 +1352,11 @@ contains
               + emv(p)*(1._r8+(1._r8-emg(c))*(1._r8-emv(p)))*sb &
               *ts_ini**3*(ts_ini+ 4._r8*dt_stem)*frac_rad_abs_by_stem &
               + emg(c)*(1._r8-emv(p))*sb*lw_grnd)
-         if ( abs(temp - ulrad(p) ) > 1.e-11 )then
+         if( temp /= 0._r8 )then
+         if ( abs(temp - ulrad(p) ) > 1.d-14*temp )then
             write(iulog,*) 'Difference = ', temp - ulrad(p)
             call endrun( "Difference greater than roundoff" )
+         end if
          end if
 
          ! Calculate the skin temperature as a weighted sum of all the ground and vegetated fraction
