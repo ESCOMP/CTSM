@@ -1,4 +1,106 @@
 ===============================================================
+Tag name:  ctsm5.1.dev020
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Tue Dec 29 17:47:30 MST 2020
+One-line Summary: Potential roundoff changes in preparation for bio-mass heat storage option
+
+Purpose of changes
+------------------
+
+This adds in some changes that may be roundoff different in preparation for bringing in the changes
+that allow turning on the bio-mass heat storage option. There's a few zeroed terms added to some calculations
+in CanopyFluxes. The new terms are identical to what will come in for BHS except the zeroed terms are
+not arrays here but scalars. I showed the new terms are only off by roundoff with a previous commit that added
+explicit tests for the terms and verified it for two tests.
+
+
+Bugs fixed or introduced
+------------------------
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Added new Clm51 compsets
+     I1PtClm51SpRs
+     I2000Clm51Sp
+     I2000Clm51SpRs
+     I1850Clm51Sp
+     I2000Clm51Fates
+     I1850Clm51SpNoAnthro
+     IHistClm51Sp
+
+Notes of particular relevance for developers: (including Code reviews and testing)
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Here I set some terms to zero that will be non-zero even when BHS is off
+   Earlier commits show the smaller set of changes that are needed.
+
+Changes to tests or testing: Switched one Clm50Sp test to Clm51Sp and added one HistClm51Sp test
+
+CTSM testing: regular
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests:
+
+    cheyenne - PASS
+
+  python testing (see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: izumi-PGI
+    - nature of change: roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+    Earlier commit tested the new terms versus the old and showed they were
+    order e-11 for absolute difference and e-14 relative difference.
+
+Detailed list of changes
+------------------------
+
+Pull Requests that document the changes (include PR ids): #1241
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1241 -- Small answer changes in preparation for adding option for bio-mass heat storage
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev019
 Originator(s):  sacks (Bill Sacks)
 Date:  Sat Dec 19 06:55:46 MST 2020
