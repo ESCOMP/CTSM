@@ -38,7 +38,6 @@ contains
     use clm_varpar    , only : nlevsoi
     use clm_varctl    , only : fatmlndfrc, fsurdat
     use clm_varctl    , only : use_soil_moisture_streams, single_column
-    !
     use ncdio_pio     , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen
     use abortutils    , only : endrun
     use shr_log_mod   , only : errMsg => shr_log_errMsg
@@ -328,9 +327,10 @@ contains
 
     use clm_varctl  , only : fsurdat, single_column
     use fileutils   , only : getfil
-    use ncdio_pio   , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen
+    use ncdio_pio   , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile, ncd_inqdlen, ncd_inqdid
     use abortutils  , only : endrun
     use shr_log_mod , only : errMsg => shr_log_errMsg
+    use shr_sys_mod , only : shr_sys_abort
 
     ! input/output variables
     integer, intent(out) :: ni
@@ -343,6 +343,8 @@ contains
     type(file_desc_t) :: ncid    ! netcdf file id
     integer           :: dimid   ! netCDF dimension id
     logical           :: readvar ! read variable in or not
+    logical :: dim_exists
+    logical :: dim_found = .false.
     !-------------------------------------------------------------------------------
 
     if (masterproc) then
@@ -354,8 +356,24 @@ contains
     endif
     call getfil(fsurdat, locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
-    call ncd_inqdlen(ncid, dimid, ni, 'lsmlon')
-    call ncd_inqdlen(ncid, dimid, nj, 'lsmlat')
+    dim_found = .false.
+    call ncd_inqdid(ncid, 'lsmlon', dimid, dim_exists)
+    if ( dim_exists ) then
+       dim_found = .true.
+       call ncd_inqdlen(ncid, dimid, ni, 'lsmlon')
+       call ncd_inqdlen(ncid, dimid, nj, 'lsmlat')
+    end if
+    if (.not. dim_found) then
+       call ncd_inqdid(ncid, 'gridcell', dimid, dim_exists)
+       if ( dim_exists ) then
+          dim_found = .true.
+          call ncd_inqdlen(ncid, dimid, ni, 'gridcell')
+          nj = 1
+       end if
+    end if
+    if (.not. dim_found) then
+       call shr_sys_abort('ERROR: surface dataset does not contain dims of lsmlon,lsmlat or gridcell')
+    end if
     call ncd_pio_closefile(ncid)
     gsize = ni*nj
     if (single_column) then
