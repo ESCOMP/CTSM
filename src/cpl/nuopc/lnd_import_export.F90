@@ -183,9 +183,8 @@ contains
     else
        send_to_atm = .false.
     end if
-    !DEBUG
+    ! for now always send to atm
     send_to_atm = .true.
-    !DEBUG
 
     call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -215,10 +214,25 @@ contains
     ! Advertise export fields
     !--------------------------------
 
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
-    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
+    ! The following namelist reads should always be called regardless of the send_to_atm value
+
+    ! Dry Deposition velocities from land - ALSO initialize drydep here
+    call seq_drydep_readnl("drv_flds_in", drydep_nflds)
+
+    ! Fire emissions fluxes from land
+    call shr_fire_emis_readnl('drv_flds_in', emis_nflds)
+
+    ! MEGAN VOC emissions fluxes from land
+    call shr_megan_readnl('drv_flds_in', megan_nflds)
+    if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
+
+    ! CARMA volumetric soil water from land
+    ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
+    call shr_carma_readnl('drv_flds_in', carma_fields)
 
     ! export to atm
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, trim(flds_scalar_name))
+    call fldlist_add(fldsFrLnd_num, fldsFrlnd, 'Sl_lfrin')
     if (send_to_atm) then
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_t          )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_tref       )
@@ -239,37 +253,21 @@ contains
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Fall_evap     )
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Fall_swnet    )
        ! call fldlist_add(fldsFrLnd_num, fldsFrlnd, Fall_methane  )
-
        ! dust fluxes from land (4 sizes)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, Fall_flxdst, ungridded_lbound=1, ungridded_ubound=4)
-
-       ! co2 fields from land
        if (flds_co2b .or. flds_co2c) then
-          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Fall_fco2_lnd )
+          call fldlist_add(fldsFrLnd_num, fldsFrlnd, Fall_fco2_lnd ) ! co2 fields from land
        end if
-
-       ! Dry Deposition velocities from land - ALSO initialize drydep here
-       call seq_drydep_readnl("drv_flds_in", drydep_nflds)
        if (drydep_nflds > 0) then
           call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_ddvel, ungridded_lbound=1, ungridded_ubound=drydep_nflds)
        end if
-
-       ! MEGAN VOC emissions fluxes from land
-       call shr_megan_readnl('drv_flds_in', megan_nflds)
-       if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
        if (shr_megan_mechcomps_n > 0) then
           call fldlist_add(fldsFrLnd_num, fldsFrLnd, Fall_voc, ungridded_lbound=1, ungridded_ubound=megan_nflds)
        end if
-
-       ! Fire emissions fluxes from land
-       call shr_fire_emis_readnl('drv_flds_in', emis_nflds)
        if (emis_nflds > 0) then
           call fldlist_add(fldsFrLnd_num, fldsFrLnd, Fall_fire, ungridded_lbound=1, ungridded_ubound=emis_nflds)
           call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_fztop)
        end if
-       ! CARMA volumetric soil water from land
-       ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
-       call shr_carma_readnl('drv_flds_in', carma_fields)
        if (carma_fields /= ' ') then
           call fldlist_add(fldsFrLnd_num, fldsFrlnd, Sl_soilw) ! optional for carma
        end if

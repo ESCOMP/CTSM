@@ -551,7 +551,7 @@ contains
        call lnd_set_decomp_and_domain_from_newmesh(domain_file, mesh, ni, nj, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
-       call NUOPC_CompAttributeGet(gcomp, name='mesh_ocnmask', value=meshfile_ocn, rc=rc)
+       call NUOPC_CompAttributeGet(gcomp, name='mesh_lndmask', value=meshfile_ocn, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
