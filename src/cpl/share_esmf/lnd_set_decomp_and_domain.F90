@@ -134,7 +134,7 @@ contains
           mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           if (masterproc) then
-             write(iulog,'(a)')'ocean mesh file ',trim(meshfile_mask)
+             write(iulog,'(a)')'mask mesh file ',trim(meshfile_mask)
           end if
           ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
           call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
