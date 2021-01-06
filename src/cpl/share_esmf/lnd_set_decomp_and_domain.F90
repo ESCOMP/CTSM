@@ -1,9 +1,10 @@
 module lnd_set_decomp_and_domain
 
   use ESMF
-  use shr_kind_mod      , only : r8 => shr_kind_r8, cl=>shr_kind_cl
-  use spmdMod           , only : masterproc
-  use clm_varctl        , only : iulog
+  use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl
+  use shr_sys_mod  , only : shr_sys_abort     
+  use spmdMod      , only : masterproc
+  use clm_varctl   , only : iulog
 
   implicit none
   private ! except
@@ -30,15 +31,14 @@ module lnd_set_decomp_and_domain
 contains
 !===============================================================================
 
-  subroutine lnd_set_decomp_and_domain_from_readmesh(mode, vm, meshfile_lnd, meshfile_ocn, mesh_ctsm, &
+  subroutine lnd_set_decomp_and_domain_from_readmesh(mode, vm, meshfile_lnd, meshfile_mask, mesh_ctsm, &
        ni, nj, rc)
 
     use decompInitMod , only : decompInit_ocn, decompInit_lnd, decompInit_lnd3D
     use domainMod     , only : ldomain, domain_init
     use decompMod     , only : ldecomp, bounds_type, get_proc_bounds
     use clm_varpar    , only : nlevsoi
-    use clm_varctl    , only : fatmlndfrc, fsurdat
-    use clm_varctl    , only : use_soil_moisture_streams, single_column
+    use clm_varctl    , only : fatmlndfrc, use_soil_moisture_streams, single_column
     use ncdio_pio     , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile
     use ncdio_pio     , only : ncd_defdim, ncd_defvar, ncd_enddef, ncd_inqdlen
     use ncdio_pio     , only : ncd_int, ncd_double, ncd_pio_createfile
@@ -50,13 +50,13 @@ contains
     character(len=*)    , intent(in)    :: mode  ! lilac or nuopc mode
     type(ESMF_VM)       , intent(in)    :: vm
     character(len=*)    , intent(in)    :: meshfile_lnd
-    character(len=*)    , intent(in)    :: meshfile_ocn
+    character(len=*)    , intent(in)    :: meshfile_mask
     type(ESMF_Mesh)     , intent(out)   :: mesh_ctsm
     integer             , intent(out)   :: ni,nj ! global grid dimensions
     integer             , intent(out)   :: rc
 
     ! local variables
-    type(ESMF_Mesh)     :: mesh_ocninput
+    type(ESMF_Mesh)     :: mesh_maskinput
     type(ESMF_Mesh)     :: mesh_lndinput
     type(ESMF_DistGrid) :: distgrid_ctsm
     character(CL)       :: cvalue          ! config data
@@ -101,7 +101,8 @@ contains
        write(iulog,'(a)')'land mesh file ',trim(meshfile_lnd)
     end if
 
-    if (mode == 'lilac' .and. trim(fatmlndfrc) /= 'null') then
+    if (mode == 'lilac') then
+       ! TODO: how can lilac be generalized to not read fatmlndfrc- for now this is hard-wired
        read_fatmlndfrc = .true.
     else
        read_fatmlndfrc = .false.
@@ -127,16 +128,16 @@ contains
        write_landmask_file = .false.
        read_landmask_file = .false.
 
-       ! Read in ocean mesh file if its not null, map the mask to the land mesh and write out the landfrac and land mask
-       if (trim(meshfile_ocn) /= 'null') then
-          ! first read in ocn mask meshfile
-          mesh_ocninput = ESMF_MeshCreate(filename=trim(meshfile_ocn), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+       ! Read in mask mesh file if its not null, map the mask to the land mesh and write out the landfrac and land mask
+       if (trim(meshfile_mask) /= 'null') then
+          ! first read in mask meshfile
+          mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           if (masterproc) then
-             write(iulog,'(a)')'ocean mesh file ',trim(meshfile_ocn)
+             write(iulog,'(a)')'ocean mesh file ',trim(meshfile_mask)
           end if
           ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
-          call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_ocninput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
+          call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           
           if (write_landmask_file) then
@@ -663,13 +664,11 @@ contains
     real(r8) , pointer :: rtemp_glob(:)
     type(ESMF_Field)   :: areaField
 
-    ! for reading in fatmlndfrc to override mesh data
-    type(file_desc_t)  :: ncid  ! netcdf id
-    character(len=CL)  :: locfn ! local file name
-    logical            :: override_lon  = .false.
-    logical            :: override_lat  = .true.
-    logical            :: override_area = .false.
-    real(r8), allocatable :: rdata2d(:,:)       ! temporary
+    ! for sanity check - remove when this is done
+    type(file_desc_t)     :: ncid  ! netcdf id
+    character(len=CL)     :: locfn ! local file name
+    real(r8), pointer :: lonc_atmlndfrc(:)
+    real(r8), pointer :: latc_atmlndfrc(:)
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
@@ -740,23 +739,28 @@ contains
        deallocate(rtemp_glob)
     end if
 
-    ! TODO: For BFB with previous baselines - the following read will overwrite 
-    ! ldomain%latc, ldomain%lonc and ldomain%area with the data above
-    ! Note that latitude and longitude read in are in degrees
+    ! Sanity check- remove this when it is done
     call getfil( trim(fatmlndfrc), locfn, 0 )
     call ncd_pio_openfile (ncid, trim(locfn), 0)
-    if (override_lon .or. override_lat .or. override_area) then
-       if (override_lon) then
-          call ncd_io(ncid=ncid, varname= 'xc' , flag='read', data=ldomain%lonc , dim1name=grlnd)
+    allocate(lonc_atmlndfrc(numownedelements))
+    allocate(latc_atmlndfrc(numownedelements))
+    call ncd_io(ncid=ncid, varname= 'xc' , flag='read', data=lonc_atmlndfrc , dim1name=grlnd)
+    call ncd_io(ncid=ncid, varname= 'yc' , flag='read', data=latc_atmlndfrc , dim1name=grlnd)
+    do g = begg,endg
+       n = g - begg + 1
+       if (abs(lonc_atmlndfrc(n) - ldomain%lonc(g)) > 1.e-11) then
+          write(6,'(a,3(d20.13,2x))')'ERROR: lonc_atmlndfrac(n), ldomain%lonc(g), abs(diff) = ',&
+               lonc_atmlndfrc(n), ldomain%lonc(g), abs(lonc_atmlndfrc(n) - ldomain%lonc(g))
+          call shr_sys_abort()
        end if
-       if (override_lat) then
-          call ncd_io(ncid=ncid, varname= 'yc' , flag='read', data=ldomain%latc , dim1name=grlnd)
+       if (abs(latc_atmlndfrc(n) - ldomain%latc(g)) > 1.e-11) then
+          write(6,'(a,3(d20.13,2x))')'ERROR: latc_atmlndfrac(n), ldomain%latc(g), abs(diff) = ',&
+               latc_atmlndfrc(n), ldomain%latc(g), abs(latc_atmlndfrc(n) - ldomain%latc(g))
+          call shr_sys_abort()
        end if
-       if (override_area) then
-          call ncd_io(ncid=ncid, varname= 'area', flag='read', data=ldomain%area, dim1name=grlnd)
-          ldomain%area = ldomain%area * (re**2) ! convert from radians**2 to km**2
-       end if
-    end if
+    end do
+    deallocate(lonc_atmlndfrc)
+    deallocate(latc_atmlndfrc)
     call ncd_pio_closefile(ncid)
 
   end subroutine lnd_set_ldomain_gridinfo_from_mesh

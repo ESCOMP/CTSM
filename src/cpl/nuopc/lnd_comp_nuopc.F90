@@ -390,7 +390,7 @@ contains
     integer                 :: shrlogunit            ! original log unit
     type(bounds_type)       :: bounds                ! bounds
     integer                 :: ni, nj
-    character(len=CL)       :: meshfile_ocn
+    character(len=CL)       :: meshfile_mask
     character(len=CL)       :: domain_file
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
@@ -551,12 +551,12 @@ contains
        call lnd_set_decomp_and_domain_from_newmesh(domain_file, mesh, ni, nj, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
-       call NUOPC_CompAttributeGet(gcomp, name='mesh_lndmask', value=meshfile_ocn, rc=rc)
+       call NUOPC_CompAttributeGet(gcomp, name='mesh_mask', value=meshfile_mask, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call lnd_set_decomp_and_domain_from_readmesh(mode='nuopc', vm=vm, &
-            meshfile_lnd=model_meshfile, meshfile_ocn=meshfile_ocn, mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
+            meshfile_lnd=model_meshfile, meshfile_mask=meshfile_mask, mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
