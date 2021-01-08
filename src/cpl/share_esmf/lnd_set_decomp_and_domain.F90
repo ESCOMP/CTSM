@@ -2,7 +2,7 @@ module lnd_set_decomp_and_domain
 
   use ESMF
   use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl
-  use shr_sys_mod  , only : shr_sys_abort     
+  use shr_sys_mod  , only : shr_sys_abort
   use spmdMod      , only : masterproc
   use clm_varctl   , only : iulog
 
@@ -11,7 +11,7 @@ module lnd_set_decomp_and_domain
 
   ! Module public routines
   public :: lnd_set_decomp_and_domain_from_readmesh
-  public :: lnd_set_decomp_and_domain_from_newmesh
+  public :: lnd_set_decomp_and_domain_from_createmesh
 
   ! Module private routines
   private :: lnd_get_global_dims
@@ -19,11 +19,10 @@ module lnd_set_decomp_and_domain
   private :: lnd_set_lndmask_from_lndmesh
   private :: lnd_set_ldomain_gridinfo_from_mesh
   private :: chkerr
-  private :: nc_check_err
+  private :: pio_check_err
 
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
-
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -38,13 +37,7 @@ contains
     use domainMod     , only : ldomain, domain_init
     use decompMod     , only : ldecomp, bounds_type, get_proc_bounds
     use clm_varpar    , only : nlevsoi
-    use clm_varctl    , only : fatmlndfrc, use_soil_moisture_streams, single_column
-    use ncdio_pio     , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile
-    use ncdio_pio     , only : ncd_defdim, ncd_defvar, ncd_enddef, ncd_inqdlen
-    use ncdio_pio     , only : ncd_int, ncd_double, ncd_pio_createfile
-    use abortutils    , only : endrun
-    use shr_log_mod   , only : errMsg => shr_log_errMsg
-    use fileutils     , only : getfil
+    use clm_varctl    , only : use_soil_moisture_streams
 
     ! input/output variables
     character(len=*)    , intent(in)    :: mode  ! lilac or nuopc mode
@@ -59,121 +52,61 @@ contains
     type(ESMF_Mesh)     :: mesh_maskinput
     type(ESMF_Mesh)     :: mesh_lndinput
     type(ESMF_DistGrid) :: distgrid_ctsm
-    character(CL)       :: cvalue          ! config data
-    integer             :: nlnd, nocn      ! local size of arrays
     integer             :: g,n             ! indices
+    integer             :: nlnd, nocn      ! local size of arrays
+    integer             :: gsize           ! global size of grid
+    logical             :: isgrid2d        ! true => grid is 2d
     type(bounds_type)   :: bounds          ! bounds
-    integer             :: begg,endg
+    integer             :: begg,endg       ! local bounds
     integer  , pointer  :: gindex_lnd(:)   ! global index space for just land points
     integer  , pointer  :: gindex_ocn(:)   ! global index space for just ocean points
     integer  , pointer  :: gindex_ctsm(:)  ! global index space for land and ocean points
-    integer  , pointer  :: gindex_input(:) ! global index space for land and ocean points
     integer  , pointer  :: lndmask_glob(:)
     real(r8) , pointer  :: lndfrac_glob(:)
-    integer             :: lsize_input
-    integer             :: gsize
-    logical             :: isgrid2d
-    character(len=CL)   :: locfn
-    type(file_desc_t)   :: ncid            ! netcdf file id
-    integer             :: dimid           ! netCDF dimension id
-    integer             :: varid
-    logical             :: readvar         ! read variable in or not
-    logical             :: fileexists
-    logical             :: read_fatmlndfrc
-    logical             :: write_landmask_file 
-    logical             :: read_landmask_file 
-    character(len=CL)   :: flandfrac = 'landfrac.nc'
     !-------------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
 
-    ! Determine global 2d sizes from read of dimensions of surface dataset
-    call lnd_get_global_dims(ni, nj, gsize, isgrid2d)
+    ! Write diag info
+    if (masterproc) then
+       write(iulog,*)
+       write(iulog,'(a)')' Input land mesh file '//trim(meshfile_lnd)
+       write(iulog,'(a)')' Input mask mesh file '//trim(meshfile_mask)
+       if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
+          write(iulog, '(a)') ' Obtaining land mask and fraction from mask file '//trim(meshfile_mask)
+       else
+          write(iulog, '(a)') ' Obtaining land mask and fraction from land mesh file '//trim(meshfile_lnd)
+       end if
+       write(iulog,*)
+    end if
 
-    ! Allocate global memory for land mask and land fraction
+    ! Determine global 2d sizes from read of dimensions of surface dataset and allocate global memory
+    call lnd_get_global_dims(ni, nj, gsize, isgrid2d)
     allocate(lndmask_glob(gsize)); lndmask_glob(:) = 0
     allocate(lndfrac_glob(gsize)); lndfrac_glob(:) = 0._r8
 
-    ! read in the land mesh from the file
+    ! Read in the land mesh from the file
     mesh_lndinput = ESMF_MeshCreate(filename=trim(meshfile_lnd), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (masterproc) then
-       write(iulog,'(a)')'land mesh file ',trim(meshfile_lnd)
+
+    ! Read in mask meshfile if needed
+    if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
+       mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
-    if (mode == 'lilac') then
-       ! TODO: how can lilac be generalized to not read fatmlndfrc- for now this is hard-wired
-       read_fatmlndfrc = .true.
+    ! Determine lndmask_glob and lndfrac_glob
+    if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
+       ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
+       call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
-       read_fatmlndfrc = .false.
+       ! obtain land mask from land mesh file - assume that land frac is identical to land mask
+       call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
 
-    ! Set global land fraction and global land mask across all processors
-    if (read_fatmlndfrc) then
-
-       ! Read in global land mask and land fraction from fatmlndfrc
-       call getfil( trim(fatmlndfrc), locfn, 0 )
-       call ncd_pio_openfile (ncid, trim(locfn), 0)
-       call ncd_io(ncid=ncid, varname='mask', data=lndmask_glob, flag='read', readvar=readvar)
-       if (.not. readvar) call endrun( msg=' ERROR: variable mask not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
-       allocate(lndfrac_glob(ni*nj)); lndfrac_glob(:) = 0._r8
-       call ncd_io(ncid=ncid, varname='frac', data=lndfrac_glob, flag='read', readvar=readvar)
-       if (.not. readvar) call endrun( msg=' ERROR: variable frac not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
-       call ncd_pio_closefile(ncid)
-
-    else
-
-       ! TODO: write landmask_file on initialization and read it in on restart or branch
-       ! for now see if any tests fail like ERP if the file is not written out
-       write_landmask_file = .false.
-       read_landmask_file = .false.
-
-       ! Read in mask mesh file if its not null, map the mask to the land mesh and write out the landfrac and land mask
-       if (trim(meshfile_mask) /= 'null') then
-          ! first read in mask meshfile
-          mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          if (masterproc) then
-             write(iulog,'(a)')'mask mesh file ',trim(meshfile_mask)
-          end if
-          ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
-          call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          
-          if (write_landmask_file) then
-             ! NOW write land mesh/fraction to file in executable directory - this will be used from now on
-             if (masterproc) then
-                write(iulog,*)
-                write(iulog,'(a)') 'lnd_set_decomp_and_domain: writing landmask and landfrac data to landfrac.nc'
-                write(iulog,*)
-             end if
-             call ncd_pio_createfile(ncid, trim(flandfrac))
-             call ncd_defdim (ncid, 'gridcell', gsize, dimid)
-             call ncd_defvar(ncid=ncid, varname='landmask', xtype=ncd_int   , dim1name='gridcell')
-             call ncd_defvar(ncid=ncid, varname='landfrac', xtype=ncd_double, dim1name='gridcell')
-             call ncd_enddef(ncid)
-             call ncd_io(ncid=ncid, varname='landmask', data=lndmask_glob, flag='write')
-             call ncd_io(ncid=ncid, varname='landfrac', data=lndfrac_glob, flag='write')
-             call ncd_pio_closefile(ncid)
-          else if (read_landmask_file) then
-             if (masterproc) then
-                write(iulog,*)
-                write(iulog,'(a)') 'lnd_set_decomp_and_domain: reading landmask and landfrac data from landfrac.nc'
-                write(iulog,*)
-             end if
-             call ncd_pio_openfile (ncid, trim(flandfrac), 0)
-             call ncd_io(ncid=ncid, varname='landmask', data=lndmask_glob, flag='read')
-             call ncd_io(ncid=ncid, varname='landfrac', data=lndfrac_glob, flag='read')
-             call ncd_pio_closefile(ncid)
-          end if
-       else
-          ! obtain land mask from land mesh file - assume that land frac is identical to land mask
-          call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
-    end if
-
-    ! Determine lnd decomposition that will be used by ctsm
+    ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
     call decompInit_lnd(lni=ni, lnj=nj, amask=lndmask_glob)
     if (use_soil_moisture_streams) then
        call decompInit_lnd3D(lni=ni, lnj=nj, lnk=nlevsoi)
@@ -208,6 +141,8 @@ contains
        ldomain%mask(g) = lndmask_glob(gindex_lnd(n))
        ldomain%frac(g) = lndfrac_glob(gindex_lnd(n))
     end do
+
+    ! Deallocate global pointer memory
     deallocate(lndmask_glob)
     deallocate(lndfrac_glob)
 
@@ -232,12 +167,248 @@ contains
     call lnd_set_ldomain_gridinfo_from_mesh(mesh_ctsm, vm, gindex_ctsm, begg, endg, isgrid2d, ni, nj, ldomain, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Deallocate memory
+    ! Deallocate local pointer memory
     deallocate(gindex_lnd)
     deallocate(gindex_ocn)
     deallocate(gindex_ctsm)
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
+
+  !===============================================================================
+  subroutine lnd_set_decomp_and_domain_from_createmesh(domain_file, vm, mesh_ctsm, ni, nj, rc)
+
+    ! Generate a new mesh from the input domain file and set the mask to 1
+
+    use decompInitMod , only : decompInit_lnd, decompInit_lnd3D
+    use decompMod     , only : ldecomp, bounds_type, get_proc_bounds
+    use domainMod     , only : ldomain, domain_init
+    use clm_varctl    , only : use_soil_moisture_streams
+    use clm_varctl    , only : scmlat, scmlon, single_column
+    use clm_varpar    , only : nlevsoi
+    use ncdio_pio     , only : pio_subsystem, io_type
+    use pio
+
+    ! input/output variables
+    character(len=CL)   , intent(in)  :: domain_file
+    type(ESMF_VM)       , intent(in)  :: vm
+    type(ESMF_Mesh)     , intent(out) :: mesh_ctsm
+    integer             , intent(out) :: ni,nj  ! global grid dimensions
+    integer             , intent(out) :: rc
+
+    ! local variables
+    type(ESMF_Grid)       :: lgrid
+    type(ESMF_Mesh)       :: mesh_lndcreate
+    type(ESMF_DistGrid)   :: distgrid_ctsm
+    integer, pointer      :: gindex_ctsm(:)       ! global index space for just land points
+    logical               :: isgrid2d
+    integer               :: i,j,g,n
+    integer               :: nv
+    integer               :: ierr
+    integer               :: dimid
+    integer               :: varid_xv, varid_yv
+    integer               :: varid_xc, varid_yc
+    integer               :: varid_area
+    real(r8), allocatable :: xc(:,:), yc(:,:)     ! coordinates of centers
+    real(r8), allocatable :: xv(:,:,:), yv(:,:,:) ! coordinates of corners
+    integer               :: maxIndex(2)
+    real(r8)              :: mincornerCoord(2)
+    real(r8)              :: maxcornerCoord(2)
+    integer               :: spatialDim
+    integer               :: numownedelements
+    real(r8) , pointer    :: ownedElemCoords(:)
+    integer, allocatable  :: lnd_mask(:)
+    type(bounds_type)     :: bounds               ! bounds
+    integer               :: begg,endg
+    integer               :: nlnd
+    integer               :: start(2)             ! start index to read in for single column mode
+    integer               :: count(2)             ! number of points to read in
+    real(r8)              :: scol_data(1)         ! temporary
+    integer , allocatable :: mask(:)              ! temporary
+    real(r8), allocatable :: lats(:)              ! temporary
+    real(r8), allocatable :: lons(:)              ! temporary
+    real(r8), allocatable :: pos_lons(:)          ! temporary
+    real(r8)              :: pos_scmlon           ! temporary
+    real(r8)              :: scol_area            ! temporary
+    type(file_desc_t)     :: pioid
+    integer               :: rcode                ! error code
+    !-------------------------------------------------------------------------------
+
+    rc = ESMF_SUCCESS
+
+    rcode = pio_openfile(pio_subsystem, pioid, io_type, trim(domain_file), pio_nowrite)
+    call pio_check_err(rcode, 'error opening file '//trim(domain_file))
+    call pio_seterrorhandling(pioid, PIO_BCAST_ERROR)
+    rcode = pio_inq_dimid(pioid, 'ni', dimid)
+    call pio_check_err(rcode, 'pio_inq_dimid for ni in file '//trim(domain_file))
+    rcode = pio_inquire_dimension(pioid, dimid, len=ni)
+    call pio_check_err(rcode, 'pio_inq_dimension for ni in file '//trim(domain_file))
+    rcode = pio_inq_dimid(pioid, 'nj', dimid)
+    call pio_check_err(rcode, 'pio_inq_dimid for nj in file '//trim(domain_file))
+    rcode = pio_inquire_dimension(pioid, dimid, len=nj)
+    call pio_check_err(rcode, 'pio_inq_dimension for nj in file '//trim(domain_file))
+    rcode = pio_inq_dimid(pioid, 'nv', dimid)
+    call pio_check_err(rcode, 'pio_inq_dimid for nv in file '//trim(domain_file))
+    rcode = pio_inquire_dimension(pioid, dimid, len=nv)
+    call pio_check_err(rcode, 'pio_inq_dimension for nv in file '//trim(domain_file))
+    rcode = pio_inq_varid(pioid, 'xc' , varid_xc)
+    call pio_check_err(rcode, 'pio_inq_varid for yc in file '//trim(domain_file))
+    rcode = pio_inq_varid(pioid, 'yc' , varid_yc)
+    call pio_check_err(rcode, 'pio_inq_varid for yc in file '//trim(domain_file))
+    rcode = pio_inq_varid(pioid, 'xv' , varid_xv)
+    call pio_check_err(rcode, 'pio_inq_varid for xv in file '//trim(domain_file))
+    rcode = pio_inq_varid(pioid, 'yv' , varid_yv)
+    call pio_check_err(rcode, 'pio_inq_varid for yv in file '//trim(domain_file))
+    rcode = pio_inq_varid(pioid, 'area', varid_area)
+    call pio_check_err(rcode, 'pio_inq_varid for area in file '//trim(domain_file))
+
+    if (single_column) then
+
+       ! In this case the domain file is not a single point file - but normally a
+       ! global domain file where a nearest neighbor search will be done to find
+       ! the closest point in the domin file to scol_lon and scol_lat
+
+       ! get center lats and lons from domain file
+       allocate(xc(ni,nj))
+       allocate(yc(ni,nj))
+       rcode = pio_get_var(pioid, varid_xc, xc)
+       call pio_check_err(rcode, 'pio_get_var for xc in file '//trim(domain_file))
+       rcode = pio_get_var(pioid, varid_yc, yc)
+       call pio_check_err(rcode, 'pio_get_var for yc in file '//trim(domain_file))
+
+       ! find nearest neighbor indices of scmlon and scmlat in domain file
+       allocate(lats(nj))
+       allocate(lons(ni))
+       allocate(pos_lons(ni))
+       do i = 1,ni
+          lons(i) = xc(i,1)
+       end do
+       do j = 1,nj
+          lats(j) = yc(1,j)
+       end do
+       pos_lons(:)  = mod(lons(:)  + 360._r8, 360._r8)
+       pos_scmlon = mod(scmlon + 360._r8, 360._r8)
+       start(1) = (MINLOC(abs(pos_lons - pos_scmlon), dim=1))
+       start(2) = (MINLOC(abs(lats      -scmlat    ), dim=1))
+       count(:) = 1
+       deallocate(lons)
+       deallocate(lats)
+
+       ! read in value of nearest neighbor lon and RESET scmlat
+       rcode = pio_get_var(pioid, varid_xc, start, count, scol_data)
+       call pio_check_err(rcode, 'pio_get_var for xc in file '//trim(domain_file))
+       scmlon = scol_data(1)
+
+       ! read in value of nearest neighbor lon and RESET scmlon
+       rcode = pio_get_var(pioid, varid_yc, start, count, scol_data)
+       call pio_check_err(rcode, 'pio_get_var for yc in file '//trim(domain_file))
+       scmlat = scol_data(1)
+
+       ! get area of gridcell
+       rcode = pio_get_var(pioid, varid_area, start, count, scol_data)
+       call pio_check_err(rcode, 'pio_get_var for area in file '//trim(domain_file))
+       scol_area = scol_data(1)
+
+       ! reset ni and nj to be single point values 
+       ni = 1   
+       nj = 1
+
+       ! determine mincornerCoord and maxcornerCoord neede to create ESMF grid
+       maxIndex(1)       = 1                        ! number of lons
+       maxIndex(2)       = 1                        ! number of lats
+       mincornerCoord(1) = scmlon - scol_area/2._r8 ! min lon
+       mincornerCoord(2) = scmlat - scol_area/2._r8 ! min lat
+       maxcornerCoord(1) = scmlon + scol_area/2._r8 ! max lon
+       maxcornerCoord(2) = scmlat + scol_area/2._r8 ! max lat
+       deallocate(xc,yc)
+
+    else
+
+       ! allocate xv and yv and read them in
+       allocate(xv(nv,ni,nj))
+       allocate(yv(nv,ni,nj))
+       rcode = pio_get_var(pioid, varid_xv, xv)
+       call pio_check_err(rcode, 'pio_get_var for xv in file '//trim(domain_file))
+       rcode = pio_get_var(pioid, varid_yv, yv)
+       call pio_check_err(rcode, 'pio_get_var for yv in file '//trim(domain_file))
+
+       ! determine mincornerCoord and maxcornerCoord neede to create ESMF grid
+       maxIndex(1)       = ni          ! number of lons
+       maxIndex(2)       = nj          ! number of lats
+       mincornerCoord(1) = xv(1,1,1)   ! min lon
+       mincornerCoord(2) = yv(1,1,1)   ! min lat
+       maxcornerCoord(1) = xv(3,ni,nj) ! max lon
+       maxcornerCoord(2) = yv(3,ni,nj) ! max lat
+       deallocate(xv,yv)
+
+    end if
+
+    ! close file
+    call pio_seterrorhandling(pioid, PIO_INTERNAL_ERROR)
+    call pio_closefile(pioid)
+
+    ! create the ESMF grid
+    lgrid = ESMF_GridCreateNoPeriDimUfrm (maxindex=maxindex, &
+         mincornercoord=mincornercoord, maxcornercoord= maxcornercoord, &
+         staggerloclist=(/ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER/), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! create the mesh from the lgrid
+    mesh_lndcreate =  ESMF_MeshCreate(lgrid, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Set the mesh mask to 1
+    call ESMF_MeshGet(mesh_lndcreate, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    allocate(ownedElemCoords(spatialDim*numownedelements))
+    call ESMF_MeshGet(mesh_lndcreate, ownedElemCoords=ownedElemCoords, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    allocate(lnd_mask(numownedelements))
+    lnd_mask(:) = 1
+    ! call ESMF_MeshSet(mesh_lndcreate, elementMask=lnd_mask, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Determine ldecomp and ldomain
+    call decompInit_lnd(lni=ni, lnj=nj, amask=lnd_mask)
+    if (use_soil_moisture_streams) then
+       call decompInit_lnd3D(lni=ni, lnj=nj, lnk=nlevsoi)
+    end if
+
+    ! Initialize processor bounds
+    call get_proc_bounds(bounds)
+    begg = bounds%begg
+    endg = bounds%endg
+
+    ! Create gindex_ctsm
+    nlnd = endg - begg + 1
+    allocate(gindex_ctsm(nlnd))
+    do g = begg, endg
+       n = 1 + (g - begg)
+       gindex_ctsm(n) = ldecomp%gdc2glo(g)
+    end do
+
+    ! Initialize domain data structure
+    isgrid2d = .true.
+    call domain_init(domain=ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=begg, nend=endg)
+
+    ! Determine ldomain%mask and ldomain%frac
+    do g = begg, endg
+       ldomain%mask(g) = 1
+       ldomain%frac(g) = 1._r8
+    end do
+
+    ! Generate a new mesh on the gindex decomposition
+    distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    mesh_ctsm = ESMF_MeshCreate(mesh_lndcreate, elementDistGrid=distgrid_ctsm, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Set ldomain%lonc, ldomain%latc and ldomain%area
+    call lnd_set_ldomain_gridinfo_from_mesh(mesh_ctsm, vm, gindex_ctsm, begg, endg, isgrid2d, ni, nj, ldomain, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    deallocate(lnd_mask)
+
+  end subroutine lnd_set_decomp_and_domain_from_createmesh
 
   !===============================================================================
   subroutine lnd_get_global_dims(ni, nj, gsize, isgrid2d)
@@ -312,136 +483,6 @@ contains
     end if
 
   end subroutine lnd_get_global_dims
-
-  !===============================================================================
-  subroutine lnd_set_decomp_and_domain_from_newmesh(domain_file, mesh, ni, nj, rc)
-
-    ! Generate a new mesh from the input domain file and set the mask to 1
-
-    use decompInitMod , only : decompInit_lnd, decompInit_lnd3D
-    use decompMod     , only : ldecomp, bounds_type, get_proc_bounds
-    use domainMod     , only : ldomain, domain_init
-    use clm_varctl    , only : use_soil_moisture_streams, single_column
-    use clm_varpar    , only : nlevsoi
-    use netcdf        , only : nf90_open, nf90_nowrite, nf90_noerr, nf90_close, nf90_strerror
-    use netcdf        , only : nf90_inq_dimid, nf90_inq_varid, nf90_get_var
-    use netcdf        , only : nf90_inquire_dimension, nf90_inquire_variable
-
-    ! input/output variables
-    character(len=CL)   , intent(in)  :: domain_file
-    type(ESMF_Mesh)     , intent(out) :: mesh
-    integer             , intent(out) :: ni,nj  ! global grid dimensions
-    integer             , intent(out) :: rc
-
-    ! local variables
-    logical               :: isgrid2d
-    integer               :: g,n
-    integer               :: nv
-    integer               :: ncid, ierr
-    integer               :: dimid_ni, dimid_nj, dimid_nv
-    integer               :: maxIndex(2)
-    real(r8)              :: mincornerCoord(2)
-    real(r8)              :: maxcornerCoord(2)
-    type(ESMF_Grid)       :: lgrid
-    real(r8), allocatable :: xv(:,:,:), yv(:,:,:)
-    integer               :: varid_xv, varid_yv
-    integer               :: numownedelements
-    integer, allocatable  :: lnd_mask(:)
-    type(bounds_type)     :: bounds          ! bounds
-    integer               :: begg,endg
-    integer               :: nlnd
-    integer, pointer      :: gindex_lnd(:)   ! global index space for just land points
-    !-------------------------------------------------------------------------------
-
-    rc = ESMF_SUCCESS
-
-    ! open file
-    ierr = nf90_open(domain_file, NF90_NOWRITE, ncid)
-    call nc_check_err(ierr, 'nf90_open', trim(domain_file))
-    ! get dimension ids
-    ierr = nf90_inq_dimid(ncid, 'ni', dimid_ni)
-    call nc_check_err(ierr, 'nf90_inq_dimid for ni', trim(domain_file))
-    ierr = nf90_inq_dimid(ncid, 'nj', dimid_nj)
-    call nc_check_err(ierr, 'nf90_inq_dimid for nj', trim(domain_file))
-    ierr = nf90_inq_dimid(ncid, 'nv', dimid_nv)
-    call nc_check_err(ierr, 'nf90_inq_dimid for nv', trim(domain_file))
-    ! get dimension values
-    ierr = nf90_inquire_dimension(ncid, dimid_ni, len=ni)
-    call nc_check_err(ierr, 'nf90_inq_dimension for ni', trim(domain_file))
-    ierr = nf90_inquire_dimension(ncid, dimid_nj, len=nj)
-    call nc_check_err(ierr, 'nf90_inq_dimension for nj', trim(domain_file))
-    ierr = nf90_inquire_dimension(ncid, dimid_nv, len=nv)
-    call nc_check_err(ierr, 'nf90_inq_dimension for nv', trim(domain_file))
-    ! get variable ids
-    ierr = nf90_inq_varid(ncid, 'xv', varid_xv)
-    call nc_check_err(ierr, 'nf90_inq_varid for xv', trim(domain_file))
-    ierr = nf90_inq_varid(ncid, 'yv', varid_yv)
-    call nc_check_err(ierr, 'nf90_inq_varid for yv', trim(domain_file))
-    ! allocate memory for variables and get variable values
-    allocate(xv(nv,ni,nj), yv(nv,ni,nj))
-    ierr = nf90_get_var(ncid, varid_xv, xv)
-    call nc_check_err(ierr, 'nf90_get_var for xv', trim(domain_file))
-    ierr = nf90_get_var(ncid, varid_yv, yv)
-    call nc_check_err(ierr, 'nf90_get_var for yv', trim(domain_file))
-    ! close file
-    ierr = nf90_close(ncid)
-    call nc_check_err(ierr, 'nf90_close', trim(domain_file))
-    ! create the grid
-    maxIndex(1)       = ni          ! number of lons
-    maxIndex(2)       = nj          ! number of lats
-    mincornerCoord(1) = xv(1,1,1)   ! min lon
-    mincornerCoord(2) = yv(1,1,1)   ! min lat
-    maxcornerCoord(1) = xv(3,ni,nj) ! max lon
-    maxcornerCoord(2) = yv(3,ni,nj) ! max lat
-    deallocate(xv,yv)
-    lgrid = ESMF_GridCreateNoPeriDimUfrm (maxindex=maxindex, &
-         mincornercoord=mincornercoord, maxcornercoord= maxcornercoord, &
-         staggerloclist=(/ESMF_STAGGERLOC_CENTER, ESMF_STAGGERLOC_CORNER/), rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! create the mesh from the grid
-    mesh =  ESMF_MeshCreate(lgrid, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Set the mesh mask to 1
-    call ESMF_MeshGet(mesh, numOwnedElements=numOwnedElements, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    allocate(lnd_mask(numownedelements))
-    lnd_mask(:) = 1
-    call ESMF_MeshSet(mesh, elementMask=lnd_mask, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Determine ldecomp and ldomain
-    call decompInit_lnd(lni=ni, lnj=nj, amask=lnd_mask)
-    if (use_soil_moisture_streams) then
-       call decompInit_lnd3D(lni=ni, lnj=nj, lnk=nlevsoi)
-    end if
-
-    ! Initialize processor bounds
-    call get_proc_bounds(bounds)
-    begg = bounds%begg
-    endg = bounds%endg
-
-    ! Create ctsm gindex_lnd
-    nlnd = endg - begg + 1
-    allocate(gindex_lnd(nlnd))
-    do g = begg, endg
-       n = 1 + (g - begg)
-       gindex_lnd(n) = ldecomp%gdc2glo(g)
-    end do
-
-    ! Initialize domain data structure
-    isgrid2d = .true.
-    call domain_init(domain=ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=begg, nend=endg)
-
-    ! Determine ldomain%mask and ldomain%frac
-    do g = begg, endg
-       ldomain%mask(g) = 1
-       ldomain%frac(g) = 1._r8
-    end do
-    deallocate(lnd_mask)
-
-  end subroutine lnd_set_decomp_and_domain_from_newmesh
 
   !===============================================================================
   subroutine lnd_set_lndmask_from_maskmesh(mesh_lnd, mesh_mask, vm, gsize, lndmask_glob, lndfrac_glob, rc)
@@ -648,7 +689,7 @@ contains
     integer           , intent(in)    :: gindex(:)
     integer           , intent(in)    :: begg,endg
     logical           , intent(in)    :: isgrid2d
-    integer           , intent(in)    :: ni, nj 
+    integer           , intent(in)    :: ni, nj
     type(domain_type) , intent(inout) :: ldomain
     integer           , intent(out)   :: rc
 
@@ -665,8 +706,8 @@ contains
     type(ESMF_Field)   :: areaField
 
     ! for sanity check - remove when this is done
-    type(file_desc_t)     :: ncid  ! netcdf id
-    character(len=CL)     :: locfn ! local file name
+    type(file_desc_t) :: ncid  ! netcdf id
+    character(len=CL) :: locfn ! local file name
     real(r8), pointer :: lonc_atmlndfrc(:)
     real(r8), pointer :: latc_atmlndfrc(:)
     !-------------------------------------------------------------------------------
@@ -677,8 +718,6 @@ contains
     call ESMF_MeshGet(mesh, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
     allocate(ownedElemCoords(spatialDim*numownedelements))
-    call ESMF_MeshGet(mesh, ownedElemCoords=ownedElemCoords)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
     call ESMF_MeshGet(mesh, ownedElemCoords=ownedElemCoords, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do g = begg,endg
@@ -748,7 +787,8 @@ contains
     call ncd_io(ncid=ncid, varname= 'yc' , flag='read', data=latc_atmlndfrc , dim1name=grlnd)
     do g = begg,endg
        n = g - begg + 1
-       if (abs(lonc_atmlndfrc(n) - ldomain%lonc(g)) > 1.e-11) then
+       if ( abs(lonc_atmlndfrc(n) - ldomain%lonc(g)) > 1.e-11 .and. &
+            abs(lonc_atmlndfrc(n) - ldomain%lonc(g)) /= 360._r8) then
           write(6,'(a,3(d20.13,2x))')'ERROR: lonc_atmlndfrac(n), ldomain%lonc(g), abs(diff) = ',&
                lonc_atmlndfrc(n), ldomain%lonc(g), abs(lonc_atmlndfrc(n) - ldomain%lonc(g))
           call shr_sys_abort()
@@ -766,21 +806,15 @@ contains
   end subroutine lnd_set_ldomain_gridinfo_from_mesh
 
   !===============================================================================
-  subroutine nc_check_err(ierror, description, filename)
-
-    use shr_sys_mod , only : shr_sys_abort
-    use netcdf      , only : nf90_noerr, nf90_strerror
-
+  subroutine pio_check_err(ierror, description)
+    use pio, only : PIO_NOERR
     integer     , intent(in) :: ierror
     character(*), intent(in) :: description
-    character(*), intent(in) :: filename
-
-    if (ierror /= nf90_noerr) then
-       write (*,'(6a)') 'ERROR ', trim(description),'. NetCDF file : "', trim(filename),&
-            '". Error message:', trim(nf90_strerror(ierror))
+    if (ierror /= PIO_NOERR) then
+       write (*,'(6a)') 'ERROR ', trim(description)
        call shr_sys_abort()
     endif
-  end subroutine nc_check_err
+  end subroutine pio_check_err
 
   !===============================================================================
   logical function chkerr(rc, line, file)
@@ -795,5 +829,53 @@ contains
        chkerr = .true.
     endif
   end function chkerr
+
+  !===============================================================================
+  subroutine lnd_set_read_write_landmask(write_file, read_file, lndmask_glob, lndfrac_glob, gsize)
+
+    use ncdio_pio , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile
+    use ncdio_pio , only : ncd_defdim, ncd_defvar, ncd_enddef, ncd_inqdlen
+    use ncdio_pio , only : ncd_int, ncd_double, ncd_pio_createfile
+
+    ! input/output variables
+    logical          , intent(in) :: write_file
+    logical          , intent(in) :: read_file
+    integer          , pointer    :: lndmask_glob(:)
+    real(r8)         , pointer    :: lndfrac_glob(:)
+    integer          , intent(in) :: gsize
+
+    ! local variables
+    type(file_desc_t) :: pioid ! netcdf file id
+    integer           :: dimid
+    character(len=CL) :: flandfrac = 'landfrac.nc'
+    !-------------------------------------------------------------------------------
+
+    if (write_file) then
+       if (masterproc) then
+          write(iulog,*)
+          write(iulog,'(a)') 'lnd_set_decomp_and_domain: writing landmask and landfrac data to landfrac.nc'
+          write(iulog,*)
+       end if
+       call ncd_pio_createfile(pioid, trim(flandfrac))
+       call ncd_defdim (pioid, 'gridcell', gsize, dimid)
+       call ncd_defvar(ncid=pioid, varname='landmask', xtype=ncd_int   , dim1name='gridcell')
+       call ncd_defvar(ncid=pioid, varname='landfrac', xtype=ncd_double, dim1name='gridcell')
+       call ncd_enddef(pioid)
+       call ncd_io(ncid=pioid, varname='landmask', data=lndmask_glob, flag='write')
+       call ncd_io(ncid=pioid, varname='landfrac', data=lndfrac_glob, flag='write')
+       call ncd_pio_closefile(pioid)
+    else if (read_file) then
+       if (masterproc) then
+          write(iulog,*)
+          write(iulog,'(a)') 'lnd_set_decomp_and_domain: reading landmask and landfrac data from landfrac.nc'
+          write(iulog,*)
+       end if
+       call ncd_pio_openfile (pioid, trim(flandfrac), 0)
+       call ncd_io(ncid=pioid, varname='landmask', data=lndmask_glob, flag='read')
+       call ncd_io(ncid=pioid, varname='landfrac', data=lndfrac_glob, flag='read')
+       call ncd_pio_closefile(pioid)
+    end if
+
+  end subroutine lnd_set_read_write_landmask
 
 end module lnd_set_decomp_and_domain

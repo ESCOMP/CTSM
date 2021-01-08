@@ -348,16 +348,6 @@ contains
          avgflag='A', long_name='convective boundary height', &
          ptr_col=col%zii, default='inactive')
 
-    ! If single-column determine closest latitude and longitude
-    ! TODO: for mct this should use fatmlnd file - for nuopc should use esmf functionality for nearest neighbor,
-    ! for lilac not applicable
-    ! TODO: these values are never used - is scam even working for ctsm?
-    ! if (single_column) then
-    !    call getfil (fsurdat, locfn, 0)
-    !    call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
-    !         closelat, closelon, closelatidx, closelonidx)
-    ! end if
-
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
 

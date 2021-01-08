@@ -345,7 +345,7 @@ contains
     use clm_instMod               , only : lnd2atm_inst, lnd2glc_inst, water_inst
     use domainMod                 , only : ldomain
     use decompMod                 , only : ldecomp, bounds_type, get_proc_bounds
-    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_newmesh
+    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_createmesh
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
 
     ! input/output variables
@@ -545,10 +545,10 @@ contains
     if (single_column) model_meshfile = 'create_mesh'
 
     if (trim(model_meshfile) == 'create_mesh') then
-       ! TODO: can't this just be fatmlndfrc
        call NUOPC_CompAttributeGet(gcomp, name='domain_lnd', value=domain_file, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call lnd_set_decomp_and_domain_from_newmesh(domain_file, mesh, ni, nj, rc)
+       call lnd_set_decomp_and_domain_from_createmesh(domain_file=domain_file, vm=vm, &
+            mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
        call NUOPC_CompAttributeGet(gcomp, name='mesh_mask', value=meshfile_mask, rc=rc)
