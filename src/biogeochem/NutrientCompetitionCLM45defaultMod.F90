@@ -17,6 +17,7 @@ module NutrientCompetitionCLM45defaultMod
   use PatchType           , only : patch                
   use NutrientCompetitionMethodMod, only : nutrient_competition_method_type
   use NutrientCompetitionMethodMod, only : params_inst
+  use CNVegMatrixMod      , only : matrix_update_phn
   !use clm_varctl          , only : iulog  
   !
   implicit none
@@ -1024,13 +1025,13 @@ contains
                         grain_flag(p) = 1._r8
                         if(use_matrixcn)then
                            if(leafn(p) .ne. 0._r8)then
-                              matrix_nphtransfer(p,ileaf_to_iretransn)  = (leafn_to_retransn(p)) / leafn(p)
+                              leafn_to_retransn(p) = leafn(p) * matrix_update_phn(p,ileaf_to_iretransn,leafn_to_retransn(p) / leafn(p),dt,cnveg_nitrogenflux_inst,.True.,.False.)
                            end if
                            if(frootn(p) .ne. 0._r8)then
-                              matrix_nphtransfer(p,ifroot_to_iretransn) = (frootn_to_retransn(p))/ frootn(p)
+                              frootn_to_retransn(p) = frootn(p) * matrix_update_phn(p,ifroot_to_iretransn,frootn_to_retransn(p) / frootn(p),dt,cnveg_nitrogenflux_inst,.True.,.False.)
                            end if
                            if(livestemn(p) .ne. 0._r8)then
-                              matrix_nphtransfer(p,ilivestem_to_iretransn) = (livestemn_to_retransn(p))/ livestemn(p)
+                              livestemn_to_retransn(p) = livestemn(p) * matrix_update_phn(p,ilivestem_to_iretransn,livestemn_to_retransn(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,.True.,.False.)
                            end if
                         end if
                      end if
