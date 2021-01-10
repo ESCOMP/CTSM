@@ -102,7 +102,8 @@ module CNVegCarbonStateType
 
   end type cnveg_carbonstate_type
 
-  real(r8), public  :: spinup_factor = 1.0_r8        ! Spinup factor used when in Accelerated Decomposition mode
+  real(r8), public  :: spinup_factor    = 1.0_r8        ! Spinup factor used for this simulation
+  real(r8), public  :: spinup_factor_AD = 10.0_r8       ! Spinup factor used when in Accelerated Decomposition mode
 
   ! !PRIVATE DATA:
 
@@ -1245,13 +1246,14 @@ contains
 
        if (flag == 'read' .and. spinup_state /= restart_file_spinup_state .and. .not. use_cndv) then
           if ( masterproc ) write(iulog, *) 'exit_spinup ',exit_spinup,' restart_file_spinup_state ',restart_file_spinup_state
+          if ( spinup_state == 2 ) spinup_factor = spinup_factor_AD
           if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
              exit_spinup = .true.
              if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
              do i = bounds%begp,bounds%endp
-                this%deadstemc_patch(i) = this%deadstemc_patch(i) * 10._r8
-                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * 10._r8
+                this%deadstemc_patch(i) = this%deadstemc_patch(i) * spinup_factor_AD
+                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * spinup_factor_AD
              end do
           else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
              if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
@@ -1259,8 +1261,8 @@ contains
                 enter_spinup = .true.
                 if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
                 do i = bounds%begp,bounds%endp
-                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / 10._r8
-                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / 10._r8
+                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / spinup_factor_AD
+                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / spinup_factor_AD
                 end do
              end if
           end if
