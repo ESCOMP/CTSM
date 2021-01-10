@@ -668,7 +668,9 @@ contains
        end if
 
        ! The following code implements the acceleration part of the AD spinup
-       ! algorithm, by multiplying all of the SOM decomposition base rates by 10.0.
+       ! algorithm, by multiplying all of the SOM decomposition base rates by
+       ! spinup_vector, scalar between 1 and 70X, defined as a constant for each
+       ! pool here
 
        if ( spinup_state .eq. 1 ) then
           k_s1 = k_s1 * params_inst%spinup_vector(1)
