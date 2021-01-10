@@ -403,20 +403,20 @@ contains
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
     logical  :: is_end_day                               ! is end of current day
-    real(r8) :: dbh(bounds%begp:bounds%endp)       !diameter at breast height of vegetation
-    real(r8) :: cp_leaf(bounds%begp:bounds%endp)   !heat capacity of leaves
-    real(r8) :: cp_stem(bounds%begp:bounds%endp)   !heat capacity of stems
-    real(r8) :: rstem(bounds%begp:bounds%endp)     !stem resistance to heat transfer
-    real(r8) :: dt_stem(bounds%begp:bounds%endp)   !change in stem temperature
-    real(r8) :: frac_rad_abs_by_stem(bounds%begp:bounds%endp)     !fraction of incoming radiation absorbed by stems
-    real(r8) :: lw_stem(bounds%begp:bounds%endp)   !internal longwave stem
-    real(r8) :: lw_leaf(bounds%begp:bounds%endp)   !internal longwave leaf
-    real(r8) :: sa_stem(bounds%begp:bounds%endp)   !surface area stem m2/m2_ground
-    real(r8) :: sa_leaf(bounds%begp:bounds%endp)   !surface area leaf m2/m2_ground
-    real(r8) :: sa_internal(bounds%begp:bounds%endp)   !min(sa_stem,sa_leaf)
-    real(r8) :: uuc(bounds%begp:bounds%endp)       ! undercanopy windspeed
-    real(r8) :: carea_stem                         !cross-sectional area of stem
-    real(r8) :: dlrad_leaf                         !Downward longwave radition from leaf
+    real(r8) :: dbh(bounds%begp:bounds%endp)             ! diameter at breast height of vegetation
+    real(r8) :: cp_leaf(bounds%begp:bounds%endp)         ! heat capacity of leaves
+    real(r8) :: cp_stem(bounds%begp:bounds%endp)         ! heat capacity of stems
+    real(r8) :: rstem(bounds%begp:bounds%endp)           ! stem resistance to heat transfer
+    real(r8) :: dt_stem(bounds%begp:bounds%endp)         ! change in stem temperature
+    real(r8) :: frac_rad_abs_by_stem(bounds%begp:bounds%endp)     ! fraction of incoming radiation absorbed by stems
+    real(r8) :: lw_stem(bounds%begp:bounds%endp)         ! internal longwave stem
+    real(r8) :: lw_leaf(bounds%begp:bounds%endp)         ! internal longwave leaf
+    real(r8) :: sa_stem(bounds%begp:bounds%endp)         ! surface area stem m2/m2_ground
+    real(r8) :: sa_leaf(bounds%begp:bounds%endp)         ! surface area leaf m2/m2_ground
+    real(r8) :: sa_internal(bounds%begp:bounds%endp)     ! min(sa_stem,sa_leaf)
+    real(r8) :: uuc(bounds%begp:bounds%endp)             ! undercanopy windspeed
+    real(r8) :: carea_stem                               ! cross-sectional area of stem
+    real(r8) :: dlrad_leaf                               ! Downward longwave radition from leaf
 
     ! Indices for raw and rah
     integer, parameter :: above_canopy = 1         ! Above canopy
@@ -1228,9 +1228,9 @@ bioms:   do f = 1, fn
                   + bir(p)*t_veg(p)**4 + cir(p)*lw_grnd) &
                   - efsh - efe(p) - lw_leaf(p) + lw_stem(p) &
                   - (cp_leaf(p)/dtime)*(t_veg(p) - tl_ini(p))) &
-                  / ((1._r8-frac_rad_abs_by_stem(p))*(- 4._r8*bir(p)*t_veg(p)**3 &
+                  / ((1._r8-frac_rad_abs_by_stem(p))*(- 4._r8*bir(p)*t_veg(p)**3) &
                   + 4._r8*sa_internal(p)*emv(p)*sb*t_veg(p)**3 &
-                  +dc1*wtga(p) +dc2*wtgaq*qsatldT(p))+ cp_leaf(p)/dtime)
+                  +dc1*wtga(p) +dc2*wtgaq*qsatldT(p)+ cp_leaf(p)/dtime)
 
             t_veg(p) = tlbef(p) + dt_veg(p)
 
