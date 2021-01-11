@@ -135,7 +135,7 @@ module lnd_import_export
   character(*), parameter :: Sl_topo_elev   = 'Sl_topo_elev'
   character(*), parameter :: Flgl_qice_elev = 'Flgl_qice_elev'
 
-  logical :: send_to_atm = .false.
+  logical :: send_to_atm
 
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
   character(*),parameter :: u_FILE_u = &
@@ -162,10 +162,12 @@ contains
     integer          , intent(out) :: rc
 
     ! local variables
-    type(ESMF_State)       :: importState
-    type(ESMF_State)       :: exportState
-    character(ESMF_MAXSTR) :: cvalue
-    integer                :: n, num
+    type(ESMF_State)  :: importState
+    type(ESMF_State)  :: exportState
+    character(len=CS) :: cvalue
+    integer           :: n, num
+    logical           :: send_co2_to_atm = .false.
+    logical           :: recv_co2_fr_atm = .false.
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
 
@@ -173,33 +175,6 @@ contains
 
     call NUOPC_ModelGet(gcomp, importState=importState, exportState=exportState, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    !--------------------------------
-    ! determine necessary toggles for below
-    !--------------------------------
-
-    if (atm_prognostic) then
-       send_to_atm = .true.
-    else
-       send_to_atm = .false.
-    end if
-    ! for now always send to atm
-    send_to_atm = .true.
-
-    call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) flds_co2a
-    call ESMF_LogWrite('flds_co2a = '// trim(cvalue), ESMF_LOGMSG_INFO)
-
-    call NUOPC_CompAttributeGet(gcomp, name='flds_co2b', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) flds_co2b
-    call ESMF_LogWrite('flds_co2b = '// trim(cvalue), ESMF_LOGMSG_INFO)
-
-    call NUOPC_CompAttributeGet(gcomp, name='flds_co2c', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) flds_co2c
-    call ESMF_LogWrite('flds_co2c = '// trim(cvalue), ESMF_LOGMSG_INFO)
 
     ! Determine  number of elevation classes
     call NUOPC_CompAttributeGet(gcomp, name='glc_nec', value=cvalue, rc=rc)
@@ -213,6 +188,36 @@ contains
     !--------------------------------
     ! Advertise export fields
     !--------------------------------
+
+    ! Is any data going to sent back to the atm
+    ! For now always send to atm
+    if (atm_prognostic) then
+       send_to_atm = .true.
+    else
+       send_to_atm = .false.
+    end if
+    send_to_atm = .true.
+
+    if (send_to_atm) then
+       call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) flds_co2a
+       call NUOPC_CompAttributeGet(gcomp, name='flds_co2b', value=cvalue, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) flds_co2b
+       call NUOPC_CompAttributeGet(gcomp, name='flds_co2c', value=cvalue, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) flds_co2c
+       if (flds_co2b .or. flds_co2c) send_co2_to_atm = .true.
+       if (flds_co2a .or. flds_co2b .or. flds_co2c) recv_co2_fr_atm = .true.
+       if (masterproc) then
+          write(iulog,'(a,l)') 'flds_co2a= ',flds_co2a
+          write(iulog,'(a,l)') 'flds_co2b= ',flds_co2b
+          write(iulog,'(a,l)') 'flds_co2c= ',flds_co2c
+          write(iulog,'(a,l)') 'sending co2 to atm     = ',send_co2_to_atm
+          write(iulog,'(a,l)') 'receiving co2 from atm = ',recv_co2_fr_atm
+       end if
+    end if
 
     ! The following namelist reads should always be called regardless of the send_to_atm value
 
@@ -255,7 +260,7 @@ contains
        ! call fldlist_add(fldsFrLnd_num, fldsFrlnd, Fall_methane  )
        ! dust fluxes from land (4 sizes)
        call fldlist_add(fldsFrLnd_num, fldsFrLnd, Fall_flxdst, ungridded_lbound=1, ungridded_ubound=4)
-       if (flds_co2b .or. flds_co2c) then
+       if (send_co2_to_atm) then
           call fldlist_add(fldsFrLnd_num, fldsFrlnd, Fall_fco2_lnd ) ! co2 fields from land
        end if
        if (drydep_nflds > 0) then

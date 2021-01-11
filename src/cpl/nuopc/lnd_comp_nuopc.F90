@@ -165,17 +165,19 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_VM)      :: vm
-    integer            :: lmpicom
-    integer            :: ierr
-    integer            :: n
-    integer            :: localpet
-    integer            :: compid      ! component id
-    integer            :: shrlogunit  ! original log unit
-    character(len=CL)  :: cvalue
-    character(len=CL)  :: logmsg
-    logical            :: isPresent, isSet
-    logical            :: cism_evolve
+    type(ESMF_VM)     :: vm
+    integer           :: lmpicom
+    integer           :: ierr
+    integer           :: n
+    integer           :: localpet
+    integer           :: compid      ! component id
+    integer           :: shrlogunit  ! original log unit
+    character(len=CL) :: cvalue
+    character(len=CL) :: logmsg
+    logical           :: cism_evolve
+    character(len=CL) :: atm_model
+    character(len=CL) :: rof_model
+    character(len=CL) :: glc_model
     character(len=*), parameter :: subname=trim(modName)//':(InitializeAdvertise) '
     character(len=*), parameter :: format = "('("//trim(subname)//") :',A)"
     !-------------------------------------------------------------------------------
@@ -225,104 +227,69 @@ contains
     ! advertise fields
     !----------------------------------------------------------------------------
 
-    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldName", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldName", value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (isPresent .and. isSet) then
-       flds_scalar_name = trim(cvalue)
-       call ESMF_LogWrite(trim(subname)//' flds_scalar_name = '//trim(flds_scalar_name), ESMF_LOGMSG_INFO)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       call shr_sys_abort(subname//'Need to set attribute ScalarFieldName')
-    endif
-
-    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldCount", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    flds_scalar_name = trim(cvalue)
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldCount", value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (isPresent .and. isSet) then
-       read(cvalue, *) flds_scalar_num
-       write(logmsg,*) flds_scalar_num
-       call ESMF_LogWrite(trim(subname)//' flds_scalar_num = '//trim(logmsg), ESMF_LOGMSG_INFO)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       call shr_sys_abort(subname//'Need to set attribute ScalarFieldCount')
-    endif
-
-    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNX", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    read(cvalue, *) flds_scalar_num
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNX", value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (isPresent .and. isSet) then
-       read(cvalue,*) flds_scalar_index_nx
-       write(logmsg,*) flds_scalar_index_nx
-       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_nx = '//trim(logmsg), ESMF_LOGMSG_INFO)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       call shr_sys_abort(subname//'Need to set attribute ScalarFieldIdxGridNX')
-    endif
-
-    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNY", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    read(cvalue,*) flds_scalar_index_nx
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxGridNY", value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (isPresent .and. isSet) then
-       read(cvalue,*) flds_scalar_index_ny
-       write(logmsg,*) flds_scalar_index_ny
-       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_ny = '//trim(logmsg), ESMF_LOGMSG_INFO)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       call shr_sys_abort(subname//'Need to set attribute ScalarFieldIdxGridNY')
-    endif
-
-    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxNextSwCday", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    read(cvalue,*) flds_scalar_index_ny
+    call NUOPC_CompAttributeGet(gcomp, name="ScalarFieldIdxNextSwCday", value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (isPresent .and. isSet) then
-       read(cvalue,*) flds_scalar_index_nextsw_cday
-       write(logmsg,*) flds_scalar_index_nextsw_cday
-       call ESMF_LogWrite(trim(subname)//' : flds_scalar_index_nextsw_cday = '//trim(logmsg), ESMF_LOGMSG_INFO)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    else
-       call shr_sys_abort(subname//'Need to set attribute ScalarFieldIdxNextSwCday')
-    endif
-
-    call NUOPC_CompAttributeGet(gcomp, name='ROF_model', value=cvalue, rc=rc)
+    read(cvalue,*) flds_scalar_index_nextsw_cday
+    call NUOPC_CompAttributeGet(gcomp, name='ROF_model', value=rof_model, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (trim(cvalue) == 'srof' .or. trim(cvalue) == 'drof') then
+    if (trim(rof_model) == 'srof' .or. trim(rof_model) == 'drof') then
        rof_prognostic = .false.
     else
        rof_prognostic = .true.
     end if
-
-    call NUOPC_CompAttributeGet(gcomp, name='ATM_model', value=cvalue, rc=rc)
+    call NUOPC_CompAttributeGet(gcomp, name='ATM_model', value=atm_model, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (trim(cvalue) == 'satm' .or. trim(cvalue) == 'datm') then
+    if (trim(atm_model) == 'satm' .or. trim(atm_model) == 'datm') then
        atm_prognostic = .false.
     else
        atm_prognostic = .true.
     end if
-
-    call NUOPC_CompAttributeGet(gcomp, name='GLC_model', value=cvalue, rc=rc)
+    call NUOPC_CompAttributeGet(gcomp, name='GLC_model', value=glc_model, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (trim(cvalue) == 'sglc') then
+    if (trim(glc_model) == 'sglc') then
        glc_present = .false.
     else
        glc_present = .true.
-       cism_evolve = .true.
-       call NUOPC_CompAttributeGet(gcomp, name="cism_evolve", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    end if
+    if (.not. glc_present) then
+       cism_evolve = .false.
+    else
+       call NUOPC_CompAttributeGet(gcomp, name="cism_evolve", value=cvalue, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       if (isPresent .and. isSet) then
-          call ESMF_LogWrite(trim(subname)//' cism_evolve = '//trim(cvalue), ESMF_LOGMSG_INFO)
-          if (trim(cvalue) .eq. '.true.') then
-             cism_evolve = .true.
-          else if (trim(cvalue) .eq. '.false.') then
-             cism_evolve = .false.
-          else
-             call shr_sys_abort(subname//'Could not determine cism_evolve value '//trim(cvalue))
-          endif
-       else
-          call shr_sys_abort(subname//'Need to set cism_evolve if glc is present')
+       if (trim(cvalue) == '.true.') then
+          cism_evolve = .true.
+       else if (trim(cvalue) == '.false.') then
+          cism_evolve = .false.
        endif
     end if
 
     if (masterproc) then
-       write(iulog,*)' atm_prognostic = ',atm_prognostic
-       write(iulog,*)' rof_prognostic = ',rof_prognostic
-       write(iulog,*)' glc_present    = ',glc_present
-       if (glc_present) write(iulog,*)' cism_evolve    = ',cism_evolve
+       write(iulog,'(a   )')' atm component                 = '//trim(atm_model)
+       write(iulog,'(a   )')' rof component                 = '//trim(rof_model)
+       write(iulog,'(a   )')' glc component                 = '//trim(glc_model)
+       write(iulog,'(a,l )')' atm_prognostic                = ',atm_prognostic
+       write(iulog,'(a,l )')' rof_prognostic                = ',rof_prognostic
+       write(iulog,'(a,l )')' glc_present                   = ',glc_present
+       if (glc_present) then
+          write(iulog,'(a,l)')' cism_evolve                    = ',cism_evolve
+       end if
+       write(iulog,'(a   )')' flds_scalar_name              = '//trim(flds_scalar_name)
+       write(iulog,'(a,i8)')' flds_scalar_num               = ',flds_scalar_num
+       write(iulog,'(a,i8)')' flds_scalar_index_nx          = ',flds_scalar_index_nx
+       write(iulog,'(a,i8)')' flds_scalar_index_ny          = ',flds_scalar_index_ny
+       write(iulog,'(a,i8)')' flds_scalar_index_nextsw_cday = ',flds_scalar_index_nextsw_cday
     end if
 
     call advertise_fields(gcomp, flds_scalar_name, glc_present, cism_evolve, rof_prognostic, atm_prognostic, rc)
@@ -373,25 +340,25 @@ contains
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
     integer                 :: localPet
     integer                 :: localpecount
-    character(ESMF_MAXSTR)  :: cvalue                ! config data
-    real(r8)                :: scmlat                ! single-column latitude
-    real(r8)                :: scmlon                ! single-column longitude
     real(r8)                :: nextsw_cday           ! calday from clock of next radiation computation
-    character(len=CL)       :: caseid                ! case identifier name
-    character(len=CL)       :: ctitle                ! case description title
     character(len=CL)       :: starttype             ! start-type (startup, continue, branch, hybrid)
     character(len=CL)       :: calendar              ! calendar type name
-    character(len=CL)       :: hostname              ! hostname of machine running on
-    character(len=CL)       :: model_version         ! Model version
-    character(len=CL)       :: username              ! user running the model
-    integer                 :: nsrest                ! ctsm restart type
     logical                 :: brnch_retain_casename ! flag if should retain the case name on a branch start type
+    integer                 :: nsrest                ! ctsm restart type
     integer                 :: lbnum                 ! input to memory diagnostic
     integer                 :: shrlogunit            ! original log unit
     type(bounds_type)       :: bounds                ! bounds
     integer                 :: ni, nj
+    character(len=CL)       :: cvalue                ! config data
     character(len=CL)       :: meshfile_mask
     character(len=CL)       :: domain_file
+    character(len=CL)       :: ctitle                ! case description title
+    character(len=CL)       :: caseid                ! case identifier name
+    real(r8)                :: scmlat                ! single-column latitude
+    real(r8)                :: scmlon                ! single-column longitude
+    character(len=CL)       :: model_version         ! Model version
+    character(len=CL)       :: hostname              ! hostname of machine running on
+    character(len=CL)       :: username              ! user running the model
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
@@ -417,49 +384,6 @@ contains
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     !$  call omp_set_num_threads(localPeCount)
-
-    !----------------------
-    ! Obtain attribute values
-    !----------------------
-
-    call NUOPC_CompAttributeGet(gcomp, name='case_name', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) caseid
-    ctitle= trim(caseid)
-    call NUOPC_CompAttributeGet(gcomp, name='scmlon', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) scmlon
-    call NUOPC_CompAttributeGet(gcomp, name='scmlat', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) scmlat
-    call NUOPC_CompAttributeGet(gcomp, name='single_column', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) single_column
-    call NUOPC_CompAttributeGet(gcomp, name='brnch_retain_casename', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) brnch_retain_casename
-    call NUOPC_CompAttributeGet(gcomp, name='start_type', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) starttype
-    call NUOPC_CompAttributeGet(gcomp, name='model_version', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) model_version
-    call NUOPC_CompAttributeGet(gcomp, name='hostname', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) hostname
-    call NUOPC_CompAttributeGet(gcomp, name='username', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) username
-
-    if (     trim(starttype) == trim(startup_run)) then
-       nsrest = nsrStartup
-    else if (trim(starttype) == trim(continue_run)) then
-       nsrest = nsrContinue
-    else if (trim(starttype) == trim(branch_run)) then
-       nsrest = nsrBranch
-    else
-       call shr_sys_abort( subname//' ERROR: unknown starttype' )
-    end if
 
     !----------------------
     ! Consistency check on namelist filename
@@ -507,6 +431,33 @@ contains
     !----------------------
     ! Initialize CTSM time manager
     !----------------------
+    call NUOPC_CompAttributeGet(gcomp, name='case_name', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) caseid
+    ctitle= trim(caseid)
+    call NUOPC_CompAttributeGet(gcomp, name='model_version', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) model_version
+    call NUOPC_CompAttributeGet(gcomp, name='username', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) username
+    call NUOPC_CompAttributeGet(gcomp, name='hostname', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) hostname
+    call NUOPC_CompAttributeGet(gcomp, name='scmlon', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) scmlon
+    call NUOPC_CompAttributeGet(gcomp, name='scmlat', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) scmlat
+    call NUOPC_CompAttributeGet(gcomp, name='single_column', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) single_column
+    call NUOPC_CompAttributeGet(gcomp, name='start_type', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) starttype
+
+
     ! Note that we assume that CTSM's internal dtime matches the coupling time step.
     ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
     call set_timemgr_init(       &
@@ -517,14 +468,29 @@ contains
          ref_tod_in=ref_tod,     &
          dtime_in=dtime_sync)
 
-    !----------------------------------------------------------------------------
     ! Set model clock in lnd_comp_shr
-    !----------------------------------------------------------------------------
     model_clock = clock
 
     ! ---------------------
     ! Initialize first phase of ctsm
     ! ---------------------
+    call NUOPC_CompAttributeGet(gcomp, name='brnch_retain_casename', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) brnch_retain_casename
+    call NUOPC_CompAttributeGet(gcomp, name='start_type', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) starttype
+
+    if (     trim(starttype) == trim(startup_run)) then
+       nsrest = nsrStartup
+    else if (trim(starttype) == trim(continue_run)) then
+       nsrest = nsrContinue
+    else if (trim(starttype) == trim(branch_run)) then
+       nsrest = nsrBranch
+    else
+       call shr_sys_abort( subname//' ERROR: unknown starttype' )
+    end if
+
     ! set default values for run control variables
     call clm_varctl_set(&
          caseid_in=caseid, ctitle_in=ctitle,                     &
