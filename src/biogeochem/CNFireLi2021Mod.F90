@@ -421,19 +421,11 @@ contains
                  end if
               end if
            end if
-           if (spinup_state == 2) then         
-              rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
+           rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
                    frootc_xfer(p) + deadcrootc(p) * spinup_factor_deadwood +       &
                    deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
                    livecrootc(p)+livecrootc_storage(p) +           &
                    livecrootc_xfer(p))*patch%wtcol(p)
-           else
-              rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
-                   frootc_xfer(p) + deadcrootc(p) +                &
-                   deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
-                   livecrootc(p)+livecrootc_storage(p) +           &
-                   livecrootc_xfer(p))*patch%wtcol(p)
-           endif
 
            fsr_col(c) = fsr_col(c) + fsr_pft(patch%itype(p))*patch%wtcol(p)/(1.0_r8-cropf_col(c))
 
