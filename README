@@ -175,4 +175,6 @@ src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
          ./case.submit               # submit script
                                      # (NOTE: ./xmlchange RESUBMIT=10 to set RESUBMIT to number
                                      # #  of times to automatically resubmit -- 10 in this example)
-
+==========================================
+This is used for testing the git workflow
+==========================================
