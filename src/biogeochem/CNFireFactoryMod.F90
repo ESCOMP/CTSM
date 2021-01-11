@@ -2,7 +2,7 @@ module CNFireFactoryMod
 
   !---------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Factory to create an instance of cnfire_method_type. This module figures
+  ! Factory to create an instance of fire_method_type. This module figures
   ! out the particular type to return.
   !
   ! !USES:
@@ -16,8 +16,8 @@ module CNFireFactoryMod
   !
   ! !PUBLIC ROUTINES:
   public :: CNFireReadNML         ! read the fire namelist
-  public :: create_cnfire_method  ! create an object of class cnfire_method_type
-  public :: create_fates_fire_data_method  ! create an object of class cnfire_method_type
+  public :: create_cnfire_method  ! create an object of class fire_method_type
+  public :: create_fates_fire_data_method  ! create an object of class fates_fire_base_type
 
   ! These parameters set the ranges of the cases in subroutine
   ! create_fates_fire_data_method. We declare them public in order to
@@ -97,12 +97,12 @@ contains
   subroutine create_cnfire_method( NLFilename, cnfire_method )
     !
     ! !DESCRIPTION:
-    ! Create and return an object of cnfire_method_type. The particular type
+    ! Create and return an object of fire_method_type. The particular type
     ! is determined based on a namelist parameter.
     !
     ! !USES:
     use shr_kind_mod     , only : SHR_KIND_CL
-    use CNFireMethodMod  , only : cnfire_method_type
+    use FireMethodType   , only : fire_method_type
     use CNFireNoFireMod  , only : cnfire_nofire_type
     use CNFireLi2014Mod  , only : cnfire_li2014_type
     use CNFireLi2016Mod  , only : cnfire_li2016_type
@@ -110,7 +110,7 @@ contains
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
-    class(cnfire_method_type), allocatable, intent(inout) :: cnfire_method
+    class(fire_method_type), allocatable, intent(inout) :: cnfire_method
     !
     ! !LOCAL VARIABLES:
     character(len=*), parameter :: subname = 'create_cnfire_method'
@@ -130,7 +130,7 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
 
     end select
-    call cnfire_method%CNFireReadNML( NLFilename )
+    call cnfire_method%FireReadNML( NLFilename )
 
   end subroutine create_cnfire_method
   !-----------------------------------------------------------------------
@@ -144,7 +144,6 @@ contains
     !
     ! !USES:
     use clm_varctl, only: fates_spitfire_mode
-    use CNFireMethodMod, only: cnfire_method_type
     use FATESFireBase,      only: fates_fire_base_type
     use FATESFireNoDataMod, only: fates_fire_no_data_type
     use FATESFireDataMod, only: fates_fire_data_type

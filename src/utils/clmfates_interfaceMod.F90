@@ -2238,7 +2238,7 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_interpfileinputs')
 
-    call this%fates_fire_data_method%CNFireInterp(bounds)
+    call this%fates_fire_data_method%FireInterp(bounds)
 
     call t_stopf('fates_interpfileinputs')
 
@@ -2266,7 +2266,7 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_init2')
 
-    call this%fates_fire_data_method%CNFireInit(bounds, NLFilename)
+    call this%fates_fire_data_method%FireInit(bounds, NLFilename)
 
     call t_stopf('fates_init2')
 
