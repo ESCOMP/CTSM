@@ -1039,7 +1039,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine Restart ( this,  bounds, ncid, flag, carbon_type, reseed_dead_plants, &
                        c12_cnveg_carbonstate_inst, filter_reseed_patch, &
-                       num_reseed_patch)
+                       num_reseed_patch, spinup_factor4deadwood )
     !
     ! !DESCRIPTION: 
     ! Read/write CN restart data for carbon state
@@ -1065,6 +1065,7 @@ contains
     type (cnveg_carbonstate_type)         , intent(in), optional :: c12_cnveg_carbonstate_inst 
     integer                               , intent(out), optional :: filter_reseed_patch(:)
     integer                               , intent(out), optional :: num_reseed_patch
+    real(r8)                              , intent(out), optional :: spinup_factor4deadwood
     !
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c,p
@@ -2284,6 +2285,9 @@ contains
                multiplier = c14ratio)
        end if
     end if
+
+    ! Output spinup factor for deadwood (dead stem and dead course root)
+    if ( present(spinup_factor4deadwood) ) spinup_factor4deadwood = spinup_factor_AD
 
   end subroutine Restart
 
