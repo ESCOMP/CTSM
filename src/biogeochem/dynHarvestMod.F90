@@ -482,9 +482,9 @@ contains
                                              leafn(p)
                hrv_frootn_to_litter(p)     = matrix_update_gmn(p,ifroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)     * &
                                              frootn(p)
-               hrv_livestemn_to_litter(p)  = matrix_update_gmn(p,ilivestem_to_iout_gmc,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
+               hrv_livestemn_to_litter(p)  = matrix_update_gmn(p,ilivestem_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
                                              livestemn(p)
-               wood_harvestn(p)            = matrix_update_gmn(p,ideadstem_to_iout_gmc,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
+               wood_harvestn(p)            = matrix_update_gmn(p,ideadstem_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.)  * &
                                              deadstemn(p)
                hrv_livecrootn_to_litter(p) = matrix_update_gmn(p,ilivecroot_to_iout_gmn,m,dtime,cnveg_nitrogenflux_inst,.True.,.True.) * &
                                              livecrootn(p)
