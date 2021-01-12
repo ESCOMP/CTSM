@@ -1030,6 +1030,10 @@ contains
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     end if
    
+    call ncd_io('nstem',this%nstem, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    call ncd_io('taper',this%taper, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     !
     ! Biomass heat storage variables
     !
@@ -1042,8 +1046,6 @@ contains
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
        call ncd_io('fbw',this%fbw, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-       call ncd_io('nstem',this%nstem, 'read', ncid, readvar=readv)
-       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
        call ncd_io('rstem',this%rstem_per_dbh, 'read', ncid, readvar=readv)
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
        call ncd_io('wood_density',this%wood_density, 'read', ncid, readvar=readv)
@@ -1051,11 +1053,9 @@ contains
     else
        this%dbh = 0.0_r8
        this%fbw = 0.0_r8
-       this%nstem = 1000._r8 / 10000._r8
        this%rstem_per_dbh = 0.0_r8
        this%wood_density = 0.0_r8
     end if
-    this%taper = 200._r8   ! Initialize taper to the same value everywhere (below change it for shrub)
 
     call ncd_pio_closefile(ncid)
 
@@ -1179,13 +1179,6 @@ contains
           this%is_grass(m) = .false.
        endif
 
-       ! Set taper differently if shrub
-       if ( this%is_shrub(m) )then
-         this%taper(m) = 10._r8
-       else
-         this%taper(m) = 200._r8
-       end if
-       
     end do
 
     if (use_cndv) then
