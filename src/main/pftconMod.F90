@@ -1476,6 +1476,7 @@ contains
     deallocate( this%nstem)
     deallocate( this%rstem_per_dbh)
     deallocate( this%wood_density)
+    deallocate( this%taper)
   end subroutine Clean
 
 end module pftconMod
