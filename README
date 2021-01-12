@@ -160,7 +160,7 @@ src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
 
 =============================================================================================
     QUICKSTART: using the CPL7 scripts
-=============================================================================================
+=================================================================================================
 
          cd $CIMEROOT/scripts
          ./create_newcase            # get help on how to run create_newcase
@@ -174,5 +174,5 @@ src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
          ./case.build                # build model and create namelists
          ./case.submit               # submit script
                                      # (NOTE: ./xmlchange RESUBMIT=10 to set RESUBMIT to number
-                                     #(#  of times to automatically resubmit -- 10 in this example)
+                                     ###  of times to automatically resubmit -- 10 in this example)
 
