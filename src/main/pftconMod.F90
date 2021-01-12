@@ -26,7 +26,6 @@ module pftconMod
   integer, public :: nbrdlf_dcd_trp_tree    ! value for Broadleaf deciduous tropical tree
   integer, public :: nbrdlf_dcd_tmp_tree    ! value for Broadleaf deciduous temperate tree
   integer, public :: nbrdlf_dcd_brl_tree    ! value for Broadleaf deciduous boreal tree
-  integer, public :: ntree                  ! value for last type of tree
   integer, public :: nbrdlf_evr_shrub       ! value for Broadleaf evergreen shrub
   integer, public :: nbrdlf_dcd_tmp_shrub   ! value for Broadleaf deciduous temperate shrub
   integer, public :: nbrdlf_dcd_brl_shrub   ! value for Broadleaf deciduous boreal shrub
@@ -1151,7 +1150,6 @@ contains
        if ( trim(pftname(i)) == 'irrigated_tropical_soybean'          ) nirrig_trp_soybean   = i
     end do
 
-    ntree                = nbrdlf_dcd_brl_tree  ! value for last type of tree
     npcropmin            = ntmp_corn            ! first prognostic crop
     npcropmax            = mxpft                ! last prognostic crop in list
 
