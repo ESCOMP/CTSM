@@ -399,7 +399,7 @@ contains
 
        this%fpsn_patch(begp:endp) = spval
        call hist_addfld1d (fname='IWUE', units='umol CO2 / mol H2O',  &
-            avgflag='A', long_name='intrinsic water usef efficiency', &
+            avgflag='A', long_name='intrinsic water use efficiency', &
             ptr_patch=this%iwue_patch, set_lake=0._r8, set_urb=0._r8)
 
        ! Don't by default output this rate limiting step as only makes sense if you are outputing
@@ -1829,7 +1829,7 @@ contains
 
   !------------------------------------------------------------------------------
   subroutine PhotosynthesisTotal (fn, filterp, &
-       atm2lnd_inst, canopystate_inst, photosyns_inst)
+       atm2lnd_inst, canopystate_inst, photosyns_inst,solarabs_inst)
     !
     ! Determine total photosynthesis
     !
@@ -1839,6 +1839,7 @@ contains
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
     type(photosyns_type)   , intent(inout) :: photosyns_inst
+    type(solarabs_type)    , intent(in)    :: solarabs_inst
     !
     ! !LOCAL VARIABLES:
     integer :: f,fp,p,l,g               ! indices
@@ -1855,8 +1856,10 @@ contains
          laisun      => canopystate_inst%laisun_patch    , & ! Input:  [real(r8) (:) ]  sunlit leaf area
          laisha      => canopystate_inst%laisha_patch    , & ! Input:  [real(r8) (:) ]  shaded leaf area
 
-         gs_mol_sun  => photosyns_inst%gs_mol_sun_patch  , & ! Input:  [real(r8) (:) ]  sunlit leaf stomatal conductance (umol H2O/m**2/s)
-         gs_mol_sha  => photosyns_inst%gs_mol_sha_patch  , & ! Input:  [real(r8) (:) ]  shaded leaf stomatal conductance (umol H2O/m**2/s)
+         par_z       => solarabs_inst%parsun_z_patch     , & ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)
+
+         gs_mol_sun  => photosyns_inst%gs_mol_sun_patch  , & ! Input:  [real(r8) (:,:) ]  sunlit leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sha  => photosyns_inst%gs_mol_sha_patch  , & ! Input:  [real(r8) (:,:) ]  shaded leaf stomatal conductance (umol H2O/m**2/s)
          psnsun      => photosyns_inst%psnsun_patch      , & ! Input:  [real(r8) (:) ]  sunlit leaf photosynthesis (umol CO2 /m**2/ s)
          psnsha      => photosyns_inst%psnsha_patch      , & ! Input:  [real(r8) (:) ]  shaded leaf photosynthesis (umol CO2 /m**2/ s)
          rc13_canair => photosyns_inst%rc13_canair_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in canopy air
@@ -1905,7 +1908,13 @@ contains
             fpsn_wj(p) = psnsun_wj(p)*laisun(p) + psnsha_wj(p)*laisha(p)
             fpsn_wp(p) = psnsun_wp(p)*laisun(p) + psnsha_wp(p)*laisha(p)
             ! calculate inherent wue, 1e6 converts gsmol from umol/m2/s to mol/m2/s
-            iwue(p)    = 1.e06_r8*fpsn(p)/(laisun(p)*gs_mol_sun(p)+laisha(p)*gs_mol_sha(p))
+            !  iwue calculation not compatible with multi-layer canopy
+            if (par_z(p,1) > 0._r8) then !daytime
+               iwue(p)  = 1.e06_r8*fpsn(p)/(laisun(p)*gs_mol_sun(p,1)+laisha(p)*gs_mol_sha(p,1))
+            else
+               iwue(p)  = spval
+               write(iulog,*) 'zqz iwue'
+            end if
          end if
 
          if (use_cn) then

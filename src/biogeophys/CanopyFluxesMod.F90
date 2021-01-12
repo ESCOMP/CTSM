@@ -1351,7 +1351,7 @@ contains
          ! Determine total photosynthesis
          
          call PhotosynthesisTotal(fn, filterp, &
-              atm2lnd_inst, canopystate_inst, photosyns_inst)
+              atm2lnd_inst, canopystate_inst, photosyns_inst, solarabs_inst)
          
          ! Calculate ozone stress. This needs to be done after rssun and rsshade are
          ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
