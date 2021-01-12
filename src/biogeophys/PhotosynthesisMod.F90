@@ -172,6 +172,7 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: psnsun_wp_patch   (:)   ! patch product-limited sunlit leaf photosynthesis (umol CO2/m**2/s)
      real(r8), pointer, private :: psnsha_wp_patch   (:)   ! patch product-limited shaded leaf photosynthesis (umol CO2/m**2/s)
 
+     real(r8), pointer, public  :: iwue_patch        (:)   ! patch intrinsic water use efficiency (umol CO2/mol H2O)
      real(r8), pointer, public  :: fpsn_patch        (:)   ! patch photosynthesis                 (umol CO2/m**2 ground/s)
      real(r8), pointer, private :: fpsn_wc_patch     (:)   ! patch Rubisco-limited photosynthesis (umol CO2/m**2 ground/s)
      real(r8), pointer, private :: fpsn_wj_patch     (:)   ! patch RuBP-limited photosynthesis    (umol CO2/m**2 ground/s)
@@ -313,7 +314,7 @@ contains
     allocate(this%fpsn_wc_patch     (begp:endp))           ; this%fpsn_wc_patch     (:)   = nan
     allocate(this%fpsn_wj_patch     (begp:endp))           ; this%fpsn_wj_patch     (:)   = nan
     allocate(this%fpsn_wp_patch     (begp:endp))           ; this%fpsn_wp_patch     (:)   = nan
-    
+    allocate(this%iwue_patch        (begp:endp))           ; this%iwue_patch        (:)   = nan
     allocate(this%lnca_patch        (begp:endp))           ; this%lnca_patch        (:)   = nan
 
     allocate(this%lmrsun_z_patch    (begp:endp,1:nlevcan)) ; this%lmrsun_z_patch    (:,:) = nan
@@ -395,6 +396,11 @@ contains
        call hist_addfld1d (fname='FPSN', units='umol m-2 s-1',  &
             avgflag='A', long_name='photosynthesis', &
             ptr_patch=this%fpsn_patch, set_lake=0._r8, set_urb=0._r8)
+
+       this%fpsn_patch(begp:endp) = spval
+       call hist_addfld1d (fname='IWUE', units='umol CO2 / mol H2O',  &
+            avgflag='A', long_name='intrinsic water usef efficiency', &
+            ptr_patch=this%iwue_patch, set_lake=0._r8, set_urb=0._r8)
 
        ! Don't by default output this rate limiting step as only makes sense if you are outputing
        ! the others each time-step
@@ -1849,6 +1855,8 @@ contains
          laisun      => canopystate_inst%laisun_patch    , & ! Input:  [real(r8) (:) ]  sunlit leaf area
          laisha      => canopystate_inst%laisha_patch    , & ! Input:  [real(r8) (:) ]  shaded leaf area
 
+         gs_mol_sun  => photosyns_inst%gs_mol_sun_patch  , & ! Input:  [real(r8) (:) ]  sunlit leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sha  => photosyns_inst%gs_mol_sha_patch  , & ! Input:  [real(r8) (:) ]  shaded leaf stomatal conductance (umol H2O/m**2/s)
          psnsun      => photosyns_inst%psnsun_patch      , & ! Input:  [real(r8) (:) ]  sunlit leaf photosynthesis (umol CO2 /m**2/ s)
          psnsha      => photosyns_inst%psnsha_patch      , & ! Input:  [real(r8) (:) ]  shaded leaf photosynthesis (umol CO2 /m**2/ s)
          rc13_canair => photosyns_inst%rc13_canair_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in canopy air
@@ -1869,7 +1877,8 @@ contains
          fpsn        => photosyns_inst%fpsn_patch        , & ! Output: [real(r8) (:) ]  photosynthesis (umol CO2 /m**2 /s)
          fpsn_wc     => photosyns_inst%fpsn_wc_patch     , & ! Output: [real(r8) (:) ]  Rubisco-limited photosynthesis (umol CO2 /m**2 /s)
          fpsn_wj     => photosyns_inst%fpsn_wj_patch     , & ! Output: [real(r8) (:) ]  RuBP-limited photosynthesis (umol CO2 /m**2 /s)
-         fpsn_wp     => photosyns_inst%fpsn_wp_patch       & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)
+         fpsn_wp     => photosyns_inst%fpsn_wp_patch     , & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)
+         iwue        => photosyns_inst%iwue_patch          & ! Output: [real(r8) (:) ]  intrinsic water use efficience (umol CO2 / mol H2o)
          )
 
       if ( use_c14 ) then
@@ -1895,6 +1904,8 @@ contains
             fpsn_wc(p) = psnsun_wc(p)*laisun(p) + psnsha_wc(p)*laisha(p)
             fpsn_wj(p) = psnsun_wj(p)*laisun(p) + psnsha_wj(p)*laisha(p)
             fpsn_wp(p) = psnsun_wp(p)*laisun(p) + psnsha_wp(p)*laisha(p)
+            ! calculate inherent wue, 1e6 converts gsmol from umol/m2/s to mol/m2/s
+            iwue(p)    = 1.e06_r8*fpsn(p)/(laisun(p)*gs_mol_sun(p)+laisha(p)*gs_mol_sha(p))
          end if
 
          if (use_cn) then
