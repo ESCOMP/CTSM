@@ -17,6 +17,7 @@ module CNFireBaseMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varctl                         , only : iulog
+  use clm_varpar                         , only : nlevgrnd
   use pftconMod                          , only : noveg, pftcon
   use abortutils                         , only : endrun
   use decompMod                          , only : bounds_type
@@ -32,6 +33,9 @@ module CNFireBaseMod
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
   use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
   use Wateratm2lndBulkType               , only : wateratm2lndbulk_type
+  use WaterStateBulkType                 , only : waterstatebulk_type
+  use SoilStateType                      , only : soilstate_type
+  use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
   use GridcellType                       , only : grc
   use ColumnType                         , only : col
   use PatchType                          , only : patch
@@ -74,14 +78,21 @@ module CNFireBaseMod
   type, abstract, extends(fire_base_type) :: cnfire_base_type
     private
       ! !PRIVATE MEMBER DATA:
+      ! !PUBLIC MEMBER DATA (used by extensions of the base class):
+      real(r8), public, pointer :: btran2_patch   (:)   ! patch root zone soil wetness factor (0 to 1)
 
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:
-      procedure, public :: FireReadNML       ! Read in namelist for CNFire
-      procedure, public :: CNFireReadParams  ! Read in constant parameters from the paramsfile
-      procedure, public :: CNFireArea        ! Calculate fire area
-      procedure, public :: CNFireFluxes      ! Calculate fire fluxes
+      procedure, public :: FireInit => CNFireInit        ! Initialization of Fire
+      procedure, public :: FireReadNML                   ! Read in namelist for CNFire
+      procedure, public :: CNFireReadParams              ! Read in constant parameters from the paramsfile
+      procedure, public :: CNFireFluxes                  ! Calculate fire fluxes
+      procedure, public :: CNFire_calc_fire_root_wetness_Li2014 ! Calculate CN-fire specific root wetness: original version
+      procedure, public :: CNFire_calc_fire_root_wetness_Li2021 ! Calculate CN-fire specific root wetness: 2021 version
+      ! !PRIVATE MEMBER FUNCTIONS:
+      procedure, private :: InitAllocate                 ! Memory allocation of Fire
+      procedure, private :: InitHistory                  ! History file assignment of fire
       !
   end type cnfire_base_type
   !-----------------------------------------------------------------------
@@ -112,6 +123,198 @@ module CNFireBaseMod
 contains
 
   !-----------------------------------------------------------------------
+  subroutine CNFireInit( this, bounds, NLFilename )
+    !
+    ! !DESCRIPTION:
+    ! Initialize CN Fire module
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    character(len=*),  intent(in) :: NLFilename
+    !-----------------------------------------------------------------------
+    ! Call the base-class Initialization method
+    call this%BaseFireInit( bounds, NLFilename )
+
+    ! Allocate memory
+    call this%InitAllocate( bounds )
+    ! History file
+    call this%InitHistory( bounds )
+  end subroutine CNFireInit
+  !----------------------------------------------------------------------
+
+  subroutine InitAllocate( this, bounds )
+    !
+    ! Initiaze memory allocate's
+    use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    !-----------------------------------------------------------------------
+    integer :: begp, endp
+    !------------------------------------------------------------------------
+    begp = bounds%begp; endp= bounds%endp
+
+    allocate(this%btran2_patch             (begp:endp))             ; this%btran2_patch            (:)   = nan
+
+  end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine InitHistory( this, bounds )
+    !
+    ! Initailizae history variables
+    use clm_varcon      , only : spval
+    use histFileMod     , only : hist_addfld1d
+    !
+    ! !ARGUMENTS:
+    class(cnfire_base_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    !-----------------------------------------------------------------------
+    integer :: begp, endp
+    !------------------------------------------------------------------------
+    begp = bounds%begp; endp= bounds%endp
+    this%btran2_patch(begp:endp) = spval
+    call hist_addfld1d(fname='BTRAN2', units='unitless',  &
+         avgflag='A', long_name='root zone soil wetness factor', &
+         ptr_patch=this%btran2_patch, l2g_scale_type='veg')
+  end subroutine InitHistory
+
+  !----------------------------------------------------------------------
+  subroutine CNFire_calc_fire_root_wetness_Li2014( this, bounds, &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
+       waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+    !
+    ! Calculate the root wetness term that will be used by the fire model
+    !
+    class(cnfire_base_type) :: this
+    type(bounds_type)      , intent(in)   :: bounds                         !bounds
+    integer                , intent(in)   :: num_exposedvegp                !number of filters
+    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    integer                , intent(in)   :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                , intent(in)   :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    type(soilstate_type)   , intent(in)   :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    ! !LOCAL VARIABLES:
+    real(r8) :: smp_node, s_node  !temporary variables
+    real(r8) :: smp_node_lf       !temporary variable
+    integer :: p, fp, j, c, l      !indices
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
+
+    associate(                                                &
+         smpso         => pftcon%smpso                      , & ! Input:  soil water potential at full stomatal opening (mm)
+         smpsc         => pftcon%smpsc                      , & ! Input:  soil water potential at full stomatal closure (mm)
+         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
+         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
+         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         )
+
+    do fp = 1, num_noexposedvegp
+       p = filter_noexposedvegp(fp)
+       ! Set for the sake of history diagnostics. The "normal" btran is set to 0 over
+       ! this filter, so we do the same for btran2.
+       btran2(p) = 0._r8
+    end do
+
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
+       btran2(p) = 0._r8
+    end do
+    do j = 1,nlevgrnd
+       do fp = 1, num_exposedvegp
+          p = filter_exposedvegp(fp)
+          c = patch%column(p)
+          l = patch%landunit(p)
+          s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+
+          call soil_water_retention_curve%soil_suction(c, j, s_node, soilstate_inst, smp_node_lf)
+
+          smp_node_lf = max(smpsc(patch%itype(p)), smp_node_lf)
+          btran2(p)   = btran2(p) +rootfr(p,j)*max(0._r8,min((smp_node_lf - smpsc(patch%itype(p))) / &
+               (smpso(patch%itype(p)) - smpsc(patch%itype(p))), 1._r8))
+       end do
+    end do
+
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
+       if (btran2(p) > 1._r8) then
+          btran2(p) = 1._r8
+       end if
+    end do
+
+    end associate
+
+  end subroutine CNFire_calc_fire_root_wetness_Li2014
+
+  !----------------------------------------------------------------------
+  subroutine CNFire_calc_fire_root_wetness_Li2021( this, bounds, &
+       num_exposedvegp, filter_exposedvegp, num_noexposedvegp, filter_noexposedvegp, &
+       waterstatebulk_inst, soilstate_inst, soil_water_retention_curve )
+    !
+    ! Calculate the root wetness term that will be used by the fire model
+    !
+    use pftconMod                 , only : pftcon
+    use PatchType                 , only : patch
+    class(cnfire_base_type) :: this
+    type(bounds_type)      , intent(in)   :: bounds                         !bounds
+    integer                , intent(in)   :: num_exposedvegp                !number of filters
+    integer                , intent(in)   :: filter_exposedvegp(:)          !filter array
+    integer                , intent(in)   :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer                , intent(in)   :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
+    type(waterstatebulk_type), intent(in) :: waterstatebulk_inst
+    type(soilstate_type)   , intent(in)   :: soilstate_inst
+    class(soil_water_retention_curve_type), intent(in) :: soil_water_retention_curve
+    ! !LOCAL VARIABLES:
+    real(r8) :: s_node  !temporary variables
+    integer :: p, fp, j, c         !indices
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(filter_exposedvegp) >= (/num_exposedvegp/)), sourcefile, __LINE__)
+
+    associate(                                                &
+         watsat        => soilstate_inst%watsat_col         , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation
+         btran2        => this%btran2_patch                 , & ! Output: [real(r8) (:)   ]  integrated soil water stress square
+         rootfr        => soilstate_inst%rootfr_patch       , & ! Input:  [real(r8) (:,:) ]  fraction of roots in each soil layer
+         h2osoi_vol    => waterstatebulk_inst%h2osoi_vol_col  & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3] (porosity)   (constant)
+         )
+
+    do fp = 1, num_noexposedvegp
+       p = filter_noexposedvegp(fp)
+       ! Set for the sake of history diagnostics. The "normal" btran is set to 0 over
+       ! this filter, so we do the same for btran2.
+       btran2(p) = 0._r8
+    end do
+
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
+       btran2(p)   = 0._r8
+    end do
+    do j = 1,nlevgrnd
+       do fp = 1, num_exposedvegp
+          p = filter_exposedvegp(fp)
+          c = patch%column(p)
+          s_node = max(h2osoi_vol(c,j)/watsat(c,j), 0.01_r8)
+
+          btran2(p)   = btran2(p) + rootfr(p,j)*s_node
+       end do
+    end do
+
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
+       if (btran2(p) > 1._r8) then
+          btran2(p) = 1._r8
+       end if
+    end do
+
+    end associate
+
+  end subroutine CNFire_calc_fire_root_wetness_Li2021
+  !----------------------------------------------------------------------
+
+  !----------------------------------------------------------------------
   subroutine FireReadNML( this, NLFilename )
     !
     ! !DESCRIPTION:
@@ -220,40 +423,6 @@ contains
   end subroutine FireReadNML
 
   !-----------------------------------------------------------------------
-  subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
-       waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
-       cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
-    !
-    ! !DESCRIPTION:
-    ! Computes column-level burned area 
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    class(cnfire_base_type)                               :: this
-    type(bounds_type)                     , intent(in)    :: bounds 
-    integer                               , intent(in)    :: num_soilc       ! number of soil columns in filter
-    integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
-    integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
-    integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
-    type(energyflux_type)                 , intent(in)    :: energyflux_inst
-    type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
-    type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
-    type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
-    type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
-    type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
-    real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
-    real(r8)                              , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:)
-    real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)
-    !
-
-    call endrun( 'cnfire_base::CNFireArea: this method MUST be implemented!' )
-
-  end subroutine CNFireArea
-
-  !-----------------------------------------------------------------------
   subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
       dgvs_inst, cnveg_state_inst,                                                                      &
       cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
@@ -272,7 +441,6 @@ contains
    !
    ! !USES:
    use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
-   use clm_varpar           , only: max_patch_per_col
    use clm_varctl           , only: use_cndv, spinup_state
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
@@ -302,7 +470,7 @@ contains
    real(r8)                       , intent(out)   :: somc_fire_col(bounds%begc:)              ! (gC/m2/s) fire C emissions due to peat burning
    !
    ! !LOCAL VARIABLES:
-   integer :: g,c,p,j,l,pi,kyr, kmo, kda, mcsec   ! indices
+   integer :: g,c,p,j,l,kyr, kmo, kda, mcsec   ! indices
    integer :: fp,fc                ! filter indices
    real(r8):: f                    ! rate for fire effects (1/s)
    real(r8):: m                    ! acceleration factor for fuel carbon
@@ -758,81 +926,75 @@ contains
      ! fire-induced transfer of carbon and nitrogen pools to litter and cwd
 
      do j = 1,nlevdecomp
-        do pi = 1,max_patch_per_col
-           do fc = 1,num_soilc
-              c = filter_soilc(fc)
-              if (pi <=  col%npatches(c)) then
-                 p = col%patchi(c) + pi - 1
-                 if ( patch%active(p) ) then
+        do fp = 1, num_soilp
+           p = filter_soilp(fp)
+           c = patch%column(p)
 
-                    fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
-                         m_deadstemc_to_litter_fire(p) * patch%wtcol(p) * stem_prof(p,j)
-                    fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
-                         m_deadcrootc_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
-                    fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
-                         m_deadstemn_to_litter_fire(p) * patch%wtcol(p) * stem_prof(p,j)
-                    fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
-                         m_deadcrootn_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
+           fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
+                m_deadstemc_to_litter_fire(p) * patch%wtcol(p) * stem_prof(p,j)
+           fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
+                m_deadcrootc_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
+           fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
+                m_deadstemn_to_litter_fire(p) * patch%wtcol(p) * stem_prof(p,j)
+           fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
+                m_deadcrootn_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
 
 
-                    fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
-                         m_livestemc_to_litter_fire(p) * patch%wtcol(p) * stem_prof(p,j)
-                    fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
-                         m_livecrootc_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
-                    fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
-                         m_livestemn_to_litter_fire(p) * patch%wtcol(p) * stem_prof(p,j)
-                    fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
-                         m_livecrootn_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
+           fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
+                m_livestemc_to_litter_fire(p) * patch%wtcol(p) * stem_prof(p,j)
+           fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
+                m_livecrootc_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
+           fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
+                m_livestemn_to_litter_fire(p) * patch%wtcol(p) * stem_prof(p,j)
+           fire_mortality_n_to_cwdn(c,j) = fire_mortality_n_to_cwdn(c,j) + &
+                m_livecrootn_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
 
 
-                    m_c_to_litr_met_fire(c,j)=m_c_to_litr_met_fire(c,j) + &
-                         ((m_leafc_to_litter_fire(p)*lf_flab(patch%itype(p)) &
-                         +m_leafc_storage_to_litter_fire(p) + &
-                         m_leafc_xfer_to_litter_fire(p) + &
-                         m_gresp_storage_to_litter_fire(p) &
-                         +m_gresp_xfer_to_litter_fire(p))*leaf_prof(p,j) + &
-                         (m_frootc_to_litter_fire(p)*fr_flab(patch%itype(p)) &
-                         +m_frootc_storage_to_litter_fire(p) + &
-                         m_frootc_xfer_to_litter_fire(p))*froot_prof(p,j) &
-                         +(m_livestemc_storage_to_litter_fire(p) + &
-                         m_livestemc_xfer_to_litter_fire(p) &
-                         +m_deadstemc_storage_to_litter_fire(p) + &
-                         m_deadstemc_xfer_to_litter_fire(p))* stem_prof(p,j)&
-                         +(m_livecrootc_storage_to_litter_fire(p) + &
-                         m_livecrootc_xfer_to_litter_fire(p) &
-                         +m_deadcrootc_storage_to_litter_fire(p) + &
-                         m_deadcrootc_xfer_to_litter_fire(p))* croot_prof(p,j))* patch%wtcol(p)    
-                    m_c_to_litr_cel_fire(c,j)=m_c_to_litr_cel_fire(c,j) + &
-                         (m_leafc_to_litter_fire(p)*lf_fcel(patch%itype(p))*leaf_prof(p,j) + &
-                         m_frootc_to_litter_fire(p)*fr_fcel(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
-                    m_c_to_litr_lig_fire(c,j)=m_c_to_litr_lig_fire(c,j) + &
-                         (m_leafc_to_litter_fire(p)*lf_flig(patch%itype(p))*leaf_prof(p,j) + &
-                         m_frootc_to_litter_fire(p)*fr_flig(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p)  
+           m_c_to_litr_met_fire(c,j)=m_c_to_litr_met_fire(c,j) + &
+                ((m_leafc_to_litter_fire(p)*lf_flab(patch%itype(p)) &
+                +m_leafc_storage_to_litter_fire(p) + &
+                m_leafc_xfer_to_litter_fire(p) + &
+                m_gresp_storage_to_litter_fire(p) &
+                +m_gresp_xfer_to_litter_fire(p))*leaf_prof(p,j) + &
+                (m_frootc_to_litter_fire(p)*fr_flab(patch%itype(p)) &
+                +m_frootc_storage_to_litter_fire(p) + &
+                m_frootc_xfer_to_litter_fire(p))*froot_prof(p,j) &
+                +(m_livestemc_storage_to_litter_fire(p) + &
+                m_livestemc_xfer_to_litter_fire(p) &
+                +m_deadstemc_storage_to_litter_fire(p) + &
+                m_deadstemc_xfer_to_litter_fire(p))* stem_prof(p,j)&
+                +(m_livecrootc_storage_to_litter_fire(p) + &
+                m_livecrootc_xfer_to_litter_fire(p) &
+                +m_deadcrootc_storage_to_litter_fire(p) + &
+                m_deadcrootc_xfer_to_litter_fire(p))* croot_prof(p,j))* patch%wtcol(p)    
+           m_c_to_litr_cel_fire(c,j)=m_c_to_litr_cel_fire(c,j) + &
+                (m_leafc_to_litter_fire(p)*lf_fcel(patch%itype(p))*leaf_prof(p,j) + &
+                m_frootc_to_litter_fire(p)*fr_fcel(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
+           m_c_to_litr_lig_fire(c,j)=m_c_to_litr_lig_fire(c,j) + &
+                (m_leafc_to_litter_fire(p)*lf_flig(patch%itype(p))*leaf_prof(p,j) + &
+                m_frootc_to_litter_fire(p)*fr_flig(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p)  
 
-                    m_n_to_litr_met_fire(c,j)=m_n_to_litr_met_fire(c,j) + &
-                         ((m_leafn_to_litter_fire(p)*lf_flab(patch%itype(p)) &
-                         +m_leafn_storage_to_litter_fire(p) + &
-                         m_leafn_xfer_to_litter_fire(p)+m_retransn_to_litter_fire(p)) &
-                         *leaf_prof(p,j) +(m_frootn_to_litter_fire(p)*fr_flab(patch%itype(p)) &
-                         +m_frootn_storage_to_litter_fire(p) + &
-                         m_frootn_xfer_to_litter_fire(p))*froot_prof(p,j) &
-                         +(m_livestemn_storage_to_litter_fire(p) + &
-                         m_livestemn_xfer_to_litter_fire(p) &
-                         +m_deadstemn_storage_to_litter_fire(p) + &
-                         m_deadstemn_xfer_to_litter_fire(p))* stem_prof(p,j)&
-                         +(m_livecrootn_storage_to_litter_fire(p) + &
-                         m_livecrootn_xfer_to_litter_fire(p) &
-                         +m_deadcrootn_storage_to_litter_fire(p) + &
-                         m_deadcrootn_xfer_to_litter_fire(p))* croot_prof(p,j))* patch%wtcol(p)    
-                    m_n_to_litr_cel_fire(c,j)=m_n_to_litr_cel_fire(c,j) + &
-                         (m_leafn_to_litter_fire(p)*lf_fcel(patch%itype(p))*leaf_prof(p,j) + &
-                         m_frootn_to_litter_fire(p)*fr_fcel(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
-                    m_n_to_litr_lig_fire(c,j)=m_n_to_litr_lig_fire(c,j) + &
-                         (m_leafn_to_litter_fire(p)*lf_flig(patch%itype(p))*leaf_prof(p,j) + &
-                         m_frootn_to_litter_fire(p)*fr_flig(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
-                 end if
-              end if
-           end do
+           m_n_to_litr_met_fire(c,j)=m_n_to_litr_met_fire(c,j) + &
+                ((m_leafn_to_litter_fire(p)*lf_flab(patch%itype(p)) &
+                +m_leafn_storage_to_litter_fire(p) + &
+                m_leafn_xfer_to_litter_fire(p)+m_retransn_to_litter_fire(p)) &
+                *leaf_prof(p,j) +(m_frootn_to_litter_fire(p)*fr_flab(patch%itype(p)) &
+                +m_frootn_storage_to_litter_fire(p) + &
+                m_frootn_xfer_to_litter_fire(p))*froot_prof(p,j) &
+                +(m_livestemn_storage_to_litter_fire(p) + &
+                m_livestemn_xfer_to_litter_fire(p) &
+                +m_deadstemn_storage_to_litter_fire(p) + &
+                m_deadstemn_xfer_to_litter_fire(p))* stem_prof(p,j)&
+                +(m_livecrootn_storage_to_litter_fire(p) + &
+                m_livecrootn_xfer_to_litter_fire(p) &
+                +m_deadcrootn_storage_to_litter_fire(p) + &
+                m_deadcrootn_xfer_to_litter_fire(p))* croot_prof(p,j))* patch%wtcol(p)    
+           m_n_to_litr_cel_fire(c,j)=m_n_to_litr_cel_fire(c,j) + &
+                (m_leafn_to_litter_fire(p)*lf_fcel(patch%itype(p))*leaf_prof(p,j) + &
+                m_frootn_to_litter_fire(p)*fr_fcel(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
+           m_n_to_litr_lig_fire(c,j)=m_n_to_litr_lig_fire(c,j) + &
+                (m_leafn_to_litter_fire(p)*lf_flig(patch%itype(p))*leaf_prof(p,j) + &
+                m_frootn_to_litter_fire(p)*fr_flig(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
         end do
      end do
      !

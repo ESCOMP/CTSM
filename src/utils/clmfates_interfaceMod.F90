@@ -1730,7 +1730,6 @@ module CLMFatesInterfaceMod
          t_soisno    => temperature_inst%t_soisno_col       , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)
          h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col , & ! Input: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          btran       => energyflux_inst%btran_patch         , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) 
-         btran2       => energyflux_inst%btran2_patch       , & ! Output: [real(r8) (:)   ]  
          rresis      => energyflux_inst%rresis_patch        , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd) 
          rootr       => soilstate_inst%rootr_patch          & ! Output: [real(r8) (:,:) ]  Fraction of water uptake in each layer
          )
@@ -1823,8 +1822,8 @@ module CLMFatesInterfaceMod
         ! Convert output BC's
         ! For CLM/ALM this wrapper provides return variables that should
         ! be similar to that of calc_root_moist_stress().  However,
-        ! CLM/ALM-FATES simulations will no make use of rresis, btran or btran2
-        ! outside of FATES. We do not have code in place to calculate btran2 or
+        ! CLM/ALM-FATES simulations will no make use of rresis or btran
+        ! outside of FATES. We do not have code in place to calculate or
         ! rresis right now, so we force to bad.  We have btran calculated so we
         ! pass it in case people want diagnostics.  rootr is actually the only
         ! variable that will be used, as it is needed to help distribute the
@@ -1844,7 +1843,6 @@ module CLMFatesInterfaceMod
                  ! it should not thought of as valid output until we decide to.
                  rootr(p,j)  = this%fates(nc)%bc_out(s)%rootr_pasl(ifp,j)
                  btran(p)    = this%fates(nc)%bc_out(s)%btran_pa(ifp)
-                 btran2(p)   = -999.9  ! Not available, force to nonsense
                  
               end do
            end do

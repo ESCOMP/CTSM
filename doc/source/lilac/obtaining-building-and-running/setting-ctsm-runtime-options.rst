@@ -6,9 +6,6 @@
  Setting CTSM runtime options
 ==============================
 
-Overview and quick start
-========================
-
 This section describes the process for creating the runtime input text files for CTSM and
 LILAC. These files, which are in Fortran namelist format, have hard-coded file
 names. These files must exist with the expected names in the directory from which the
@@ -51,8 +48,8 @@ also illustrated in :numref:`Figure ctsm_lilac_runtime_file_workflow`:
    unnecessary if all of the needed input data already exists. However, it doesn't hurt to
    run it in this case.)
 
-#. Copy ``lnd_in``, ``lnd_modelio.nml`` and ``lilac_in`` to the directory from which you
-   will be running the model.
+#. Copy or create links to ``lnd_in``, ``lnd_modelio.nml`` and ``lilac_in`` in the
+   directory from which you will be running the model.
 
 .. _Figure ctsm_lilac_runtime_file_workflow:
 
@@ -119,7 +116,7 @@ The first set of options in this file specifies key file names:
   NWP / prediction applications, you will typically want a customized initial condition
   file. The process for generating this file will depend on your atmosphere model and
   workflow, but an example for WRF is given in section
-  :numref:`wrf-create-input-namelists-for-ctsm-and-lilac`.
+  :numref:`wrf-set-ctsm-runtime-options`.
 
 The remainder of this file specifies a variety of high-level options, each of which sets
 the default values for a number of CTSM's runtime parameters. The default values should be
@@ -233,13 +230,20 @@ files (and not to CTSM's standard input files), then this is nothing to worry ab
 Copying the necessary files to the model's run directory
 ========================================================
 
-Finally, copy the following files to the directory from which you will run the model:
+Finally, copy or create links to the following files in the directory from which you will
+run the model:
 
 - ``lnd_in``: This is the main namelist input file for CTSM
 
 - ``lnd_modelio.nml``: This sets CTSM's PIO (parallel i/o library) configuration settings
 
 - ``lilac_in``: This namelist controls the operation of LILAC
+
+.. note::
+
+   We recommend using symbolic links (via ``ln -s``) rather than copying these files: This
+   way, if you later update these files in the ``runtime_inputs`` directory, you do not
+   need to re-copy them.
 
 .. note::
 

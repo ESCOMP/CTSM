@@ -10,7 +10,7 @@ module lnd2atmMod
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
   use shr_megan_mod        , only : shr_megan_mechcomps_n
   use shr_fire_emis_mod    , only : shr_fire_emis_mechcomps_n
-  use clm_varpar           , only : numrad, ndst, nlevgrnd !ndst = number of dust bins.
+  use clm_varpar           , only : numrad, ndst, nlevgrnd, nlevmaxurbgrnd !ndst = number of dust bins.
   use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
   use clm_varctl           , only : iulog, use_lch4
   use seq_drydep_mod       , only : n_drydep, drydep_method, DD_XLND
@@ -119,7 +119,7 @@ contains
        end associate
     end do
 
-    call c2g(bounds, nlevgrnd, &
+    call c2g(bounds, nlevmaxurbgrnd, &
          water_inst%waterstatebulk_inst%h2osoi_vol_col (bounds%begc:bounds%endc, :), &
          water_inst%waterlnd2atmbulk_inst%h2osoi_vol_grc    (bounds%begg:bounds%endg, :), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity')

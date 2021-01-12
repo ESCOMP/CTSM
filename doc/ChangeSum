@@ -1,5 +1,25 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev020     erik 12/30/2020 Potential roundoff changes in preparation for bio-mass heat storage option
+  ctsm5.1.dev019    sacks 12/19/2020 Fix ndep from coupler
+  ctsm5.1.dev018   slevis 12/08/2020 Add ACTIVE (T/F) column to master hist fields table and alphabetize
+  ctsm5.1.dev017   slevis 11/17/2020 Write history fields master list to separate optional file
+  ctsm5.1.dev016 multiple 11/17/2020 Updates for nuopc
+  ctsm5.1.dev015    sacks 11/13/2020 A few small fixes
+  ctsm5.1.dev014 dll/oles 11/07/2020 Grass/crop snow burial fraction fix, and some other fixes
+  ctsm5.1.dev013 jedwards 11/04/2020 Allow pnetcdf for vector history files
+  ctsm5.1.dev012 oleson/s 11/03/2020 Allow nlevgrnd < nlevurb
+  ctsm5.1.dev011    sacks 11/02/2020 Change CISM2%NOEVOLVE compsets to use SGLC; documentation updates
+  ctsm5.1.dev010 sacks/je 10/23/2020 Fix reading netcdf variable into a different data type
+  ctsm5.1.dev009   negins 10/21/2020 BFB changes for Perturbed Parameter Ensemble and  Hydraulic redistribution
+  ctsm5.1.dev008     erik 10/07/2020 Two answer changes: Clm45/50/51 with crop, and for 2000Clm51
+  ctsm5.1.dev007    sacks 10/06/2020 CNFire: btran2 fixes and general cleanup
+  ctsm5.1.dev006    sacks 10/03/2020 Call correct routine to calculate btran2 for CNFireLi2021
+  ctsm5.1.dev005    sacks 10/02/2020 Answer changing bug fixes for clm51: fire and organic_frac_squared
+  ctsm5.1.dev004   oleson 09/30/2020 Improve robustness of onset and offset counters when changing dt
+  ctsm5.1.dev003 ivanderk 09/29/2020 Add capability for dynamic lakes
+  ctsm5.1.dev002   slevis 09/25/2020 Reduce duplication between caps
+  ctsm5.1.dev001     erik 09/23/2020 Start the clm5_1 physics series, with some changes to the fire model from Fang Li
   ctsm1.0.dev113   negins 09/08/2020 Some bit-for-bit changes needed for the Perturbed Parameter Ensemble work
   ctsm1.0.dev112 sacks/ww 08/28/2020 Small changes to mksurfdata_map, singlept tool and run_sys_tests
   ctsm1.0.dev111     erik 08/28/2020 Compsets don't use 2014 for GSWP3 forcing, LUNA prevyr changed back

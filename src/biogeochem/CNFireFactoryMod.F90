@@ -106,6 +106,7 @@ contains
     use CNFireNoFireMod  , only : cnfire_nofire_type
     use CNFireLi2014Mod  , only : cnfire_li2014_type
     use CNFireLi2016Mod  , only : cnfire_li2016_type
+    use CNFireLi2021Mod  , only : cnfire_li2021_type
     use decompMod        , only : bounds_type
     !
     ! !ARGUMENTS:
@@ -124,6 +125,8 @@ contains
        allocate(cnfire_li2014_type :: cnfire_method)
     case ("li2016crufrc")
        allocate(cnfire_li2016_type :: cnfire_method)
+    case ("li2021gswpfrc")
+       allocate(cnfire_li2021_type :: cnfire_method)
 
     case default
        write(iulog,*) subname//' ERROR: unknown method: ', fire_method
