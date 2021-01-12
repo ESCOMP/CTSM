@@ -178,3 +178,8 @@ src/unit_test_stubs Unit test stubs that replicate CTSM code simpler
 ==========================================
 This is used for testing the git workflow
 ==========================================
+The first commit made on github and it is 
+meant to test whether adding a commit on 
+github will notify the user by email
+==========================================
+
