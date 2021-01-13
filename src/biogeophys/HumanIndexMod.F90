@@ -125,12 +125,14 @@ module HumanIndexMod
 ! Modified 03-21-14--- Changed Specific Humidity to Mixing
 !    Ratio.
 ! Modified 04-08-16--- Added new convergence routine for
-!          Wet_Bulb.  CLM4.5 Inputs at 50C 100% RH cause NaN.
-!          Davies-Jones is not calibrated for Tw above 40C.
-!          Modification makes all moisture calculations
-!          internal to Wet_Bulb.  External input of RH used,
-!          Not external Q due to differences in QSat_2 and
-!          QSatMod at high RH and T>45C.
+!    Wet_Bulb.  CLM4.5 Inputs at 50C 100% RH cause NaN.
+!    Davies-Jones is not calibrated for Tw above 40C.
+!    Modification makes all moisture calculations
+!    internal to Wet_Bulb.  External input of RH used,
+!    Not external Q due to differences in QSat_2 and
+!    QSatMod at high RH and T>45C.
+! Modified JRBuzan 12-29-20--- Qinqin Kong discovered an error in
+!    QSat_2Mod. The derivative of F(Tw;pi) = F(Tw;pi) * dlnF(Tw;pi)/dTw.
 !EOP
 !-----------------------------------------------------------------------
 
@@ -807,12 +809,12 @@ end subroutine InitHistory
 ! Modified JRBuzan 03-21-14:  Minor Revision.  Changed specific humidity to mixing
 !       ratio.
 ! Modified JRBuzan 04-08-16:  Added new convergence routine for
-!                             Wet_Bulb.  CLM4.5 Inputs at 50C 100% RH cause NaN.
-!                             Davies-Jones is not calibrated for Tw above 40C.
-!                             Modification makes all moisture calculations
-!                             internal to Wet_Bulb.  External input of RH used,
-!                             Not external Q due to differences in QSat_2 and
-!                             QSatMod at high RH and T>45C.
+!       Wet_Bulb.  CLM4.5 Inputs at 50C 100% RH cause NaN. Davies-Jones is not 
+!       calibrated for Tw above 40C. Modification makes all moisture calculations
+!       internal to Wet_Bulb.  External input of RH used, not external Q due to 
+!       differences in QSat_2 and QSatMod at high RH and T>45C.
+! Modified JRBuzan 12-29-20--- Qinqin Kong discovered an error in
+!       QSat_2Mod. The derivative of F(Tw;pi) = F(Tw;pi) * dlnF(Tw;pi)/dTw.
 !
 ! !USES:
     use shr_kind_mod , only: r8 => shr_kind_r8
@@ -1366,7 +1368,9 @@ end subroutine InitHistory
     ! Calculations for used to calculate f(T,ndimpress)
     foftk = ((Cf/T_k)**lambd_a)*(1._r8 - es_mb/p0ndplam)**(vkp*lambd_a)* &
            exp(-lambd_a*goftk)
-    fdT = -lambd_a*(1._r8/T_k + vkp*de_mbdT/pminuse + gdT)
+    ! 12-29-20 Correct derivative error found by Qinqin Kong. Original was dlnf/dTw.
+    ! Now f(Tw) * dlnf/dTw. 
+    fdT = -lambd_a*(1._r8/T_k + vkp*de_mbdT/pminuse + gdT) * foftk
     d2fdT2 = lambd_a*(1._r8/(T_k*T_k) - vkp*de_mbdT*de_mbdT/(pminuse*pminuse) - &
              vkp*d2e_mbdT2/pminuse - d2gdT2)
 
