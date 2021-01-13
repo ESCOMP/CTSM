@@ -331,6 +331,10 @@ Intercept of free living Nitrogen fixation with zero annual ET
 If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng, 2008)
 </entry>
 
+<entry id="use_biomass_heat_storage" type="logical" category="clm_physics"
+       group="canopyfluxes_inparm" valid_values="" >
+If TRUE, include biomass heat storage in canopy energy balance.
+
 <entry id="itmax_canopy_fluxes" type="integer" category="clm_physics"
        group="canopyfluxes_inparm">
 Max number of iterations used in subr. CanopyFluxes. For many years, 40 was the hardwired default value.

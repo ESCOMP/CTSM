@@ -7,8 +7,8 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop
-  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb, nlevmaxurbgrnd
+  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
+  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
   use LandunitType    , only : lun
@@ -22,6 +22,7 @@ module TemperatureType
   type, public :: temperature_type
 
      ! Temperatures
+     real(r8), pointer :: t_stem_patch             (:)   ! patch stem temperatu\re (Kelvin)
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
      real(r8), pointer :: t_skin_patch             (:)   ! patch skin temperature (Kelvin)
      real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
@@ -192,6 +193,7 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     ! Temperatures
+    allocate(this%t_stem_patch             (begp:endp))                      ; this%t_stem_patch             (:)   = nan
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
     allocate(this%t_skin_patch             (begp:endp))                      ; this%t_skin_patch             (:)   = nan
     if(use_luna) then
@@ -387,6 +389,13 @@ contains
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
          ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
+
+    if (use_biomass_heat_storage) then 
+       this%t_stem_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TSTEM', units='K',  &
+            avgflag='A', long_name='stem temperature', &
+            ptr_patch=this%t_stem_patch, default='active')
+    endif
 
     this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV', units='K',  &
@@ -790,6 +799,8 @@ contains
             this%t_veg_patch(p)   = 283._r8
          end if
 
+         this%t_stem_patch(p)   = this%t_veg_patch(p)
+
          if (use_vancouver) then
             this%t_ref2m_patch(p) = 297.56
          else if (use_mexicocity) then
@@ -888,6 +899,11 @@ contains
          dim1name='pft', &
          long_name='vegetation temperature', units='K', &
          interpinic_flag='interp', readvar=readvar, data=this%t_veg_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='T_STEM', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='stem temperature', units='K', &
+         interpinic_flag='interp', readvar=readvar, data=this%t_stem_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='TH2OSFC', xtype=ncd_double,  &
          dim1name='column', &
