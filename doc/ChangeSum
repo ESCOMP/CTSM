@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev021     erik 01/12/2021 Add option for biomass heat storage (BHS) to clm5_1 physics
+  ctsm5.1.dev020     erik 12/30/2020 Potential roundoff changes in preparation for bio-mass heat storage option
+  ctsm5.1.dev019    sacks 12/19/2020 Fix ndep from coupler
   ctsm5.1.dev018   slevis 12/08/2020 Add ACTIVE (T/F) column to master hist fields table and alphabetize
   ctsm5.1.dev017   slevis 11/17/2020 Write history fields master list to separate optional file
   ctsm5.1.dev016 multiple 11/17/2020 Updates for nuopc

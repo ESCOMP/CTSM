@@ -27,7 +27,7 @@ module CNFireLi2016Mod
   use atm2lndType                        , only : atm2lnd_type
   use CNDVType                           , only : dgvs_type
   use CNVegStateType                     , only : cnveg_state_type
-  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType               , only : cnveg_carbonstate_type, spinup_factor_deadwood
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
@@ -420,19 +420,11 @@ contains
                  end if
               end if
            end if
-           if (spinup_state == 2) then         
-              rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
-                   frootc_xfer(p) + deadcrootc(p) * 10._r8 +       &
+           rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
+                   frootc_xfer(p) + deadcrootc(p) * spinup_factor_deadwood +       &
                    deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
                    livecrootc(p)+livecrootc_storage(p) +           &
                    livecrootc_xfer(p))*patch%wtcol(p)
-           else
-              rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
-                   frootc_xfer(p) + deadcrootc(p) +                &
-                   deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
-                   livecrootc(p)+livecrootc_storage(p) +           &
-                   livecrootc_xfer(p))*patch%wtcol(p)
-           endif
 
            fsr_col(c) = fsr_col(c) + fsr_pft(patch%itype(p))*patch%wtcol(p)/(1.0_r8-cropf_col(c))
 
@@ -588,7 +580,7 @@ contains
         if( cropf_col(c)  <  1._r8 )then
            fuelc(c) = totlitc(c)+totvegc(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            if (spinup_state == 2) then
-              fuelc(c) = fuelc(c) + ((10._r8 - 1._r8)*deadstemc_col(c))
+              fuelc(c) = fuelc(c) + ((spinup_factor_deadwood - 1._r8)*deadstemc_col(c))
               do j = 1, nlevdecomp  
                  fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j) * spinup_factor(i_cwd) &
                             * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))

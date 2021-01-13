@@ -451,6 +451,7 @@ contains
     ! !LOCAL VARIABLES:
 
     integer :: begp, endp
+    real(r8) :: spinup_factor4deadwood    ! Spinup factor used for deadwood (dead-stem and dead course root)
 
     character(len=*), parameter :: subname = 'Restart'
     !-----------------------------------------------------------------------
@@ -460,9 +461,12 @@ contains
        endp = bounds%endp
        call this%cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c12', &
                reseed_dead_plants=this%reseed_dead_plants, filter_reseed_patch=reseed_patch, &
-               num_reseed_patch=num_reseed_patch )
+               num_reseed_patch=num_reseed_patch, spinup_factor4deadwood=spinup_factor4deadwood )
        if ( flag /= 'read' .and. num_reseed_patch /= 0 )then
           call endrun(msg="ERROR num_reseed should be zero and is not"//errmsg(sourcefile, __LINE__))
+       end if
+       if ( flag /= 'read' .and. spinup_factor4deadwood /= 10_r8 )then
+          call endrun(msg="ERROR spinup_factor4deadwood should be 10 and is not"//errmsg(sourcefile, __LINE__))
        end if
        if (use_c13) then
           call this%c13_cnveg_carbonstate_inst%restart(bounds, ncid, flag=flag, carbon_type='c13', &
@@ -487,7 +491,8 @@ contains
             frootc_patch=this%cnveg_carbonstate_inst%frootc_patch(begp:endp), &
             frootc_storage_patch=this%cnveg_carbonstate_inst%frootc_storage_patch(begp:endp), &
             deadstemc_patch=this%cnveg_carbonstate_inst%deadstemc_patch(begp:endp), &
-            filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch)
+            filter_reseed_patch=reseed_patch, num_reseed_patch=num_reseed_patch, &
+            spinup_factor_deadwood=spinup_factor4deadwood )
        call this%cnveg_nitrogenflux_inst%restart(bounds, ncid, flag=flag)
        call this%cnveg_state_inst%restart(bounds, ncid, flag=flag, &
             cnveg_carbonstate=this%cnveg_carbonstate_inst, &
@@ -1084,7 +1089,7 @@ contains
     ! vegetation structure (LAI, SAI, height)
 
     if (doalb) then   
-       call CNVegStructUpdate(num_soilp, filter_soilp, &
+       call CNVegStructUpdate(bounds,num_soilp, filter_soilp, &
             waterdiagnosticbulk_inst, frictionvel_inst, this%dgvs_inst, this%cnveg_state_inst, &
             crop_inst, this%cnveg_carbonstate_inst, canopystate_inst)
     end if

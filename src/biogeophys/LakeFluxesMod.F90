@@ -269,6 +269,7 @@ contains
          eflx_gnet        =>    energyflux_inst%eflx_gnet_patch        , & ! Output: [real(r8) (:)   ]  net heat flux into ground (W/m**2)                
          taux             =>    energyflux_inst%taux_patch             , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)              
          tauy             =>    energyflux_inst%tauy_patch             , & ! Output: [real(r8) (:)   ]  wind (shear) stress: n-s (kg/m/s**2)              
+         dhsdt_canopy     =>    energyflux_inst%dhsdt_canopy_patch     , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm] 
 
          ks               =>    lakestate_inst%ks_col                  , & ! Output: [real(r8) (:)   ]  coefficient passed to LakeTemperature            
          ws               =>    lakestate_inst%ws_col                  , & ! Output: [real(r8) (:)   ]  surface friction velocity (m/s)                   
@@ -377,6 +378,7 @@ contains
          c = patch%column(p)
          g = patch%gridcell(p)
 
+         dhsdt_canopy(p) = 0.0_r8
          nmozsgn(p) = 0
          obuold(p) = 0._r8
          displa(p) = 0._r8
