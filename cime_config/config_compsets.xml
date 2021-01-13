@@ -145,6 +145,11 @@
   </compset>
 
   <compset>
+    <alias>I1850Clm51BgcCrop</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>I1850Clm51Sp</alias>
     <lname>1850_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
@@ -237,6 +242,12 @@
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
   </compset>
+
+  <compset>
+     <alias>I1850Clm51Bgc</alias>
+     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+   </compset>
+
 
   <compset>
      <alias>I1850Clm51SpNoAnthro</alias>
