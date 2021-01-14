@@ -302,13 +302,13 @@
       <option name="wallclock">00:60:00</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_C96_mg17" compset="IHistClm50BgcCrop" testmods="clm/default">
+  <test name="SMS_Ln9_P360x2" grid="C96_C96_mg17" compset="IHistClm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Want one C96 test in the aux_clm test suite; just a short smoke test to make sure it can get off the ground</option>
+      <option name="wallclock">00:10:00</option>
+      <option name="comment">Want one C96 test in the aux_clm test suite; just a short smoke test to make sure it can get off the ground. Use a PE layout that (1) has threading, because CAM uses threading at this resolution; and (2) has a smaller-than-standard task count in order to get through the queue faster.</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50BgcCrop" testmods="clm/default">
@@ -381,12 +381,13 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Sp" testmods="clm/decStart">
+  <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm51Sp" testmods="clm/decStart">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">2000 Sp test for CLM51</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50Sp" testmods="clm/reduceOutput">
@@ -421,6 +422,15 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+    </options>
+  </test>
+  <test name="ERP_D_Ld5" grid="f10_f10_musgs" compset="IHistClm51Sp" testmods="clm/default">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Test Hist compset with Sp for CLM5.1</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50SpCru" testmods="clm/default">
@@ -1016,7 +1026,7 @@
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:10:00</option>
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No need to run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing. decStart doesn't accomplish a lot in this very short test, but we're using it anyway to be consistent with other Hist tests.</option>
     </options>
   </test>
@@ -1053,6 +1063,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Among other extra outputs, ensure that writing the history field master list to a separate file does not cause failure"</option>
     </options>
   </test>
   <test name="ERS_D_Ld3" grid="f10_f10_musgs" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -1962,12 +1973,13 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
+  <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm51Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment"  >Run a Fates test with latest Clm5_1</option>
     </options>
   </test>
   <test name="SMS_D_Lm6" grid="f45_f45_mg37" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">

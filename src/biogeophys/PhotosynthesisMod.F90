@@ -590,7 +590,7 @@ contains
 
        endif
        this%fpsn24_patch = spval 
-       call hist_addfld1d (fname='FPSN24', units='umol CO2/m**2 ground/day',&
+       call hist_addfld1d (fname='FPSN24', units='umol CO2/m^2 ground/day',&
            avgflag='A', long_name='24 hour accumulative patch photosynthesis starting from mid-night', &
            ptr_patch=this%fpsn24_patch, default='inactive')
    
@@ -4155,51 +4155,61 @@ contains
     ! With an <= 0, then gs_mol = bbb
     
     ! Sunlit
-    cs_sun = cair - 1.4_r8/gb_mol * an_sun(p,iv) * forc_pbot(c)
-    cs_sun = max(cs_sun,10.e-06_r8)
+    if (an_sun(p,iv) >= 0._r8) then
+       cs_sun = cair - 1.4_r8/gb_mol * an_sun(p,iv) * forc_pbot(c)
+       cs_sun = max(cs_sun,10.e-06_r8)
+    end if
 
     if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
-       term = 1.6_r8 * an_sun(p,iv) / (cs_sun / forc_pbot(c) * 1.e06_r8)
-       aquad = 1.0_r8
-       bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+       if (an_sun(p,iv) >= 0._r8) then
+          term = 1.6_r8 * an_sun(p,iv) / (cs_sun / forc_pbot(c) * 1.e06_r8)
+          aquad = 1.0_r8
+          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
-       cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
+          cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
                (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
                (1.0 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
 
-       call quadratic (aquad, bquad, cquad, r1, r2)
-       gs_mol_sun = max(r1,r2) * 1.e06_r8
-   
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol_sun = max(r1,r2) * 1.e06_r8
+       end if
+
        ! Shaded
-       cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
-       cs_sha = max(cs_sha,10.e-06_r8)
-   
-       term = 1.6_r8 * an_sha(p,iv) / (cs_sha / forc_pbot(c) * 1.e06_r8)
-       aquad = 1.0_r8
-       bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+       if (an_sha(p,iv) >= 0._r8) then
+          cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
+          cs_sha = max(cs_sha,10.e-06_r8)
+
+          term = 1.6_r8 * an_sha(p,iv) / (cs_sha / forc_pbot(c) * 1.e06_r8)
+          aquad = 1.0_r8
+          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
-       cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
+          cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
                (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * (1.0 - medlynslope(patch%itype(p))* &
                medlynslope(patch%itype(p)) / rh_can)) * term
 
-       call quadratic (aquad, bquad, cquad, r1, r2)
-       gs_mol_sha = max(r1,r2)* 1.e06_r8
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol_sha = max(r1,r2)* 1.e06_r8
+       end if
     else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
-       aquad = cs_sun
-       bquad = cs_sun*(gb_mol - max(bsun*bbb(p),1._r8)) - mbb(p)*an_sun(p,iv)*forc_pbot(c)
-       cquad = -gb_mol*(cs_sun*max(bsun*bbb(p),1._r8) + mbb(p)*an_sun(p,iv)*forc_pbot(c)*rh_can)
-       call quadratic (aquad, bquad, cquad, r1, r2)
-       gs_mol_sun = max(r1,r2)
-    
+       if (an_sun(p,iv) >= 0._r8) then
+          aquad = cs_sun
+          bquad = cs_sun*(gb_mol - max(bsun*bbb(p),1._r8)) - mbb(p)*an_sun(p,iv)*forc_pbot(c)
+          cquad = -gb_mol*(cs_sun*max(bsun*bbb(p),1._r8) + mbb(p)*an_sun(p,iv)*forc_pbot(c)*rh_can)
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol_sun = max(r1,r2)
+       end if
+
        ! Shaded
-       cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
-       cs_sha = max(cs_sha,10.e-06_r8)
-    
-       aquad = cs_sha
-       bquad = cs_sha*(gb_mol - max(bsha*bbb(p),1._r8)) - mbb(p)*an_sha(p,iv)*forc_pbot(c)
-       cquad = -gb_mol*(cs_sha*max(bsha*bbb(p),1._r8) + mbb(p)*an_sha(p,iv)*forc_pbot(c)*rh_can)
-       call quadratic (aquad, bquad, cquad, r1, r2)
-       gs_mol_sha = max(r1,r2)
+       if (an_sha(p,iv) >= 0._r8) then
+          cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
+          cs_sha = max(cs_sha,10.e-06_r8)
+
+          aquad = cs_sha
+          bquad = cs_sha*(gb_mol - max(bsha*bbb(p),1._r8)) - mbb(p)*an_sha(p,iv)*forc_pbot(c)
+          cquad = -gb_mol*(cs_sha*max(bsha*bbb(p),1._r8) + mbb(p)*an_sha(p,iv)*forc_pbot(c)*rh_can)
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol_sha = max(r1,r2)
+       end if
     end if
     
     ! Derive new estimate for cisun,cisha

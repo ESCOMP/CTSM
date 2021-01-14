@@ -279,6 +279,12 @@ module clm_varctl
   logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
 
   !----------------------------------------------------------
+  ! biomass heat storage switch
+  !----------------------------------------------------------
+
+  logical, public :: use_biomass_heat_storage = .false. ! true => include biomass heat storage in canopy energy budget
+
+  !----------------------------------------------------------
   ! bedrock / soil depth switch
   !----------------------------------------------------------
 
@@ -346,6 +352,9 @@ module clm_varctl
   ! moved hist_wrtch4diag from histFileMod.F90 to here - caused compiler error with intel
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
+
+  ! namelist: write history master list to a file for use in documentation
+  logical, public :: hist_master_list_file = .false.
 
   !----------------------------------------------------------
   ! FATES

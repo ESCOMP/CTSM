@@ -55,6 +55,20 @@ module FrictionVelocityMod
      real(r8), pointer, public :: z0mg_col         (:)   ! col roughness length over ground, momentum  [m] 
      real(r8), pointer, public :: z0hg_col         (:)   ! col roughness length over ground, sensible heat [m]
      real(r8), pointer, public :: z0qg_col         (:)   ! col roughness length over ground, latent heat [m]
+     ! variables to add history output from CanopyFluxesMod
+     real(r8), pointer, public :: rah1_patch       (:)   ! patch sensible heat flux resistance [s/m]
+     real(r8), pointer, public :: rah2_patch       (:)   ! patch below-canopy sensible heat flux resistance [s/m]
+     real(r8), pointer, public :: raw1_patch       (:)   ! patch moisture flux resistance [s/m]
+     real(r8), pointer, public :: raw2_patch       (:)   ! patch below-canopy moisture flux resistance [s/m]
+     real(r8), pointer, public :: ustar_patch      (:)   ! patch friction velocity [m/s]
+     real(r8), pointer, public :: um_patch         (:)   ! patch wind speed including the stablity effect [m/s]
+     real(r8), pointer, public :: uaf_patch        (:)   ! patch canopy air speed [m/s]
+     real(r8), pointer, public :: taf_patch        (:)   ! patch canopy air temperature [K]
+     real(r8), pointer, public :: qaf_patch        (:)   ! patch canopy humidity [kg/kg]
+     real(r8), pointer, public :: obu_patch        (:)   ! patch Monin-Obukhov length [m]
+     real(r8), pointer, public :: zeta_patch       (:)   ! patch dimensionless stability parameter
+     real(r8), pointer, public :: vpd_patch        (:)   ! patch vapor pressure deficit [Pa]
+     real(r8), pointer, public :: num_iter_patch   (:)   ! patch number of iterations
      real(r8), pointer, public :: z0m_actual_patch (:)   ! patch roughness length actually used in flux calculations, momentum [m]
 
    contains
@@ -138,6 +152,19 @@ contains
     allocate(this%z0mg_col         (begc:endc)) ; this%z0mg_col         (:)   = nan
     allocate(this%z0qg_col         (begc:endc)) ; this%z0qg_col         (:)   = nan
     allocate(this%z0hg_col         (begc:endc)) ; this%z0hg_col         (:)   = nan
+    allocate(this%rah1_patch       (begp:endp)) ; this%rah1_patch       (:)   = nan
+    allocate(this%rah2_patch       (begp:endp)) ; this%rah2_patch       (:)   = nan
+    allocate(this%raw1_patch       (begp:endp)) ; this%raw1_patch       (:)   = nan
+    allocate(this%raw2_patch       (begp:endp)) ; this%raw2_patch       (:)   = nan
+    allocate(this%um_patch         (begp:endp)) ; this%um_patch         (:)   = nan
+    allocate(this%uaf_patch        (begp:endp)) ; this%uaf_patch        (:)   = nan
+    allocate(this%taf_patch        (begp:endp)) ; this%taf_patch        (:)   = nan
+    allocate(this%qaf_patch        (begp:endp)) ; this%qaf_patch        (:)   = nan
+    allocate(this%ustar_patch      (begp:endp)) ; this%ustar_patch      (:)   = nan
+    allocate(this%obu_patch        (begp:endp)) ; this%obu_patch        (:)   = nan
+    allocate(this%zeta_patch       (begp:endp)) ; this%zeta_patch       (:)   = nan
+    allocate(this%vpd_patch        (begp:endp)) ; this%vpd_patch        (:)   = nan
+    allocate(this%num_iter_patch   (begp:endp)) ; this%num_iter_patch   (:)   = nan
     allocate(this%z0m_actual_patch (begp:endp)) ; this%z0m_actual_patch (:)   = nan
 
   end subroutine InitAllocate
@@ -211,7 +238,63 @@ contains
             ptr_patch=this%fv_patch, default='inactive')
     end if
 
-    if (use_cn) then
+       call hist_addfld1d (fname='RAH1', units='s/m', &
+            avgflag='A', long_name='aerodynamical resistance ', &
+            ptr_patch=this%rah1_patch, default='inactive')
+       this%rah2_patch(begp:endp) = spval
+       call hist_addfld1d (fname='RAH2', units='s/m', &
+            avgflag='A', long_name='aerodynamical resistance ', &
+            ptr_patch=this%rah2_patch, default='inactive')
+       this%raw1_patch(begp:endp) = spval
+       call hist_addfld1d (fname='RAW1', units='s/m', &
+            avgflag='A', long_name='aerodynamical resistance ', &
+            ptr_patch=this%raw1_patch, default='inactive')
+       this%raw2_patch(begp:endp) = spval
+       call hist_addfld1d (fname='RAW2', units='s/m', &
+            avgflag='A', long_name='aerodynamical resistance ', &
+            ptr_patch=this%raw2_patch, default='inactive')
+       this%ustar_patch(begp:endp) = spval
+       call hist_addfld1d (fname='USTAR', units='s/m', &
+            avgflag='A', long_name='aerodynamical resistance ', &
+            ptr_patch=this%ustar_patch, default='inactive')
+       this%um_patch(begp:endp) = spval
+       call hist_addfld1d (fname='UM', units='m/s', &
+            avgflag='A', long_name='wind speed plus stability effect', &
+            ptr_patch=this%um_patch, default='inactive')
+       this%uaf_patch(begp:endp) = spval
+       call hist_addfld1d (fname='UAF', units='m/s', &
+            avgflag='A', long_name='canopy air speed ', &
+            ptr_patch=this%uaf_patch, default='inactive')
+       this%taf_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TAF', units='K', &
+            avgflag='A', long_name='canopy air temperature', &
+            ptr_patch=this%taf_patch, default='inactive')
+       this%qaf_patch(begp:endp) = spval
+       call hist_addfld1d (fname='QAF', units='kg/kg', &
+            avgflag='A', long_name='canopy air humidity', &
+            ptr_patch=this%qaf_patch, default='inactive')
+       this%obu_patch(begp:endp) = spval
+       call hist_addfld1d (fname='OBU', units='m', &
+            avgflag='A', long_name='Monin-Obukhov length', &
+            ptr_patch=this%obu_patch, default='inactive')
+       this%zeta_patch(begp:endp) = spval
+       call hist_addfld1d (fname='ZETA', units='unitless', &
+            avgflag='A', long_name='dimensionless stability parameter', &
+            ptr_patch=this%zeta_patch, default='inactive')
+       this%vpd_patch(begp:endp) = spval
+       call hist_addfld1d (fname='VPD', units='Pa', &
+            avgflag='A', long_name='vpd', &
+            ptr_patch=this%vpd_patch, default='inactive')
+       this%num_iter_patch(begp:endp) = spval
+       call hist_addfld1d (fname='num_iter', units='unitless', &
+            avgflag='A', long_name='number of iterations', &
+            ptr_patch=this%num_iter_patch, default='inactive')
+       this%rb1_patch(begp:endp) = spval
+       call hist_addfld1d (fname='RB', units='s/m', &
+            avgflag='A', long_name='leaf boundary resistance', &
+            ptr_patch=this%rb1_patch, default='inactive')
+
+       if (use_cn) then
        this%z0hv_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0HV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, sensible heat', &
