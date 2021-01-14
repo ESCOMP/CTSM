@@ -6,6 +6,8 @@ module FATESFireBase
   !
   ! !USES:
   use CNFireBaseMod                      , only : cnfire_base_type
+  use shr_kind_mod                       , only : r8 => shr_kind_r8
+  use abortutils                         , only : endrun
   use decompMod                          , only : bounds_type
   use atm2lndType                        , only : atm2lnd_type
   use EnergyFluxType                     , only : energyflux_type
@@ -18,7 +20,6 @@ module FATESFireBase
   use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
   use CNVegStateType                     , only : cnveg_state_type
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
-  use abortutils                         , only : endrun
 
   implicit none
   private
