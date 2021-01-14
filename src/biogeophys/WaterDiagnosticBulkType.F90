@@ -53,6 +53,7 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
      real(r8), pointer :: sno_liq_top_col        (:)   ! col snow liquid water fraction (mass), top layer  [fraction]
 
+     real(r8), pointer :: vpd_ref2m_patch        (:)   ! patch 2 m height surface vapor pressue deficit (Pa)
      real(r8), pointer :: rh_ref2m_patch         (:)   ! patch 2 m height surface relative humidity (%)
      real(r8), pointer :: rh_ref2m_r_patch       (:)   ! patch 2 m height surface relative humidity - rural (%)
      real(r8), pointer :: rh_ref2m_u_patch       (:)   ! patch 2 m height surface relative humidity - urban (%)
@@ -190,7 +191,8 @@ contains
     allocate(this%h2osno_top_col         (begc:endc))                     ; this%h2osno_top_col         (:)   = nan
     allocate(this%sno_liq_top_col        (begc:endc))                     ; this%sno_liq_top_col        (:)   = nan
 
-    allocate(this%dqgdT_col              (begc:endc))                     ; this%dqgdT_col              (:)   = nan   
+    allocate(this%dqgdT_col              (begc:endc))                     ; this%dqgdT_col              (:)   = nan
+    allocate(this%vpd_ref2m_patch        (begp:endp))                     ; this%vpd_ref2m_patch        (:)   = nan   
     allocate(this%rh_ref2m_patch         (begp:endp))                     ; this%rh_ref2m_patch         (:)   = nan
     allocate(this%rh_ref2m_u_patch       (begp:endp))                     ; this%rh_ref2m_u_patch       (:)   = nan
     allocate(this%rh_ref2m_r_patch       (begp:endp))                     ; this%rh_ref2m_r_patch       (:)   = nan
@@ -267,6 +269,14 @@ contains
          avgflag='A', &
          long_name=this%info%lname('vertically summed soil cie (veg landunits only)'), &
          ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
+
+    this%vpd_ref2m_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('VPD2M'), &
+         units='Pa',  &
+         avgflag='A', &
+         long_name=this%info%lname('2m vapor pressure deficit'), &
+         ptr_patch=this%vpd_ref2m_patch)
 
     this%rh_ref2m_patch(begp:endp) = spval
     call hist_addfld1d ( &
