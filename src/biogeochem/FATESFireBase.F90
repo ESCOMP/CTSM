@@ -24,6 +24,8 @@ module FATESFireBase
       procedure(InitAccBuffer_interface), public, deferred :: InitAccBuffer  ! Initialize accumulation processes
       procedure(InitAccVars_interface),   public, deferred :: InitAccVars    ! Initialize accumulation variables
       procedure(UpdateAccVars_interface), public, deferred :: UpdateAccVars  ! Update/extract accumulations vars
+      
+      procedure, public :: CNFireArea
 
   end type fates_fire_base_type
 
@@ -103,6 +105,39 @@ module FATESFireBase
   end subroutine UpdateAccVars_interface
 
   end interface
+
+  subroutine CNFireArea (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
+    atm2lnd_inst, energyflux_inst, saturated_excess_runoff_inst, &
+    waterdiagnosticbulk_inst, wateratm2lndbulk_inst, &
+    cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
+ !
+ ! !DESCRIPTION:
+ ! Computes column-level burned area 
+ !
+ ! !USES:
+ !
+ ! !ARGUMENTS:
+ class(cnfire_base_type)                               :: this
+ type(bounds_type)                     , intent(in)    :: bounds 
+ integer                               , intent(in)    :: num_soilc       ! number of soil columns in filter
+ integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
+ integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
+ integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
+ type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
+ type(energyflux_type)                 , intent(in)    :: energyflux_inst
+ type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
+ type(waterdiagnosticbulk_type)                 , intent(in)    :: waterdiagnosticbulk_inst
+ type(wateratm2lndbulk_type)                 , intent(in)    :: wateratm2lndbulk_inst
+ type(cnveg_state_type)                , intent(inout) :: cnveg_state_inst
+ type(cnveg_carbonstate_type)          , intent(inout) :: cnveg_carbonstate_inst
+ real(r8)                              , intent(in)    :: totlitc_col(bounds%begc:)
+ real(r8)                              , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:)
+ real(r8)                              , intent(in)    :: t_soi17cm_col(bounds%begc:)
+ !
+
+ call endrun( 'cnfire_base::CNFireArea: this method MUST be implemented!' )
+
+end subroutine CNFireArea
   !---------------------------------------------------------------------
 
 end module FATESFireBase
