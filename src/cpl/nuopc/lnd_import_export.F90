@@ -33,6 +33,10 @@ module lnd_import_export
 
   private :: fldlist_add
   private :: fldlist_realize
+  private :: state_getimport_1d
+  private :: state_getimport_2d
+  private :: state_setexport_1d
+  private :: state_setexport_2d
   private :: state_getfldptr
   private :: fldchk
 
@@ -168,6 +172,10 @@ contains
     integer           :: n, num
     logical           :: send_co2_to_atm = .false.
     logical           :: recv_co2_fr_atm = .false.
+
+    ! BUG(wjs, 2020-12-22, ESCOMP/CTSM#1237) force_send_to_atm should be read from the
+    ! namelist rather than being hard-coded to true.
+    logical, parameter :: force_send_to_atm = .true.
     character(len=*), parameter :: subname='(lnd_import_export:advertise_fields)'
     !-------------------------------------------------------------------------------
 
@@ -189,14 +197,11 @@ contains
     ! Advertise export fields
     !--------------------------------
 
-    ! Is any data going to sent back to the atm
-    ! For now always send to atm
-    if (atm_prognostic) then
+    if (atm_prognostic .or. force_send_to_atm) then
        send_to_atm = .true.
     else
        send_to_atm = .false.
     end if
-    send_to_atm = .true.
 
     if (send_to_atm) then
        call NUOPC_CompAttributeGet(gcomp, name='flds_co2a', value=cvalue, rc=rc)
@@ -628,7 +633,7 @@ contains
        call state_getimport_1d(importState, Flrr_flood, wateratm2lndbulk_inst%forc_flood_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
-          wateratm2lndbulk_inst%forc_flood_grc(g) = wateratm2lndbulk_inst%forc_flood_grc(g) * (ldomain%area(g) * 1.e6_r8)
+          wateratm2lndbulk_inst%forc_flood_grc(g) = -wateratm2lndbulk_inst%forc_flood_grc(g)
        end do
     else
        wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
@@ -1102,15 +1107,24 @@ contains
     integer          , intent(out):: rc
 
     ! local variables
+    logical :: l_minus ! local version of minus
     real(r8), pointer :: fldPtr1d(:)
     integer           :: g
     character(len=*), parameter :: subname='(lnd_export_export:state_setexport_1d)'
     ! ----------------------------------------------
 
+    rc = ESMF_SUCCESS
+
+    if (present(minus)) then
+       l_minus = minus
+    else
+       l_minus = .false.
+    end if
+
     call state_getfldptr(state, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     fldptr1d(:) = 0._r8
-    if (present(minus)) then
+    if (l_minus) then
        do g = 1,size(ctsmdata)
           fldptr1d(g) = -ctsmdata(g)
        end do
@@ -1139,6 +1153,7 @@ contains
     integer          , intent(out):: rc
 
     ! local variables
+    logical :: l_minus ! local version of minus
     real(r8), pointer :: fldPtr2d(:,:)
     integer           :: g, n
     character(len=CS) :: cnum
@@ -1147,12 +1162,18 @@ contains
 
     rc = ESMF_SUCCESS
 
+    if (present(minus)) then
+       l_minus = minus
+    else
+       l_minus = .false.
+    end if
+
     call state_getfldptr(state, trim(fldname), fldptr2d=fldptr2d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     fldptr2d(:,:) = 0._r8
     do n = 1,size(ctsmdata, dim=2)
        write(cnum,'(i0)') n
-       if (present(minus)) then
+       if (l_minus) then
           do g = 1,size(ctsmdata, dim=1)
              fldptr2d(n,g) = -ctsmdata(g,n)
           end do
