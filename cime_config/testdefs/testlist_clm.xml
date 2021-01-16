@@ -2320,6 +2320,8 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
         <options>
           <option name="wallclock">00:30:00</option>
           <option name="comment">Can use this test to determine if there are significant throughput changes, at least for this common and important configuration. Note that this deliberately doesn't have any testmods in order to (1) avoid doing history output (because the timing of output can be very variable, and mixing output timing with other aspects of model time can be confusing), and (2) generally keep the test replicating a production configuration as closely as possible (so, for example, we do NOT set BFBFLAG=TRUE for this test).</option>
+          <!-- standard throughput tolerance is 25%, but for this PFS test we want a stricter tolerance -->
+          <option name="tput_tolerance">0.1</option>
         </options>
       </machine>
     </machines>
