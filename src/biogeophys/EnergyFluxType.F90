@@ -8,6 +8,7 @@ module EnergyFluxType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use clm_varcon     , only : spval
+  use clm_varctl     , only : use_biomass_heat_storage
   use decompMod      , only : bounds_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -21,6 +22,7 @@ module EnergyFluxType
   type, public :: energyflux_type
 
      ! Fluxes
+     real(r8), pointer :: eflx_sh_stem_patch      (:)   ! patch sensible heat flux from stem (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_h2osfc_to_snow_col (:)   ! col snow melt to h2osfc heat flux (W/m**2)
      real(r8), pointer :: eflx_sh_grnd_patch      (:)   ! patch sensible heat flux from ground (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_sh_veg_patch       (:)   ! patch sensible heat flux from leaves (W/m**2) [+ to atm]
@@ -99,6 +101,9 @@ module EnergyFluxType
 
      ! Latent heat
      real(r8), pointer :: htvp_col                (:)   ! latent heat of vapor of water (or sublimation) [j/kg]
+
+     ! Canopy heat
+     real(r8), pointer :: dhsdt_canopy_patch      (:)   ! patch change in heat content of canopy (leaf+stem) (W/m**2) [+ to atm]
 
      ! Balance Checks
      real(r8), pointer :: errsoi_patch            (:)   ! soil/lake energy conservation error   (W/m**2)
@@ -190,6 +195,7 @@ contains
     allocate( this%eflx_sh_tot_u_patch     (begp:endp))             ; this%eflx_sh_tot_u_patch     (:)   = nan
     allocate( this%eflx_sh_tot_r_patch     (begp:endp))             ; this%eflx_sh_tot_r_patch     (:)   = nan
     allocate( this%eflx_sh_grnd_patch      (begp:endp))             ; this%eflx_sh_grnd_patch      (:)   = nan
+    allocate( this%eflx_sh_stem_patch      (begp:endp))             ; this%eflx_sh_stem_patch      (:)   = nan
     allocate( this%eflx_sh_veg_patch       (begp:endp))             ; this%eflx_sh_veg_patch       (:)   = nan
     allocate( this%eflx_sh_precip_conversion_col(begc:endc))        ; this%eflx_sh_precip_conversion_col(:) = nan
     allocate( this%eflx_lh_tot_u_patch     (begp:endp))             ; this%eflx_lh_tot_u_patch     (:)   = nan
@@ -245,6 +251,8 @@ contains
 
     allocate( this%htvp_col                (begc:endc))             ; this%htvp_col                (:)   = nan
 
+    allocate( this%dhsdt_canopy_patch      (begp:endp))             ; this%dhsdt_canopy_patch      (:)   = nan
+ 
     allocate(this%rresis_patch             (begp:endp,1:nlevgrnd))  ; this%rresis_patch            (:,:) = nan
     allocate(this%btran_patch              (begp:endp))             ; this%btran_patch             (:)   = nan
     allocate(this%btran_min_patch          (begp:endp))             ; this%btran_min_patch         (:)   = nan
@@ -431,6 +439,18 @@ contains
          avgflag='A', long_name='sensible heat from veg', &
          ptr_patch=this%eflx_sh_veg_patch, set_lake=0._r8, c2l_scale_type='urbanf')
 
+    if (use_biomass_heat_storage) then
+       this%eflx_sh_stem_patch(begp:endp) = spval
+       call hist_addfld1d (fname='FSH_STEM', units='W/m^2',  &
+            avgflag='A', long_name='sensible heat from stem', &
+            ptr_patch=this%eflx_sh_stem_patch, c2l_scale_type='urbanf',default = 'inactive')
+
+       this%dhsdt_canopy_patch(begp:endp) = spval
+       call hist_addfld1d (fname='DHSDT_CANOPY', units='W/m^2',  &
+            avgflag='A', long_name='change in canopy heat storage', &
+            ptr_patch=this%dhsdt_canopy_patch, set_lake=0._r8, c2l_scale_type='urbanf',default='active')
+    endif
+
     this%eflx_sh_grnd_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSH_G', units='W/m^2',  &
          avgflag='A', long_name='sensible heat from ground', &
@@ -528,12 +548,10 @@ contains
             ptr_patch=this%cgrnds_patch, default='inactive', c2l_scale_type='urbanf')
     end if 
 
-    if (use_cn) then
-       this%eflx_gnet_patch(begp:endp) = spval
-       call hist_addfld1d (fname='EFLX_GNET', units='W/m^2', &
-            avgflag='A', long_name='net heat flux into ground', &
-            ptr_patch=this%eflx_gnet_patch, default='inactive', c2l_scale_type='urbanf')
-    end if 
+    this%eflx_gnet_patch(begp:endp) = spval
+    call hist_addfld1d (fname='EFLX_GNET', units='W/m^2', &
+         avgflag='A', long_name='net heat flux into ground', &
+         ptr_patch=this%eflx_gnet_patch, default='inactive', c2l_scale_type='urbanf')
 
     this%eflx_grnd_lake_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_GRND_LAKE', units='W/m^2', &
