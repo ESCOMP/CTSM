@@ -290,13 +290,6 @@ contains
          if (.not. lun%urbpoi(l)) eflx_sh_tot(p) = eflx_sh_tot(p) + eflx_sh_stem(p)
          qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
 
-                              if (c==82328) then
-            write(*,*) ' '
-            write(*,*) 'evaptot1: ',c,j,qflx_evap_tot(p),qflx_evap_tot(p)*dtime
-            write(*,*) 'evaptot2: ',c,j,qflx_evap_soi(p),qflx_evap_veg(p)
-            write(*,*) ' '
-         endif
-
          eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             eflx_lh_tot_r(p)= eflx_lh_tot(p)
@@ -331,15 +324,6 @@ contains
                if ((h2osoi_liq(c,j)+h2osoi_ice(c,j)) > 0._r8) then
                   qflx_liqevap_from_top_layer(p) = max(qflx_ev_snow(p)*(h2osoi_liq(c,j)/ &
                        (h2osoi_liq(c,j)+h2osoi_ice(c,j))), 0._r8)
-                  !scs
-                  if(c==-8212) then
-                      write(iulog,*) 'evtupdate: ',c,tinc(c)*cgrndl(p)
-                     write(iulog,*) 'evsnow2: ',c,j,qflx_ev_snow(p),qflx_liqevap_from_top_layer(p),qflx_liqevap_from_top_layer(p)*dtime
-                  write(*,*) 'h2oamt2: ',c,j,h2osoi_liq(c,j),h2osoi_ice(c,j),(h2osoi_ice(c,j)+h2osoi_liq(c,j))
-                  write(*,*) 'h2ofrac2: ',c,j,(h2osoi_liq(c,j))/(h2osoi_ice(c,j)+h2osoi_liq(c,j))
-                  write(*,*) ' '
-               endif
-                  
                else
                   qflx_liqevap_from_top_layer(p) = 0._r8
                end if
