@@ -1365,7 +1365,8 @@ contains
             c = patch%column(p)
             g = patch%gridcell(p)
             
-            if ( par_z_sun(p,1) > 0._r8 .and. qflx_tran_veg(p)>0._r8) then
+            if ( par_z_sun(p,1) > 0._r8 .and. qflx_tran_veg(p)>4.e-9_r8) then
+               ! 4e-9  sets a transpiration tolerance of 0.01 W/m2
                ! 12e-6 converts umolCO2->gC
                ! 1e-2  converts Pa->hPa
                wue_ei(p) = 12e-6_r8*fpsn(p) * 1e-2_r8*vpd_ref2m(p) / qflx_tran_veg(p)
