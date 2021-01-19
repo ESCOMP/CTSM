@@ -53,6 +53,7 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
      real(r8), pointer :: sno_liq_top_col        (:)   ! col snow liquid water fraction (mass), top layer  [fraction]
 
+     real(r8), pointer :: wue_ei_patch           (:)   ! patch ecosystem-scale inherent water use efficiency (gC kgH2O-1 hPa)
      real(r8), pointer :: vpd_ref2m_patch        (:)   ! patch 2 m height surface vapor pressure deficit (Pa)
      real(r8), pointer :: rh_ref2m_patch         (:)   ! patch 2 m height surface relative humidity (%)
      real(r8), pointer :: rh_ref2m_r_patch       (:)   ! patch 2 m height surface relative humidity - rural (%)
@@ -192,7 +193,8 @@ contains
     allocate(this%sno_liq_top_col        (begc:endc))                     ; this%sno_liq_top_col        (:)   = nan
 
     allocate(this%dqgdT_col              (begc:endc))                     ; this%dqgdT_col              (:)   = nan
-    allocate(this%vpd_ref2m_patch        (begp:endp))                     ; this%vpd_ref2m_patch        (:)   = nan   
+    allocate(this%wue_ei_patch           (begp:endp))                     ; this%wue_ei_patch           (:)   = nan
+    allocate(this%vpd_ref2m_patch        (begp:endp))                     ; this%vpd_ref2m_patch        (:)   = nan
     allocate(this%rh_ref2m_patch         (begp:endp))                     ; this%rh_ref2m_patch         (:)   = nan
     allocate(this%rh_ref2m_u_patch       (begp:endp))                     ; this%rh_ref2m_u_patch       (:)   = nan
     allocate(this%rh_ref2m_r_patch       (begp:endp))                     ; this%rh_ref2m_r_patch       (:)   = nan
@@ -269,6 +271,14 @@ contains
          avgflag='A', &
          long_name=this%info%lname('vertically summed soil cie (veg landunits only)'), &
          ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
+
+    this%wue_ei_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('WUE_EI'), &
+         units='gC kgH2O-1 hPa',  &
+         avgflag='A', &
+         long_name=this%info%lname('ecosystem-scale inherenet water use efficiency'), &
+         ptr_patch=this%wue_ei_patch)
 
     this%vpd_ref2m_patch(begp:endp) = spval
     call hist_addfld1d ( &
