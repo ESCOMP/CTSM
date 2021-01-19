@@ -431,6 +431,10 @@ contains
     real(r8), parameter :: min_stem_diameter = 0.05_r8 !minimum stem diameter for which to calculate stem interactions
 
     integer :: dummy_to_make_pgi_happy
+
+    real(r8) :: snow_evaporation_limit
+    real(r8) :: ev_snow_unconstrained
+
     !------------------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(downreg_patch) == (/bounds%endp/)), sourcefile, __LINE__)
@@ -1435,6 +1439,19 @@ bioms:   do f = 1, fn
          delq_h2osfc = wtalq(p)*qg_h2osfc(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
          qflx_ev_h2osfc(p) = forc_rho(c)*wtgq(p)*delq_h2osfc
 
+         ! adjust snow surface layer evaporation
+         j = col%snl(c)+1
+         if ((h2osoi_ice(c,j)+h2osoi_liq(c,j)) > 0._r8 .and. j < 1) then
+            ! assumes for j < 1 that frac_sno_eff > 0
+            snow_evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))*patch%wtcol(p)/frac_sno(c)
+            if (qflx_ev_snow(p)*dtime > snow_evaporation_limit) then
+               ev_snow_unconstrained = qflx_ev_snow(p)
+               qflx_ev_snow(p) = snow_evaporation_limit/dtime
+
+               qflx_evap_soi(p)  = qflx_evap_soi(p) - frac_sno(c)*(ev_snow_unconstrained - qflx_ev_snow(p))
+            endif
+         endif
+         
          ! 2 m height air temperature
 
          t_ref2m(p) = thm(p) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
