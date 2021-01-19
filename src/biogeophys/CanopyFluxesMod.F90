@@ -527,7 +527,6 @@ contains
          q_ref2m                => waterdiagnosticbulk_inst%q_ref2m_patch                , & ! Output: [real(r8) (:)   ]  2 m height surface specific humidity (kg/kg)                          
          rh_ref2m_r             => waterdiagnosticbulk_inst%rh_ref2m_r_patch             , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface relative humidity (%)                        
          rh_ref2m               => waterdiagnosticbulk_inst%rh_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
-         vpd_ref2m              => waterdiagnosticbulk_inst%vpd_ref2m_patch              , & ! Output: [real(r8) (:)   ]  2 m height surface vapor pressure deficit (Pa)
          rhaf                   => waterdiagnosticbulk_inst%rh_af_patch                  , & ! Output: [real(r8) (:)   ]  fractional humidity of canopy air [dimensionless]                     
 
          qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)                      
@@ -1257,12 +1256,6 @@ contains
          rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
          rh_ref2m_r(p) = rh_ref2m(p)
 
-         ! 2 m vapor pressure deficit
-         vpd_ref2m(p) = e_ref2m*(1-rh_ref2m(p)/100._r8)
-
-
-
-
          ! Human Heat Stress
          if ( all_human_stress_indices .or. fast_human_stress_indices ) then
             call KtoC(t_ref2m(p), tc_ref2m(p))
@@ -1358,7 +1351,7 @@ contains
          ! Determine total photosynthesis
          
          call PhotosynthesisTotal(fn, filterp, &
-              atm2lnd_inst, canopystate_inst, photosyns_inst, solarabs_inst)
+              atm2lnd_inst, canopystate_inst, photosyns_inst)
          
          ! Calculate ozone stress. This needs to be done after rssun and rsshade are
          ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
@@ -1440,6 +1433,7 @@ contains
 
 
     end associate
+
 
   end subroutine CanopyFluxes
 
