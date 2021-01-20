@@ -858,7 +858,7 @@ contains
            m_livestemn_to_fire(p)           =  livestemn(p)          * matrix_update_fin(p,ilivestem_to_iout_fin    ,f * cc_lstem(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
            m_livestemn_storage_to_fire(p)   =  livestemn_storage(p)  * matrix_update_fin(p,ilivestemst_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
            m_livestemn_xfer_to_fire(p)      =  livestemn_xfer(p)     * matrix_update_fin(p,ilivestemxf_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
-           m_deadstemn_to_fire(p)           =  deadstemn(p)          * matrix_update_fin(p,ideadstem_to_iout_fin    ,f * cc_dstem(patch%itype(p)*m),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadstemn_to_fire(p)           =  deadstemn(p)          * matrix_update_fin(p,ideadstem_to_iout_fin    ,f * cc_dstem(patch%itype(p))*m,dt,cnveg_nitrogenflux_inst,.True.,.True.)
            m_deadstemn_storage_to_fire(p)   =  deadstemn_storage(p)  * matrix_update_fin(p,ideadstemst_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
            m_deadstemn_xfer_to_fire(p)      =  deadstemn_xfer(p)     * matrix_update_fin(p,ideadstemxf_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
            m_frootn_to_fire(p)              =  frootn(p)             * matrix_update_fin(p,ifroot_to_iout_fin       ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
