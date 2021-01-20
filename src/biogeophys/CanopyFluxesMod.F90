@@ -324,6 +324,7 @@ contains
     real(r8) :: qsatldT(bounds%begp:bounds%endp)     ! derivative of "qsatl" on "t_veg"
     real(r8) :: e_ref2m                              ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: qsat_ref2m                           ! 2 m height surface saturated specific humidity [kg/kg]
+    real(r8) :: gs                                   ! canopy conductance for iwue cal [molH2O/m2ground/s]
     real(r8) :: air(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
     real(r8) :: bir(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
     real(r8) :: cir(bounds%begp:bounds%endp)         ! atmos. radiation temporay set
@@ -530,6 +531,7 @@ contains
          rhaf                   => waterdiagnosticbulk_inst%rh_af_patch                  , & ! Output: [real(r8) (:)   ]  fractional humidity of canopy air [dimensionless]                     
          vpd_ref2m              => waterdiagnosticbulk_inst%vpd_ref2m_patch              , & ! Output: [real(r8) (:)   ]  2 m height surface vapor pressure deficit (Pa)
          wue_ei                 => waterdiagnosticbulk_inst%wue_ei_patch                 , & ! Output: [real(r8) (:)   ]  ecosystem-scale inherent water use efficiency (gC kgH2O-1 hPa)
+         iwue                   => waterdiagnosticbulk_inst%iwue_patch                   , & ! Output: [real(r8) (:)   ]  ecosystem-scale inherent water use efficiency (gC kgH2O-1 hPa)
 
          qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)                      
          qflx_evap_veg          => waterfluxbulk_inst%qflx_evap_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)                        
@@ -537,7 +539,8 @@ contains
          qflx_ev_snow           => waterfluxbulk_inst%qflx_ev_snow_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]                        
          qflx_ev_soil           => waterfluxbulk_inst%qflx_ev_soil_patch            , & ! Output: [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]                        
          qflx_ev_h2osfc         => waterfluxbulk_inst%qflx_ev_h2osfc_patch          , & ! Output: [real(r8) (:)   ]  evaporation flux from h2osfc (mm H2O/s) [+ to atm]                      
-
+         gs_mol_sun             => photosyns_inst%gs_mol_sun_patch              , & ! Input: [real(r8) (:)   ]  patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sha             => photosyns_inst%gs_mol_sha_patch              , & ! Input: [real(r8) (:)   ]  patch shaded leaf stomatal conductance (umol H2O/m**2/s)
          rssun                  => photosyns_inst%rssun_patch                   , & ! Output: [real(r8) (:)   ]  leaf sunlit stomatal resistance (s/m) (output from Photosynthesis)
          rssha                  => photosyns_inst%rssha_patch                   , & ! Output: [real(r8) (:)   ]  leaf shaded stomatal resistance (s/m) (output from Photosynthesis)
          fpsn                   => photosyns_inst%fpsn_patch                    , & ! Input:  [real(r8) (:)   ]  photosynthesis (umol CO2 /m**2 /s)
@@ -1369,9 +1372,17 @@ contains
                ! 4e-9  sets a transpiration tolerance of 0.01 W/m2
                ! 12e-6 converts umolCO2->gC
                ! 1e-2  converts Pa->hPa
+               ! 1e-6  converts umolH2O->molH2O
                wue_ei(p) = 12e-6_r8*fpsn(p) * 1e-2_r8*vpd_ref2m(p) / qflx_tran_veg(p)
+               gs        = 1.e-6_r8*(laisun(p)*gs_mol_sun(p,1)+laisha(p)*gs_mol_sha(p,1))
+               if ( gs>0._r8 ) then
+                  iwue(p)   = fpsn(p)/gs
+               else
+                  iwue(p)   = spval
+               end if
             else
                wue_ei(p) = spval
+               iwue(p)   = spval
             end if
 
          end do
