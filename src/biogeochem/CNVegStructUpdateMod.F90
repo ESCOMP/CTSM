@@ -13,7 +13,7 @@ module CNVegStructUpdateMod
   use CNDVType             , only : dgvs_type
   use CNVegStateType       , only : cnveg_state_type
   use CropType             , only : crop_type
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type, spinup_factor_deadwood
+  use CNVegCarbonStateType , only : cnveg_carbonstate_type
   use CanopyStateType      , only : canopystate_type
   use PatchType            , only : patch                
   use decompMod            , only : bounds_type
@@ -199,7 +199,7 @@ contains
 
                else
                   !correct height calculation if doing accelerated spinup
-                  htop(p) = ((3._r8 * deadstemc(p) * spinup_factor_deadwood * taper(ivt(p)) * taper(ivt(p)))/ &
+                  htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
                          (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
 
                endif
@@ -212,9 +212,12 @@ contains
                   leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
-                  stem_biomass(p) = (spinup_factor_deadwood*deadstemc(p) + livestemc(p)) &
+                  stem_biomass(p) = (deadstemc(p) + livestemc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
+                  if (spinup_state == 2) then
+                     stem_biomass(p) = 10._r8 * stem_biomass(p)
+                  end if
                else
                   leaf_biomass(p) = 0_r8
                   stem_biomass(p) = 0_r8
