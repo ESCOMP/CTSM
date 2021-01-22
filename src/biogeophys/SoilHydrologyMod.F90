@@ -844,11 +844,15 @@ contains
              ! make consistent with how evap_grnd removed in infiltration
              h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
              h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
-             if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
+             if ((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
                 qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                 qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
                 qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
                                        - qflx_solidevap_from_top_layer(c))
+
+                if((abs((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1))) > 1.e-8) then
+                   call endrun(msg="solid evap too large! "//errmsg(sourcefile, __LINE__))
+                endif
                 h2osoi_ice(c,1) = 0._r8
              else
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) - (1._r8 - frac_h2osfc(c)) * qflx_solidevap_from_top_layer(c) * dtime
@@ -2315,11 +2319,15 @@ contains
              ! make consistent with how evap_grnd removed in infiltration
              h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
              h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
-             if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
+             if ((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
                 qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                 qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
                 qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
-                                       - qflx_solidevap_from_top_layer(c))
+                     - qflx_solidevap_from_top_layer(c))
+                if((abs((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1))) > 1.e-8) then
+                   call endrun(msg="solid evap too large! "//errmsg(sourcefile, __LINE__))
+                endif
+
                 h2osoi_ice(c,1) = 0._r8
              else
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) - (1._r8 - frac_h2osfc(c)) * qflx_solidevap_from_top_layer(c) * dtime

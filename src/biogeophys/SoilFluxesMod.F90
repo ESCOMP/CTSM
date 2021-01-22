@@ -5,7 +5,7 @@ module SoilFluxesMod
   ! Updates surface fluxes based on the new ground temperature.
   !
   ! !USES:
-  use shr_kind_mod	, only : r8 => shr_kind_r8
+  use shr_kind_mod	, only : r8 => shr_kind_r8, r4 => shr_kind_r4
   use shr_log_mod	, only : errMsg => shr_log_errMsg
   use decompMod		, only : bounds_type
   use abortutils	, only : endrun
@@ -213,7 +213,7 @@ contains
          ! snow layers
          if (j < 1) then
             ! assumes for j < 1 that frac_sno_eff > 0
-            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))*patch%wtcol(p)/frac_sno_eff(c)
+            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/frac_sno_eff(c)
             if (qflx_ev_snow(p)*dtime > evaporation_limit) then
                ev_unconstrained = qflx_ev_snow(p)
                qflx_ev_snow(p) = evaporation_limit/dtime
@@ -227,7 +227,7 @@ contains
          ! top soil layer for urban columns; adjust qflx_evap_soi directly
          if (lun%urbpoi(patch%landunit(p))) then
             j = 1
-            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))*patch%wtcol(p)
+            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))
             if (qflx_evap_soi(p)*dtime > evaporation_limit) then
                ev_unconstrained = qflx_evap_soi(p)
                qflx_evap_soi(p) = evaporation_limit/dtime
@@ -357,6 +357,22 @@ contains
             end if
 
          end if
+
+         ! limit only solid evaporation (sublimation) from top soil layer
+         ! (liquid evaporation from soil should not be limited)
+         if (j==1 .and. frac_h2osfc(c) < 1._r8) then
+
+            if (real((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(p) * dtime,r4) > real(h2osoi_ice(c,j),r4)) then
+
+               qflx_liqevap_from_top_layer(p)  &
+                    = qflx_liqevap_from_top_layer(p)  &
+                    + (qflx_solidevap_from_top_layer(p) &
+                    - h2osoi_ice(c,j)/(dtime*(1._r8 - frac_h2osfc(c))))
+               qflx_solidevap_from_top_layer(p) &
+                    = h2osoi_ice(c,j)/(dtime*(1._r8 - frac_h2osfc(c)))
+
+            endif
+         endif
 
          ! Variables needed by history tape
 

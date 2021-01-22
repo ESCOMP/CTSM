@@ -89,7 +89,6 @@ contains
                                       Wet_Bulb, Wet_BulbS, HeatIndex, AppTemp, &
                                       swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                       SwampCoolEff, KtoC, VaporPres
-    use clm_time_manager , only : get_step_size_real
 
     !
     ! !ARGUMENTS:
@@ -146,9 +145,6 @@ contains
     real(r8) :: qsat_ref2m                       ! 2 m height surface saturated specific humidity [kg/kg]
     real(r8) :: www                              ! surface soil wetness [-]
 
-    real(r8) :: snow_evaporation_limit
-    real(r8) :: ev_snow_unconstrained
-    real(r8) :: dtime                                              ! land model time step (sec)
     !------------------------------------------------------------------------------
 
     associate(                                                                    & 
@@ -264,10 +260,6 @@ contains
          begp                   => bounds%begp                                  , &
          endp                   => bounds%endp                                    &
          )
-
-      ! Get step size
-
-      dtime = get_step_size_real()
 
       ! First do some simple settings of values over points where frac vegetation covered
       ! by snow is zero
@@ -426,20 +418,6 @@ contains
          qflx_ev_snow(p)   = -raiw*(forc_q(c) - qg_snow(c))
          qflx_ev_soil(p)   = -raiw*(forc_q(c) - qg_soil(c))
          qflx_ev_h2osfc(p) = -raiw*(forc_q(c) - qg_h2osfc(c))
-
-         ! adjust snow surface layer evaporation
-         j = col%snl(c)+1
-         if ((h2osoi_ice(c,j)+h2osoi_liq(c,j)) > 0._r8 .and. j < 1) then
-            ! assumes for j < 1 that frac_sno_eff > 0
-            snow_evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))*patch%wtcol(p)/frac_sno_eff(c)
-            if (qflx_ev_snow(p)*dtime > snow_evaporation_limit) then
-               ev_snow_unconstrained = qflx_ev_snow(p)
-               qflx_ev_snow(p) = snow_evaporation_limit/dtime
-
-               qflx_evap_soi(p)  = qflx_evap_soi(p) - frac_sno_eff(c)*(ev_snow_unconstrained - qflx_ev_snow(p))
-               qflx_evap_tot(p)  = qflx_evap_soi(p)
-            endif
-         endif
 
          ! 2 m height air temperature
          t_ref2m(p) = thm(p) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
