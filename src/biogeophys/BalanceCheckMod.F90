@@ -168,8 +168,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterColumnBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       water_inst, soilhydrology_inst, lakestate_inst, &
-       use_aquifer_layer)
+       water_inst, lakestate_inst)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step, for bulk water and
@@ -183,8 +182,6 @@ contains
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(water_type)          , intent(inout) :: water_inst
     type(lakestate_type)      , intent(in)    :: lakestate_inst
-    type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
-    logical                   , intent(in)    :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -196,12 +193,10 @@ contains
        call BeginWaterColumnBalanceSingle(bounds, &
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
-            soilhydrology_inst, &
             lakestate_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
-            water_inst%bulk_and_tracers(i)%waterbalance_inst, &
-            use_aquifer_layer = use_aquifer_layer)
+            water_inst%bulk_and_tracers(i)%waterbalance_inst)
     end do
 
   end subroutine BeginWaterColumnBalance
@@ -282,8 +277,12 @@ contains
     call c2g(bounds, begwb_col(begc:endc), begwb_grc(begg:endg), &
              c2l_scale_type='urbanf', l2g_scale_type='unity')
 
-    call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_beg(bounds, qflx_liq_dynbal_left_to_dribble(begg:endg))
-    call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_beg(bounds, qflx_ice_dynbal_left_to_dribble(begg:endg))
+    call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_beg( &
+      bounds, &
+      qflx_liq_dynbal_left_to_dribble(begg:endg))
+    call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_beg( &
+      bounds, &
+      qflx_ice_dynbal_left_to_dribble(begg:endg))
 
     do g = begg, endg
        begwb_grc(g) = begwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
@@ -297,9 +296,8 @@ contains
    !-----------------------------------------------------------------------
   subroutine BeginWaterColumnBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, lakestate_inst, waterstate_inst, & 
-       waterdiagnostic_inst, waterbalance_inst, &
-       use_aquifer_layer)
+       lakestate_inst, waterstate_inst, & 
+       waterdiagnostic_inst, waterbalance_inst)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step, for bulk or a
@@ -311,36 +309,18 @@ contains
     integer                   , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
-    type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
     type(lakestate_type)      , intent(in)    :: lakestate_inst
     class(waterstate_type)    , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)   :: waterdiagnostic_inst
     class(waterbalance_type)  , intent(inout) :: waterbalance_inst
-    logical                   , intent(in)    :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
-    integer :: c, j, fc                  ! indices
     !-----------------------------------------------------------------------
 
     associate(                                               &
-         zi         => col%zi                           , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
-         zwt        => soilhydrology_inst%zwt_col       , & ! Input:  [real(r8) (:)   ]  water table depth (m)
-         aquifer_water_baseline => waterstate_inst%aquifer_water_baseline, & ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
-         wa         => waterstate_inst%wa_col           , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)
          begwb      => waterbalance_inst%begwb_col      , & ! Output: [real(r8) (:)   ]  water mass begining of the time step
          h2osno_old => waterbalance_inst%h2osno_old_col   & ! Output: [real(r8) (:)   ]  snow water (mm H2O) at previous time step
          )
-
-      if(use_aquifer_layer) then
-         do fc = 1, num_nolakec
-            c = filter_nolakec(fc)
-            if (col%hydrologically_active(c)) then
-               if(zwt(c) <= zi(c,nlevsoi)) then
-                  wa(c) = aquifer_water_baseline
-               end if
-            end if
-         end do
-      endif
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstate_inst, waterdiagnostic_inst, &
@@ -413,6 +393,7 @@ contains
      integer  :: nstep                                  ! time step number
      integer  :: DAnstep                                ! time step number since last Data Assimilation (DA)
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
+     real(r8) :: errh2o_grc(bounds%begg:bounds%endg)    ! grid cell level water conservation error [mm H2O]
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
      real(r8) :: forc_snow_col(bounds%begc:bounds%endc) ! column level snow rate [mm/s]
      real(r8) :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water [mm H2O]
@@ -450,7 +431,6 @@ contains
           snow_depth              =>    waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
           begwb_grc               =>    waterbalance_inst%begwb_grc             , & ! Input:  [real(r8) (:)   ]  grid cell-level water mass begining of the time step
           endwb_grc               =>    waterbalance_inst%endwb_grc             , & ! Output: [real(r8) (:)   ]  grid cell-level water mass end of the time step
-          errh2o_grc              =>    waterbalance_inst%errh2o_grc            , & ! Output: [real(r8) (:)   ]  grid cell-level water conservation error (mm H2O)
           begwb_col               =>    waterbalance_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  column-level water mass begining of the time step
           endwb_col               =>    waterbalance_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  column-level water mass end of the time step
           errh2o_col              =>    waterbalance_inst%errh2o_col            , & ! Output: [real(r8) (:)   ]  column-level water conservation error (mm H2O)
@@ -642,8 +622,12 @@ contains
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
-       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_end(bounds, qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg))
-       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_end(bounds, qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg))
+       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_end( &
+         bounds, &
+         qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg))
+       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_end( &
+         bounds, &
+         qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg))
 
        do g = bounds%begg, bounds%endg
           endwb_grc(g) = endwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
@@ -704,7 +688,7 @@ contains
 
        end if
 
-       ! Snow balance check at the grid cell level.
+       ! Snow balance check at the column level.
        ! Beginning snow balance variable h2osno_old is calculated once
        ! for both the column-level and grid cell-level balance checks.
 

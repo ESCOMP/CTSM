@@ -42,7 +42,6 @@ module WaterBalanceType
      real(r8), pointer :: endwb_col              (:)   ! column-level water mass end of the time step
      real(r8), pointer :: errh2o_patch           (:)   ! water conservation error (mm H2O)
      real(r8), pointer :: errh2o_col             (:)   ! column-level water conservation error (mm H2O)
-     real(r8), pointer :: errh2o_grc             (:)   ! grid cell-level water conservation error (mm H2O)
      real(r8), pointer :: errh2osno_col          (:)   ! snow water conservation error(mm H2O)
 
    contains
@@ -133,9 +132,6 @@ contains
     call AllocateVar1d(var = this%errh2o_col, name = 'errh2o_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
-    call AllocateVar1d(var = this%errh2o_grc, name = 'errh2o_grc', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
     call AllocateVar1d(var = this%errh2osno_col, name = 'errh2osno_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)

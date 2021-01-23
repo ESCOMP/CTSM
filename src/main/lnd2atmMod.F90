@@ -358,8 +358,9 @@ contains
 
           ! qflx_runoff is the sum of a number of terms, including qflx_qrgwl. Since we
           ! are adjusting qflx_qrgwl above, we need to adjust qflx_runoff analogously.
-          water_inst%waterfluxbulk_inst%qflx_runoff_col(c) = water_inst%waterfluxbulk_inst%qflx_runoff_col(c) + &
-               water_inst%waterlnd2atmbulk_inst%qflx_liq_from_ice_col(c)
+          water_inst%waterfluxbulk_inst%qflx_runoff_col(c) = &
+            water_inst%waterfluxbulk_inst%qflx_runoff_col(c) + &
+            water_inst%waterlnd2atmbulk_inst%qflx_liq_from_ice_col(c)
        end if
     end do
 
@@ -374,8 +375,12 @@ contains
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
     do g = bounds%begg, bounds%endg
-       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(g) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(g) - water_inst%waterfluxbulk_inst%qflx_liq_dynbal_grc(g)
-       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_grc(g) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_grc(g) - water_inst%waterfluxbulk_inst%qflx_liq_dynbal_grc(g)
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(g) = &
+         water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qgwl_grc(g) - &
+         water_inst%waterfluxbulk_inst%qflx_liq_dynbal_grc(g)
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_grc(g) = &
+         water_inst%waterlnd2atmbulk_inst%qflx_rofliq_grc(g) - &
+         water_inst%waterfluxbulk_inst%qflx_liq_dynbal_grc(g)
     enddo
 
     call c2g( bounds, &
@@ -394,7 +399,9 @@ contains
          water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(bounds%begg:bounds%endg),  & 
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     do g = bounds%begg, bounds%endg
-       water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(g) = water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(g) - water_inst%waterfluxbulk_inst%qflx_ice_dynbal_grc(g)          
+       water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(g) = &
+         water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(g) - &
+         water_inst%waterfluxbulk_inst%qflx_ice_dynbal_grc(g)
     enddo
 
     ! calculate total water storage for history files
@@ -407,7 +414,9 @@ contains
          water_inst%waterbalancebulk_inst%endwb_grc(bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     do g = bounds%begg, bounds%endg
-       water_inst%waterdiagnosticbulk_inst%tws_grc(g) = water_inst%waterbalancebulk_inst%endwb_grc(g) + water_inst%wateratm2lndbulk_inst%volr_grc(g) / grc%area(g) * 1.e-3_r8
+       water_inst%waterdiagnosticbulk_inst%tws_grc(g) = &
+         water_inst%waterbalancebulk_inst%endwb_grc(g) + &
+         water_inst%wateratm2lndbulk_inst%volr_grc(g) / grc%area(g) * 1.e-3_r8
     enddo
 
   end subroutine lnd2atm

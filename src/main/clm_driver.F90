@@ -391,8 +391,7 @@ contains
        call BeginWaterColumnBalance(bounds_clump,             &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
-            water_inst, soilhydrology_inst, lakestate_inst, &
-            use_aquifer_layer = use_aquifer_layer())
+            water_inst, lakestate_inst)
 
        call t_stopf('begwbal')
 
