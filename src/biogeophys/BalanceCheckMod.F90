@@ -370,6 +370,7 @@ contains
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod     , only : c2g
+     use dynSubgridControlMod, only : get_for_testing_zero_dynbal_fluxes
      !
      ! !ARGUMENTS:
      type(bounds_type)     , intent(in)    :: bounds  
@@ -658,7 +659,8 @@ contains
              ' nstep= ',nstep, &
              ' local indexg= ',indexg,&
              ' errh2o_grc= ',errh2o_grc(indexg)
-          if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
+          if (errh2o_max_val > error_thresh .and. DAnstep > skip_steps .and. &
+              .not. get_for_testing_zero_dynbal_fluxes()) then
 
              write(iulog,*)'clm model is stopping - error is greater than 1e-5 (mm)'
              write(iulog,*)'nstep                     = ',nstep
