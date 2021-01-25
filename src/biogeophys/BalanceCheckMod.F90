@@ -284,6 +284,10 @@ contains
       bounds, &
       qflx_ice_dynbal_left_to_dribble(begg:endg))
 
+    ! These dynbal dribblers store the delta state, (end - beg). Thus, the
+    ! amount dribbled out is the negative of the amount stored in the
+    ! dribblers. Therefore, conservation requires us to subtract the amount
+    ! remaining to dribble.
     do g = begg, endg
        begwb_grc(g) = begwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
                                    - qflx_ice_dynbal_left_to_dribble(g)
@@ -630,6 +634,10 @@ contains
          bounds, &
          qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg))
 
+       ! These dynbal dribblers store the delta state, (end - beg). Thus, the
+       ! amount dribbled out is the negative of the amount stored in the
+       ! dribblers. Therefore, conservation requires us to subtract the amount
+       ! remaining to dribble.
        do g = bounds%begg, bounds%endg
           endwb_grc(g) = endwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
                                       - qflx_ice_dynbal_left_to_dribble(g)
