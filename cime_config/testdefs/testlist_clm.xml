@@ -1863,7 +1863,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment"  >Include a few debug tests of Cn</option>
     </options>
   </test>
-  <test name="SSPMATRIXCN_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly_matrixcn">
+  <test name="SSPMATRIXCN_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
