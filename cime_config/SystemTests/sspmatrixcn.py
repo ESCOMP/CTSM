@@ -40,7 +40,7 @@ class SSPMATRIXCN(SystemTestsCommon):
     # Define the settings that will be used for each step
     steps  = ["0",       "3",      "4"      ]
     desc   = ["AD-cold", "slow",   "normal" ]
-    runtyp = ["startup", "branch", "branch" ]
+    runtyp = ["startup", "hybrid", "branch" ]
     spin   = ["on",      "sasu",   "off"    ]
     stop_n = [5,         thrice,   thrice   ]
     cold   = [True,      False,    False    ]
