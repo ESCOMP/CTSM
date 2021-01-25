@@ -932,7 +932,7 @@ contains
 
     call t_startf('NUpdate3')
 
-    call NstateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
+    call NStateUpdate3(num_soilc, filter_soilc, num_soilp, filter_soilp, &
          cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
          soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
 
