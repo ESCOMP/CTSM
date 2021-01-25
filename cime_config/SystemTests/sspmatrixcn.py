@@ -38,10 +38,10 @@ class SSPMATRIXCN(SystemTestsCommon):
     twice  = 2 * nyr_forcing
     thrice = 3 * nyr_forcing
     # Define the settings that will be used for each step
-    steps  = ["0",       "0",      "1"      ]
+    steps  = ["0",       "3",      "4"      ]
     desc   = ["AD-cold", "slow",   "normal" ]
     runtyp = ["startup", "branch", "branch" ]
-    spin   = [False,     True,     False    ]
+    spin   = ["on",      "sasu",   "off"    ]
     stop_n = [5,         thrice,   thrice   ]
     cold   = [True,      False,    False    ]
     iloop  = [-999,      -999,     -999     ]
@@ -63,11 +63,15 @@ class SSPMATRIXCN(SystemTestsCommon):
            SystemTestsCommon.__init__(self, case)
            ystart = self._case.get_value("DATM_CLMNCEP_YR_START")
            yend   = self._case.get_value("DATM_CLMNCEP_YR_END")
+           self.comp = self._case.get_value("COMP_LND") 
         else:
+           self._case = None
+           self.comp = "clm"
            ystart = 2000
            yend   = 2001
 
         expect( yend-ystart+1 == self.nyr_forcing, "Number of years run over MUST correspond to nyr_forcing" )
+        self._testname = "SSPMATRIX"
 
     def check_n( self, n):
         "Check if n is within range"
@@ -108,7 +112,7 @@ class SSPMATRIXCN(SystemTestsCommon):
         if ( n < b4last ):
            contents_to_append = contents_to_append + ", is_outmatrix = .False."
         # For matrix spinup steps, set the matrix spinup and other variables associated with it
-        if ( self.spin[n] ):
+        if ( self.spin[n] == "sasu" ):
             contents_to_append = contents_to_append + ", nyr_forcing = "+str(self.nyr_forcing)
             contents_to_append = contents_to_append + ", isspinup = .True."
             contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
@@ -122,7 +126,7 @@ class SSPMATRIXCN(SystemTestsCommon):
 
         # Always append to the end
         user_nl_utils.append_to_user_nl_files(caseroot = caseroot,
-                                              component = "clm",
+                                              component = self.comp,
                                               contents = contents_to_append)
 
     def run_phase(self):
@@ -155,14 +159,10 @@ class SSPMATRIXCN(SystemTestsCommon):
               clone.set_value("RUN_TYPE", self.runtyp[n] )
               clone.set_value("STOP_N", self.stop_n[n] )
 
-              if ( self.spin[n] ):
-                 clone.set_value("CLM_ACCELERATED_SPINUP", "on" )
-              else:
-                 clone.set_value("CLM_ACCELERATED_SPINUP", "off" )
+              clone.set_value("CLM_ACCELERATED_SPINUP", self.spin[n] )
 
               if ( self.cold[n] ):
                  clone.set_value("CLM_FORCE_COLDSTART", "on" )
-                 clone.set_value("CLM_ACCELERATED_SPINUP", "on" )
               else:
                  clone.set_value("CLM_FORCE_COLDSTART", "off" )
 
@@ -267,7 +267,7 @@ class test_ssp_matrixcn(unittest.TestCase):
      logger.info( "nyr_forcing = {}".format(self.ssp.nyr_forcing) )
      for n in range(self.ssp.n_steps()):
        self.ssp.__logger__(n)
-       if ( self.ssp.spin[n] ):
+       if ( self.ssp.spin[n] == "sasu" ):
           logger.info( "  isspinup = .true." )
           logger.info( "  nyr_sasu = {}".format(self.ssp.sasu[n]) )
           if ( self.ssp.iloop[n] != -999 ):
