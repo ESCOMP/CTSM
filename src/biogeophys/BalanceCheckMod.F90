@@ -288,6 +288,11 @@ contains
     ! amount dribbled out is the negative of the amount stored in the
     ! dribblers. Therefore, conservation requires us to subtract the amount
     ! remaining to dribble.
+    ! This sign convention is opposite to the convention chosen for the
+    ! respective dribble terms used in the carbon balance. At some point
+    ! it may be worth making the two conventions consistent.
+    ! Bill Sacks states: I think the convention used for the water and
+    ! energy dribblers is counter-intuitive.
     do g = begg, endg
        begwb_grc(g) = begwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
                                    - qflx_ice_dynbal_left_to_dribble(g)
@@ -638,6 +643,11 @@ contains
        ! amount dribbled out is the negative of the amount stored in the
        ! dribblers. Therefore, conservation requires us to subtract the amount
        ! remaining to dribble.
+       ! This sign convention is opposite to the convention chosen for the
+       ! respective dribble terms used in the carbon balance. At some point
+       ! it may be worth making the two conventions consistent.
+       ! Bill Sacks states: I think the convention used for the water and
+       ! energy dribblers is counter-intuitive.
        do g = bounds%begg, bounds%endg
           endwb_grc(g) = endwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
                                       - qflx_ice_dynbal_left_to_dribble(g)
