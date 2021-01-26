@@ -17,7 +17,7 @@ module WaterDiagnosticBulkType
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use clm_varctl     , only : use_cn, iulog, use_luna
-  use clm_varpar     , only : nlevgrnd, nlevsno   
+  use clm_varpar     , only : nlevgrnd, nlevsno, nlevcan
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -53,8 +53,7 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
      real(r8), pointer :: sno_liq_top_col        (:)   ! col snow liquid water fraction (mass), top layer  [fraction]
 
-     real(r8), pointer :: iwue_patch             (:)   ! patch intrinsic water use efficiency (umolCO2/molH2O)
-     real(r8), pointer :: wue_ei_patch           (:)   ! patch ecosystem-scale inherent water use efficiency (gC kgH2O-1 hPa)
+     real(r8), pointer :: iwue_ln_patch          (:)   ! patch intrinsic water use efficiency near local noon (umolCO2/molH2O)
      real(r8), pointer :: vpd_ref2m_patch        (:)   ! patch 2 m height surface vapor pressure deficit (Pa)
      real(r8), pointer :: rh_ref2m_patch         (:)   ! patch 2 m height surface relative humidity (%)
      real(r8), pointer :: rh_ref2m_r_patch       (:)   ! patch 2 m height surface relative humidity - rural (%)
@@ -194,8 +193,7 @@ contains
     allocate(this%sno_liq_top_col        (begc:endc))                     ; this%sno_liq_top_col        (:)   = nan
 
     allocate(this%dqgdT_col              (begc:endc))                     ; this%dqgdT_col              (:)   = nan
-    allocate(this%iwue_patch             (begp:endp))                     ; this%iwue_patch             (:)   = nan
-    allocate(this%wue_ei_patch           (begp:endp))                     ; this%wue_ei_patch           (:)   = nan
+    allocate(this%iwue_ln_patch          (begp:endp))                     ; this%iwue_ln_patch          (:)   = nan
     allocate(this%vpd_ref2m_patch        (begp:endp))                     ; this%vpd_ref2m_patch        (:)   = nan
     allocate(this%rh_ref2m_patch         (begp:endp))                     ; this%rh_ref2m_patch         (:)   = nan
     allocate(this%rh_ref2m_u_patch       (begp:endp))                     ; this%rh_ref2m_u_patch       (:)   = nan
@@ -274,21 +272,13 @@ contains
          long_name=this%info%lname('vertically summed soil cie (veg landunits only)'), &
          ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
 
-    this%iwue_patch(begp:endp) = spval
+    this%iwue_ln_patch(begp:endp) = spval
     call hist_addfld1d ( &
-         fname=this%info%fname('IWUE'), &
+         fname=this%info%fname('IWUELN'), &
          units='umolCO2/molH2O',  &
-         avgflag='A', &
-         long_name=this%info%lname('intrinsic water use efficiency'), &
-         ptr_patch=this%iwue_patch)
-
-    this%wue_ei_patch(begp:endp) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('WUE_EI'), &
-         units='gC kgH2O-1 hPa',  &
-         avgflag='A', &
-         long_name=this%info%lname('ecosystem-scale inherenet water use efficiency'), &
-         ptr_patch=this%wue_ei_patch)
+         avgflag='A',  &
+         long_name=this%info%lname('local noon intrinsic water use efficiency'), &
+         ptr_patch=this%iwue_ln_patch, set_lake=spval, set_urb=spval)
 
     this%vpd_ref2m_patch(begp:endp) = spval
     call hist_addfld1d ( &

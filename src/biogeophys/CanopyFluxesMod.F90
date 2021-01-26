@@ -15,7 +15,7 @@ module CanopyFluxesMod
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
                                      use_luna, use_hydrstress
-  use clm_varpar            , only : nlevgrnd, nlevsno
+  use clm_varpar            , only : nlevgrnd, nlevsno, nlevcan
   use clm_varcon            , only : namep, spval 
   use pftconMod             , only : pftcon
   use decompMod             , only : bounds_type
@@ -221,7 +221,7 @@ contains
     !
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_RGAS
-    use clm_time_manager   , only : get_step_size_real, get_prev_date,is_end_curr_day
+    use clm_time_manager   , only : get_step_size_real, get_prev_date,is_end_curr_day, is_near_local_noon
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
@@ -400,7 +400,7 @@ contains
     integer  :: ft                                       ! plant functional type index
     real(r8) :: h2ocan                                   ! total canopy water (mm H2O)
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
-    integer  :: iv
+    integer, parameter :: iv=1                           ! index for first canopy layer (iwue calculation)
     logical  :: is_end_day                               ! is end of current day
     real(r8) :: tl_ini                                   ! leaf temperature from beginning of time step [K]
     real(r8) :: ts_ini                                   ! stem temperature from beginning of time step [K]
@@ -470,6 +470,7 @@ contains
 
          sabv                   => solarabs_inst%sabv_patch                     , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by vegetation (W/m**2)                       
          par_z_sun              => solarabs_inst%parsun_z_patch                 , & ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)
+
          frac_veg_nosno         => canopystate_inst%frac_veg_nosno_patch        , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
          elai                   => canopystate_inst%elai_patch                  , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index with burying by snow                        
          esai                   => canopystate_inst%esai_patch                  , & ! Input:  [real(r8) (:)   ]  one-sided stem area index with burying by snow                        
@@ -530,8 +531,7 @@ contains
          rh_ref2m               => waterdiagnosticbulk_inst%rh_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface relative humidity (%)                              
          rhaf                   => waterdiagnosticbulk_inst%rh_af_patch                  , & ! Output: [real(r8) (:)   ]  fractional humidity of canopy air [dimensionless]                     
          vpd_ref2m              => waterdiagnosticbulk_inst%vpd_ref2m_patch              , & ! Output: [real(r8) (:)   ]  2 m height surface vapor pressure deficit (Pa)
-         wue_ei                 => waterdiagnosticbulk_inst%wue_ei_patch                 , & ! Output: [real(r8) (:)   ]  ecosystem-scale inherent water use efficiency (gC kgH2O-1 hPa)
-         iwue                   => waterdiagnosticbulk_inst%iwue_patch                   , & ! Output: [real(r8) (:)   ]  ecosystem-scale inherent water use efficiency (gC kgH2O-1 hPa)
+         iwue_ln                => waterdiagnosticbulk_inst%iwue_ln_patch                , & ! Output: [real(r8) (:)   ]  local noon ecosystem-scale inherent water use efficiency (gC kgH2O-1 hPa)
 
          qflx_tran_veg          => waterfluxbulk_inst%qflx_tran_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation transpiration (mm H2O/s) (+ = to atm)                      
          qflx_evap_veg          => waterfluxbulk_inst%qflx_evap_veg_patch           , & ! Output: [real(r8) (:)   ]  vegetation evaporation (mm H2O/s) (+ = to atm)                        
@@ -1363,30 +1363,25 @@ contains
               atm2lnd_inst, canopystate_inst, photosyns_inst)
          
          ! Calculate water use efficiency
-         do f = 1, fn
-            p = filterp(f)
-            c = patch%column(p)
-            g = patch%gridcell(p)
-            
-            if ( par_z_sun(p,1) > 0._r8 .and. qflx_tran_veg(p)>4.e-9_r8) then
-               ! 4e-9  sets a transpiration tolerance of 0.01 W/m2
-               ! 12e-6 converts umolCO2->gC
-               ! 1e-2  converts Pa->hPa
-               ! 1e-6  converts umolH2O->molH2O
-               wue_ei(p) = 12e-6_r8*fpsn(p) * 1e-2_r8*vpd_ref2m(p) / qflx_tran_veg(p)
-               gs        = 1.e-6_r8*(laisun(p)*gs_mol_sun(p,1)+laisha(p)*gs_mol_sha(p,1))
-               if ( gs>0._r8 ) then
-                  iwue(p)   = fpsn(p)/gs
+         !   does not support multi-layer canopy
+         if (nlevcan == 1) then 
+            do f = 1, fn
+               p = filterp(f)
+               c = patch%column(p)
+               g = patch%gridcell(p)
+               
+               if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) .and. fpsn(p)>0._r8 )then
+                  gs        = 1.e-6_r8*(laisun(p)*gs_mol_sun(p,iv)+laisha(p)*gs_mol_sha(p,iv))    ! 1e-6  converts umolH2O->molH2O
+                  if ( gs>0._r8 ) then
+                     iwue_ln(p)   = fpsn(p)/gs
+                  else
+                     iwue_ln(p)   = spval
+                  end if
                else
-                  iwue(p)   = spval
+                  iwue_ln(p)   = spval
                end if
-            else
-               wue_ei(p) = spval
-               iwue(p)   = spval
-            end if
-
-         end do
-
+            end do
+         end if
          ! Calculate ozone stress. This needs to be done after rssun and rsshade are
          ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
          ! ozone stress computed here. Thus, the ozone stress computed in timestep i is
