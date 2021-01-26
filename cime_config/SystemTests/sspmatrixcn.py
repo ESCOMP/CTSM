@@ -21,6 +21,8 @@ if __name__ == '__main__':
 
    sys.path.append(os.path.join( CIMEROOT, "scripts", "lib"))
    sys.path.append(os.path.join( CIMEROOT, "scripts" ) )
+else:
+   from CIME.utils import append_testlog
 
 from CIME.XML.standard_module_setup import *
 from CIME.SystemTests.system_tests_common import SystemTestsCommon
@@ -38,14 +40,14 @@ class SSPMATRIXCN(SystemTestsCommon):
     twice  = 2 * nyr_forcing
     thrice = 3 * nyr_forcing
     # Define the settings that will be used for each step
-    steps  = ["0",       "3",      "4"      ]
-    desc   = ["AD-cold", "slow",   "normal" ]
-    runtyp = ["startup", "hybrid", "branch" ]
-    spin   = ["on",      "sasu",   "off"    ]
-    stop_n = [5,         thrice,   thrice   ]
-    cold   = [True,      False,    False    ]
-    iloop  = [-999,      -999,     -999     ]
-    sasu   = [-999,      full,     -999     ]
+    steps  = ["0-AD",                        "1-SASU",                               "2-norm" ]
+    desc   = ["Accell-Decomp(AD)-coldstart", "slow-mode Semi-Analytic SpinUp(SASU)", "normal" ]
+    runtyp = ["startup",                     "hybrid",                               "branch" ]
+    spin   = ["on",                          "sasu",                                 "off"    ]
+    stop_n = [5,                             thrice,                                 thrice   ]
+    cold   = [True,                          False,                                  False    ]
+    iloop  = [-999,                          -999,                                   -999     ]
+    sasu   = [-999,                          full,                                   -999     ]
 
     def __init__(self, case=None):
         """
@@ -70,6 +72,19 @@ class SSPMATRIXCN(SystemTestsCommon):
            ystart = 2000
            yend   = 2001
 
+        for n in range(len(self.steps)):
+           if ( n == 0 ):
+              expect( self.cold[n]   == True,      "First step MUST be a cold-start" )
+              expect( self.runtyp[n] == "startup", "First step MUST be a startup" )
+           else:
+              expect( self.cold[n] == False, "Other steps must NOT be a cold-start" )
+              expect( self.runtyp[n] != "startup", "Other steps MUST NOT be a startup" )
+
+           if ( self.spin[n] == "sasu" ):
+              expect( self.cold[n] == False,            "SASU step should NOT be a cold-start" )
+              expect( self.sasu[n] > 0,                 "SASU steps must set SASU cycle" )
+              expect( self.sasu[n] <= self.nyr_forcing, "SASU cycles can't be greater than a full forcing cycle" )
+
         expect( yend-ystart+1 == self.nyr_forcing, "Number of years run over MUST correspond to nyr_forcing" )
         self._testname = "SSPMATRIX"
 
@@ -81,7 +96,11 @@ class SSPMATRIXCN(SystemTestsCommon):
         "Log info on this step"
 
         self.check_n( n )
-        logger.info("Step {}: {}: doing a {} run for {} years".format( self.steps[n], self.runtyp[n], self.desc[n], self.stop_n[n] )  )
+        msg = "Step {}: {}: doing a {} run for {} years".format( self.steps[n], self.runtyp[n], self.desc[n], self.stop_n[n] )
+        logger.info(msg)
+        logger.info("  spinup type: {}".format( self.spin[n] ) )
+        if __name__ != '__main__':
+           append_testlog(msg)
         if ( n+1 < self.n_steps() ):
            logger.info("  writing restarts at end of run")
            logger.info("  short term archiving is on ")
