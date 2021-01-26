@@ -12,7 +12,7 @@ module dynSubgridDriverMod
   use decompMod                    , only : bounds_type, BOUNDS_LEVEL_PROC, BOUNDS_LEVEL_CLUMP
   use decompMod                    , only : get_proc_clumps, get_clump_bounds
   use dynSubgridControlMod         , only : get_flanduse_timeseries
-  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops
+  use dynSubgridControlMod         , only : get_do_transient_pfts, get_do_transient_crops, get_do_transient_lakes
   use dynSubgridControlMod         , only : get_do_harvest
   use dynPriorWeightsMod           , only : prior_weights_type
   use dynPatchStateUpdaterMod      , only : patch_state_updater_type
@@ -20,6 +20,7 @@ module dynSubgridDriverMod
   use dynpftFileMod                , only : dynpft_init, dynpft_interp
   use dyncropFileMod               , only : dyncrop_init, dyncrop_interp
   use dynHarvestMod                , only : dynHarvest_init, dynHarvest_interp
+  use dynlakeFileMod               , only : dynlake_init, dynlake_interp
   use dynLandunitAreaMod           , only : update_landunit_weights
   use subgridWeightsMod            , only : compute_higher_order_weights, set_subgrid_diagnostic_fields
   use reweightMod                  , only : reweight_wrapup
@@ -37,6 +38,7 @@ module dynSubgridDriverMod
   use SoilHydrologyType            , only : soilhydrology_type  
   use SoilStateType                , only : soilstate_type
   use WaterType                    , only : water_type
+  use LakestateType                , only : lakestate_type
   use TemperatureType              , only : temperature_type
   use CropType                     , only : crop_type
   use glc2lndMod                   , only : glc2lnd_type
@@ -120,6 +122,12 @@ contains
        call dynHarvest_init(bounds_proc, harvest_filename=get_flanduse_timeseries())
     end if
 
+    
+    ! Initialize stuff for prescribed transient lakes
+    if (get_do_transient_lakes()) then
+        call dynlake_init(bounds_proc, dynlake_filename=get_flanduse_timeseries())
+    end if
+    
     ! ------------------------------------------------------------------------
     ! Set initial subgrid weights for aspects that are read from file. This is relevant
     ! for cold start and use_init_interp-based initialization.
@@ -133,6 +141,11 @@ contains
        call dyncrop_interp(bounds_proc, crop_inst)
     end if
 
+    if (get_do_transient_lakes()) then
+       call dynlake_interp(bounds_proc)
+    end if
+    
+    
     ! (We don't bother calling dynHarvest_interp, because the harvest information isn't
     ! needed until the run loop. Harvest has nothing to do with subgrid weights, and in
     ! some respects doesn't even really belong in this module at all.)
@@ -153,7 +166,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine dynSubgrid_driver(bounds_proc,                                            &
        urbanparams_inst, soilstate_inst, water_inst,          &
-       temperature_inst, energyflux_inst,             &
+       temperature_inst, energyflux_inst, lakestate_inst, &
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
@@ -181,6 +194,7 @@ contains
     type(urbanparams_type)               , intent(in)    :: urbanparams_inst
     type(soilstate_type)                 , intent(in)    :: soilstate_inst
     type(water_type)                     , intent(inout) :: water_inst
+    type(lakestate_type)                 , intent(in)    :: lakestate_inst
     type(temperature_type)               , intent(inout) :: temperature_inst
     type(energyflux_type)                , intent(inout) :: energyflux_inst
     type(canopystate_type)               , intent(inout) :: canopystate_inst
@@ -221,7 +235,7 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, &
-            water_inst, temperature_inst)
+            water_inst, temperature_inst, lakestate_inst)
 
        call prior_weights%set_prior_weights(bounds_clump)
        call patch_state_updater%set_old_weights(bounds_clump)
@@ -244,7 +258,10 @@ contains
     if (get_do_harvest() .and. .not. use_fates) then
        call dynHarvest_interp(bounds_proc)
     end if
-
+	
+    if (get_do_transient_lakes()) then
+       call dynlake_interp(bounds_proc)
+    end if
     ! ==========================================================================
     ! Do land cover change that does not require I/O
     ! ==========================================================================
@@ -292,7 +309,7 @@ contains
             filter(nc)%num_lakec, filter(nc)%lakec, &
             urbanparams_inst, soilstate_inst, &
             water_inst, &
-            temperature_inst, energyflux_inst)
+            temperature_inst, energyflux_inst, lakestate_inst)
 
        if (use_cn) then
           call bgc_vegetation_inst%DynamicAreaConservation(bounds_clump, nc, &

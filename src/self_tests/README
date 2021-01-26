@@ -1,0 +1,8 @@
+This directory contains code that is invoked only when running with
+self-tests enabled. This self-test code is similar to unit tests, but is
+run in the context of a full model run because it covers code that is
+difficult to get into a unit test harness. As such, the tests here may
+be viewed more as integration tests than unit tests. An example is tests
+that cover the PIO interface, since these require building and
+initializing the PIO system (which is difficult to do in our unit
+testing framework).

@@ -49,6 +49,15 @@ Full pathname of master restart file for a branch run. (only used if RUN_TYPE=br
 (Set with RUN_REFCASE and RUN_REFDATE)
 </entry>
 
+<entry id="compname" 
+       type="char*8" 
+       category="datasets"
+       group="clm_inparm" 
+       value="clm2"
+       valid_values="clm2,clm4,clm5" >
+Component name to use in history and restart files
+</entry>
+
 <entry id="fatmlndfrc" 
        type="char*256" 
        category="datasets"
@@ -198,12 +207,13 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,spitfire" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc,spitfire" >
 The method type to use for CNFire
 
 nofire:        Turn fire effects off
 li2014qianfrc: Reference paper Li, et. al.(2014) tuned with QIAN atmospheric forcing
 li2016crufrc:  Reference paper Li, et. al.(2016) tuned with CRU-NCEP atmospheric forcing
+li2021gswpfrc: Reference paper Li, et. al.(2021?) tuned with GSWP3 atmospheric forcing
 </entry>
 
 <entry id="pot_hmn_ign_counts_alpha" type="real" category="clm_physics"
@@ -736,6 +746,11 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) optical data file name
 SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 </entry>
 
+<entry id="hist_master_list_file" type="logical" category="history"
+       group="clm_inparm" valid_values="" value=".false.">
+If TRUE, write master field list to separate file for documentation purposes
+</entry>
+
 <entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
        group="clm_inparm" valid_values="A,I,X,M" >
 Per file averaging flag.
@@ -948,6 +963,12 @@ Whether to use subgrid fluxes for snow
 Whether snow on the vegetation canopy affects the radiation/albedo calculations
 </entry>
 
+<entry id="for_testing_run_ncdiopio_tests" type="logical" category="default_settings"
+       group="clm_inparm" >
+Whether to run some tests of ncdio_pio as part of the model run. This is
+typically only used in automated tests.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- Former CPP tokens -->
 <!-- ========================================================================================  -->
@@ -1089,11 +1110,6 @@ Toggle for vancouver specific logic.
 Toggle for mexico city specific logic.
 </entry>
 
-<entry id="maxpatch_pft" type="integer" category="physics"
-       group="clm_inparm" valid_values="" value="17">
-Max number of plant functional types in naturally vegetated landunit.
-</entry>
-
 <entry id="n_dom_pfts" type="integer" category="physics"
        group="clm_inparm"
        valid_values="0,1,2,3,4,5,6,7,8,9,10,11,12,13,14" value="0">
@@ -1115,37 +1131,37 @@ If true, this directs the model to collapse the urban landunits to the dominant 
 </entry>
 
 <entry id="toosmall_soil" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the soil landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_crop" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the crop landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_glacier" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the glacier landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_lake" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the lake landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_wetland" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the wetland landunit. Selecting the value 0 means DO NOTHING.
 <default>Default: 0</default>
 </entry>
 
 <entry id="toosmall_urban" type="real" category="physics"
-       group="clm_inparm"
+       group="clm_inparm">
 Percentage threshold above which the model keeps the urban landunits. Selecting the value 0 means DO NOTHING. If collapse_urban = .false., the same threshold will apply to all three urban landunits if they are present. If collapse_urban = .true., this threshold will apply to the single collapsed urban landunit if presnet.
 <default>Default: 0</default>
 </entry>
@@ -1667,37 +1683,6 @@ Filename of input stream data for prescribed soil moisture streams data
 Time interpolation method to use for prescribed soil moisture streams data
 </entry>
 
-<!-- Prescribed soil moisture -->
-<entry id="use_soil_moisture_streams" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on use of input prescribed soil moisture streams rather than have CLM prognose it (EXPERIMENTAL)
-</entry>
-
-<entry id="stream_year_first_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
-First year to loop over for prescribed soil moisture streams data
-</entry>
-
-<entry id="stream_year_last_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
-Last year to loop over for prescribed soil moisture streams data
-</entry>
-
-<entry id="model_year_align_soilm" type="integer" category="datasets"
-       group="soil_moisture_streams" valid_values="" >
-Simulation year that aligns with stream_year_first_soilm value
-</entry>
-
-<entry id="stream_fldfilename_soilm" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="soil_moisture_streams" valid_values="" >
-Filename of input stream data for prescribed soil moisture streams data
-</entry>
-
-<entry id="soilm_tintalgo" type="char*256" category="datasets"
-       group="soil_moisture_streams" valid_values="linear,nearest,lower,upper" >
-Time interpolation method to use for prescribed soil moisture streams data
-</entry>
-
 <entry id="soilm_offset" type="integer" category="datasets"
        group="soil_moisture_streams" >
 Offset in time coordinate for soil moisture streams (sec)
@@ -1981,7 +1966,7 @@ Land mask description
 
 <entry id="lnd_tuning_mode" type="char*20" category="default_settings"
        group="default_settings"
-       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1">
+       valid_values="clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_0_cam6.0,clm5_0_CRUv7,clm5_0_GSWP3v1,clm5_1_GSWP3v1">
 General configuration of model version and atmospheric forcing to tune the model to run under.
 This sets the model to run with constants and initial conditions that were set to run well under 
 the configuration of model version and atmospheric forcing. To run well constants would need to be changed
@@ -2428,6 +2413,12 @@ If TRUE, apply transient natural PFTs from flanduse_timeseries file.
 <entry id="do_transient_crops" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, apply transient crops from flanduse_timeseries file.
+(Only valid for transient runs, where there is a flanduse_timeseries file.)
+</entry>
+
+<entry id="do_transient_lakes" type="logical" category="physics"
+       group="dynamic_subgrid" valid_values="" >
+If TRUE, apply transient lakes from flanduse_timeseries file.
 (Only valid for transient runs, where there is a flanduse_timeseries file.)
 </entry>
 
