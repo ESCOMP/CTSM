@@ -33,6 +33,7 @@ module WaterBalanceType
 
      real(r8), pointer :: snow_sources_col         (:)   ! col snow sources (mm H2O/s)
      real(r8), pointer :: snow_sinks_col           (:)   ! col snow sinks (mm H2O/s)
+     real(r8), pointer :: wa_reset_nonconservation_gain_col(:)  ! col mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
 
      ! Balance Checks
 
@@ -49,6 +50,7 @@ module WaterBalanceType
      procedure          :: Init         
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
+     procedure, private :: InitCold
 
   end type waterbalance_type
 
@@ -70,8 +72,8 @@ contains
     this%info => info
 
     call this%InitAllocate(bounds, tracer_vars)
-
     call this%InitHistory(bounds)
+    call this%InitCold(bounds)
 
   end subroutine Init
 
@@ -111,6 +113,9 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%snow_sinks_col, name = 'snow_sinks_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%wa_reset_nonconservation_gain_col, name = 'wa_reset_nonconservation_gain_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
 
@@ -232,5 +237,21 @@ contains
          long_name=this%info%lname('imbalance in snow depth (liquid water)'), &
          ptr_col=this%errh2osno_col, c2l_scale_type='urbanf')
   end subroutine InitHistory
+
+  !-----------------------------------------------------------------------
+  subroutine InitCold(this, bounds)
+    !
+    ! !USES:
+    !
+    ! !ARGUMENTS:
+    class(waterbalance_type), intent(in) :: this
+    type(bounds_type) , intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    this%wa_reset_nonconservation_gain_col(bounds%begc:bounds%endc) = 0.0_r8
+
+  end subroutine InitCold
 
 end module WaterBalanceType

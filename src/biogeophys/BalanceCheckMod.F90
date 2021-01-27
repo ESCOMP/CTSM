@@ -126,7 +126,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterGridcellBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       water_inst, soilhydrology_inst, lakestate_inst, &
+       water_inst, lakestate_inst, &
        use_aquifer_layer)
     !
     ! !DESCRIPTION:
@@ -141,7 +141,6 @@ contains
     integer                 , intent(in)    :: filter_lakec(:)    ! column filter for lake points
     type(water_type)        , intent(inout) :: water_inst
     type(lakestate_type)    , intent(in)    :: lakestate_inst
-    type(soilhydrology_type), intent(in)    :: soilhydrology_inst
     logical                 , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
@@ -154,7 +153,6 @@ contains
        call BeginWaterGridcellBalanceSingle(bounds, &
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
-            soilhydrology_inst, &
             lakestate_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
@@ -168,7 +166,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterColumnBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       water_inst, lakestate_inst)
+       water_inst, soilhydrology_inst, lakestate_inst, &
+       use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step, for bulk water and
@@ -182,6 +181,8 @@ contains
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
     type(water_type)          , intent(inout) :: water_inst
     type(lakestate_type)      , intent(in)    :: lakestate_inst
+    type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
+    logical                   , intent(in)    :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -193,10 +194,12 @@ contains
        call BeginWaterColumnBalanceSingle(bounds, &
             num_nolakec, filter_nolakec, &
             num_lakec, filter_lakec, &
+            soilhydrology_inst, &
             lakestate_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
-            water_inst%bulk_and_tracers(i)%waterbalance_inst)
+            water_inst%bulk_and_tracers(i)%waterbalance_inst, &
+            use_aquifer_layer = use_aquifer_layer)
     end do
 
   end subroutine BeginWaterColumnBalance
@@ -204,7 +207,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BeginWaterGridcellBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       soilhydrology_inst, lakestate_inst, waterstate_inst, &
+       lakestate_inst, waterstate_inst, &
        waterdiagnostic_inst, waterbalance_inst, waterflux_inst, &
        use_aquifer_layer)
     !
@@ -221,7 +224,6 @@ contains
     integer                    , intent(in)    :: filter_nolakec(:)  ! column filter for non-lake points
     integer                    , intent(in)    :: num_lakec          ! number of column lake points in column filter
     integer                    , intent(in)    :: filter_lakec(:)    ! column filter for lake points
-    type(soilhydrology_type)   , intent(in)    :: soilhydrology_inst
     type(lakestate_type)       , intent(in)    :: lakestate_inst
     class(waterstate_type)     , intent(inout) :: waterstate_inst
     class(waterflux_type)      , intent(inout) :: waterflux_inst
@@ -230,17 +232,15 @@ contains
     logical                    , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
-    integer :: c, g, j, fc  ! indices
+    integer :: g  ! indices
     integer :: begc, endc, begg, endg  ! bounds
     real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux at beginning of time step
     real(r8) :: qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc ice dynamic land cover change conversion runoff flux at beginning of time step
+    real(r8) :: wa_reset_nonconservation_gain_grc(bounds%begg:bounds%endg)  ! grc mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
     !-----------------------------------------------------------------------
 
     associate(                                     &
-         zi        => col%zi                     , &  ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
-         zwt       => soilhydrology_inst%zwt_col , &  ! Input:  [real(r8) (:)   ]  water table depth (m)
-         aquifer_water_baseline => waterstate_inst%aquifer_water_baseline, &  ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
-         wa        => waterstate_inst%wa_col     , &  ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)
+         wa_reset_nonconservation_gain_col => waterbalance_inst%wa_reset_nonconservation_gain_col                                    , &  ! Output: [real(r8) (:)   ]  col mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
          begwb_col => waterbalance_inst%begwb_col, &  ! Output: [real(r8) (:)   ]  column-level water mass begining of the time step
          begwb_grc => waterbalance_inst%begwb_grc  &  ! Output: [real(r8) (:)   ]  grid cell-level water mass begining of the time step
          )
@@ -250,17 +250,20 @@ contains
     begg = bounds%begg
     endg = bounds%endg
 
-    ! wa(c) gets added to liquid_mass in ComputeLiqIceMassNonLake
-    if(use_aquifer_layer) then
-       do fc = 1, num_nolakec
-          c = filter_nolakec(fc)
-          if (col%hydrologically_active(c)) then
-             if(zwt(c) <= zi(c,nlevsoi)) then
-                wa(c) = aquifer_water_baseline
-             end if
-          end if
-       end do
-    endif
+    if (use_aquifer_layer) then
+       ! wa_reset_nonconservation_gain_col should be non-zero only when
+       ! use_aquifer_layer is true. We do this c2g call only when needed
+       ! to avoid unnecessary calculations; by adding this term only when
+       ! use_aquifer_layer is true, we effectively let the balance checks
+       ! ensure that this term is zero when use_aquifer_layer is false,
+       ! as it should be.
+       call c2g( bounds, &
+            wa_reset_nonconservation_gain_col(begc:endc), &
+            wa_reset_nonconservation_gain_grc(begg:endg), &
+            c2l_scale_type='urbanf', l2g_scale_type='unity' )
+    else
+       wa_reset_nonconservation_gain_grc(begg:endg) = 0._r8
+    end if
 
     ! NOTES subroutines Compute*Mass* are in TotalWaterAndHeatMod.F90
     !       endwb is calculated in HydrologyDrainageMod & LakeHydrologyMod
@@ -295,7 +298,8 @@ contains
     ! energy dribblers is counter-intuitive.
     do g = begg, endg
        begwb_grc(g) = begwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
-                                   - qflx_ice_dynbal_left_to_dribble(g)
+                                   - qflx_ice_dynbal_left_to_dribble(g)  &
+                                   - wa_reset_nonconservation_gain_grc(g)
     end do
 
     end associate
@@ -305,8 +309,9 @@ contains
    !-----------------------------------------------------------------------
   subroutine BeginWaterColumnBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       lakestate_inst, waterstate_inst, & 
-       waterdiagnostic_inst, waterbalance_inst)
+       soilhydrology_inst, lakestate_inst, waterstate_inst, &
+       waterdiagnostic_inst, waterbalance_inst, &
+       use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize column-level water balance at beginning of time step, for bulk or a
@@ -318,18 +323,42 @@ contains
     integer                   , intent(in)    :: filter_nolakec(:)    ! column filter for non-lake points
     integer                   , intent(in)    :: num_lakec            ! number of column lake points in column filter
     integer                   , intent(in)    :: filter_lakec(:)      ! column filter for lake points
+    type(soilhydrology_type)  , intent(in)    :: soilhydrology_inst
     type(lakestate_type)      , intent(in)    :: lakestate_inst
     class(waterstate_type)    , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)   :: waterdiagnostic_inst
     class(waterbalance_type)  , intent(inout) :: waterbalance_inst
+    logical                   , intent(in)    :: use_aquifer_layer    ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
+    integer :: c, fc                  ! indices
     !-----------------------------------------------------------------------
 
     associate(                                               &
+         zi        => col%zi                     , &  ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
+         zwt       => soilhydrology_inst%zwt_col , &  ! Input:  [real(r8) (:)   ]  water table depth (m)
+         aquifer_water_baseline => waterstate_inst%aquifer_water_baseline, &  ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
+         wa        => waterstate_inst%wa_col     , &  ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)
+         wa_reset_nonconservation_gain => waterbalance_inst%wa_reset_nonconservation_gain_col                                    , &  ! Output: [real(r8) (:)   ]  mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
          begwb      => waterbalance_inst%begwb_col      , & ! Output: [real(r8) (:)   ]  water mass begining of the time step
          h2osno_old => waterbalance_inst%h2osno_old_col   & ! Output: [real(r8) (:)   ]  snow water (mm H2O) at previous time step
          )
+
+    ! wa(c) gets added to liquid_mass in ComputeLiqIceMassNonLake
+    if(use_aquifer_layer) then
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          if (col%hydrologically_active(c)) then
+             if(zwt(c) <= zi(c,nlevsoi)) then
+                wa_reset_nonconservation_gain(c) = aquifer_water_baseline - &
+                                                   wa(c)
+                wa(c) = aquifer_water_baseline
+             else
+                wa_reset_nonconservation_gain(c) = 0._r8
+             end if
+          end if
+       end do
+    endif
 
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstate_inst, waterdiagnostic_inst, &
