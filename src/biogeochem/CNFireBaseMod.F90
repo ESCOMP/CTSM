@@ -24,7 +24,7 @@ module CNFireBaseMod
   use atm2lndType                        , only : atm2lnd_type
   use CNDVType                           , only : dgvs_type
   use CNVegStateType                     , only : cnveg_state_type
-  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType               , only : cnveg_carbonstate_type, spinup_factor_deadwood
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
@@ -444,7 +444,7 @@ contains
    !
    ! !USES:
    use clm_time_manager     , only: get_step_size_real,get_days_per_year,get_curr_date
-   use clm_varctl           , only: use_cndv, spinup_state, use_soil_matrixcn, use_matrixcn
+   use clm_varctl           , only: use_cndv, use_soil_matrixcn, use_matrixcn
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: run_has_transient_landcover
@@ -777,10 +777,7 @@ contains
         ! apply this rate to the patch state variables to get flux rates
         ! biomass burning
         ! carbon fluxes
-        m = 1._r8
-        if (spinup_state == 2) then
-           m = 10._r8
-        end if
+        m = spinup_factor_deadwood
 
         if(f /= 0)then
            num_actfirep = num_actfirep + 1

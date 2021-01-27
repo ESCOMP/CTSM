@@ -169,6 +169,7 @@ contains
     ! Note that forc_pbot is in Pa
 
     do g = begg,endg
+       i = 1 + (g - begg)
 
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
 

@@ -14,16 +14,16 @@ module CNGapMortalityMod
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
   use pftconMod                      , only : pftcon
   use CNDVType                       , only : dgvs_type
-  use CNVegCarbonStateType           , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType           , only : cnveg_carbonstate_type, spinup_factor_deadwood
   use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
   use CNVegNitrogenStateType         , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType          , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenFluxType , only : soilbiogeochem_nitrogenflux_type
-  use CanopyStateType                , only : canopystate_type            
-  use ColumnType                     , only : col                
-  use PatchType                      , only : patch                
+  use CanopyStateType                , only : canopystate_type
+  use ColumnType                     , only : col
+  use PatchType                      , only : patch
   use GridcellType                   , only : grc
-  use clm_varctl                     , only : use_matrixcn  
+  use clm_varctl                     , only : use_matrixcn
   use clm_varpar                     , only : ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
                                               ilivestem,ilivestem_st,ilivestem_xf,&
                                               ideadstem,ideadstem_st,ideadstem_xf,&
@@ -248,23 +248,15 @@ contains
             cnveg_carbonflux_inst%m_livestemc_to_litter_patch(p)           = cnveg_carbonstate_inst%livestemc_patch(p)   * matrix_update_gmc(p,ilivestem_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
             cnveg_carbonflux_inst%m_livecrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%livecrootc_patch(p)  * matrix_update_gmc(p,ilivecroot_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
          end if
-         if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
-            if(.not. use_matrixcn)then
-               cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * 10._r8
-               cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * 10._r8
-            else
-               cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)   * matrix_update_gmc(p,ideadstem_to_iout_gmc,m*10._r8,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
-               cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)  * matrix_update_gmc(p,ideadcroot_to_iout_gmc,m*10._r8,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
-            end if !use_matrixcn
+         if(.not. use_matrixcn)then
+            cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * spinup_factor_deadwood
+            cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * spinup_factor_deadwood
          else
-            if (.not. use_matrixcn) then
-               cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)           * m
-               cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)          * m
-            else
-               cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)   * matrix_update_gmc(p,ideadstem_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
-               cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)  * matrix_update_gmc(p,ideadcroot_to_iout_gmc,m,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
-            end if !use_matrixcn
-         end if
+            cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)   * matrix_update_gmc(p,ideadstem_to_iout_gmc, &
+                                                                             m*spinup_factor_deadwood,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
+            cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)  * matrix_update_gmc(p,ideadcroot_to_iout_gmc, &
+                                                                             m*spinup_factor_deadwood,dt,cnveg_carbonflux_inst,matrixcheck_gm,.True.)
+         end if !use_matrixcn
 
          ! storage pools
          if(.not. use_matrixcn)then
@@ -323,11 +315,13 @@ contains
 
          if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
             if(.not. use_matrixcn)then
-               cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * 10._r8
-               cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * 10._r8
+               cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * spinup_factor_deadwood
+               cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * spinup_factor_deadwood
             else
-               cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * matrix_update_gmn(p,ideadstem_to_iout_gmn ,m*10._r8,dt,cnveg_nitrogenflux_inst,matrixcheck_gm,.True.)
-               cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * matrix_update_gmn(p,ideadcroot_to_iout_gmn,m*10._r8,dt,cnveg_nitrogenflux_inst,matrixcheck_gm,.True.)
+               cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * matrix_update_gmn(p,ideadstem_to_iout_gmn , &
+                                                                              m*spinup_factor_deadwood,dt,cnveg_nitrogenflux_inst,matrixcheck_gm,.True.)
+               cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)    = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * matrix_update_gmn(p,ideadcroot_to_iout_gmn, &
+                                                                              m*spinup_factor_deadwood,dt,cnveg_nitrogenflux_inst,matrixcheck_gm,.True.)
             end if !.not. use_matrixcn
          else
             if (.not. use_matrixcn) then

@@ -37,6 +37,11 @@
 <!-- I single point forcing -->
 
   <compset>
+    <alias>I1PtClm51SpRs</alias>
+    <lname>2000_DATM%1PT_CLM51%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
     <alias>I1PtClm50SpRs</alias>
     <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
@@ -59,10 +64,26 @@
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
+  <compset>
+    <alias>I2000Clm51Sp</alias>
+    <lname>2000_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm51SpRs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
   <!-- Primarily for testing -->
   <compset>
     <alias>I2000Clm50SpRtm</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Clm50SpMizGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -121,6 +142,16 @@
     <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm51BgcCrop</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm51Sp</alias>
+    <lname>1850_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <compset>
@@ -198,6 +229,10 @@
 
   <!---I FATES compsets -->
   <compset>
+    <alias>I2000Clm51Fates</alias>
+    <lname>2000_DATM%GSWP3v1_CLM51%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+  <compset>
     <alias>I2000Clm50Fates</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
@@ -231,6 +266,22 @@
     <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
+  </compset>
+
+  <compset>
+     <alias>I1850Clm51Bgc</alias>
+     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+   </compset>
+
+
+  <compset>
+     <alias>I1850Clm51SpNoAnthro</alias>
+     <lname>1850_DATM%GSWP3v1_CLM51%SP-NOANTHRO_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+   </compset>
+
+  <compset>
+    <alias>IHistClm51Sp</alias>
+    <lname>HIST_DATM%GSWP3v1_CLM51%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
   <compset>

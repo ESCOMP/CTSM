@@ -11,7 +11,7 @@ WRF-CTSM simulations.
 
 
 
-Generate CSTM surface dataset for a WRF domain
+Generate CTSM surface dataset for a WRF domain
 ----------------------------------------------
 
 Before this step, make sure you have successfully created geo_em* files for
@@ -40,7 +40,7 @@ is described in here.
     ncl mkunitymap.ncl
 
 
-.. warning:::
+.. warning::
 
     This will throw some git errors if not run in a repository.
 
