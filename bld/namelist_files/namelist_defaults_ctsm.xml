@@ -635,8 +635,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <isspinup     clm_accelerated_spinup="off"                            >.false.</isspinup>
 <nyr_forcing                                                          >1</nyr_forcing>
 <nyr_forcing  isspinup=".true."             use_soil_matrixcn=".true.">20</nyr_forcing>
+<!-- for SASU spinup nyr_sasu will normally be set to nyr_forcing (slow mode spinup) -->
 <nyr_sasu                                                             >1</nyr_sasu>
-<nyr_sasu     isspinup=".true."             use_soil_matrixcn=".true.">1</nyr_sasu>
 <iloop_avg                                                            >-999</iloop_avg>
 <iloop_avg    isspinup=".true."             use_soil_matrixcn=".true.">-999</iloop_avg>
 

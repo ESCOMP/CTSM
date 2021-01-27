@@ -3984,8 +3984,14 @@ sub setup_logic_cnmatrix {
     my @spinup_vars = ( "nyr_forcing", "nyr_sasu", "iloop_avg" );
     foreach my $var ( @spinup_vars ) {
        if ( &value_is_true($nl_flags->{"use_soil_matrixcn"}) && &value_is_true($nl_flags->{'isspinup'}) ) {
-          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                    , 'phys'=>$nl_flags->{'phys'}, 'isspinup'=>$nl_flags->{'isspinup'} );
+          if ( $var ne "nyr_sasu" ) {
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                       , 'phys'=>$nl_flags->{'phys'}, 'isspinup'=>$nl_flags->{'isspinup'} );
+          } else {
+             # Set SASU spinup period to nyr_forcing (slow mode) by default
+             add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                       , 'val'=>$nl->get_value("nyr_forcing") );
+          }
           my $val = $nl->get_value($var);
           if ( $val == -999 && ($var eq "iloop_avg") ) { next; }  # iloop_avg can be special flag value
           if ( $val < 1 ) {
