@@ -47,7 +47,7 @@ class SSPMATRIXCN(SystemTestsCommon):
     stop_n = [5,                             thrice,                                 thrice   ]
     cold   = [True,                          False,                                  False    ]
     iloop  = [-999,                          -999,                                   -999     ]
-    sasu   = [-999,                          full,                                   -999     ]
+    sasu   = [-999,                          -999,                                   -999     ]
 
     def __init__(self, case=None):
         """
@@ -82,8 +82,9 @@ class SSPMATRIXCN(SystemTestsCommon):
 
            if ( self.spin[n] == "sasu" ):
               expect( self.cold[n] == False,            "SASU step should NOT be a cold-start" )
-              expect( self.sasu[n] > 0,                 "SASU steps must set SASU cycle" )
-              expect( self.sasu[n] <= self.nyr_forcing, "SASU cycles can't be greater than a full forcing cycle" )
+              if ( self.sasu[n] != -999 ):
+                 expect( self.sasu[n] > 0,                 "SASU steps must set SASU cycle" )
+                 expect( self.sasu[n] <= self.nyr_forcing, "SASU cycles can't be greater than a full forcing cycle" )
 
         expect( yend-ystart+1 == self.nyr_forcing, "Number of years run over MUST correspond to nyr_forcing" )
         self._testname = "SSPMATRIX"
@@ -133,7 +134,8 @@ class SSPMATRIXCN(SystemTestsCommon):
         # For matrix spinup steps, set the matrix spinup and other variables associated with it
         if ( self.spin[n] == "sasu" ):
             contents_to_append = contents_to_append + ", nyr_forcing = "+str(self.nyr_forcing)
-            contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
+            if ( self.sasu[n] != -999 ):
+               contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
             if ( self.iloop[n] != -999 ):
                contents_to_append = contents_to_append + ", iloop_avg = " + str(self.iloop[n])
 
@@ -287,7 +289,8 @@ class test_ssp_matrixcn(unittest.TestCase):
        self.ssp.__logger__(n)
        if ( self.ssp.spin[n] == "sasu" ):
           logger.info( "  SASU spinup is .true." )
-          logger.info( "  nyr_sasu = {}".format(self.ssp.sasu[n]) )
+          if ( self.ssp.sasu[n] != -999 ):
+             logger.info( "  nyr_sasu = {}".format(self.ssp.sasu[n]) )
           if ( self.ssp.iloop[n] != -999 ):
              logger.info( "  iloop_avg = {}".format(self.ssp.iloop[n]) )
 
