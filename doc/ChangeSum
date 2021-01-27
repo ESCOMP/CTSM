@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev022 glemieux 01/27/2021 Merge fates_main_api into ctsm master
   ctsm5.1.dev021     erik 01/12/2021 Add option for biomass heat storage (BHS) to clm5_1 physics
   ctsm5.1.dev020     erik 12/30/2020 Potential roundoff changes in preparation for bio-mass heat storage option
   ctsm5.1.dev019    sacks 12/19/2020 Fix ndep from coupler

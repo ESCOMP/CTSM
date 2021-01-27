@@ -1,4 +1,132 @@
 ===============================================================
+Tag name:  ctsm5.1.dev022
+Originator(s):  gregorylemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date:  Wed 27 Jan 2021 12:26:44 AM PST
+One-line Summary: Merge fates_main_api into ctsm master
+
+Purpose and description of changes
+----------------------------------
+
+This brings fates_main_api into and up-to-date with ctsm master.
+At the point of merge, fates_main_api was parallel with ctsm5.1.dev020,
+only one tag behind ctsm master's head.
+
+The purpose of this merge is to make all future updates to fates
+on the ctsm master branch instead of on the fates_main_api branch.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[X] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #): none
+
+CIME Issues fixed (include issue #): none
+
+Known bugs introduced in this tag (include issue #): none
+
+Known bugs found since the previous tag (include issue #): none
+
+
+Notes of particular relevance for users
+---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for users (e.g., need to interpolate initial conditions): none
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist
+variables): none
+
+Changes made to namelist defaults (e.g., changed parameter values): none
+
+Changes to the datasets (e.g., parameter, surface or initial files): none
+
+Substantial timing or memory changes: 
+   Only the fates testmod FatesAllVars failed the MEMCOMP test
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double
+maintenance): none
+
+Changes to tests or testing: none
+
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS (except for fates DIFFs)
+    izumi ------- N/A
+
+    ok: All non-fates testmods PASS. Fates testmods have DIFF as expected due
+    to update of fates tag.
+
+  any other testing (give details below):
+
+  fates suite:
+    cheyenne ---- OK 
+
+    ok: expected failures on COMPARE_base_rest for FatesHydro
+    and Fates_nat_and_anthro_ignitions.  All else B4B.
+
+    fates baseline: fates-sci.1.43.2_api.14.2.0-ctsm5.1.dev020-C5f348cac-F5534a940
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, only for fates
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all fates
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new
+    climate): larger than roundoff
+
+  Comparison made using fates suite between fates_main_api (at ctsm5.1.dev020) 
+  and ctsm5.1.dev022.  All tests PASS, except for two expected failures and
+  expected NLCOMP failure due to ctsm5.1.dev021 update to paramfile.
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+fates
+
+   fates: sci.1.30.0_api.8.0.0 -> sci.1.43.2_api.14.2.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1264 -- Merge fates_main_api into master
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev021
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue Jan 12 20:21:52 MST 2021
@@ -121,6 +249,7 @@ Changes answers relative to baseline: Yes!
 
 Detailed list of changes
 ------------------------
+
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
