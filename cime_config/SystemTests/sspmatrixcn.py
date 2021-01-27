@@ -133,7 +133,6 @@ class SSPMATRIXCN(SystemTestsCommon):
         # For matrix spinup steps, set the matrix spinup and other variables associated with it
         if ( self.spin[n] == "sasu" ):
             contents_to_append = contents_to_append + ", nyr_forcing = "+str(self.nyr_forcing)
-            contents_to_append = contents_to_append + ", isspinup = .True."
             contents_to_append = contents_to_append + ", nyr_sasu = " + str(self.sasu[n])
             if ( self.iloop[n] != -999 ):
                contents_to_append = contents_to_append + ", iloop_avg = " + str(self.iloop[n])
@@ -287,7 +286,7 @@ class test_ssp_matrixcn(unittest.TestCase):
      for n in range(self.ssp.n_steps()):
        self.ssp.__logger__(n)
        if ( self.ssp.spin[n] == "sasu" ):
-          logger.info( "  isspinup = .true." )
+          logger.info( "  SASU spinup is .true." )
           logger.info( "  nyr_sasu = {}".format(self.ssp.sasu[n]) )
           if ( self.ssp.iloop[n] != -999 ):
              logger.info( "  iloop_avg = {}".format(self.ssp.iloop[n]) )
