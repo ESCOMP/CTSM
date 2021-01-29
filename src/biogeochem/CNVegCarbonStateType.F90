@@ -102,6 +102,9 @@ module CNVegCarbonStateType
 
   end type cnveg_carbonstate_type
 
+  real(r8), public  :: spinup_factor_deadwood = 1.0_r8        ! Spinup factor used for this simulation
+  real(r8), public  :: spinup_factor_AD       = 10.0_r8       ! Spinup factor used when in Accelerated Decomposition mode
+
   ! !PRIVATE DATA:
 
   type, private :: cnvegcarbonstate_const_type
@@ -1036,7 +1039,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine Restart ( this,  bounds, ncid, flag, carbon_type, reseed_dead_plants, &
                        c12_cnveg_carbonstate_inst, filter_reseed_patch, &
-                       num_reseed_patch)
+                       num_reseed_patch, spinup_factor4deadwood )
     !
     ! !DESCRIPTION: 
     ! Read/write CN restart data for carbon state
@@ -1062,6 +1065,7 @@ contains
     type (cnveg_carbonstate_type)         , intent(in), optional :: c12_cnveg_carbonstate_inst 
     integer                               , intent(out), optional :: filter_reseed_patch(:)
     integer                               , intent(out), optional :: num_reseed_patch
+    real(r8)                              , intent(out), optional :: spinup_factor4deadwood
     !
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c,p
@@ -1243,22 +1247,23 @@ contains
 
        if (flag == 'read' .and. spinup_state /= restart_file_spinup_state .and. .not. use_cndv) then
           if ( masterproc ) write(iulog, *) 'exit_spinup ',exit_spinup,' restart_file_spinup_state ',restart_file_spinup_state
+          if ( spinup_state == 2 ) spinup_factor_deadwood = spinup_factor_AD
           if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
              exit_spinup = .true.
-             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
+             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by ', spinup_factor_AD, ' for exit spinup'
              do i = bounds%begp,bounds%endp
-                this%deadstemc_patch(i) = this%deadstemc_patch(i) * 10._r8
-                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * 10._r8
+                this%deadstemc_patch(i) = this%deadstemc_patch(i) * spinup_factor_AD
+                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * spinup_factor_AD
              end do
           else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
              if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
                 if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools into AD spinup mode'
                 enter_spinup = .true.
-                if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
+                if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by ', spinup_factor_AD, 'for enter spinup '
                 do i = bounds%begp,bounds%endp
-                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / 10._r8
-                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / 10._r8
+                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / spinup_factor_AD
+                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / spinup_factor_AD
                 end do
              end if
           end if
@@ -2280,6 +2285,9 @@ contains
                multiplier = c14ratio)
        end if
     end if
+
+    ! Output spinup factor for deadwood (dead stem and dead course root)
+    if ( present(spinup_factor4deadwood) ) spinup_factor4deadwood = spinup_factor_AD
 
   end subroutine Restart
 

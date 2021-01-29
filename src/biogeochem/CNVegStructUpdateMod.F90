@@ -13,9 +13,10 @@ module CNVegStructUpdateMod
   use CNDVType             , only : dgvs_type
   use CNVegStateType       , only : cnveg_state_type
   use CropType             , only : crop_type
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType , only : cnveg_carbonstate_type, spinup_factor_deadwood
   use CanopyStateType      , only : canopystate_type
   use PatchType            , only : patch                
+  use decompMod            , only : bounds_type
   !
   implicit none
   private
@@ -27,7 +28,7 @@ module CNVegStructUpdateMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNVegStructUpdate(num_soilp, filter_soilp, &
+  subroutine CNVegStructUpdate(bounds,num_soilp, filter_soilp, &
        waterdiagnosticbulk_inst, frictionvel_inst, dgvs_inst, cnveg_state_inst, crop_inst, &
        cnveg_carbonstate_inst, canopystate_inst)
     !
@@ -44,10 +45,12 @@ contains
     use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
     
     use pftconMod        , only : pftcon
-    use clm_varctl       , only : spinup_state
+    use clm_varctl       , only : spinup_state, use_biomass_heat_storage
+    use clm_varcon       , only : c_to_b
     use clm_time_manager , only : get_rad_step_size
     !
     ! !ARGUMENTS:
+    type(bounds_type)            , intent(in)    :: bounds  
     integer                      , intent(in)    :: num_soilp       ! number of column soil points in patch filter
     integer                      , intent(in)    :: filter_soilp(:) ! patch filter for soil points
     type(waterdiagnosticbulk_type)        , intent(in)    :: waterdiagnosticbulk_inst
@@ -65,8 +68,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: p,c,g      ! indices
     integer  :: fp         ! lake filter indices
-    real(r8) :: taper      ! ratio of height:radius_breast_height (tree allometry)
-    real(r8) :: stocking   ! #stems / ha (stocking density)
+    real(r8) :: stocking                            ! #stems / ha (stocking density)
     real(r8) :: ol         ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb         ! fraction of canopy layer covered by snow
     real(r8) :: tlai_old   ! for use in Zeng tsai formula
@@ -101,7 +103,10 @@ contains
          dwood              =>  pftcon%dwood                            , & ! Input:  density of wood (gC/m^3)                          
          ztopmx             =>  pftcon%ztopmx                           , & ! Input:
          laimx              =>  pftcon%laimx                            , & ! Input:
-         
+         nstem              =>  pftcon%nstem                            , & ! Input:  Tree number density (#ind/m2)
+         taper              =>  pftcon%taper                            , & ! Input:  ratio of height:radius_breast_height (tree allometry)
+         fbw                =>  pftcon%fbw                              , & ! Input:  Fraction of fresh biomass that is water        
+       
          allom2             =>  dgv_ecophyscon%allom2                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
          allom3             =>  dgv_ecophyscon%allom3                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
 
@@ -115,6 +120,7 @@ contains
 
          leafc              =>  cnveg_carbonstate_inst%leafc_patch      , & ! Input:  [real(r8) (:) ] (gC/m2) leaf C                                    
          deadstemc          =>  cnveg_carbonstate_inst%deadstemc_patch  , & ! Input:  [real(r8) (:) ] (gC/m2) dead stem C                               
+         livestemc          =>  cnveg_carbonstate_inst%livestemc_patch  , & ! Input:  [real(r8) (:) ] (gC/m2) live stem C
 
          farea_burned       =>  cnveg_state_inst%farea_burned_col       , & ! Input:  [real(r8) (:) ] F. Li and S. Levis                                 
          htmx               =>  cnveg_state_inst%htmx_patch             , & ! Output: [real(r8) (:) ] max hgt attained by a crop during yr (m)          
@@ -125,6 +131,8 @@ contains
          ! *** Key Output from CN***
          tlai               =>  canopystate_inst%tlai_patch             , & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow      
          tsai               =>  canopystate_inst%tsai_patch             , & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow      
+         stem_biomass       => canopystate_inst%stem_biomass_patch      , & ! Output: [real(r8) (:) ] Aboveground stem biomass  (kg/m**2)
+         leaf_biomass       => canopystate_inst%leaf_biomass_patch      , & ! Output: [real(r8) (:) ] Aboveground leave biomass (kg/m**2)   
          htop               =>  canopystate_inst%htop_patch             , & ! Output: [real(r8) (:) ] canopy top (m)                                     
          hbot               =>  canopystate_inst%hbot_patch             , & ! Output: [real(r8) (:) ] canopy bottom (m)                                  
          elai               =>  canopystate_inst%elai_patch             , & ! Output: [real(r8) (:) ] one-sided leaf area index with burying by snow    
@@ -133,13 +141,6 @@ contains
          )
 
       dt = real( get_rad_step_size(), r8 )
-
-      ! constant allometric parameters
-      taper = 200._r8
-      stocking = 1000._r8
-
-      ! convert from stems/ha -> stems/m^2
-      stocking = stocking / 10000._r8
 
       ! patch loop
       do fp = 1,num_soilp
@@ -182,25 +183,15 @@ contains
 
             if (woody(ivt(p)) == 1._r8) then
 
-               ! trees and shrubs
-
-               ! if shrubs have a squat taper 
-               if (ivt(p) >= nbrdlf_evr_shrub .and. ivt(p) <= nbrdlf_dcd_brl_shrub) then
-                  taper = 10._r8
-                  ! otherwise have a tall taper
-               else
-                  taper = 200._r8
-               end if
-
                ! trees and shrubs for now have a very simple allometry, with hard-wired
-               ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
+               ! stem taper (height:radius) and nstem from PFT parameter file
                if (use_cndv) then
 
                   if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
 
                      stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                      htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
-                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper(ivt(p))))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
 
                   else
                      htop(p) = 0._r8
@@ -208,15 +199,26 @@ contains
 
                else
                   !correct height calculation if doing accelerated spinup
-                  if (spinup_state == 2) then
-                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
-                  else
-                    htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
-                  end if
+                  htop(p) = ((3._r8 * deadstemc(p) * spinup_factor_deadwood * taper(ivt(p)) * taper(ivt(p)))/ &
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
 
                endif
+
+               !
+               ! calculate vegetation physiological parameters used in biomass heat storage
+               !
+               if (use_biomass_heat_storage) then
+                  ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
+                  leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
+                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
+
+                  stem_biomass(p) = (spinup_factor_deadwood*deadstemc(p) + livestemc(p)) &
+                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
+
+               else
+                  leaf_biomass(p) = 0_r8
+                  stem_biomass(p) = 0_r8
+               end if
 
                ! Peter Thornton, 5/3/2004
                ! Adding test to keep htop from getting too close to forcing height for windspeed

@@ -182,7 +182,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_bedrock phys="clm5_0"                     >.true.</use_bedrock>
 <use_bedrock phys="clm4_5"                     >.false.</use_bedrock>
 
-
 <!-- Rooting profile namelist defaults -->
 <rooting_profile_method_water  phys="clm5_1" >1</rooting_profile_method_water>
 <rooting_profile_method_water  phys="clm5_0" >1</rooting_profile_method_water>
@@ -311,6 +310,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_undercanopy_stability phys="clm5_1" >.false.</use_undercanopy_stability>
 <use_undercanopy_stability phys="clm5_0" >.false.</use_undercanopy_stability>
 <use_undercanopy_stability phys="clm4_5" >.true.</use_undercanopy_stability>
+
+<use_biomass_heat_storage  phys="clm5_1"                   >.true.</use_biomass_heat_storage>
+<use_biomass_heat_storage  phys="clm5_1" use_fates=".true.">.false.</use_biomass_heat_storage>
+<use_biomass_heat_storage                                  >.false.</use_biomass_heat_storage>
 
 <itmax_canopy_fluxes structure="standard">40</itmax_canopy_fluxes>
 <itmax_canopy_fluxes structure="fast"    >3</itmax_canopy_fluxes>
@@ -470,9 +473,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c200905.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c200905.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c200905.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c210112.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c210112.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c210112.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
