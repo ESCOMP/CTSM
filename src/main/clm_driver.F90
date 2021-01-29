@@ -330,8 +330,7 @@ contains
        call BeginWaterGridcellBalance(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
-            water_inst, lakestate_inst, &
-            use_aquifer_layer = use_aquifer_layer())
+            water_inst, lakestate_inst)
        call t_stopf('begwbal')
     end do
     !$OMP END PARALLEL DO
@@ -1271,7 +1270,8 @@ contains
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
-            water_inst%waterlnd2atmbulk_inst, surfalb_inst, energyflux_inst, canopystate_inst)
+            water_inst%waterlnd2atmbulk_inst, surfalb_inst, energyflux_inst, &
+            canopystate_inst, use_aquifer_layer = use_aquifer_layer())
     end do
     !$OMP END PARALLEL DO
     call t_stopf('balchk')
