@@ -1,5 +1,5 @@
 ===============================================================
-Tag name:  ctsm5.1.dev020
+Tag name:  ctsm5.1.dev0??
 Originator(s):  slevis (Samuel Levis,303-665-1310)
 Date:  Wed Dec 23 11:29:33 MST 2020
 One-line Summary: Grid cell-level error check for H2O
@@ -26,13 +26,13 @@ Does this tag change answers significantly for any of the following physics conf
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
-[X] clm5_1
+[ ] clm5_1
 
-[X] clm5_0
+[ ] clm5_0
 
-[X] ctsm5_0-nwp
+[ ] ctsm5_0-nwp
 
-[X] clm4_5
+[ ] clm4_5
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -93,12 +93,12 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: YES
 
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
     - what platforms/compilers: ALL
-    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+    - nature of change: ROUNDOFF
  Specific example from running the single point test
  ERI_D_Ld9.1x1_camdenNJ.I2000Clm50BgcCruRs.cheyenne_intel.clm-default:
  RMS ERRH2O 6.0280E-21  NORMALIZED 7.6050E-06

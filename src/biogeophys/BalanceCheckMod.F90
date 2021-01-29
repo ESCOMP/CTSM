@@ -257,6 +257,9 @@ contains
        ! use_aquifer_layer is true, we effectively let the balance checks
        ! ensure that this term is zero when use_aquifer_layer is false,
        ! as it should be.
+       ! The _col term converted to _grc here gets determined in
+       ! BeginWaterColumnBalanceSingle in the previous time step after any
+       ! dynamic landuse adjustments.
        call c2g( bounds, &
             wa_reset_nonconservation_gain_col(begc:endc), &
             wa_reset_nonconservation_gain_grc(begg:endg), &
@@ -335,20 +338,33 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                               &
-         zi        => col%zi                            , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
-         zwt       => soilhydrology_inst%zwt_col        , & ! Input:  [real(r8) (:)   ]  water table depth (m)
+         zi         => col%zi                           , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)
+         zwt        => soilhydrology_inst%zwt_col       , & ! Input:  [real(r8) (:)   ]  water table depth (m)
          aquifer_water_baseline => waterstate_inst%aquifer_water_baseline, &  ! Input: [real(r8)] baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
-         wa        => waterstate_inst%wa_col            , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)
+         wa         => waterstate_inst%wa_col           , & ! Output: [real(r8) (:)   ]  water in the unconfined aquifer (mm)
          wa_reset_nonconservation_gain => waterbalance_inst%wa_reset_nonconservation_gain_col                                           , & ! Output: [real(r8) (:)   ]  mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
          begwb      => waterbalance_inst%begwb_col      , & ! Output: [real(r8) (:)   ]  water mass begining of the time step
          h2osno_old => waterbalance_inst%h2osno_old_col   & ! Output: [real(r8) (:)   ]  snow water (mm H2O) at previous time step
          )
 
-    ! wa(c) gets added to liquid_mass in ComputeLiqIceMassNonLake
+    ! wa(c) gets added to liquid_mass in ComputeLiqIceMassNonLake called here.
     ! wa_reset_nonconservation_gain is calculated for the grid cell-level
     ! water balance check and may be non-zero only when
     ! use_aquifer_layer is true. The grid cell-level balance check ensures
     ! that this term is zero when use_aquifer_layer is false, as it should be.
+    ! In particular, we adjust wa back to the baseline under certain
+    ! conditions. The right way to do this might be to use explicit fluxes from
+    ! some other state, but in this case we don't have a source to pull from,
+    ! so we adjust wa without explicit fluxes. Because we do this before
+    ! initializing the column-level balance check, the column-level check is
+    ! unaware of the adjustment. However, since this adjustment happens after
+    ! initializing the gridcell-level balance check, we have to account for
+    ! it in the gridcell-level balance check. The normal way to account for an
+    ! adjustment like this would be to include the flux in the balance check.
+    ! Here we don't have an explicit flux, so instead we track the
+    ! non-conservation state. In principle, we could calculate an explicit flux
+    ! and use that, but we don't gain anything from using an explicit flux in
+    ! this case.
     if(use_aquifer_layer) then
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
@@ -614,7 +630,7 @@ contains
              ' errh2o= ',errh2o_col(indexc)
          if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
               
-              write(iulog,*)'CTSM model stopping because errh2o > ', error_thresh, ' mm'
+              write(iulog,*)'CTSM is stopping because errh2o > ', error_thresh, ' mm'
               write(iulog,*)'nstep                     = ',nstep
               write(iulog,*)'errh2o_col                = ',errh2o_col(indexc)
               write(iulog,*)'forc_rain                 = ',forc_rain_col(indexc)*dtime
@@ -643,7 +659,7 @@ contains
                    write(iulog,*)'qflx_glcice_dyn_water_flux = ', qflx_glcice_dyn_water_flux_col(indexc)*dtime
               end if
               
-              write(iulog,*)'CTSM model is stopping'
+              write(iulog,*)'CTSM is stopping'
               call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
          end if
        
@@ -713,7 +729,7 @@ contains
           if (errh2o_max_val > error_thresh .and. DAnstep > skip_steps .and. &
               .not. get_for_testing_zero_dynbal_fluxes()) then
 
-             write(iulog,*)'CTSM model stopping because errh2o > ', error_thresh, ' mm'
+             write(iulog,*)'CTSM is stopping because errh2o > ', error_thresh, ' mm'
              write(iulog,*)'nstep                     = ',nstep
              write(iulog,*)'errh2o_grc                = ',errh2o_grc(indexg)
              write(iulog,*)'forc_rain                 = ',forc_rain_grc(indexg)*dtime
@@ -735,15 +751,13 @@ contains
              write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
 
-             write(iulog,*)'CTSM model is stopping'
+             write(iulog,*)'CTSM is stopping'
              call endrun(decomp_index=indexg, clmlevel=nameg, msg=errmsg(sourcefile, __LINE__))
           end if
 
        end if
 
        ! Snow balance check at the column level.
-       ! Beginning snow balance variable h2osno_old is calculated once
-       ! for both the column-level and grid cell-level balance checks.
 
        call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
             caller = 'BalanceCheck', &
@@ -815,7 +829,7 @@ contains
                  ' errh2osno= ',errh2osno(indexc)
 
             if ((errh2osno_max_val > error_thresh) .and. (DAnstep > skip_steps) ) then
-                 write(iulog,*)'CTSM model stopping because errh2osno > ', error_thresh, ' mm'
+                 write(iulog,*)'CTSM is stopping because errh2osno > ', error_thresh, ' mm'
                  write(iulog,*)'nstep              = ',nstep
                  write(iulog,*)'errh2osno          = ',errh2osno(indexc)
                  write(iulog,*)'snl                = ',col%snl(indexc)
@@ -838,7 +852,7 @@ contains
                  write(iulog,*)'qflx_snwcp_discarded_ice = ',qflx_snwcp_discarded_ice_col(indexc)*dtime
                  write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq_col(indexc)*dtime
                  write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
-                 write(iulog,*)'CTSM model is stopping'
+                 write(iulog,*)'CTSM is stopping'
                  call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
             end if
 
@@ -910,7 +924,7 @@ contains
            write(iulog,*)'errsol        = ',errsol(indexp)
            
            if (errsol_max_val > error_thresh) then
-               write(iulog,*)'CTSM model stopping because errsol > ', error_thresh, ' W/m2'
+               write(iulog,*)'CTSM is stopping because errsol > ', error_thresh, ' W/m2'
                write(iulog,*)'fsa           = ',fsa(indexp)
                write(iulog,*)'fsr           = ',fsr(indexp)
                write(iulog,*)'forc_solad(1) = ',forc_solad(indexg,1)
@@ -919,7 +933,7 @@ contains
                write(iulog,*)'forc_solai(2) = ',forc_solai(indexg,2)
                write(iulog,*)'forc_tot      = ',forc_solad(indexg,1)+forc_solad(indexg,2) &
                   +forc_solai(indexg,1)+forc_solai(indexg,2)
-               write(iulog,*)'CTSM model is stopping'
+               write(iulog,*)'CTSM is stopping'
                call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
            end if
 
@@ -936,7 +950,7 @@ contains
             write(iulog,*)'nstep        = ',nstep
             write(iulog,*)'errlon       = ',errlon(indexp)
             if (errlon_max_val > error_thresh ) then
-                 write(iulog,*)'CTSM model stopping because errlon > ', error_thresh, ' W/m2'
+                 write(iulog,*)'CTSM is stopping because errlon > ', error_thresh, ' W/m2'
                  call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
             end if
        end if
@@ -956,7 +970,7 @@ contains
            write(iulog,*)'errseb         = ' ,errseb(indexp)
 
            if ( errseb_max_val > error_thresh ) then
-              write(iulog,*)'CTSM model stopping because errseb > ', error_thresh, ' W/m2'
+              write(iulog,*)'CTSM is stopping because errseb > ', error_thresh, ' W/m2'
               write(iulog,*)'sabv           = ' ,sabv(indexp)
               write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
                    frac_sno(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
@@ -972,7 +986,7 @@ contains
               write(iulog,*)'albd albi = '      ,albd(indexp,:), albi(indexp,:)
               write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
               write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)
-              write(iulog,*)'CTSM model is stopping'
+              write(iulog,*)'CTSM is stopping'
               call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
            end if
 
@@ -989,7 +1003,7 @@ contains
            write(iulog,*)'errsoi_col    = ',errsoi_col(indexc)
 
            if ((errsoi_col_max_val > 1.e-4_r8) .and. (DAnstep > skip_steps)) then
-              write(iulog,*)'CTSM model is stopping'
+              write(iulog,*)'CTSM is stopping'
               call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
            end if
        end if 
