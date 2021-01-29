@@ -654,9 +654,10 @@ Switch deciding which nutrient model to use in FATES.
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
 Relevant only if use_fates = .true.
 Allowed values are:
+ 0 : Simulations of fire are off
  1 : use a global constant lightning rate found in fates_params.
  2 : use an external lightning dataset. 
- 3 : use an external confirmed ignitions dataset. 
+ 3 : use an external confirmed ignitions dataset (not available through standard CSEM dataset collection).
  4 : use external lightning and population datasets to simulate both natural and anthropogenic
 ignitions.
 </entry>
@@ -679,7 +680,7 @@ Toggle to turn on the logging module (only relevant if FATES is being used).
 
 <entry id="use_fates_cohort_age_tracking" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
-  Toggle to turn on cohort age tracking (only relevant if FATES is on).
+  Toggle to turn on cohort age tracking (only relevant if FATES is on, which only tracks patches by default).
 </entry>
 
 <entry id="use_fates_ed_st3" type="logical" category="physics"
