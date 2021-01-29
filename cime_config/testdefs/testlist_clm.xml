@@ -1656,7 +1656,6 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
   <test name="SMS_Ld1" grid="f19_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
-      <machine name="edison" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
