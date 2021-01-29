@@ -1381,6 +1381,9 @@ contains
                   iwue_ln(p)   = spval
                end if
             end do
+         else
+            call endrun(msg=' ERROR: IWUELN calculation not compatible with nlevcan>1 ' // &
+                 errMsg(sourcefile, __LINE__))
          end if
          ! Calculate ozone stress. This needs to be done after rssun and rsshade are
          ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
