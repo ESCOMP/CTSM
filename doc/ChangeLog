@@ -32,34 +32,25 @@ Does this tag change answers significantly for any of the following physics conf
 [X] clm4_5
 
 
-Bugs fixed or introduced
-------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Issues fixed (include CTSM Issue #): none
-
-CIME Issues fixed (include issue #): none
-
-Known bugs introduced in this tag (include issue #): none
-
-Known bugs found since the previous tag (include issue #): none
-
-
 Notes of particular relevance for users
 ---------------------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for users (e.g., need to interpolate initial conditions): none
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist
-variables): none
+variables): 
+   
 
-Changes made to namelist defaults (e.g., changed parameter values): none
+Changes made to namelist defaults (e.g., changed parameter values): 
+  - fates_spitfire_mode updated with multiple modes that use external datasets
+  - use_fates_cohort_age_tracking added to enable size and age dependent mortality
+  - fates_parteh_mode option 2 added for fates CNP mode
 
-Changes to the datasets (e.g., parameter, surface or initial files): none
+Changes to the datasets (e.g., parameter, surface or initial files): 
+  fates_paramfile updated to fates_params_api.14.0.0_12pft_c200921.nc
 
 Substantial timing or memory changes: 
-   Only the fates testmod FatesAllVars failed the MEMCOMP test
+  Only the fates testmod FatesAllVars failed the MEMCOMP test due to the increase in the number of variables included
 
 
 Notes of particular relevance for developers:
@@ -69,7 +60,11 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 Caveats for developers (e.g., code that is duplicated that requires double
 maintenance): none
 
-Changes to tests or testing: none
+Changes to tests or testing: 
+  - Added FatesPRT2 testmod test which activates fates CNP mode
+  - Added FatesReducedComplexFixedBiogeo testmod which activates fates fixed biogeography mode
+  - Added FatesSizeAgeMort testmod which activates tracking of size and age dependent mortality in fates
+  - Added Fates_nat_and_anthro_ignitions testmod to activate use of external lightning and population datasets
 
 
 Testing summary:
