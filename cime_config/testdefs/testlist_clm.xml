@@ -1656,7 +1656,6 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
   <test name="SMS_Ld1" grid="f19_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
-      <machine name="edison" compiler="intel" category="prebeta"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2136,6 +2135,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Short ERP debug FATES test for f19_g17 grid.</option>
     </options>
   </test>
   <test name="ERP_D_P32x2_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
@@ -2144,6 +2144,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Short ERP debug FATES test for f19_g17 grid with modified task layout.</option>
     </options>
   </test>
   <test name="ERP_Ld3" grid="f09_g17" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
@@ -2154,6 +2155,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Short ERP FATES test for f09_g17 grid.</option>
     </options>
   </test>
   <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesAllVars">
@@ -2164,6 +2166,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP FATES test covering all standard FATES history variables.</option>
     </options>
   </test>
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesPRT2">
@@ -2174,6 +2177,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">Exact restart debug test covering Fates CNP nutrients mode.</option>
     </options>
   </test>
   <test name="ERS_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
@@ -2184,6 +2188,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">Exact restart debug FATES test covering for the f19_g17 grid resolution.</option>
     </options>
   </test>
   <test name="ERS_D_Ld5" grid="f19_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
@@ -2193,6 +2198,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Exact restart debug test to provide for some CLM coverage during fates suite tests.</option>
     </options>
   </test>
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
@@ -2203,6 +2209,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
     </options>
   </test>
     <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
@@ -2212,6 +2219,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro.</option>
     </options>
   </test>
   <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
@@ -2222,6 +2230,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">Short exact restart debug test for single site grid with coverage for FATES Hydro.</option>
     </options>
   </test>
   <test name="ERS_Ld5" grid="f19_g17" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
@@ -2231,6 +2240,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Exact restart debug FATES test providing coverage for Clm45 physics.</option>
     </options>
   </test>
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/Fates">
@@ -2241,6 +2251,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">60 day exact restart FATES test on f45 grid.</option>
     </options>
   </test>
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesNoFire">
@@ -2250,6 +2261,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">60 day exact restart test that turns off all fire (both FATES and CLM) on an f45 grid.</option>
     </options>
   </test>
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesST3">
@@ -2260,6 +2272,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">60 day exact restart test activating FATES static stand structure on an f45 grid.</option>
     </options>
   </test>
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesPPhys">
@@ -2268,6 +2281,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">60 day exact restart test activating FATES prescribed physiology mode on an f45 grid.</option>
     </options>
   </test>
     <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesReducedComplexFixedBiogeo">
@@ -2278,6 +2292,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">30 day exact restart test for FATES fixed biogeography reduced complexity mode on an f45 grid.</option>
     </options>
   </test>
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesLogging">
@@ -2286,6 +2301,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">60 day exact restart test providing coverage for the FATES logging mode on an f45 grid.</option>
     </options>
   </test>
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesSizeAgeMort">
@@ -2296,6 +2312,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">30 day exact restart test activating FATES size and age mortality mode on an f45 grid.</option>
     </options>
   </test>
   <test name="SMS_Lm6" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/Fates">
@@ -2315,6 +2332,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">13 month single site FATES smoke test.</option>
     </options>
   </test>
   <test name="ERS_D_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/Fates_nat_and_anthro_ignitions">
@@ -2323,6 +2341,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
+      <option name="comment">12 month exact restart FATES single site debug test covering anthropogenic fire ignition mode.</option>
     </options>
   </test>
   <test name="SMS_Lm1" grid="f10_f10_musgs" compset="I1850Clm50BgcCropCmip6waccm" testmods="clm/basic">

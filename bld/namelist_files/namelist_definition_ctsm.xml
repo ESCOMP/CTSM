@@ -207,7 +207,7 @@ formulation (1).
 </entry>
 
 <entry id="fire_method" type="char*80" category="clm_physics"
-       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc,spitfire" >
+       group="cnfire_inparm" valid_values="nofire,li2014qianfrc,li2016crufrc,li2021gswpfrc" >
 The method type to use for CNFire
 
 nofire:        Turn fire effects off
@@ -654,9 +654,10 @@ Switch deciding which nutrient model to use in FATES.
         group="clm_inparm" valid_values="0,1,2,3,4" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
 Allowed values are:
+ 0 : Simulations of fire are off
  1 : use a global constant lightning rate found in fates_params.
  2 : use an external lightning dataset. 
- 3 : use an external confirmed ignitions dataset. 
+ 3 : use an external confirmed ignitions dataset (not available through standard CSEM dataset collection).
  4 : use external lightning and population datasets to simulate both natural and anthropogenic
 ignitions.
 (Only relevant if FATES is on)
@@ -682,7 +683,7 @@ Toggle to turn on plant hydraulics
 
 <entry id="use_fates_cohort_age_tracking" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on cohort age tracking 
+Toggle to turn on cohort age tracking (by default FATES only tracks age of patches)
 (Only relevant if FATES is on).
 </entry>
 

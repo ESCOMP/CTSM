@@ -1580,9 +1580,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_lightng use_fates=".true.">0001</stream_year_first_lightng>
 <stream_year_last_lightng  use_fates=".true.">0001</stream_year_last_lightng>
 
-<stream_fldfilename_lightng hgrid="94x192"    use_cn=".true."   >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
-<stream_fldfilename_lightng hgrid="360x720"   use_cn=".true."   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
-<stream_fldfilename_lightng use_fates=".true."   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng hgrid="94x192"    use_cn=".true."    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng hgrid="360x720"   use_cn=".true."    >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng hgrid="360x720"   use_fates=".true." >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
 
 <lightngmapalgo use_cn=".true."                               >bilinear</lightngmapalgo>
 <lightngmapalgo use_fates=".true."                            >bilinear</lightngmapalgo>
