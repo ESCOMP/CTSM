@@ -703,6 +703,22 @@ contains
          waterstatebulk_inst = waterstatebulk_inst)
 
     call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('IWUELN'), &
+         xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name=this%info%lname('local noon intrinsic water use efficiency'), &
+         units='umolCO2/molH2O', &
+         interpinic_flag='interp', readvar=readvar, data=this%iwue_ln_patch)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('VPD2M'), &
+         xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name=this%info%lname('2m vapor pressure deficit'), &
+         units='Pa', &
+         interpinic_flag='interp', readvar=readvar, data=this%vpd_ref2m_patch)
+
+    call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('FWET'), &
          xtype=ncd_double,  &
          dim1name='pft', &
