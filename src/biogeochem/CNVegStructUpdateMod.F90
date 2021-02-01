@@ -197,11 +197,11 @@ contains
                          * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))  
                   end if
                else
-                  stem_biomass(p) = 0_r8
+                  stem_biomass(p) = 0._r8
                end if
             else
-               leaf_biomass(p) = 0_r8
-               stem_biomass(p) = 0_r8
+               leaf_biomass(p) = 0._r8
+               stem_biomass(p) = 0._r8
             end if  
 !KO
 
