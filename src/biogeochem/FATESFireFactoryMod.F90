@@ -72,4 +72,4 @@ contains
 
   end subroutine create_fates_fire_data_method
 
-end module CNFireFactoryMod
+end module FATESFireFactoryMod
