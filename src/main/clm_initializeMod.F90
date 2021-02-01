@@ -317,7 +317,7 @@ contains
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
     use BalanceCheckMod       , only : BalanceCheckInit
-    use CNFireFactoryMod      , only : scalar_lightning
+    use FATESFireFactoryMod      , only : scalar_lightning
     !
     ! !ARGUMENTS    
     !

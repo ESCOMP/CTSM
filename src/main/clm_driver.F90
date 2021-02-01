@@ -113,7 +113,7 @@ contains
     use clm_time_manager     , only : get_curr_date
     use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
     use SatellitePhenologyMod, only : lai_advance
-    use CNFireFactoryMod     , only : scalar_lightning
+    use FATESFireFactoryMod  , only : scalar_lightning
     !
     ! !ARGUMENTS:
     implicit none

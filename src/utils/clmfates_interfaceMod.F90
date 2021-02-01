@@ -142,7 +142,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use FATESFireBase          , only : fates_fire_base_type
-   use CNFireFactoryMod       , only : no_fire, scalar_lightning, &
+   use FATESFireFactoryMod    , only : no_fire, scalar_lightning, &
                                        successful_ignitions, anthro_ignitions
    use dynSubgridControlMod   , only : get_do_harvest
    use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
@@ -460,7 +460,7 @@ module CLMFatesInterfaceMod
       use FatesParameterDerivedMod, only : param_derived
       use subgridMod, only :  natveg_patch_exists
       use clm_instur       , only : wt_nat_patch
-      use CNFireFactoryMod , only: create_fates_fire_data_method
+      use FATESFireFactoryMod , only: create_fates_fire_data_method
 
       implicit none
       
@@ -717,7 +717,7 @@ module CLMFatesInterfaceMod
       ! to process array bounding information 
       
       ! !USES
-      use CNFireFactoryMod, only: scalar_lightning
+      use FATESFireFactoryMod, only: scalar_lightning
 
       ! !ARGUMENTS:
       implicit none
