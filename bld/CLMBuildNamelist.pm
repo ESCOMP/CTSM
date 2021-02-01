@@ -908,7 +908,11 @@ sub setup_cmdl_fire_light_res {
   my $var = "light_res";
   my $val = $opts->{$var};
   if ( $val eq "default" ) {
-     $nl_flags->{$var} = remove_leading_and_trailing_quotes($defaults->get_value($var));
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
+                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$nl->get_value('fire_method') );
+     $val              = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+     $nl_flags->{$var} = $val;
   } else {
      my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
      if ( defined($fire_method) && $val ne "none" ) {
