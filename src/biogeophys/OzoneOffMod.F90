@@ -104,13 +104,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(ram) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(tlai) == (/bounds%endp/)), sourcefile, __LINE__)
 
-    ! Explicitly set outputs to 1. This isn't really needed, because they should still be
-    ! at 1 from cold-start initialization, but do this for clarity here.
-
-    this%o3coefvsha_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefvsun_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefgsha_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefgsun_patch(bounds%begp:bounds%endp) = 1._r8
+    ! Do nothing: Outputs are already fixed at 1 from cold start initialization.
 
   end subroutine CalcOzoneStress
 
