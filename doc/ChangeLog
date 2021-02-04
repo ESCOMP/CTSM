@@ -31,7 +31,6 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
-[X] fates
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -65,6 +64,7 @@ Changes to tests or testing:
   - Added FatesReducedComplexFixedBiogeo testmod which activates fates fixed biogeography mode
   - Added FatesSizeAgeMort testmod which activates tracking of size and age dependent mortality in fates
   - Added Fates_nat_and_anthro_ignitions testmod to activate use of external lightning and population datasets
+  - Non-debug mode nag tests replaced in izumi test list with debug versions due to internal compiler error.
 
 
 Testing summary:
@@ -74,11 +74,11 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- PASS (except for fates DIFFs)
+    cheyenne ---- PASS (fates testmods DIFFs are expected)
     izumi ------- OK
 
-    ok: All non-fates testmods PASS. Fates testmods have DIFF as expected due
-    to update of fates tag.
+    ok: All non-fates testmods PASS. Fates testmods have DIFF as expected due to update of fates tag.  
+    BFAILs expected due to changing non-debug nag test to debug.  See #1264 comments for discussion.
 
   fates tests:
     cheyenne ---- OK 
