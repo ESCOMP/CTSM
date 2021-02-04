@@ -26,6 +26,8 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
+[ ] fates
+
 
 Bugs fixed or introduced
 ------------------------
@@ -119,6 +121,9 @@ infrastructure should be run when appropriate, as described below.
 
     cheyenne ---- 
     izumi ------- 
+  
+  fates tests:
+    cheyenne ---- 
 
   any other testing (give details below):
 
