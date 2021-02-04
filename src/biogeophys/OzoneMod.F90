@@ -63,10 +63,6 @@ module OzoneMod
      procedure, private, nopass :: CalcOzoneStressOnePoint
   end type ozone_type
 
-  interface ozone_type
-     module procedure constructor
-  end interface ozone_type
-
   ! !PRIVATE TYPES:
   
   ! TODO(wjs, 2014-09-29) This parameter will eventually become a spatially-varying
@@ -110,31 +106,6 @@ contains
   ! ========================================================================
   ! Infrastructure routines (initialization, restart, etc.)
   ! ========================================================================
-
-  !-----------------------------------------------------------------------
-  function constructor() result(ozone)
-    !
-    ! !DESCRIPTION:
-    ! Return an instance of ozone_type
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    type(ozone_type) :: ozone  ! function result
-    !
-    ! !LOCAL VARIABLES:
-    
-    character(len=*), parameter :: subname = 'constructor'
-    !-----------------------------------------------------------------------
-
-    ! DO NOTHING (simply return a variable of the appropriate type)
-
-    ! Eventually this should call the Init routine (or replace the Init routine
-    ! entirely). But I think it would be confusing to do that until we switch everything
-    ! to use a constructor rather than the init routine.
-    
-  end function constructor
-
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds)
