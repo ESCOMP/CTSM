@@ -1540,7 +1540,8 @@ bioms:   do f = 1, fn
          
          call clm_fates%wrap_accumulatefluxes(nc,fn,filterp(1:fn))
          call clm_fates%wrap_hydraulics_drive(bounds,nc,soilstate_inst, &
-               waterstatebulk_inst,waterdiagnosticbulk_inst,waterfluxbulk_inst,solarabs_inst,energyflux_inst)
+               waterstatebulk_inst,waterdiagnosticbulk_inst,waterfluxbulk_inst, &
+               fn, filterp, solarabs_inst,energyflux_inst)
 
       else
 
