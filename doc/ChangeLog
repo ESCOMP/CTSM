@@ -25,11 +25,11 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm5_1
 
-[X] clm5_0
+[ ] clm5_0
 
 [ ] ctsm5_0-nwp
 
-[X] clm4_5
+[ ] clm4_5
 
 
 Notes of particular relevance for users
@@ -40,7 +40,6 @@ Caveats for users (e.g., need to interpolate initial conditions): none
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist
 variables): 
    
-
 Changes made to namelist defaults (e.g., changed parameter values): 
   - fates_spitfire_mode updated with multiple modes that use external datasets
   - use_fates_cohort_age_tracking added to enable size and age dependent mortality
@@ -65,6 +64,7 @@ Changes to tests or testing:
   - Added FatesReducedComplexFixedBiogeo testmod which activates fates fixed biogeography mode
   - Added FatesSizeAgeMort testmod which activates tracking of size and age dependent mortality in fates
   - Added Fates_nat_and_anthro_ignitions testmod to activate use of external lightning and population datasets
+  - Non-debug mode nag tests replaced in izumi test list with debug versions due to internal compiler error.
 
 
 Testing summary:
@@ -74,21 +74,21 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- PASS (except for fates DIFFs)
-    izumi ------- N/A
+    cheyenne ---- PASS (fates testmods DIFFs are expected)
+    izumi ------- OK
 
-    ok: All non-fates testmods PASS. Fates testmods have DIFF as expected due
-    to update of fates tag.
+    ok: All non-fates testmods PASS. Fates testmods have DIFF as expected due to update of fates tag.  
+    BFAILs expected due to changing non-debug nag test to debug.  See #1264 comments for discussion.
 
-  any other testing (give details below):
-
-  fates suite:
+  fates tests:
     cheyenne ---- OK 
 
     ok: expected failures on COMPARE_base_rest for FatesHydro
     and Fates_nat_and_anthro_ignitions.  All else B4B.
 
     fates baseline: fates-sci.1.43.2_api.14.2.0-ctsm5.1.dev020-C5f348cac-F5534a940
+  
+  any other testing (give details below):
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
