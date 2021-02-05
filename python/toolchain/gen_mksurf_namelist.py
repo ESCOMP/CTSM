@@ -13,7 +13,7 @@ import sys
 valid_opts = {
         'res' :
         ['512x1024','360x720cru','128x256','64x128','48x96','94x192','0.23x0.31','0.47x0.63','0.9x1.25','1.9x2.5','2.5x3.33',
-        '4x5,10x15','0.125nldas2','5x5_amazon','1x1_camdenNJ','1x1_vancouverCAN','1x1_mexicocityMEX',
+        '4x5','10x15','0.125nldas2','5x5_amazon','1x1_camdenNJ','1x1_vancouverCAN','1x1_mexicocityMEX',
         '1x1_asphaltjungleNJ','1x1_brazil,1x1_urbanc_alpha','1x1_numaIA,1x1_smallvilleIA','0.1x0.1','0.25x0.25','0.5x0.5',
         '3x3min','5x5min','10x10min','0.33x0.33','0.125x0.125','ne4np4,ne16np4','ne30np4.pg2','ne30np4.pg3','ne30np4','ne60np4','ne120np4']
         ,'ssp_rcp': ["hist","SSP1-2.6","SSP3-7.0","SSP5-3.4","SSP2-4.5","SSP1-1.9","SSP4-3.4","SSP4-6.0","SSP5-8.5"]
@@ -35,13 +35,6 @@ def get_parser():
                             formatter_class=ArgumentDefaultsHelpFormatter)
         parser = argparse.ArgumentParser(description='Setting the flags and input files.')
 
-        parser.add_argument('-r','--res',
-                    help='Resolution is the supported resolution(s) to use for files.',
-                    action="store", 
-                    dest="res", 
-                    choices=valid_opts['res'], 
-                    required=False, 
-                    default="4x5")
         parser.add_argument('-sy','--start_year',
                     help='Simulation start year.', 
                     action="store",
@@ -134,6 +127,13 @@ def get_parser():
                     action="store_true", 
                     dest="fast_flag", 
                     default=False)
+        parser.add_argument('-r','--res',
+                    help='Resolution is the supported resolution(s) to use for files.',
+                    action="store", 
+                    dest="res", 
+                    choices=valid_opts['res'], 
+                    required=False, 
+                    default="4x5")
         return parser
 
 def name_nl  (start_year,end_year, res, ssp_rcp, num_pft):
@@ -143,7 +143,6 @@ def name_nl  (start_year,end_year, res, ssp_rcp, num_pft):
 
     time_stamp = datetime.today().strftime('%y%m%d')
     namelist_fname = "surfdata_"+res+"_"+ssp_rcp+"_"+num_pft+"pfts_CMIP6_"+start_year.__str__()+'-'+end_year.__str__()+"_c"+time_stamp+".namelist"
-    print ("namelist file created is : ", namelist_fname)
 
     return namelist_fname 
 
@@ -162,12 +161,13 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
     else: 
         use_transient = ".false"
    
-    mesh = which_mesh (res)
+    dst_mesh = which_mesh (res)
 
+    print ('dst mesh is :', dst_mesh)
     nl_template = ( \
             "&clmexp\n"                                                                                                                                                                  
             "nglcec           = "+glc_nec + "\n"
-            "mksrf_fsoitex    = "+input_path+"mksrf_soitex.10level.c010119.nc"+"\n"
+            "mksrf_fsoitex    = "+input_path+"mksrf_soitex.10level.c201018.nc"+"\n"
             "mksrf_forganic   = "+input_path+"mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc"+"\n"
             "mksrf_flakwat    = "+input_path+"mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"+"\n"
             "mksrf_fwetlnd    = "+input_path+"mksrf_lanwat.050425.nc"+"\n"
@@ -188,16 +188,14 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
             "mksrf_fvegtyp    = "+input_path + "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_1850.c170629.nc"+"\n"
             "mksrf_fsoicol    = "+input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc"+"\n"
             "mksrf_flai       = "+input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc" +"\n"
-            "mksrf_fdynuse    = ''\n"
             "fdyndat          = ''\n"
             "numpft           = "+num_pft+"\n"
-            "dst_mesh_file    = "+"\n"
+            "dst_mesh_file    = "+input_path+dst_mesh+"\n"
             "\n&transient\n"
             "use_transient    = "+use_transient + "\n"
-            "mksrf_fdynuse    = \n"
             "start_year       = "+start_year.__str__() + "\n"
             "end_year         = "+end_year.__str__() + "\n"
-            "mksrf_dyn_lu     = "+input_path+"\n"
+            "mksrf_dyn_lu     = "+input_path+ "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629" + "\n"
             "\n&vic\n"
             "use_vic          = "+vic_flag.__str__()+"\n"
             "mksrf_fvic       = "+input_path+"mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc\n"
@@ -208,6 +206,8 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
             "/\n"
             )
 
+    print ("Successfully created namelist file : ", namelist_fname)
+    print ("---------------------------------------------------")
     namelist_file.write (nl_template)
     namelist_file.close ()
 
@@ -243,7 +243,7 @@ def which_mesh(res):
        "360x720cru" : "lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc", 
    }
 
-   return switcher.get(argument, "nothing") 
+   return switcher.get(res, "nothing") 
 
 
 
@@ -263,17 +263,36 @@ def glc_nec_type(x):
 
 def start_year_type(x):
     x = int(x)
-    if (x <= 850) or (x >= 2105):
+    if (x < 850) or (x > 2105):
         raise argparse.ArgumentTypeError("ERROR: Simulation start year should be between 850 and 2105.")
     return x
 
 def check_endyear(start_year, end_year):
-    if (end_year < start_year):
+    if (int(end_year) < int(start_year)):
         print ( "ERROR: end_year should be bigger than the start_year : ", start_year, ".")
         sys.exit()
 
+def create_landuse(start_year, end_year):
+    lu_fname = landuse_filename (start_year, end_year)
+    lu_file = open (lu_fname,'w')
+    for yr in range (start_year, end_year+1):
+        print (yr)
+        lu_fname_line = \
+        "/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_landuse_histclm50_LUH2_"+str(yr)+".c170412.nc"\
+        +"\t\t\t"+ str(yr) + "\n"
+        print (lu_fname_line)
+        lu_file.write (lu_fname_line)
+    print ("Successfully created land use file : ", lu_fname)
+    print ("---------------------------------------------------")
+    lu_file.close ()
+
+
+def landuse_filename(start_year, end_year):
+    lu_fname = "landuse_timeseries_hist_78pfts_simyr"+str(start_year)+"-"+str(end_year)+".txt"
+    return (lu_fname)
+
 def main ():
-    print ('Testing gen_mksurf_namelist')
+    print ('Testing gen_mksurf_namelist...')
 
     args         = get_parser().parse_args()
 
@@ -293,10 +312,10 @@ def main ():
     end_year     = args.end_year
 
     # determine end_year
-    check_endyear (start_year, end_year)
     if not end_year:
         end_year = start_year
 
+    check_endyear (start_year, end_year)
     if (end_year > start_year):
         run_type = "transient"
     else:
@@ -334,6 +353,7 @@ def main ():
     #    start_year, end_year = sim_range.split("-")
 
 
+    create_landuse(start_year, end_year)
     build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, run_type, vic_flag, glc_flag)
 
 if __name__ == "__main__":
