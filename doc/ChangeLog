@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev022
 Originator(s):  gregorylemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date:  Wed 27 Jan 2021 12:26:44 AM PST
+Date: Fri Feb  5 00:03:28 MST 2021
 One-line Summary: Merge fates_main_api into ctsm master
 
 Purpose and description of changes
@@ -31,15 +31,24 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] clm4_5
 
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #1128 -- missing compset for FATES tests
+   Fixes #1002 -- allow transient land-use files when FATES is on?
+   Some work was done on #1272 -- namelist refactor for FATES
+
+Known bugs introduced in this tag (include issue #):
+   #1265 -- Diversifying fates testmods included in `aux_clm` test suite
+   #1266 - Add test for successful_ignitions mode for FATES-SPITFIRE
+
+Known bugs found since the previous tag (include issue #):
+   #1269 -- GSWP3V1 atmospheric forcing for 2011-2014 is "bad" over Antarctica
 
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions): none
-
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist
-variables): 
-   
 Changes made to namelist defaults (e.g., changed parameter values): 
   - fates_spitfire_mode updated with multiple modes that use external datasets
   - use_fates_cohort_age_tracking added to enable size and age dependent mortality
@@ -56,8 +65,11 @@ Notes of particular relevance for developers:
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
-Caveats for developers (e.g., code that is duplicated that requires double
-maintenance): none
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): 
+   There are a couple of issues we plan to address later (#1265, and #1272)
+    Note also that NAG compiler production tests started failing because of a compiler error
+    Since, we only care about NAG for DEBUG testing we removed those tests. Hopefully, a compiler
+    update will allow that to work in the future.
 
 Changes to tests or testing: 
   - Added FatesPRT2 testmod test which activates fates CNP mode
@@ -67,10 +79,13 @@ Changes to tests or testing:
   - Non-debug mode nag tests replaced in izumi test list with debug versions due to internal compiler error.
 
 
-Testing summary:
+Testing summary: regular
 ----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - PASS (61 namelists are different because of fates changes)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
