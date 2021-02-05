@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1550;
+my $ntests = 1551;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1044;
 }
@@ -842,18 +842,23 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
+     "FireNoneButFATESfireon"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res none",
+                                     namelst=>"fates_spitfire_mode=4",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
+                                     namelst=>"fire_method='li2021gswpfrc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
      "createcropFalse"           =>{ options=>"-bgc bgc -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "useFATESWTransient"        =>{ options=>"-bgc fates -use_case 20thC_transient -envxml_dir . -no-megan -res 10x15",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
      "usespitfireButNOTFATES"    =>{ options=>"-envxml_dir . -no-megan",
-                                     namelst=>"use_fates_spitfire=.true.",
+                                     namelst=>"fates_spitfire_mode>0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },

@@ -119,6 +119,9 @@ infrastructure should be run when appropriate, as described below.
 
     cheyenne ---- 
     izumi ------- 
+  
+  fates tests:
+    cheyenne ---- 
 
   any other testing (give details below):
 
