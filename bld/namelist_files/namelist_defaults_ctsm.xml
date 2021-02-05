@@ -1579,26 +1579,21 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <light_res    use_fates=".true." fates_spitfire_mode="3" >360x720</light_res>
 <light_res    use_fates=".true." fates_spitfire_mode="4" >360x720</light_res>
 
-<stream_year_first_lightng use_cn=".true."   >0001</stream_year_first_lightng>
-<stream_year_last_lightng  use_cn=".true."   >0001</stream_year_last_lightng>
-<stream_year_first_lightng use_fates=".true.">0001</stream_year_first_lightng>
-<stream_year_last_lightng  use_fates=".true.">0001</stream_year_last_lightng>
+<stream_year_first_lightng >0001</stream_year_first_lightng>
+<stream_year_last_lightng  >0001</stream_year_last_lightng>
 
-<stream_fldfilename_lightng hgrid="94x192"    use_cn=".true."    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
-<stream_fldfilename_lightng hgrid="360x720"   use_cn=".true."    >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
-<stream_fldfilename_lightng hgrid="94x192"    use_fates=".true." >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
-<stream_fldfilename_lightng hgrid="360x720"   use_fates=".true." >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng hgrid="94x192"    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
 
-<lightngmapalgo use_cn=".true."                               >bilinear</lightngmapalgo>
-<lightngmapalgo use_fates=".true."                            >bilinear</lightngmapalgo>
+<lightngmapalgo >bilinear</lightngmapalgo>
 
-<lightngmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_brazil"          >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_mexicocityMEX"   >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_vancouverCAN"    >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_urbanc_alpha"    >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_camdenNJ"        >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_asphaltjungleNJ" >nn</lightngmapalgo>
+<lightngmapalgo hgrid="5x5_amazon"          >nn</lightngmapalgo>
 
 <!-- Population density streams namelist defaults -->
 <stream_year_first_popdens phys="clm4_5"  cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>

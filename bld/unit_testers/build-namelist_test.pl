@@ -138,7 +138,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1549;
+my $ntests = 1551;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1044;
 }
@@ -839,6 +839,16 @@ my %failtest = (
                                    },
      "useFATESWbMH"              =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_biomass_heat_storage=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "FireNoneButFATESfireon"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res none",
+                                     namelst=>"fates_spitfire_mode=4",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
+                                     namelst=>"fire_method='li2021gswpfrc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
