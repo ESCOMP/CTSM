@@ -1838,38 +1838,12 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm45FatesRs" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="prebeta"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld5" grid="f09_g17" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1893,23 +1867,6 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm45FatesRs" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm45FatesRs" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
   <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1921,24 +1878,6 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </options>
   </test>
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1966,14 +1905,6 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment"  >Run a Fates test with latest Clm5_1</option>
     </options>
   </test>
-  <test name="SMS_D_Lm6" grid="f45_f45_mg37" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:40:00</option>
-    </options>
-  </test>
   <test name="SMS_D_Lm6" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -1984,22 +1915,6 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     </options>
   </test>
   <test name="SMS_D_Lm6_P144x1" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f10_f10_musgs" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-    </options>
-  </test>
-  <test name="SMS_Ld5" grid="f19_g17" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
