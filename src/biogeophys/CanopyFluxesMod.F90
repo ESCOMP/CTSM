@@ -1548,10 +1548,10 @@ bioms:   do f = 1, fn
          call PhotosynthesisTotal(fn, filterp, &
               atm2lnd_inst, canopystate_inst, photosyns_inst)
          
-         ! Calculate ozone stress. This needs to be done after rssun and rsshade are
-         ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
-         ! ozone stress computed here. Thus, the ozone stress computed in timestep i is
-         ! applied in timestep (i+1).
+         ! Calculate ozone uptake. This needs to be done after rssun and rsshade are
+         ! computed by the Photosynthesis routine. The updated ozone uptake computed here
+         ! will be used in the next time step to calculate ozone stress for the next time
+         ! step's photosynthesis calculations.
          
          ! COMPILER_BUG(wjs, 2014-11-29, pgi 14.7) The following dummy variable assignment is
          ! needed with pgi 14.7 on yellowstone; without it, forc_pbot_downscaled_col gets
@@ -1566,7 +1566,6 @@ bioms:   do f = 1, fn
               rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
               ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
               tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
-         call ozone_inst%CalcOzoneStress(bounds, fn, filterp)
 
          !---------------------------------------------------------
          !update Vc,max and Jmax by LUNA model

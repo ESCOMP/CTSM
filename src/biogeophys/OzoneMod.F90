@@ -267,26 +267,6 @@ contains
          long_name='ozone uptake for sunlit leaves', units='mmol m^-3', &
          readvar=readvar, interpinic_flag='interp', data=this%o3uptakesun_patch)
 
-    call restartvar(ncid=ncid, flag=flag, varname='o3coefvsun', xtype=ncd_double, &
-         dim1name='pft', &
-         long_name='ozone coefficient for photosynthesis for sunlit leaves', units='unitless', &
-         readvar=readvar, interpinic_flag='interp', data=this%o3coefvsun_patch)
-
-    call restartvar(ncid=ncid, flag=flag, varname='o3coefgsun', xtype=ncd_double, &
-         dim1name='pft', &
-         long_name='ozone coefficient for stomatal conductance for sunlit leaves', units='unitless', &
-         readvar=readvar, interpinic_flag='interp', data=this%o3coefgsun_patch)
-
-    call restartvar(ncid=ncid, flag=flag, varname='o3coefvsha', xtype=ncd_double, &
-         dim1name='pft', &
-         long_name='ozone coefficient for photosynthesis for shaded leaves', units='unitless', &
-         readvar=readvar, interpinic_flag='interp', data=this%o3coefvsha_patch)
-
-    call restartvar(ncid=ncid, flag=flag, varname='o3coefgsha', xtype=ncd_double, &
-         dim1name='pft', &
-         long_name='ozone coefficient for stomatal conductance for shaded leaves', units='unitless', &
-         readvar=readvar, interpinic_flag='interp', data=this%o3coefgsha_patch)
-
   end subroutine Restart
 
   ! ========================================================================
