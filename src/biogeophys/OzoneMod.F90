@@ -18,6 +18,8 @@ module OzoneMod
   use clm_varcon  , only : spval
   use OzoneBaseMod, only : ozone_base_type
   use abortutils  , only : endrun
+  use PatchType   , only : patch
+  use pftconMod   , only : pftcon
 
   implicit none
   save
@@ -52,12 +54,16 @@ module OzoneMod
      ! Public routines
      procedure, public :: Init
      procedure, public :: Restart
+     procedure, public :: CalcOzoneUptake
      procedure, public :: CalcOzoneStress
 
      ! Private routines
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
+
+     ! Calculate ozone uptake for a single point, for just sunlit or shaded leaves
+     procedure, private, nopass :: CalcOzoneUptakeOnePoint
 
      ! Calculate ozone stress for a single point, for just sunlit or shaded leaves
      procedure, private, nopass :: CalcOzoneStressOnePoint
@@ -278,14 +284,11 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine CalcOzoneStress(this, bounds, num_exposedvegp, filter_exposedvegp, &
+  subroutine CalcOzoneUptake(this, bounds, num_exposedvegp, filter_exposedvegp, &
        forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
     !
     ! !DESCRIPTION:
-    ! Calculate ozone stress.
-    !
-    ! !USES:
-    use PatchType            , only : patch
+    ! Calculate ozone uptake.
     !
     ! !ARGUMENTS:
     class(ozone_type)      , intent(inout) :: this
@@ -305,7 +308,7 @@ contains
     integer  :: p              ! patch index
     integer  :: c              ! column index
 
-    character(len=*), parameter :: subname = 'CalcOzoneStress'
+    character(len=*), parameter :: subname = 'CalcOzoneUptake'
     !-----------------------------------------------------------------------
     
     ! Enforce expected array sizes
@@ -318,10 +321,6 @@ contains
     SHR_ASSERT_ALL_FL((ubound(tlai) == (/bounds%endp/)), sourcefile, __LINE__)
 
     associate( &
-         o3coefvsha  => this%o3coefvsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
-         o3coefvsun  => this%o3coefvsun_patch                 , & ! Output: [real(r8) (:)] ozone coef
-         o3coefgsha  => this%o3coefgsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
-         o3coefgsun  => this%o3coefgsun_patch                 , & ! Output: [real(r8) (:)] ozone coef
          o3uptakesha => this%o3uptakesha_patch                , & ! Output: [real(r8) (:)] ozone dose
          o3uptakesun => this%o3uptakesun_patch                , & ! Output: [real(r8) (:)] ozone dose
          tlai_old    => this%tlai_old_patch                     & ! Output: [real(r8) (:)] tlai from last time step
@@ -331,19 +330,19 @@ contains
        p = filter_exposedvegp(fp)
        c = patch%column(p)
 
-       ! Ozone stress for shaded leaves
-       call CalcOzoneStressOnePoint( &
+       ! Ozone uptake for shaded leaves
+       call CalcOzoneUptakeOnePoint( &
             forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
             rs=rssha(p), rb=rb(p), ram=ram(p), &
             tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-            o3uptake=o3uptakesha(p), o3coefv=o3coefvsha(p), o3coefg=o3coefgsha(p))
+            o3uptake=o3uptakesha(p))
 
-       ! Ozone stress for sunlit leaves
-       call CalcOzoneStressOnePoint( &
+       ! Ozone uptake for sunlit leaves
+       call CalcOzoneUptakeOnePoint( &
             forc_ozone=forc_ozone, forc_pbot=forc_pbot(c), forc_th=forc_th(c), &
             rs=rssun(p), rb=rb(p), ram=ram(p), &
             tlai=tlai(p), tlai_old=tlai_old(p), pft_type=patch%itype(p), &
-            o3uptake=o3uptakesun(p), o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
+            o3uptake=o3uptakesun(p))
 
        tlai_old(p) = tlai(p)
 
@@ -351,21 +350,67 @@ contains
 
     end associate
 
+  end subroutine CalcOzoneUptake
+
+  !-----------------------------------------------------------------------
+  subroutine CalcOzoneStress(this, bounds, num_exposedvegp, filter_exposedvegp)
+    !
+    ! !DESCRIPTION:
+    ! Calculate ozone stress.
+    !
+    ! !ARGUMENTS:
+    class(ozone_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    integer  , intent(in) :: num_exposedvegp           ! number of points in filter_exposedvegp
+    integer  , intent(in) :: filter_exposedvegp(:)     ! patch filter for non-snow-covered veg
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: fp             ! filter index
+    integer  :: p              ! patch index
+
+    character(len=*), parameter :: subname = 'CalcOzoneStress'
+    !-----------------------------------------------------------------------
+
+    associate( &
+         o3uptakesha => this%o3uptakesha_patch                , & ! Input:  [real(r8) (:)] ozone dose
+         o3uptakesun => this%o3uptakesun_patch                , & ! Input:  [real(r8) (:)] ozone dose
+         o3coefvsha  => this%o3coefvsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
+         o3coefvsun  => this%o3coefvsun_patch                 , & ! Output: [real(r8) (:)] ozone coef
+         o3coefgsha  => this%o3coefgsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
+         o3coefgsun  => this%o3coefgsun_patch                   & ! Output: [real(r8) (:)] ozone coef
+         )
+
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
+
+       ! Ozone stress for shaded leaves
+       call CalcOzoneStressOnePoint( &
+            pft_type=patch%itype(p), o3uptake=o3uptakesha(p), &
+            o3coefv=o3coefvsha(p), o3coefg=o3coefgsha(p))
+
+       ! Ozone stress for sunlit leaves
+       call CalcOzoneStressOnePoint( &
+            pft_type=patch%itype(p), o3uptake=o3uptakesun(p), &
+            o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
+    end do
+
+
+    end associate
+
   end subroutine CalcOzoneStress
 
   !-----------------------------------------------------------------------
-  subroutine CalcOzoneStressOnePoint( &
+  subroutine CalcOzoneUptakeOnePoint( &
        forc_ozone, forc_pbot, forc_th, &
        rs, rb, ram, &
        tlai, tlai_old, pft_type, &
-       o3uptake, o3coefv, o3coefg)
+       o3uptake)
     !
     ! !DESCRIPTION:
-    ! Calculates ozone stress for a single point, for just sunlit or shaded leaves
+    ! Calculates ozone uptake for a single point, for just sunlit or shaded leaves
     !
     ! !USES:
     use shr_const_mod        , only : SHR_CONST_RGAS
-    use pftconMod            , only : pftcon
     use clm_time_manager     , only : get_step_size
     !
     ! !ARGUMENTS:
@@ -379,8 +424,6 @@ contains
     real(r8) , intent(in)    :: tlai_old   ! tlai from last time step
     integer  , intent(in)    :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
     real(r8) , intent(inout) :: o3uptake   ! ozone entering the leaf
-    real(r8) , intent(out)   :: o3coefv    ! ozone coefficient for photosynthesis (0 - 1)
-    real(r8) , intent(out)   :: o3coefg    ! ozone coefficient for conductance (0 - 1)
     !
     ! !LOCAL VARIABLES:
     integer  :: dtime          ! land model time step (sec)
@@ -392,12 +435,8 @@ contains
     real(r8) :: heal           ! o3uptake healing rate based on % of new leaves growing (mmol m^-2)
     real(r8) :: leafturn       ! leaf turnover time / mortality rate (per hour)
     real(r8) :: decay          ! o3uptake decay rate based on leaf lifetime (mmol m^-2)
-    real(r8) :: photoInt       ! intercept for photosynthesis
-    real(r8) :: photoSlope     ! slope for photosynthesis
-    real(r8) :: condInt        ! intercept for conductance
-    real(r8) :: condSlope      ! slope for conductance
 
-    character(len=*), parameter :: subname = 'CalcOzoneStressOnePoint'
+    character(len=*), parameter :: subname = 'CalcOzoneUptakeOnePoint'
     !-----------------------------------------------------------------------
 
     ! convert o3 from mol/mol to nmol m^-3
@@ -443,6 +482,30 @@ contains
        o3uptake = 0._r8
     end if
 
+  end subroutine CalcOzoneUptakeOnePoint
+
+  !-----------------------------------------------------------------------
+  subroutine CalcOzoneStressOnePoint( &
+       pft_type, o3uptake, &
+       o3coefv, o3coefg)
+    !
+    ! !DESCRIPTION:
+    ! Calculates ozone stress for a single point, for just sunlit or shaded leaves
+    !
+    ! !ARGUMENTS:
+    integer  , intent(in)    :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
+    real(r8) , intent(in)    :: o3uptake   ! ozone entering the leaf
+    real(r8) , intent(out)   :: o3coefv    ! ozone coefficient for photosynthesis (0 - 1)
+    real(r8) , intent(out)   :: o3coefg    ! ozone coefficient for conductance (0 - 1)
+    !
+    ! !LOCAL VARIABLES:
+    real(r8) :: photoInt       ! intercept for photosynthesis
+    real(r8) :: photoSlope     ! slope for photosynthesis
+    real(r8) :: condInt        ! intercept for conductance
+    real(r8) :: condSlope      ! slope for conductance
+
+    character(len=*), parameter :: subname = 'CalcOzoneStressOnePoint'
+    !-----------------------------------------------------------------------
 
     if (o3uptake == 0._r8) then
        ! No o3 damage if no o3 uptake
@@ -478,6 +541,5 @@ contains
     end if
 
   end subroutine CalcOzoneStressOnePoint
-
 
 end module OzoneMod

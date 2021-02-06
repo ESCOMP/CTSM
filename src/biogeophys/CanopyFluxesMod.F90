@@ -1557,7 +1557,7 @@ bioms:   do f = 1, fn
          ! needed with pgi 14.7 on yellowstone; without it, forc_pbot_downscaled_col gets
          ! resized inappropriately in the following subroutine call, due to a compiler bug.
          dummy_to_make_pgi_happy = ubound(atm2lnd_inst%forc_pbot_downscaled_col, 1)
-         call ozone_inst%CalcOzoneStress( &
+         call ozone_inst%CalcOzoneUptake( &
               bounds, fn, filterp, &
               forc_pbot = atm2lnd_inst%forc_pbot_downscaled_col(bounds%begc:bounds%endc), &
               forc_th   = atm2lnd_inst%forc_th_downscaled_col(bounds%begc:bounds%endc), &
@@ -1566,7 +1566,8 @@ bioms:   do f = 1, fn
               rb        = frictionvel_inst%rb1_patch(bounds%begp:bounds%endp), &
               ram       = frictionvel_inst%ram1_patch(bounds%begp:bounds%endp), &
               tlai      = canopystate_inst%tlai_patch(bounds%begp:bounds%endp))
-         
+         call ozone_inst%CalcOzoneStress(bounds, fn, filterp)
+
          !---------------------------------------------------------
          !update Vc,max and Jmax by LUNA model
          if(use_luna)then
