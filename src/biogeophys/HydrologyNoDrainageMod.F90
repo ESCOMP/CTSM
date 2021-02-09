@@ -247,8 +247,6 @@ contains
          snow_persistence   => b_waterstate_inst%snow_persistence_col   , & ! Output: [real(r8) (:)   ]  counter for length of time snow-covered
          h2osoi_ice         => b_waterstate_inst%h2osoi_ice_col         , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
          h2osoi_liq         => b_waterstate_inst%h2osoi_liq_col         , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
-         h2osoi_ice_tot     => b_waterdiagnostic_inst%h2osoi_ice_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
-         h2osoi_liq_tot     => b_waterdiagnostic_inst%h2osoi_liq_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed liquid water (kg/m2)   
          h2osoi_vol         => b_waterstate_inst%h2osoi_vol_col         , & ! Output: [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
          h2osno_top         => b_waterdiagnostic_inst%h2osno_top_col         , & ! Output: [real(r8) (:)   ]  mass of snow in top layer (col) [kg]    
          wf                 => b_waterdiagnostic_inst%wf_col                 , & ! Output: [real(r8) (:)   ]  soil water as frac. of whc for top 0.05 m 
@@ -510,8 +508,6 @@ contains
          if (.not. lun%urbpoi(l)) then
             t_soi_10cm(c) = 0._r8
             tsoi17(c) = 0._r8
-            h2osoi_liq_tot(c) = 0._r8
-            h2osoi_ice_tot(c) = 0._r8
          end if
       end do
       do j = 1, nlevsoi
@@ -542,9 +538,6 @@ contains
                      t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
                   end if
                end if
-
-               h2osoi_liq_tot(c) = h2osoi_liq_tot(c) + h2osoi_liq(c,j)
-               h2osoi_ice_tot(c) = h2osoi_ice_tot(c) + h2osoi_ice(c,j)
 
             end if
          end do
