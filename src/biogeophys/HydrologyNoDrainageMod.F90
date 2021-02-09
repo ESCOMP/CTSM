@@ -245,7 +245,6 @@ contains
          snowice            => b_waterdiagnostic_inst%snowice_col            , & ! Output: [real(r8) (:)   ]  average snow ice lens                   
          snowliq            => b_waterdiagnostic_inst%snowliq_col            , & ! Output: [real(r8) (:)   ]  average snow liquid water               
          snow_persistence   => b_waterstate_inst%snow_persistence_col   , & ! Output: [real(r8) (:)   ]  counter for length of time snow-covered
-         h2osoi_liqice_10cm => b_waterdiagnostic_inst%h2osoi_liqice_10cm_col , & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
          h2osoi_ice         => b_waterstate_inst%h2osoi_ice_col         , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
          h2osoi_liq         => b_waterstate_inst%h2osoi_liq_col         , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
          h2osoi_ice_tot     => b_waterdiagnostic_inst%h2osoi_ice_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
@@ -511,7 +510,6 @@ contains
          if (.not. lun%urbpoi(l)) then
             t_soi_10cm(c) = 0._r8
             tsoi17(c) = 0._r8
-            h2osoi_liqice_10cm(c) = 0._r8
             h2osoi_liq_tot(c) = 0._r8
             h2osoi_ice_tot(c) = 0._r8
          end if
@@ -538,16 +536,10 @@ contains
                if (zi(c,j) <= 0.1_r8) then
                   fracl = 1._r8
                   t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
-                  h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
-                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
-                       fracl
                else
                   if (zi(c,j) > 0.1_r8 .and. zi(c,j-1) < 0.1_r8) then
                      fracl = (0.1_r8 - zi(c,j-1))/dz(c,j)
                      t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
-                     h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
-                          (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
-                          fracl
                   end if
                end if
 
