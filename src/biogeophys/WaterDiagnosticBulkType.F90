@@ -855,13 +855,16 @@ contains
 
     character(len=*), parameter :: subname = 'Summary'
     !-----------------------------------------------------------------------
-    associate(                                               &
-         dz                 => col%dz                      , & !  Input:  [real(r8) (:,:) ]  layer thickness depth (m)             
-         zi                 => col%zi                      , & !  Input:  [real(r8) (:,:) ]  interface depth (m)  
+    associate(                                                 &
+         dz                 => col%dz                        , & !  Input:  [real(r8) (:,:) ]  layer thickness depth (m)             
+         zi                 => col%zi                        , & !  Input:  [real(r8) (:,:) ]  interface depth (m)  
 
-         h2osoi_ice         => waterstate_inst%h2osoi_ice_col         , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         h2osoi_liq         => waterstate_inst%h2osoi_liq_col         , & !  Output: [real(r8) (:,:) ]  liquid water (kg/m2)
-         h2osoi_liqice_10cm => this%h2osoi_liqice_10cm_col   & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
+         h2osoi_ice         => waterstate_inst%h2osoi_ice_col, & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
+         h2osoi_liq         => waterstate_inst%h2osoi_liq_col, & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
+
+         h2osoi_ice_tot     => this%h2osoi_ice_tot_col       , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
+         h2osoi_liq_tot     => this%h2osoi_liq_tot_col       , & ! Output: [real(r8) (:)   ]  vertically summed liquid water (kg/m2)   
+         h2osoi_liqice_10cm => this%h2osoi_liqice_10cm_col     & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
     )
 
     call this%waterdiagnostic_type%Summary(bounds, &
@@ -892,6 +895,8 @@ contains
        l = col%landunit(c)
        if (.not. lun%urbpoi(l)) then
           h2osoi_liqice_10cm(c) = 0.0_r8
+          h2osoi_liq_tot(c) = 0._r8
+          h2osoi_ice_tot(c) = 0._r8
        end if
     end do
     do j = 1, nlevsoi
@@ -912,6 +917,8 @@ contains
                         fracl
                 end if
              end if
+             h2osoi_liq_tot(c) = h2osoi_liq_tot(c) + h2osoi_liq(c,j)
+             h2osoi_ice_tot(c) = h2osoi_ice_tot(c) + h2osoi_ice(c,j)
           end if
        end do
     end do
