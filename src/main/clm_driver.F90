@@ -1112,7 +1112,8 @@ contains
 
        call water_inst%Summary(bounds_clump, &
             filter(nc)%num_soilp, filter(nc)%soilp, &
-            filter(nc)%num_allc, filter(nc)%allc)
+            filter(nc)%num_allc, filter(nc)%allc, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec)
 
        ! ============================================================================
        ! Check the energy and water balance

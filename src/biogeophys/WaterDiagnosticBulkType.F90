@@ -829,31 +829,48 @@ contains
   subroutine Summary(this, bounds, &
        num_soilp, filter_soilp, &
        num_allc, filter_allc, &
+       num_nolakec, filter_nolakec, &
        waterstate_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
     ! Compute end-of-timestep summaries of water diagnostic terms
     !
+    ! !USES:
+    use clm_varpar   , only : nlevsoi
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type) , intent(inout) :: this
     type(bounds_type)           , intent(in)    :: bounds
-    integer                     , intent(in)    :: num_soilp       ! number of patches in soilp filter
-    integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                     , intent(in)    :: num_allc        ! number of columns in allc filter
-    integer                     , intent(in)    :: filter_allc(:)  ! filter for all columns
+    integer                     , intent(in)    :: num_soilp          ! number of patches in soilp filter
+    integer                     , intent(in)    :: filter_soilp(:)    ! filter for soil patches
+    integer                     , intent(in)    :: num_allc           ! number of columns in allc filter
+    integer                     , intent(in)    :: filter_allc(:)     ! filter for all columns
+    integer                     , intent(in)    :: num_nolakec        ! number of columns in no-lake columnc filter
+    integer                     , intent(in)    :: filter_nolakec(:)  ! filter for no-lake  columns
     class(waterstate_type)      , intent(in)    :: waterstate_inst
     class(waterflux_type)       , intent(in)    :: waterflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: fp, p
-    integer :: fc, c
+    integer :: fp, p, j, l, fc, c            ! Indices
+    real(r8):: fracl                         ! fraction of soil layer contributing to 10cm total soil water
 
     character(len=*), parameter :: subname = 'Summary'
     !-----------------------------------------------------------------------
+    associate(                                                 &
+         dz                 => col%dz                        , & !  Input:  [real(r8) (:,:) ]  layer thickness depth (m)             
+         zi                 => col%zi                        , & !  Input:  [real(r8) (:,:) ]  interface depth (m)  
+
+         h2osoi_ice         => waterstate_inst%h2osoi_ice_col, & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
+         h2osoi_liq         => waterstate_inst%h2osoi_liq_col, & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
+
+         h2osoi_ice_tot     => this%h2osoi_ice_tot_col       , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
+         h2osoi_liq_tot     => this%h2osoi_liq_tot_col       , & ! Output: [real(r8) (:)   ]  vertically summed liquid water (kg/m2)   
+         h2osoi_liqice_10cm => this%h2osoi_liqice_10cm_col     & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
+    )
 
     call this%waterdiagnostic_type%Summary(bounds, &
          num_soilp, filter_soilp, &
          num_allc, filter_allc, &
+         num_nolakec, filter_nolakec, &
          waterstate_inst, waterflux_inst)
 
     call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
@@ -873,6 +890,40 @@ contains
             waterflux_inst%qflx_liq_grnd_col(c) + &
             waterflux_inst%qflx_snow_grnd_col(c)
     end do
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       l = col%landunit(c)
+       if (.not. lun%urbpoi(l)) then
+          h2osoi_liqice_10cm(c) = 0.0_r8
+          h2osoi_liq_tot(c) = 0._r8
+          h2osoi_ice_tot(c) = 0._r8
+       end if
+    end do
+    do j = 1, nlevsoi
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          l = col%landunit(c)
+          if (.not. lun%urbpoi(l)) then
+             if (zi(c,j) <= 0.1_r8) then
+                fracl = 1._r8
+                h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
+                     (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
+                     fracl
+             else
+                if (zi(c,j) > 0.1_r8 .and. zi(c,j-1) < 0.1_r8) then
+                   fracl = (0.1_r8 - zi(c,j-1))/dz(c,j)
+                   h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
+                        (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
+                        fracl
+                end if
+             end if
+             h2osoi_liq_tot(c) = h2osoi_liq_tot(c) + h2osoi_liq(c,j)
+             h2osoi_ice_tot(c) = h2osoi_ice_tot(c) + h2osoi_ice(c,j)
+          end if
+       end do
+    end do
+
+    end associate
 
   end subroutine Summary
 

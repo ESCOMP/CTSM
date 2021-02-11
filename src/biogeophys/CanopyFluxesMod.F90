@@ -228,7 +228,7 @@ contains
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, c_to_b
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
-    use clm_varcon         , only : c_water, c_dry_biomass
+    use clm_varcon         , only : c_water, c_dry_biomass, c_to_b
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
@@ -447,6 +447,7 @@ contains
          is_shrub               => pftcon%is_shrub                              , & ! Input:  shrub patch or not
          dleaf                  => pftcon%dleaf                                 , & ! Input:  characteristic leaf dimension (m)
          dbh_param              => pftcon%dbh                                   , & ! Input:  diameter at brest height (m)
+         slatop                 => pftcon%slatop                                , & ! SLA at top of canopy [m^2/gC]
          fbw                    => pftcon%fbw                                   , & ! Input:  fraction of biomass that is water
          nstem                  => pftcon%nstem                                 , & ! Input:  stem number density (#ind/m2)
          rstem_per_dbh          => pftcon%rstem_per_dbh                         , & ! Input:  stem resistance per stem diameter (s/m**2)
@@ -728,14 +729,14 @@ bioms:   do f = 1, fn
                sa_stem(p) = 0.0
             endif
 
-            ! cross-sectional area of stems
-            carea_stem = shr_const_pi * (dbh(p)*0.5)**2
-
             ! if using Satellite Phenology mode, calculate leaf and stem biomass
             if(.not. use_cn) then
-               ! boreal needleleaf lma*c2b ~ 0.25 kg dry mass/m2(leaf)
-               leaf_biomass(p) = 0.25_r8 * max(0.01_r8, sa_leaf(p)) &
+               ! 2gbiomass/gC * (1/SLA) * 1e-3 = kg dry mass/m2(leaf)
+               leaf_biomass(p) = (1.e-3_r8*c_to_b/slatop(patch%itype(p))) &
+                    * max(0.01_r8, 0.5_r8*sa_leaf(p)) &
                     / (1.-fbw(patch%itype(p)))
+               ! cross-sectional area of stems
+               carea_stem = shr_const_pi * (dbh(p)*0.5)**2
                stem_biomass(p) = carea_stem * htop(p) * k_cyl_vol &
                     * nstem(patch%itype(p)) * wood_density(patch%itype(p)) &
                     /(1.-fbw(patch%itype(p)))
@@ -1346,13 +1347,13 @@ bioms:   do f = 1, fn
          ! Test for convergence
 
          itlef = itlef+1
-         num_iter(p) = itlef
          if (itlef > itmin) then
             do f = 1, fn
                p = filterp(f)
                dele(p) = abs(efe(p)-efeb(p))
                efeb(p) = efe(p)
                det(p)  = max(del(p),del2(p))
+               num_iter(p) = itlef
             end do
             fnold = fn
             fn = 0
