@@ -1939,6 +1939,46 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDefNoFire">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">60 day exact restart test that turns off all fire (both FATES and CLM) on an f45 grid.</option>
+    </options>
+  </test>
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDefPPhys">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">60 day exact restart test activating FATES prescribed physiology mode on an f45 grid.</option>
+    </options>
+  </test>
+    <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesPRT2">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="comment">Exact restart debug test covering Fates CNP nutrients mode.</option>
+    </options>
+  </test>
+    <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDefST3">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">60 day exact restart test activating FATES static stand structure on an f45 grid.</option>
+    </options>
+  </test>
   <test name="SMS_D_Ld5" grid="f10_f10_musgs" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm">
