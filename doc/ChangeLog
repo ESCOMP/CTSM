@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev023
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Wed Feb 10 13:33:19 MST 2021
+Date: Thu Feb 11 00:14:03 MST 2021
 One-line Summary: Calculate leaf biomass for non-woody PFTS, and a few other small answer changes
 
 Purpose and description of changes
@@ -33,16 +33,15 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 Issues fixed (include CTSM Issue #):
-  Fixes #1256
-  Fixes #1268
-  Fixes #1262
-  Fixes #1261
-  Fixes #1256
-  Fixes #1255
-  Fixes #1252
-  Fixes #1184
-  Fixes #932
-  Fixes #478
+  Fixes #1256 -- num_iter incorrect
+  Fixes #1268 -- Leaf biomass not updated for 
+  Fixes #1262 -- pconv should be 1 for crops
+  Fixes #1261 -- Restarts fail in AD-spinup mode
+  Fixes #1255 -- mkmapdata crashes because of modules
+  Fixes #1252 -- New urban dataset for fsurdat fails when used with new model
+  Fixes #1184 -- slatop for generic crop
+  Fixes #932 --- Diagnostic variables are incorrect
+  Fixes #478 --- Bare soil g1 should be zero
 
 Known bugs found since the previous tag (include issue #):
   #1274 -- Dead PFTs in PPE2_BHSon simulations
@@ -50,8 +49,6 @@ Known bugs found since the previous tag (include issue #):
 
 Notes of particular relevance for users
 ---------------------------------------
-
-Caveats for users (e.g., need to interpolate initial conditions):
 
 Changes made to namelist defaults (e.g., changed parameter values):
    Parameter files are updated
@@ -63,6 +60,7 @@ Notes of particular relevance for developers:
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Leaf biomass should still be completely moved outside of CanopyFluxes
 
 Changes to tests or testing: Add ADspinup test
    Add an ADspinup restart test that would've detected one of the bugs fixed here
