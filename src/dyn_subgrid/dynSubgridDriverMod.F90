@@ -257,7 +257,7 @@ contains
        call dyncrop_interp(bounds_proc,crop_inst)
     end if
 
-    if (get_do_harvest()) then
+    if (get_do_harvest() .and. .not. use_fates) then
        call dynHarvest_interp(bounds_proc)
     end if
 	

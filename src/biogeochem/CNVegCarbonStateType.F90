@@ -1448,7 +1448,7 @@ contains
     ! !USES:
     use landunit_varcon	 , only : istsoil, istcrop 
     use clm_time_manager , only : is_restart, get_nstep
-    use clm_varctl       , only : MM_Nuptake_opt   ,use_matrixcn 
+    use clm_varctl, only : MM_Nuptake_opt, spinup_state, use_matrixcn
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this 
@@ -1471,6 +1471,8 @@ contains
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
                errMsg(sourcefile, __LINE__))
        end if
+    else
+       if ( spinup_state == 2 ) spinup_factor_deadwood = spinup_factor_AD
     end if
 
     ! Set column filters
@@ -2367,7 +2369,6 @@ contains
 
        if (flag == 'read' .and. spinup_state /= restart_file_spinup_state .and. .not. use_cndv) then
           if ( masterproc ) write(iulog, *) 'exit_spinup ',exit_spinup,' restart_file_spinup_state ',restart_file_spinup_state
-          if ( spinup_state == 2 ) spinup_factor_deadwood = spinup_factor_AD
           if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
              exit_spinup = .true.
