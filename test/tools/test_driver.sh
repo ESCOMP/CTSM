@@ -78,6 +78,7 @@ export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
 dataroot="$CESMDATAROOT"
 export TOOLSLIBS=""
+export REGRID_PROC=1
 export TOOLS_CONF_STRING="--mpilib mpi-serial"
 
 
