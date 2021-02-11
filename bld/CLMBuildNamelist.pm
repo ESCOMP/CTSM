@@ -149,6 +149,8 @@ OPTIONS
                                        number of pts, and date files created
      -co2_type "value"        Set CO2 the type of CO2 variation to use.
      -co2_ppmv "value"        Set CO2 concentration to use when co2_type is constant (ppmv).
+     -o3_type  "value"        Set O3 the type of O3 variation to use.
+     -o3_ppmv  "value"        Set O3 concentration to use when o3_type is constant (ppbv).
      -crop                    Toggle for prognostic crop model. (default is off)
                               (can ONLY be turned on when BGC type is CN or BGC)
                               This turns on the namelist variable: use_crop
@@ -250,6 +252,8 @@ sub process_commandline {
                clm_usr_name          => undef,
                co2_type              => undef,
                co2_ppmv              => undef,
+               o3_type               => undef,
+               o3_ppbv               => undef,
                clm_demand            => "null",
                help                  => 0,
                glc_nec               => "default",
@@ -285,6 +289,8 @@ sub process_commandline {
              "clm_demand=s"              => \$opts{'clm_demand'},
              "co2_ppmv=f"                => \$opts{'co2_ppmv'},
              "co2_type=s"                => \$opts{'co2_type'},
+             "o3_ppbv=f"                 => \$opts{'o3_ppbv'},
+             "o3_type=s"                 => \$opts{'o3_type'},
              "config=s"                  => \$opts{'config'},
              "configuration=s"           => \$opts{'configuration'},
              "csmdata=s"                 => \$opts{'csmdata'},
@@ -1471,6 +1477,7 @@ sub process_namelist_inline_logic {
   setup_logic_site_specific($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_lnd_frac($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_o3_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_start_type($opts, $nl_flags, $nl);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -1805,6 +1812,35 @@ sub setup_logic_co2_type {
     if ( defined($opts->{$var}) ) {
       if ( $opts->{$var} <= 0.0 ) {
         $log->fatal_error("co2_ppmv can NOT be less than or equal to zero.");
+      }
+      my $group = $definition->get_group_name($var);
+      $nl->set_variable_value($group, $var, $opts->{$var});
+    } else {
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'sim_year'=>$nl_flags->{'sim_year'},
+                  'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_o3_type {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  my $var = "o3_type";
+  if ( defined($opts->{$var}) ) {
+    if ( ! defined($nl->get_value($var)) ) {
+      add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'o3_type','val'=>"$opts->{'o3_type'}");
+    } else {
+      $log->fatal_error("o3_type set on namelist as well as -o3_type option.");
+    }
+  }
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'o3_type');
+  if ( $nl->get_value('o3_type') =~ /constant/ ) {
+    my $var = 'o3_ppbv';
+    if ( defined($opts->{$var}) ) {
+      if ( $opts->{$var} < 0.0 ) {
+        $log->fatal_error("o3_ppbv can NOT be less than zero.");
       }
       my $group = $definition->get_group_name($var);
       $nl->set_variable_value($group, $var, $opts->{$var});
