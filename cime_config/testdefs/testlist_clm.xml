@@ -2048,7 +2048,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">Short ERP FATES test for f09_g17 grid.</option>
     </options>
   </test>
-  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesAllVars">
+  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2070,7 +2070,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">Exact restart debug test covering Fates CNP nutrients mode.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesLandUse">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruGs" testmods="clm/FatesColdDefLandUse">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2112,7 +2112,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
     </options>
   </test>
-    <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
+    <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2122,7 +2122,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
+  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2154,7 +2154,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">60 day exact restart FATES test on f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesNoFire">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefNoFire">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
@@ -2164,7 +2164,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">60 day exact restart test that turns off all fire (both FATES and CLM) on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesST3">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefST3">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2175,7 +2175,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">60 day exact restart test activating FATES static stand structure on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesPPhys">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefPPhys">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -2184,7 +2184,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">60 day exact restart test activating FATES prescribed physiology mode on an f45 grid.</option>
     </options>
   </test>
-    <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesReducedComplexFixedBiogeo">
+    <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexFixedBiogeo">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2195,7 +2195,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">30 day exact restart test for FATES fixed biogeography reduced complexity mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesLogging">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefLogging">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
@@ -2204,7 +2204,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">60 day exact restart test providing coverage for the FATES logging mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesSizeAgeMort">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefSizeAgeMort">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
