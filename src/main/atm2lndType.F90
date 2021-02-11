@@ -81,7 +81,6 @@ module atm2lndType
      real(r8), pointer :: forc_pco2_grc                 (:)   => null() ! CO2 partial pressure (Pa)
      real(r8), pointer :: forc_pco2_240_patch           (:)   => null() ! 10-day mean CO2 partial pressure (Pa)
      real(r8), pointer :: forc_po3_grc                  (:)   => null() ! O3 partial pressure (Pa)
-     real(r8), pointer :: forc_po3_240_patch            (:)   => null() ! 10-day mean O3 partial pressure (Pa)
      real(r8), pointer :: forc_solad_grc                (:,:) => null() ! direct beam radiation (numrad) (vis=forc_sols , nir=forc_soll )
      real(r8), pointer :: forc_solai_grc                (:,:) => null() ! diffuse radiation (numrad) (vis=forc_solsd, nir=forc_solld)
      real(r8), pointer :: forc_solar_grc                (:)   => null() ! incident solar radiation
@@ -487,7 +486,6 @@ contains
     allocate(this%forc_pch4_grc                 (begg:endg))        ; this%forc_pch4_grc                 (:)   = ival
     if(use_luna)then
      allocate(this%forc_pco2_240_patch          (begp:endp))        ; this%forc_pco2_240_patch           (:)   = ival
-     allocate(this%forc_po3_240_patch           (begp:endp))        ; this%forc_po3_240_patch            (:)   = ival
      allocate(this%forc_po2_240_patch           (begp:endp))        ; this%forc_po2_240_patch            (:)   = ival
      allocate(this%forc_pbot240_downscaled_patch(begp:endp))        ; this%forc_pbot240_downscaled_patch (:)   = ival
     endif
@@ -657,12 +655,8 @@ contains
        call hist_addfld1d (fname='PCO2_240', units='Pa',  &
             avgflag='A', long_name='10 day running mean of CO2 pressure', &
             ptr_patch=this%forc_pco2_240_patch, default='inactive')
-       this%forc_po3_240_patch = spval
-       call hist_addfld1d (fname='PO3_240', units='Pa',  &
-            avgflag='A', long_name='10 day running mean of O3 pressure', &
-            ptr_patch=this%forc_po3_240_patch, default='inactive')
        this%forc_po2_240_patch = spval
-      call hist_addfld1d (fname='PO2_240', units='Pa',  &
+       call hist_addfld1d (fname='PO2_240', units='Pa',  &
             avgflag='A', long_name='10 day running mean of O2 pressure', &
             ptr_patch=this%forc_po2_240_patch, default='inactive')
        this%forc_pbot240_downscaled_patch = spval
@@ -726,11 +720,6 @@ contains
       call init_accum_field (name='pco2_240', units='Pa',                                            &
          desc='10-day running mean of parial CO2 pressure',  accum_type='runmean', accum_period=-10, &
          subgrid_type='pft', numlev=1, init_value=28._r8)
-
-      this%forc_po3_240_patch(bounds%begp:bounds%endp) = spval
-      call init_accum_field (name='po3_240', units='Pa',                                            &
-         desc='10-day running mean of parial O3 pressure',  accum_type='runmean', accum_period=-10, &
-         subgrid_type='pft', numlev=1, init_value=0.003_r8)
 
       this%forc_pbot240_downscaled_patch(bounds%begp:bounds%endp) = spval
       call init_accum_field (name='pbot240', units='Pa',                                            &
@@ -816,9 +805,6 @@ contains
 
        call extract_accum_field ('pco2_240', rbufslp, nstep)
        this%forc_pco2_240_patch(begp:endp) = rbufslp(begp:endp)   
-
-       call extract_accum_field ('po3_240', rbufslp, nstep)
-       this%forc_po3_240_patch(begp:endp) = rbufslp(begp:endp)   
 
        call extract_accum_field ('pbot240', rbufslp, nstep)
        this%forc_pbot240_downscaled_patch(begp:endp) = rbufslp(begp:endp)  
@@ -929,13 +915,6 @@ contains
 
      do p = bounds%begp,bounds%endp
        g = patch%gridcell(p)
-       rbufslp(p) = this%forc_po3_grc(g) 
-     enddo
-     call update_accum_field  ('po3_240', rbufslp, nstep)
-     call extract_accum_field ('po3_240', this%forc_po3_240_patch, nstep)
-
-     do p = bounds%begp,bounds%endp
-       g = patch%gridcell(p)
        rbufslp(p) = this%forc_po2_grc(g) 
      enddo
      call update_accum_field  ('po2_240', rbufslp, nstep)
@@ -982,9 +961,6 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='pco2_240', xtype=ncd_double,  &
             dim1name='pft', long_name='10-day mean CO2 partial pressure', units='Pa', &
             interpinic_flag='interp', readvar=readvar, data=this%forc_pco2_240_patch )
-       call restartvar(ncid=ncid, flag=flag, varname='po3_240', xtype=ncd_double,  &
-            dim1name='pft', long_name='10-day mean CO2 partial pressure', units='Pa', &
-            interpinic_flag='interp', readvar=readvar, data=this%forc_po3_240_patch )
        call restartvar(ncid=ncid, flag=flag, varname='po2_240', xtype=ncd_double,  &
             dim1name='pft', long_name='10-day mean O2 partial pressure', units='Pa', &
             interpinic_flag='interp', readvar=readvar, data=this%forc_po2_240_patch )
