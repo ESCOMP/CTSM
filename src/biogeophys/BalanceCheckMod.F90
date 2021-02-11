@@ -404,6 +404,7 @@ contains
      use CanopyStateType   , only : canopystate_type
      use subgridAveMod     , only : c2g
      use dynSubgridControlMod, only : get_for_testing_zero_dynbal_fluxes
+     use SurfaceAlbedoType , only : surfalb_type
      !
      ! !ARGUMENTS:
      type(bounds_type)     , intent(in)    :: bounds  

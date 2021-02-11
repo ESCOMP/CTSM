@@ -1,7 +1,7 @@
 ===============================================================
-Tag name:  ctsm5.1.dev0??
+Tag name:  ctsm5.1.dev024
 Originator(s):  slevis (Samuel Levis,303-665-1310)
-Date:  Wed Dec 23 11:29:33 MST 2020
+Date:  Wed Feb 11 10:35:33 MST 2021
 One-line Summary: Grid cell-level error check for H2O
 
 Purpose of changes
@@ -116,6 +116,257 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/1228
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev023
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Feb 11 00:14:03 MST 2021
+One-line Summary: Calculate leaf biomass for non-woody PFTS, and a few other small answer changes
+
+Purpose and description of changes
+----------------------------------
+
+Replace hard code constant 0.25 for leaf mass per area with calculation based on parameter slatop (specific leaf area, top of
+canopy). Also move num_iter into loop over patches; currently it sits outside a loop, so p index is incorrect.
+
+Also do some small answer changes in terms of new parameter files, and some other existing issues that have mild answer changes.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+  Fixes #1256 -- num_iter incorrect
+  Fixes #1268 -- Leaf biomass not updated for 
+  Fixes #1262 -- pconv should be 1 for crops
+  Fixes #1261 -- Restarts fail in AD-spinup mode
+  Fixes #1255 -- mkmapdata crashes because of modules
+  Fixes #1252 -- New urban dataset for fsurdat fails when used with new model
+  Fixes #1184 -- slatop for generic crop
+  Fixes #932 --- Diagnostic variables are incorrect
+  Fixes #478 --- Bare soil g1 should be zero
+
+Known bugs found since the previous tag (include issue #):
+  #1274 -- Dead PFTs in PPE2_BHSon simulations
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Parameter files are updated
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Leaf biomass should still be completely moved outside of CanopyFluxes
+
+Changes to tests or testing: Add ADspinup test
+   Add an ADspinup restart test that would've detected one of the bugs fixed here
+
+
+Testing summary: regular tools
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (348 tests are different because of parameter file update)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- PASS
+  
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, clm51, clm50-non-crop, clm45 two diagnostics
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_1 for all, clm50 for non-crop (Sp and Bgc), clm4_5 two diagnostics
+    - what platforms/compilers: All
+    - nature of change: clm51--BGC climate, others similar climate
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #1254 -- replace constant leaf mass per area (lma)
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev022
+Originator(s):  gregorylemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Fri Feb  5 00:03:28 MST 2021
+One-line Summary: Merge fates_main_api into ctsm master
+
+Purpose and description of changes
+----------------------------------
+
+This brings fates_main_api into and up-to-date with ctsm master.
+At the point of merge, fates_main_api was parallel with ctsm5.1.dev020,
+only one tag behind ctsm master's head.
+
+The purpose of this merge is to make all future updates to fates
+on the ctsm master branch instead of on the fates_main_api branch.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #1128 -- missing compset for FATES tests
+   Fixes #1002 -- allow transient land-use files when FATES is on?
+   Some work was done on #1272 -- namelist refactor for FATES
+
+Known bugs introduced in this tag (include issue #):
+   #1265 -- Diversifying fates testmods included in `aux_clm` test suite
+   #1266 - Add test for successful_ignitions mode for FATES-SPITFIRE
+
+Known bugs found since the previous tag (include issue #):
+   #1269 -- GSWP3V1 atmospheric forcing for 2011-2014 is "bad" over Antarctica
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values): 
+  - fates_spitfire_mode updated with multiple modes that use external datasets
+  - use_fates_cohort_age_tracking added to enable size and age dependent mortality
+  - fates_parteh_mode option 2 added for fates CNP mode
+
+Changes to the datasets (e.g., parameter, surface or initial files): 
+  fates_paramfile updated to fates_params_api.14.0.0_12pft_c200921.nc
+
+Substantial timing or memory changes: 
+  Only the fates testmod FatesAllVars failed the MEMCOMP test due to the increase in the number of variables included
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance): 
+   There are a couple of issues we plan to address later (#1265, and #1272)
+    Note also that NAG compiler production tests started failing because of a compiler error
+    Since, we only care about NAG for DEBUG testing we removed those tests. Hopefully, a compiler
+    update will allow that to work in the future.
+
+Changes to tests or testing: 
+  - Added FatesPRT2 testmod test which activates fates CNP mode
+  - Added FatesReducedComplexFixedBiogeo testmod which activates fates fixed biogeography mode
+  - Added FatesSizeAgeMort testmod which activates tracking of size and age dependent mortality in fates
+  - Added Fates_nat_and_anthro_ignitions testmod to activate use of external lightning and population datasets
+  - Non-debug mode nag tests replaced in izumi test list with debug versions due to internal compiler error.
+
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - PASS (61 namelists are different because of fates changes)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS (fates testmods DIFFs are expected)
+    izumi ------- OK
+
+    ok: All non-fates testmods PASS. Fates testmods have DIFF as expected due to update of fates tag.  
+    BFAILs expected due to changing non-debug nag test to debug.  See #1264 comments for discussion.
+
+  fates tests:
+    cheyenne ---- OK 
+
+    ok: expected failures on COMPARE_base_rest for FatesHydro
+    and Fates_nat_and_anthro_ignitions.  All else B4B.
+
+    fates baseline: fates-sci.1.43.2_api.14.2.0-ctsm5.1.dev020-C5f348cac-F5534a940
+  
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, only for fates
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all fates
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new
+    climate): larger than roundoff
+
+  Comparison made using fates suite between fates_main_api (at ctsm5.1.dev020) 
+  and ctsm5.1.dev022.  All tests PASS, except for two expected failures and
+  expected NLCOMP failure due to ctsm5.1.dev021 update to paramfile.
+
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+fates
+
+   fates: sci.1.30.0_api.8.0.0 -> sci.1.43.2_api.14.2.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1264 -- Merge fates_main_api into master
 
 ===============================================================
 ===============================================================
@@ -241,6 +492,7 @@ Changes answers relative to baseline: Yes!
 
 Detailed list of changes
 ------------------------
+
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
