@@ -269,9 +269,6 @@ contains
     ! flag for SSRE diagnostic
     namelist /clm_inparm/ use_SSRE
 
-    ! flag for SSRE diagnostic
-    namelist /clm_inparm/ use_SSRE
-
     namelist /clm_inparm/ &
          use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
          use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, &
