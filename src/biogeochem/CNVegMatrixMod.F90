@@ -3539,7 +3539,7 @@ contains
    )
       if(.not. present(matrixcheck) .or. matrixcheck)then
          if((.not. present(acc) .or. acc) .and. matrix_phturnover(p,doner_phc(itransfer)) + rate * dt .ge. 1)then
-            matrix_update_phc = amax1(0._r8,(1._r8 - matrix_phturnover(p,doner_phc(itransfer))) / dt)
+            matrix_update_phc = max(0._r8,(1._r8 - matrix_phturnover(p,doner_phc(itransfer))) / dt)
          else
             matrix_update_phc = rate
          end if
@@ -3579,7 +3579,7 @@ contains
 
       if(.not. present(matrixcheck) .or. matrixcheck)then
          if((.not. present(acc) .or. acc) .and. matrix_phturnover(p,doner_gmc(itransfer)) + matrix_gmturnover(p,doner_gmc(itransfer)) + rate * dt .ge. 1)then
-            matrix_update_gmc = amax1(0._r8,(1._r8 - matrix_phturnover(p,doner_gmc(itransfer)) - matrix_gmturnover(p,doner_gmc(itransfer))) / dt)
+            matrix_update_gmc = max(0._r8,(1._r8 - matrix_phturnover(p,doner_gmc(itransfer)) - matrix_gmturnover(p,doner_gmc(itransfer))) / dt)
          else
             matrix_update_gmc = rate
          end if
@@ -3621,7 +3621,7 @@ contains
       if(.not. present(matrixcheck) .or. matrixcheck)then
          if((.not. present(acc) .or. acc) .and. matrix_phturnover(p,doner_fic(itransfer)) + matrix_gmturnover(p,doner_fic(itransfer)) &
            + matrix_fiturnover(p,doner_fic(itransfer)) + rate * dt .ge. 1)then
-            matrix_update_fic = amax1(0._r8,(1._r8 - matrix_phturnover(p,doner_fic(itransfer)) &
+            matrix_update_fic = max(0._r8,(1._r8 - matrix_phturnover(p,doner_fic(itransfer)) &
                               - matrix_gmturnover(p,doner_fic(itransfer)) - matrix_fiturnover(p,doner_fic(itransfer))) / dt)
          else
             matrix_update_fic = rate
@@ -3661,7 +3661,7 @@ end function matrix_update_fic
 
       if(.not. present(matrixcheck) .or. matrixcheck)then
          if((.not. present(acc) .or. acc) .and. matrix_nphturnover(p,doner_phn(itransfer)) + rate * dt .ge. 1)then
-            matrix_update_phn = amax1(0._r8,(1._r8 - matrix_nphturnover(p,doner_phn(itransfer))) / dt)
+            matrix_update_phn = max(0._r8,(1._r8 - matrix_nphturnover(p,doner_phn(itransfer))) / dt)
          else
             matrix_update_phn = rate
          end if
@@ -3701,7 +3701,7 @@ end function matrix_update_fic
 
       if(.not. present(matrixcheck) .or. matrixcheck)then
          if((.not. present(acc) .or. acc) .and. matrix_nphturnover(p,doner_gmn(itransfer)) + matrix_ngmturnover(p,doner_gmn(itransfer)) + rate * dt .ge. 1)then
-            matrix_update_gmn = amax1(0._r8,(1._r8 - matrix_nphturnover(p,doner_gmn(itransfer)) - matrix_ngmturnover(p,doner_gmn(itransfer))) / dt)
+            matrix_update_gmn = max(0._r8,(1._r8 - matrix_nphturnover(p,doner_gmn(itransfer)) - matrix_ngmturnover(p,doner_gmn(itransfer))) / dt)
          else
             matrix_update_gmn = rate
          end if
@@ -3744,7 +3744,7 @@ end function matrix_update_fic
       if(.not. present(matrixcheck) .or. matrixcheck)then
          if((.not. present(acc) .or. acc) .and. matrix_nphturnover(p,doner_fin(itransfer)) + matrix_ngmturnover(p,doner_fin(itransfer)) &
            + matrix_nfiturnover(p,doner_fin(itransfer)) + rate * dt .ge. 1)then
-            matrix_update_fin = amax1(0._r8,(1._r8 - matrix_nphturnover(p,doner_fin(itransfer)) &
+            matrix_update_fin = max(0._r8,(1._r8 - matrix_nphturnover(p,doner_fin(itransfer)) &
                               - matrix_ngmturnover(p,doner_fin(itransfer)) - matrix_nfiturnover(p,doner_fin(itransfer))) / dt)
          else
             matrix_update_fin = rate

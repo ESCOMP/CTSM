@@ -1037,7 +1037,7 @@ contains
            m_livestemc_to_fire(p)           =  livestemc(p)          * matrix_update_fic(p,ilivestem_to_iout_fic    ,f * cc_lstem(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
            m_livestemc_storage_to_fire(p)   =  livestemc_storage(p)  * matrix_update_fic(p,ilivestemst_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
            m_livestemc_xfer_to_fire(p)      =  livestemc_xfer(p)     * matrix_update_fic(p,ilivestemxf_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
-           m_deadstemc_to_fire(p)           =  deadstemc(p)          * matrix_update_fic(p,ideadstem_to_iout_fic    ,f * cc_dstem(patch%itype(p)*m),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadstemc_to_fire(p)           =  deadstemc(p)          * matrix_update_fic(p,ideadstem_to_iout_fic    ,f * cc_dstem(patch%itype(p))*m,dt,cnveg_carbonflux_inst,.True.,.True.)
            m_deadstemc_storage_to_fire(p)   =  deadstemc_storage(p)  * matrix_update_fic(p,ideadstemst_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
            m_deadstemc_xfer_to_fire(p)      =  deadstemc_xfer(p)     * matrix_update_fic(p,ideadstemxf_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
            m_frootc_to_fire(p)              =  frootc(p)             * matrix_update_fic(p,ifroot_to_iout_fic       ,f * 0._r8                     ,dt,cnveg_carbonflux_inst,.True.,.True.)
