@@ -13,7 +13,7 @@ module CNVegStructUpdateMod
   use CNDVType             , only : dgvs_type
   use CNVegStateType       , only : cnveg_state_type
   use CropType             , only : crop_type
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType , only : cnveg_carbonstate_type, spinup_factor_deadwood
   use CanopyStateType      , only : canopystate_type
   use PatchType            , only : patch                
   use decompMod            , only : bounds_type
@@ -223,7 +223,7 @@ contains
 
                else
                   !correct height calculation if doing accelerated spinup
-                  htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
+                  htop(p) = ((3._r8 * deadstemc(p) * spinup_factor_deadwood * taper(ivt(p)) * taper(ivt(p)))/ &
                          (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
 
                endif
@@ -231,21 +231,18 @@ contains
                !
                ! calculate vegetation physiological parameters used in biomass heat storage
                !
-!KO               if (use_biomass_heat_storage) then
-!KO                  ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
-!KO                  leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
-!KO                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
+               if (use_biomass_heat_storage) then
+                  ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
+                  leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
+                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
-!KO                  stem_biomass(p) = (deadstemc(p) + livestemc(p)) &
-!KO                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
+                  stem_biomass(p) = (spinup_factor_deadwood*deadstemc(p) + livestemc(p)) &
+                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
-!KO                  if (spinup_state == 2) then
-!KO                     stem_biomass(p) = 10._r8 * stem_biomass(p)
-!KO                  end if
-!KO               else
-!KO                  leaf_biomass(p) = 0_r8
-!KO                  stem_biomass(p) = 0_r8
-!KO               end if
+               else
+                  leaf_biomass(p) = 0_r8
+                  stem_biomass(p) = 0_r8
+               end if
 
                ! Peter Thornton, 5/3/2004
                ! Adding test to keep htop from getting too close to forcing height for windspeed
