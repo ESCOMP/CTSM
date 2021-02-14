@@ -18,7 +18,6 @@ module BalanceCheckMod
   use EnergyFluxType     , only : energyflux_type
   use SolarAbsorbedType  , only : solarabs_type
   use SoilHydrologyType  , only : soilhydrology_type
-  use SurfaceAlbedoType  , only : surfalb_type
   use WaterStateType     , only : waterstate_type
   use LakestateType      , only : lakestate_type
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
@@ -399,6 +398,7 @@ contains
      !
      ! !USES:
      use clm_varcon        , only : spval
+     use clm_varctl        , only : use_soil_moisture_streams
      use clm_time_manager  , only : get_step_size_real, get_nstep
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use CanopyStateType   , only : canopystate_type
@@ -724,6 +724,7 @@ contains
              ' local indexg= ',indexg,&
              ' errh2o_grc= ',errh2o_grc(indexg)
           if (errh2o_max_val > error_thresh .and. DAnstep > skip_steps .and. &
+              .not. use_soil_moisture_streams .and. &
               .not. get_for_testing_zero_dynbal_fluxes()) then
 
              write(iulog,*)'CTSM is stopping because errh2o > ', error_thresh, ' mm'
