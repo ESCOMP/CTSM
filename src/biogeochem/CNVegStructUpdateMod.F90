@@ -223,17 +223,8 @@ contains
 
                else
                   !correct height calculation if doing accelerated spinup
-!KO                  htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
-!KO                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
-!KO
-                  if (spinup_state == 2) then
-                     htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
-                            (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
-                  else
-                     htop(p) = ((3._r8 * deadstemc(p) * taper(ivt(p)) * taper(ivt(p)))/ &
-                            (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
-                  end if
-!KO
+                  htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper(ivt(p)) * taper(ivt(p)))/ &
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
 
                endif
 
