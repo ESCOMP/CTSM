@@ -364,6 +364,7 @@ contains
          h2osoi_liq          = b_waterstate_inst%h2osoi_liq_col(begc:endc,:), &
          qflx_snow_grnd      = b_waterflux_inst%qflx_snow_grnd_col(begc:endc), &
          qflx_snow_drain     = b_waterflux_inst%qflx_snow_drain_col(begc:endc), &
+         qflx_h2osfc_to_ice  = b_waterflux_inst%qflx_h2osfc_to_ice_col(begc:endc), &
          ! Outputs
          dz                  = col%dz(begc:endc,:), &
          int_snow            = b_waterstate_inst%int_snow_col(begc:endc), &
@@ -393,7 +394,7 @@ contains
   subroutine BulkDiag_NewSnowDiagnostics(bounds, num_c, filter_c, &
        scf_method, &
        dtime, lun_itype_col, urbpoi, snl, bifall, h2osno_total, h2osoi_ice, h2osoi_liq, &
-       qflx_snow_grnd, qflx_snow_drain, &
+       qflx_snow_grnd, qflx_snow_drain, qflx_h2osfc_to_ice, &
        dz, int_snow, swe_old, frac_sno, frac_sno_eff, snow_depth)
     !
     ! !DESCRIPTION:
@@ -415,6 +416,7 @@ contains
     real(r8)                  , intent(in)    :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
     real(r8)                  , intent(in)    :: qflx_snow_grnd( bounds%begc: )  ! snow on ground after interception (mm H2O/s)
     real(r8)                  , intent(in)    :: qflx_snow_drain( bounds%begc: ) ! drainage from snow pack from previous time step (mm H2O/s)
+    real(r8)                  , intent(in)    :: qflx_h2osfc_to_ice( bounds%begc: ) ! conversion of h2osfc to ice (mm H2O/s)
     real(r8)                  , intent(inout) :: dz( bounds%begc: , -nlevsno+1: ) ! layer depth (m)
     real(r8)                  , intent(inout) :: int_snow( bounds%begc: )        ! integrated snowfall (mm H2O)
     real(r8)                  , intent(inout) :: swe_old( bounds%begc:, -nlevsno+1: )         ! snow water before update (mm H2O)
@@ -480,7 +482,11 @@ contains
        int_snow(c) = max(int_snow(c),h2osno_total(c)) !h2osno_total could be larger due to frost
 
        ! snowmelt from previous time step * dtime
-       snowmelt(c) = qflx_snow_drain(c) * dtime
+       ! add h2osfc to ice conversion flux to snowmelt to trigger
+       ! re-calculation of scf when h2osfc freezes (snowmelt
+       ! amount is not used in sfc_method, just presence/absence)
+       snowmelt(c) = (qflx_h2osfc_to_ice(c) + qflx_snow_drain(c)) * dtime
+
     end do
 
     call scf_method%UpdateSnowDepthAndFrac(bounds, num_c, filter_c, &
@@ -1232,7 +1238,9 @@ contains
           call endrun("In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative")
        end if
 
-       if (h2osoi_liq(c,lev_top(c)) < 0._r8) then
+       !       if (h2osoi_liq(c,lev_top(c)) < 0._r8) then
+       ! in some case roundoff level negative values trigger this 
+       if (h2osoi_liq(c,lev_top(c)) < -1.e-12_r8) then
           write(iulog,*) "ERROR: In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative"
           write(iulog,*) "Bulk/tracer name = ", name
           write(iulog,*) "c, lev_top(c) = ", c, lev_top(c)

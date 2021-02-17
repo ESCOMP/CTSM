@@ -846,6 +846,7 @@ contains
     real(r8) :: z_avg                       !average of snow depth 
     real(r8) :: c1                          !weight to use for lowest snow layer
     real(r8) :: c2                          !weight to use for surface water layer
+    real(r8) :: frac_sno_update             !update to snow cover fraction due to incorporation of frozen surface water into snowpack
     !-----------------------------------------------------------------------
 
     call t_startf( 'PhaseChangeH2osfc' )
@@ -912,13 +913,17 @@ contains
 
             z_avg=frac_sno(c)*snow_depth(c)
             if (z_avg > 0._r8) then 
-               rho_avg=min(800._r8,h2osno_total(c)/z_avg)
+               rho_avg=min(denice,h2osno_total(c)/z_avg)
             else
-               rho_avg=200._r8
+               rho_avg = denice
             endif
 
             !=====================  xm < h2osfc  ====================================
             if(temp1 >= 0._r8) then ! add some frozen water to snow column
+
+               ! update snow depth
+               frac_sno_update = frac_sno(c) + tanh(0.1 * (-xm(c)))*(1._r8 - frac_sno(c))
+               snow_depth(c)=(h2osno_total(c)/rho_avg - xm(c)/denice)/frac_sno_update
 
                ! add ice to snow column
                int_snow(c) = int_snow(c) - xm(c)
@@ -934,14 +939,6 @@ contains
 
                xmf_h2osfc(c) = hm(c)
                qflx_h2osfc_to_ice(c) = -xm(c)/dtime
-
-
-               ! update snow depth
-               if (frac_sno(c) > 0 .and. snl(c) < 0) then 
-                  snow_depth(c)=h2osno_total(c)/(rho_avg*frac_sno(c))
-               else
-                  snow_depth(c)=h2osno_total(c)/denice
-               endif
 
                ! adjust temperature of lowest snow layer to account for addition of ice
                if (snl(c) == 0) then
@@ -968,7 +965,10 @@ contains
                !=========================  xm > h2osfc  =============================
             else !all h2osfc converted to ice
 
-               rho_avg=(h2osno_total(c)*rho_avg + h2osfc(c)*denice)/(h2osno_total(c) + h2osfc(c))
+               frac_sno_update = frac_sno(c) + tanh(0.1 * h2osfc(c))*(1._r8 - frac_sno(c))
+
+               snow_depth(c)=(h2osno_total(c)/rho_avg + h2osfc(c)/denice)/frac_sno_update
+ 
                int_snow(c) = int_snow(c) + h2osfc(c)
                if (snl(c) == 0) then
                   h2osno_no_layers(c) = h2osno_no_layers(c) + h2osfc(c)
@@ -1020,13 +1020,6 @@ contains
 
                ! set h2osfc to zero (all liquid converted to ice)
                h2osfc(c) = 0._r8
-
-               ! update snow depth
-               if (frac_sno(c) > 0 .and. snl(c) < 0) then 
-                  snow_depth(c)=h2osno_total(c)/(rho_avg*frac_sno(c))
-               else
-                  snow_depth(c)=h2osno_total(c)/denice
-               endif
 
             endif
          endif
@@ -1085,7 +1078,6 @@ contains
     real(r8) :: wice0 (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of ice (kg/m2)
     real(r8) :: wliq0 (bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)!initial mass of liquid (kg/m2)
     real(r8) :: supercool(bounds%begc:bounds%endc,nlevmaxurbgrnd)        !supercooled water in soil (kg/m2) 
-    real(r8) :: propor                             !proportionality constant (-)
     real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)  !t(n+1)-t(n) [K]
     real(r8) :: smp                                !frozen water potential (mm)
     !-----------------------------------------------------------------------
@@ -1105,7 +1097,6 @@ contains
          
          frac_sno_eff     =>    waterdiagnosticbulk_inst%frac_sno_eff_col    , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
-         snow_depth       =>    waterdiagnosticbulk_inst%snow_depth_col      , & ! Input:  [real(r8) (:)   ] snow height (m)                         
          h2osno_no_layers =>    waterstatebulk_inst%h2osno_no_layers_col     , & ! Output: [real(r8) (:)   ] snow not resolved into layers (mm H2O)
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2) (new)             
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Output: [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
@@ -1307,8 +1298,6 @@ contains
                         if (h2osno_no_layers(c) > 0._r8 .AND. xm(c,j) > 0._r8) then
                            temp1 = h2osno_no_layers(c)                     ! kg/m2
                            h2osno_no_layers(c) = max(0._r8,temp1-xm(c,j))
-                           propor = h2osno_no_layers(c)/temp1
-                           snow_depth(c) = propor * snow_depth(c)
                            heatr = hm(c,j) - hfus*(temp1-h2osno_no_layers(c))/dtime   ! W/m2
                            if (heatr > 0._r8) then
                               xm(c,j) = heatr*dtime/hfus                    ! kg/m2

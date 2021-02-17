@@ -208,6 +208,7 @@ contains
     real(r8) :: fracl                         ! fraction of soil layer contributing to 10cm total soil water
     real(r8) :: s_node                        ! soil wetness (-)
     real(r8) :: icefrac(bounds%begc:bounds%endc,1:nlevsoi)
+    real(r8) :: frac_sno_update               ! update to snow cover fraction for h2osfc phase change and frost deposition
     !-----------------------------------------------------------------------
 
     associate( &
@@ -239,6 +240,10 @@ contains
          snowdp             => b_waterdiagnostic_inst%snowdp_col             , & ! Input:  [real(r8) (:)   ]  area-averaged snow height (m)       
          frac_sno_eff       => b_waterdiagnostic_inst%frac_sno_eff_col       , & ! Input:  [real(r8) (:)   ]  eff.  snow cover fraction (col) [frc]    
          frac_h2osfc        => b_waterdiagnostic_inst%frac_h2osfc_col        , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+
+         qflx_h2osfc_to_ice         => b_waterflux_inst%qflx_h2osfc_to_ice_col        , & ! Input: [real(r8) (:)   ]  conversion of h2osfc to ice (mm H2O /s)
+         qflx_soliddew_to_top_layer => b_waterflux_inst%qflx_soliddew_to_top_layer_col, & ! Input:  [real(r8) (:)  ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]
+
          snw_rds            => b_waterdiagnostic_inst%snw_rds_col            , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
          snw_rds_top        => b_waterdiagnostic_inst%snw_rds_top_col        , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer(col) [microns] 
          sno_liq_top        => b_waterdiagnostic_inst%sno_liq_top_col        , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer (col) [frc] 
@@ -453,8 +458,16 @@ contains
       end do
 
       ! Calculate column average snow depth
+      ! Use updated snow cover fraction to account for
+      ! surface water to ice conversion and frost deposition
+      ! that may have occurred since initial frac_sno calculation
       do c = bounds%begc,bounds%endc
-         snowdp(c) = snow_depth(c) * frac_sno_eff(c)
+         frac_sno_update = frac_sno_eff(c) &
+              + tanh(0.1 * (qflx_h2osfc_to_ice(c)+qflx_soliddew_to_top_layer(c))*dtime) &
+              * (1._r8 - frac_sno_eff(c))
+
+         snowdp(c) = snow_depth(c) * frac_sno_update
+
       end do
 
       ! Calculate snow internal temperature
