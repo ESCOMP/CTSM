@@ -66,6 +66,7 @@ module SoilHydrologyMod
   
   !-----------------------------------------------------------------------
   real(r8), private :: baseflow_scalar = 1.e-2_r8
+  real(r8), parameter :: tolerance = 1.e-12_r8                   ! tolerance for checking whether sublimation is greater than ice in top soil layer
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -850,8 +851,8 @@ contains
                 qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
                                        - qflx_solidevap_from_top_layer(c))
 
-                if((abs((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1))) > 1.e-8) then
-                   call endrun(msg="solid evap too large! "//errmsg(sourcefile, __LINE__))
+                if((abs((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1))) > tolerance) then
+                   call endrun(msg="qflx_solidevap_from_top_layer too large! "//errmsg(sourcefile, __LINE__))
                 endif
                 h2osoi_ice(c,1) = 0._r8
              else
@@ -2322,10 +2323,13 @@ contains
              if ((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
                 qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
                 qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
-                qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
+                qflx_ev_snow(c) = qflx_ev_snow(c) &
+                     - (qflx_solidevap_from_top_layer_save &
                      - qflx_solidevap_from_top_layer(c))
-                if((abs((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1))) > 1.e-8) then
-                   call endrun(msg="solid evap too large! "//errmsg(sourcefile, __LINE__))
+                ! qflx_solidevap_from_top_layer should be constrained
+                ! in SoilFluxesMod to be <= h2osoi_ice, but check here 
+                if((abs((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1))) > tolerance) then
+                   call endrun(msg="qflx_solidevap_from_top_layer too large! "//errmsg(sourcefile, __LINE__))
                 endif
 
                 h2osoi_ice(c,1) = 0._r8

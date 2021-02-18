@@ -5,7 +5,7 @@ module SoilFluxesMod
   ! Updates surface fluxes based on the new ground temperature.
   !
   ! !USES:
-  use shr_kind_mod	, only : r8 => shr_kind_r8, r4 => shr_kind_r4
+  use shr_kind_mod	, only : r8 => shr_kind_r8
   use shr_log_mod	, only : errMsg => shr_log_errMsg
   use decompMod		, only : bounds_type
   use abortutils	, only : endrun
@@ -78,8 +78,8 @@ contains
     real(r8) :: eflx_lwrad_del(bounds%begp:bounds%endp)            ! update due to eflx_lwrad
     real(r8) :: t_grnd0(bounds%begc:bounds%endc)                   ! t_grnd of previous time step
     real(r8) :: lw_grnd
-    real(r8) :: evaporation_limit
-    real(r8) :: ev_unconstrained
+    real(r8) :: evaporation_limit                                  ! top layer moisture available for evaporation
+    real(r8) :: ev_unconstrained                                   ! evaporative demand 
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
@@ -361,8 +361,7 @@ contains
          ! limit only solid evaporation (sublimation) from top soil layer
          ! (liquid evaporation from soil should not be limited)
          if (j==1 .and. frac_h2osfc(c) < 1._r8) then
-
-            if (real((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(p) * dtime,r4) > real(h2osoi_ice(c,j),r4)) then
+            if (((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(p)*dtime) >= h2osoi_ice(c,j)) then
 
                qflx_liqevap_from_top_layer(p)  &
                     = qflx_liqevap_from_top_layer(p)  &
