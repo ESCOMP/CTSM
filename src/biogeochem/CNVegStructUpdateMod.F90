@@ -181,7 +181,6 @@ contains
             tsai_min = tsai_min * 0.5_r8
             tsai(p) = max(tsai_alpha*tsai_old+max(tlai_old-tlai(p),0._r8),tsai_min)
 
-!KO
             ! calculate vegetation physiological parameters used in biomass heat storage
             if (use_biomass_heat_storage) then
                ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
@@ -189,13 +188,8 @@ contains
                     * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
 
                if (woody(ivt(p)) == 1._r8) then
-                  if (spinup_state == 2) then
-                     stem_biomass(p) = (10._r8*deadstemc(p) + livestemc(p)) &
-                          * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
-                  else
-                      stem_biomass(p) = (1._r8*deadstemc(p) + livestemc(p)) &
-                         * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))  
-                  end if
+                  stem_biomass(p) = (spinup_factor_deadwood*deadstemc(p) + livestemc(p)) &
+                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
                else
                   stem_biomass(p) = 0._r8
                end if
@@ -203,8 +197,6 @@ contains
                leaf_biomass(p) = 0._r8
                stem_biomass(p) = 0._r8
             end if  
-!KO
-
             if (woody(ivt(p)) == 1._r8) then
 
                ! trees and shrubs for now have a very simple allometry, with hard-wired
@@ -227,23 +219,7 @@ contains
                          (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
 
                endif
-
                !
-               ! calculate vegetation physiological parameters used in biomass heat storage
-               !
-               if (use_biomass_heat_storage) then
-                  ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
-                  leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
-                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
-
-                  stem_biomass(p) = (spinup_factor_deadwood*deadstemc(p) + livestemc(p)) &
-                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
-
-               else
-                  leaf_biomass(p) = 0_r8
-                  stem_biomass(p) = 0_r8
-               end if
-
                ! Peter Thornton, 5/3/2004
                ! Adding test to keep htop from getting too close to forcing height for windspeed
                ! Also added for grass, below, although it is not likely to ever be an issue.

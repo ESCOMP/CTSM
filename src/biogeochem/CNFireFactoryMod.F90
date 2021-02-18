@@ -124,5 +124,6 @@ contains
     call cnfire_method%FireReadNML( NLFilename )
 
   end subroutine create_cnfire_method
+  !-----------------------------------------------------------------------
 
 end module CNFireFactoryMod

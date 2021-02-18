@@ -335,6 +335,7 @@ contains
   subroutine Summary(this, bounds, &
        num_soilp, filter_soilp, &
        num_allc, filter_allc, &
+       num_nolakec, filter_nolakec, &
        waterstate_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
@@ -347,6 +348,8 @@ contains
     integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer                     , intent(in)    :: num_allc        ! number of columns in allc filter
     integer                     , intent(in)    :: filter_allc(:)  ! filter for all columns
+    integer                     , intent(in)    :: num_nolakec        ! number of columns in no-lake filter
+    integer                     , intent(in)    :: filter_nolakec(:)  ! filter for no-lake columns
     class(waterstate_type)      , intent(in)    :: waterstate_inst
     class(waterflux_type)       , intent(in)    :: waterflux_inst
     !
