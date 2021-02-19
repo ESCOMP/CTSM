@@ -26,7 +26,7 @@ module clm_driver
   use abortutils             , only : endrun
   !
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
-  use BalanceCheckMod        , only : BeginWaterGridcellBalance, BeginWaterColumnBalance, BalanceCheck
+  use BalanceCheckMod        , only : WaterGridcellBalance, BeginWaterColumnBalance, BalanceCheck
   !
   use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
   use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
@@ -328,10 +328,11 @@ contains
        call t_stopf('begcnbal_grc')
 
        call t_startf('begwbal')
-       call BeginWaterGridcellBalance(bounds_clump, &
+       call WaterGridcellBalance(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
-            water_inst, lakestate_inst)
+            water_inst, lakestate_inst, &
+            use_aquifer_layer = use_aquifer_layer(), flag = 'begwb')
        call t_stopf('begwbal')
     end do
     !$OMP END PARALLEL DO
@@ -370,7 +371,7 @@ contains
     ! conserved when weights change (instead the difference is put in the grid cell-level
     ! terms, qflx_liq_dynbal, etc.). Grid cell-level balance
     ! checks ensure that the grid cell-level water is conserved by considering
-    ! qflx_liq_dynbal and calling BeginWaterGridcellBalance
+    ! qflx_liq_dynbal and calling WaterGridcellBalance
     ! before the weight updates.
     !
     ! For carbon & nitrogen: This needs to be done after dynSubgrid_driver, because the
@@ -1284,6 +1285,9 @@ contains
        call get_clump_bounds(nc, bounds_clump)
        call BalanceCheck(bounds_clump, &
             filter(nc)%num_allc, filter(nc)%allc, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            water_inst, lakestate_inst, &
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &

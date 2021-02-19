@@ -44,7 +44,7 @@ module BalanceCheckMod
   ! !PUBLIC MEMBER FUNCTIONS:
 
   public :: BalanceCheckInit         ! Initialization of Water and energy balance check
-  public :: BeginWaterGridcellBalance  ! Initialize grid cell-level water balance check
+  public :: WaterGridcellBalance     ! Grid cell-level water balance check
   public :: BeginWaterColumnBalance  ! Initialize column-level water balance check
   public :: BalanceCheck             ! Water & energy balance checks
   public :: GetBalanceCheckSkipSteps ! Get the number of steps to skip for the balance check
@@ -56,7 +56,7 @@ module BalanceCheckMod
 
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: BeginWaterGridcellBalanceSingle  ! Initialize grid cell-level water balance check for bulk or a single tracer
+  private :: WaterGridcellBalanceSingle  ! Grid cell-level water balance check for bulk or a single tracer
   private :: BeginWaterColumnBalanceSingle  ! Initialize column-level water balance check for bulk or a single tracer
 
   character(len=*), parameter, private :: sourcefile = &
@@ -123,13 +123,12 @@ contains
   !-----------------------------------------------------------------------
 
   !-----------------------------------------------------------------------
-  subroutine BeginWaterGridcellBalance(bounds, &
+  subroutine WaterGridcellBalance(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       water_inst, lakestate_inst)
+       water_inst, lakestate_inst, use_aquifer_layer, flag)
     !
     ! !DESCRIPTION:
-    ! Initialize grid cell-level water balance at beginning of time step
-    ! for bulk water and each water tracer
+    ! Grid cell-level water balance for bulk water and each water tracer
     !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in)    :: bounds
@@ -139,25 +138,28 @@ contains
     integer                 , intent(in)    :: filter_lakec(:)    ! column filter for lake points
     type(water_type)        , intent(inout) :: water_inst
     type(lakestate_type)    , intent(in)    :: lakestate_inst
+    logical                 , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
+    character(len=5)        , intent(in)    :: flag  ! specifies begwb or endwb
     !
     ! !LOCAL VARIABLES:
     integer :: i
 
-    character(len=*), parameter :: subname = 'BeginWaterGridcellBalance'
+    character(len=*), parameter :: subname = 'WaterGridcellBalance'
     !-----------------------------------------------------------------------
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-       call BeginWaterGridcellBalanceSingle(bounds, &
-            num_nolakec, filter_nolakec, &
-            num_lakec, filter_lakec, &
+       ! Obtain begwb_grc
+       call WaterGridcellBalanceSingle(bounds, &
+            num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
             lakestate_inst, &
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
             water_inst%bulk_and_tracers(i)%waterbalance_inst, &
-            water_inst%bulk_and_tracers(i)%waterflux_inst)
+            water_inst%bulk_and_tracers(i)%waterflux_inst, &
+            use_aquifer_layer = use_aquifer_layer, flag = flag)
     end do
 
-  end subroutine BeginWaterGridcellBalance
+  end subroutine WaterGridcellBalance
 
   !-----------------------------------------------------------------------
   subroutine BeginWaterColumnBalance(bounds, &
@@ -201,14 +203,14 @@ contains
   end subroutine BeginWaterColumnBalance
 
   !-----------------------------------------------------------------------
-  subroutine BeginWaterGridcellBalanceSingle(bounds, &
+  subroutine WaterGridcellBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-       lakestate_inst, waterstate_inst, &
-       waterdiagnostic_inst, waterbalance_inst, waterflux_inst)
+       lakestate_inst, waterstate_inst, waterdiagnostic_inst, &
+       waterbalance_inst, waterflux_inst, use_aquifer_layer, flag)
     !
     ! !DESCRIPTION:
-    ! Initialize grid cell-level water balance at beginning of time step
-    ! for bulk or a single tracer
+    ! Grid cell-level water balance for bulk or a single tracer
+    ! at beginning or end of time step as specified by "flag"
     !
     ! !USES:
     use subgridAveMod, only: c2g
@@ -221,20 +223,28 @@ contains
     integer                    , intent(in)    :: filter_lakec(:)    ! column filter for lake points
     type(lakestate_type)       , intent(in)    :: lakestate_inst
     class(waterstate_type)     , intent(inout) :: waterstate_inst
-    class(waterflux_type)      , intent(inout) :: waterflux_inst
     class(waterdiagnostic_type), intent(in)    :: waterdiagnostic_inst
     class(waterbalance_type)   , intent(inout) :: waterbalance_inst
+    class(waterflux_type)      , intent(inout) :: waterflux_inst
+    logical                    , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
+    character(len=5)           , intent(in)    :: flag  ! specifies begwb or endwb
     !
     ! !LOCAL VARIABLES:
     integer :: g  ! indices
     integer :: begc, endc, begg, endg  ! bounds
-    real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux at beginning of time step
-    real(r8) :: qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc ice dynamic land cover change conversion runoff flux at beginning of time step
+    real(r8) :: wb_col(bounds%begc:bounds%endc)  ! temporary column-level water mass
+    real(r8) :: wb_grc(bounds%begg:bounds%endg)  ! temporary grid cell-level water mass
+    real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux
+    real(r8) :: qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc ice dynamic land cover change conversion runoff flux
+    real(r8) :: wa_reset_nonconservation_gain_grc(bounds%begg:bounds%endg)  ! grc mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
+
+    character(len=*), parameter :: subname = 'WaterGridcellBalanceSingle'
     !-----------------------------------------------------------------------
 
     associate(                                     &
-         begwb_col => waterbalance_inst%begwb_col, &  ! Output: [real(r8) (:)   ]  column-level water mass begining of the time step
-         begwb_grc => waterbalance_inst%begwb_grc  &  ! Output: [real(r8) (:)   ]  grid cell-level water mass begining of the time step
+         begwb_grc => waterbalance_inst%begwb_grc, &  ! Output: [real(r8) (:)]  grid cell-level water mass begining of the time step
+         endwb_grc => waterbalance_inst%endwb_grc, &  ! Output: [real(r8) (:)]  grid cell-level water mass end of the time step
+         wa_reset_nonconservation_gain_col => waterbalance_inst%wa_reset_nonconservation_gain_col                                  &  ! Input:  [real(r8) (:)]  col mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
          )
 
     begc = bounds%begc
@@ -242,27 +252,40 @@ contains
     begg = bounds%begg
     endg = bounds%endg
 
-    ! NOTES subroutines Compute*Mass* are in TotalWaterAndHeatMod.F90
-    !       endwb is calculated in HydrologyDrainageMod & LakeHydrologyMod
     call ComputeWaterMassNonLake(bounds, num_nolakec, filter_nolakec, &
          waterstate_inst, waterdiagnostic_inst, &
-         subtract_dynbal_baselines = .false., &
-         water_mass = begwb_col(begc:endc))
+         subtract_dynbal_baselines = .true., &
+         water_mass = wb_col(begc:endc))
 
     call ComputeWaterMassLake(bounds, num_lakec, filter_lakec, &
          waterstate_inst, lakestate_inst, &
-         add_lake_water_and_subtract_dynbal_baselines = .false., &
-         water_mass = begwb_col(begc:endc))
+         add_lake_water_and_subtract_dynbal_baselines = .true., &
+         water_mass = wb_col(begc:endc))
 
-    call c2g(bounds, begwb_col(begc:endc), begwb_grc(begg:endg), &
+    call c2g(bounds, wb_col(begc:endc), wb_grc(begg:endg), &
              c2l_scale_type='urbanf', l2g_scale_type='unity')
 
-    call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_beg( &
-      bounds, &
-      qflx_liq_dynbal_left_to_dribble(begg:endg))
-    call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_beg( &
-      bounds, &
-      qflx_ice_dynbal_left_to_dribble(begg:endg))
+    ! Call the beginning or ending version of the subroutine according
+    ! to flag value
+    if (flag == 'begwb') then
+       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_beg( &
+         bounds, &
+         qflx_liq_dynbal_left_to_dribble(begg:endg))
+       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_beg( &
+         bounds, &
+         qflx_ice_dynbal_left_to_dribble(begg:endg))
+    else if (flag == 'endwb') then
+       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_end( &
+         bounds, &
+         qflx_liq_dynbal_left_to_dribble(begg:endg))
+       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_end( &
+         bounds, &
+         qflx_ice_dynbal_left_to_dribble(begg:endg))
+    else
+       write(iulog,*) 'Unknown flag passed into this subroutine.'
+       write(iulog,*) 'Expecting either begwb or endwb.'
+       call endrun(msg=errmsg(sourcefile, __LINE__))
+    end if
 
     ! These dynbal dribblers store the delta state, (end - beg). Thus, the
     ! amount dribbled out is the negative of the amount stored in the
@@ -271,16 +294,42 @@ contains
     ! This sign convention is opposite to the convention chosen for the
     ! respective dribble terms used in the carbon balance. At some point
     ! it may be worth making the two conventions consistent.
-    ! Bill Sacks states: I think the convention used for the water and
-    ! energy dribblers is counter-intuitive.
     do g = begg, endg
-       begwb_grc(g) = begwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
-                                   - qflx_ice_dynbal_left_to_dribble(g)
+       wb_grc(g) = wb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
+                             - qflx_ice_dynbal_left_to_dribble(g)
     end do
+
+    ! Map wb_grc to beginning/ending water balance according to flag
+    if (flag == 'begwb') then
+       do g = begg, endg
+          begwb_grc(g) = wb_grc(g)
+       end do
+    else if (flag == 'endwb') then
+       ! endwb_grc requires one more step first
+       if (use_aquifer_layer) then
+          ! wa_reset_nonconservation_gain may be non-zero only when
+          ! use_aquifer_layer is true. We do this c2g call only when needed
+          ! to avoid unnecessary calculations; by adding this term only when
+          ! use_aquifer_layer is true, we effectively let the balance checks
+          ! ensure that this term is zero when use_aquifer_layer is false,
+          ! as it should be.
+          ! The _col term was determined in BeginWaterColumnBalanceSingle
+          ! after any dynamic landuse adjustments.
+          call c2g( bounds, &
+               wa_reset_nonconservation_gain_col(begc:endc), &
+               wa_reset_nonconservation_gain_grc(begg:endg), &
+               c2l_scale_type='urbanf', l2g_scale_type='unity' )
+       else
+          wa_reset_nonconservation_gain_grc(begg:endg) = 0._r8
+       end if
+       do g = begg, endg
+          endwb_grc(g) = wb_grc(g) - wa_reset_nonconservation_gain_grc(g)
+       end do
+    end if
 
     end associate
 
-  end subroutine BeginWaterGridcellBalanceSingle
+  end subroutine WaterGridcellBalanceSingle
 
    !-----------------------------------------------------------------------
   subroutine BeginWaterColumnBalanceSingle(bounds, &
@@ -377,6 +426,8 @@ contains
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
         num_allc, filter_allc, &
+        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+        water_inst, lakestate_inst, &
         atm2lnd_inst, solarabs_inst, waterflux_inst, waterstate_inst, &
         waterdiagnosticbulk_inst, waterbalance_inst, wateratm2lnd_inst, &
         waterlnd2atm_inst, surfalb_inst, energyflux_inst, canopystate_inst, &
@@ -410,6 +461,12 @@ contains
      type(bounds_type)     , intent(in)    :: bounds  
      integer               , intent(in)    :: num_allc        ! number of columns in allc filter
      integer               , intent(in)    :: filter_allc(:)  ! filter for all columns
+     integer               , intent(in)    :: num_nolakec  ! number of column non-lake points in column filter
+     integer               , intent(in)    :: filter_nolakec(:)  ! column filter for non-lake points
+     integer               , intent(in)    :: num_lakec  ! number of column lake points in column filter
+     integer               , intent(in)    :: filter_lakec(:)  ! column filter for lake points
+     type(water_type)      , intent(inout) :: water_inst
+     type(lakestate_type)  , intent(in)    :: lakestate_inst
      type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
      type(solarabs_type)   , intent(in)    :: solarabs_inst
      class(waterflux_type) , intent(in)    :: waterflux_inst
@@ -436,9 +493,6 @@ contains
      real(r8) :: qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg)  ! grid cell-level water flux needed for balance check due to glc_dyn_runoff_routing [mm H2O/s] (positive means addition of water to the system)
      real(r8) :: qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg)  ! grid cell-level excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
      real(r8) :: qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg)  ! grid cell-level excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
-     real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux at end of time step
-     real(r8) :: qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux at end of time step
-     real(r8) :: wa_reset_nonconservation_gain_grc(bounds%begg:bounds%endg)  ! grc mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
@@ -491,7 +545,6 @@ contains
           qflx_h2osfc_to_ice      =>    waterflux_inst%qflx_h2osfc_to_ice_col   , & ! Input:  [real(r8) (:)   ]  conversion of h2osfc to ice             
           qflx_drain_perched_col  =>    waterflux_inst%qflx_drain_perched_col   , & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
           qflx_drain_perched_grc  =>    waterlnd2atm_inst%qflx_rofliq_drain_perched_grc, & ! Input: [real(r8) (:)] grid cell-level sub-surface runoff (mm H2O /s)
-          wa_reset_nonconservation_gain_col => waterbalance_inst%wa_reset_nonconservation_gain_col, &  ! Output: [real(r8) (:)   ]  col mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
           qflx_flood_col          =>    waterflux_inst%qflx_floodc_col          , & ! Input:  [real(r8) (:)   ]  column level total runoff due to flooding
           forc_flood_grc          =>    wateratm2lnd_inst%forc_flood_grc        , & ! Input:  [real(r8) (:)   ]  grid cell-level total grid cell-level runoff from river model
           qflx_snow_drain         =>    waterflux_inst%qflx_snow_drain_col      , & ! Input:  [real(r8) (:)   ]  drainage from snow pack                         
@@ -660,44 +713,14 @@ contains
          qflx_snwcp_discarded_ice_col(bounds%begc:bounds%endc),  &
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       if (use_aquifer_layer) then
-          ! wa_reset_nonconservation_gain may be non-zero only when
-          ! use_aquifer_layer is true. We do this c2g call only when needed
-          ! to avoid unnecessary calculations; by adding this term only when
-          ! use_aquifer_layer is true, we effectively let the balance checks
-          ! ensure that this term is zero when use_aquifer_layer is false,
-          ! as it should be.
-          ! The _col term was determined in BeginWaterColumnBalanceSingle
-          ! after any dynamic landuse adjustments.
-          call c2g( bounds, &
-               wa_reset_nonconservation_gain_col(bounds%begc:bounds%endc), &
-               wa_reset_nonconservation_gain_grc(bounds%begg:bounds%endg), &
-               c2l_scale_type='urbanf', l2g_scale_type='unity' )
-       else
-          wa_reset_nonconservation_gain_grc(bounds%begg:bounds%endg) = 0._r8
-       end if
 
-       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_end( &
-         bounds, &
-         qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg))
-       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_end( &
-         bounds, &
-         qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg))
+       ! Obtain endwb_grc
+       call WaterGridcellBalance(bounds, &
+            num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
+            water_inst, lakestate_inst, &
+            use_aquifer_layer = use_aquifer_layer, flag = 'endwb')
 
-       ! These dynbal dribblers store the delta state, (end - beg). Thus, the
-       ! amount dribbled out is the negative of the amount stored in the
-       ! dribblers. Therefore, conservation requires us to subtract the amount
-       ! remaining to dribble.
-       ! This sign convention is opposite to the convention chosen for the
-       ! respective dribble terms used in the carbon balance. At some point
-       ! it may be worth making the two conventions consistent.
-       ! Bill Sacks states: I think the convention used for the water and
-       ! energy dribblers is counter-intuitive.
        do g = bounds%begg, bounds%endg
-          endwb_grc(g) = endwb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
-                                      - qflx_ice_dynbal_left_to_dribble(g)  &
-                                      - wa_reset_nonconservation_gain_grc(g)
-
           errh2o_grc(g) = endwb_grc(g) - begwb_grc(g)  &
                - (forc_rain_grc(g)  &
                + forc_snow_grc(g)  &
