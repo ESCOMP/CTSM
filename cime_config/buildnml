@@ -61,7 +61,6 @@ def buildnml(case, caseroot, compname):
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
     mask = case.get_value("MASK_GRID")
-    neonsite = case.get_value("NEONSITE")
 
     # -----------------------------------------------------
     # Set ctsmconf
@@ -233,16 +232,6 @@ def buildnml(case, caseroot, compname):
             logger.debug("     %s"%out)
         if err is not None:
             logger.debug("     %s"%err)
-
-        # -----------------------------------------------------
-        # Resolve NEON site in namelist if needed
-        # ----------------------------------------------------
-        if neonsite:
-            os.rename(os.path.join(ctsmconf,"lnd_in"), os.path.join(ctsmconf,"lnd_in.unresolved"))
-            with open(os.path.join(ctsmconf,'lnd_in.unresolved'),"r") as fi, open(os.path.join(ctsmconf,"lnd_in"),"w") as fo:
-                for line in fi.readlines():
-                    line = line.replace('${NEONSITE}',neonsite)
-                    fo.write(line)
 
         # -----------------------------------------------------
         # copy resolved namelist to rundir

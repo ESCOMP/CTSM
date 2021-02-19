@@ -75,7 +75,6 @@
       <value compset=             "CLM50" >clm5_0_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM50" >clm5_0_CRUv7</value>
       <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSWP3v1</value>
-      <value compset="DATM%NEON.+_CLM50"  >clm5_0_GSWP3v1</value>
       <value compset="CAM.+_CLM50"        >clm5_0_cam6.0</value>
       <value compset=            "_CLM51" >clm5_1_GSWP3v1</value>
     </values>
@@ -299,13 +298,6 @@
     <file>env_run.xml</file>
     <desc>Name of site for NEON tower data</desc>
   </entry>
-
-
-
-
-
-
-
 
   <help>
     =========================================

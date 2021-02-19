@@ -645,8 +645,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  lnd_tuning_mode="clm4_5_GSWP3v1"  >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="2000"  lnd_tuning_mode="clm4_5_CRUv7"    >.true.</use_init_interp>
 <use_init_interp  use_cndv=".false." use_fates=".false." sim_year="1979"  lnd_tuning_mode="clm4_5_cam6.0"   >.true.</use_init_interp>
+
 <!-- NEON Tower sites -->
-<use_init_interp hgrid="1x1_NEON" >.true.</use_init_interp>
+<use_init_interp hgrid="CLM_USRDAT" >.true.</use_init_interp>
 
 <!-- Default to FALSE if couldn't find a match -->
 <use_init_interp                                                                                            >.false.</use_init_interp>
@@ -1023,8 +1024,9 @@ p
          lnd_tuning_mode="clm5_0_cam6.0"
 >lnd/clm2/initdata_map/clmi.FHISTSp.2013-01-01.ne0CONUSne30x8_mt12_simyr2013_c200806.nc
 </finidat>
-<!-- NEON SITE DATA -->
-<finidat hgrid="1x1_NEON" >lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc</finidat>
+
+<!-- NEON SITE DATA - this should not be needed once the site data is established -->
+<finidat hgrid="CLM_USRDAT" >lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc</finidat>
 
 
 <!-- FATES on for 2000 (MUST be an exact match - can't interpolate files for FATES -->
@@ -1170,7 +1172,7 @@ lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_numaIA_hist_78pfts_CMIP6_si
 <fsurdat hgrid="1x1_brazil"    sim_year="1850" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr1850_c190214.nc</fsurdat>
 
-<fsurdat hgrid="1x1_NEON"    sim_year="2000" >
+<fsurdat hgrid="NEON">
 /glade/work/jedwards/sandboxes/NEON/inputdata/single_point/datmdata_NEON/${NEONSITE}/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_${NEONSITE}.nc</fsurdat>
 
 <fsurdat hgrid="ne30np4"                  sim_year="1850" use_crop=".true.">

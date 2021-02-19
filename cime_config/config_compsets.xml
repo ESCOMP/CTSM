@@ -42,8 +42,8 @@
   </compset>
 
   <compset>
-    <alias>I1PtClm50Bgc-NEON</alias>
-    <lname>2000_DATM%NEON_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <alias>I1PtClm50Bgc</alias>
+    <lname>2000_DATM%1PT_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
