@@ -26,7 +26,7 @@ module clm_driver
   use abortutils             , only : endrun
   !
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
-  use BalanceCheckMod        , only : BeginWaterBalance, BalanceCheck
+  use BalanceCheckMod        , only : WaterGridcellBalance, BeginWaterColumnBalance, BalanceCheck
   !
   use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
   use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
@@ -327,6 +327,13 @@ contains
        end if
        call t_stopf('begcnbal_grc')
 
+       call t_startf('begwbal')
+       call WaterGridcellBalance(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            water_inst, lakestate_inst, &
+            use_aquifer_layer = use_aquifer_layer(), flag = 'begwb')
+       call t_stopf('begwbal')
     end do
     !$OMP END PARALLEL DO
 
@@ -362,9 +369,9 @@ contains
     ! For water: Currently, I believe this needs to be done after weights are updated for
     ! prescribed transient patches or CNDV, because column-level water is not generally
     ! conserved when weights change (instead the difference is put in the grid cell-level
-    ! terms, qflx_liq_dynbal, etc.). In the future, we may want to change the balance
-    ! checks to ensure that the grid cell-level water is conserved, considering
-    ! qflx_liq_dynbal; in this case, the call to BeginWaterBalance should be moved to
+    ! terms, qflx_liq_dynbal, etc.). Grid cell-level balance
+    ! checks ensure that the grid cell-level water is conserved by considering
+    ! qflx_liq_dynbal and calling WaterGridcellBalance
     ! before the weight updates.
     !
     ! For carbon & nitrogen: This needs to be done after dynSubgrid_driver, because the
@@ -382,7 +389,7 @@ contains
           call t_stopf('prescribed_sm')
        endif
        call t_startf('begwbal')
-       call BeginWaterBalance(bounds_clump,                   &
+       call BeginWaterColumnBalance(bounds_clump,             &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
             water_inst, soilhydrology_inst, lakestate_inst, &
@@ -1116,19 +1123,6 @@ contains
             filter(nc)%num_nolakec, filter(nc)%nolakec)
 
        ! ============================================================================
-       ! Check the energy and water balance
-       ! ============================================================================
-
-       call t_startf('balchk')
-       call BalanceCheck(bounds_clump, &
-            filter(nc)%num_allc, filter(nc)%allc, &
-            atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
-            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
-            surfalb_inst, energyflux_inst, canopystate_inst)
-       call t_stopf('balchk')
-
-       ! ============================================================================
        ! Check the carbon and nitrogen balance
        ! ============================================================================
 
@@ -1280,6 +1274,28 @@ contains
     end do
     !$OMP END PARALLEL DO
     call t_stopf('lnd2glc')
+
+    ! ==========================================================================
+    ! Check the energy and water balance
+    ! ==========================================================================
+
+    call t_startf('balchk')
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call BalanceCheck(bounds_clump, &
+            filter(nc)%num_allc, filter(nc)%allc, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            water_inst, lakestate_inst, &
+            atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
+            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
+            water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
+            water_inst%waterlnd2atmbulk_inst, surfalb_inst, energyflux_inst, &
+            canopystate_inst, use_aquifer_layer = use_aquifer_layer())
+    end do
+    !$OMP END PARALLEL DO
+    call t_stopf('balchk')
 
     ! ============================================================================
     ! Write global average diagnostics to standard output
