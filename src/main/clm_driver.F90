@@ -74,13 +74,11 @@ module clm_driver
   use DaylengthMod           , only : UpdateDaylength
   use perf_mod
   !
-  use clm_instMod            , only : nutrient_competition_method
   use GridcellType           , only : grc
   use LandunitType           , only : lun
   use ColumnType             , only : col
   use PatchType              , only : patch
   use clm_instMod
-  use clm_instMod            , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   !
@@ -621,6 +619,8 @@ contains
             soilstate_inst, temperature_inst, &
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterstatebulk_inst)
+
+       call ozone_inst%CalcOzoneStress(bounds_clump, filter(nc)%num_exposedvegp, filter(nc)%exposedvegp)
 
        ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
        ! LakeFluxes... I'll probably leave it in place there.
