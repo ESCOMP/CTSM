@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev024
 Originator(s):  slevis (Samuel Levis,303-665-1310)
-Date:  Wed Feb 11 10:35:33 MST 2021
+Date:  Sat Feb 20 14:42:33 MST 2021
 One-line Summary: Grid cell-level error check for H2O
 
 Purpose of changes
@@ -84,8 +84,8 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- PEND (expect OK)
-    izumi ------- PEND (expect OK)
+    cheyenne ---- OK (comparisons to baseline fail as expected)
+    izumi ------- OK (comparisons to baseline fail as expected)
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -99,13 +99,10 @@ Changes answers relative to baseline: YES
     - what code configurations: ALL
     - what platforms/compilers: ALL
     - nature of change: ROUNDOFF
- Specific example from running the single point test
- ERI_D_Ld9.1x1_camdenNJ.I2000Clm50BgcCruRs.cheyenne_intel.clm-default:
- RMS ERRH2O 6.0280E-21  NORMALIZED 7.6050E-06
 
  Explanation: Moving call BalanceCheck to after the call lnd2glc in
  subroutine clm_drv causes a change in order of operations that leads to
- the above change in ERRH2O.
+ roundoff change in ERRH2O. Confirmed by running ./summarize_cprnc_diffs
 
 
 Detailed list of changes
