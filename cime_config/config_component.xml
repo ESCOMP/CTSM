@@ -241,11 +241,11 @@
 
   <entry id="CLM_ACCELERATED_SPINUP">
     <type>char</type>
-    <valid_values>on,off</valid_values>
+    <valid_values>on,sasu,off</valid_values>
     <default_value>off</default_value>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Turn on any settings for accellerating the model spinup.
+    <desc>Turn on any settings for accellerating the model spinup. SASU is to run the Semi-Analytic Spin-Up with the CN soil matrix method.
     </desc>
   </entry>
 

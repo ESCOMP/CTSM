@@ -17,7 +17,7 @@ module CNFireLi2014Mod
   use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
-  use clm_varctl                         , only : iulog
+  use clm_varctl                         , only : iulog, use_matrixcn, use_soil_matrixcn
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
   use clm_varcon                         , only : dzsoi_decomp
   use pftconMod                          , only : noveg, pftcon
@@ -32,6 +32,7 @@ module CNFireLi2014Mod
   use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use EnergyFluxType                     , only : energyflux_type
   use SaturatedExcessRunoffMod           , only : saturated_excess_runoff_type
   use WaterDiagnosticBulkType            , only : waterdiagnosticbulk_type
@@ -44,6 +45,7 @@ module CNFireLi2014Mod
   use PatchType                          , only : patch                
   use FireMethodType                     , only : fire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
+  use CNVegMatrixMod                     , only : matrix_update_fic, matrix_update_fin
   !
   implicit none
   private
@@ -630,9 +632,9 @@ contains
 
  !-----------------------------------------------------------------------
  subroutine CNFireFluxes (this, bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-      dgvs_inst, cnveg_state_inst,                                                                      &
+      num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, dgvs_inst, cnveg_state_inst, &
       cnveg_carbonstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenstate_inst, cnveg_nitrogenflux_inst, &
-      leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch, &
+      soilbiogeochem_carbonflux_inst, leaf_prof_patch, froot_prof_patch, croot_prof_patch, stem_prof_patch, &
       totsomc_col, decomp_cpools_vr_col, decomp_npools_vr_col, somc_fire_col)
    !
    ! !DESCRIPTION:
@@ -651,28 +653,38 @@ contains
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: run_has_transient_landcover
+   use clm_varpar           , only: ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
+                                    ilivestem,ilivestem_st,ilivestem_xf,&
+                                    ideadstem,ideadstem_st,ideadstem_xf,&
+                                    ilivecroot,ilivecroot_st,ilivecroot_xf,&
+                                    ideadcroot,ideadcroot_st,ideadcroot_xf,iretransn,ioutc,ioutn
    !
    ! !ARGUMENTS:
    class(cnfire_li2014_type)                      :: this
-   type(bounds_type)              , intent(in)    :: bounds  
-   integer                        , intent(in)    :: num_soilc       ! number of soil columns in filter
-   integer                        , intent(in)    :: filter_soilc(:) ! filter for soil columns
-   integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
-   integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
-   type(dgvs_type)                , intent(inout) :: dgvs_inst
-   type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
-   type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
-   type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
-   type(cnveg_nitrogenstate_type) , intent(in)    :: cnveg_nitrogenstate_inst
-   type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
-   real(r8)                       , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
-   real(r8)                       , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
-   real(r8)                       , intent(in)    :: croot_prof_patch(bounds%begp:,1:)
-   real(r8)                       , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
-   real(r8)                       , intent(in)    :: totsomc_col(bounds%begc:)                ! (gC/m2) total soil organic matter C
-   real(r8)                       , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:) ! (gC/m3)  VR decomp. (litter, cwd, soil)
-   real(r8)                       , intent(in)    :: decomp_npools_vr_col(bounds%begc:,1:,1:) ! (gC/m3)  VR decomp. (litter, cwd, soil)
-   real(r8)                       , intent(out)   :: somc_fire_col(bounds%begc:)              ! (gC/m2/s) fire C emissions due to peat burning
+   type(bounds_type)                    , intent(in)    :: bounds  
+   integer                              , intent(in)    :: num_soilc       ! number of soil columns in filter
+   integer                              , intent(in)    :: filter_soilc(:) ! filter for soil columns
+   integer                              , intent(in)    :: num_soilp       ! number of soil patches in filter
+   integer                              , intent(in)    :: filter_soilp(:) ! filter for soil patches
+   integer                              , intent(out)   :: num_actfirep    ! number of active patches on fire in filter
+   integer                              , intent(out)   :: filter_actfirep(:) ! filter for soil patches
+   integer                              , intent(out)   :: num_actfirec    ! number of active columns on fire in filter
+   integer                              , intent(out)   :: filter_actfirec(:) ! filter for soil columns
+   type(dgvs_type)                      , intent(inout) :: dgvs_inst
+   type(cnveg_state_type)               , intent(inout) :: cnveg_state_inst
+   type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+   type(cnveg_carbonstate_type)         , intent(inout) :: cnveg_carbonstate_inst
+   type(cnveg_carbonflux_type)          , intent(inout) :: cnveg_carbonflux_inst
+   type(cnveg_nitrogenstate_type)       , intent(in)    :: cnveg_nitrogenstate_inst
+   type(cnveg_nitrogenflux_type)        , intent(inout) :: cnveg_nitrogenflux_inst
+   real(r8)                             , intent(in)    :: leaf_prof_patch(bounds%begp:,1:)
+   real(r8)                             , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
+   real(r8)                             , intent(in)    :: croot_prof_patch(bounds%begp:,1:)
+   real(r8)                             , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
+   real(r8)                             , intent(in)    :: totsomc_col(bounds%begc:)                ! (gC/m2) total soil organic matter C
+   real(r8)                             , intent(in)    :: decomp_cpools_vr_col(bounds%begc:,1:,1:) ! (gC/m3)  VR decomp. (litter, cwd, soil)
+   real(r8)                             , intent(in)    :: decomp_npools_vr_col(bounds%begc:,1:,1:) ! (gC/m3)  VR decomp. (litter, cwd, soil)
+   real(r8)                             , intent(out)   :: somc_fire_col(bounds%begc:)              ! (gC/m2/s) fire C emissions due to peat burning
    !
    ! !LOCAL VARIABLES:
    integer :: g,c,p,j,l,pi,kyr, kmo, kda, mcsec   ! indices
@@ -839,6 +851,7 @@ contains
          m_c_to_litr_met_fire                => cnveg_carbonflux_inst%m_c_to_litr_met_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_cel_fire                => cnveg_carbonflux_inst%m_c_to_litr_cel_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_lig_fire                => cnveg_carbonflux_inst%m_c_to_litr_lig_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
+         matrix_decomp_fire_k                => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col           , & ! Output: [real(r8) (:,:)   ]                                                  
          
          fire_mortality_n_to_cwdn            => cnveg_nitrogenflux_inst%fire_mortality_n_to_cwdn_col              , & ! Input:  [real(r8) (:,:)   ]  N flux fire mortality to CWD (gN/m3/s)
          m_leafn_to_fire                     => cnveg_nitrogenflux_inst%m_leafn_to_fire_patch                     , & ! Input:  [real(r8) (:)     ]  (gN/m2/s) N emis. leafn		  
@@ -884,8 +897,51 @@ contains
          m_decomp_npools_to_fire_vr          => cnveg_nitrogenflux_inst%m_decomp_npools_to_fire_vr_col            , & ! Output: [real(r8) (:,:,:) ]  VR decomp. N fire loss (gN/m3/s)
          m_n_to_litr_met_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_met_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
          m_n_to_litr_cel_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_cel_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
-         m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                    & ! Output: [real(r8) (:,:)   ]                                                  
-         )
+         m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
+         matrix_fitransfer                   => cnveg_carbonflux_inst%matrix_fitransfer_patch                     , & ! Output: [real(r8) (:,:)   ] (gC/m2/s) C transfer rate from fire processes
+         matrix_nfitransfer                  => cnveg_nitrogenflux_inst%matrix_nfitransfer_patch                  , & ! Output: [real(r8) (:,:)   ] (gN/m2/s) N transfer rate from fire processes
+         ileaf_to_iout_fic                   => cnveg_carbonflux_inst%ileaf_to_iout_fi                            , & ! Input: [integer (:)] Index of fire related C transfer from leaf pool to outside of vegetation pools
+         ileafst_to_iout_fic                 => cnveg_carbonflux_inst%ileafst_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related C transfer from leaf storage pool to outside of vegetation pools
+         ileafxf_to_iout_fic                 => cnveg_carbonflux_inst%ileafxf_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related C transfer from leaf transfer pool to outside of vegetation pools
+         ifroot_to_iout_fic                  => cnveg_carbonflux_inst%ifroot_to_iout_fi                           , & ! Input: [integer (:)] Index of fire related C transfer from fine root pool to outside of vegetation pools
+         ifrootst_to_iout_fic                => cnveg_carbonflux_inst%ifrootst_to_iout_fi                         , & ! Input: [integer (:)] Index of fire related C transfer from fine root storage pool to outside of vegetation pools
+         ifrootxf_to_iout_fic                => cnveg_carbonflux_inst%ifrootxf_to_iout_fi                         , & ! Input: [integer (:)] Index of fire related C transfer from fine root transfer pool to outside of vegetation pools
+         ilivestem_to_iout_fic               => cnveg_carbonflux_inst%ilivestem_to_iout_fi                        , & ! Input: [integer (:)] Index of fire related C transfer from live stem pool to outside of vegetation pools
+         ilivestemst_to_iout_fic             => cnveg_carbonflux_inst%ilivestemst_to_iout_fi                      , & ! Input: [integer (:)] Index of fire related C transfer from live stem storage pool to outside of vegetation pools
+         ilivestemxf_to_iout_fic             => cnveg_carbonflux_inst%ilivestemxf_to_iout_fi                      , & ! Input: [integer (:)] Index of fire related C transfer from live stem transfer pool to outside of vegetation pools
+         ideadstem_to_iout_fic               => cnveg_carbonflux_inst%ideadstem_to_iout_fi                        , & ! Input: [integer (:)] Index of fire related C transfer from dead stem pool to outside of vegetation pools
+         ideadstemst_to_iout_fic             => cnveg_carbonflux_inst%ideadstemst_to_iout_fi                      , & ! Input: [integer (:)] Index of fire related C transfer from dead stem storage pool to outside of vegetation pools
+         ideadstemxf_to_iout_fic             => cnveg_carbonflux_inst%ideadstemxf_to_iout_fi                      , & ! Input: [integer (:)] Index of fire related C transfer from dead stem transfer pool to outside of vegetation pools
+         ilivecroot_to_iout_fic              => cnveg_carbonflux_inst%ilivecroot_to_iout_fi                       , & ! Input: [integer (:)] Index of fire related C transfer from live coarse root pool to outside of vegetation pools
+         ilivecrootst_to_iout_fic            => cnveg_carbonflux_inst%ilivecrootst_to_iout_fi                     , & ! Input: [integer (:)] Index of fire related C transfer from live coarse root storage pool to outside of vegetation pools
+         ilivecrootxf_to_iout_fic            => cnveg_carbonflux_inst%ilivecrootxf_to_iout_fi                     , & ! Input: [integer (:)] Index of fire related C transfer from live coarse root transfer pool to outside of vegetation pools
+         ideadcroot_to_iout_fic              => cnveg_carbonflux_inst%ideadcroot_to_iout_fi                       , & ! Input: [integer (:)] Index of fire related C transfer from dead coarse root pool to outside of vegetation pools
+         ideadcrootst_to_iout_fic            => cnveg_carbonflux_inst%ideadcrootst_to_iout_fi                     , & ! Input: [integer (:)] Index of fire related C transfer from dead coarse root storage pool to outside of vegetation pools
+         ideadcrootxf_to_iout_fic            => cnveg_carbonflux_inst%ideadcrootxf_to_iout_fi                     , & ! Input: [integer (:)] Index of fire related C transfer from dead coarse root transfer pool to outside of vegetation pools
+         ilivestem_to_ideadstem_fic          => cnveg_carbonflux_inst%ilivestem_to_ideadstem_fi                   , & ! Input: [integer (:)] Index of fire related C transfer from live stem pool to dead stem pool
+         ilivecroot_to_ideadcroot_fic        => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_fi                 , & ! Input: [integer (:)] Index of fire related C transfer from live coarse root pool to dead coarse root pool
+         ileaf_to_iout_fin                   => cnveg_nitrogenflux_inst%ileaf_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related N transfer from leaf pool to outside of vegetation pools
+         ileafst_to_iout_fin                 => cnveg_nitrogenflux_inst%ileafst_to_iout_fi                        , & ! Input: [integer (:)] Index of fire related N transfer from leaf storage pool to outside of vegetation pools
+         ileafxf_to_iout_fin                 => cnveg_nitrogenflux_inst%ileafxf_to_iout_fi                        , & ! Input: [integer (:)] Index of fire related N transfer from leaf transfer pool to outside of vegetation pools
+         ifroot_to_iout_fin                  => cnveg_nitrogenflux_inst%ifroot_to_iout_fi                         , & ! Input: [integer (:)] Index of fire related N transfer from fine root pool to outside of vegetation pools
+         ifrootst_to_iout_fin                => cnveg_nitrogenflux_inst%ifrootst_to_iout_fi                       , & ! Input: [integer (:)] Index of fire related N transfer from fine root storage pool to outside of vegetation pools
+         ifrootxf_to_iout_fin                => cnveg_nitrogenflux_inst%ifrootxf_to_iout_fi                       , & ! Input: [integer (:)] Index of fire related N transfer from fine transfer pool to outside of vegetation pools
+         ilivestem_to_iout_fin               => cnveg_nitrogenflux_inst%ilivestem_to_iout_fi                      , & ! Input: [integer (:)] Index of fire related N transfer from live stem pool to outside of vegetation pools
+         ilivestemst_to_iout_fin             => cnveg_nitrogenflux_inst%ilivestemst_to_iout_fi                    , & ! Input: [integer (:)] Index of fire related N transfer from live stem storage pool to outside of vegetation pool
+         ilivestemxf_to_iout_fin             => cnveg_nitrogenflux_inst%ilivestemxf_to_iout_fi                    , & ! Input: [integer (:)] Index of fire related N transfer from live stem transfer pool to outside of vegetation pools
+         ideadstem_to_iout_fin               => cnveg_nitrogenflux_inst%ideadstem_to_iout_fi                      , & ! Input: [integer (:)] Index of fire related N transfer from dead stem pool to outside of vegetation pools
+         ideadstemst_to_iout_fin             => cnveg_nitrogenflux_inst%ideadstemst_to_iout_fi                    , & ! Input: [integer (:)] Index of fire related N transfer from dead stem storage pool to outside of vegetation pools
+         ideadstemxf_to_iout_fin             => cnveg_nitrogenflux_inst%ideadstemxf_to_iout_fi                    , & ! Input: [integer (:)] Index of fire related N transfer from dead stem transfer pool to outside of vegetation pools
+         ilivecroot_to_iout_fin              => cnveg_nitrogenflux_inst%ilivecroot_to_iout_fi                     , & ! Input: [integer (:)] Index of fire related N transfer from live coarse root pool to outside of vegetation pools
+         ilivecrootst_to_iout_fin            => cnveg_nitrogenflux_inst%ilivecrootst_to_iout_fi                   , & ! Input: [integer (:)] Index of fire related N transfer from live coarse root storage pool to outside of vegetation pools
+         ilivecrootxf_to_iout_fin            => cnveg_nitrogenflux_inst%ilivecrootxf_to_iout_fi                   , & ! Input: [integer (:)] Index of fire related N transfer from live coarse root transfer pool to outside of vegetation pools
+         ideadcroot_to_iout_fin              => cnveg_nitrogenflux_inst%ideadcroot_to_iout_fi                     , & ! Input: [integer (:)] Index of fire related N transfer from dead coarse root pool to outside of vegetation pools
+         ideadcrootst_to_iout_fin            => cnveg_nitrogenflux_inst%ideadcrootst_to_iout_fi                   , & ! Input: [integer (:)] Index of fire related N transfer from dead coarse root storage pool to outside of vegetation pools
+         ideadcrootxf_to_iout_fin            => cnveg_nitrogenflux_inst%ideadcrootxf_to_iout_fi                   , & ! Input: [integer (:)] Index of fire related N transfer from dead coarse root transfer pool to outside of vegetation pools
+         ilivestem_to_ideadstem_fin          => cnveg_nitrogenflux_inst%ilivestem_to_ideadstem_fi                 , & ! Input: [integer (:)] Index of fire related N transfer from live stem to dead stem pool
+         ilivecroot_to_ideadcroot_fin        => cnveg_nitrogenflux_inst%ilivecroot_to_ideadcroot_fi               , & ! Input: [integer (:)] Index of fire related N transfer from live coarse root pool to dead coarse root pool
+         iretransn_to_iout_fin               => cnveg_nitrogenflux_inst%iretransn_to_iout_fi                        & ! Input: [integer (:)] Index of fire related N transfer from retranslocated N pool to outside of vegetation pools
+	 )
 
      transient_landcover = run_has_transient_landcover()
 
@@ -897,6 +953,7 @@ contains
      !
      ! patch loop
      !
+     num_actfirep = 0
      do fp = 1,num_soilp
         p = filter_soilp(fp)
         c = patch%column(p)
@@ -921,176 +978,333 @@ contains
         ! biomass burning
         ! carbon fluxes
         m = spinup_factor_deadwood
+ 
+        if(f /= 0)then
+           num_actfirep = num_actfirep + 1
+           filter_actfirep(num_actfirep) = p
+        end if
 
-        m_leafc_to_fire(p)               =  leafc(p)              * f * cc_leaf(patch%itype(p))
-        m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * f * cc_other(patch%itype(p))
-        m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * f * cc_other(patch%itype(p))
-        m_livestemc_to_fire(p)           =  livestemc(p)          * f * cc_lstem(patch%itype(p))
-        m_livestemc_storage_to_fire(p)   =  livestemc_storage(p)  * f * cc_other(patch%itype(p))
-        m_livestemc_xfer_to_fire(p)      =  livestemc_xfer(p)     * f * cc_other(patch%itype(p))
-        m_deadstemc_to_fire(p)           =  deadstemc(p)          * f * cc_dstem(patch%itype(p)) * m
-        m_deadstemc_storage_to_fire(p)   =  deadstemc_storage(p)  * f * cc_other(patch%itype(p))
-        m_deadstemc_xfer_to_fire(p)      =  deadstemc_xfer(p)     * f * cc_other(patch%itype(p))
-        m_frootc_to_fire(p)              =  frootc(p)             * f * 0._r8
-        m_frootc_storage_to_fire(p)      =  frootc_storage(p)     * f * cc_other(patch%itype(p)) 
-        m_frootc_xfer_to_fire(p)         =  frootc_xfer(p)        * f * cc_other(patch%itype(p))
-        m_livecrootc_to_fire(p)          =  livecrootc(p)         * f * 0._r8
-        m_livecrootc_storage_to_fire(p)  =  livecrootc_storage(p) * f * cc_other(patch%itype(p)) 
-        m_livecrootc_xfer_to_fire(p)     =  livecrootc_xfer(p)    * f * cc_other(patch%itype(p)) 
-        m_deadcrootc_to_fire(p)          =  deadcrootc(p)         * f * 0._r8
-        m_deadcrootc_storage_to_fire(p)  =  deadcrootc_storage(p) * f*  cc_other(patch%itype(p)) 
-        m_deadcrootc_xfer_to_fire(p)     =  deadcrootc_xfer(p)    * f * cc_other(patch%itype(p)) 
         m_gresp_storage_to_fire(p)       =  gresp_storage(p)      * f * cc_other(patch%itype(p))
         m_gresp_xfer_to_fire(p)          =  gresp_xfer(p)         * f * cc_other(patch%itype(p))
+        if ( .not. use_matrixcn )then
+           ! NOTE: The non matrix version of this is in CNCStateUpdate3::CStateUpdate3 EBK (11/26/2019)
+           !                                        and CNNStateUpdate3::NStateUpdate3
+           m_leafc_to_fire(p)               =  leafc(p)              * f * cc_leaf(patch%itype(p))
+           m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * f * cc_other(patch%itype(p))
+           m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * f * cc_other(patch%itype(p))
+           m_livestemc_to_fire(p)           =  livestemc(p)          * f * cc_lstem(patch%itype(p))
+           m_livestemc_storage_to_fire(p)   =  livestemc_storage(p)  * f * cc_other(patch%itype(p))
+           m_livestemc_xfer_to_fire(p)      =  livestemc_xfer(p)     * f * cc_other(patch%itype(p))
+           m_deadstemc_to_fire(p)           =  deadstemc(p)          * f * cc_dstem(patch%itype(p)) * m
+           m_deadstemc_storage_to_fire(p)   =  deadstemc_storage(p)  * f * cc_other(patch%itype(p))
+           m_deadstemc_xfer_to_fire(p)      =  deadstemc_xfer(p)     * f * cc_other(patch%itype(p))
+           m_frootc_to_fire(p)              =  frootc(p)             * f * 0._r8
+           m_frootc_storage_to_fire(p)      =  frootc_storage(p)     * f * cc_other(patch%itype(p))
+           m_frootc_xfer_to_fire(p)         =  frootc_xfer(p)        * f * cc_other(patch%itype(p))
+           m_livecrootc_to_fire(p)          =  livecrootc(p)         * f * 0._r8
+           m_livecrootc_storage_to_fire(p)  =  livecrootc_storage(p) * f * cc_other(patch%itype(p))
+           m_livecrootc_xfer_to_fire(p)     =  livecrootc_xfer(p)    * f * cc_other(patch%itype(p))
+           m_deadcrootc_to_fire(p)          =  deadcrootc(p)         * f * 0._r8
+           m_deadcrootc_storage_to_fire(p)  =  deadcrootc_storage(p) * f*  cc_other(patch%itype(p))
+           m_deadcrootc_xfer_to_fire(p)     =  deadcrootc_xfer(p)    * f * cc_other(patch%itype(p))
 
 
-        ! nitrogen fluxes
-        m_leafn_to_fire(p)               =  leafn(p)              * f * cc_leaf(patch%itype(p))
-        m_leafn_storage_to_fire(p)       =  leafn_storage(p)      * f * cc_other(patch%itype(p))
-        m_leafn_xfer_to_fire(p)          =  leafn_xfer(p)         * f * cc_other(patch%itype(p))
-        m_livestemn_to_fire(p)           =  livestemn(p)          * f * cc_lstem(patch%itype(p))
-        m_livestemn_storage_to_fire(p)   =  livestemn_storage(p)  * f * cc_other(patch%itype(p))
-        m_livestemn_xfer_to_fire(p)      =  livestemn_xfer(p)     * f * cc_other(patch%itype(p))
-        m_deadstemn_to_fire(p)           =  deadstemn(p)          * f * cc_dstem(patch%itype(p)) * m
-        m_deadstemn_storage_to_fire(p)   =  deadstemn_storage(p)  * f * cc_other(patch%itype(p))
-        m_deadstemn_xfer_to_fire(p)      =  deadstemn_xfer(p)     * f * cc_other(patch%itype(p))
-        m_frootn_to_fire(p)              =  frootn(p)             * f * 0._r8
-        m_frootn_storage_to_fire(p)      =  frootn_storage(p)     * f * cc_other(patch%itype(p))
-        m_frootn_xfer_to_fire(p)         =  frootn_xfer(p)        * f * cc_other(patch%itype(p))
-        m_livecrootn_to_fire(p)          =  livecrootn(p)         * f * 0._r8 
-        m_livecrootn_storage_to_fire(p)  =  livecrootn_storage(p) * f * cc_other(patch%itype(p)) 
-        m_livecrootn_xfer_to_fire(p)     =  livecrootn_xfer(p)    * f * cc_other(patch%itype(p))
-        m_deadcrootn_to_fire(p)          =  deadcrootn(p)         * f * 0._r8
-        m_deadcrootn_xfer_to_fire(p)     =  deadcrootn_xfer(p)    * f * cc_other(patch%itype(p)) 
-        m_deadcrootn_storage_to_fire(p)  =  deadcrootn_storage(p) * f * cc_other(patch%itype(p))
-        m_retransn_to_fire(p)            =  retransn(p)           * f * cc_other(patch%itype(p))
+           ! nitrogen fluxes
+           m_leafn_to_fire(p)               =  leafn(p)              * f * cc_leaf(patch%itype(p))
+           m_leafn_storage_to_fire(p)       =  leafn_storage(p)      * f * cc_other(patch%itype(p))
+           m_leafn_xfer_to_fire(p)          =  leafn_xfer(p)         * f * cc_other(patch%itype(p))
+           m_livestemn_to_fire(p)           =  livestemn(p)          * f * cc_lstem(patch%itype(p))
+           m_livestemn_storage_to_fire(p)   =  livestemn_storage(p)  * f * cc_other(patch%itype(p))
+           m_livestemn_xfer_to_fire(p)      =  livestemn_xfer(p)     * f * cc_other(patch%itype(p))
+           m_deadstemn_to_fire(p)           =  deadstemn(p)          * f * cc_dstem(patch%itype(p)) * m
+           m_deadstemn_storage_to_fire(p)   =  deadstemn_storage(p)  * f * cc_other(patch%itype(p))
+           m_deadstemn_xfer_to_fire(p)      =  deadstemn_xfer(p)     * f * cc_other(patch%itype(p))
+           m_frootn_to_fire(p)              =  frootn(p)             * f * 0._r8
+           m_frootn_storage_to_fire(p)      =  frootn_storage(p)     * f * cc_other(patch%itype(p))
+           m_frootn_xfer_to_fire(p)         =  frootn_xfer(p)        * f * cc_other(patch%itype(p))
+           m_livecrootn_to_fire(p)          =  livecrootn(p)         * f * 0._r8
+           m_livecrootn_storage_to_fire(p)  =  livecrootn_storage(p) * f * cc_other(patch%itype(p))
+           m_livecrootn_xfer_to_fire(p)     =  livecrootn_xfer(p)    * f * cc_other(patch%itype(p))
+           m_deadcrootn_to_fire(p)          =  deadcrootn(p)         * f * 0._r8
+           m_deadcrootn_xfer_to_fire(p)     =  deadcrootn_xfer(p)    * f * cc_other(patch%itype(p))
+           m_deadcrootn_storage_to_fire(p)  =  deadcrootn_storage(p) * f * cc_other(patch%itype(p))
+           m_retransn_to_fire(p)            =  retransn(p)           * f * cc_other(patch%itype(p))
 
+        else
+           m_leafc_to_fire(p)               =  leafc(p)              * matrix_update_fic(p,ileaf_to_iout_fic        ,f * cc_leaf(patch%itype(p))   ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_leafc_storage_to_fire(p)       =  leafc_storage(p)      * matrix_update_fic(p,ileafst_to_iout_fic      ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_leafc_xfer_to_fire(p)          =  leafc_xfer(p)         * matrix_update_fic(p,ileafxf_to_iout_fic      ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livestemc_to_fire(p)           =  livestemc(p)          * matrix_update_fic(p,ilivestem_to_iout_fic    ,f * cc_lstem(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livestemc_storage_to_fire(p)   =  livestemc_storage(p)  * matrix_update_fic(p,ilivestemst_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livestemc_xfer_to_fire(p)      =  livestemc_xfer(p)     * matrix_update_fic(p,ilivestemxf_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadstemc_to_fire(p)           =  deadstemc(p)          * matrix_update_fic(p,ideadstem_to_iout_fic    ,f * cc_dstem(patch%itype(p))*m,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadstemc_storage_to_fire(p)   =  deadstemc_storage(p)  * matrix_update_fic(p,ideadstemst_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadstemc_xfer_to_fire(p)      =  deadstemc_xfer(p)     * matrix_update_fic(p,ideadstemxf_to_iout_fic  ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_frootc_to_fire(p)              =  frootc(p)             * matrix_update_fic(p,ifroot_to_iout_fic       ,f * 0._r8                     ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_frootc_storage_to_fire(p)      =  frootc_storage(p)     * matrix_update_fic(p,ifrootst_to_iout_fic     ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_frootc_xfer_to_fire(p)         =  frootc_xfer(p)        * matrix_update_fic(p,ifrootxf_to_iout_fic     ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livecrootc_to_fire(p)          =  livecrootc(p)         * matrix_update_fic(p,ilivecroot_to_iout_fic   ,f * 0._r8                     ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livecrootc_storage_to_fire(p)  =  livecrootc_storage(p) * matrix_update_fic(p,ilivecrootst_to_iout_fic ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livecrootc_xfer_to_fire(p)     =  livecrootc_xfer(p)    * matrix_update_fic(p,ilivecrootxf_to_iout_fic ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadcrootc_to_fire(p)          =  deadcrootc(p)         * matrix_update_fic(p,ideadcroot_to_iout_fic   ,f * 0._r8                     ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadcrootc_storage_to_fire(p)  =  deadcrootc_storage(p) * matrix_update_fic(p,ideadcrootst_to_iout_fic ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadcrootc_xfer_to_fire(p)     =  deadcrootc_xfer(p)    * matrix_update_fic(p,ideadcrootxf_to_iout_fic ,f * cc_other(patch%itype(p))  ,dt,cnveg_carbonflux_inst,.True.,.True.)
+
+           m_leafn_to_fire(p)               =  leafn(p)              * matrix_update_fin(p,ileaf_to_iout_fin        ,f * cc_leaf(patch%itype(p))   ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_leafn_storage_to_fire(p)       =  leafn_storage(p)      * matrix_update_fin(p,ileafst_to_iout_fin      ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_leafn_xfer_to_fire(p)          =  leafn_xfer(p)         * matrix_update_fin(p,ileafxf_to_iout_fin      ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livestemn_to_fire(p)           =  livestemn(p)          * matrix_update_fin(p,ilivestem_to_iout_fin    ,f * cc_lstem(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livestemn_storage_to_fire(p)   =  livestemn_storage(p)  * matrix_update_fin(p,ilivestemst_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livestemn_xfer_to_fire(p)      =  livestemn_xfer(p)     * matrix_update_fin(p,ilivestemxf_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadstemn_to_fire(p)           =  deadstemn(p)          * matrix_update_fin(p,ideadstem_to_iout_fin    ,f * cc_dstem(patch%itype(p))*m,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadstemn_storage_to_fire(p)   =  deadstemn_storage(p)  * matrix_update_fin(p,ideadstemst_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadstemn_xfer_to_fire(p)      =  deadstemn_xfer(p)     * matrix_update_fin(p,ideadstemxf_to_iout_fin  ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_frootn_to_fire(p)              =  frootn(p)             * matrix_update_fin(p,ifroot_to_iout_fin       ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_frootn_storage_to_fire(p)      =  frootn_storage(p)     * matrix_update_fin(p,ifrootst_to_iout_fin     ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_frootn_xfer_to_fire(p)         =  frootn_xfer(p)        * matrix_update_fin(p,ifrootxf_to_iout_fin     ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livecrootn_to_fire(p)          =  livecrootn(p)         * matrix_update_fin(p,ilivecroot_to_iout_fin   ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livecrootn_storage_to_fire(p)  =  livecrootn_storage(p) * matrix_update_fin(p,ilivecrootst_to_iout_fin ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livecrootn_xfer_to_fire(p)     =  livecrootn_xfer(p)    * matrix_update_fin(p,ilivecrootxf_to_iout_fin ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadcrootn_to_fire(p)          =  deadcrootn(p)         * matrix_update_fin(p,ideadcroot_to_iout_fin   ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadcrootn_storage_to_fire(p)  =  deadcrootn_storage(p) * matrix_update_fin(p,ideadcrootst_to_iout_fin ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadcrootn_xfer_to_fire(p)     =  deadcrootn_xfer(p)    * matrix_update_fin(p,ideadcrootxf_to_iout_fin ,f * cc_other(patch%itype(p))  ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_retransn_to_fire(p)            =  retransn(p)           * matrix_update_fin(p,iretransn_to_iout_fin    ,f * 0._r8                     ,dt,cnveg_nitrogenflux_inst,.True.,.True.)
+        end if
         ! mortality due to fire
         ! carbon pools
-        m_leafc_to_litter_fire(p)                   =  leafc(p) * f * &
-             (1._r8 - cc_leaf(patch%itype(p))) * &
-             fm_leaf(patch%itype(p))
-        m_leafc_storage_to_litter_fire(p)           =  leafc_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_leafc_xfer_to_litter_fire(p)              =  leafc_xfer(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_livestemc_to_litter_fire(p)               =  livestemc(p) * f * &
-             (1._r8 - cc_lstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))    
-        m_livestemc_storage_to_litter_fire(p)       =  livestemc_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_livestemc_xfer_to_litter_fire(p)          =  livestemc_xfer(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p)) 
-        m_livestemc_to_deadstemc_fire(p)            =  livestemc(p) * f * &
-             (1._r8 - cc_lstem(patch%itype(p))) * &
-             (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadstemc_to_litter_fire(p)               =  deadstemc(p) * f * m * &
-             (1._r8 - cc_dstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))    
-        m_deadstemc_storage_to_litter_fire(p)       =  deadstemc_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_deadstemc_xfer_to_litter_fire(p)          =  deadstemc_xfer(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_frootc_to_litter_fire(p)                  =  frootc(p)             * f * &
-             fm_root(patch%itype(p))
-        m_frootc_storage_to_litter_fire(p)          =  frootc_storage(p)     * f * &
-             (1._r8- cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_frootc_xfer_to_litter_fire(p)             =  frootc_xfer(p)        * f * &
-             (1._r8- cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_livecrootc_to_litter_fire(p)              =  livecrootc(p)         * f * &
-             fm_droot(patch%itype(p))
-        m_livecrootc_storage_to_litter_fire(p)      =  livecrootc_storage(p) * f * &
-             (1._r8- cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p)) 
-        m_livecrootc_xfer_to_litter_fire(p)         =  livecrootc_xfer(p)    * f * &
-             (1._r8- cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p)) 
-        m_livecrootc_to_deadcrootc_fire(p)          =  livecrootc(p)         * f * &
-             (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadcrootc_to_litter_fire(p)              =  deadcrootc(p)         * f * m * &
-             fm_droot(patch%itype(p))
-        m_deadcrootc_storage_to_litter_fire(p)      =  deadcrootc_storage(p) * f * &
-             (1._r8- cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_deadcrootc_xfer_to_litter_fire(p)         =  deadcrootc_xfer(p)    * f * &
-             (1._r8- cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))      
-        m_gresp_storage_to_litter_fire(p)           =  gresp_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))  
-        m_gresp_xfer_to_litter_fire(p)              =  gresp_xfer(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p)) 
+        if ( .not. use_matrixcn )then
+           ! NOTE: The non matrix version of this is in CNCStateUpdate3::CStateUpdate3 EBK (11/26/2019)
+           !                                        and CNNStateUpdate3::NStateUpdate3
+           m_leafc_to_litter_fire(p)                   =  leafc(p) * f * &
+                (1._r8 - cc_leaf(patch%itype(p))) * &
+                fm_leaf(patch%itype(p))
+           m_leafc_storage_to_litter_fire(p)           =  leafc_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_leafc_xfer_to_litter_fire(p)              =  leafc_xfer(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from livestem/livecroot to litter
+           ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
+           m_livestemc_to_litter_fire(p)               =  livestemc(p) * f * &
+                (1._r8 - cc_lstem(patch%itype(p))) * &
+                fm_droot(patch%itype(p))
+           m_livestemc_storage_to_litter_fire(p)       =  livestemc_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_livestemc_xfer_to_litter_fire(p)          =  livestemc_xfer(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent the fraction of plant-tissue mortality for deadstem/deadcroot
+           ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516
+           m_livestemc_to_deadstemc_fire(p)            =  livestemc(p) * f * &
+                (1._r8 - cc_lstem(patch%itype(p))) * &
+                (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
+           ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from deadstem/deadcroot to litter
+           ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
+           m_deadstemc_to_litter_fire(p)               =  deadstemc(p) * f * m * &
+                (1._r8 - cc_dstem(patch%itype(p))) * &
+                fm_droot(patch%itype(p))
+           m_deadstemc_storage_to_litter_fire(p)       =  deadstemc_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_deadstemc_xfer_to_litter_fire(p)          =  deadstemc_xfer(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_frootc_to_litter_fire(p)                  =  frootc(p)             * f * &
+                fm_root(patch%itype(p))
+           m_frootc_storage_to_litter_fire(p)          =  frootc_storage(p)     * f * &
+                (1._r8- cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_frootc_xfer_to_litter_fire(p)             =  frootc_xfer(p)        * f * &
+                (1._r8- cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from livestem/livecroot to litter
+           ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
+           m_livecrootc_to_litter_fire(p)              =  livecrootc(p)         * f * &
+                fm_droot(patch%itype(p))
+           m_livecrootc_storage_to_litter_fire(p)      =  livecrootc_storage(p) * f * &
+                (1._r8- cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_livecrootc_xfer_to_litter_fire(p)         =  livecrootc_xfer(p)    * f * &
+                (1._r8- cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_livecrootc_to_deadcrootc_fire(p)          =  livecrootc(p)         * f * &
+                (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
+           m_deadcrootc_to_litter_fire(p)              =  deadcrootc(p)         * f * m * &
+                fm_droot(patch%itype(p))
+           m_deadcrootc_storage_to_litter_fire(p)      =  deadcrootc_storage(p) * f * &
+                (1._r8- cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_deadcrootc_xfer_to_litter_fire(p)         =  deadcrootc_xfer(p)    * f * &
+                (1._r8- cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_gresp_storage_to_litter_fire(p)           =  gresp_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_gresp_xfer_to_litter_fire(p)              =  gresp_xfer(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
 
 
-        ! nitrogen pools    
-        m_leafn_to_litter_fire(p)                  =  leafn(p) * f * &
-             (1._r8 - cc_leaf(patch%itype(p))) * &
-             fm_leaf(patch%itype(p))
-        m_leafn_storage_to_litter_fire(p)          =  leafn_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))  
-        m_leafn_xfer_to_litter_fire(p)             =  leafn_xfer(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_livestemn_to_litter_fire(p)              =  livestemn(p) * f * &
-             (1._r8 - cc_lstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))
-        m_livestemn_storage_to_litter_fire(p)      =  livestemn_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))   
-        m_livestemn_xfer_to_litter_fire(p)         =  livestemn_xfer(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_livestemn_to_deadstemn_fire(p)           =  livestemn(p) * f * &
-             (1._r8 - cc_lstem(patch%itype(p))) * &
-             (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadstemn_to_litter_fire(p)              =  deadstemn(p) * f * m * &
-             (1._r8 - cc_dstem(patch%itype(p))) * &
-             fm_droot(patch%itype(p))    
-        m_deadstemn_storage_to_litter_fire(p)      =  deadstemn_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_deadstemn_xfer_to_litter_fire(p)         =  deadstemn_xfer(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_frootn_to_litter_fire(p)                 =  frootn(p)             * f * &
-             fm_root(patch%itype(p))
-        m_frootn_storage_to_litter_fire(p)         =  frootn_storage(p)     * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_frootn_xfer_to_litter_fire(p)            =  frootn_xfer(p)        * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_livecrootn_to_litter_fire(p)             =  livecrootn(p)         * f * &
-             fm_droot(patch%itype(p))
-        m_livecrootn_storage_to_litter_fire(p)     =  livecrootn_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_livecrootn_xfer_to_litter_fire(p)        =  livecrootn_xfer(p)    * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p)) 
-        m_livecrootn_to_deadcrootn_fire(p)         =  livecrootn(p)         * f * &
-             (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
-        m_deadcrootn_to_litter_fire(p)             =  deadcrootn(p)         * f * m * &
-             fm_droot(patch%itype(p))
-        m_deadcrootn_storage_to_litter_fire(p)     =  deadcrootn_storage(p) * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_deadcrootn_xfer_to_litter_fire(p)        =  deadcrootn_xfer(p)    * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p))
-        m_retransn_to_litter_fire(p)               =  retransn(p)           * f * &
-             (1._r8 - cc_other(patch%itype(p))) * &
-             fm_other(patch%itype(p)) 
+           ! nitrogen pools
+           m_leafn_to_litter_fire(p)                  =  leafn(p) * f * &
+                (1._r8 - cc_leaf(patch%itype(p))) * &
+                fm_leaf(patch%itype(p))
+           m_leafn_storage_to_litter_fire(p)          =  leafn_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_leafn_xfer_to_litter_fire(p)             =  leafn_xfer(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from livestem/livecroot to litter
+           ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
+           m_livestemn_to_litter_fire(p)              =  livestemn(p) * f * &
+                (1._r8 - cc_lstem(patch%itype(p))) * &
+                fm_droot(patch%itype(p))
+           m_livestemn_storage_to_litter_fire(p)      =  livestemn_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_livestemn_xfer_to_litter_fire(p)         =  livestemn_xfer(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent the fraction of plant-tissue mortality for deadstem/deadcroot
+           ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516
+           m_livestemn_to_deadstemn_fire(p)           =  livestemn(p) * f * &
+                (1._r8 - cc_lstem(patch%itype(p))) * &
+                (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p)))
+           ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from deadstem/deadcroot to litter
+           ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
+           m_deadstemn_to_litter_fire(p)              =  deadstemn(p) * f * m * &
+                (1._r8 - cc_dstem(patch%itype(p))) * &
+                fm_droot(patch%itype(p))
+           m_deadstemn_storage_to_litter_fire(p)      =  deadstemn_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_deadstemn_xfer_to_litter_fire(p)         =  deadstemn_xfer(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_frootn_to_litter_fire(p)                 =  frootn(p)             * f * &
+                fm_root(patch%itype(p))
+           m_frootn_storage_to_litter_fire(p)         =  frootn_storage(p)     * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_frootn_xfer_to_litter_fire(p)            =  frootn_xfer(p)        * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           ! NOTE: It looks incorrect to use fm_droot here, but it's used to represent fraction of transport from livestem/livecroot to litter
+           ! EBK Oct/06/2017 see bug 2516 http://bugs.cgd.ucar.edu/show_bug.cgi?id=2516 (stem and root live or dead assumed to have the same transport)
+           m_livecrootn_to_litter_fire(p)             =  livecrootn(p)         * f * &
+                fm_droot(patch%itype(p))
+           m_livecrootn_storage_to_litter_fire(p)     =  livecrootn_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_livecrootn_xfer_to_litter_fire(p)        =  livecrootn_xfer(p)    * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_livecrootn_to_deadcrootn_fire(p)         =  livecrootn(p)         * f * &
+                (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p)))
+           m_deadcrootn_to_litter_fire(p)             =  deadcrootn(p)         * f * m * &
+                fm_droot(patch%itype(p))
+           m_deadcrootn_storage_to_litter_fire(p)     =  deadcrootn_storage(p) * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_deadcrootn_xfer_to_litter_fire(p)        =  deadcrootn_xfer(p)    * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+           m_retransn_to_litter_fire(p)               =  retransn(p)           * f * &
+                (1._r8 - cc_other(patch%itype(p))) * &
+                fm_other(patch%itype(p))
+
+        else
+           m_leafc_to_litter_fire(p)              = leafc(p) * matrix_update_fic(p,ileaf_to_iout_fic, &
+                                                  f * (1._r8 - cc_leaf(patch%itype(p)))     * fm_leaf(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_leafc_storage_to_litter_fire(p)      = leafc_storage(p) * matrix_update_fic(p,ileafst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_leafc_xfer_to_litter_fire(p)         = leafc_xfer(p) * matrix_update_fic(p,ileafxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livestemc_to_litter_fire(p)          = livestemc(p) * matrix_update_fic(p,ilivestem_to_iout_fic, &
+                                                  f * (1._r8 - cc_lstem(patch%itype(p)))    * fm_droot(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livestemc_storage_to_litter_fire(p)  = livestemc_storage(p) * matrix_update_fic(p,ilivestemst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livestemc_xfer_to_litter_fire(p)     = livestemc_xfer(p) * matrix_update_fic(p,ilivestemxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livestemc_to_deadstemc_fire(p)       = livestemc(p) * matrix_update_fic(p,ilivestem_to_ideadstem_fic,&
+                                                  f * (1._r8 - cc_lstem(patch%itype(p)))    * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p))),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadstemc_to_litter_fire(p)          = deadstemc(p) * matrix_update_fic(p,ideadstem_to_iout_fic, &
+                                                  f * (1._r8 - cc_dstem(patch%itype(p)))    * fm_droot(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadstemc_storage_to_litter_fire(p)  = deadstemc_storage(p) * matrix_update_fic(p,ideadstemst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadstemc_xfer_to_litter_fire(p)     = deadstemc_xfer(p) * matrix_update_fic(p,ideadstemxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_frootc_to_litter_fire(p)             = frootc(p) * matrix_update_fic(p,ifroot_to_iout_fic, &
+                                                  f * fm_root(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_frootc_storage_to_litter_fire(p)     = frootc_storage(p) * matrix_update_fic(p,ifrootst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_frootc_xfer_to_litter_fire(p)        = frootc_xfer(p) * matrix_update_fic(p,ifrootxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livecrootc_to_litter_fire(p)         = livecrootc(p) * matrix_update_fic(p,ilivecroot_to_iout_fic, &
+                                                  f * fm_droot(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livecrootc_storage_to_litter_fire(p) = livecrootc_storage(p) * matrix_update_fic(p,ilivecrootst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livecrootc_xfer_to_litter_fire(p)    = livecrootc_xfer(p) * matrix_update_fic(p,ilivecrootxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_livecrootc_to_deadcrootc_fire(p)     = livecrootc(p) * matrix_update_fic(p,ilivecroot_to_ideadcroot_fic,&
+                                                  f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p))),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadcrootc_to_litter_fire(p)         = deadcrootc(p) * matrix_update_fic(p,ideadcroot_to_iout_fic, &
+                                                  f * m * fm_droot(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadcrootc_storage_to_litter_fire(p) = deadcrootc_storage(p) * matrix_update_fic(p,ideadcrootst_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+           m_deadcrootc_xfer_to_litter_fire(p)    = deadcrootc_xfer(p) * matrix_update_fic(p,ideadcrootxf_to_iout_fic, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_carbonflux_inst,.True.,.True.)
+
+           m_leafn_to_litter_fire(p)              = leafn(p) * matrix_update_fin(p,ileaf_to_iout_fin, &
+                                                  f * (1._r8 - cc_leaf(patch%itype(p)))     * fm_leaf(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_leafn_storage_to_litter_fire(p)      = leafn_storage(p) * matrix_update_fin(p,ileafst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_leafn_xfer_to_litter_fire(p)         = leafn_xfer(p) * matrix_update_fin(p,ileafxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livestemn_to_litter_fire(p)          = livestemn(p) * matrix_update_fin(p,ilivestem_to_iout_fin, &
+                                                  f * (1._r8 - cc_lstem(patch%itype(p)))    * fm_droot(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livestemn_storage_to_litter_fire(p)  = livestemn_storage(p) * matrix_update_fin(p,ilivestemst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livestemn_xfer_to_litter_fire(p)     = livestemn_xfer(p) * matrix_update_fin(p,ilivestemxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livestemn_to_deadstemn_fire(p)       = livestemn(p) * matrix_update_fin(p,ilivestem_to_ideadstem_fin,&
+                                                  f * (1._r8 - cc_lstem(patch%itype(p)))    * (fm_lstem(patch%itype(p))-fm_droot(patch%itype(p))),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadstemn_to_litter_fire(p)          = deadstemn(p) * matrix_update_fin(p,ideadstem_to_iout_fin, &
+                                                  f * (1._r8 - cc_dstem(patch%itype(p)))    * fm_droot(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadstemn_storage_to_litter_fire(p)  = deadstemn_storage(p) * matrix_update_fin(p,ideadstemst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadstemn_xfer_to_litter_fire(p)     = deadstemn_xfer(p) * matrix_update_fin(p,ideadstemxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_frootn_to_litter_fire(p)             = frootn(p) * matrix_update_fin(p,ifroot_to_iout_fin, &
+                                                  f * fm_root(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_frootn_storage_to_litter_fire(p)     = frootn_storage(p) * matrix_update_fin(p,ifrootst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_frootn_xfer_to_litter_fire(p)        = frootn_xfer(p) * matrix_update_fin(p,ifrootxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livecrootn_to_litter_fire(p)         = livecrootn(p) * matrix_update_fin(p,ilivecroot_to_iout_fin, &
+                                                  f * fm_droot(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livecrootn_storage_to_litter_fire(p) = livecrootn_storage(p) * matrix_update_fin(p,ilivecrootst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livecrootn_xfer_to_litter_fire(p)    = livecrootn_xfer(p) * matrix_update_fin(p,ilivecrootxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_livecrootn_to_deadcrootn_fire(p)     = livecrootn(p) * matrix_update_fin(p,ilivecroot_to_ideadcroot_fin,&
+                                                  f * (fm_lroot(patch%itype(p))-fm_droot(patch%itype(p))),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadcrootn_to_litter_fire(p)         = deadcrootn(p) * matrix_update_fin(p,ideadcroot_to_iout_fin, &
+                                                  f * m * fm_droot(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadcrootn_storage_to_litter_fire(p) = deadcrootn_storage(p) * matrix_update_fin(p,ideadcrootst_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+           m_deadcrootn_xfer_to_litter_fire(p)    = deadcrootn_xfer(p) * matrix_update_fin(p,ideadcrootxf_to_iout_fin, &
+                                                  f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+!KO
+           ! This term is not currently in the matrix code version of CNFireBaseMod, but there are non-matrix terms for this 
+           ! in CNFireLi2014Mod and in CNFireBaseMod in ctsm5.1.dev012. I'm not adding it here because tests are passing without it.
+!KO        m_retransn_to_litter_fire(p)           = retransn(p) * matrix_update_fin(p,iretransn_to_iout_fin, &
+!KO                                               f * (1._r8 - cc_other(patch%itype(p)))    * fm_other(patch%itype(p)),dt,cnveg_nitrogenflux_inst,.True.,.True.)
+!KO
+        end if
 
         if (use_cndv) then
            if ( woody(patch%itype(p)) == 1._r8 )then
@@ -1184,10 +1398,16 @@ contains
      ! vertically-resolved decomposing C/N fire loss   
      ! column loop
      !
+     num_actfirec = 0
      do fc = 1,num_soilc
         c = filter_soilc(fc)
 
         f = farea_burned(c) 
+
+        if(f .ne. 0 .or. f .ne. baf_crop(c))then
+           num_actfirec = num_actfirec + 1
+           filter_actfirec(num_actfirec) = c
+        end if
 
         ! change CC for litter from 0.4_r8 to 0.5_r8 and CC for CWD from 0.2_r8
         ! to 0.25_r8 according to Li et al.(2014) 
@@ -1195,11 +1415,17 @@ contains
            ! carbon fluxes
            do l = 1, ndecomp_pools
               if ( is_litter(l) ) then
-                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * 0.5_r8 
+                 m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * 0.5_r8
+                 if(use_soil_matrixcn)then
+                    matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) - f * 0.5_r8 * dt
+                 end if
               end if
               if ( is_cwd(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
                       (f-baf_crop(c)) * 0.25_r8
+                 if(use_soil_matrixcn)then
+                    matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) - (f-baf_crop(c)) * 0.25_r8 * dt
+                 end if
               end if
            end do
 

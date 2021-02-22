@@ -179,6 +179,31 @@
     <science_support grid="f19_g17"/>
   </compset>
 
+  <compset>
+    <alias>I2000Clm50Sp</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing -->
+  <compset>
+    <alias>I2000Clm50BgcCrop</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+  <!-- Primarily for testing (stub glc needed for single-point tests); uses Qian
+       atmospheric forcing simply to give faster datm throughput, which is
+       particularly relevant for single-point cases (where datm dominates the
+       runtime) -->
+  <compset>
+    <alias>I2000Clm50BgcCropQianRs</alias>
+    <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm50BgcCropQian</alias>
+    <lname>1850_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
   <!-- Primarily for testing - when we want builds and runs to be as
        fast as possible, but still with full-featured CTSM: uses Qian
        atm forcing to speed up datm, SROF to speed up build and run -->
