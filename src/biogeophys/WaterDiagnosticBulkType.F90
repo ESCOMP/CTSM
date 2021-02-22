@@ -17,7 +17,7 @@ module WaterDiagnosticBulkType
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use clm_varctl     , only : use_cn, iulog, use_luna
-  use clm_varpar     , only : nlevgrnd, nlevsno   
+  use clm_varpar     , only : nlevgrnd, nlevsno, nlevcan
   use clm_varcon     , only : spval
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -38,6 +38,7 @@ module WaterDiagnosticBulkType
 
      real(r8), pointer :: h2osno_total_col       (:)   ! col total snow water (mm H2O)
      real(r8), pointer :: snow_depth_col         (:)   ! col snow height of snow covered area (m)
+     real(r8), pointer :: snow_5day_col          (:)   ! col snow height 5 day avg
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
      real(r8), pointer :: bw_col                 (:,:) ! col partial density of water in the snow pack (ice + liquid) [kg/m3] 
@@ -53,6 +54,8 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: h2osno_top_col         (:)   ! col top-layer mass of snow  [kg]
      real(r8), pointer :: sno_liq_top_col        (:)   ! col snow liquid water fraction (mass), top layer  [fraction]
 
+     real(r8), pointer :: iwue_ln_patch          (:)   ! patch intrinsic water use efficiency near local noon (umolCO2/molH2O)
+     real(r8), pointer :: vpd_ref2m_patch        (:)   ! patch 2 m height surface vapor pressure deficit (Pa)
      real(r8), pointer :: rh_ref2m_patch         (:)   ! patch 2 m height surface relative humidity (%)
      real(r8), pointer :: rh_ref2m_r_patch       (:)   ! patch 2 m height surface relative humidity - rural (%)
      real(r8), pointer :: rh_ref2m_u_patch       (:)   ! patch 2 m height surface relative humidity - urban (%)
@@ -86,6 +89,9 @@ module WaterDiagnosticBulkType
      procedure, private :: InitBulkAllocate 
      procedure, private :: InitBulkHistory  
      procedure, private :: InitBulkCold     
+     procedure, public :: InitAccBuffer
+     procedure, public :: InitAccVars
+     procedure, public :: UpdateAccVars
      procedure, private :: RestartBackcompatIssue783
 
   end type waterdiagnosticbulk_type
@@ -176,6 +182,7 @@ contains
 
     allocate(this%h2osno_total_col       (begc:endc))                     ; this%h2osno_total_col       (:)   = nan
     allocate(this%snow_depth_col         (begc:endc))                     ; this%snow_depth_col         (:)   = nan
+    allocate(this%snow_5day_col          (begc:endc))                     ; this%snow_5day_col          (:)   = nan
     allocate(this%snowdp_col             (begc:endc))                     ; this%snowdp_col             (:)   = nan
     allocate(this%snow_layer_unity_col   (begc:endc,-nlevsno+1:0))        ; this%snow_layer_unity_col   (:,:) = nan
     allocate(this%bw_col                 (begc:endc,-nlevsno+1:0))        ; this%bw_col                 (:,:) = nan   
@@ -190,7 +197,9 @@ contains
     allocate(this%h2osno_top_col         (begc:endc))                     ; this%h2osno_top_col         (:)   = nan
     allocate(this%sno_liq_top_col        (begc:endc))                     ; this%sno_liq_top_col        (:)   = nan
 
-    allocate(this%dqgdT_col              (begc:endc))                     ; this%dqgdT_col              (:)   = nan   
+    allocate(this%dqgdT_col              (begc:endc))                     ; this%dqgdT_col              (:)   = nan
+    allocate(this%iwue_ln_patch          (begp:endp))                     ; this%iwue_ln_patch          (:)   = nan
+    allocate(this%vpd_ref2m_patch        (begp:endp))                     ; this%vpd_ref2m_patch        (:)   = nan
     allocate(this%rh_ref2m_patch         (begp:endp))                     ; this%rh_ref2m_patch         (:)   = nan
     allocate(this%rh_ref2m_u_patch       (begp:endp))                     ; this%rh_ref2m_u_patch       (:)   = nan
     allocate(this%rh_ref2m_r_patch       (begp:endp))                     ; this%rh_ref2m_r_patch       (:)   = nan
@@ -267,6 +276,22 @@ contains
          avgflag='A', &
          long_name=this%info%lname('vertically summed soil cie (veg landunits only)'), &
          ptr_col=this%h2osoi_ice_tot_col, l2g_scale_type='veg')
+
+    this%iwue_ln_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('IWUELN'), &
+         units='umolCO2/molH2O',  &
+         avgflag='A',  &
+         long_name=this%info%lname('local noon intrinsic water use efficiency'), &
+         ptr_patch=this%iwue_ln_patch, set_lake=spval, set_urb=spval)
+
+    this%vpd_ref2m_patch(begp:endp) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('VPD2M'), &
+         units='Pa',  &
+         avgflag='A', &
+         long_name=this%info%lname('2m vapor pressure deficit'), &
+         ptr_patch=this%vpd_ref2m_patch)
 
     this%rh_ref2m_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -400,6 +425,13 @@ contains
          avgflag='A', &
          long_name=this%info%lname('snow height of snow covered area'), &
          ptr_col=this%snow_depth_col, c2l_scale_type='urbanf')
+    this%snow_5day_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_5D'),  &
+         units='m',  &
+         avgflag='A', &
+         long_name=this%info%lname('5day snow avg'), &
+         ptr_col=this%snow_5day_col, c2l_scale_type='urbanf', default='inactive')
 
     call hist_addfld1d ( &
          fname=this%info%fname('SNOW_DEPTH_ICE'), &
@@ -507,8 +539,102 @@ contains
          ptr_patch=this%qflx_prec_intr_patch, set_lake=0._r8)
 
   end subroutine InitBulkHistory
+  
+  !-----------------------------------------------------------------------
+   subroutine InitAccBuffer (this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialize accumulation buffer for all required module accumulated fields
+    ! This routine set defaults values that are then overwritten by the
+    ! restart file for restart or branch runs
+    !
+    ! !USES 
+    use clm_varcon  , only : spval
+    use accumulMod  , only : init_accum_field
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type)  :: this
+    type(bounds_type), intent(in) :: bounds
+    !---------------------------------------------------------------------
+
+    this%snow_5day_col(bounds%begc:bounds%endc) = spval
+    call init_accum_field (name='SNOW_5D', units='m', &
+            desc='5-day running mean of snowdepth', accum_type='runmean', accum_period=-5, &
+            subgrid_type='column', numlev=1, init_value=0._r8)
+
+
+  end subroutine InitAccBuffer
 
   !-----------------------------------------------------------------------
+   subroutine InitAccVars (this, bounds)
+    ! !DESCRIPTION:
+    ! Initialize module variables that are associated with
+    ! time accumulated fields. This routine is called for both an initial run
+    ! and a restart run (and must therefore must be called after the restart file 
+    ! is read in and the accumulation buffer is obtained)
+    !
+    ! !USES 
+    use accumulMod       , only : extract_accum_field
+    use clm_time_manager , only : get_nstep
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: begc, endc
+    integer  :: nstep
+    integer  :: ier
+    real(r8), pointer :: rbufslp(:)  ! temporary
+    !---------------------------------------------------------------------
+    begc = bounds%begc; endc = bounds%endc
+
+    ! Allocate needed dynamic memory for single level patch field
+    allocate(rbufslp(begc:endc), stat=ier)
+
+    ! Determine time step
+    nstep = get_nstep()
+    call extract_accum_field ('SNOW_5D', rbufslp, nstep)
+    this%snow_5day_col(begc:endc) = rbufslp(begc:endc)
+
+    deallocate(rbufslp)
+
+  end subroutine InitAccVars
+
+!-----------------------------------------------------------------------
+  subroutine UpdateAccVars (this, bounds)
+    !
+    ! USES
+    use clm_time_manager, only : get_nstep
+    use accumulMod      , only : update_accum_field, extract_accum_field
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type) :: this
+    type(bounds_type)              , intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c                         ! indices
+    integer :: dtime                     ! timestep size [seconds]
+    integer :: nstep                     ! timestep number
+    integer :: ier                       ! error status
+    !---------------------------------------------------------------------
+
+    nstep = get_nstep()
+
+    ! Allocate needed dynamic memory for single level patch field
+
+
+       ! Accumulate and extract snow 10 day
+    call update_accum_field  ('SNOW_5D', this%snow_depth_col, nstep)
+    call extract_accum_field ('SNOW_5D', this%snow_5day_col, nstep)
+
+
+
+  end subroutine UpdateAccVars
+
+
+  !-----------------------------------------------------------------------
+  
   subroutine InitBulkCold(this, bounds, &
        snow_depth_input_col, h2osno_input_col)
     !
@@ -681,6 +807,22 @@ contains
          flag = flag, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          waterstatebulk_inst = waterstatebulk_inst)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('IWUELN'), &
+         xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name=this%info%lname('local noon intrinsic water use efficiency'), &
+         units='umolCO2/molH2O', &
+         interpinic_flag='interp', readvar=readvar, data=this%iwue_ln_patch)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('VPD2M'), &
+         xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name=this%info%lname('2m vapor pressure deficit'), &
+         units='Pa', &
+         interpinic_flag='interp', readvar=readvar, data=this%vpd_ref2m_patch)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('FWET'), &

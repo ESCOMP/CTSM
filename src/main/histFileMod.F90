@@ -2399,7 +2399,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine htape_timeconst3D(t, &
-       bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode)
+       bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
+       cellsand_col, cellclay_col, mode)
     !
     ! !DESCRIPTION:
     ! Write time constant 3D variables to history tapes.
@@ -2410,7 +2411,7 @@ contains
     !
     ! !USES:
     use subgridAveMod  , only : c2g
-    use clm_varpar     , only : nlevgrnd ,nlevlak, nlevmaxurbgrnd
+    use clm_varpar     , only : nlevgrnd ,nlevlak, nlevmaxurbgrnd, nlevsoi
     use shr_string_mod , only : shr_string_listAppend
     use domainMod      , only : ldomain
     !
@@ -2421,6 +2422,8 @@ contains
     real(r8)          , intent(in) :: sucsat_col( bounds%begc:,1: )
     real(r8)          , intent(in) :: bsw_col( bounds%begc:,1: )
     real(r8)          , intent(in) :: hksat_col( bounds%begc:,1: )
+    real(r8)          , intent(in) :: cellsand_col( bounds%begc:,1: )
+    real(r8)          , intent(in) :: cellclay_col( bounds%begc:,1: )
     character(len=*)  , intent(in) :: mode ! 'define' or 'write'
     !
     ! !LOCAL VARIABLES:
@@ -2450,12 +2453,21 @@ contains
                                                           'ZLAKE ', &
                                                           'DZLAKE' &
                                                       /)
+    real(r8), pointer :: histit(:,:)      ! temporary
+    real(r8), pointer :: histot(:,:)
+    integer, parameter :: nfldst = 2
+    character(len=*),parameter :: varnamest(nfldst) = (/ &
+                                                          'PCT_SAND ', &
+                                                          'PCT_CLAY '  &
+                                                      /)
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col)   == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sucsat_col)   == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsw_col)      == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hksat_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cellsand_col) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cellclay_col) == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
     !-------------------------------------------------------------------------------
     !***      Non-time varying 3D fields                    ***
@@ -2662,6 +2674,85 @@ contains
 
        if (tape(t)%dov2xy) deallocate(histol)
        deallocate(histil)
+
+    end if  ! (define/write mode
+
+    if (mode == 'define') then
+       do ifld = 1,nfldst
+          ! Field indices MUST match varnamest array order above!
+          if (ifld == 1) then
+             long_name='percent sand'; units = 'percent'
+          else if (ifld == 2) then
+             long_name='percent clay'; units = 'percent'
+          else
+             call endrun(msg=' ERROR: bad 3D time-constant field index'//errMsg(sourcefile, __LINE__))
+          end if
+          if (tape(t)%dov2xy) then
+             if (ldomain%isgrid2d) then
+                call ncd_defvar(ncid=nfid(t), varname=trim(varnamest(ifld)), xtype=tape(t)%ncprec,&
+                     dim1name='lon', dim2name='lat', dim3name='levsoi', &
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+             else
+                call ncd_defvar(ncid=nfid(t), varname=trim(varnamest(ifld)), xtype=tape(t)%ncprec, &
+                     dim1name=grlnd, dim2name='levsoi', &
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+             end if
+          else
+             call ncd_defvar(ncid=nfid(t), varname=trim(varnamest(ifld)), xtype=tape(t)%ncprec, &
+                  dim1name=namec, dim2name='levsoi', &
+                  long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+          end if
+          call shr_string_listAppend(TimeConst3DVars,varnamest(ifld))
+       end do
+
+    else if (mode == 'write') then
+
+       allocate(histit(bounds%begc:bounds%endc,nlevsoi), stat=ier)
+       if (ier /= 0) then
+          write(iulog,*) trim(subname),' ERROR: allocation error for histit'
+          call endrun(msg=errMsg(sourcefile, __LINE__))
+       end if
+
+       ! Write time constant fields
+
+       if (tape(t)%dov2xy) then
+          allocate(histot(bounds%begg:bounds%endg,nlevsoi), stat=ier)
+          if (ier /= 0) then
+             write(iulog,*)  trim(subname),' ERROR: allocation error for histot'
+             call endrun(msg=errMsg(sourcefile, __LINE__))
+          end if
+       end if
+
+       do ifld = 1,nfldst
+          histit(:,:) = spval
+          do lev = 1,nlevsoi
+             do c = bounds%begc,bounds%endc
+                ! Field indices MUST match varnamesl array order above!
+                if (ifld ==1) histit(c,lev) = cellsand_col(c,lev) 
+                if (ifld ==2) histit(c,lev) = cellclay_col(c,lev)
+             end do
+          end do
+          if (tape(t)%dov2xy) then
+             histot(:,:) = spval
+             call c2g(bounds, nlevsoi, &
+                  histit(bounds%begc:bounds%endc, :), &
+                  histot(bounds%begg:bounds%endg, :), &
+                  c2l_scale_type='unity', l2g_scale_type='veg')
+             if (ldomain%isgrid2d) then
+                call ncd_io(varname=trim(varnamest(ifld)), dim1name=grlnd, &
+                     data=histot, ncid=nfid(t), flag='write')
+             else
+                call ncd_io(varname=trim(varnamest(ifld)), dim1name=grlnd, &
+                     data=histot, ncid=nfid(t), flag='write')
+             end if
+          else
+             call ncd_io(varname=trim(varnamest(ifld)), dim1name=namec,  &
+                  data=histit, ncid=nfid(t), flag='write')
+          end if
+       end do
+
+       if (tape(t)%dov2xy) deallocate(histot)
+       deallocate(histit)
 
     end if  ! (define/write mode
 
@@ -3563,7 +3654,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine hist_htapes_wrapup( rstwr, nlend, bounds, &
-       watsat_col, sucsat_col, bsw_col, hksat_col)
+       watsat_col, sucsat_col, bsw_col, hksat_col, cellsand_col, cellclay_col)
     !
     ! !DESCRIPTION:
     ! Write history tape(s)
@@ -3589,7 +3680,7 @@ contains
     use clm_time_manager, only : get_nstep, get_curr_date, get_curr_time, get_prev_date
     use clm_varcon      , only : secspday
     use perf_mod        , only : t_startf, t_stopf
-    use clm_varpar      , only : nlevgrnd, nlevmaxurbgrnd
+    use clm_varpar      , only : nlevgrnd, nlevmaxurbgrnd, nlevsoi
     !
     ! !ARGUMENTS:
     logical, intent(in) :: rstwr    ! true => write restart file this step
@@ -3599,6 +3690,8 @@ contains
     real(r8)          , intent(in) :: sucsat_col( bounds%begc:,1: )
     real(r8)          , intent(in) :: bsw_col( bounds%begc:,1: )
     real(r8)          , intent(in) :: hksat_col( bounds%begc:,1: )
+    real(r8)          , intent(in) :: cellsand_col( bounds%begc:,1: )
+    real(r8)          , intent(in) :: cellclay_col( bounds%begc:,1: )
     !
     ! !LOCAL VARIABLES:
     integer :: t                          ! tape index
@@ -3622,10 +3715,12 @@ contains
     character(len=*),parameter :: subname = 'hist_htapes_wrapup'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(sucsat_col) == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(bsw_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(hksat_col)  == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(watsat_col)    == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(sucsat_col)    == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(bsw_col)       == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(hksat_col)     == (/bounds%endc, nlevgrnd/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cellsand_col)  == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(cellclay_col)  == (/bounds%endc, nlevsoi/)), sourcefile, __LINE__)
 
     ! get current step
 
@@ -3698,7 +3793,8 @@ contains
              ! Define 3D time-constant field variables on first history tapes
              if ( do_3Dtconst) then
                 call htape_timeconst3D(t, &
-                     bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='define')
+                     bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
+                     cellsand_col, cellclay_col, mode='define')
                 TimeConst3DVars_Filename = trim(locfnh(t))
              end if
 
@@ -3717,7 +3813,8 @@ contains
           ! Write 3D time constant history variables to first history tapes
           if ( do_3Dtconst .and. tape(t)%ntimes == 1 )then
              call htape_timeconst3D(t, &
-                  bounds, watsat_col, sucsat_col, bsw_col, hksat_col, mode='write')
+                  bounds, watsat_col, sucsat_col, bsw_col, hksat_col, &
+                  cellsand_col, cellclay_col, mode='write')
              do_3Dtconst = .false.
           end if
 

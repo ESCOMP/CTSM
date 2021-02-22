@@ -34,10 +34,12 @@ module SoilStateInitTimeConstMod
      real(r8) :: csol_clay           ! Heat capacity of clay *10^6 (J/K/m3)
      real(r8) :: csol_om             ! Heat capacity of peat soil *10^6 (Farouki, 1986) (J/K/m3)
      real(r8) :: csol_sand           ! Heat capacity of sand *10^6 (J/K/m3)
-     real(r8) :: bsw_adjustfactor    ! Adjustment factor for bsw (unitless)
-     real(r8) :: hksat_adjustfactor  ! Adjustment factor for hksat (unitless)
-     real(r8) :: sucsat_adjustfactor ! Adjustment factor for sucsat (unitless)
-     real(r8) :: watsat_adjustfactor ! Adjustment factor for watsat (unitless)
+     real(r8) :: bsw_sf              ! Scale factor for bsw (unitless)
+     real(r8) :: hksat_sf            ! Scale factor for hksat (unitless)
+     real(r8) :: sucsat_sf           ! Scale factor for sucsat (unitless)
+     real(r8) :: watsat_sf           ! Scale factor for watsat (unitless)
+     real(r8) :: sand_pf             ! Perturbation factor (via addition) for percent sand (percent)
+     real(r8) :: clay_pf             ! Perturbation factor (via addition) for percent clay of clay+silt (percent)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -135,14 +137,18 @@ contains
     call readNcdioScalar(ncid, 'csol_om', subname, params_inst%csol_om)
     ! Heat capacity of sand *10^6 (J/K/m3)
     call readNcdioScalar(ncid, 'csol_sand', subname, params_inst%csol_sand)
-    ! Adjustment factor for bsw (unitless)
-    call readNcdioScalar(ncid, 'bsw_adjustfactor', subname, params_inst%bsw_adjustfactor)
-    ! Adjustment factor for hksat (unitless)
-    call readNcdioScalar(ncid, 'hksat_adjustfactor', subname, params_inst%hksat_adjustfactor)
-    ! Adjustment factor for sucsat (unitless)
-    call readNcdioScalar(ncid, 'sucsat_adjustfactor', subname, params_inst%sucsat_adjustfactor)
-    ! Adjustment factor for watsat (unitless)
-    call readNcdioScalar(ncid, 'watsat_adjustfactor', subname, params_inst%watsat_adjustfactor)
+    ! Scale factor for bsw (unitless)
+    call readNcdioScalar(ncid, 'bsw_sf', subname, params_inst%bsw_sf)
+    ! Scale factor for hksat (unitless)
+    call readNcdioScalar(ncid, 'hksat_sf', subname, params_inst%hksat_sf)
+    ! Scale factor for sucsat (unitless)
+    call readNcdioScalar(ncid, 'sucsat_sf', subname, params_inst%sucsat_sf)
+    ! Scale factor for watsat (unitless)
+    call readNcdioScalar(ncid, 'watsat_sf', subname, params_inst%watsat_sf)
+    ! Perturbation factor (via addition) for percent sand (percent)
+    call readNcdioScalar(ncid, 'sand_pf', subname, params_inst%sand_pf)
+    ! Perturbation factor  (via addition) for percent clay of clay+silt (percent)
+    call readNcdioScalar(ncid, 'clay_pf', subname, params_inst%clay_pf)
 
   end subroutine readParams
 
@@ -199,6 +205,9 @@ contains
     real(r8)           :: tkm                           ! mineral conductivity
     real(r8)           :: xksat                         ! maximum hydraulic conductivity of soil [mm/s]
     real(r8)           :: clay,sand                     ! temporaries
+    real(r8)           :: perturbed_sand                ! temporary for paramfile implementation of +/- sand percentage
+    real(r8)           :: residual_clay_frac            ! temporary for paramfile implementation of +/- residual clay percentage
+    real(r8)           :: perturbed_residual_clay_frac  ! temporary for paramfile implementation of +/- residual clay percentage
     integer            :: dimid                         ! dimension id
     logical            :: readvar 
     type(file_desc_t)  :: ncid                          ! netcdf id
@@ -479,8 +488,27 @@ contains
              end if
 
              if (lev <= nlevsoi) then
-                soilstate_inst%cellsand_col(c,lev) = sand
-                soilstate_inst%cellclay_col(c,lev) = clay
+                ! This is separated into sections for non-perturbation and perturbation of sand/clay
+                ! because the perturbation code is not bfb when sand_pf=clay_pf=0. This occurs because
+                ! of a divide and then a multiply in the code.
+                if (params_inst%sand_pf == 0._r8 .and. params_inst%clay_pf == 0._r8) then
+                   soilstate_inst%cellsand_col(c,lev) = sand
+                   soilstate_inst%cellclay_col(c,lev) = clay
+                else
+                   ! by default, will read sand and clay from the surface dataset
+                   !     - sand_pf can be used to perturb the absolute percent sand
+                   !     - clay_pf can be used to perturb what percent of (clay+silt) is clay
+                   if (sand<100._r8) then
+                      residual_clay_frac              = clay/(100._r8-sand)
+                   else
+                      residual_clay_frac              = 0.5_r8
+                   end if
+                   perturbed_sand                     = min(100._r8,max(0._r8,sand+params_inst%sand_pf))
+                   perturbed_residual_clay_frac       = min(1._r8,max(0._r8,residual_clay_frac + &
+                                                        params_inst%clay_pf/100._r8))
+                   soilstate_inst%cellsand_col(c,lev) = perturbed_sand
+                   soilstate_inst%cellclay_col(c,lev) = (100._r8-perturbed_sand)*perturbed_residual_clay_frac
+                end if
                 soilstate_inst%cellorg_col(c,lev)  = om_frac*organic_max
              end if
 
@@ -503,13 +531,13 @@ contains
                 om_hksat          = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), xksat)
 
                 soilstate_inst%bd_col(c,lev)        = (1._r8 - soilstate_inst%watsat_col(c,lev))*params_inst%pd
-                soilstate_inst%watsat_col(c,lev)    = params_inst%watsat_adjustfactor * ( (1._r8 - om_frac) * &
+                soilstate_inst%watsat_col(c,lev)    = params_inst%watsat_sf * ( (1._r8 - om_frac) * &
                                                       soilstate_inst%watsat_col(c,lev) + om_watsat*om_frac )
                 tkm                                 = (1._r8-om_frac) * (params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/ &
                                                       (sand+clay)+params_inst%tkm_om*om_frac ! W/(m K)
-                soilstate_inst%bsw_col(c,lev)       = params_inst%bsw_adjustfactor * ( (1._r8-om_frac) * &
+                soilstate_inst%bsw_col(c,lev)       = params_inst%bsw_sf * ( (1._r8-om_frac) * &
                                                       (2.91_r8 + 0.159_r8*clay) + om_frac*om_b )
-                soilstate_inst%sucsat_col(c,lev)    = params_inst%sucsat_adjustfactor * ( (1._r8-om_frac) * &
+                soilstate_inst%sucsat_col(c,lev)    = params_inst%sucsat_sf * ( (1._r8-om_frac) * &
                                                       soilstate_inst%sucsat_col(c,lev) + om_sucsat*om_frac ) 
                 soilstate_inst%hksat_min_col(c,lev) = xksat
 
@@ -531,7 +559,7 @@ contains
                 else
                    uncon_hksat = 0._r8
                 end if
-                soilstate_inst%hksat_col(c,lev)  = params_inst%hksat_adjustfactor * ( uncon_frac*uncon_hksat + &
+                soilstate_inst%hksat_col(c,lev)  = params_inst%hksat_sf * ( uncon_frac*uncon_hksat + &
                                                    (perc_frac*om_frac)*om_hksat )
 
                 soilstate_inst%tkmg_col(c,lev)   = tkm ** (1._r8- soilstate_inst%watsat_col(c,lev))           
@@ -604,16 +632,16 @@ contains
 
              bd = (1._r8-soilstate_inst%watsat_col(c,lev))*params_inst%pd
 
-             soilstate_inst%watsat_col(c,lev) = params_inst%watsat_adjustfactor * ( (1._r8 - om_frac) * &
+             soilstate_inst%watsat_col(c,lev) = params_inst%watsat_sf * ( (1._r8 - om_frac) * &
                    soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac )
 
              tkm = (1._r8-om_frac)*(params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/(sand+clay) + &
                    params_inst%tkm_om * om_frac ! W/(m K)
 
-             soilstate_inst%bsw_col(c,lev)    = params_inst%bsw_adjustfactor * ( (1._r8-om_frac) * &
+             soilstate_inst%bsw_col(c,lev)    = params_inst%bsw_sf * ( (1._r8-om_frac) * &
                    (2.91_r8 + 0.159_r8*clay) + om_frac * om_b_lake )
 
-             soilstate_inst%sucsat_col(c,lev) = params_inst%sucsat_adjustfactor * ( (1._r8-om_frac) * &
+             soilstate_inst%sucsat_col(c,lev) = params_inst%sucsat_sf * ( (1._r8-om_frac) * &
                    soilstate_inst%sucsat_col(c,lev) + om_sucsat_lake * om_frac )
 
              xksat = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
@@ -637,7 +665,7 @@ contains
                 uncon_hksat = 0._r8
              end if
 
-             soilstate_inst%hksat_col(c,lev)  = params_inst%hksat_adjustfactor * ( uncon_frac*uncon_hksat + &
+             soilstate_inst%hksat_col(c,lev)  = params_inst%hksat_sf * ( uncon_frac*uncon_hksat + &
                                        (perc_frac*om_frac)*om_hksat_lake )
              soilstate_inst%tkmg_col(c,lev)   = tkm ** (1._r8- soilstate_inst%watsat_col(c,lev))
              soilstate_inst%tksatu_col(c,lev) = soilstate_inst%tkmg_col(c,lev)*0.57_r8**soilstate_inst%watsat_col(c,lev)

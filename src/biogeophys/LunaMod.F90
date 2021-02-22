@@ -833,7 +833,6 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (out):: PNetopt                    !optimal proportion of nitrogen for electron transport 
   real(r8), intent (out):: PNrespopt                  !optimal proportion of nitrogen for respiration 
   real(r8), intent (out):: PNcbopt                    !optial proportion of nitrogen for carboxyaltion  
- 
   !-------------------------------------------------------------------------------------------------------------------------------
   !intermediate variables
   real(r8) :: Carboncost1                             !absolute amount of carbon cost associated with maintenance respiration due to deccrease in light capture nitrogen(g dry mass per day) 

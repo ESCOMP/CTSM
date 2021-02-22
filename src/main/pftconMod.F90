@@ -210,6 +210,9 @@ module pftconMod
      real(r8), allocatable :: evergreen     (:)   ! binary flag for evergreen leaf habit (0 or 1)
      real(r8), allocatable :: stress_decid  (:)   ! binary flag for stress-deciduous leaf habit (0 or 1)
      real(r8), allocatable :: season_decid  (:)   ! binary flag for seasonal-deciduous leaf habit (0 or 1)
+!KO
+     real(r8), allocatable :: season_decid_temperate(:) ! binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
+!KO
      real(r8), allocatable :: pconv         (:)   ! proportion of deadstem to conversion flux
      real(r8), allocatable :: pprod10       (:)   ! proportion of deadstem to 10-yr product pool
      real(r8), allocatable :: pprod100      (:)   ! proportion of deadstem to 100-yr product pool
@@ -424,6 +427,9 @@ contains
     allocate( this%evergreen     (0:mxpft) )    
     allocate( this%stress_decid  (0:mxpft) ) 
     allocate( this%season_decid  (0:mxpft) ) 
+!KO
+    allocate( this%season_decid_temperate (0:mxpft) ) 
+!KO
     allocate( this%dwood         (0:mxpft) )
     allocate( this%root_density  (0:mxpft) )
     allocate( this%root_radius   (0:mxpft) )
@@ -764,6 +770,11 @@ contains
 
     call ncd_io('season_decid', this%season_decid, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+!KO
+    call ncd_io('season_decid_temperate', this%season_decid_temperate, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+!KO
 
     call ncd_io('pftpar20', this%pftpar20, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -1416,6 +1427,9 @@ contains
     deallocate( this%evergreen)
     deallocate( this%stress_decid)
     deallocate( this%season_decid)
+!KO
+    deallocate( this%season_decid_temperate)
+!KO
     deallocate( this%dwood)
     deallocate( this%root_density)
     deallocate( this%root_radius)

@@ -102,6 +102,10 @@ module  PhotosynthesisMod
      real(r8) :: lmrse      ! Entropy term for lmr (J/mol/K)
      real(r8) :: tpu25ratio ! Ratio of tpu25top to vcmax25top (unitless)
      real(r8) :: kp25ratio  ! Ratio of kp25top to vcmax25top (unitless)
+     real(r8) :: vcmaxse_sf ! Scale factor for vcmaxse (unitless)
+     real(r8) :: jmaxse_sf  ! Scale factor for jmaxse (unitless)
+     real(r8) :: tpuse_sf   ! Scale factor for tpuse (unitless)
+     real(r8) :: jmax25top_sf ! Scale factor for jmax25top (unitless)
      real(r8), allocatable, public  :: krmax              (:)
      real(r8), allocatable, private :: kmax               (:,:)
      real(r8), allocatable, private :: psi50              (:,:)
@@ -127,8 +131,8 @@ module  PhotosynthesisMod
      real(r8), pointer, private :: vcmax_z_phs_patch (:,:,:) ! patch maximum rate of carboxylation (umol co2/m**2/s)
      real(r8), pointer, private :: kp_z_phs_patch    (:,:,:) ! patch initial slope of CO2 response curve (C4 plants)
      real(r8), pointer, private :: tpu_z_phs_patch   (:,:,:) ! patch triose phosphate utilization rate (umol CO2/m**2/s)
-     real(r8), pointer, private :: gs_mol_sun_patch  (:,:) ! patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
-     real(r8), pointer, private :: gs_mol_sha_patch  (:,:) ! patch shaded leaf stomatal conductance (umol H2O/m**2/s)
+     real(r8), pointer, public  :: gs_mol_sun_patch  (:,:) ! patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
+     real(r8), pointer, public  :: gs_mol_sha_patch  (:,:) ! patch shaded leaf stomatal conductance (umol H2O/m**2/s)
      real(r8), pointer, private :: gs_mol_sun_ln_patch (:,:) ! patch sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
      real(r8), pointer, private :: gs_mol_sha_ln_patch (:,:) ! patch shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
      real(r8), pointer, private :: ac_patch          (:,:) ! patch Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
@@ -751,6 +755,14 @@ contains
     call readNcdioScalar(ncid, 'tpu25ratio', subname, params_inst%tpu25ratio)
     ! Ratio of kp25top to vcmax25top (unitless)
     call readNcdioScalar(ncid, 'kp25ratio', subname, params_inst%kp25ratio)
+    ! Scale factor for vcmaxse (unitless)
+    call readNcdioScalar(ncid, 'vcmaxse_sf', subname, params_inst%vcmaxse_sf)
+    ! Scale factor for jmaxse (unitless)
+    call readNcdioScalar(ncid, 'jmaxse_sf', subname, params_inst%jmaxse_sf)
+    ! Scale factor for tpuse (unitless)
+    call readNcdioScalar(ncid, 'tpuse_sf', subname, params_inst%tpuse_sf)
+    ! Scale factor for jmax25top (unitless)
+    call readNcdioScalar(ncid, 'jmax25top_sf', subname, params_inst%jmax25top_sf)
 
   end subroutine readParams
 
@@ -1449,7 +1461,8 @@ contains
          ! Parameters derived from vcmax25top. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
          ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
 
-         jmax25top = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top
+         jmax25top = ((2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top) * &
+                          params_inst%jmax25top_sf
          tpu25top  = params_inst%tpu25ratio * vcmax25top
          kp25top   = params_inst%kp25ratio * vcmax25top
 
@@ -1580,9 +1593,9 @@ contains
 
                ! Adjust for temperature
 
-               vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               tpuse = vcmaxse
+               vcmaxse = (668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%vcmaxse_sf
+               jmaxse  = (659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%jmaxse_sf
+               tpuse   = (668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%tpuse_sf
                vcmaxc = fth25 (params_inst%vcmaxhd, vcmaxse)
                jmaxc  = fth25 (params_inst%jmaxhd, jmaxse)
                tpuc   = fth25 (params_inst%tpuhd, tpuse)
@@ -3010,7 +3023,8 @@ contains
          ! Parameters derived from vcmax25top. Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
          ! used jmax25 = 1.97 vcmax25, from Wullschleger (1993) Journal of Experimental Botany 44:907-920.
 
-         jmax25top = (2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top
+         jmax25top = ((2.59_r8 - 0.035_r8*min(max((t10(p)-tfrz),11._r8),35._r8)) * vcmax25top) * &
+                          params_inst%jmax25top_sf
          tpu25top  = params_inst%tpu25ratio * vcmax25top
          kp25top   = params_inst%kp25ratio * vcmax25top
          luvcmax25top(p) = vcmax25top
@@ -3166,10 +3180,13 @@ contains
                kp25_sha = kp25top * nscaler_sha
 
                ! Adjust for temperature
-
-               vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
-               tpuse = vcmaxse
+               ! Acclimation is done for Kattge
+               vcmaxse = (668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%vcmaxse_sf
+               jmaxse  = (659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%jmaxse_sf
+               ! These values are used for Leuning
+               !vcmaxse = 486.0_r8
+               !jmaxse  = 495.0_r8
+               tpuse   = (668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)) * params_inst%tpuse_sf
                vcmaxc = fth25 (params_inst%vcmaxhd, vcmaxse)
                jmaxc  = fth25 (params_inst%jmaxhd, jmaxse)
                tpuc   = fth25 (params_inst%tpuhd, tpuse)

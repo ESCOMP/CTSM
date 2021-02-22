@@ -1096,6 +1096,18 @@ Initial seed Carbon to use at planting
 (only used when CN is on as well as crop)
 </entry>
 
+<entry id="onset_thresh_depends_on_veg" type="logical" category="physics"
+       group="cnphenology">
+Phenology onset depends on the vegetation type
+(only used when CN is on)
+</entry>
+
+<entry id="min_crtical_dayl_depends_on_lat" type="logical" category="physics"
+       group="cnphenology">
+The minimum critical day length for onset depends on latitude
+(only used when CN is on)
+</entry>
+
 <entry id="use_ozone" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on ozone stress
@@ -2627,11 +2639,6 @@ Upper Limit on Destructive Metamorphism Compaction [kg/m3]
        group="clm_snowhydrology_inparm"   >
 Snow compaction overburden exponential factor (1/K)
 Not used for snow_overburden_compaction_method=Vionnet2012
-</entry>
-
-<entry id="min_wind_snowcompact" type="real" category="clm_physics"
-       group="clm_snowhydrology_inparm"   >
-Minimum wind speed tht results in compaction (m/s)
 </entry>
 
 <entry id="fresh_snw_rds_max" type="real" category="clm_physics"
