@@ -904,7 +904,7 @@ sub setup_cmdl_bgc {
   $var = "use_soil_matrixcn";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
               , 'use_fates'=>$nl_flags->{'use_fates'}, 'bgc_mode'=>$nl_flags->{'bgc_mode'}
-              , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$nl_flags->{$var} );
+              , 'phys'=>$nl_flags->{'phys'}, clm_accelerated_spinup=>$opts->{'clm_accelerated_spinup'} );
   if ( &value_is_true($nl->get_value($var)) ) {
      $nl_flags->{$var} = ".true.";
   } else {
