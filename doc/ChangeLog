@@ -1,4 +1,86 @@
 ===============================================================
+Tag name:  ctsm5.1.dev025
+Originator(s):  sacks (Bill Sacks)
+Date:  Tue Feb 23 11:20:17 MST 2021
+One-line Summary: Refactor ozone code, and misc. small fixes
+
+Purpose and description of changes
+----------------------------------
+
+(1) Restructure ozone code (https://github.com/ESCOMP/CTSM/pull/1276) in
+    preparation for new ozone parameterization.
+
+(2) Fix non-standard hexadecimal constant
+    (https://github.com/ESCOMP/CTSM/pull/1271), needed for gfortran 10
+
+(3) Remove support for CISM1 (https://github.com/ESCOMP/CTSM/pull/1226)
+
+(4) Move final WaterGridcellBalance call out to clm_driver (resolves
+    ESCOMP/CTSM#1286)
+
+(5) Only add WA and QCHARGE history fields if use_aquifer_layer is true
+    (resolves ESCOMP/CTSM#1281)
+
+(6) Consolidate conditional structures for VIC initialization (resolves
+    ESCOMP/CTSM#1287)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1286 (Move call to WaterGridcellBalance out to
+  the driver)
+- Resolves ESCOMP/CTSM#1281 (Remove deprecated history output)
+- Resolves ESCOMP/CTSM#1287 (Inconsistent logic for VIC initialization
+  can cause crash in debug mode)
+- Resolves ESCOMP/CTSM#1270 (Hexadecimal constants use non-standard
+  Fortran)
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+  Field lists differ for Clm50 / Clm51 / Ctsm50 tests; otherwise
+  bit-for-bit
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1276 (Restructure ozone code)
+- https://github.com/ESCOMP/CTSM/pull/1271 (Fix non-standard hexadecimal constant)
+- https://github.com/ESCOMP/CTSM/pull/1226 (Remove support for CISM1)
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev024
 Originator(s):  slevis (Samuel Levis,303-665-1310)
 Date:  Sat Feb 20 14:42:33 MST 2021
