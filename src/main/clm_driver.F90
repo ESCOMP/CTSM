@@ -74,13 +74,11 @@ module clm_driver
   use DaylengthMod           , only : UpdateDaylength
   use perf_mod
   !
-  use clm_instMod            , only : nutrient_competition_method
   use GridcellType           , only : grc
   use LandunitType           , only : lun
   use ColumnType             , only : col
   use PatchType              , only : patch
   use clm_instMod
-  use clm_instMod            , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   !
@@ -621,6 +619,8 @@ contains
             soilstate_inst, temperature_inst, &
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterstatebulk_inst)
+
+       call ozone_inst%CalcOzoneStress(bounds_clump, filter(nc)%num_exposedvegp, filter(nc)%exposedvegp)
 
        ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
        ! LakeFluxes... I'll probably leave it in place there.
@@ -1283,16 +1283,18 @@ contains
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1,nclumps
        call get_clump_bounds(nc, bounds_clump)
-       call BalanceCheck(bounds_clump, &
-            filter(nc)%num_allc, filter(nc)%allc, &
+       call WaterGridcellBalance(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             filter(nc)%num_lakec, filter(nc)%lakec, &
             water_inst, lakestate_inst, &
+            use_aquifer_layer = use_aquifer_layer(), flag = 'endwb')
+       call BalanceCheck(bounds_clump, &
+            filter(nc)%num_allc, filter(nc)%allc, &
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
             water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
             water_inst%waterlnd2atmbulk_inst, surfalb_inst, energyflux_inst, &
-            canopystate_inst, use_aquifer_layer = use_aquifer_layer())
+            canopystate_inst)
     end do
     !$OMP END PARALLEL DO
     call t_stopf('balchk')

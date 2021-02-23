@@ -148,7 +148,7 @@ contains
     !-----------------------------------------------------------------------
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
-       ! Obtain begwb_grc
+       ! Obtain begwb_grc or endwb_grc
        call WaterGridcellBalanceSingle(bounds, &
             num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
             lakestate_inst, &
@@ -426,12 +426,9 @@ contains
    !-----------------------------------------------------------------------
    subroutine BalanceCheck( bounds, &
         num_allc, filter_allc, &
-        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-        water_inst, lakestate_inst, &
         atm2lnd_inst, solarabs_inst, waterflux_inst, waterstate_inst, &
         waterdiagnosticbulk_inst, waterbalance_inst, wateratm2lnd_inst, &
-        waterlnd2atm_inst, surfalb_inst, energyflux_inst, canopystate_inst, &
-        use_aquifer_layer)
+        waterlnd2atm_inst, surfalb_inst, energyflux_inst, canopystate_inst)
      !
      ! !DESCRIPTION:
      ! This subroutine accumulates the numerical truncation errors of the water
@@ -461,12 +458,6 @@ contains
      type(bounds_type)     , intent(in)    :: bounds  
      integer               , intent(in)    :: num_allc        ! number of columns in allc filter
      integer               , intent(in)    :: filter_allc(:)  ! filter for all columns
-     integer               , intent(in)    :: num_nolakec  ! number of column non-lake points in column filter
-     integer               , intent(in)    :: filter_nolakec(:)  ! column filter for non-lake points
-     integer               , intent(in)    :: num_lakec  ! number of column lake points in column filter
-     integer               , intent(in)    :: filter_lakec(:)  ! column filter for lake points
-     type(water_type)      , intent(inout) :: water_inst
-     type(lakestate_type)  , intent(in)    :: lakestate_inst
      type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
      type(solarabs_type)   , intent(in)    :: solarabs_inst
      class(waterflux_type) , intent(in)    :: waterflux_inst
@@ -478,7 +469,6 @@ contains
      type(surfalb_type)    , intent(in)    :: surfalb_inst
      type(energyflux_type) , intent(inout) :: energyflux_inst
      type(canopystate_type), intent(inout) :: canopystate_inst
-     logical               , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
      !
      ! !LOCAL VARIABLES:
      integer  :: p,c,l,g,fc                             ! indices
@@ -713,12 +703,6 @@ contains
          qflx_snwcp_discarded_ice_col(bounds%begc:bounds%endc),  &
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-
-       ! Obtain endwb_grc
-       call WaterGridcellBalance(bounds, &
-            num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
-            water_inst, lakestate_inst, &
-            use_aquifer_layer = use_aquifer_layer, flag = 'endwb')
 
        do g = bounds%begg, bounds%endg
           errh2o_grc(g) = endwb_grc(g) - begwb_grc(g)  &
