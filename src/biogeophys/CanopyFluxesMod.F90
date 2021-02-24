@@ -431,7 +431,6 @@ contains
     real(r8), parameter :: min_stem_diameter = 0.05_r8 !minimum stem diameter for which to calculate stem interactions
 
     integer :: dummy_to_make_pgi_happy
-
     !------------------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(downreg_patch) == (/bounds%endp/)), sourcefile, __LINE__)
