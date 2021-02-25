@@ -625,9 +625,6 @@ contains
     matrix_gmturnover  => cnveg_carbonflux_inst%matrix_gmturnover_patch    , & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from gap mortality processe, updated in CNVegMatrixMods
     matrix_fiturnover  => cnveg_carbonflux_inst%matrix_fiturnover_patch    , & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from fire processe, updated in CNVegMatrixMods
 
-    matrix_c14fitransfer  => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch    , & ! Input:  [real(r8) (:,:)] (gC/m2/s) C transfer rate from fire processes, updated in (CNFireBaseMod or CNFireLi2014Mod) and CNC14decayMod
-    matrix_c14fiturnover  => c14_cnveg_carbonflux_inst%matrix_fiturnover_patch    , & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from fire processe, updated in CNVegMatrixMods
-
     matrix_nphtransfer => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch , & ! Input:  [real(r8) (:,:)] (gN/m2/s) N transfer rate from phenology processes, updated in CNPhenology and (NutrientCompetitionFlexibleCNMod or NutrientCompetitionCLM45defaultMod)
     matrix_ngmtransfer => cnveg_nitrogenflux_inst%matrix_ngmtransfer_patch , & ! Input:  [real(r8) (:,:)] (gN/m2/s) N transfer rate from gap mortality processes, updated in CNGapMortality and dynHarvestMod
     matrix_nfitransfer => cnveg_nitrogenflux_inst%matrix_nfitransfer_patch , & ! Input:  [real(r8) (:,:)] (gN/m2/s) N transfer rate from fire processes, updated in CNFireBaseMod or CNFireLi2014Mod
@@ -767,7 +764,6 @@ contains
                           ! Input: [integer (:)] Index of fire related C transfer from live stem pool to dead stem pool
     ilivecroot_to_ideadcroot_fic      => cnveg_carbonflux_inst%ilivecroot_to_ideadcroot_fi     , & 
                           ! Input: [integer (:)] Index of fire related C transfer from live coarse root pool to dead coarse root pool
-
   ! Index of each processes related N transfers. See subroutine InitTransfer in CNVegNitrogenFluxType.F90 for details.
     ileafst_to_ileafxf_phn            => cnveg_nitrogenflux_inst%ileafst_to_ileafxf_ph          , & 
                           ! Input: [integer (:)] Index of phenology related N transfer from leaf storage pool to leaf transfer pool
@@ -930,15 +926,10 @@ contains
     AKphvegc                            => cnveg_carbonflux_inst%AKphvegc           , & ! Aph*Kph for C cycle in sparse matrix format
     AKgmvegc                            => cnveg_carbonflux_inst%AKgmvegc           , & ! Agm*Kgm for C cycle in sparse matrix format
     AKfivegc                            => cnveg_carbonflux_inst%AKfivegc           , & ! Afi*Kfi for C cycle in sparse matrix format
-    AKfivegc14                          => c14_cnveg_carbonflux_inst%AKfivegc       , & ! Afi*Kfi for C14 cycle in sparse matrix format
     AKallvegc                           => cnveg_carbonflux_inst%AKallvegc          , & ! Aph*Kph + Agm*Kgm + Afi*Kfi for C cycle in sparse matrix format
-    AKallvegc14                         => c14_cnveg_carbonflux_inst%AKallvegc      , & ! Aph*Kph + Agm*Kgm + Afi*Kfi for C14 cycle in sparse matrix format
     NE_AKallvegc                        => cnveg_carbonflux_inst%NE_AKallvegc       , & ! Number of entries in AKallvegc
     RI_AKallvegc                        => cnveg_carbonflux_inst%RI_AKallvegc       , & ! Row indices in Akallvegc
     CI_AKallvegc                        => cnveg_carbonflux_inst%CI_AKallvegc       , & ! Column indices in AKallvegc
-    NE_AKallvegc14                      => c14_cnveg_carbonflux_inst%NE_AKallvegc       , & ! Number of entries in AKallvegc
-    RI_AKallvegc14                      => c14_cnveg_carbonflux_inst%RI_AKallvegc       , & ! Row indices in Akallvegc
-    CI_AKallvegc14                      => c14_cnveg_carbonflux_inst%CI_AKallvegc       , & ! Column indices in AKallvegc
     Kvegc                               => cnveg_carbonflux_inst%Kvegc              , & ! Temporary variable of Kph, Kgm or Kfi for C cycle in diagonal matrix format
     Xvegc                               => cnveg_carbonflux_inst%Xvegc              , & ! Vegetation C of each compartment in a vector format
     AKphvegn                            => cnveg_nitrogenflux_inst%AKphvegn         , & ! Aph*Kph for N cycle in sparse matrix format
@@ -960,8 +951,6 @@ contains
     CI_gmc                              => cnveg_carbonflux_inst%CI_gmc             , & ! Column indices of non-diagonal entries in Agm for C cycle
     RI_fic                              => cnveg_carbonflux_inst%RI_fic             , & ! Row indices of non-diagonal entires in Afi for C cycle
     CI_fic                              => cnveg_carbonflux_inst%CI_fic             , & ! Column indices of non-diagonal entries in Afi for C cycle
-    RI_fic14                            => c14_cnveg_carbonflux_inst%RI_fic             , & ! Row indices of non-diagonal entires in Afi for C cycle
-    CI_fic14                            => c14_cnveg_carbonflux_inst%CI_fic             , & ! Column indices of non-diagonal entries in Afi for C cycle
     RI_phn                              => cnveg_nitrogenflux_inst%RI_phn           , & ! Row indices of non-diagonal entires in Aph for N cycle
     CI_phn                              => cnveg_nitrogenflux_inst%CI_phn           , & ! Column indices of non-diagonal entries in Aph for N cycle
     RI_gmn                              => cnveg_nitrogenflux_inst%RI_gmn           , & ! Row indices of non-diagonal entires in Agm for N cycle
@@ -973,7 +962,6 @@ contains
     list_aphc                           => cnveg_carbonflux_inst%list_aphc          , & ! Indices of non-diagnoal entries in full sparse matrix Aph for C cycle
     list_agmc                           => cnveg_carbonflux_inst%list_agmc          , & ! Indices of non-diagnoal entries in full sparse matrix Agm for C cycle
     list_afic                           => cnveg_carbonflux_inst%list_afic          , & ! Indices of non-diagnoal entries in full sparse matrix Afi for C cycle
-    list_afic14                         => c14_cnveg_carbonflux_inst%list_afic      , & ! Indices of non-diagnoal entries in full sparse matrix Afi for C cycle
     list_aphn                           => cnveg_nitrogenflux_inst%list_aphn        , & ! Indices of non-diagnoal entries in full sparse matrix Aph for N cycle
     list_agmn                           => cnveg_nitrogenflux_inst%list_agmn        , & ! Indices of non-diagnoal entries in full sparse matrix Agm for N cycle
     list_afin                           => cnveg_nitrogenflux_inst%list_afin        , & ! Indices of non-diagnoal entries in full sparse matrix Afi for N cycle
@@ -984,14 +972,27 @@ contains
     list_phc_phgmfi                     => cnveg_carbonflux_inst%list_phc_phgmfic   , & ! The locations of entries in AKphvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
     list_gmc_phgmfi                     => cnveg_carbonflux_inst%list_gmc_phgmfic   , & ! The locations of entries in AKgmvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
     list_fic_phgmfi                     => cnveg_carbonflux_inst%list_fic_phgmfic   , & ! The locations of entries in AKfivegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
-    list_phc14_phgmfi                   => c14_cnveg_carbonflux_inst%list_phc_phgmfic   , & ! The locations of entries in AKphvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
-    list_gmc14_phgmfi                   => c14_cnveg_carbonflux_inst%list_gmc_phgmfic   , & ! The locations of entries in AKgmvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
-    list_fic14_phgmfi                   => c14_cnveg_carbonflux_inst%list_fic_phgmfic   , & ! The locations of entries in AKfivegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
     list_phn_phgm                       => cnveg_nitrogenflux_inst%list_phn_phgmn   , & ! The locations of entries in AKphvegn mapped into (AKphvegn+AKgmvegn)
     list_gmn_phgm                       => cnveg_nitrogenflux_inst%list_gmn_phgmn   , & ! The locations of entries in AKgmvegn mapped into (AKphvegn+AKgmvegn)
     list_phn_phgmfi                     => cnveg_nitrogenflux_inst%list_phn_phgmfin , & ! The locations of entries in AKphvegn mapped into (AKphvegn+AKgmvegn+AKfivegn)
     list_gmn_phgmfi                     => cnveg_nitrogenflux_inst%list_gmn_phgmfin , & ! The locations of entries in AKgmvegn mapped into (AKphvegn+AKgmvegn+AKfivegn)
     list_fin_phgmfi                     => cnveg_nitrogenflux_inst%list_fin_phgmfin   & ! The locations of entries in AKfivegn mapped into (AKphvegn+AKgmvegn+AKfivegn)
+    )
+    associate(                          &
+
+    matrix_c14fitransfer  => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch    , & ! Input:  [real(r8) (:,:)] (gC/m2/s) C transfer rate from fire processes, updated in (CNFireBaseMod or CNFireLi2014Mod) and CNC14decayMod
+    matrix_c14fiturnover  => c14_cnveg_carbonflux_inst%matrix_fiturnover_patch    , & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from fire processe, updated in CNVegMatrixMods
+    AKfivegc14                          => c14_cnveg_carbonflux_inst%AKfivegc     , & ! Afi*Kfi for C14 cycle in sparse matrix format
+    AKallvegc14                         => c14_cnveg_carbonflux_inst%AKallvegc    , & ! Aph*Kph + Agm*Kgm + Afi*Kfi for C14 cycle in sparse matrix format
+    NE_AKallvegc14                      => c14_cnveg_carbonflux_inst%NE_AKallvegc       , & ! Number of entries in AKallvegc
+    RI_AKallvegc14                      => c14_cnveg_carbonflux_inst%RI_AKallvegc       , & ! Row indices in Akallvegc
+    CI_AKallvegc14                      => c14_cnveg_carbonflux_inst%CI_AKallvegc       , & ! Column indices in AKallvegc
+    RI_fic14                            => c14_cnveg_carbonflux_inst%RI_fic             , & ! Row indices of non-diagonal entires in Afi for C cycle
+    CI_fic14                            => c14_cnveg_carbonflux_inst%CI_fic             , & ! Column indices of non-diagonal entries in Afi for C cycle
+    list_afic14                         => c14_cnveg_carbonflux_inst%list_afic          , & ! Indices of non-diagnoal entries in full sparse matrix Afi for C cycle
+    list_phc14_phgmfi                   => c14_cnveg_carbonflux_inst%list_phc_phgmfic   , & ! The locations of entries in AKphvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
+    list_gmc14_phgmfi                   => c14_cnveg_carbonflux_inst%list_gmc_phgmfic   , & ! The locations of entries in AKgmvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
+    list_fic14_phgmfi                   => c14_cnveg_carbonflux_inst%list_fic_phgmfic     & ! The locations of entries in AKfivegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
     )
 #ifdef _OPENMP
      nthreads = OMP_GET_MAX_THREADS()
@@ -1004,8 +1005,12 @@ contains
 
     ! Initialize local variables
       call vegmatrixc_input%InitV(nvegcpool,bounds%begp,bounds%endp)
-      call vegmatrixc13_input%InitV(nvegcpool,bounds%begp,bounds%endp)
-      call vegmatrixc14_input%InitV(nvegcpool,bounds%begp,bounds%endp)
+      if(use_c13)then
+         call vegmatrixc13_input%InitV(nvegcpool,bounds%begp,bounds%endp)
+      end if
+      if(use_c14)then
+         call vegmatrixc14_input%InitV(nvegcpool,bounds%begp,bounds%endp)
+      end if
       call vegmatrixn_input%InitV(nvegnpool,bounds%begp,bounds%endp)
       
       matrix_calloc_acc    (:)     = 0._r8
@@ -3511,10 +3516,15 @@ contains
          end if
    
       call vegmatrixc_input%ReleaseV()
-      call vegmatrixc13_input%ReleaseV()
-      call vegmatrixc14_input%ReleaseV()
+      if ( use_c13 )then
+         call vegmatrixc13_input%ReleaseV()
+      end if
+      if ( use_c14 )then
+         call vegmatrixc14_input%ReleaseV()
+      end if
       call vegmatrixn_input%ReleaseV()
     
+   end associate
    end associate
    end associate
    end associate
