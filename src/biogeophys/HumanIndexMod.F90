@@ -957,7 +957,7 @@ end subroutine InitHistory
     do while ( converged .eq. 0 .and. iter < max_iter)
 
        iter = iter + 1
-       if ( wb_temp > 100._r8 ) exit
+       if ( wb_temp > 50._r8 ) exit
        call QSat_2(wb_temp+C, pin, es_mb_wb_temp, de_mbdwb_temp, dlnes_mbdwb_temp, &
            rs_wb_temp, rsdwb_temp, foftk_wb_temp, fdwb_temp)
        wb_temp_new = wb_temp - ((foftk_wb_temp - X)/fdwb_temp)
