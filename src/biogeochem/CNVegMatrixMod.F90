@@ -54,6 +54,11 @@ module CNVegMatrixMod
   public:: CNVegMatrix
   public:: matrix_update_phc,matrix_update_gmc,matrix_update_fic
   public:: matrix_update_phn,matrix_update_gmn,matrix_update_fin
+  public:: CNVegMatrixRest
+
+  ! ! PRIVATE MEMBER DATA:
+  integer,save, private :: iyr=0   ! Cycling year number into forcing sequence
+  integer,save, private :: iloop=0 ! The iloop^th forcing loop
   !-----------------------------------------------------------------------
 
 contains
@@ -133,9 +138,6 @@ contains
      logical, save             :: list_ready_phgmc     = .false.
      logical, save             :: list_ready_phgmfin   = .false.
      logical, save             :: list_ready_phgmn     = .false.
-
-     integer, save             :: iyr=0
-     integer, save             :: iloop=0
 
   ! Temporary variables are only used at end of the year to calculate C and N storage capacity
      real(r8),dimension(:)     :: matrix_calloc_acc      (1:nvegcpool)
@@ -3764,5 +3766,33 @@ end function matrix_update_fic
    end associate
 
  end function matrix_update_fin
+
+  !-----------------------------------------------------------------------
+   subroutine CNVegMatrixRest( ncid, flag )
+    ! !DESCRIPTION:
+    !
+    !    Read/write restart data needed for the CN Matrix model solution
+    !
+    ! !USES:
+    use restUtilMod   , only: restartvar
+    use ncdio_pio     , only: file_desc_t, ncd_int
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t) , intent(inout) :: ncid   ! netcdf id
+    character(len=*)  , intent(in)    :: flag   !'read' or 'write'
+    !
+    ! !LOCAL VARIABLES:
+    logical :: readvar      ! determine if variable is on initial file
+    !------------------------------------------------------------------------
+    call restartvar(ncid=ncid, flag=flag, varname='bgc_cycle_year', xtype=ncd_int,  &
+            long_name='Year number in spinup cycle sequence', units='years', &
+            interpinic_flag='skip', readvar=readvar, data=iyr)
+
+    call restartvar(ncid=ncid, flag=flag, varname='bgc_cycle_loop', xtype=ncd_int,  &
+            long_name='Loop number in spinup cycle sequence', units='years', &
+            interpinic_flag='skip', readvar=readvar, data=iloop)
+
+    !------------------------------------------------------------------------
+   end subroutine CNVegMatrixRest
 
 end module CNVegMatrixMod

@@ -48,6 +48,11 @@ module CNSoilMatrixMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public:: CNSoilMatrixInit        ! Initialization for CN Soil Matrix solution
   public:: CNSoilMatrix
+  public:: CNSoilMatrixRest        ! Restart for CN Soil Matrix solution
+
+  ! ! PRIVATE MEMBER DATA:
+  integer,save, private :: iyr=0   ! Cycling year number into forcing sequence
+  integer,save, private :: iloop=0 ! The iloop^th forcing loop
   !-----------------------------------------------------------------------
 
 contains
@@ -136,8 +141,6 @@ contains
     logical,save :: init_readyAsoilc = .False.
     logical,save :: init_readyAsoiln = .False.
     logical isbegofyear
-    integer,save :: iyr=0
-    integer,save :: iloop=0                   ! The iloop^th forcing loop
 
     !-----------------------------------------------------------------------
     begc = bounds%begc; endc = bounds%endc
@@ -909,6 +912,34 @@ contains
 
    end associate 
  end subroutine CNSoilMatrix
+
+  !-----------------------------------------------------------------------
+   subroutine CNSoilMatrixRest( ncid, flag )
+    ! !DESCRIPTION:
+    !
+    !    Read/write restart data needed for the CN soil Matrix model solution
+    !
+    ! !USES:
+    use restUtilMod   , only: restartvar
+    use ncdio_pio     , only: file_desc_t, ncd_int
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t) , intent(inout) :: ncid   ! netcdf id
+    character(len=*)  , intent(in)    :: flag   !'read' or 'write'
+    !
+    ! !LOCAL VARIABLES:
+    logical :: readvar      ! determine if variable is on initial file
+    !------------------------------------------------------------------------
+    call restartvar(ncid=ncid, flag=flag, varname='soil_cycle_year', xtype=ncd_int,  &
+            long_name='Year number in soil spinup cycle sequence', units='years', &
+            interpinic_flag='skip', readvar=readvar, data=iyr)
+
+    call restartvar(ncid=ncid, flag=flag, varname='soil_cycle_loop', xtype=ncd_int,  &
+            long_name='Loop number in soil spinup cycle sequence', units='years', &
+            interpinic_flag='skip', readvar=readvar, data=iloop)
+
+    !------------------------------------------------------------------------
+   end subroutine CNSoilMatrixRest
  
 end module CNSoilMatrixMod
 
