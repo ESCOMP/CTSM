@@ -165,7 +165,7 @@ contains
      integer, parameter :: nthreads = 0 ! Number of threads
 #endif
  
-    associate(                          &
+fr:  associate(                          &
      ivt                   => patch%itype                                       , & ! Input:  [integer  (:) ]  patch vegetation type
      cf13_veg              => c13_cnveg_carbonflux_inst                         , & ! In
      cf14_veg              => c14_cnveg_carbonflux_inst                         , & ! In
@@ -414,7 +414,7 @@ contains
     matrix_cturnover_grainxf_acc     => cnveg_carbonstate_inst%matrix_cturnover_grainxf_acc_patch       &
                     ! In/Output: [real(r8) (:) ] (gC/m2/year) C turnover from grain transfer
     )
-    associate(                          &
+od: associate(                          &
 
   ! Variables matrix_nalloc_*_acc, matrix_ntransfer_*_acc, and matrix_nturnover_*_acc are used to calculate the N capacity as the N steady state estimates in spin up.
   ! These variables are all state variables, saving accumulated N transfers during the calendar year.
@@ -612,7 +612,7 @@ contains
     grainn0_xfer        => cnveg_nitrogenstate_inst%grainn0_xfer_patch        , & ! In/Output: [real(r8) (:) ] (gN/m2) grain transfer N at begin of this year
     retransn0           => cnveg_nitrogenstate_inst%retransn0_patch             & ! In/Output: [real(r8) (:) ] (gN/m2) plant retranslocated N at begin of this year
     )
-    associate(                          &
+sd: associate(                          &
 
   ! Following variables save the C and N transfer rate of different processes at current time step. 
   ! Eg. ph: phenology, gm: gap mortality (including harvest), fi: fire.
@@ -920,7 +920,7 @@ contains
     iretransn_to_iout_fin             => cnveg_nitrogenflux_inst%iretransn_to_iout_fi              &
                           ! Input: [integer (:)] Index of fire related N transfer from retranslocated N pool to outside of vegetation pools
     )
-    associate(                          &
+td: associate(                          &
  
   ! Sparse matrix type of A*K 
     AKphvegc                            => cnveg_carbonflux_inst%AKphvegc           , & ! Aph*Kph for C cycle in sparse matrix format
@@ -977,22 +977,6 @@ contains
     list_phn_phgmfi                     => cnveg_nitrogenflux_inst%list_phn_phgmfin , & ! The locations of entries in AKphvegn mapped into (AKphvegn+AKgmvegn+AKfivegn)
     list_gmn_phgmfi                     => cnveg_nitrogenflux_inst%list_gmn_phgmfin , & ! The locations of entries in AKgmvegn mapped into (AKphvegn+AKgmvegn+AKfivegn)
     list_fin_phgmfi                     => cnveg_nitrogenflux_inst%list_fin_phgmfin   & ! The locations of entries in AKfivegn mapped into (AKphvegn+AKgmvegn+AKfivegn)
-    )
-    associate(                          &
-
-    matrix_c14fitransfer  => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch    , & ! Input:  [real(r8) (:,:)] (gC/m2/s) C transfer rate from fire processes, updated in (CNFireBaseMod or CNFireLi2014Mod) and CNC14decayMod
-    matrix_c14fiturnover  => c14_cnveg_carbonflux_inst%matrix_fiturnover_patch    , & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from fire processe, updated in CNVegMatrixMods
-    AKfivegc14                          => c14_cnveg_carbonflux_inst%AKfivegc     , & ! Afi*Kfi for C14 cycle in sparse matrix format
-    AKallvegc14                         => c14_cnveg_carbonflux_inst%AKallvegc    , & ! Aph*Kph + Agm*Kgm + Afi*Kfi for C14 cycle in sparse matrix format
-    NE_AKallvegc14                      => c14_cnveg_carbonflux_inst%NE_AKallvegc       , & ! Number of entries in AKallvegc
-    RI_AKallvegc14                      => c14_cnveg_carbonflux_inst%RI_AKallvegc       , & ! Row indices in Akallvegc
-    CI_AKallvegc14                      => c14_cnveg_carbonflux_inst%CI_AKallvegc       , & ! Column indices in AKallvegc
-    RI_fic14                            => c14_cnveg_carbonflux_inst%RI_fic             , & ! Row indices of non-diagonal entires in Afi for C cycle
-    CI_fic14                            => c14_cnveg_carbonflux_inst%CI_fic             , & ! Column indices of non-diagonal entries in Afi for C cycle
-    list_afic14                         => c14_cnveg_carbonflux_inst%list_afic          , & ! Indices of non-diagnoal entries in full sparse matrix Afi for C cycle
-    list_phc14_phgmfi                   => c14_cnveg_carbonflux_inst%list_phc_phgmfic   , & ! The locations of entries in AKphvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
-    list_gmc14_phgmfi                   => c14_cnveg_carbonflux_inst%list_gmc_phgmfic   , & ! The locations of entries in AKgmvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
-    list_fic14_phgmfi                   => c14_cnveg_carbonflux_inst%list_fic_phgmfic     & ! The locations of entries in AKfivegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
     )
 #ifdef _OPENMP
      nthreads = OMP_GET_MAX_THREADS()
@@ -1072,11 +1056,16 @@ contains
                   Aficoned(p,k) = 0._r8
                end if
                if(use_c14)then
+                  associate( &
+                        matrix_c14fitransfer  => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch    , & ! Input:  [real(r8) (:,:)] (gC/m2/s) C transfer rate from fire processes, updated in (CNFireBaseMod or CNFireLi2014Mod) and CNC14decayMod
+                        matrix_c14fiturnover  => c14_cnveg_carbonflux_inst%matrix_fiturnover_patch      & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from fire processe, updated in CNVegMatrixMods
+                  )
                   if(matrix_c14fiturnover(p,doner_fic(k)) .ne. 0)then
                      Afic14oned(p,k) = matrix_c14fitransfer(p,k) * dt / matrix_c14fiturnover(p,doner_fic(k))
                   else
                      Afic14oned(p,k) = 0._r8
                   end if
+                  end associate
                end if
             end do
          end do
@@ -1456,15 +1445,26 @@ contains
             call AKfivegc%SetValueA(bounds%begp,bounds%endp,num_soilp,filter_soilp,Aficoned,&
                  AI_fic,AJ_fic,ncfitrans-ncfiouttrans,init_ready_afic,list_afic,RI_fic,CI_fic)
             if(use_c14)then
+               associate( &
+                   AKfivegc14                          => c14_cnveg_carbonflux_inst%AKfivegc     , & ! Afi*Kfi for C14 cycle in sparse matrix format
+                   RI_fic14                            => c14_cnveg_carbonflux_inst%RI_fic             , & ! Row indices of non-diagonal entires in Afi for C cycle
+                   CI_fic14                            => c14_cnveg_carbonflux_inst%CI_fic             , & ! Column indices of non-diagonal entries in Afi for C cycle
+                   list_afic14                         => c14_cnveg_carbonflux_inst%list_afic            & ! Indices of non-diagnoal entries in full sparse matrix Afi for C cycle
+               )
                AI_fic14 = receiver_fic(1:ncfitrans-ncfiouttrans)
                AJ_fic14 = doner_fic   (1:ncfitrans-ncfiouttrans)
                call AKfivegc14%SetValueA(bounds%begp,bounds%endp,num_soilp,filter_soilp,Afic14oned,&
                     AI_fic14,AJ_fic14,ncfitrans-ncfiouttrans,init_ready_afic14,list_afic14,RI_fic14,CI_fic14)
+               end associate
             end if
          else
             call AKfivegc%SetValueA_diag(num_soilp,filter_soilp,-1._r8)
             if(use_c14)then
+               associate( &
+                   AKfivegc14 => c14_cnveg_carbonflux_inst%AKfivegc  & ! Afi*Kfi for C14 cycle in sparse matrix format
+               )
                call AKfivegc14%SetValueA_diag(num_soilp,filter_soilp,-1._r8)
+               end associate
             end if
          end if
 
@@ -1475,11 +1475,17 @@ contains
          call AKfivegc%SPMM_AK(num_soilp,filter_soilp,Kvegc)
 
          if(use_c14)then
+            associate( &
+                AKfivegc14                          => c14_cnveg_carbonflux_inst%AKfivegc     , & ! Afi*Kfi for C14 cycle in sparse matrix format
+                matrix_c14fitransfer  => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch    , & ! Input:  [real(r8) (:,:)] (gC/m2/s) C transfer rate from fire processes, updated in (CNFireBaseMod or CNFireLi2014Mod) and CNC14decayMod
+                matrix_c14fiturnover  => c14_cnveg_carbonflux_inst%matrix_fiturnover_patch      & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from fire processe, updated in CNVegMatrixMods
+            )
   ! Set up diagonal matrix Kfi_c from diagonal entries matrix_fiturnover
             call Kvegc%SetValueDM(bounds%begp,bounds%endp,num_soilp,filter_soilp,matrix_c14fiturnover(bounds%begp:bounds%endp,1:nvegcpool))
 
   ! Calculate Afi_c*Kfi_c using SPMM_AK.
             call AKfivegc14%SPMM_AK(num_soilp,filter_soilp,Kvegc)
+            end associate
          end if
 
   ! Caclulate AKallvegc = Aph_c*Kph_c + Agm_c*Kgm_c + Afi_c*Kfi_c
@@ -1496,8 +1502,19 @@ contains
          end if
           
          if(use_c14)then
+            associate( &
+                AKfivegc14                          => c14_cnveg_carbonflux_inst%AKfivegc     , & ! Afi*Kfi for C14 cycle in sparse matrix format
+                AKallvegc14                         => c14_cnveg_carbonflux_inst%AKallvegc    , & ! Aph*Kph + Agm*Kgm + Afi*Kfi for C14 cycle in sparse matrix format
+                NE_AKallvegc14                      => c14_cnveg_carbonflux_inst%NE_AKallvegc       , & ! Number of entries in AKallvegc
+                RI_AKallvegc14                      => c14_cnveg_carbonflux_inst%RI_AKallvegc       , & ! Row indices in Akallvegc
+                CI_AKallvegc14                      => c14_cnveg_carbonflux_inst%CI_AKallvegc       , & ! Column indices in AKallvegc
+                list_phc14_phgmfi                   => c14_cnveg_carbonflux_inst%list_phc_phgmfic   , & ! The locations of entries in AKphvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
+                list_gmc14_phgmfi                   => c14_cnveg_carbonflux_inst%list_gmc_phgmfic   , & ! The locations of entries in AKgmvegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
+                list_fic14_phgmfi                   => c14_cnveg_carbonflux_inst%list_fic_phgmfic     & ! The locations of entries in AKfivegc mapped into (AKphvegc+AKgmvegc+AKfivegc)
+            )
             call AKallvegc14%SPMP_ABC(num_soilp,filter_soilp,AKphvegc,AKgmvegc,AKfivegc14,list_ready_phgmfic14,list_A=list_phc14_phgmfi,&
                  list_B=list_gmc14_phgmfi,list_C=list_fic14_phgmfi,NE_ABC=NE_AKallvegc14,RI_ABC=RI_AKallvegc14,CI_ABC=CI_AKallvegc14)
+            end associate
          end if
 
 
@@ -1536,6 +1553,10 @@ contains
 
 
          if ( use_c14 ) then
+             associate( &
+                matrix_C14input => cnveg_carbonflux_inst%matrix_C14input_patch, & ! Input:  [real(r8) (:)] (gC/m2/s) C14 input to vegetation, updated in NutrientCompetitionFlexibleCNMod or NutrientCompetitionCLM45defaultMod
+                AKallvegc14     => c14_cnveg_carbonflux_inst%AKallvegc          & ! Aph*Kph + Agm*Kgm + Afi*Kfi for C14 cycle in sparse matrix format
+            ) 
   ! Calculate B*I_C14
             do i=1,nvegcpool
                do fp = 1,num_soilp
@@ -1554,6 +1575,7 @@ contains
                   Xveg14c%V(p,i) = Xveg14c%V(p,i) + vegmatrixc14_input%V(p,i) 
                end do
             end do
+            end associate
          end if
                             
 
@@ -1915,6 +1937,10 @@ contains
                                                                      * cs13_veg%deadcrootc_xfer_patch(p)
                end if
                if(use_c14)then
+                  associate( &
+                        matrix_c14fitransfer  => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch    , & ! Input:  [real(r8) (:,:)] (gC/m2/s) C transfer rate from fire processes, updated in (CNFireBaseMod or CNFireLi2014Mod) and CNC14decayMod
+                        matrix_c14fiturnover  => c14_cnveg_carbonflux_inst%matrix_fiturnover_patch      & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from fire processe, updated in CNVegMatrixMods
+                  )
                   cs14_veg%matrix_ctransfer_leafst_to_leafxf_acc_patch(p)           = cs14_veg%matrix_ctransfer_leafst_to_leafxf_acc_patch(p) &
                                                                                     + matrix_phtransfer(p,ileafst_to_ileafxf_phc) &
                                                                                     * dt * cs14_veg%leafc_storage_patch(p) !matrix_phturnover(p,ileaf_st)*leafc_storage(p)
@@ -2013,6 +2039,7 @@ contains
                   cs14_veg%matrix_cturnover_deadcrootxf_acc_patch(p) = cs14_veg%matrix_cturnover_deadcrootxf_acc_patch(p) &
                                                                      + (matrix_phturnover(p,ideadcroot_xf)+matrix_gmturnover(p,ideadcroot_xf)+matrix_c14fiturnover(p,ideadcroot_xf)) &
                                                                      * cs14_veg%deadcrootc_xfer_patch(p)
+                  end associate
                end if
             end do
             do fp = 1,num_soilp
@@ -2039,6 +2066,10 @@ contains
                                                                      * cs13_veg%grainc_xfer_patch(p)
                   end if
                   if(use_c14)then
+                     associate( &
+                           matrix_c14fitransfer  => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch    , & ! Input:  [real(r8) (:,:)] (gC/m2/s) C transfer rate from fire processes, updated in (CNFireBaseMod or CNFireLi2014Mod) and CNC14decayMod
+                           matrix_c14fiturnover  => c14_cnveg_carbonflux_inst%matrix_fiturnover_patch      & ! Output: [real(r8) (:,:)] (gC/m2/step) C turnover rate from fire processe, updated in CNVegMatrixMods
+                     )
                      cs14_veg%matrix_cturnover_grain_acc_patch(p)    = cs14_veg%matrix_cturnover_grain_acc_patch(p) &
                                                                + (matrix_phturnover(p,igrain)+matrix_gmturnover(p,igrain)+matrix_c14fiturnover(p,igrain)) &
                                                                * cs14_veg%grainc_patch(p)
@@ -2048,6 +2079,7 @@ contains
                      cs14_veg%matrix_cturnover_grainxf_acc_patch(p)  = cs14_veg%matrix_cturnover_grainxf_acc_patch(p) &
                                                                + (matrix_phturnover(p,igrain_xf)+matrix_gmturnover(p,igrain_xf)+matrix_c14fiturnover(p,igrain_xf)) &
                                                                * cs14_veg%grainc_xfer_patch(p)
+                     end associate
                   end if
                end if
             end do
@@ -3524,11 +3556,10 @@ contains
       end if
       call vegmatrixn_input%ReleaseV()
     
-   end associate
-   end associate
-   end associate
-   end associate
-   end associate
+   end associate td
+   end associate sd
+   end associate od
+   end associate fr
  end subroutine CNVegMatrix
 
  function matrix_update_phc(p,itransfer,rate,dt,cnveg_carbonflux_inst,matrixcheck,acc)
