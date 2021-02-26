@@ -651,7 +651,6 @@ contains
          m_c_to_litr_met_fire                => cnveg_carbonflux_inst%m_c_to_litr_met_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_cel_fire                => cnveg_carbonflux_inst%m_c_to_litr_cel_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_lig_fire                => cnveg_carbonflux_inst%m_c_to_litr_lig_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
-         matrix_decomp_fire_k                => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col           , & ! Output: [real(r8) (:,:)   ]  (gC/m3/step) VR deomp. C fire loss in matrix representation
          
          fire_mortality_n_to_cwdn            => cnveg_nitrogenflux_inst%fire_mortality_n_to_cwdn_col              , & ! Input:  [real(r8) (:,:)   ]  N flux fire mortality to CWD (gN/m3/s)
          m_leafn_to_fire                     => cnveg_nitrogenflux_inst%m_leafn_to_fire_patch                     , & ! Input:  [real(r8) (:)     ]  (gN/m2/s) N emis. leafn		  
@@ -1208,16 +1207,24 @@ contains
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * &
                       cmb_cmplt_fact_litter
                  if(use_soil_matrixcn)then! matrix is the same for C and N in the fire.
+                    associate( &
+                       matrix_decomp_fire_k  => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col & ! Output: [real(r8) (:,:)   ]  (gC/m3/step) VR deomp. C fire loss in matrix representation
+                    )
                     matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) &
                      - f * cmb_cmplt_fact_litter * dt
+                    end associate
                  end if
               end if
               if ( is_cwd(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
                       (f-baf_crop(c)) * cmb_cmplt_fact_cwd
                  if(use_soil_matrixcn)then
+                    associate( &
+                       matrix_decomp_fire_k  => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col & ! Output: [real(r8) (:,:)   ]  (gC/m3/step) VR deomp. C fire loss in matrix representation
+                    )
                     matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) &
                      - (f-baf_crop(c)) * cmb_cmplt_fact_cwd * dt
+                    end associate
                  end if
               end if
            end do
