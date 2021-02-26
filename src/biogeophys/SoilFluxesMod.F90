@@ -224,9 +224,8 @@ contains
             endif
          endif
          
-         ! top soil layer for urban columns; adjust qflx_evap_soi directly
-         if (lun%urbpoi(patch%landunit(p))) then
-            j = 1
+         ! top soil layer for urban columns (excluding pervious road); adjust qflx_evap_soi directly
+         if (lun%urbpoi(patch%landunit(p)) .and. (col%itype(c)/=icol_road_perv) .and. (j == 1)) then
             evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))
             if (qflx_evap_soi(p)*dtime > evaporation_limit) then
                ev_unconstrained = qflx_evap_soi(p)
