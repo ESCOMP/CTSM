@@ -364,6 +364,26 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
+  <test name="SMS_D3" grid="f10_f10_mg37" compset="I1850Clm51BgcCrop" testmods="clm/ciso_soil_matrixcn_only">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:20:00</option>
+      <option name="comment"  >Run soil matrix solution without CN matrix with debug on and the extra options that it interacts with (isotopes and crop)</option>
+    </options>
+  </test>
+  <test name="ERS_Lm13" grid="f10_f10_mg37" compset="I1850Clm51Bgc" testmods="clm/monthly_matrixcn_fast_spinup">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:20:00</option>
+      <option name="comment"  >Run matrix solution fast spinup for restart beyond a year (to trigger next year logic) turning off extra options to make faster (so without crop or isotopes). This test would've caught a previous bug.</option>
+    </options>
+  </test>
   <test name="ERS_D_Lm3" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
@@ -376,6 +396,7 @@
   <test name="ERS_D_Lm3" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1852,6 +1873,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
   <test name="SSPMATRIXCN_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
