@@ -79,7 +79,7 @@ contains
     real(r8) :: t_grnd0(bounds%begc:bounds%endc)                   ! t_grnd of previous time step
     real(r8) :: lw_grnd
     real(r8) :: evaporation_limit                                  ! top layer moisture available for evaporation
-    real(r8) :: ev_unconstrained                                   ! evaporative demand 
+    real(r8) :: evaporation_demand                                   ! evaporative demand 
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
@@ -204,8 +204,7 @@ contains
          endif
       end do
 
-      ! evaporation from snow may be larger than available moisture
-      ! after flux update from tinc*cgrnd, repeat adjustment of ev_snow
+      ! Constrain evaporation from snow to be <= available moisture
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
          c = patch%column(p)
@@ -213,25 +212,25 @@ contains
          ! snow layers
          if (j < 1) then
             ! assumes for j < 1 that frac_sno_eff > 0
-            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/frac_sno_eff(c)
-            if (qflx_ev_snow(p)*dtime > evaporation_limit) then
-               ev_unconstrained = qflx_ev_snow(p)
-               qflx_ev_snow(p) = evaporation_limit/dtime
-
-               qflx_evap_soi(p)  = qflx_evap_soi(p) - frac_sno_eff(c)*(ev_unconstrained - qflx_ev_snow(p))
+            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno_eff(c)*dtime)
+            if (qflx_ev_snow(p) > evaporation_limit) then
+               evaporation_demand = qflx_ev_snow(p)
+               qflx_ev_snow(p)    = evaporation_limit
+               qflx_evap_soi(p)   = qflx_evap_soi(p) - frac_sno_eff(c)*(evaporation_demand - evaporation_limit)
                ! conserve total energy flux
-               eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_eff(c)*(ev_unconstrained - qflx_ev_snow(p))*htvp(c)
+               eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_eff(c)*(evaporation_demand - evaporation_limit)*htvp(c)
             endif
          endif
          
-         ! top soil layer for urban columns (excluding pervious road); adjust qflx_evap_soi directly
+         ! top soil layer for urban columns (excluding pervious road)
          if (lun%urbpoi(patch%landunit(p)) .and. (col%itype(c)/=icol_road_perv) .and. (j == 1)) then
-            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))
-            if (qflx_evap_soi(p)*dtime > evaporation_limit) then
-               ev_unconstrained = qflx_evap_soi(p)
-               qflx_evap_soi(p) = evaporation_limit/dtime
+            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/dtime
+            if (qflx_evap_soi(p) > evaporation_limit) then
+               evaporation_demand = qflx_evap_soi(p)
+               qflx_evap_soi(p)   = evaporation_limit
+               qflx_ev_snow(p)    = qflx_evap_soi(p)
                ! conserve total energy flux
-               eflx_sh_grnd(p) = eflx_sh_grnd(p) +(ev_unconstrained - qflx_evap_soi(p))*htvp(c)
+               eflx_sh_grnd(p) = eflx_sh_grnd(p) +(evaporation_demand -evaporation_limit)*htvp(c)
             endif
          endif
          
@@ -246,11 +245,6 @@ contains
          l = patch%landunit(p)
          g = patch%gridcell(p)
          j = col%snl(c)+1
-
-         ! Update ev_snow for urban landunits here
-         if (lun%urbpoi(l)) then
-            qflx_ev_snow(p) = qflx_evap_soi(p)
-         end if
 
          ! Ground heat flux
          
@@ -360,15 +354,14 @@ contains
          ! limit only solid evaporation (sublimation) from top soil layer
          ! (liquid evaporation from soil should not be limited)
          if (j==1 .and. frac_h2osfc(c) < 1._r8) then
-            if (((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(p)*dtime) >= h2osoi_ice(c,j)) then
-
+            evaporation_limit = h2osoi_ice(c,j)/(dtime*(1._r8 - frac_h2osfc(c)))
+            if (qflx_solidevap_from_top_layer(p) >= evaporation_limit) then
+               evaporation_demand = qflx_solidevap_from_top_layer(p)
+               qflx_solidevap_from_top_layer(p) &
+                    = evaporation_limit
                qflx_liqevap_from_top_layer(p)  &
                     = qflx_liqevap_from_top_layer(p)  &
-                    + (qflx_solidevap_from_top_layer(p) &
-                    - h2osoi_ice(c,j)/(dtime*(1._r8 - frac_h2osfc(c))))
-               qflx_solidevap_from_top_layer(p) &
-                    = h2osoi_ice(c,j)/(dtime*(1._r8 - frac_h2osfc(c)))
-
+                    + (evaporation_demand - evaporation_limit)
             endif
          endif
 

@@ -65,7 +65,7 @@ module SoilHydrologyMod
   type(params_type), private ::  params_inst
   
   !-----------------------------------------------------------------------
-  real(r8), private :: baseflow_scalar = 1.e-2_r8
+  real(r8), private   :: baseflow_scalar = 1.e-2_r8
   real(r8), parameter :: tolerance = 1.e-12_r8                   ! tolerance for checking whether sublimation is greater than ice in top soil layer
 
   character(len=*), parameter, private :: sourcefile = &
@@ -845,16 +845,8 @@ contains
              ! make consistent with how evap_grnd removed in infiltration
              h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
              h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
-             if ((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
-                qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
-                qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
-                qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
-                                       - qflx_solidevap_from_top_layer(c))
-
-                if((abs((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1))) > tolerance) then
-                   call endrun(msg="qflx_solidevap_from_top_layer too large! "//errmsg(sourcefile, __LINE__))
-                endif
-                h2osoi_ice(c,1) = 0._r8
+             if (((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1) > tolerance)) then
+                call endrun(msg="qflx_solidevap_from_top_layer too large! "//errmsg(sourcefile, __LINE__))
              else
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) - (1._r8 - frac_h2osfc(c)) * qflx_solidevap_from_top_layer(c) * dtime
              end if
@@ -870,12 +862,8 @@ contains
              if (snl(c)+1 >= 1) then
                 h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_liqdew_to_top_layer(c) * dtime
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_soliddew_to_top_layer(c) * dtime)
-                if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
-                   qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
-                   qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
-                   qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
-                                          - qflx_solidevap_from_top_layer(c))
-                   h2osoi_ice(c,1) = 0._r8
+                if ((qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1)) > tolerance) then
+                   call endrun(msg="urban qflx_solidevap_from_top_layer too large! "//errmsg(sourcefile, __LINE__))
                 else
                    h2osoi_ice(c,1) = h2osoi_ice(c,1) - (qflx_solidevap_from_top_layer(c) * dtime)
                 end if
@@ -2349,12 +2337,8 @@ contains
              if (snl(c)+1 >= 1) then
                 h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_liqdew_to_top_layer(c) * dtime
                 h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_soliddew_to_top_layer(c) * dtime)
-                if (qflx_solidevap_from_top_layer(c)*dtime > h2osoi_ice(c,1)) then
-                   qflx_solidevap_from_top_layer_save = qflx_solidevap_from_top_layer(c)
-                   qflx_solidevap_from_top_layer(c) = h2osoi_ice(c,1)/dtime
-                   qflx_ev_snow(c) = qflx_ev_snow(c) - (qflx_solidevap_from_top_layer_save &
-                                          - qflx_solidevap_from_top_layer(c))
-                   h2osoi_ice(c,1) = 0._r8
+                if ((qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1)) > tolerance) then
+                   call endrun(msg="urban qflx_solidevap_from_top_layer too large! "//errmsg(sourcefile, __LINE__))
                 else
                    h2osoi_ice(c,1) = h2osoi_ice(c,1) - (qflx_solidevap_from_top_layer(c) * dtime)
                 end if
