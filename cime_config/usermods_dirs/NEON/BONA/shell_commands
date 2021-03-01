@@ -1,1 +1,3 @@
 ./xmlchange NEONSITE=BONA
+./xmlchange PTS_LON=212.497439
+./xmlchange PTS_LAT=65.154044
