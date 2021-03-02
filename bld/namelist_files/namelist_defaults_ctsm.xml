@@ -623,7 +623,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <use_soil_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." bgc_mode="bgc" >.true.</use_soil_matrixcn>
 <use_soil_matrixcn clm_accelerated_spinup="sasu" use_fates=".false." bgc_mode="cn"  >.true.</use_soil_matrixcn>
-<use_soil_matrixcn phys="clm5_1" use_fates=".false." bgc_mode="bgc"   >.false.</use_soil_matrixcn>
+<use_soil_matrixcn phys="clm5_1" use_fates=".false." bgc_mode="bgc"   >.true.</use_soil_matrixcn>
 <use_soil_matrixcn phys="clm5_1" use_fates=".false." bgc_mode="bgc"   >.true.</use_soil_matrixcn>
 <use_soil_matrixcn phys="clm5_0" use_fates=".false." bgc_mode="bgc"   >.true.</use_soil_matrixcn>
 <use_soil_matrixcn phys="clm5_0" use_fates=".false." bgc_mode="cn"    >.true.</use_soil_matrixcn>
