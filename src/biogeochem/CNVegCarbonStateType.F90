@@ -11,7 +11,7 @@ module CNVegCarbonStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
-  use clm_varctl     , only : iulog, use_cndv, use_crop
+  use clm_varctl     , only : iulog, use_cndv, use_crop, use_matrixcn
   use decompMod      , only : bounds_type
   use abortutils     , only : endrun
   use spmdMod        , only : masterproc 
@@ -31,59 +31,178 @@ module CNVegCarbonStateType
 
      integer :: species  ! c12, c13, c14
 
-     real(r8), pointer :: grainc_patch             (:) ! (gC/m2) grain C (crop model)
-     real(r8), pointer :: grainc_storage_patch     (:) ! (gC/m2) grain C storage (crop model)
-     real(r8), pointer :: grainc_xfer_patch        (:) ! (gC/m2) grain C transfer (crop model)
-     real(r8), pointer :: leafc_patch              (:) ! (gC/m2) leaf C
-     real(r8), pointer :: leafc_storage_patch      (:) ! (gC/m2) leaf C storage
-     real(r8), pointer :: leafc_xfer_patch         (:) ! (gC/m2) leaf C transfer
-     real(r8), pointer :: leafc_storage_xfer_acc_patch   (:) ! (gC/m2) Accmulated leaf C transfer
-     real(r8), pointer :: storage_cdemand_patch          (:) ! (gC/m2)       C use from the C storage pool 
-     real(r8), pointer :: frootc_patch             (:) ! (gC/m2) fine root C
-     real(r8), pointer :: frootc_storage_patch     (:) ! (gC/m2) fine root C storage
-     real(r8), pointer :: frootc_xfer_patch        (:) ! (gC/m2) fine root C transfer
-     real(r8), pointer :: livestemc_patch          (:) ! (gC/m2) live stem C
-     real(r8), pointer :: livestemc_storage_patch  (:) ! (gC/m2) live stem C storage
-     real(r8), pointer :: livestemc_xfer_patch     (:) ! (gC/m2) live stem C transfer
-     real(r8), pointer :: deadstemc_patch          (:) ! (gC/m2) dead stem C
-     real(r8), pointer :: deadstemc_storage_patch  (:) ! (gC/m2) dead stem C storage
-     real(r8), pointer :: deadstemc_xfer_patch     (:) ! (gC/m2) dead stem C transfer
-     real(r8), pointer :: livecrootc_patch         (:) ! (gC/m2) live coarse root C
-     real(r8), pointer :: livecrootc_storage_patch (:) ! (gC/m2) live coarse root C storage
-     real(r8), pointer :: livecrootc_xfer_patch    (:) ! (gC/m2) live coarse root C transfer
-     real(r8), pointer :: deadcrootc_patch         (:) ! (gC/m2) dead coarse root C
-     real(r8), pointer :: deadcrootc_storage_patch (:) ! (gC/m2) dead coarse root C storage
-     real(r8), pointer :: deadcrootc_xfer_patch    (:) ! (gC/m2) dead coarse root C transfer
-     real(r8), pointer :: gresp_storage_patch      (:) ! (gC/m2) growth respiration storage
-     real(r8), pointer :: gresp_xfer_patch         (:) ! (gC/m2) growth respiration transfer
-     real(r8), pointer :: cpool_patch              (:) ! (gC/m2) temporary photosynthate C pool
-     real(r8), pointer :: xsmrpool_patch           (:) ! (gC/m2) abstract C pool to meet excess MR demand
-     real(r8), pointer :: xsmrpool_loss_patch      (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
-     real(r8), pointer :: ctrunc_patch             (:) ! (gC/m2) patch-level sink for C truncation
-     real(r8), pointer :: woodc_patch              (:) ! (gC/m2) wood C
-     real(r8), pointer :: leafcmax_patch           (:) ! (gC/m2) ann max leaf C
-     real(r8), pointer :: totc_patch               (:) ! (gC/m2) total patch-level carbon, including cpool
-     real(r8), pointer :: rootc_col                (:) ! (gC/m2) root carbon at column level (fire)
-     real(r8), pointer :: leafc_col                (:) ! (gC/m2) column-level leafc (fire)
-     real(r8), pointer :: deadstemc_col            (:) ! (gC/m2) column-level deadstemc (fire)
-     real(r8), pointer :: fuelc_col                (:) ! fuel load outside cropland
-     real(r8), pointer :: fuelc_crop_col           (:) ! fuel load for cropland
-     real(r8), pointer :: cropseedc_deficit_patch  (:) ! (gC/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
+     real(r8), pointer :: grainc_patch                        (:) ! (gC/m2) grain C (crop model)
+     real(r8), pointer :: grainc_storage_patch                (:) ! (gC/m2) grain C storage (crop model)
+     real(r8), pointer :: grainc_xfer_patch                   (:) ! (gC/m2) grain C transfer (crop model)
+     real(r8), pointer :: matrix_cap_grainc_patch             (:) ! (gC/m2) Capacity of grain C
+     real(r8), pointer :: matrix_cap_grainc_storage_patch     (:) ! (gC/m2) Capacity of grain storage C
+     real(r8), pointer :: matrix_cap_grainc_xfer_patch        (:) ! (gC/m2) Capacity of grain transfer C
+     real(r8), pointer :: leafc_patch                         (:) ! (gC/m2) leaf C
+     real(r8), pointer :: leafc_storage_patch                 (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: leafc_xfer_patch                    (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: matrix_cap_leafc_patch              (:) ! (gC/m2) Capacity of leaf C
+     real(r8), pointer :: matrix_cap_leafc_storage_patch      (:) ! (gC/m2) Capacity of leaf C storage
+     real(r8), pointer :: matrix_cap_leafc_xfer_patch         (:) ! (gC/m2) Capacity of leaf C transfer
+     real(r8), pointer :: leafc_storage_xfer_acc_patch        (:) ! (gC/m2) Accmulated leaf C transfer
+     real(r8), pointer :: storage_cdemand_patch               (:) ! (gC/m2)       C use from the C storage pool 
+     real(r8), pointer :: frootc_patch                        (:) ! (gC/m2) fine root C
+     real(r8), pointer :: frootc_storage_patch                (:) ! (gC/m2) fine root C storage
+     real(r8), pointer :: frootc_xfer_patch                   (:) ! (gC/m2) fine root C transfer
+     real(r8), pointer :: matrix_cap_frootc_patch             (:) ! (gC/m2) Capacity of fine root C
+     real(r8), pointer :: matrix_cap_frootc_storage_patch     (:) ! (gC/m2) Capacity of fine root C storage
+     real(r8), pointer :: matrix_cap_frootc_xfer_patch        (:) ! (gC/m2) Capacity of fine root C transfer
+     real(r8), pointer :: livestemc_patch                     (:) ! (gC/m2) live stem C
+     real(r8), pointer :: livestemc_storage_patch             (:) ! (gC/m2) live stem C storage
+     real(r8), pointer :: livestemc_xfer_patch                (:) ! (gC/m2) live stem C transfer
+     real(r8), pointer :: matrix_cap_livestemc_patch          (:) ! (gC/m2) Capacity of live stem C
+     real(r8), pointer :: matrix_cap_livestemc_storage_patch  (:) ! (gC/m2) Capacity of live stem C storage
+     real(r8), pointer :: matrix_cap_livestemc_xfer_patch     (:) ! (gC/m2) Capacity of live stem C transfer
+     real(r8), pointer :: deadstemc_patch                     (:) ! (gC/m2) dead stem C
+     real(r8), pointer :: deadstemc_storage_patch             (:) ! (gC/m2) dead stem C storage
+     real(r8), pointer :: deadstemc_xfer_patch                (:) ! (gC/m2) dead stem C transfer
+     real(r8), pointer :: matrix_cap_deadstemc_patch          (:) ! (gC/m2) Capacity of dead stem C
+     real(r8), pointer :: matrix_cap_deadstemc_storage_patch  (:) ! (gC/m2) Capacity of dead stem C storage
+     real(r8), pointer :: matrix_cap_deadstemc_xfer_patch     (:) ! (gC/m2) Capacity of dead stem C transfer
+     real(r8), pointer :: livecrootc_patch                    (:) ! (gC/m2) live coarse root C
+     real(r8), pointer :: livecrootc_storage_patch            (:) ! (gC/m2) live coarse root C storage
+     real(r8), pointer :: livecrootc_xfer_patch               (:) ! (gC/m2) live coarse root C transfer
+     real(r8), pointer :: matrix_cap_livecrootc_patch         (:) ! (gC/m2) Capacity of live coarse root C
+     real(r8), pointer :: matrix_cap_livecrootc_storage_patch (:) ! (gC/m2) Capacity of live coarse root C storage
+     real(r8), pointer :: matrix_cap_livecrootc_xfer_patch    (:) ! (gC/m2) Capacity of live coarse root C transfer
+     real(r8), pointer :: deadcrootc_patch                    (:) ! (gC/m2) dead coarse root C
+     real(r8), pointer :: deadcrootc_storage_patch            (:) ! (gC/m2) dead coarse root C storage
+     real(r8), pointer :: deadcrootc_xfer_patch               (:) ! (gC/m2) dead coarse root C transfer
+     real(r8), pointer :: matrix_cap_deadcrootc_patch         (:) ! (gC/m2) Capacity of dead coarse root C
+     real(r8), pointer :: matrix_cap_deadcrootc_storage_patch (:) ! (gC/m2) Capacity of dead coarse root C storage
+     real(r8), pointer :: matrix_cap_deadcrootc_xfer_patch    (:) ! (gC/m2) Capacity of dead coarse root C transfer
+     real(r8), pointer :: gresp_storage_patch                 (:) ! (gC/m2) growth respiration storage
+     real(r8), pointer :: gresp_xfer_patch                    (:) ! (gC/m2) growth respiration transfer
+     real(r8), pointer :: cpool_patch                         (:) ! (gC/m2) temporary photosynthate C pool
+     real(r8), pointer :: xsmrpool_patch                      (:) ! (gC/m2) abstract C pool to meet excess MR demand
+     real(r8), pointer :: xsmrpool_loss_patch                 (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
+     real(r8), pointer :: ctrunc_patch                        (:) ! (gC/m2) patch-level sink for C truncation
+     real(r8), pointer :: woodc_patch                         (:) ! (gC/m2) wood C
+     real(r8), pointer :: leafcmax_patch                      (:) ! (gC/m2) ann max leaf C
+     real(r8), pointer :: totc_patch                          (:) ! (gC/m2) total patch-level carbon, including cpool
+     real(r8), pointer :: rootc_col                           (:) ! (gC/m2) root carbon at column level (fire)
+     real(r8), pointer :: leafc_col                           (:) ! (gC/m2) column-level leafc (fire)
+     real(r8), pointer :: deadstemc_col                       (:) ! (gC/m2) column-level deadstemc (fire)
+     real(r8), pointer :: fuelc_col                           (:) ! fuel load outside cropland
+     real(r8), pointer :: fuelc_crop_col                      (:) ! fuel load for cropland
+     real(r8), pointer :: cropseedc_deficit_patch             (:) ! (gC/m2) pool for seeding new crop growth; this is a NEGATIVE term, indicating the amount of seed usage that needs to be repaid
+! initial pool size of year for matrix
+     real(r8), pointer :: leafc0_patch                        (:) ! (gC/m2) Initial value of leaf C for SASU
+     real(r8), pointer :: leafc0_storage_patch                (:) ! (gC/m2) Initial value of leaf C storage for SASU
+     real(r8), pointer :: leafc0_xfer_patch                   (:) ! (gC/m2) Initial value of leaf C transfer for SASU
+     real(r8), pointer :: frootc0_patch                       (:) ! (gC/m2) Initial value of fine root C for SASU
+     real(r8), pointer :: frootc0_storage_patch               (:) ! (gC/m2) Initial value of fine root C storage for SASU
+     real(r8), pointer :: frootc0_xfer_patch                  (:) ! (gC/m2) Initial value of fine root C transfer for SASU
+     real(r8), pointer :: livestemc0_patch                    (:) ! (gC/m2) Initial value of live stem C for SASU
+     real(r8), pointer :: livestemc0_storage_patch            (:) ! (gC/m2) Initial value of live stem C storage for SASU
+     real(r8), pointer :: livestemc0_xfer_patch               (:) ! (gC/m2) Initial value of live stem C transfer for SASU
+     real(r8), pointer :: deadstemc0_patch                    (:) ! (gC/m2) Initial value of dead stem C for SASU
+     real(r8), pointer :: deadstemc0_storage_patch            (:) ! (gC/m2) Initial value of dead stem C storage for SASU
+     real(r8), pointer :: deadstemc0_xfer_patch               (:) ! (gC/m2) Initial value of dead stem C transfer for SASU
+     real(r8), pointer :: livecrootc0_patch                   (:) ! (gC/m2) Initial value of live coarse root C for SASU
+     real(r8), pointer :: livecrootc0_storage_patch           (:) ! (gC/m2) Initial value of live coarse root C storage for SASU
+     real(r8), pointer :: livecrootc0_xfer_patch              (:) ! (gC/m2) Initial value of live coarse root C transfer for SASU
+     real(r8), pointer :: deadcrootc0_patch                   (:) ! (gC/m2) Initial value of dead coarse root C for SASU
+     real(r8), pointer :: deadcrootc0_storage_patch           (:) ! (gC/m2) Initial value of dead coarse root C storage for SASU
+     real(r8), pointer :: deadcrootc0_xfer_patch              (:) ! (gC/m2) Initial value of dead coarse root C transfer for SASU
+     real(r8), pointer :: grainc0_patch                       (:) ! (gC/m2) Initial value of fine grain C for SASU
+     real(r8), pointer :: grainc0_storage_patch               (:) ! (gC/m2) Initial value of fine grain C storage for SASU
+     real(r8), pointer :: grainc0_xfer_patch                  (:) ! (gC/m2) Initial value of fine grain C transfer for SASU
 
      ! pools for dynamic landcover
-     real(r8), pointer :: seedc_grc                (:) ! (gC/m2) gridcell-level pool for seeding new PFTs via dynamic landcover
+     real(r8), pointer :: seedc_grc                           (:) ! (gC/m2) gridcell-level pool for seeding new PFTs via dynamic landcover
 
      ! summary (diagnostic) state variables, not involved in mass balance
-     real(r8), pointer :: dispvegc_patch           (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
-     real(r8), pointer :: storvegc_patch           (:) ! (gC/m2) stored vegetation carbon, excluding cpool
-     real(r8), pointer :: totvegc_patch            (:) ! (gC/m2) total vegetation carbon, excluding cpool
-     real(r8), pointer :: totvegc_col              (:) ! (gC/m2) total vegetation carbon, excluding cpool averaged to column (p2c)
+     real(r8), pointer :: dispvegc_patch                      (:) ! (gC/m2) displayed veg carbon, excluding storage and cpool
+     real(r8), pointer :: storvegc_patch                      (:) ! (gC/m2) stored vegetation carbon, excluding cpool
+     real(r8), pointer :: totvegc_patch                       (:) ! (gC/m2) total vegetation carbon, excluding cpool
+     real(r8), pointer :: totvegc_col                         (:) ! (gC/m2) total vegetation carbon, excluding cpool averaged to column (p2c)
 
      ! Total C pools       
-     real(r8), pointer :: totc_p2c_col             (:) ! (gC/m2) totc_patch averaged to col
-     real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
-     real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
-     real(r8), pointer :: totc_grc                 (:) ! (gC/m2) total gridcell carbon
+     real(r8), pointer :: totc_p2c_col                        (:) ! (gC/m2) totc_patch averaged to col
+     real(r8), pointer :: totc_col                            (:) ! (gC/m2) total column carbon, incl veg and cpool
+     real(r8), pointer :: totecosysc_col                      (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
+     real(r8), pointer :: totc_grc                            (:) ! (gC/m2) total gridcell carbon
+
+! Accumulation variables are accumulated for a whole year. They are used for matrix spinup and calculation of diagnostic variables
+     real(r8), pointer :: matrix_calloc_leaf_acc_patch        (:) ! (gC/m2/year) Input C allocated to leaf during this year 
+     real(r8), pointer :: matrix_calloc_leafst_acc_patch      (:) ! (gC/m2/year) Input C allocated to leaf storage during this year
+     real(r8), pointer :: matrix_calloc_froot_acc_patch       (:) ! (gC/m2/year) Input C allocated to fine root during this year
+     real(r8), pointer :: matrix_calloc_frootst_acc_patch     (:) ! (gC/m2/year) Input C allocated to fine root storage during this year
+     real(r8), pointer :: matrix_calloc_livestem_acc_patch    (:) ! (gC/m2/year) Input C allocated to live stem during this year
+     real(r8), pointer :: matrix_calloc_livestemst_acc_patch  (:) ! (gC/m2/year) Input C allocated to live stem storage during this year
+     real(r8), pointer :: matrix_calloc_deadstem_acc_patch    (:) ! (gC/m2/year) Input C allocated to dead stem during this year
+     real(r8), pointer :: matrix_calloc_deadstemst_acc_patch  (:) ! (gC/m2/year) Input C allocated to dead stem storage during this year
+     real(r8), pointer :: matrix_calloc_livecroot_acc_patch   (:) ! (gC/m2/year) Input C allocated to live coarse root during this year
+     real(r8), pointer :: matrix_calloc_livecrootst_acc_patch (:) ! (gC/m2/year) Input C allocated to live coarse root storage during this year
+     real(r8), pointer :: matrix_calloc_deadcroot_acc_patch   (:) ! (gC/m2/year) Input C allocated to dead coarse root during this year
+     real(r8), pointer :: matrix_calloc_deadcrootst_acc_patch (:) ! (gC/m2/year) Input C allocated to dead coarse root storage during this year
+     real(r8), pointer :: matrix_calloc_grain_acc_patch       (:) ! (gC/m2/year) Input C allocated to grain during this year
+     real(r8), pointer :: matrix_calloc_grainst_acc_patch     (:) ! (gC/m2/year) Input C allocated to grain storage during this year
+
+     real(r8), pointer :: matrix_ctransfer_leafst_to_leafxf_acc_patch           (:) ! (gC/m2/year) C transfer from leaf storage to leaf transfer pool during this year
+     real(r8), pointer :: matrix_ctransfer_leafxf_to_leaf_acc_patch             (:) ! (gC/m2/year) C transfer from leaf transfer to leaf pool during this year
+     real(r8), pointer :: matrix_ctransfer_frootst_to_frootxf_acc_patch         (:) ! (gC/m2/year) C transfer from fine root storage to fine root transfer pool during this year
+     real(r8), pointer :: matrix_ctransfer_frootxf_to_froot_acc_patch           (:) ! (gC/m2/year) C transfer from fine root transfer to fine root pool during this year
+     real(r8), pointer :: matrix_ctransfer_livestemst_to_livestemxf_acc_patch   (:) ! (gC/m2/year) C transfer from live stem storage to live stem transfer pool during this year
+     real(r8), pointer :: matrix_ctransfer_livestemxf_to_livestem_acc_patch     (:) ! (gC/m2/year) C transfer from live stem transfer to live stem pool during this year
+     real(r8), pointer :: matrix_ctransfer_deadstemst_to_deadstemxf_acc_patch   (:) ! (gC/m2/year) C transfer from dead stem storage to dead stem transfer pool during this year
+     real(r8), pointer :: matrix_ctransfer_deadstemxf_to_deadstem_acc_patch     (:) ! (gC/m2/year) C transfer from dead stem transfer to dead stem pool during this year
+     real(r8), pointer :: matrix_ctransfer_livecrootst_to_livecrootxf_acc_patch (:) ! (gC/m2/year) C transfer from live coarse root storage to live coarse root transfer pool during this year
+     real(r8), pointer :: matrix_ctransfer_livecrootxf_to_livecroot_acc_patch   (:) ! (gC/m2/year) C transfer from live coarse root transfer to live coarse root pool during this year
+     real(r8), pointer :: matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_patch (:) ! (gC/m2/year) C transfer from dead coarse root storage to dead coarse root transfer pool during this year
+     real(r8), pointer :: matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch   (:) ! (gC/m2/year) C transfer from dead coarse root transfer to dead coarse root pool during this year
+     real(r8), pointer :: matrix_ctransfer_grainst_to_grainxf_acc_patch         (:) ! (gC/m2/year) C transfer from grain storage to grain transfer pool during this year
+     real(r8), pointer :: matrix_ctransfer_grainxf_to_grain_acc_patch           (:) ! (gC/m2/year) C transfer from grain transfer to grain pool during this year
+     real(r8), pointer :: matrix_ctransfer_livestem_to_deadstem_acc_patch       (:) ! (gC/m2/year) C transfer from live stem to dead stem pool during this year
+     real(r8), pointer :: matrix_ctransfer_livecroot_to_deadcroot_acc_patch     (:) ! (gC/m2/year) C transfer from live coarse root to dead coarse root pool during this year
+
+     real(r8), pointer :: matrix_cturnover_leaf_acc_patch             (:) ! (gC/m2/year) C turnover from leaf
+     real(r8), pointer :: matrix_cturnover_leafst_acc_patch           (:) ! (gC/m2/year) C turnover from leaf storage
+     real(r8), pointer :: matrix_cturnover_leafxf_acc_patch           (:) ! (gC/m2/year) C turnover from leaf transfer
+     real(r8), pointer :: matrix_cturnover_froot_acc_patch            (:) ! (gC/m2/year) C turnover from fine root
+     real(r8), pointer :: matrix_cturnover_frootst_acc_patch          (:) ! (gC/m2/year) C turnover from fine root storage
+     real(r8), pointer :: matrix_cturnover_frootxf_acc_patch          (:) ! (gC/m2/year) C turnover from fine root transfer
+     real(r8), pointer :: matrix_cturnover_livestem_acc_patch         (:) ! (gC/m2/year) C turnover from live stem
+     real(r8), pointer :: matrix_cturnover_livestemst_acc_patch       (:) ! (gC/m2/year) C turnover from live stem storage
+     real(r8), pointer :: matrix_cturnover_livestemxf_acc_patch       (:) ! (gC/m2/year) C turnover from live stem transfer
+     real(r8), pointer :: matrix_cturnover_deadstem_acc_patch         (:) ! (gC/m2/year) C turnover from dead stem
+     real(r8), pointer :: matrix_cturnover_deadstemst_acc_patch       (:) ! (gC/m2/year) C turnover from dead stem storage
+     real(r8), pointer :: matrix_cturnover_deadstemxf_acc_patch       (:) ! (gC/m2/year) C turnover from dead stem transfer
+     real(r8), pointer :: matrix_cturnover_livecroot_acc_patch        (:) ! (gC/m2/year) C turnover from live coarse root
+     real(r8), pointer :: matrix_cturnover_livecrootst_acc_patch      (:) ! (gC/m2/year) C turnover from live coarse root storage
+     real(r8), pointer :: matrix_cturnover_livecrootxf_acc_patch      (:) ! (gC/m2/year) C turnover from live coarse root transfer
+     real(r8), pointer :: matrix_cturnover_deadcroot_acc_patch        (:) ! (gC/m2/year) C turnover from dead coarse root
+     real(r8), pointer :: matrix_cturnover_deadcrootst_acc_patch      (:) ! (gC/m2/year) C turnover from dead coarse root storage
+     real(r8), pointer :: matrix_cturnover_deadcrootxf_acc_patch      (:) ! (gC/m2/year) C turnover from dead coarse root transfer
+     real(r8), pointer :: matrix_cturnover_grain_acc_patch            (:) ! (gC/m2/year) C turnover from grain 
+     real(r8), pointer :: matrix_cturnover_grainst_acc_patch          (:) ! (gC/m2/year) C turnover from grain storage
+     real(r8), pointer :: matrix_cturnover_grainxf_acc_patch          (:) ! (gC/m2/year) C turnover from grain transfer
+
+     real(r8), pointer :: grainc_SASUsave_patch               (:) ! (gC/m2) grain C (crop model)
+     real(r8), pointer :: grainc_storage_SASUsave_patch       (:) ! (gC/m2) grain C storage (crop model)
+     real(r8), pointer :: leafc_SASUsave_patch                (:) ! (gC/m2) leaf C
+     real(r8), pointer :: leafc_storage_SASUsave_patch        (:) ! (gC/m2) leaf C storage
+     real(r8), pointer :: leafc_xfer_SASUsave_patch           (:) ! (gC/m2) leaf C transfer
+     real(r8), pointer :: frootc_SASUsave_patch               (:) ! (gC/m2) fine root C
+     real(r8), pointer :: frootc_storage_SASUsave_patch       (:) ! (gC/m2) fine root C storage
+     real(r8), pointer :: frootc_xfer_SASUsave_patch          (:) ! (gC/m2) fine root C transfer
+     real(r8), pointer :: livestemc_SASUsave_patch            (:) ! (gC/m2) live stem C
+     real(r8), pointer :: livestemc_storage_SASUsave_patch    (:) ! (gC/m2) live stem C storage
+     real(r8), pointer :: livestemc_xfer_SASUsave_patch       (:) ! (gC/m2) live stem C transfer
+     real(r8), pointer :: deadstemc_SASUsave_patch            (:) ! (gC/m2) dead stem C
+     real(r8), pointer :: deadstemc_storage_SASUsave_patch    (:) ! (gC/m2) dead stem C storage
+     real(r8), pointer :: deadstemc_xfer_SASUsave_patch       (:) ! (gC/m2) dead stem C transfer
+     real(r8), pointer :: livecrootc_SASUsave_patch           (:) ! (gC/m2) live coarse root C
+     real(r8), pointer :: livecrootc_storage_SASUsave_patch   (:) ! (gC/m2) live coarse root C storage
+     real(r8), pointer :: livecrootc_xfer_SASUsave_patch      (:) ! (gC/m2) live coarse root C transfer
+     real(r8), pointer :: deadcrootc_SASUsave_patch           (:) ! (gC/m2) dead coarse root C
+     real(r8), pointer :: deadcrootc_storage_SASUsave_patch   (:) ! (gC/m2) dead coarse root C storage
+     real(r8), pointer :: deadcrootc_xfer_SASUsave_patch      (:) ! (gC/m2) dead coarse root C transfer
 
      logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
@@ -224,40 +343,190 @@ contains
     begc = bounds%begc; endc = bounds%endc
     begg = bounds%begg; endg = bounds%endg
 
-    allocate(this%leafc_patch              (begp:endp)) ; this%leafc_patch              (:) = nan
-    allocate(this%leafc_storage_patch      (begp:endp)) ; this%leafc_storage_patch      (:) = nan
-    allocate(this%leafc_xfer_patch         (begp:endp)) ; this%leafc_xfer_patch         (:) = nan
-    allocate(this%leafc_storage_xfer_acc_patch (begp:endp)) ; this%leafc_storage_xfer_acc_patch (:) = nan
-    allocate(this%storage_cdemand_patch        (begp:endp)) ; this%storage_cdemand_patch        (:) = nan
-    allocate(this%frootc_patch             (begp:endp)) ; this%frootc_patch             (:) = nan
-    allocate(this%frootc_storage_patch     (begp:endp)) ; this%frootc_storage_patch     (:) = nan
-    allocate(this%frootc_xfer_patch        (begp:endp)) ; this%frootc_xfer_patch        (:) = nan
-    allocate(this%livestemc_patch          (begp:endp)) ; this%livestemc_patch          (:) = nan
-    allocate(this%livestemc_storage_patch  (begp:endp)) ; this%livestemc_storage_patch  (:) = nan
-    allocate(this%livestemc_xfer_patch     (begp:endp)) ; this%livestemc_xfer_patch     (:) = nan
-    allocate(this%deadstemc_patch          (begp:endp)) ; this%deadstemc_patch          (:) = nan
-    allocate(this%deadstemc_storage_patch  (begp:endp)) ; this%deadstemc_storage_patch  (:) = nan
-    allocate(this%deadstemc_xfer_patch     (begp:endp)) ; this%deadstemc_xfer_patch     (:) = nan
-    allocate(this%livecrootc_patch         (begp:endp)) ; this%livecrootc_patch         (:) = nan
-    allocate(this%livecrootc_storage_patch (begp:endp)) ; this%livecrootc_storage_patch (:) = nan
-    allocate(this%livecrootc_xfer_patch    (begp:endp)) ; this%livecrootc_xfer_patch    (:) = nan
-    allocate(this%deadcrootc_patch         (begp:endp)) ; this%deadcrootc_patch         (:) = nan
-    allocate(this%deadcrootc_storage_patch (begp:endp)) ; this%deadcrootc_storage_patch (:) = nan
-    allocate(this%deadcrootc_xfer_patch    (begp:endp)) ; this%deadcrootc_xfer_patch    (:) = nan
-    allocate(this%gresp_storage_patch      (begp:endp)) ; this%gresp_storage_patch      (:) = nan
-    allocate(this%gresp_xfer_patch         (begp:endp)) ; this%gresp_xfer_patch         (:) = nan
-    allocate(this%cpool_patch              (begp:endp)) ; this%cpool_patch              (:) = nan
-    allocate(this%xsmrpool_patch           (begp:endp)) ; this%xsmrpool_patch           (:) = nan
-    allocate(this%xsmrpool_loss_patch      (begp:endp)) ; this%xsmrpool_loss_patch      (:) = nan
-    allocate(this%ctrunc_patch             (begp:endp)) ; this%ctrunc_patch             (:) = nan
-    allocate(this%dispvegc_patch           (begp:endp)) ; this%dispvegc_patch           (:) = nan
-    allocate(this%storvegc_patch           (begp:endp)) ; this%storvegc_patch           (:) = nan
-    allocate(this%leafcmax_patch           (begp:endp)) ; this%leafcmax_patch           (:) = nan
-    allocate(this%totc_patch               (begp:endp))  ; this%totc_patch               (:) = nan
-    allocate(this%grainc_patch             (begp:endp)) ; this%grainc_patch             (:) = nan
-    allocate(this%grainc_storage_patch     (begp:endp)) ; this%grainc_storage_patch     (:) = nan
-    allocate(this%grainc_xfer_patch        (begp:endp)) ; this%grainc_xfer_patch        (:) = nan
-    allocate(this%woodc_patch              (begp:endp)) ; this%woodc_patch              (:) = nan     
+    allocate(this%leafc_patch                            (begp:endp)) ; this%leafc_patch                        (:) = nan
+    allocate(this%leafc_storage_patch                    (begp:endp)) ; this%leafc_storage_patch                (:) = nan
+    allocate(this%leafc_xfer_patch                       (begp:endp)) ; this%leafc_xfer_patch                   (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_leafc_patch              (begp:endp)) ; this%matrix_cap_leafc_patch             (:) = nan
+       allocate(this%matrix_cap_leafc_storage_patch      (begp:endp)) ; this%matrix_cap_leafc_storage_patch     (:) = nan
+       allocate(this%matrix_cap_leafc_xfer_patch         (begp:endp)) ; this%matrix_cap_leafc_xfer_patch        (:) = nan
+    end if
+    allocate(this%leafc_storage_xfer_acc_patch           (begp:endp)) ; this%leafc_storage_xfer_acc_patch       (:) = nan
+    allocate(this%storage_cdemand_patch                  (begp:endp)) ; this%storage_cdemand_patch              (:) = nan
+    allocate(this%frootc_patch                           (begp:endp)) ; this%frootc_patch                       (:) = nan
+    allocate(this%frootc_storage_patch                   (begp:endp)) ; this%frootc_storage_patch               (:) = nan
+    allocate(this%frootc_xfer_patch                      (begp:endp)) ; this%frootc_xfer_patch                  (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_frootc_patch             (begp:endp)) ; this%matrix_cap_frootc_patch            (:) = nan
+       allocate(this%matrix_cap_frootc_storage_patch     (begp:endp)) ; this%matrix_cap_frootc_storage_patch    (:) = nan
+       allocate(this%matrix_cap_frootc_xfer_patch        (begp:endp)) ; this%matrix_cap_frootc_xfer_patch       (:) = nan
+    end if
+    allocate(this%livestemc_patch                        (begp:endp)) ; this%livestemc_patch                    (:) = nan
+    allocate(this%livestemc_storage_patch                (begp:endp)) ; this%livestemc_storage_patch            (:) = nan
+    allocate(this%livestemc_xfer_patch                   (begp:endp)) ; this%livestemc_xfer_patch               (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_livestemc_patch          (begp:endp)) ; this%matrix_cap_livestemc_patch         (:) = nan
+       allocate(this%matrix_cap_livestemc_storage_patch  (begp:endp)) ; this%matrix_cap_livestemc_storage_patch (:) = nan
+       allocate(this%matrix_cap_livestemc_xfer_patch     (begp:endp)) ; this%matrix_cap_livestemc_xfer_patch    (:) = nan
+    end if
+    allocate(this%deadstemc_patch                        (begp:endp)) ; this%deadstemc_patch                    (:) = nan
+    allocate(this%deadstemc_storage_patch                (begp:endp)) ; this%deadstemc_storage_patch            (:) = nan
+    allocate(this%deadstemc_xfer_patch                   (begp:endp)) ; this%deadstemc_xfer_patch               (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_deadstemc_patch          (begp:endp)) ; this%matrix_cap_deadstemc_patch         (:) = nan
+       allocate(this%matrix_cap_deadstemc_storage_patch  (begp:endp)) ; this%matrix_cap_deadstemc_storage_patch (:) = nan
+       allocate(this%matrix_cap_deadstemc_xfer_patch     (begp:endp)) ; this%matrix_cap_deadstemc_xfer_patch    (:) = nan
+    end if
+    allocate(this%livecrootc_patch                       (begp:endp)) ; this%livecrootc_patch                   (:) = nan
+    allocate(this%livecrootc_storage_patch               (begp:endp)) ; this%livecrootc_storage_patch           (:) = nan
+    allocate(this%livecrootc_xfer_patch                  (begp:endp)) ; this%livecrootc_xfer_patch              (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_livecrootc_patch         (begp:endp)) ; this%matrix_cap_livecrootc_patch        (:) = nan
+       allocate(this%matrix_cap_livecrootc_storage_patch (begp:endp)) ; this%matrix_cap_livecrootc_storage_patch(:) = nan
+       allocate(this%matrix_cap_livecrootc_xfer_patch    (begp:endp)) ; this%matrix_cap_livecrootc_xfer_patch   (:) = nan
+    end if
+    allocate(this%deadcrootc_patch                       (begp:endp)) ; this%deadcrootc_patch                   (:) = nan
+    allocate(this%deadcrootc_storage_patch               (begp:endp)) ; this%deadcrootc_storage_patch           (:) = nan
+    allocate(this%deadcrootc_xfer_patch                  (begp:endp)) ; this%deadcrootc_xfer_patch              (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_deadcrootc_patch         (begp:endp)) ; this%matrix_cap_deadcrootc_patch        (:) = nan
+       allocate(this%matrix_cap_deadcrootc_storage_patch (begp:endp)) ; this%matrix_cap_deadcrootc_storage_patch(:) = nan
+       allocate(this%matrix_cap_deadcrootc_xfer_patch    (begp:endp)) ; this%matrix_cap_deadcrootc_xfer_patch   (:) = nan
+    end if
+    allocate(this%gresp_storage_patch                    (begp:endp)) ; this%gresp_storage_patch                (:) = nan
+    allocate(this%gresp_xfer_patch                       (begp:endp)) ; this%gresp_xfer_patch                   (:) = nan
+    allocate(this%cpool_patch                            (begp:endp)) ; this%cpool_patch                        (:) = nan
+    allocate(this%xsmrpool_patch                         (begp:endp)) ; this%xsmrpool_patch                     (:) = nan
+    allocate(this%xsmrpool_loss_patch                    (begp:endp)) ; this%xsmrpool_loss_patch                (:) = nan
+    allocate(this%ctrunc_patch                           (begp:endp)) ; this%ctrunc_patch                       (:) = nan
+    allocate(this%dispvegc_patch                         (begp:endp)) ; this%dispvegc_patch                     (:) = nan
+    allocate(this%storvegc_patch                         (begp:endp)) ; this%storvegc_patch                     (:) = nan
+    allocate(this%leafcmax_patch                         (begp:endp)) ; this%leafcmax_patch                     (:) = nan
+    allocate(this%totc_patch                             (begp:endp))  ; this%totc_patch                        (:) = nan
+    allocate(this%grainc_patch                           (begp:endp)) ; this%grainc_patch                       (:) = nan
+    allocate(this%grainc_storage_patch                   (begp:endp)) ; this%grainc_storage_patch               (:) = nan
+    allocate(this%grainc_xfer_patch                      (begp:endp)) ; this%grainc_xfer_patch                  (:) = nan
+    if(use_matrixcn)then
+       allocate(this%matrix_cap_grainc_patch             (begp:endp)) ; this%matrix_cap_grainc_patch            (:) = nan
+       allocate(this%matrix_cap_grainc_storage_patch     (begp:endp)) ; this%matrix_cap_grainc_storage_patch    (:) = nan
+       allocate(this%matrix_cap_grainc_xfer_patch        (begp:endp)) ; this%matrix_cap_grainc_xfer_patch       (:) = nan
+    end if
+    allocate(this%woodc_patch                            (begp:endp)) ; this%woodc_patch                        (:) = nan     
+!initial pool size of year for matrix
+    if(use_matrixcn)then
+       allocate(this%leafc0_patch                        (begp:endp)) ; this%leafc0_patch                       (:) = nan
+       allocate(this%leafc0_storage_patch                (begp:endp)) ; this%leafc0_storage_patch               (:) = nan
+       allocate(this%leafc0_xfer_patch                   (begp:endp)) ; this%leafc0_xfer_patch                  (:) = nan
+       allocate(this%frootc0_patch                       (begp:endp)) ; this%frootc0_patch                      (:) = nan
+       allocate(this%frootc0_storage_patch               (begp:endp)) ; this%frootc0_storage_patch              (:) = nan
+       allocate(this%frootc0_xfer_patch                  (begp:endp)) ; this%frootc0_xfer_patch                 (:) = nan
+       allocate(this%livestemc0_patch                    (begp:endp)) ; this%livestemc0_patch                   (:) = nan
+       allocate(this%livestemc0_storage_patch            (begp:endp)) ; this%livestemc0_storage_patch           (:) = nan
+       allocate(this%livestemc0_xfer_patch               (begp:endp)) ; this%livestemc0_xfer_patch              (:) = nan
+       allocate(this%deadstemc0_patch                    (begp:endp)) ; this%deadstemc0_patch                   (:) = nan
+       allocate(this%deadstemc0_storage_patch            (begp:endp)) ; this%deadstemc0_storage_patch           (:) = nan
+       allocate(this%deadstemc0_xfer_patch               (begp:endp)) ; this%deadstemc0_xfer_patch              (:) = nan
+       allocate(this%livecrootc0_patch                   (begp:endp)) ; this%livecrootc0_patch                  (:) = nan
+       allocate(this%livecrootc0_storage_patch           (begp:endp)) ; this%livecrootc0_storage_patch          (:) = nan
+       allocate(this%livecrootc0_xfer_patch              (begp:endp)) ; this%livecrootc0_xfer_patch             (:) = nan
+       allocate(this%deadcrootc0_patch                   (begp:endp)) ; this%deadcrootc0_patch                  (:) = nan
+       allocate(this%deadcrootc0_storage_patch           (begp:endp)) ; this%deadcrootc0_storage_patch          (:) = nan
+       allocate(this%deadcrootc0_xfer_patch              (begp:endp)) ; this%deadcrootc0_xfer_patch             (:) = nan
+       allocate(this%grainc0_patch                       (begp:endp)) ; this%grainc0_patch                      (:) = nan
+       allocate(this%grainc0_storage_patch               (begp:endp)) ; this%grainc0_storage_patch              (:) = nan
+       allocate(this%grainc0_xfer_patch                  (begp:endp)) ; this%grainc0_xfer_patch                 (:) = nan
+ 
+       allocate(this%leafc_SASUsave_patch                (begp:endp)) ; this%leafc_SASUsave_patch               (:) = nan
+       allocate(this%leafc_storage_SASUsave_patch        (begp:endp)) ; this%leafc_storage_SASUsave_patch       (:) = nan
+       allocate(this%leafc_xfer_SASUsave_patch           (begp:endp)) ; this%leafc_xfer_SASUsave_patch          (:) = nan
+       allocate(this%frootc_SASUsave_patch               (begp:endp)) ; this%frootc_SASUsave_patch              (:) = nan
+       allocate(this%frootc_storage_SASUsave_patch       (begp:endp)) ; this%frootc_storage_SASUsave_patch      (:) = nan
+       allocate(this%frootc_xfer_SASUsave_patch          (begp:endp)) ; this%frootc_xfer_SASUsave_patch         (:) = nan
+       allocate(this%livestemc_SASUsave_patch            (begp:endp)) ; this%livestemc_SASUsave_patch           (:) = nan
+       allocate(this%livestemc_storage_SASUsave_patch    (begp:endp)) ; this%livestemc_storage_SASUsave_patch   (:) = nan
+       allocate(this%livestemc_xfer_SASUsave_patch       (begp:endp)) ; this%livestemc_xfer_SASUsave_patch      (:) = nan
+       allocate(this%deadstemc_SASUsave_patch            (begp:endp)) ; this%deadstemc_SASUsave_patch           (:) = nan
+       allocate(this%deadstemc_storage_SASUsave_patch    (begp:endp)) ; this%deadstemc_storage_SASUsave_patch   (:) = nan
+       allocate(this%deadstemc_xfer_SASUsave_patch       (begp:endp)) ; this%deadstemc_xfer_SASUsave_patch      (:) = nan
+       allocate(this%livecrootc_SASUsave_patch           (begp:endp)) ; this%livecrootc_SASUsave_patch          (:) = nan
+       allocate(this%livecrootc_storage_SASUsave_patch   (begp:endp)) ; this%livecrootc_storage_SASUsave_patch  (:) = nan
+       allocate(this%livecrootc_xfer_SASUsave_patch      (begp:endp)) ; this%livecrootc_xfer_SASUsave_patch     (:) = nan
+       allocate(this%deadcrootc_SASUsave_patch           (begp:endp)) ; this%deadcrootc_SASUsave_patch          (:) = nan
+       allocate(this%deadcrootc_storage_SASUsave_patch   (begp:endp)) ; this%deadcrootc_storage_SASUsave_patch  (:) = nan
+       allocate(this%deadcrootc_xfer_SASUsave_patch      (begp:endp)) ; this%deadcrootc_xfer_SASUsave_patch     (:) = nan
+       allocate(this%grainc_SASUsave_patch               (begp:endp)) ; this%grainc_SASUsave_patch              (:) = nan
+       allocate(this%grainc_storage_SASUsave_patch       (begp:endp)) ; this%grainc_storage_SASUsave_patch      (:) = nan
+
+       allocate(this%matrix_calloc_leaf_acc_patch        (begp:endp)); this%matrix_calloc_leaf_acc_patch        (:) = nan
+       allocate(this%matrix_calloc_leafst_acc_patch      (begp:endp)); this%matrix_calloc_leafst_acc_patch      (:) = nan
+       allocate(this%matrix_calloc_froot_acc_patch       (begp:endp)); this%matrix_calloc_froot_acc_patch       (:) = nan
+       allocate(this%matrix_calloc_frootst_acc_patch     (begp:endp)); this%matrix_calloc_frootst_acc_patch     (:) = nan
+       allocate(this%matrix_calloc_livestem_acc_patch    (begp:endp)); this%matrix_calloc_livestem_acc_patch    (:) = nan
+       allocate(this%matrix_calloc_livestemst_acc_patch  (begp:endp)); this%matrix_calloc_livestemst_acc_patch  (:) = nan
+       allocate(this%matrix_calloc_deadstem_acc_patch    (begp:endp)); this%matrix_calloc_deadstem_acc_patch    (:) = nan
+       allocate(this%matrix_calloc_deadstemst_acc_patch  (begp:endp)); this%matrix_calloc_deadstemst_acc_patch  (:) = nan
+       allocate(this%matrix_calloc_livecroot_acc_patch   (begp:endp)); this%matrix_calloc_livecroot_acc_patch   (:) = nan
+       allocate(this%matrix_calloc_livecrootst_acc_patch (begp:endp)); this%matrix_calloc_livecrootst_acc_patch (:) = nan
+       allocate(this%matrix_calloc_deadcroot_acc_patch   (begp:endp)); this%matrix_calloc_deadcroot_acc_patch   (:) = nan
+       allocate(this%matrix_calloc_deadcrootst_acc_patch (begp:endp)); this%matrix_calloc_deadcrootst_acc_patch (:) = nan
+       allocate(this%matrix_calloc_grain_acc_patch       (begp:endp)); this%matrix_calloc_grain_acc_patch       (:) = nan
+       allocate(this%matrix_calloc_grainst_acc_patch     (begp:endp)); this%matrix_calloc_grainst_acc_patch     (:) = nan
+
+       allocate(this%matrix_ctransfer_leafst_to_leafxf_acc_patch           (begp:endp))
+       this%matrix_ctransfer_leafst_to_leafxf_acc_patch                    (:) = nan
+       allocate(this%matrix_ctransfer_leafxf_to_leaf_acc_patch             (begp:endp))
+       this%matrix_ctransfer_leafxf_to_leaf_acc_patch                      (:) = nan
+       allocate(this%matrix_ctransfer_frootst_to_frootxf_acc_patch         (begp:endp))
+       this%matrix_ctransfer_frootst_to_frootxf_acc_patch                  (:) = nan
+       allocate(this%matrix_ctransfer_frootxf_to_froot_acc_patch           (begp:endp))
+       this%matrix_ctransfer_frootxf_to_froot_acc_patch                    (:) = nan
+       allocate(this%matrix_ctransfer_livestemst_to_livestemxf_acc_patch   (begp:endp))
+       this%matrix_ctransfer_livestemst_to_livestemxf_acc_patch            (:) = nan
+       allocate(this%matrix_ctransfer_livestemxf_to_livestem_acc_patch     (begp:endp))
+       this%matrix_ctransfer_livestemxf_to_livestem_acc_patch              (:) = nan
+       allocate(this%matrix_ctransfer_deadstemst_to_deadstemxf_acc_patch   (begp:endp))
+       this%matrix_ctransfer_deadstemst_to_deadstemxf_acc_patch            (:) = nan
+       allocate(this%matrix_ctransfer_deadstemxf_to_deadstem_acc_patch     (begp:endp))
+       this%matrix_ctransfer_deadstemxf_to_deadstem_acc_patch              (:) = nan
+       allocate(this%matrix_ctransfer_livecrootst_to_livecrootxf_acc_patch (begp:endp))
+       this%matrix_ctransfer_livecrootst_to_livecrootxf_acc_patch          (:) = nan
+       allocate(this%matrix_ctransfer_livecrootxf_to_livecroot_acc_patch   (begp:endp))
+       this%matrix_ctransfer_livecrootxf_to_livecroot_acc_patch            (:) = nan
+       allocate(this%matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_patch (begp:endp))
+       this%matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_patch          (:) = nan
+       allocate(this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch   (begp:endp))
+       this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch            (:) = nan
+       allocate(this%matrix_ctransfer_grainst_to_grainxf_acc_patch         (begp:endp))
+       this%matrix_ctransfer_grainst_to_grainxf_acc_patch                  (:) = nan
+       allocate(this%matrix_ctransfer_grainxf_to_grain_acc_patch           (begp:endp))
+       this%matrix_ctransfer_grainxf_to_grain_acc_patch                    (:) = nan
+       allocate(this%matrix_ctransfer_livestem_to_deadstem_acc_patch       (begp:endp))
+       this%matrix_ctransfer_livestem_to_deadstem_acc_patch                (:) = nan
+       allocate(this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch     (begp:endp))
+       this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch              (:) = nan
+
+       allocate(this%matrix_cturnover_leaf_acc_patch        (begp:endp)) ; this%matrix_cturnover_leaf_acc_patch        (:) = nan
+       allocate(this%matrix_cturnover_leafst_acc_patch      (begp:endp)) ; this%matrix_cturnover_leafst_acc_patch      (:) = nan
+       allocate(this%matrix_cturnover_leafxf_acc_patch      (begp:endp)) ; this%matrix_cturnover_leafxf_acc_patch      (:) = nan
+       allocate(this%matrix_cturnover_froot_acc_patch       (begp:endp)) ; this%matrix_cturnover_froot_acc_patch       (:) = nan
+       allocate(this%matrix_cturnover_frootst_acc_patch     (begp:endp)) ; this%matrix_cturnover_frootst_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_frootxf_acc_patch     (begp:endp)) ; this%matrix_cturnover_frootxf_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_livestem_acc_patch    (begp:endp)) ; this%matrix_cturnover_livestem_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_livestemst_acc_patch  (begp:endp)) ; this%matrix_cturnover_livestemst_acc_patch  (:) = nan
+       allocate(this%matrix_cturnover_livestemxf_acc_patch  (begp:endp)) ; this%matrix_cturnover_livestemxf_acc_patch  (:) = nan
+       allocate(this%matrix_cturnover_deadstem_acc_patch    (begp:endp)) ; this%matrix_cturnover_deadstem_acc_patch    (:) = nan
+       allocate(this%matrix_cturnover_deadstemst_acc_patch  (begp:endp)) ; this%matrix_cturnover_deadstemst_acc_patch  (:) = nan
+       allocate(this%matrix_cturnover_deadstemxf_acc_patch  (begp:endp)) ; this%matrix_cturnover_deadstemxf_acc_patch  (:) = nan
+       allocate(this%matrix_cturnover_livecroot_acc_patch   (begp:endp)) ; this%matrix_cturnover_livecroot_acc_patch   (:) = nan
+       allocate(this%matrix_cturnover_livecrootst_acc_patch (begp:endp)) ; this%matrix_cturnover_livecrootst_acc_patch (:) = nan
+       allocate(this%matrix_cturnover_livecrootxf_acc_patch (begp:endp)) ; this%matrix_cturnover_livecrootxf_acc_patch (:) = nan
+       allocate(this%matrix_cturnover_deadcroot_acc_patch   (begp:endp)) ; this%matrix_cturnover_deadcroot_acc_patch   (:) = nan
+       allocate(this%matrix_cturnover_deadcrootst_acc_patch (begp:endp)) ; this%matrix_cturnover_deadcrootst_acc_patch (:) = nan
+       allocate(this%matrix_cturnover_deadcrootxf_acc_patch (begp:endp)) ; this%matrix_cturnover_deadcrootxf_acc_patch (:) = nan
+       allocate(this%matrix_cturnover_grain_acc_patch       (begp:endp)) ; this%matrix_cturnover_grain_acc_patch       (:) = nan
+       allocate(this%matrix_cturnover_grainst_acc_patch     (begp:endp)) ; this%matrix_cturnover_grainst_acc_patch     (:) = nan
+       allocate(this%matrix_cturnover_grainxf_acc_patch     (begp:endp)) ; this%matrix_cturnover_grainxf_acc_patch     (:) = nan
+    end if
 
     allocate(this%cropseedc_deficit_patch  (begp:endp)) ; this%cropseedc_deficit_patch  (:) = nan
     allocate(this%seedc_grc                (begg:endg)) ; this%seedc_grc                (:) = nan
@@ -284,7 +553,7 @@ contains
     ! add history fields for all CN variables, always set as default='inactive'
     !
     ! !USES:
-    use clm_varctl , only : use_c13, use_c14
+    use clm_varctl , only : use_c13, use_c14, use_matrixcn
     use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 
     !
     ! !ARGUMENTS:
@@ -350,6 +619,23 @@ contains
             avgflag='A', long_name='leaf C transfer', &
             ptr_patch=this%leafc_xfer_patch, default='inactive')    
 
+       if(use_matrixcn)then
+          this%matrix_cap_leafc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='leaf C capacity', &
+               ptr_patch=this%matrix_cap_leafc_patch)
+
+          this%matrix_cap_leafc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='leaf C storage capacity', &
+               ptr_patch=this%matrix_cap_leafc_storage_patch, default='inactive')    
+
+          this%matrix_cap_leafc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LEAFC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='leaf C transfer capacity', &
+               ptr_patch=this%matrix_cap_leafc_xfer_patch, default='inactive')    
+       end if
+
        this%leafc_storage_xfer_acc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LEAFC_STORAGE_XFER_ACC', units='gC/m^2', &
             avgflag='A', long_name='Accumulated leaf C transfer', &
@@ -375,6 +661,23 @@ contains
             avgflag='A', long_name='fine root C transfer', &
             ptr_patch=this%frootc_xfer_patch, default='inactive')    
 
+       if(use_matrixcn)then
+          this%matrix_cap_frootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='fine root C capacity', &
+               ptr_patch=this%matrix_cap_frootc_patch)
+
+          this%matrix_cap_frootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='fine root C storage capacity', &
+               ptr_patch=this%matrix_cap_frootc_storage_patch, default='inactive')   
+
+          this%matrix_cap_frootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='FROOTC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='fine root C transfer capacity', &
+               ptr_patch=this%matrix_cap_frootc_xfer_patch, default='inactive')    
+       end if
+
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVESTEMC', units='gC/m^2', &
             avgflag='A', long_name='live stem C', &
@@ -389,6 +692,23 @@ contains
        call hist_addfld1d (fname='LIVESTEMC_XFER', units='gC/m^2', &
             avgflag='A', long_name='live stem C transfer', &
             ptr_patch=this%livestemc_xfer_patch, default='inactive')     
+
+       if(use_matrixcn)then
+          this%matrix_cap_livestemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live stem C capacity', &
+               ptr_patch=this%matrix_cap_livestemc_patch)
+
+          this%matrix_cap_livestemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live stem C storage capcity', &
+               ptr_patch=this%matrix_cap_livestemc_storage_patch, default='inactive')    
+
+          this%matrix_cap_livestemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVESTEMC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live stem C transfer capacity', &
+               ptr_patch=this%matrix_cap_livestemc_xfer_patch, default='inactive')     
+       end if
 
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADSTEMC', units='gC/m^2', &
@@ -405,6 +725,23 @@ contains
             avgflag='A', long_name='dead stem C transfer', &
             ptr_patch=this%deadstemc_xfer_patch, default='inactive')    
 
+       if(use_matrixcn)then
+          this%matrix_cap_deadstemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_patch)
+
+          this%matrix_cap_deadstemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C storage capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_storage_patch, default='inactive')    
+
+          this%matrix_cap_deadstemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADSTEMC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead stem C transfer capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_xfer_patch, default='inactive')    
+       end if
+
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='LIVECROOTC', units='gC/m^2', &
             avgflag='A', long_name='live coarse root C', &
@@ -420,6 +757,23 @@ contains
             avgflag='A', long_name='live coarse root C transfer', &
             ptr_patch=this%livecrootc_xfer_patch, default='inactive')    
 
+       if(use_matrixcn)then
+          this%matrix_cap_livecrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C capacity', &
+               ptr_patch=this%matrix_cap_livecrootc_patch)
+
+          this%matrix_cap_livecrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C storage capacity', &
+            ptr_patch=this%matrix_cap_livecrootc_storage_patch, default='inactive')     
+
+          this%matrix_cap_livecrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='LIVECROOTC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='live coarse root C transfer capacity', &
+               ptr_patch=this%matrix_cap_livecrootc_xfer_patch, default='inactive')    
+       end if
+
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='DEADCROOTC', units='gC/m^2', &
             avgflag='A', long_name='dead coarse root C', &
@@ -434,6 +788,23 @@ contains
        call hist_addfld1d (fname='DEADCROOTC_XFER', units='gC/m^2', &
             avgflag='A', long_name='dead coarse root C transfer', &
             ptr_patch=this%deadcrootc_xfer_patch, default='inactive')   
+
+       if(use_matrixcn)then
+          this%matrix_cap_deadcrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_patch)
+
+          this%matrix_cap_deadcrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_STORAGE_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C storage capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_storage_patch, default='inactive')   
+
+          this%matrix_cap_deadcrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='DEADCROOTC_XFER_CAP', units='gC/m^2', &
+               avgflag='I', long_name='dead coarse root C transfer capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_xfer_patch, default='inactive')   
+       end if
 
        this%gresp_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='GRESP_STORAGE', units='gC/m^2', &
@@ -523,6 +894,23 @@ contains
             avgflag='A', long_name='C13 leaf C transfer', &
             ptr_patch=this%leafc_xfer_patch, default='inactive')
 
+       if(use_matrixcn)then
+          this%matrix_cap_leafc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LEAFC_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 leaf C capacity', &
+               ptr_patch=this%matrix_cap_leafc_patch)
+
+          this%matrix_cap_leafc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LEAFC_STORAGE_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 leaf C storage capacity', &
+               ptr_patch=this%matrix_cap_leafc_storage_patch)!, default='inactive')    
+
+          this%matrix_cap_leafc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LEAFC_XFER_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 leaf C transfer capacity', &
+               ptr_patch=this%matrix_cap_leafc_xfer_patch)!, default='inactive')    
+       end if
+
        this%leafc_storage_xfer_acc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LEAFC_STORAGE_XFER_ACC', units='gC13/m^2', &
             avgflag='A', long_name='Accumulated C13 leaf C transfer', &
@@ -543,6 +931,23 @@ contains
             avgflag='A', long_name='C13 fine root C transfer', &
             ptr_patch=this%frootc_xfer_patch, default='inactive')
 
+       if(use_matrixcn)then
+          this%matrix_cap_frootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_FROOTC_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 fine root C capacity', &
+               ptr_patch=this%matrix_cap_frootc_patch)
+
+          this%matrix_cap_frootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_FROOTC_STORAGE_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 fine root C storage capacity', &
+               ptr_patch=this%matrix_cap_frootc_storage_patch)!, default='inactive')   
+
+          this%matrix_cap_frootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_FROOTC_XFER_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 fine root C transfer capacity', &
+               ptr_patch=this%matrix_cap_frootc_xfer_patch)!, default='inactive')    
+       end if
+
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVESTEMC', units='gC13/m^2', &
             avgflag='A', long_name='C13 live stem C', &
@@ -557,6 +962,23 @@ contains
        call hist_addfld1d (fname='C13_LIVESTEMC_XFER', units='gC13/m^2', &
             avgflag='A', long_name='C13 live stem C transfer', &
             ptr_patch=this%livestemc_xfer_patch, default='inactive')
+
+       if(use_matrixcn)then
+          this%matrix_cap_livestemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LIVESTEMC_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 live stem C capacity', &
+               ptr_patch=this%matrix_cap_livestemc_patch)
+
+          this%matrix_cap_livestemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LIVESTEMC_STORAGE_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 live stem C storage capcity', &
+               ptr_patch=this%matrix_cap_livestemc_storage_patch)!, default='inactive')    
+
+          this%matrix_cap_livestemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LIVESTEMC_XFER_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 live stem C transfer capacity', &
+               ptr_patch=this%matrix_cap_livestemc_xfer_patch)!, default='inactive')     
+       end if
 
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADSTEMC', units='gC13/m^2', &
@@ -573,6 +995,23 @@ contains
             avgflag='A', long_name='C13 dead stem C transfer', &
             ptr_patch=this%deadstemc_xfer_patch, default='inactive')
 
+       if(use_matrixcn)then
+          this%matrix_cap_deadstemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_DEADSTEMC_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 dead stem C capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_patch)
+
+          this%matrix_cap_deadstemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_DEADSTEMC_STORAGE_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 dead stem C storage capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_storage_patch)!, default='inactive')    
+
+          this%matrix_cap_deadstemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_DEADSTEMC_XFER_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 dead stem C transfer capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_xfer_patch)!, default='inactive')    
+       end if
+
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_LIVECROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 live coarse root C', &
@@ -588,6 +1027,23 @@ contains
             avgflag='A', long_name='C13 live coarse root C transfer', &
             ptr_patch=this%livecrootc_xfer_patch, default='inactive')
 
+       if(use_matrixcn)then
+          this%matrix_cap_livecrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LIVECROOTC_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 live coarse root C capacity', &
+               ptr_patch=this%matrix_cap_livecrootc_patch)
+
+          this%matrix_cap_livecrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LIVECROOTC_STORAGE_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 live coarse root C storage capacity', &
+            ptr_patch=this%matrix_cap_livecrootc_storage_patch)!, default='inactive')     
+
+          this%matrix_cap_livecrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_LIVECROOTC_XFER_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 live coarse root C transfer capacity', &
+               ptr_patch=this%matrix_cap_livecrootc_xfer_patch)!, default='inactive')    
+       end if
+
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_DEADCROOTC', units='gC13/m^2', &
             avgflag='A', long_name='C13 dead coarse root C', &
@@ -602,6 +1058,23 @@ contains
        call hist_addfld1d (fname='C13_DEADCROOTC_XFER', units='gC13/m^2', &
             avgflag='A', long_name='C13 dead coarse root C transfer', &
             ptr_patch=this%deadcrootc_xfer_patch, default='inactive')
+
+       if(use_matrixcn)then
+          this%matrix_cap_deadcrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_DEADCROOTC_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 dead coarse root C capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_patch)
+
+          this%matrix_cap_deadcrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_DEADCROOTC_STORAGE_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 dead coarse root C storage capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_storage_patch)!, default='inactive')   
+
+          this%matrix_cap_deadcrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_DEADCROOTC_XFER_CAP', units='gC13/m^2', &
+               avgflag='I', long_name='C13 dead coarse root C transfer capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_xfer_patch)!, default='inactive')   
+       end if
 
        this%gresp_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C13_GRESP_STORAGE', units='gC13/m^2', &
@@ -708,6 +1181,23 @@ contains
              avgflag='A', long_name='Accumulated C14 leaf C transfer', &
              ptr_patch=this%leafc_storage_xfer_acc_patch, default='inactive')
 
+       if(use_matrixcn)then
+          this%matrix_cap_leafc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LEAFC_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 leaf C capacity', &
+               ptr_patch=this%matrix_cap_leafc_patch)
+
+          this%matrix_cap_leafc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LEAFC_STORAGE_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 leaf C storage capacity', &
+               ptr_patch=this%matrix_cap_leafc_storage_patch)!, default='inactive')    
+
+          this%matrix_cap_leafc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LEAFC_XFER_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 leaf C transfer capacity', &
+               ptr_patch=this%matrix_cap_leafc_xfer_patch)!, default='inactive')    
+       end if
+
        this%frootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_FROOTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 fine root C', &
@@ -722,6 +1212,23 @@ contains
        call hist_addfld1d (fname='C14_FROOTC_XFER', units='gC14/m^2', &
             avgflag='A', long_name='C14 fine root C transfer', &
             ptr_patch=this%frootc_xfer_patch, default='inactive')
+
+       if(use_matrixcn)then
+          this%matrix_cap_frootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_FROOTC_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 fine root C capacity', &
+               ptr_patch=this%matrix_cap_frootc_patch)
+
+          this%matrix_cap_frootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_FROOTC_STORAGE_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 fine root C storage capacity', &
+               ptr_patch=this%matrix_cap_frootc_storage_patch)!, default='inactive')   
+
+          this%matrix_cap_frootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_FROOTC_XFER_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 fine root C transfer capacity', &
+               ptr_patch=this%matrix_cap_frootc_xfer_patch)!, default='inactive')    
+       end if
 
        this%livestemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVESTEMC', units='gC14/m^2', &
@@ -738,6 +1245,23 @@ contains
             avgflag='A', long_name='C14 live stem C transfer', &
             ptr_patch=this%livestemc_xfer_patch, default='inactive')
 
+       if(use_matrixcn)then
+          this%matrix_cap_livestemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LIVESTEMC_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 live stem C capacity', &
+               ptr_patch=this%matrix_cap_livestemc_patch)
+
+          this%matrix_cap_livestemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LIVESTEMC_STORAGE_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 live stem C storage capcity', &
+               ptr_patch=this%matrix_cap_livestemc_storage_patch)!, default='inactive')    
+
+          this%matrix_cap_livestemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LIVESTEMC_XFER_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 live stem C transfer capacity', &
+               ptr_patch=this%matrix_cap_livestemc_xfer_patch)!, default='inactive')     
+       end if
+
        this%deadstemc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADSTEMC', units='gC14/m^2', &
             avgflag='A', long_name='C14 dead stem C', &
@@ -752,6 +1276,23 @@ contains
        call hist_addfld1d (fname='C14_DEADSTEMC_XFER', units='gC14/m^2', &
             avgflag='A', long_name='C14 dead stem C transfer', &
             ptr_patch=this%deadstemc_xfer_patch, default='inactive')
+
+       if(use_matrixcn)then
+          this%matrix_cap_deadstemc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_DEADSTEMC_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 dead stem C capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_patch)
+
+          this%matrix_cap_deadstemc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_DEADSTEMC_STORAGE_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 dead stem C storage capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_storage_patch)!, default='inactive')    
+
+          this%matrix_cap_deadstemc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_DEADSTEMC_XFER_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 dead stem C transfer capacity', &
+               ptr_patch=this%matrix_cap_deadstemc_xfer_patch)!, default='inactive')    
+       end if
 
        this%livecrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_LIVECROOTC', units='gC14/m^2', &
@@ -768,6 +1309,23 @@ contains
             avgflag='A', long_name='C14 live coarse root C transfer', &
             ptr_patch=this%livecrootc_xfer_patch, default='inactive')
 
+       if(use_matrixcn)then
+          this%matrix_cap_livecrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LIVECROOTC_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 live coarse root C capacity', &
+               ptr_patch=this%matrix_cap_livecrootc_patch)
+
+          this%matrix_cap_livecrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LIVECROOTC_STORAGE_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 live coarse root C storage capacity', &
+            ptr_patch=this%matrix_cap_livecrootc_storage_patch)!, default='inactive')     
+
+          this%matrix_cap_livecrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_LIVECROOTC_XFER_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 live coarse root C transfer capacity', &
+               ptr_patch=this%matrix_cap_livecrootc_xfer_patch)!, default='inactive')    
+       end if
+
        this%deadcrootc_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_DEADCROOTC', units='gC14/m^2', &
             avgflag='A', long_name='C14 dead coarse root C', &
@@ -782,6 +1340,23 @@ contains
        call hist_addfld1d (fname='C14_DEADCROOTC_XFER', units='gC14/m^2', &
             avgflag='A', long_name='C14 dead coarse root C transfer', &
             ptr_patch=this%deadcrootc_xfer_patch, default='inactive')
+
+       if(use_matrixcn)then
+          this%matrix_cap_deadcrootc_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_DEADCROOTC_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 dead coarse root C capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_patch)
+
+          this%matrix_cap_deadcrootc_storage_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_DEADCROOTC_STORAGE_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 dead coarse root C storage capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_storage_patch)!, default='inactive')   
+
+          this%matrix_cap_deadcrootc_xfer_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_DEADCROOTC_XFER_CAP', units='gC14/m^2', &
+               avgflag='I', long_name='C14 dead coarse root C transfer capacity', &
+               ptr_patch=this%matrix_cap_deadcrootc_xfer_patch)!, default='inactive')   
+       end if
 
        this%gresp_storage_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_GRESP_STORAGE', units='gC14/m^2', &
@@ -872,7 +1447,8 @@ contains
     !
     ! !USES:
     use landunit_varcon	 , only : istsoil, istcrop 
-    use clm_varctl, only : MM_Nuptake_opt, spinup_state
+    use clm_time_manager , only : is_restart, get_nstep
+    use clm_varctl, only : MM_Nuptake_opt, spinup_state, use_matrixcn
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this 
@@ -933,57 +1509,116 @@ contains
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
 
           if (patch%itype(p) == noveg) then
-             this%leafc_patch(p)          = 0._r8
-             this%leafc_storage_patch(p)  = 0._r8
-             this%frootc_patch(p)         = 0._r8            
-             this%frootc_storage_patch(p) = 0._r8    
+             this%leafc_patch(p)                        = 0._r8
+             this%leafc_storage_patch(p)                = 0._r8
+             this%frootc_patch(p)                       = 0._r8            
+             this%frootc_storage_patch(p)               = 0._r8    
+             if(use_matrixcn)then
+                this%matrix_cap_leafc_patch(p)          = 0._r8
+                this%matrix_cap_leafc_storage_patch(p)  = 0._r8
+                this%matrix_cap_frootc_patch(p)         = 0._r8            
+                this%matrix_cap_frootc_storage_patch(p) = 0._r8    
+             end if
           else
              if (pftcon%evergreen(patch%itype(p)) == 1._r8) then
-                this%leafc_patch(p)          = cnvegcstate_const%initial_vegC * ratio     
-                this%leafc_storage_patch(p)  = 0._r8
-                this%frootc_patch(p)         = cnvegcstate_const%initial_vegC * ratio           
-                this%frootc_storage_patch(p) = 0._r8    
+                this%leafc_patch(p)                        = cnvegcstate_const%initial_vegC * ratio     
+                this%leafc_storage_patch(p)                = 0._r8
+                this%frootc_patch(p)                       = cnvegcstate_const%initial_vegC * ratio           
+                this%frootc_storage_patch(p)               = 0._r8    
+                if(use_matrixcn)then
+                   this%matrix_cap_leafc_patch(p)          = cnvegcstate_const%initial_vegC * ratio     
+                   this%matrix_cap_leafc_storage_patch(p)  = 0._r8
+                   this%matrix_cap_frootc_patch(p)         = cnvegcstate_const%initial_vegC * ratio           
+                   this%matrix_cap_frootc_storage_patch(p) = 0._r8    
+                end if
              else if (patch%itype(p) >= npcropmin) then ! prognostic crop types
-                this%leafc_patch(p)          = 0._r8
-                this%leafc_storage_patch(p)  = 0._r8
-                this%frootc_patch(p)         = 0._r8            
-                this%frootc_storage_patch(p) = 0._r8    
+                this%leafc_patch(p)                        = 0._r8
+                this%leafc_storage_patch(p)                = 0._r8
+                this%frootc_patch(p)                       = 0._r8            
+                this%frootc_storage_patch(p)               = 0._r8    
+                if(use_matrixcn)then
+                   this%matrix_cap_leafc_patch(p)          = 0._r8
+                   this%matrix_cap_leafc_storage_patch(p)  = 0._r8
+                   this%matrix_cap_frootc_patch(p)         = 0._r8            
+                   this%matrix_cap_frootc_storage_patch(p) = 0._r8    
+                end if
              else
-                this%leafc_patch(p)          = 0._r8
-                this%leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
-                this%frootc_patch(p)         = 0._r8            
-                this%frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio   
+                this%leafc_patch(p)                        = 0._r8
+                this%leafc_storage_patch(p)                = cnvegcstate_const%initial_vegC * ratio   
+                this%frootc_patch(p)                       = 0._r8            
+                this%frootc_storage_patch(p)               = cnvegcstate_const%initial_vegC * ratio   
+                if(use_matrixcn)then
+                   this%matrix_cap_leafc_patch(p)          = 0._r8
+                   this%matrix_cap_leafc_storage_patch(p)  = cnvegcstate_const%initial_vegC * ratio   
+                   this%matrix_cap_frootc_patch(p)         = 0._r8            
+                   this%matrix_cap_frootc_storage_patch(p) = cnvegcstate_const%initial_vegC * ratio   
+                end if
              end if
           end if
-          this%leafc_xfer_patch(p) = 0._r8
-          this%leafc_storage_xfer_acc_patch(p)  = 0._r8
-          this%storage_cdemand_patch(p)         = 0._r8
+          this%leafc_xfer_patch(p)                         = 0._r8
+          if(use_matrixcn)then
+             this%matrix_cap_leafc_xfer_patch(p)           = 0._r8
+          end if
+          this%leafc_storage_xfer_acc_patch(p)             = 0._r8
+          this%storage_cdemand_patch(p)                    = 0._r8
 
           if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-             this%frootc_patch(p)            = 0._r8 
-             this%frootc_storage_patch(p)    = 0._r8 
+             this%frootc_patch(p)                          = 0._r8 
+             this%frootc_storage_patch(p)                  = 0._r8 
+             if(use_matrixcn)then
+                this%matrix_cap_frootc_patch(p)            = 0._r8 
+                this%matrix_cap_frootc_storage_patch(p)    = 0._r8 
+             end if
           end if     
-          this%frootc_xfer_patch(p)       = 0._r8 
+          this%frootc_xfer_patch(p)                        = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_frootc_xfer_patch(p)          = 0._r8 
+          end if
 
-          this%livestemc_patch(p)         = 0._r8 
-          this%livestemc_storage_patch(p) = 0._r8 
-          this%livestemc_xfer_patch(p)    = 0._r8 
+          this%livestemc_patch(p)                          = 0._r8 
+          this%livestemc_storage_patch(p)                  = 0._r8 
+          this%livestemc_xfer_patch(p)                     = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_livestemc_patch(p)            = 0._r8 
+             this%matrix_cap_livestemc_storage_patch(p)    = 0._r8 
+             this%matrix_cap_livestemc_xfer_patch(p)       = 0._r8 
+          end if
 
           if (pftcon%woody(patch%itype(p)) == 1._r8) then
-             this%deadstemc_patch(p) = 0.1_r8 * ratio
+             this%deadstemc_patch(p)                       = 0.1_r8 * ratio
+             if(use_matrixcn)then
+                this%matrix_cap_deadstemc_patch(p)         = 0.1_r8 * ratio
+             end if
           else
-             this%deadstemc_patch(p) = 0._r8 
+             this%deadstemc_patch(p)                       = 0._r8 
+             if(use_matrixcn)then
+                this%matrix_cap_deadstemc_patch(p)         = 0._r8 
+             end if
           end if
-          this%deadstemc_storage_patch(p)  = 0._r8 
-          this%deadstemc_xfer_patch(p)     = 0._r8 
+          this%deadstemc_storage_patch(p)                  = 0._r8 
+          this%deadstemc_xfer_patch(p)                     = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_deadstemc_storage_patch(p)    = 0._r8 
+             this%matrix_cap_deadstemc_xfer_patch(p)       = 0._r8 
+          end if
 
-          this%livecrootc_patch(p)         = 0._r8 
-          this%livecrootc_storage_patch(p) = 0._r8 
-          this%livecrootc_xfer_patch(p)    = 0._r8 
+          this%livecrootc_patch(p)                         = 0._r8 
+          this%livecrootc_storage_patch(p)                 = 0._r8 
+          this%livecrootc_xfer_patch(p)                    = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_livecrootc_patch(p)           = 0._r8 
+             this%matrix_cap_livecrootc_storage_patch(p)   = 0._r8 
+             this%matrix_cap_livecrootc_xfer_patch(p)      = 0._r8 
+          end if
 
-          this%deadcrootc_patch(p)         = 0._r8 
-          this%deadcrootc_storage_patch(p) = 0._r8 
-          this%deadcrootc_xfer_patch(p)    = 0._r8 
+          this%deadcrootc_patch(p)                         = 0._r8 
+          this%deadcrootc_storage_patch(p)                 = 0._r8 
+          this%deadcrootc_xfer_patch(p)                    = 0._r8 
+          if(use_matrixcn)then
+             this%matrix_cap_deadcrootc_patch(p)           = 0._r8 
+             this%matrix_cap_deadcrootc_storage_patch(p)   = 0._r8 
+             this%matrix_cap_deadcrootc_xfer_patch(p)      = 0._r8 
+          end if
 
           this%gresp_storage_patch(p)      = 0._r8 
           this%gresp_xfer_patch(p)         = 0._r8 
@@ -995,13 +1630,122 @@ contains
           this%storvegc_patch(p)           = 0._r8 
           this%woodc_patch(p)              = 0._r8
           this%totc_patch(p)               = 0._r8 
+!!!!initial pool size for matrix
+          if(use_matrixcn)then
+             this%leafc0_patch(p)              = 1.e-30_r8
+             this%leafc0_storage_patch(p)      = 1.e-30_r8
+             this%leafc0_xfer_patch(p)         = 1.e-30_r8
+             this%frootc0_patch(p)             = 1.e-30_r8            
+             this%frootc0_storage_patch(p)     = 1.e-30_r8  
+             this%frootc0_xfer_patch(p)        = 1.e-30_r8 
+
+             this%livestemc0_patch(p)          = 1.e-30_r8 
+             this%livestemc0_storage_patch(p)  = 1.e-30_r8 
+             this%livestemc0_xfer_patch(p)     = 1.e-30_r8
+             this%deadstemc0_patch(p)          = 1.e-30_r8
+             this%deadstemc0_storage_patch(p)  = 1.e-30_r8 
+             this%deadstemc0_xfer_patch(p)     = 1.e-30_r8 
+
+             this%livecrootc0_patch(p)         = 1.e-30_r8 
+             this%livecrootc0_storage_patch(p) = 1.e-30_r8 
+             this%livecrootc0_xfer_patch(p)    = 1.e-30_r8 
+
+             this%deadcrootc0_patch(p)         = 1.e-30_r8 
+             this%deadcrootc0_storage_patch(p) = 1.e-30_r8 
+             this%deadcrootc0_xfer_patch(p)    = 1.e-30_r8
+
+             this%grainc0_patch(p)             = 1.e-30_r8
+             this%grainc0_storage_patch(p)     = 1.e-30_r8
+             this%grainc0_xfer_patch(p)        = 1.e-30_r8
+
+             this%leafc_SASUsave_patch(p)              = 0._r8
+             this%leafc_storage_SASUsave_patch(p)      = 0._r8
+             this%leafc_xfer_SASUsave_patch(p)         = 0._r8
+             this%frootc_SASUsave_patch(p)             = 0._r8
+             this%frootc_storage_SASUsave_patch(p)     = 0._r8
+             this%frootc_xfer_SASUsave_patch(p)        = 0._r8
+             this%livestemc_SASUsave_patch(p)          = 0._r8
+             this%livestemc_storage_SASUsave_patch(p)  = 0._r8
+             this%livestemc_xfer_SASUsave_patch(p)     = 0._r8
+             this%deadstemc_SASUsave_patch(p)          = 0._r8
+             this%deadstemc_storage_SASUsave_patch(p)  = 0._r8
+             this%deadstemc_xfer_SASUsave_patch(p)     = 0._r8
+             this%livecrootc_SASUsave_patch(p)         = 0._r8
+             this%livecrootc_storage_SASUsave_patch(p) = 0._r8
+             this%livecrootc_xfer_SASUsave_patch(p)    = 0._r8
+             this%deadcrootc_SASUsave_patch(p)         = 0._r8
+             this%deadcrootc_storage_SASUsave_patch(p) = 0._r8
+             this%deadcrootc_xfer_SASUsave_patch(p)    = 0._r8
+             this%grainc_SASUsave_patch(p)             = 0._r8
+             this%grainc_storage_SASUsave_patch(p)     = 0._r8
+
+             this%matrix_calloc_leaf_acc_patch(p)                           = 0._r8
+             this%matrix_calloc_leafst_acc_patch(p)                         = 0._r8
+             this%matrix_calloc_froot_acc_patch(p)                          = 0._r8
+             this%matrix_calloc_frootst_acc_patch(p)                        = 0._r8
+             this%matrix_calloc_livestem_acc_patch(p)                       = 0._r8
+             this%matrix_calloc_livestemst_acc_patch(p)                     = 0._r8
+             this%matrix_calloc_deadstem_acc_patch(p)                       = 0._r8
+             this%matrix_calloc_deadstemst_acc_patch(p)                     = 0._r8
+             this%matrix_calloc_livecroot_acc_patch(p)                      = 0._r8
+             this%matrix_calloc_livecrootst_acc_patch(p)                    = 0._r8
+             this%matrix_calloc_deadcroot_acc_patch(p)                      = 0._r8
+             this%matrix_calloc_deadcrootst_acc_patch(p)                    = 0._r8
+
+             this%matrix_ctransfer_leafst_to_leafxf_acc_patch(p)            = 0._r8
+             this%matrix_ctransfer_leafxf_to_leaf_acc_patch(p)              = 0._r8
+             this%matrix_ctransfer_frootst_to_frootxf_acc_patch(p)          = 0._r8
+             this%matrix_ctransfer_frootxf_to_froot_acc_patch(p)            = 0._r8
+             this%matrix_ctransfer_livestemst_to_livestemxf_acc_patch(p)    = 0._r8
+             this%matrix_ctransfer_livestemxf_to_livestem_acc_patch(p)      = 0._r8
+             this%matrix_ctransfer_deadstemst_to_deadstemxf_acc_patch(p)    = 0._r8
+             this%matrix_ctransfer_deadstemxf_to_deadstem_acc_patch(p)      = 0._r8
+             this%matrix_ctransfer_livecrootst_to_livecrootxf_acc_patch(p)  = 0._r8
+             this%matrix_ctransfer_livecrootxf_to_livecroot_acc_patch(p)    = 0._r8
+             this%matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_patch(p)  = 0._r8
+             this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch(p)    = 0._r8
+             this%matrix_ctransfer_livestem_to_deadstem_acc_patch(p)        = 0._r8
+             this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch(p)      = 0._r8
+
+             this%matrix_cturnover_leaf_acc_patch(p)                        = 0._r8
+             this%matrix_cturnover_leafst_acc_patch(p)                      = 0._r8
+             this%matrix_cturnover_leafxf_acc_patch(p)                      = 0._r8
+             this%matrix_cturnover_froot_acc_patch(p)                       = 0._r8
+             this%matrix_cturnover_frootst_acc_patch(p)                     = 0._r8
+             this%matrix_cturnover_frootxf_acc_patch(p)                     = 0._r8
+             this%matrix_cturnover_livestem_acc_patch(p)                    = 0._r8
+             this%matrix_cturnover_livestemst_acc_patch(p)                  = 0._r8
+             this%matrix_cturnover_livestemxf_acc_patch(p)                  = 0._r8
+             this%matrix_cturnover_deadstem_acc_patch(p)                    = 0._r8
+             this%matrix_cturnover_deadstemst_acc_patch(p)                  = 0._r8
+             this%matrix_cturnover_deadstemxf_acc_patch(p)                  = 0._r8
+             this%matrix_cturnover_livecroot_acc_patch(p)                   = 0._r8
+             this%matrix_cturnover_livecrootst_acc_patch(p)                 = 0._r8
+             this%matrix_cturnover_livecrootxf_acc_patch(p)                 = 0._r8
+             this%matrix_cturnover_deadcroot_acc_patch(p)                   = 0._r8
+             this%matrix_cturnover_deadcrootst_acc_patch(p)                 = 0._r8
+             this%matrix_cturnover_deadcrootxf_acc_patch(p)                 = 0._r8
+          end if
+  
 
           if ( use_crop )then
-             this%grainc_patch(p)         = 0._r8 
-             this%grainc_storage_patch(p) = 0._r8 
-             this%grainc_xfer_patch(p)    = 0._r8 
-             this%cropseedc_deficit_patch(p)  = 0._r8
-             this%xsmrpool_loss_patch(p)  = 0._r8 
+             this%grainc_patch(p)                                           = 0._r8 
+             this%grainc_storage_patch(p)                                   = 0._r8 
+             this%grainc_xfer_patch(p)                                      = 0._r8 
+             this%cropseedc_deficit_patch(p)                                = 0._r8
+             this%xsmrpool_loss_patch(p)                                    = 0._r8 
+             if(use_matrixcn)then
+                this%matrix_cap_grainc_patch(p)                             = 0._r8            
+                this%matrix_cap_grainc_storage_patch(p)                     = 0._r8    
+                this%matrix_cap_grainc_xfer_patch(p)                        = 0._r8    
+                this%matrix_calloc_grain_acc_patch(p)                       = 0._r8            
+                this%matrix_calloc_grainst_acc_patch(p)                     = 0._r8    
+                this%matrix_ctransfer_grainst_to_grainxf_acc_patch(p)       = 0._r8
+                this%matrix_ctransfer_grainxf_to_grain_acc_patch(p)         = 0._r8
+                this%matrix_cturnover_grain_acc_patch(p)                    = 0._r8
+                this%matrix_cturnover_grainst_acc_patch(p)                  = 0._r8
+                this%matrix_cturnover_grainxf_acc_patch(p)                  = 0._r8
+             end if
           end if
 
        endif
@@ -1049,6 +1793,7 @@ contains
     ! !USES:
     use shr_infnan_mod   , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
     use clm_varcon       , only : c13ratio, c14ratio
+    use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt, use_matrixcn
     use clm_varctl       , only : spinup_state, use_cndv, MM_Nuptake_opt
     use clm_time_manager , only : is_restart
     use landunit_varcon	 , only : istsoil, istcrop 
@@ -1127,6 +1872,61 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_xfer_patch) 
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_leaf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_leaf_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_leafst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_leafst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_leafst_to_leafxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_leafst_to_leafxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_leafxf_to_leaf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_leafxf_to_leaf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_leaf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leaf_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_leafst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leafst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctrunover_leafxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leafxf_acc_patch) 
+
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_xfer_acc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%leafc_storage_xfer_acc_patch)
@@ -1147,6 +1947,60 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_xfer_patch) 
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_froot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_froot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_frootst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_frootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_frootst_to_frootxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_frootst_to_frootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_frootxf_to_froot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_frootxf_to_froot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_froot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_froot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_frootst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_frootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_frootxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_frootxf_acc_patch) 
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='livestemc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_patch) 
@@ -1158,6 +2012,64 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='livestemc_xfer', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_xfer_patch) 
+
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_patch) 
+  
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livestem_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livestem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livestemst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livestemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestemst_to_livestemxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestemst_to_livestemxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestemxf_to_livestem_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestemxf_to_livestem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestem_to_deadstem_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestem_to_deadstem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestem_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestemst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestemxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestemxf_acc_patch) 
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='deadstemc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1171,6 +2083,60 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadstemc_xfer_patch) 
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadstem_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadstem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadstemst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadstemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadstemst_to_deadstemxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadstemst_to_deadstemxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadstemxf_to_deadstem_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadstemxf_to_deadstem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstem_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstemst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstemxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstemxf_acc_patch) 
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='livecrootc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_patch) 
@@ -1183,6 +2149,64 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_xfer_patch) 
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livecroot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livecroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livecrootst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livecrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecrootst_to_livecrootxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecrootst_to_livecrootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecrootxf_to_livecroot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecrootxf_to_livecroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecroot_to_deadcroot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecroot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecrootst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecrootxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecrootxf_acc_patch) 
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_patch) 
@@ -1194,6 +2218,102 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_xfer', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_xfer_patch) 
+
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_xfer_cap', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_storage', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_xfer', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_xfer_patch) 
+!
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadcroot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadcroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadcrootst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadcrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadcrootst_to_deadcrootxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadcrootxf_to_deadcroot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcroot_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcrootst_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcrootxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcrootxf_acc_patch) 
+       end if
+
+       if(use_matrixcn .and. use_crop)then
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0_storage', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C storage', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_storage_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0_xfer', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C transfer', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_xfer_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_calloc_grain_acc', xtype=ncd_double,  &
+               dim1name='pft',    long_name='C accumulated allocation to grain', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_grain_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_calloc_grainst_acc', xtype=ncd_double,  &
+               dim1name='pft',    long_name='C accumulated allocation to grain storage', units='gC/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_grainst_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_grainst_to_grainxf_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_grainst_to_grainxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_grainxf_to_grain_acc', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_grainxf_to_grain_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grain_acc', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grain_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grainst_acc', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grainst_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grainxf_acc', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grainxf_acc_patch)
+       end if
 
        call restartvar(ncid=ncid, flag=flag, varname='gresp_storage', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
@@ -1373,70 +2493,129 @@ contains
                       end if
 
                       if (patch%itype(i) == noveg) then
-                         this%leafc_patch(i)          = 0._r8
-                         this%leafc_storage_patch(i)  = 0._r8
-                         this%frootc_patch(i)         = 0._r8            
-                         this%frootc_storage_patch(i) = 0._r8    
+                         this%leafc_patch(i)                           = 0._r8
+                         this%leafc_storage_patch(i)                   = 0._r8
+                         this%frootc_patch(i)                          = 0._r8            
+                         this%frootc_storage_patch(i)                  = 0._r8    
+                         if(use_matrixcn)then
+                            this%matrix_cap_leafc_patch(i)             = 0._r8
+                            this%matrix_cap_leafc_storage_patch(i)     = 0._r8
+                            this%matrix_cap_frootc_patch(i)            = 0._r8            
+                            this%matrix_cap_frootc_storage_patch(i)    = 0._r8    
+                         end if
                       else
                          if (pftcon%evergreen(patch%itype(i)) == 1._r8) then
-                            this%leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
-                            this%leafc_storage_patch(i)  = 0._r8
-                            this%frootc_patch(i)         = cnvegcstate_const%initial_vegC * ratio           
-                            this%frootc_storage_patch(i) = 0._r8    
+                            this%leafc_patch(i)                        = cnvegcstate_const%initial_vegC * ratio     
+                            this%leafc_storage_patch(i)                = 0._r8
+                            this%frootc_patch(i)                       = cnvegcstate_const%initial_vegC * ratio           
+                            this%frootc_storage_patch(i)               = 0._r8    
+                            if(use_matrixcn)then
+                               this%matrix_cap_leafc_patch(i)          = cnvegcstate_const%initial_vegC * ratio     
+                               this%matrix_cap_leafc_storage_patch(i)  = 0._r8
+                               this%matrix_cap_frootc_patch(i)         = cnvegcstate_const%initial_vegC * ratio           
+                               this%matrix_cap_frootc_storage_patch(i) = 0._r8    
+                            end if
                          else
-                            this%leafc_patch(i)          = 0._r8
-                            this%leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
-                            this%frootc_patch(i)         = 0._r8            
-                            this%frootc_storage_patch(i) = cnvegcstate_const%initial_vegC * ratio   
+                            this%leafc_patch(i)                        = 0._r8
+                            this%leafc_storage_patch(i)                = cnvegcstate_const%initial_vegC * ratio   
+                            this%frootc_patch(i)                       = 0._r8            
+                            this%frootc_storage_patch(i)               = cnvegcstate_const%initial_vegC * ratio   
+                            if(use_matrixcn)then
+                               this%matrix_cap_leafc_patch(i)          = 0._r8
+                               this%matrix_cap_leafc_storage_patch(i)  = cnvegcstate_const%initial_vegC * ratio   
+                               this%matrix_cap_frootc_patch(i)         = 0._r8            
+                               this%matrix_cap_frootc_storage_patch(i) = cnvegcstate_const%initial_vegC * ratio   
+                            end if
                          end if
                       end if
-                      this%leafc_xfer_patch(i) = 0._r8
-                      this%leafc_storage_xfer_acc_patch(i)  = 0._r8
-                      this%storage_cdemand_patch(i)         = 0._r8
+                      this%leafc_xfer_patch(i)                         = 0._r8
+                      if(use_matrixcn)then
+                         this%matrix_cap_leafc_xfer_patch(i)           = 0._r8
+                      end if
+                      this%leafc_storage_xfer_acc_patch(i)             = 0._r8
+                      this%storage_cdemand_patch(i)                    = 0._r8
 
                       if (MM_Nuptake_opt .eqv. .false.) then  ! if not running in floating CN ratio option 
-                         this%frootc_patch(i)            = 0._r8 
-                         this%frootc_storage_patch(i)    = 0._r8 
+                         this%frootc_patch(i)                          = 0._r8 
+                         this%frootc_storage_patch(i)                  = 0._r8 
+                         if(use_matrixcn)then
+                            this%matrix_cap_frootc_patch(i)            = 0._r8 
+                            this%matrix_cap_frootc_storage_patch(i)    = 0._r8 
+                         end if
                       end if     
-                      this%frootc_xfer_patch(i)       = 0._r8 
+                      this%frootc_xfer_patch(i)                        = 0._r8 
 
-                      this%livestemc_patch(i)         = 0._r8 
-                      this%livestemc_storage_patch(i) = 0._r8 
-                      this%livestemc_xfer_patch(i)    = 0._r8 
+                      this%livestemc_patch(i)                          = 0._r8 
+                      this%livestemc_storage_patch(i)                  = 0._r8 
+                      this%livestemc_xfer_patch(i)                     = 0._r8 
+                      if(use_matrixcn)then
+                         this%matrix_cap_frootc_xfer_patch(i)          = 0._r8 
+                         this%matrix_cap_livestemc_patch(i)            = 0._r8 
+                         this%matrix_cap_livestemc_storage_patch(i)    = 0._r8 
+                         this%matrix_cap_livestemc_xfer_patch(i)       = 0._r8 
+                      end if
 
                       if (pftcon%woody(patch%itype(i)) == 1._r8) then
-                         this%deadstemc_patch(i) = 0.1_r8 * ratio
+                         this%deadstemc_patch(i)                       = 0.1_r8 * ratio
+                         if(use_matrixcn)then
+                            this%matrix_cap_deadstemc_patch(i)         = 0.1_r8 * ratio
+                         end if
                       else
-                         this%deadstemc_patch(i) = 0._r8 
+                         this%deadstemc_patch(i)                       = 0._r8 
+                         if(use_matrixcn)then
+                            this%matrix_cap_deadstemc_patch(i)         = 0._r8 
+                         end if
                       end if
-                      this%deadstemc_storage_patch(i)  = 0._r8 
-                      this%deadstemc_xfer_patch(i)     = 0._r8 
+                      this%deadstemc_storage_patch(i)                  = 0._r8 
+                      this%deadstemc_xfer_patch(i)                     = 0._r8 
+                      if(use_matrixcn)then
+                         this%matrix_cap_deadstemc_storage_patch(i)    = 0._r8 
+                         this%matrix_cap_deadstemc_xfer_patch(i)       = 0._r8 
+                      end if
 
-                      this%livecrootc_patch(i)         = 0._r8 
-                      this%livecrootc_storage_patch(i) = 0._r8 
-                      this%livecrootc_xfer_patch(i)    = 0._r8 
+                      this%livecrootc_patch(i)                         = 0._r8 
+                      this%livecrootc_storage_patch(i)                 = 0._r8 
+                      this%livecrootc_xfer_patch(i)                    = 0._r8 
 
-                      this%deadcrootc_patch(i)         = 0._r8 
-                      this%deadcrootc_storage_patch(i) = 0._r8 
-                      this%deadcrootc_xfer_patch(i)    = 0._r8 
+                      this%deadcrootc_patch(i)                         = 0._r8 
+                      this%deadcrootc_storage_patch(i)                 = 0._r8 
+                      this%deadcrootc_xfer_patch(i)                    = 0._r8 
 
-                      this%gresp_storage_patch(i)      = 0._r8 
-                      this%gresp_xfer_patch(i)         = 0._r8 
+                      if(use_matrixcn)then
+                         this%matrix_cap_livecrootc_patch(i)           = 0._r8 
+                         this%matrix_cap_livecrootc_storage_patch(i)   = 0._r8 
+                         this%matrix_cap_livecrootc_xfer_patch(i)      = 0._r8 
+ 
+                         this%matrix_cap_deadcrootc_patch(i)           = 0._r8 
+                         this%matrix_cap_deadcrootc_storage_patch(i)   = 0._r8 
+                         this%matrix_cap_deadcrootc_xfer_patch(i)      = 0._r8 
+                      end if
 
-                      this%cpool_patch(i)              = 0._r8 
-                      this%xsmrpool_patch(i)           = 0._r8 
-                      this%ctrunc_patch(i)             = 0._r8 
-                      this%dispvegc_patch(i)           = 0._r8 
-                      this%storvegc_patch(i)           = 0._r8 
-                      this%woodc_patch(i)              = 0._r8
-                      this%totc_patch(i)               = 0._r8 
+                      this%gresp_storage_patch(i)                      = 0._r8 
+                      this%gresp_xfer_patch(i)                         = 0._r8 
+
+                      this%cpool_patch(i)                              = 0._r8 
+                      this%xsmrpool_patch(i)                           = 0._r8 
+                      this%ctrunc_patch(i)                             = 0._r8 
+                      this%dispvegc_patch(i)                           = 0._r8 
+                      this%storvegc_patch(i)                           = 0._r8 
+                      this%woodc_patch(i)                              = 0._r8
+                      this%totc_patch(i)                               = 0._r8 
 
                       if ( use_crop )then
-                         this%grainc_patch(i)         = 0._r8 
-                         this%grainc_storage_patch(i) = 0._r8 
-                         this%grainc_xfer_patch(i)    = 0._r8 
-                         this%cropseedc_deficit_patch(i)  = 0._r8
-                         this%xsmrpool_loss_patch(i)  = 0._r8 
+                         this%grainc_patch(i)                          = 0._r8 
+                         this%grainc_storage_patch(i)                  = 0._r8 
+                         this%grainc_xfer_patch(i)                     = 0._r8 
+                         if(use_matrixcn)then
+                            this%grainc0_patch(i)                      = 0._r8 
+                            this%grainc0_storage_patch(i)              = 0._r8 
+                            this%grainc0_xfer_patch(i)                 = 0._r8 
+                            this%matrix_cap_grainc_patch(i)            = 0._r8 
+                            this%matrix_cap_grainc_storage_patch(i)    = 0._r8 
+                            this%matrix_cap_grainc_xfer_patch(i)       = 0._r8 
+                         end if
+                         this%cropseedc_deficit_patch(i)               = 0._r8
+                         this%xsmrpool_loss_patch(i)                   = 0._r8 
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 
@@ -1532,6 +2711,61 @@ contains
           end do
        end if
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_storage_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_xfer_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_leaf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_leaf_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_leafst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_leafst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_leafst_to_leafxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_leafst_to_leafxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_leafxf_to_leaf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_leafxf_to_leaf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_leaf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leaf_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_leafst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leafst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctrunover_leafxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leafxf_acc_patch) 
+
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='frootc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_patch) 
@@ -1574,6 +2808,61 @@ contains
           end do
        end if
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_storage_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_xfer_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_storage_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_xfer_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_froot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_froot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_frootst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_frootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_frootst_to_frootxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_frootst_to_frootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_frootxf_to_froot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_frootxf_to_froot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_froot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_froot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_frootst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_frootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_frootxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_frootxf_acc_patch) 
+       end if
+
+
        call restartvar(ncid=ncid, flag=flag, varname='livestemc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_patch) 
@@ -1614,6 +2903,64 @@ contains
                 this%livestemc_xfer_patch(i) = c12_cnveg_carbonstate_inst%livestemc_xfer_patch(i) * c4_r2
              endif
           end do
+       end if
+
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_patch) 
+  
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_storage_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_xfer_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_storage_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_xfer_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livestem_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livestem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livestemst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livestemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestemst_to_livestemxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestemst_to_livestemxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestemxf_to_livestem_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestemxf_to_livestem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestem_to_deadstem_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestem_to_deadstem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestem_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestemst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestemxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestemxf_acc_patch) 
        end if
 
        call restartvar(ncid=ncid, flag=flag, varname='deadstemc_13', xtype=ncd_double,  &
@@ -1658,6 +3005,60 @@ contains
           end do
        end if
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_storage_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_xfer_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_storage_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_xfer_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadstem_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadstem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadstemst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadstemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadstemst_to_deadstemxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadstemst_to_deadstemxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadstemxf_to_deadstem_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadstemxf_to_deadstem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstem_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstemst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstemxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstemxf_acc_patch) 
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='livecrootc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_patch) 
@@ -1700,6 +3101,64 @@ contains
           end do
        end if
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_storage_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_xfer_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_storage_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_xfer_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livecroot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livecroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livecrootst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livecrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecrootst_to_livecrootxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecrootst_to_livecrootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecrootxf_to_livecroot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecrootxf_to_livecroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecroot_to_deadcroot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecroot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecrootst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecrootxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecrootxf_acc_patch) 
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_patch) 
@@ -1740,6 +3199,102 @@ contains
                 this%deadcrootc_xfer_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_xfer_patch(i) * c4_r2
              endif
           end do
+       end if
+
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_xfer_cap_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_storage_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_xfer_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_xfer_patch) 
+!
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadcroot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadcroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadcrootst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadcrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadcrootxf_to_deadcroot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcroot_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcrootst_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcrootxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcrootxf_acc_patch) 
+       end if
+
+       if(use_matrixcn .and. use_crop)then
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0_13', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C13', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0_storage_13', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C13 storage', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_storage_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0_xfer_13', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C13 transfer', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_xfer_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_calloc_grain_acc_13', xtype=ncd_double,  &
+               dim1name='pft',    long_name='C13 accumulated allocation to grain', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_grain_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_calloc_grainst_acc_13', xtype=ncd_double,  &
+               dim1name='pft',    long_name='C13 accumulated allocation to grain storage', units='gC13/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_grainst_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_grainst_to_grainxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_grainst_to_grainxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_grainxf_to_grain_acc_13', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_grainxf_to_grain_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grain_acc_13', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grain_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grainst_acc_13', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grainst_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grainxf_acc_13', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grainxf_acc_patch)
        end if
 
        call restartvar(ncid=ncid, flag=flag, varname='gresp_storage_13', xtype=ncd_double,  &
@@ -1874,6 +3429,61 @@ contains
           end do
        end if
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_storage_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc_xfer_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_leafc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_storage_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='leafc0_xfer_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%leafc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_leaf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_leaf_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_leafst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_leafst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_leafst_to_leafxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_leafst_to_leafxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_leafxf_to_leaf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_leafxf_to_leaf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_leaf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leaf_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_leafst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leafst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctrunover_leafxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_leafxf_acc_patch) 
+
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='frootc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%frootc_patch) 
@@ -1913,6 +3523,60 @@ contains
           end do
        end if
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_storage_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc_xfer_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_frootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_storage_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='frootc0_xfer_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%frootc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_froot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_froot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_frootst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_frootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_frootst_to_frootxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_frootst_to_frootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_frootxf_to_froot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_frootxf_to_froot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_froot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_froot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_frootst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_frootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_frootxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_frootxf_acc_patch) 
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='livestemc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livestemc_patch) 
@@ -1947,6 +3611,64 @@ contains
                 this%livestemc_xfer_patch(i) = c12_cnveg_carbonstate_inst%livestemc_xfer_patch(i) * c14ratio
              endif
           end do
+       end if
+
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_patch) 
+  
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_storage_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc_xfer_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livestemc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_storage_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livestemc0_xfer_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livestemc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livestem_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livestem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livestemst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livestemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestemst_to_livestemxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestemst_to_livestemxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestemxf_to_livestem_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestemxf_to_livestem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livestem_to_deadstem_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livestem_to_deadstem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestem_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestemst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livestemxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livestemxf_acc_patch) 
        end if
 
        call restartvar(ncid=ncid, flag=flag, varname='deadstemc_14', xtype=ncd_double,  &
@@ -1985,6 +3707,60 @@ contains
           end do
        end if
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_storage_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc_xfer_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadstemc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_storage_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadstemc0_xfer_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadstemc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadstem_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadstem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadstemst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadstemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadstemst_to_deadstemxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadstemst_to_deadstemxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadstemxf_to_deadstem_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadstemxf_to_deadstem_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstem_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstem_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstemst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstemst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadstemxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadstemxf_acc_patch) 
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='livecrootc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%livecrootc_patch) 
@@ -2021,6 +3797,64 @@ contains
           end do
        end if
 
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_storage_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc_xfer_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_livecrootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_storage_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='livecrootc0_xfer_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%livecrootc0_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livecroot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livecroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_livecrootst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_livecrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecrootst_to_livecrootxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecrootst_to_livecrootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecrootxf_to_livecroot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecrootxf_to_livecroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_livecroot_to_deadcroot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecroot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecrootst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_livecrootxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_livecrootxf_acc_patch) 
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%deadcrootc_patch) 
@@ -2055,6 +3889,102 @@ contains
                 this%deadcrootc_xfer_patch(i) = c12_cnveg_carbonstate_inst%deadcrootc_xfer_patch(i) * c14ratio
              endif
           end do
+       end if
+
+       if(use_matrixcn)then
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_storage_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc_xfer_cap_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cap_deadcrootc_xfer_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_storage_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_storage_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='deadcrootc0_xfer_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%deadcrootc0_xfer_patch) 
+!
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadcroot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadcroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_calloc_deadcrootst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_deadcrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_deadcrootxf_to_deadcroot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcroot_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcroot_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcrootst_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcrootst_acc_patch) 
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_cturnover_deadcrootxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_deadcrootxf_acc_patch) 
+       end if
+
+       if(use_matrixcn .and. use_crop)then
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0_14', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C14', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0_storage_14', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C14 storage', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_storage_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='grainc0_xfer_14', xtype=ncd_double,  &
+               dim1name='pft',    long_name='initial grain C14 transfer', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%grainc0_xfer_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_calloc_grain_acc_14', xtype=ncd_double,  &
+               dim1name='pft',    long_name='C14 accumulated allocation to grain', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_grain_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_calloc_grainst_acc_14', xtype=ncd_double,  &
+               dim1name='pft',    long_name='C14 accumulated allocation to grain storage', units='gC14/m2', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_calloc_grainst_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_grainst_to_grainxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_grainst_to_grainxf_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag, varname='matrix_ctransfer_grainxf_to_grain_acc_14', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_ctransfer_grainxf_to_grain_acc_patch)
+
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grain_acc_14', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grain_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grainst_acc_14', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grainst_acc_patch)
+ 
+          call restartvar(ncid=ncid, flag=flag,  varname='matrix_cturnover_grainxf_acc_14', xtype=ncd_double,  &
+               dim1name='pft',    long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%matrix_cturnover_grainxf_acc_patch)
        end if
 
        call restartvar(ncid=ncid, flag=flag, varname='gresp_storage_14', xtype=ncd_double,  &
@@ -2335,6 +4265,95 @@ contains
        this%deadcrootc_patch(i)         = value_patch
        this%deadcrootc_storage_patch(i) = value_patch
        this%deadcrootc_xfer_patch(i)    = value_patch
+       if(use_matrixcn)then
+          this%matrix_cap_leafc_patch(i)              = value_patch
+          this%matrix_cap_leafc_storage_patch(i)      = value_patch
+          this%matrix_cap_leafc_xfer_patch(i)         = value_patch
+          this%matrix_cap_frootc_patch(i)             = value_patch
+          this%matrix_cap_frootc_storage_patch(i)     = value_patch
+          this%matrix_cap_frootc_xfer_patch(i)        = value_patch
+          this%matrix_cap_livestemc_patch(i)          = value_patch
+          this%matrix_cap_livestemc_storage_patch(i)  = value_patch
+          this%matrix_cap_livestemc_xfer_patch(i)     = value_patch
+          this%matrix_cap_deadstemc_patch(i)          = value_patch
+          this%matrix_cap_deadstemc_storage_patch(i)  = value_patch
+          this%matrix_cap_deadstemc_xfer_patch(i)     = value_patch
+          this%matrix_cap_livecrootc_patch(i)         = value_patch
+          this%matrix_cap_livecrootc_storage_patch(i) = value_patch
+          this%matrix_cap_livecrootc_xfer_patch(i)    = value_patch
+          this%matrix_cap_deadcrootc_patch(i)         = value_patch
+          this%matrix_cap_deadcrootc_storage_patch(i) = value_patch
+          this%matrix_cap_deadcrootc_xfer_patch(i)    = value_patch
+
+          this%leafc0_patch(i)              = value_patch
+          this%leafc0_storage_patch(i)      = value_patch
+          this%leafc0_xfer_patch(i)         = value_patch   
+          this%frootc0_patch(i)             = value_patch
+          this%frootc0_storage_patch(i)     = value_patch
+          this%frootc0_xfer_patch(i)        = value_patch
+          this%livestemc0_patch(i)          = value_patch
+          this%livestemc0_storage_patch(i)  = value_patch
+          this%livestemc0_xfer_patch(i)     = value_patch
+          this%deadstemc0_patch(i)          = value_patch
+          this%deadstemc0_storage_patch(i)  = value_patch
+          this%deadstemc0_xfer_patch(i)     = value_patch
+          this%livecrootc0_patch(i)         = value_patch
+          this%livecrootc0_storage_patch(i) = value_patch
+          this%livecrootc0_xfer_patch(i)    = value_patch
+          this%deadcrootc0_patch(i)         = value_patch
+          this%deadcrootc0_storage_patch(i) = value_patch
+          this%deadcrootc0_xfer_patch(i)    = value_patch
+          this%grainc0_patch(i)             = value_patch
+          this%grainc0_storage_patch(i)     = value_patch
+          this%grainc0_xfer_patch(i)        = value_patch
+!!!!matrix
+          this%matrix_calloc_leaf_acc_patch(i)        =  value_patch
+          this%matrix_calloc_leafst_acc_patch(i)      =  value_patch
+          this%matrix_calloc_froot_acc_patch(i)       =  value_patch
+          this%matrix_calloc_frootst_acc_patch(i)     =  value_patch
+          this%matrix_calloc_livestem_acc_patch(i)    =  value_patch
+          this%matrix_calloc_livestemst_acc_patch(i)  =  value_patch
+          this%matrix_calloc_deadstem_acc_patch(i)    =  value_patch
+          this%matrix_calloc_deadstemst_acc_patch(i)  =  value_patch
+          this%matrix_calloc_livecroot_acc_patch(i)   =  value_patch
+          this%matrix_calloc_livecrootst_acc_patch(i) =  value_patch
+          this%matrix_calloc_deadcroot_acc_patch(i)   =  value_patch
+          this%matrix_calloc_deadcrootst_acc_patch(i) =  value_patch
+
+          this%matrix_ctransfer_leafst_to_leafxf_acc_patch           (i) = value_patch
+          this%matrix_ctransfer_leafxf_to_leaf_acc_patch             (i) = value_patch
+          this%matrix_ctransfer_frootst_to_frootxf_acc_patch         (i) = value_patch
+          this%matrix_ctransfer_frootxf_to_froot_acc_patch           (i) = value_patch
+          this%matrix_ctransfer_livestemst_to_livestemxf_acc_patch   (i) = value_patch
+          this%matrix_ctransfer_livestemxf_to_livestem_acc_patch     (i) = value_patch
+          this%matrix_ctransfer_deadstemst_to_deadstemxf_acc_patch   (i) = value_patch
+          this%matrix_ctransfer_deadstemxf_to_deadstem_acc_patch     (i) = value_patch
+          this%matrix_ctransfer_livecrootst_to_livecrootxf_acc_patch (i) = value_patch
+          this%matrix_ctransfer_livecrootxf_to_livecroot_acc_patch   (i) = value_patch
+          this%matrix_ctransfer_deadcrootst_to_deadcrootxf_acc_patch (i) = value_patch
+          this%matrix_ctransfer_deadcrootxf_to_deadcroot_acc_patch   (i) = value_patch
+          this%matrix_ctransfer_livestem_to_deadstem_acc_patch       (i) = value_patch
+          this%matrix_ctransfer_livecroot_to_deadcroot_acc_patch     (i) = value_patch
+
+          this%matrix_cturnover_leaf_acc_patch(i)        = value_patch
+          this%matrix_cturnover_leafst_acc_patch(i)      = value_patch
+          this%matrix_cturnover_leafxf_acc_patch(i)      = value_patch   
+          this%matrix_cturnover_froot_acc_patch(i)       = value_patch
+          this%matrix_cturnover_frootst_acc_patch(i)     = value_patch
+          this%matrix_cturnover_frootxf_acc_patch(i)     = value_patch   
+          this%matrix_cturnover_livestem_acc_patch(i)    = value_patch
+          this%matrix_cturnover_livestemst_acc_patch(i)  = value_patch
+          this%matrix_cturnover_livestemxf_acc_patch(i)  = value_patch   
+          this%matrix_cturnover_deadstem_acc_patch(i)    = value_patch
+          this%matrix_cturnover_deadstemst_acc_patch(i)  = value_patch
+          this%matrix_cturnover_deadstemxf_acc_patch(i)  = value_patch   
+          this%matrix_cturnover_livecroot_acc_patch(i)   = value_patch
+          this%matrix_cturnover_livecrootst_acc_patch(i) = value_patch
+          this%matrix_cturnover_livecrootxf_acc_patch(i) = value_patch   
+          this%matrix_cturnover_deadcroot_acc_patch(i)   = value_patch
+          this%matrix_cturnover_deadcrootst_acc_patch(i) = value_patch
+          this%matrix_cturnover_deadcrootxf_acc_patch(i) = value_patch   
+       end if
        this%gresp_storage_patch(i)      = value_patch
        this%gresp_xfer_patch(i)         = value_patch
        this%cpool_patch(i)              = value_patch
@@ -2349,6 +4368,18 @@ contains
           this%grainc_patch(i)          = value_patch
           this%grainc_storage_patch(i)  = value_patch
           this%grainc_xfer_patch(i)     = value_patch
+          if(use_matrixcn)then
+             this%matrix_cap_grainc_patch(i)                        = value_patch
+             this%matrix_cap_grainc_storage_patch(i)                = value_patch
+             this%matrix_cap_grainc_xfer_patch(i)                   = value_patch
+             this%matrix_calloc_grain_acc_patch(i)                  = value_patch
+             this%matrix_calloc_grainst_acc_patch(i)                = value_patch
+             this%matrix_ctransfer_grainst_to_grainxf_acc_patch (i) = value_patch
+             this%matrix_ctransfer_grainxf_to_grain_acc_patch   (i) = value_patch
+             this%matrix_cturnover_grain_acc_patch(i)               = value_patch
+             this%matrix_cturnover_grainst_acc_patch(i)             = value_patch
+             this%matrix_cturnover_grainxf_acc_patch(i)             = value_patch
+          end if
           this%cropseedc_deficit_patch(i)  = value_patch
           this%xsmrpool_loss_patch(i)   = value_patch
        end if

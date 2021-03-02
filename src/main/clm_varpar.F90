@@ -55,6 +55,11 @@ module clm_varpar
   integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers
   integer, public, parameter :: nvariants   =   2     ! number of variants of PFT constants
+  integer, public, parameter :: nvegpool_natveg = 18  ! number of vegetation matrix pool without crop
+  integer, public, parameter :: nvegpool_crop   =  3  ! number of vegetation matrix pool with crop
+  integer, public, parameter :: nveg_retransn   =  1  ! number of vegetation retranslocation pool
+  integer, public    :: nvegcpool             ! number of vegetation C pools
+  integer, public    :: nvegnpool             ! number of vegetation N pools
 
   integer, public :: maxveg           ! # of pfts + cfts
   integer, public :: maxpatch_urb= 5       ! max number of urban patches (columns) in urban landunit
@@ -67,9 +72,54 @@ module clm_varpar
   integer, public, parameter :: i_cel_lit  = i_met_lit + 1
   integer, public, parameter :: i_lig_lit  = i_cel_lit + 1
   integer, public    :: i_cwd
+   !Matrix index (when use_matrixcn)
+  integer, public, parameter :: ileaf         = 1     ! leaf pool index
+  integer, public, parameter :: ileaf_st      = 2     ! leaf storage pool index
+  integer, public, parameter :: ileaf_xf      = 3     ! leaf transfer pool index
+  integer, public, parameter :: ifroot        = 4     ! fine root pool index
+  integer, public, parameter :: ifroot_st     = 5     ! fine root storage pool index
+  integer, public, parameter :: ifroot_xf     = 6     ! fine root transfer pool index
+  integer, public, parameter :: ilivestem     = 7     ! live stem pool index
+  integer, public, parameter :: ilivestem_st  = 8     ! live stem storage pool index
+  integer, public, parameter :: ilivestem_xf  = 9     ! live stem transfer pool index
+  integer, public, parameter :: ideadstem     = 10    ! dead stem pool index
+  integer, public, parameter :: ideadstem_st  = 11    ! dead stem storage pool index
+  integer, public, parameter :: ideadstem_xf  = 12    ! dead stem transfer pool index
+  integer, public, parameter :: ilivecroot    = 13    ! live coarse root pool index
+  integer, public, parameter :: ilivecroot_st = 14    ! live coarse root storage pool index
+  integer, public, parameter :: ilivecroot_xf = 15    ! live coarse root transfer pool index
+  integer, public, parameter :: ideadcroot    = 16    ! dead coarse root pool index
+  integer, public, parameter :: ideadcroot_st = 17    ! dead coarse root storage pool index
+  integer, public, parameter :: ideadcroot_xf = 18    ! dead coarse root transfer pool index
+  integer, public, parameter :: igrain        = 19    ! grain pool index
+  integer, public, parameter :: igrain_st     = 20    ! grain storage pool index
+  integer, public, parameter :: igrain_xf     = 21    ! grain transfer pool index
+
+  integer, public    :: ncphtrans             !maximum number of vegetation C transfers through phenology
+  integer, public    :: ncphouttrans          !maximum number of vegetation C transfers out of vegetation through phenology
+  integer, public    :: ncgmtrans             !maximum number of vegetation C transfers through gap mortality
+  integer, public    :: ncgmouttrans          !maximum number of vegetation C transfers out of vegetation through gap mortality
+  integer, public    :: ncfitrans             !maximum number of vegetation C transfers through fire
+  integer, public    :: ncfiouttrans          !maximum number of vegetation C transfers out of vegetation trhough fire
+  integer, public    :: nnphtrans             !maximum number of vegetation N transfers through phenology
+  integer, public    :: nnphouttrans          !maximum number of vegetation N transfers out of vegetation through phenology
+  integer, public    :: nngmtrans             !maximum number of vegetation N transfers through gap mortality
+  integer, public    :: nngmouttrans          !maximum number of vegetation N transfers out of vegetation through gap mortality
+  integer, public    :: nnfitrans             !maximum number of vegetation N transfers through fire
+  integer, public    :: nnfiouttrans          !maximum number of vegetation N transfers out of vegetation trhough fire
+
+  
+  integer, public    :: iretransn             ! retranslocation pool index
+     
+  integer, public    :: ioutc                 ! external C pool index
+  integer, public    :: ioutn                 ! external N pool index
 
   integer, public :: ndecomp_pools
   integer, public :: ndecomp_cascade_transitions
+  integer, public :: ndecomp_cascade_outtransitions
+
+  ! for soil matrix 
+  integer, public  :: ndecomp_pools_vr   !total number of pools ndecomp_pools*vertical levels
 
   ! Indices used in surface file read and set in clm_varpar_init
 
@@ -241,11 +291,40 @@ contains
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
+          ndecomp_cascade_outtransitions = 0
        else
           ndecomp_pools = 8
           ndecomp_cascade_transitions = 9
+          ndecomp_cascade_outtransitions = 1
        end if
     endif
+    ndecomp_pools_vr = ndecomp_pools * nlevdecomp
+    
+    if (use_crop)then
+       nvegcpool = nvegpool_natveg + nvegpool_crop
+       ncphtrans = 18
+       nnphtrans = 37
+       ncphouttrans = 4
+       nnphouttrans = 5
+    else
+       nvegcpool = nvegpool_natveg
+       ncphtrans = 17
+       nnphtrans = 34
+       ncphouttrans = 3
+       nnphouttrans = 4
+    end if
+    ncgmtrans = 18   
+    ncgmouttrans = 18   
+    ncfitrans = 20 
+    ncfiouttrans = 18   
+    nngmtrans = 19   
+    nngmouttrans = 19   
+    nnfitrans = 21 
+    nnfiouttrans = 19 
+    nvegnpool = nvegcpool + 1
+    iretransn = nvegnpool
+    ioutc = nvegcpool + 1
+    ioutn = nvegnpool + 1
 
   end subroutine clm_varpar_init
 

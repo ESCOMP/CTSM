@@ -3498,14 +3498,14 @@ contains
                  ch4_aere_depth(c,j) - ch4_ebul_depth(c,j) ! [mol/m3-total/s]
             ! aerenchyma added to surface flux below
             ! ebul added to soil depth just above WT
-            if (source(c,j,1) + conc_ch4(c,j) / dtime < -1.e-12_r8) then
+            if (source(c,j,1) + conc_ch4(c,j) / dtime < -1.e-12_r8)then 
                write(iulog,*) 'Methane demands exceed methane available. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
                call endrun(msg=' ERROR: Methane demands exceed methane available.'&
                     //errMsg(sourcefile, __LINE__))
-            else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then
+            else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then  
                write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
@@ -3987,7 +3987,7 @@ contains
 
          errch4(c) = errch4(c) + (ch4_surf_aere(c) + ch4_surf_ebul(c) + ch4_surf_diff(c))*dtime
 
-         if (abs(errch4(c)) < 1.e-8_r8) then
+         if (abs(errch4(c)) < 1.e-8_r8) then 
             ch4_surf_diff(c) = ch4_surf_diff(c) - errch4(c)/dtime
          else ! errch4 > 1e-8 mol / m^2 / timestep
             write(iulog,*)'CH4 Conservation Error in CH4Mod during diffusion, nstep, c, errch4 (mol /m^2.timestep)', &

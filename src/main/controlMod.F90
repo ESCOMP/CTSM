@@ -122,6 +122,7 @@ contains
     use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
+    use CNSoilMatrixMod                  , only : CNSoilMatrixInit
     !
     ! ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -186,6 +187,11 @@ contains
 
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
+
+    ! CN Matrix solution
+    namelist /clm_inparm / &
+         use_matrixcn, use_soil_matrixcn, is_outmatrix, isspinup, nyr_forcing, nyr_sasu, iloop_avg
+
     ! lake_melt_icealb is of dimension numrad
 
     ! Glacier_mec info
@@ -292,6 +298,14 @@ contains
     runtyp(nsrContinue + 1) = 'restart'
     runtyp(nsrBranch   + 1) = 'branch '
 
+    if(use_fates)then
+       use_matrixcn = .false.
+       use_soil_matrixcn = .false.
+       is_outmatrix = .false.
+       isspinup = .false.
+    end if
+    nyr_forcing = 10
+
     ! Set clumps per procoessor
 
 #if (defined _OPENMP)
@@ -301,7 +315,6 @@ contains
 #endif
 
     use_init_interp = .false.
-
     if (masterproc) then
 
        ! ----------------------------------------------------------------------
@@ -463,6 +476,7 @@ contains
              call endrun(msg=' ERROR: ozone is not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
+
        end if
 
        ! If nfix_timeconst is equal to the junk default value, then it was not specified
@@ -540,6 +554,10 @@ contains
     if ( use_century_decomp ) then
        call DecompCascadeBGCreadNML( NLFilename )
     end if
+
+    ! CN soil matrix
+
+    call CNSoilMatrixInit()
 
     ! ----------------------------------------------------------------------
     ! consistency checks
@@ -747,6 +765,13 @@ contains
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (is_outmatrix, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (isspinup, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (nyr_sasu, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (iloop_avg, 1, MPI_INTEGER, 0, mpicom, ier)
 
     if (use_cn .and. use_vertsoilc) then
        ! vertical soil mixing variables
@@ -843,6 +868,7 @@ contains
     ! clump decomposition variables
 
     call mpi_bcast (clump_pproc, 1, MPI_INTEGER, 0, mpicom, ier)
+
 
   end subroutine control_spmd
 

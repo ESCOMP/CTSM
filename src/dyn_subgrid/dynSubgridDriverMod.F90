@@ -32,6 +32,7 @@ module dynSubgridDriverMod
   use SoilBiogeochemCarbonFluxType , only : soilBiogeochem_carbonflux_type
   use SoilBiogeochemCarbonStateType, only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemNitrogenStateType, only : soilbiogeochem_nitrogenstate_type
+  use SoilBiogeochemNitrogenFluxType, only : soilbiogeochem_nitrogenflux_type
   use ch4Mod,                        only : ch4_type
   use EnergyFluxType               , only : energyflux_type
   use PhotosynthesisMod            , only : photosyns_type
@@ -170,8 +171,8 @@ contains
        canopystate_inst, photosyns_inst, crop_inst, glc2lnd_inst, bgc_vegetation_inst,          &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, &
        c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst,       &
-       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
-       glc_behavior)
+       soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
+       soilbiogeochem_carbonflux_inst, ch4_inst, glc_behavior)
     !
     ! !DESCRIPTION:
     ! Update subgrid weights for prescribed transient PFTs, CNDV, and/or dynamic
@@ -207,6 +208,7 @@ contains
     type(soilbiogeochem_carbonstate_type), intent(inout) :: c13_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_carbonstate_type), intent(inout) :: c14_soilbiogeochem_carbonstate_inst
     type(soilbiogeochem_nitrogenstate_type), intent(inout) :: soilbiogeochem_nitrogenstate_inst
+    type(soilbiogeochem_nitrogenflux_type), intent(inout) :: soilbiogeochem_nitrogenflux_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(ch4_type)                       , intent(inout) :: ch4_inst
     type(glc_behavior_type)              , intent(in)    :: glc_behavior
@@ -319,7 +321,8 @@ contains
                canopystate_inst, photosyns_inst, &
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenstate_inst, ch4_inst, soilbiogeochem_state_inst)
+               soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, ch4_inst, &
+               soilbiogeochem_state_inst)
        end if
 
     end do
