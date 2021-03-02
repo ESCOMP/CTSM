@@ -38,6 +38,7 @@ contains
     ! !DESCRIPTION:
     ! On the radiation time step, calculate the radioactive decay of C14
     !
+    implicit none
     ! !ARGUMENTS:
     type(bounds_type)                     , intent(in)    :: bounds        
     integer                               , intent(in)    :: num_soilc       ! number of soil columns filter
@@ -89,8 +90,6 @@ contains
          livestemc_xfer     =>    c14_cnveg_carbonstate_inst%livestemc_xfer_patch          , & ! Output:  [real(r8) (:)     ]  (gC/m2) live stem C transfer            
          pft_ctrunc         =>    c14_cnveg_carbonstate_inst%ctrunc_patch                  , & ! Output:  [real(r8) (:)     ]  (gC/m2) patch-level sink for C truncation 
 
-         matrix_fitransfer        => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch           , & ! Output: [real(r8) (:,:)   ] (gC/m2/s) C transfer rate from fire processes
-         matrix_decomp_fire_k     => c14_soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col , & ! Output: [real(r8) (:,:)   ]  (gC/m3/step) VR deomp. C fire loss in matrix representation
          ileaf_to_iout_fic        => c14_cnveg_carbonflux_inst%ileaf_to_iout_fi                  , & ! Input: [integer (:)] Index of fire related C transfer from leaf pool to outside of vegetation pools
          ileafst_to_iout_fic      => c14_cnveg_carbonflux_inst%ileafst_to_iout_fi                , & ! Input: [integer (:)] Index of fire related C transfer from leaf storage pool to outside of vegetation pools
          ileafxf_to_iout_fic      => c14_cnveg_carbonflux_inst%ileafxf_to_iout_fi                , & ! Input: [integer (:)] Index of fire related C transfer from leaf transfer pool to outside of vegetation pools
@@ -138,8 +137,12 @@ contains
                if(.not. use_soil_matrixcn)then
                   decomp_cpools_vr(c,j,l) = decomp_cpools_vr(c,j,l) * (1._r8 - decay_const * spinup_term * dt)
                else
+                  associate( &
+                    matrix_decomp_fire_k => c14_soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col   & ! Output: [real(r8) (:,:)   ]  (gC/m3/step) VR deomp. C fire loss in matrix representation
+                  )
                   matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) &
                                                              - spinup_term * decay_const * dt
+                  end associate
                end if
             end do
          end do
@@ -172,6 +175,9 @@ contains
             livestemc_storage(p)  = livestemc_storage(p)   * (1._r8 - decay_const * dt)
             livestemc_xfer(p)     = livestemc_xfer(p)      * (1._r8 - decay_const * dt)
          else
+            associate( &
+              matrix_fitransfer => c14_cnveg_carbonflux_inst%matrix_fitransfer_patch & ! Output: [real(r8) (:,:)   ] (gC/m2/s) C transfer rate from fire processes
+            )
             ! Each of these MUST correspond to the code above. Any changes in
             ! code above need to apply here as well
             matrix_fitransfer(p,ideadcroot_to_iout_fic)   = decay_const
@@ -192,6 +198,7 @@ contains
             matrix_fitransfer(p,ilivestem_to_iout_fic)    = decay_const
             matrix_fitransfer(p,ilivestemst_to_iout_fic)  = decay_const
             matrix_fitransfer(p,ilivestemxf_to_iout_fic)  = decay_const
+            end associate
          end if
          gresp_storage(p)      = gresp_storage(p)       * (1._r8 - decay_const * dt)
          gresp_xfer(p)         = gresp_xfer(p)          * (1._r8 - decay_const * dt)
