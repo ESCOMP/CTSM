@@ -209,9 +209,12 @@ contains
          p = filter_nolakep(fp)
          c = patch%column(p)
          j = col%snl(c)+1
-         ! snow layers
+         ! snow layers; assumes for j < 1 that frac_sno_eff > 0
          if (j < 1) then
-            ! assumes for j < 1 that frac_sno_eff > 0
+            ! Defining the limitation uniformly for all patches is more 
+            ! strict than absolutely necessary.  This definition assumes 
+            ! each patch is spatially distinct and may remove all the snow
+            ! on its patch, but may not remove snow from adjacent patches. 
             evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno_eff(c)*dtime)
             if (qflx_ev_snow(p) > evaporation_limit) then
                evaporation_demand = qflx_ev_snow(p)
@@ -222,7 +225,9 @@ contains
             endif
          endif
          
-         ! top soil layer for urban columns (excluding pervious road)
+         ! top soil layer for urban columns (excluding pervious road, which 
+         ! shouldn't be limited here b/c it uses the uses the soilwater
+         ! equations, while the other urban columns do not)
          if (lun%urbpoi(patch%landunit(p)) .and. (col%itype(c)/=icol_road_perv) .and. (j == 1)) then
             evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/dtime
             if (qflx_evap_soi(p) > evaporation_limit) then
