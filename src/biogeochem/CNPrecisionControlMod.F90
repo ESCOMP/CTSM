@@ -22,9 +22,9 @@ module CNPrecisionControlMod
 
   ! !PUBLIC DATA:
   real(r8), public :: ccrit    =  1.e-8_r8              ! critical carbon state value for truncation (gC/m2)
-  real(r8), public :: cnegcrit = -6.e+1_r8              ! critical negative carbon state value for abort (gC/m2)
+  real(r8), public :: cnegcrit =  -6.e+1_r8             ! critical negative carbon state value for abort (gC/m2)
   real(r8), public :: ncrit    =  1.e-8_r8              ! critical nitrogen state value for truncation (gN/m2)
-  real(r8), public :: nnegcrit = -7.e+0_r8              ! critical negative nitrogen state value for abort (gN/m2)
+  real(r8), public :: nnegcrit =  -7.e+0_r8             ! critical negative nitrogen state value for abort (gN/m2)
   real(r8), public, parameter :: n_min = 0.000000001_r8 ! Minimum Nitrogen value to use when calculating CN ratio (gN/m2)
 
   ! !PRIVATE DATA:
@@ -644,7 +644,7 @@ contains
     !
     ! !USES:
     use shr_log_mod, only : errMsg => shr_log_errMsg
-    use clm_varctl , only : use_c13, use_c14, use_nguardrail
+    use clm_varctl , only : use_c13, use_c14, use_nguardrail, use_matrixcn
     use clm_varctl , only : iulog
     use pftconMod  , only : nc3crop
     use decompMod  , only : bounds_type
@@ -691,15 +691,32 @@ contains
              write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ', carbon_patch(p), nitrogen_patch(p)
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit
              call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
-          else if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit) ) then
-             num_truncatep = num_truncatep + 1
-             filter_truncatep(num_truncatep) = p
+          else 
+             if (use_matrixcn)then
+                if ( (carbon_patch(p) < ccrit .and. carbon_patch(p) > -ccrit * 1.e+6) .or. (use_nguardrail .and. nitrogen_patch(p) < ncrit .and. nitrogen_patch(p) > -ncrit*1.e+6) ) then
+                   num_truncatep = num_truncatep + 1
+                   filter_truncatep(num_truncatep) = p
 
-             pc(p) = pc(p) + carbon_patch(p)
-             carbon_patch(p) = 0._r8
+                   pc(p) = pc(p) + carbon_patch(p)
+                   carbon_patch(p) = 0._r8
+          
+                   pn(p) = pn(p) + nitrogen_patch(p)
+                   nitrogen_patch(p) = 0._r8
+    
+                end if
+             else
+                if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit ) ) then
+                   num_truncatep = num_truncatep + 1
+                   filter_truncatep(num_truncatep) = p
 
-             pn(p) = pn(p) + nitrogen_patch(p)
-             nitrogen_patch(p) = 0._r8
+                   pc(p) = pc(p) + carbon_patch(p)
+                   carbon_patch(p) = 0._r8
+
+                   pn(p) = pn(p) + nitrogen_patch(p)
+                   nitrogen_patch(p) = 0._r8
+
+                end if
+             end if
           end if
        end if
     end do

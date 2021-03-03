@@ -185,6 +185,8 @@ contains
     !
     ! !USES: 
     use clm_varpar                         , only : nlevsno
+    use clm_varctl                         , only : use_soil_matrixcn
+    use abortutils                         , only : endrun
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
@@ -374,6 +376,9 @@ contains
        ! soilbiogeochem_state_inst to be initialized
 
        call init_decomp_cascade_constants( use_century_decomp )
+       if ( use_soil_matrixcn .and. use_fates )then
+          call endrun( "ERROR: Currently use_soil_matrixcn can NOT be used with FATES" )
+       end if
        if (use_century_decomp) then
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )

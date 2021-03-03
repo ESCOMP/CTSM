@@ -38,6 +38,10 @@ module CNBalanceCheckMod
      real(r8), pointer :: endcb_grc(:)  ! (gC/m2) gridcell carbon mass, end of time step
      real(r8), pointer :: begnb_grc(:)  ! (gN/m2) gridcell nitrogen mass, beginning of time step
      real(r8), pointer :: endnb_grc(:)  ! (gN/m2) gridcell nitrogen mass, end of time step
+     real(r8)          :: cwarning      ! (gC/m2) For a Carbon balance warning
+     real(r8)          :: nwarning      ! (gN/m2) For a Nitrogen balance warning
+     real(r8)          :: cerror        ! (gC/m2) For a Carbon balance error
+     real(r8)          :: nerror        ! (gN/m2) For a Nitrogen balance error
    contains
      procedure , public  :: Init
      procedure , public  :: BeginCNGridcellBalance
@@ -56,10 +60,16 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Init(this, bounds)
+    use clm_varctl       , only : use_matrixcn, use_soil_matrixcn
     class(cn_balance_type)         :: this
     type(bounds_type) , intent(in) :: bounds  
 
     call this%InitAllocate(bounds)
+
+    this%cwarning = 1.e-8_r8
+    this%nwarning = 1.e-7_r8
+    this%nerror   = 1.e-3_r8
+    this%cerror   = 1.e-7_r8
   end subroutine Init
 
   !-----------------------------------------------------------------------
@@ -277,15 +287,13 @@ contains
               (col_endcb(c) - col_begcb(c))
 
          ! check for significant errors
-         if (abs(col_errcb(c)) > 1e-7_r8) then
+         if (abs(col_errcb(c)) > this%cerror) then 
             err_found = .true.
             err_index = c
          end if
-          if (abs(col_errcb(c)) > 1e-8_r8) then
+          if (abs(col_errcb(c)) > this%cwarning) then
             write(iulog,*) 'cbalance warning at c =', c, col_errcb(c), col_endcb(c)
          end if
-
-
 
       end do ! end of columns loop
 
@@ -356,11 +364,11 @@ contains
                         (grc_endcb(g) - grc_begcb(g))
 
          ! check for significant errors
-         if (abs(grc_errcb(g)) > 1e-7_r8) then
+         if (abs(grc_errcb(g)) > this%cerror) then
             err_found = .true.
             err_index = g
          end if
-         if (abs(grc_errcb(g)) > 1e-8_r8) then
+         if (abs(grc_errcb(g)) > this%cwarning) then
             write(iulog,*) 'cbalance warning at g =', g, grc_errcb(g), grc_endcb(g)
          end if
       end do ! end of gridcell loop
@@ -515,13 +523,13 @@ contains
          ! calculate the total column-level nitrogen balance error for this time step
          col_errnb(c) = (col_ninputs(c) - col_noutputs(c))*dt - &
               (col_endnb(c) - col_begnb(c))
-
-         if (abs(col_errnb(c)) > 1e-3_r8) then
+        
+         if (abs(col_errnb(c)) > this%nerror) then 
             err_found = .true.
             err_index = c
          end if
          
-         if (abs(col_errnb(c)) > 1e-7_r8) then
+         if (abs(col_errnb(c)) > this%nwarning) then
             write(iulog,*) 'nbalance warning at c =', c, col_errnb(c), col_endnb(c)
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
             write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
@@ -590,12 +598,12 @@ contains
          grc_errnb(g) = (grc_ninputs(g) - grc_noutputs(g)) * dt - &
                         (grc_endnb(g) - grc_begnb(g))
 
-         if (abs(grc_errnb(g)) > 1e-3_r8) then
+         if (abs(grc_errnb(g)) > this%nerror) then
             err_found = .true.
             err_index = g
          end if
 
-         if (abs(grc_errnb(g)) > 1e-7_r8) then
+         if (abs(grc_errnb(g)) > this%nwarning) then
             write(iulog,*) 'nbalance warning at g =', g, grc_errnb(g), grc_endnb(g)
          end if
       end do
