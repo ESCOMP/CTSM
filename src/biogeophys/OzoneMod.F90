@@ -79,6 +79,7 @@ module OzoneMod
 
   ! !PRIVATE TYPES:
   integer, parameter :: stress_method_lombardozzi2015 = 1
+  integer, parameter :: stress_method_falk = 2
   
   ! TODO(wjs, 2014-09-29) This parameter will eventually become a spatially-varying
   ! value, obtained from ATM
@@ -135,6 +136,7 @@ contains
 
     ! TODO(wjs, 2021-02-06) This will be based on a namelist variable
     this%stress_method = stress_method_lombardozzi2015
+    ! FIXME
 
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
@@ -202,6 +204,44 @@ contains
     call hist_addfld1d (fname='O3UPTAKESHA', units='mmol/m^2', &
          avgflag='A', long_name='total ozone flux into shaded leaves', &
          ptr_patch=this%o3uptakesha_patch)
+
+    if (this%stress_method==stress_method_lombardozzi2015) then
+       !
+       this%o3coefvsha_patch(begp:endp) = spval  
+       call hist_addfld1d (fname='O3COEFPSNSHA', units='unitless', &
+            avgflag='A', long_name='ozone coefficient for photosynthesis for shaded leaves', &
+            ptr_patch=this%o3coefvsha_patch, l2g_scale_type='veg')
+
+       this%o3coefvsun_patch(begp:endp) = spval
+       call hist_addfld1d (fname='O3COEFPSNSUN', units='unitless', &
+            avgflag='A', long_name='ozone coefficient for photosynthesis for sunlit leaves', &
+            ptr_patch=this%o3coefvsun_patch, l2g_scale_type='veg')
+
+       this%o3coefgsha_patch(begp:endp) = spval
+       call hist_addfld1d (fname='O3COEFGSSHA', units='unitless', &
+            avgflag='A', long_name='ozone coefficient for stomatal conductance for shaded leaves', &
+            ptr_patch=this%o3coefgsha_patch, l2g_scale_type='veg')
+
+       this%o3coefgsun_patch(begp:endp) = spval
+       call hist_addfld1d (fname='O3COEFGSSUN', units='unitless', &
+            avgflag='A', long_name='ozone coefficient for stomatal conductance for sunlit leaves', &
+            ptr_patch=this%o3coefgsun_patch, l2g_scale_type='veg')
+
+       elseif (this%stress_method==stress_method_falk) then
+          !
+       this%o3coefjmaxsha_patch(begp:endp) = spval
+       call hist_addfld1d (fname='O3COEFJMAXSHA', units='unitless', &
+            avgflag='A', long_name='ozone coefficient for maximum electron transport rate for shaded leaves', &
+            ptr_patch=this%o3coefjmaxsha_patch, l2g_scale_type='veg')
+
+       this%o3coefjmaxsun_patch(begp:endp) = spval
+       call hist_addfld1d (fname='O3COEFJMAXSUN', units='unitless', &
+            avgflag='A', long_name='ozone coefficient for maximum electron transport rate sunlit leaves', &
+            ptr_patch=this%o3coefjmaxsun_patch, l2g_scale_type='veg')
+          else 
+             call endrun('unknown ozone stress method')
+       end if
+
 
   end subroutine InitHistory
 
@@ -449,6 +489,8 @@ contains
     select case (this%stress_method)
     case (stress_method_lombardozzi2015)
        call this%CalcOzoneStressLombardozzi2015(bounds, num_exposedvegp, filter_exposedvegp)
+    case (stress_method_falk)
+       call this%CalcOzoneStressFalk(bounds, num_exposedvegp, filter_exposedvegp)
     case default
        write(iulog,*) 'ERROR: unknown ozone stress method: ', this%stress_method
        call endrun('Unknown ozone stress method')
