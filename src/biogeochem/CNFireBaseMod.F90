@@ -697,8 +697,6 @@ contains
          m_n_to_litr_met_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_met_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
          m_n_to_litr_cel_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_cel_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
          m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
-         matrix_fitransfer                   => cnveg_carbonflux_inst%matrix_fitransfer_patch                     , & ! Output: [real(r8) (:,:)   ] (gC/m2/s) C transfer rate from fire processes
-         matrix_nfitransfer                  => cnveg_nitrogenflux_inst%matrix_nfitransfer_patch                  , & ! Output: [real(r8) (:,:)   ] (gN/m2/s) N transfer rate from fire processes
          ileaf_to_iout_fic                   => cnveg_carbonflux_inst%ileaf_to_iout_fi                            , & ! Input: [integer (:)] Index of fire related C transfer from leaf pool to outside of vegetation pools
          ileafst_to_iout_fic                 => cnveg_carbonflux_inst%ileafst_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related C transfer from leaf storage pool to outside of vegetation pools
          ileafxf_to_iout_fic                 => cnveg_carbonflux_inst%ileafxf_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related C transfer from leaf transfer pool to outside of vegetation pools

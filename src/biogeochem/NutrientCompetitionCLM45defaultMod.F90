@@ -261,13 +261,6 @@ contains
          Nam                          => cnveg_nitrogenflux_inst%Nam_patch                         , & ! Output:  [real(r8) (:) ]  AM uptake (gN/m2/s)
          Necm                         => cnveg_nitrogenflux_inst%Necm_patch                        , & ! Output:  [real(r8) (:) ]  ECM uptake (gN/m2/s)
          sminn_to_plant_fun           => cnveg_nitrogenflux_inst%sminn_to_plant_fun_patch          , & ! Output:  [real(r8) (:) ]  Total N uptake of FUN (gN/m2/s)
-         matrix_Cinput                => cnveg_carbonflux_inst%matrix_Cinput_patch                 , & ! Output:  [real(r8) (:) ]  C input of matrix (gC/m2/s)
-         matrix_C13input              => cnveg_carbonflux_inst%matrix_C13input_patch               , & ! C13 input of matrix
-         matrix_C14input              => cnveg_carbonflux_inst%matrix_C14input_patch               , & ! C14 input of matrix
-         matrix_Ninput                => cnveg_nitrogenflux_inst%matrix_Ninput_patch               , & ! Output:  [real(r8) (:) ]  N input of matrix (gN/m2/s)
-         matrix_nphtransfer           => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch          , & ! Output:  [real(r8) (:,:,:) ]  A-matrix_phenology for nitrogen
-         matrix_alloc                 => cnveg_carbonflux_inst%matrix_alloc_patch                  , & ! Output:  [real(r8) (:,:) ]    B-matrix for carbon allocation
-         matrix_nalloc                => cnveg_nitrogenflux_inst%matrix_nalloc_patch               , & ! Output:  [real(r8) (:,:) ]    B-matrix for nitrogen allocation
          iretransn_to_ileaf           => cnveg_nitrogenflux_inst%iretransn_to_ileaf_ph             , & ! Input:   [integer] Transfer index (from retranslocation pool to leaf pool)
          iretransn_to_ileafst         => cnveg_nitrogenflux_inst%iretransn_to_ileafst_ph           , & ! Input:   [integer] Transfer index (from retranslocation pool to leaf storage pool)
          iretransn_to_ifroot          => cnveg_nitrogenflux_inst%iretransn_to_ifroot_ph            , & ! Input:   [integer] Transfer index (from retranslocation pool to fine root pool)
@@ -344,8 +337,13 @@ contains
          plant_nalloc(p) = sminn_to_npool(p) + retransn_to_npool(p)
          plant_calloc(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
          if (use_matrixcn)then 
+           associate( &
+             matrix_Cinput => cnveg_carbonflux_inst%matrix_Cinput_patch  , & ! Output:  [real(r8) (:) ]  C input of matrix (gC/m2/s)
+             matrix_Ninput => cnveg_nitrogenflux_inst%matrix_Ninput_patch  & ! Output:  [real(r8) (:) ]  N input of matrix (gN/m2/s)
+            )
             matrix_Ninput(p) =  sminn_to_npool(p)! + retransn_to_npool(p) 
             matrix_Cinput(p) = plant_nalloc(p) * (c_allometry(p)/n_allometry(p))
+            end associate
          end if
 
 
@@ -440,6 +438,10 @@ contains
             npool_to_grainn_storage(p)     = (nlc * f5 / cng) * (1._r8 -fcur)
          end if		
          if (use_matrixcn) then
+            associate( &
+              matrix_alloc  => cnveg_carbonflux_inst%matrix_alloc_patch   , & ! Output:  [real(r8) (:,:) ]    B-matrix for carbon allocation
+              matrix_nalloc => cnveg_nitrogenflux_inst%matrix_nalloc_patch  & ! Output:  [real(r8) (:,:) ]    B-matrix for nitrogen allocation
+            )
             matrix_alloc(p,ileaf)             = (1.0_r8) / c_allometry(p) * fcur
             matrix_alloc(p,ileaf_st)          = (1.0_r8) / c_allometry(p) * (1._r8 - fcur)
             matrix_alloc(p,ifroot)            = (1.0_r8) / c_allometry(p) * f1 * fcur
@@ -491,6 +493,7 @@ contains
                matrix_nalloc(p,igrain)        = (f5 / cng)   / n_allometry(p)    * fcur
                matrix_nalloc(p,igrain_st)     = (f5 / cng)   / n_allometry(p)    *(1._r8 - fcur)
             end if
+            end associate
          end if !end use_matrixcn
 
          ! Calculate the amount of carbon that needs to go into growth
@@ -517,18 +520,33 @@ contains
          cpool_to_gresp_storage(p) = gresp_storage * g1 * (1._r8 - g2)
 
          if(use_matrixcn)then
+            associate( &
+             matrix_Cinput => cnveg_carbonflux_inst%matrix_Cinput_patch   & ! Output:  [real(r8) (:) ]  C input of matrix (gC/m2/s)
+            )
             matrix_Cinput(p) = plant_calloc(p)
             if(use_c13 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0.)then
+               associate( &
+                 matrix_C13input => cnveg_carbonflux_inst%matrix_C13input_patch & ! C13 input of matrix
+               )
                matrix_C13input(p) = plant_calloc(p) * &
                                 ((c13_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)+ c13_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p))/ &
                                 (psnsun_to_cpool(p)+psnshade_to_cpool(p)))
+               end associate
             end if
             if(use_c14 .and. psnsun_to_cpool(p)+psnshade_to_cpool(p).ne. 0.)then
+               associate( &
+                 matrix_C14input => cnveg_carbonflux_inst%matrix_C14input_patch & ! C14 input of matrix
+               )
                matrix_C14input(p) = plant_calloc(p) * &
                                 ((c14_cnveg_carbonflux_inst%psnsun_to_cpool_patch(p)+ c14_cnveg_carbonflux_inst%psnshade_to_cpool_patch(p))/ &
                                 (psnsun_to_cpool(p)+psnshade_to_cpool(p)))
+               end associate
             end if
             if(retransn(p) .ne. 0)then
+               associate( &
+                  matrix_nphtransfer => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch, & ! Output:  [real(r8) (:,:,:) ]  A-matrix_phenology for nitrogen
+                  matrix_nalloc      => cnveg_nitrogenflux_inst%matrix_nalloc_patch       & ! Output:  [real(r8) (:,:) ]    B-matrix for nitrogen allocation
+               )
                matrix_nphtransfer(p,iretransn_to_ileaf)           = matrix_nphtransfer(p,iretransn_to_ileaf) &
                                                                   + matrix_nalloc(p,ileaf    )     * retransn_to_npool(p) / retransn(p)
                matrix_nphtransfer(p,iretransn_to_ileafst)         = matrix_nphtransfer(p,iretransn_to_ileafst) &
@@ -559,7 +577,9 @@ contains
                   matrix_nphtransfer(p,iretransn_to_igrainst)     = matrix_nphtransfer(p,iretransn_to_igrainst) &
                                                                   + matrix_nalloc(p,igrain_st    ) * retransn_to_npool(p) / retransn(p)
                end if
+               end associate
             end if
+            end associate
          end if !end use_matrixcn  
       end do ! end patch loop
 
@@ -756,7 +776,6 @@ contains
          livestemc             => cnveg_carbonstate_inst%livestemc_patch            , & ! Input:  [real(r8) (:)   ]                                          
 
          retransn              => cnveg_nitrogenstate_inst%retransn_patch           , & ! Input:  [real(r8) (:)   ]  (gN/m2) plant pool of retranslocated N  
-         matrix_nphtransfer    => cnveg_nitrogenflux_inst%matrix_nphtransfer_patch  , & ! Output: [real(r8) (:,:,:) ] A-matrix_phenologh for nitrogen
          leafn                 => cnveg_nitrogenstate_inst%leafn_patch              , & ! Input:  [real(r8) (:)   ]  (gN/m2) leaf N
          livestemn             => cnveg_nitrogenstate_inst%livestemn_patch          , & ! Input:  [real(r8) (:)   ]  (gN/m2) livestem N
          frootn                => cnveg_nitrogenstate_inst%frootn_patch             , & ! Input:  [real(r8) (:)   ]  (gN/m2) fine root N

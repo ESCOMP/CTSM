@@ -851,7 +851,6 @@ contains
          m_c_to_litr_met_fire                => cnveg_carbonflux_inst%m_c_to_litr_met_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_cel_fire                => cnveg_carbonflux_inst%m_c_to_litr_cel_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          m_c_to_litr_lig_fire                => cnveg_carbonflux_inst%m_c_to_litr_lig_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
-         matrix_decomp_fire_k                => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col           , & ! Output: [real(r8) (:,:)   ]                                                  
          
          fire_mortality_n_to_cwdn            => cnveg_nitrogenflux_inst%fire_mortality_n_to_cwdn_col              , & ! Input:  [real(r8) (:,:)   ]  N flux fire mortality to CWD (gN/m3/s)
          m_leafn_to_fire                     => cnveg_nitrogenflux_inst%m_leafn_to_fire_patch                     , & ! Input:  [real(r8) (:)     ]  (gN/m2/s) N emis. leafn		  
@@ -898,8 +897,6 @@ contains
          m_n_to_litr_met_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_met_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
          m_n_to_litr_cel_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_cel_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
          m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
-         matrix_fitransfer                   => cnveg_carbonflux_inst%matrix_fitransfer_patch                     , & ! Output: [real(r8) (:,:)   ] (gC/m2/s) C transfer rate from fire processes
-         matrix_nfitransfer                  => cnveg_nitrogenflux_inst%matrix_nfitransfer_patch                  , & ! Output: [real(r8) (:,:)   ] (gN/m2/s) N transfer rate from fire processes
          ileaf_to_iout_fic                   => cnveg_carbonflux_inst%ileaf_to_iout_fi                            , & ! Input: [integer (:)] Index of fire related C transfer from leaf pool to outside of vegetation pools
          ileafst_to_iout_fic                 => cnveg_carbonflux_inst%ileafst_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related C transfer from leaf storage pool to outside of vegetation pools
          ileafxf_to_iout_fic                 => cnveg_carbonflux_inst%ileafxf_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related C transfer from leaf transfer pool to outside of vegetation pools
@@ -1417,14 +1414,22 @@ contains
               if ( is_litter(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * f * 0.5_r8
                  if(use_soil_matrixcn)then
+                    associate( &
+                       matrix_decomp_fire_k => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col  & ! Output: [real(r8) (:,:)   ]                                                  
+                    )
                     matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) - f * 0.5_r8 * dt
+                    end associate
                  end if
               end if
               if ( is_cwd(l) ) then
                  m_decomp_cpools_to_fire_vr(c,j,l) = decomp_cpools_vr(c,j,l) * &
                       (f-baf_crop(c)) * 0.25_r8
                  if(use_soil_matrixcn)then
+                    associate( &
+                       matrix_decomp_fire_k => soilbiogeochem_carbonflux_inst%matrix_decomp_fire_k_col  & ! Output: [real(r8) (:,:)   ]                                                  
+                    )
                     matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) = matrix_decomp_fire_k(c,j+nlevdecomp*(l-1)) - (f-baf_crop(c)) * 0.25_r8 * dt
+                    end associate
                  end if
               end if
            end do
