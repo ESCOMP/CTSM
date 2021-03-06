@@ -32,7 +32,8 @@ module Waterlnd2atmType
      real(r8), pointer :: qflx_rofliq_qsub_grc    (:)   ! rof liq -- subsurface runoff component
      real(r8), pointer :: qflx_rofliq_qgwl_grc    (:)   ! rof liq -- glacier, wetland and lakes water balance residual component
      real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   ! rof liq -- perched water table runoff component
-     real(r8), pointer :: qflx_rofice_grc    (:)   ! rof ice forcing
+     real(r8), pointer :: qflx_ice_runoff_col(:)   ! rof ice forcing, col level
+     real(r8), pointer :: qflx_rofice_grc    (:)   ! rof ice forcing, grc level
      real(r8), pointer :: qflx_liq_from_ice_col(:) ! liquid runoff from converted ice runoff
      real(r8), pointer :: qirrig_grc         (:)   ! irrigation flux
 
@@ -118,6 +119,10 @@ contains
     call AllocateVar1d(var = this%qflx_rofliq_drain_perched_grc, name = 'qflx_rofliq_drain_perched_grc', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         ival=ival)
+    call AllocateVar1d(var = this%qflx_ice_runoff_col, name = 'qflx_ice_runoff_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
          ival=ival)
     call AllocateVar1d(var = this%qflx_rofice_grc, name = 'qflx_rofice_grc', &
          container = tracer_vars, &

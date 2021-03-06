@@ -17,7 +17,7 @@ module surfrdMod
   use clm_varctl      , only : use_cndv, use_crop
   use surfrdUtilsMod  , only : check_sums_equal_1, collapse_crop_types, collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
-  use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim, ncd_inqdid, ncd_inqdlen
+  use ncdio_pio       , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
   use pio
   use spmdMod
   !
@@ -71,7 +71,6 @@ contains
     integer :: n,i,j               ! index
     integer :: ier                 ! error status
     type(file_desc_t)  :: ncid     ! netcdf id
-    type(var_desc_t)   :: vardesc  ! variable descriptor
     character(len=256) :: varname  ! variable name
     character(len=256) :: locfn    ! local file name
     logical :: readvar             ! read variable in or not
@@ -154,7 +153,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t) :: ncid               ! netcdf id
-    type(var_desc_t)  :: vardesc            ! variable descriptor
     integer :: beg                          ! local beg index
     integer :: end                          ! local end index
     integer :: ni,nj,ns                     ! size of grid on file
@@ -189,7 +187,7 @@ contains
     call domain_init(ldomain, isgrid2d=isgrid2d, ni=ni, nj=nj, nbeg=begg, nend=endg)
 
     ! Determine type of file - old style grid file or new style domain file
-    call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar)
+    call check_var(ncid=ncid, varname='xc', readvar=readvar)
     if (readvar)then
         istype_domain = .true.
     else
@@ -303,7 +301,6 @@ contains
     character(len=*), intent(in) :: lfsurdat    ! surface dataset filename
     !
     ! !LOCAL VARIABLES:
-    type(var_desc_t)  :: vardesc              ! pio variable descriptor
     type(domain_type) :: surfdata_domain      ! local domain associated with surface dataset
     character(len=256):: locfn                ! local file name
     integer, parameter :: n_dom_urban = 1     ! # of dominant urban landunits
@@ -344,11 +341,11 @@ contains
 
     ! Check if fsurdat grid is "close" to fatmlndfrc grid, exit if lats/lon > 0.001
 
-    call check_var(ncid=ncid, varname='xc', vardesc=vardesc, readvar=readvar)
+    call check_var(ncid=ncid, varname='xc', readvar=readvar)
     if (readvar) then
        istype_domain = .true.
     else
-       call check_var(ncid=ncid, varname='LONGXY', vardesc=vardesc, readvar=readvar)
+       call check_var(ncid=ncid, varname='LONGXY', readvar=readvar)
        if (readvar) then
           istype_domain = .false.
        else
@@ -554,7 +551,7 @@ contains
     allocate(urban_region_id(begg:endg))
     allocate(pctspec(begg:endg))
 
-    call check_dim(ncid, 'nlevsoi', nlevsoifl)
+    call check_dim_size(ncid, 'nlevsoi', nlevsoifl)
 
        ! Obtain non-grid surface properties of surface dataset other than percent patch
 
@@ -605,8 +602,8 @@ contains
 
     ! Read glacier info
 
-    call check_dim(ncid, 'nglcec',   maxpatch_glcmec   )
-    call check_dim(ncid, 'nglcecp1', maxpatch_glcmec+1 )
+    call check_dim_size(ncid, 'nglcec',   maxpatch_glcmec   )
+    call check_dim_size(ncid, 'nglcecp1', maxpatch_glcmec+1 )
 
     call ncd_io(ncid=ncid, varname='PCT_GLC_MEC', flag='read', data=wt_glc_mec, &
          dim1name=grlnd, readvar=readvar)
@@ -694,8 +691,8 @@ contains
     SHR_ASSERT_ALL_FL((ubound(fert_cft, dim=2) >= (/cftsize+1-cft_lb/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch)    >= (/endg,natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
-    call check_dim(ncid, 'cft',    cftsize)
-    call check_dim(ncid, 'natpft', natpft_size)
+    call check_dim_size(ncid, 'cft',    cftsize)
+    call check_dim_size(ncid, 'natpft', natpft_size)
 
     call ncd_io(ncid=ncid, varname='PCT_CFT', flag='read', data=wt_cft, &
             dim1name=grlnd, readvar=readvar)
@@ -757,7 +754,7 @@ contains
 !-----------------------------------------------------------------------
     SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, natpft_size-1+natpft_lb/)), sourcefile, __LINE__)
 
-    call check_dim(ncid, 'natpft', natpft_size)
+    call check_dim_size(ncid, 'natpft', natpft_size)
     ! If cft_size == 0, then we expect to be running with a surface dataset
     ! that does
     ! NOT have a PCT_CFT array (or CONST_FERTNITRO_CFT array), and thus does not have a 'cft' dimension.

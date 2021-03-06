@@ -12,7 +12,7 @@ module ndepStreamMod
   use shr_strdata_mod, only: shr_strdata_print, shr_strdata_advance
   use mct_mod     , only: mct_ggrid
   use spmdMod     , only: mpicom, masterproc, comp_id, iam
-  use clm_varctl  , only: iulog
+  use clm_varctl  , only: iulog, inst_name
   use abortutils  , only: endrun
   use fileutils   , only: getavu, relavu
   use decompMod   , only: bounds_type, ldecomp
@@ -51,14 +51,13 @@ contains
    !
    ! Uses:
    use shr_kind_mod     , only : CS => shr_kind_cs
-   use clm_varctl       , only : inst_name
    use clm_time_manager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
-   use decompMod        , only : gsmap_lnd_gdc2glo 
+   use decompMod        , only : gsmap_lnd_gdc2glo
    !
    ! arguments
    implicit none
@@ -302,7 +301,7 @@ contains
     ! Initialize mct domain type
     ! lat/lon in degrees,  area in radians^2, mask is 1 (land), 0 (non-land)
     ! Note that in addition land carries around landfrac for the purposes of domain checking
-    ! 
+    !
     lsize = mct_gsMap_lsize(gsmap, mpicom)
     call mct_gGrid_init( GGrid=dom_clm, &
          CoordChars='lat:lon:hgt', OtherChars='area:aream:mask:frac', lsize=lsize )
@@ -339,7 +338,7 @@ contains
        data(i) = ldomain%lonc(g)
     end do
     end do
-    call mct_gGrid_importRattr(dom_clm,"lon",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"lon",data,lsize)
 
     do k = 1, nlevs
     do g = bounds%begg,bounds%endg
@@ -347,7 +346,7 @@ contains
        data(i) = ldomain%latc(g)
     end do
     end do
-    call mct_gGrid_importRattr(dom_clm,"lat",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"lat",data,lsize)
 
     do k = 1, nlevs
     do g = bounds%begg,bounds%endg
@@ -355,7 +354,7 @@ contains
        data(i) = ldomain%area(g)/(re*re)
     end do
     end do
-    call mct_gGrid_importRattr(dom_clm,"area",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"area",data,lsize)
 
     do k = 1, nlevs
     do g = bounds%begg,bounds%endg
@@ -363,7 +362,7 @@ contains
        data(i) = real(ldomain%mask(g), r8)
     end do
     end do
-    call mct_gGrid_importRattr(dom_clm,"mask",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"mask",data,lsize)
 
     do k = 1, nlevs
     do g = bounds%begg,bounds%endg
@@ -371,7 +370,7 @@ contains
        data(i) = real(ldomain%frac(g), r8)
     end do
     end do
-    call mct_gGrid_importRattr(dom_clm,"frac",data,lsize) 
+    call mct_gGrid_importRattr(dom_clm,"frac",data,lsize)
 
     deallocate(data)
     deallocate(idata)

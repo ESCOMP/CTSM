@@ -164,7 +164,7 @@ contains
          hist_fexcl4,  hist_fexcl5, hist_fexcl6, &
          hist_fexcl7,  hist_fexcl8,              &
          hist_fexcl9,  hist_fexcl10
-    namelist /clm_inparm/ hist_wrtch4diag
+    namelist /clm_inparm/ hist_wrtch4diag, hist_master_list_file
 
     ! BGC info
 
@@ -219,13 +219,15 @@ contains
 
     ! FATES Flags
     namelist /clm_inparm/ fates_paramfile, use_fates,   &
-          use_fates_spitfire, use_fates_logging,        &
+          fates_spitfire_mode, use_fates_logging,       &
           use_fates_planthydro, use_fates_ed_st3,       &
+          use_fates_cohort_age_tracking,                &
           use_fates_ed_prescribed_phys,                 &
           use_fates_inventory_init,                     &
+          use_fates_fixed_biogeog,                      &
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode
-
+    
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -240,6 +242,8 @@ contains
     namelist /clm_inparm/ use_lai_streams
 
     namelist /clm_inparm/ use_bedrock
+
+    namelist /clm_inparm/ use_biomass_heat_storage
 
     namelist /clm_inparm/ use_hydrstress
 
@@ -700,12 +704,14 @@ contains
 
     call mpi_bcast (use_fates, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_fates_spitfire, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_inventory_init, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_fixed_biogeog, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -735,6 +741,8 @@ contains
     call mpi_bcast (use_lai_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_bedrock, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (use_biomass_heat_storage, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
@@ -801,11 +809,12 @@ contains
     call mpi_bcast (hist_nhtfrq, size(hist_nhtfrq), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_mfilt, size(hist_mfilt), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_ndens, size(hist_ndens), MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (hist_avgflag_pertape, size(hist_avgflag_pertape), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hist_avgflag_pertape, len(hist_avgflag_pertape)*size(hist_avgflag_pertape), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_type1d_pertape, max_namlen*size(hist_type1d_pertape), MPI_CHARACTER, 0, mpicom, ier)
     if (use_lch4) then
        call mpi_bcast (hist_wrtch4diag, 1, MPI_LOGICAL, 0, mpicom, ier)
     end if
+    call mpi_bcast (hist_master_list_file, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl1, max_namlen*size(hist_fexcl1), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl2, max_namlen*size(hist_fexcl2), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (hist_fexcl3, max_namlen*size(hist_fexcl3), MPI_CHARACTER, 0, mpicom, ier)
@@ -1049,14 +1058,16 @@ contains
     write(iulog, *) '  ED/FATES: '
     write(iulog, *) '    use_fates = ', use_fates
     if (use_fates) then
-       write(iulog, *) '    use_fates_spitfire = ', use_fates_spitfire
+       write(iulog, *) '    fates_spitfire_mode = ', fates_spitfire_mode
        write(iulog, *) '    use_fates_logging = ', use_fates_logging
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
+       write(iulog, *) '    use_fates_cohort_age_tracking = ', use_fates_cohort_age_tracking
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
        write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
        write(iulog, *) '    use_fates_inventory_init = ',use_fates_inventory_init
+       write(iulog, *) '    use_fates_fixed_biogeog = ', use_fates_fixed_biogeog
        write(iulog, *) '    fates_inventory_ctrl_filename = ',fates_inventory_ctrl_filename
     end if
   end subroutine control_print
