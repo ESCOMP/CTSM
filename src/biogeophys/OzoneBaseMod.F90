@@ -47,12 +47,14 @@ module OzoneBaseMod
 
   abstract interface
 
-     subroutine Init_interface(this, bounds)
+     subroutine Init_interface(this, bounds, ozone_method)
        use decompMod, only : bounds_type
        import :: ozone_base_type
 
        class(ozone_base_type), intent(inout) :: this
        type(bounds_type), intent(in) :: bounds
+       character(len=*),        intent(in) :: ozone_method
+
      end subroutine Init_interface
   
      subroutine Restart_interface(this, bounds, ncid, flag)

@@ -63,6 +63,7 @@ module OzoneMod
      procedure, public :: CalcOzoneStress
 
      ! Private routines
+     procedure, private :: ReadNamelist
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
@@ -124,19 +125,24 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds)
+  subroutine Init(this, bounds, ozone_method)
     !
     ! !DESCRIPTION:
     ! Initialize ozone data structure
     !
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
-    type(bounds_type), intent(in)    :: bounds
+    type(bounds_type), intent(in)      :: bounds
+    character(len=*), intent(in)            :: ozone_method 
     !-----------------------------------------------------------------------
-
-    ! TODO(wjs, 2021-02-06) This will be based on a namelist variable
-    this%stress_method = stress_method_lombardozzi2015
-    ! FIXME
+    
+    if (ozone_method=='lombardozzi2015') then 
+       this%stress_method = stress_method_lombardozzi2015
+    else if (ozone_method=='falk') then 
+       this%stress_method = stress_method_falk
+    else 
+       call endrun('unknown ozone stress method')
+    end if
 
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)

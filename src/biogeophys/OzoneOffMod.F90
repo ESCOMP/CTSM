@@ -60,12 +60,16 @@ contains
   end function constructor
 
 
-  subroutine Init(this, bounds)
+  subroutine Init(this,  bounds, ozone_method)
     class(ozone_off_type) , intent(inout) :: this
-    type(bounds_type)     , intent(in)    :: bounds
+    type(bounds_type)     , intent(in)           :: bounds
+    character(len=*), intent(in)                      :: ozone_method 
+    
+    if (.not. ozone_method=='off' ) call endrun(' unconsistent choice of ozone stress method.')
 
     call this%InitAllocateBase(bounds)
     call this%InitColdBase(bounds)
+
   end subroutine Init
 
   subroutine Restart(this, bounds, ncid, flag)
