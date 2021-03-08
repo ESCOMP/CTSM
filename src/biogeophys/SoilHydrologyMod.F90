@@ -633,8 +633,7 @@ contains
      !-----------------------------------------------------------------------
 
      associate(                                                            & 
-          snl                =>    col%snl                               , & ! Input:  [integer  (:)   ]  number of snow layers                              
-          dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
+          dz                 =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)
           z                  =>    col%z                                 , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
           zi                 =>    col%zi                                , & ! Input:  [real(r8) (:,:) ]  interface level below a "z" level (m)           
 
@@ -644,10 +643,7 @@ contains
           h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                            
           h2osoi_ice         =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                                
           h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
-          frac_h2osfc        =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ]                                                    
 
-          qflx_liqdew_to_top_layer   => waterfluxbulk_inst%qflx_liqdew_to_top_layer_col  , & ! Input:  [real(r8) (:)   ]  rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s) [+]    
-          qflx_soliddew_to_top_layer => waterfluxbulk_inst%qflx_soliddew_to_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s) [+]      
           qflx_ev_snow       =>    waterfluxbulk_inst%qflx_ev_snow_col   , & ! In/Out: [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
           bsw                =>    soilstate_inst%bsw_col                , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"                        
           hksat              =>    soilstate_inst%hksat_col              , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity at saturation (mm H2O /s)
@@ -662,8 +658,7 @@ contains
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ]  aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical  
           
-          qflx_solidevap_from_top_layer => waterfluxbulk_inst%qflx_solidevap_from_top_layer_col, & ! Output: [real(r8) (:)   ]  rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s) [+]   
-          qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)                    
+          qflx_drain         =>    waterfluxbulk_inst%qflx_drain_col         , & ! Output: [real(r8) (:)   ]  sub-surface runoff (mm H2O /s)
           qflx_drain_perched =>    waterfluxbulk_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ]  perched wt sub-surface runoff (mm H2O /s)         
           qflx_rsub_sat      =>    waterfluxbulk_inst%qflx_rsub_sat_col        & ! Output: [real(r8) (:)   ]  soil saturation excess [mm h2o/s]                 
           )
@@ -835,42 +830,17 @@ contains
           endif
        end do
 
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-
-          ! Renew the ice and liquid mass due to condensation
-
-          if (snl(c)+1 >= 1) then
-
-             ! make consistent with how evap_grnd removed in infiltration
-             h2osoi_liq(c,1) = h2osoi_liq(c,1) + (1._r8 - frac_h2osfc(c))*qflx_liqdew_to_top_layer(c) * dtime
-             h2osoi_ice(c,1) = h2osoi_ice(c,1) + (1._r8 - frac_h2osfc(c))*qflx_soliddew_to_top_layer(c) * dtime
-             if (((1._r8 - frac_h2osfc(c))*qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1) > tolerance)) then
-                call endrun(msg="qflx_solidevap_from_top_layer too large! "//errmsg(sourcefile, __LINE__))
-             else
-                h2osoi_ice(c,1) = h2osoi_ice(c,1) - (1._r8 - frac_h2osfc(c)) * qflx_solidevap_from_top_layer(c) * dtime
-             end if
-          end if
-       end do
-
-
-       do fc = 1, num_urbanc
-          c = filter_urbanc(fc)
-          ! Renew the ice and liquid mass due to condensation for urban roof and impervious road
-
-          if (col%itype(c) == icol_roof .or. col%itype(c) == icol_road_imperv) then
-             if (snl(c)+1 >= 1) then
-                h2osoi_liq(c,1) = h2osoi_liq(c,1) + qflx_liqdew_to_top_layer(c) * dtime
-                h2osoi_ice(c,1) = h2osoi_ice(c,1) + (qflx_soliddew_to_top_layer(c) * dtime)
-                if ((qflx_solidevap_from_top_layer(c)*dtime - h2osoi_ice(c,1)) > tolerance) then
-                   call endrun(msg="urban qflx_solidevap_from_top_layer too large! "//errmsg(sourcefile, __LINE__))
-                else
-                   h2osoi_ice(c,1) = h2osoi_ice(c,1) - (qflx_solidevap_from_top_layer(c) * dtime)
-                end if
-             end if
-          end if
-
-       end do
+       call RenewCondensation(&
+            bounds                   = bounds, &
+            num_hydrologyc           = num_hydrologyc, &
+            filter_hydrologyc        = filter_hydrologyc, &
+            num_urbanc               = num_urbanc, &
+            filter_urbanc            = filter_urbanc, &
+            soilhydrology_inst       = soilhydrology_inst, &
+            soilstate_inst           = soilstate_inst, &
+            waterstatebulk_inst      = waterstatebulk_inst, &
+            waterdiagnosticbulk_inst = waterdiagnosticbulk_inst, &
+            waterfluxbulk_inst       = waterfluxbulk_inst)
 
      end associate
 
