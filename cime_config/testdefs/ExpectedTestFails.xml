@@ -30,10 +30,10 @@
 
   <!-- aux_clm test suite failures -->
 
-  <test name="ERS_Lm20_Mmpi-serial.1x1_smallvilleIA.I2000Clm50BgcCropQianGs.cheyenne_gnu.clm-monthly">
-    <phase name="RUN">
+  <test name="ERS_Ln9.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.IHistClm50SpGs.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start">
+    <phase name="COMPARE_base_rest">
       <status>FAIL</status>
-      <issue>#158</issue>
+      <issue>#1117</issue>
     </phase>
   </test>
 

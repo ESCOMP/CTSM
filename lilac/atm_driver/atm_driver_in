@@ -1,0 +1,18 @@
+&atm_driver_input
+  caseid                = 'FILL_THIS_IN'
+  atm_mesh_file         = 'FILL_THIS_IN'
+  atm_global_nx         = FILL_THIS_IN
+  atm_global_ny         = FILL_THIS_IN
+  atm_timestep          = 1800
+  atm_calendar          = 'NOLEAP'
+  atm_start_year        = 2000
+  atm_stop_year         = 2000
+  atm_start_mon         = 1
+  atm_stop_mon          = 1
+  atm_start_secs        = 0
+  atm_stop_secs         = 0
+  atm_start_day         = 1
+  atm_stop_day          = FILL_THIS_IN
+  atm_starttype         = 'startup'
+  atm_ndays_all_segs    = FILL_THIS_IN
+/

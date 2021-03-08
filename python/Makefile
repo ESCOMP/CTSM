@@ -6,9 +6,9 @@ verbose = not-set
 debug = not-set
 
 ifneq ($(python), not-set)
-PYTHON=$(python)
+    PYTHON=$(python)
 else
-PYTHON=python
+    PYTHON=python
 endif
 
 ifneq ($(debug), not-set)
@@ -23,9 +23,16 @@ PYLINT_ARGS=-j 4 --rcfile=ctsm/.pylintrc
 PYLINT_SRC = \
 	ctsm
 
-.PHONY: test
-test: FORCE
-	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS)
+all: test lint
+test: utest stest
+
+.PHONY: utest
+utest: FORCE
+	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS) --unit
+
+.PHONY: stest
+stest: FORCE
+	$(PYTHON) ./run_ctsm_py_tests $(TEST_ARGS) --sys
 
 .PHONY: lint
 lint: FORCE
