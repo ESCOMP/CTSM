@@ -39,14 +39,14 @@ contains
     
     character(len=*), parameter :: subname = 'create_and_init_ozone_type'
     !-----------------------------------------------------------------------
-
-    if (use_ozone) then
-       allocate(ozone_type :: ozone)
-    else
+    
+    if (ozone_method=='off') then 
        allocate(ozone_off_type :: ozone)
-    end if
+    else 
+       allocate(ozone_type :: ozone)
+    endif
 
-    call ozone%Init(bounds)
+    call ozone%Init(bounds, ozone_method)
     
   end function create_and_init_ozone_type
 

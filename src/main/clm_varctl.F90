@@ -205,6 +205,9 @@ module clm_varctl
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
 
+  character(len=64), public    :: ozone_method = 'unset'
+  real(r8), public  :: o3_ppbv = 100._r8
+
   !----------------------------------------------------------
   ! C isotopes
   !----------------------------------------------------------
@@ -382,7 +385,6 @@ module clm_varctl
   logical, public :: use_cndv            = .false.
   logical, public :: use_grainproduct    = .false.
   logical, public :: use_fertilizer      = .false.
-  logical, public :: use_ozone           = .false.
   logical, public :: use_snicar_frc      = .false.
   logical, public :: use_vancouver       = .false.
   logical, public :: use_mexicocity      = .false.
