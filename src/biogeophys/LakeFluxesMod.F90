@@ -130,12 +130,10 @@ contains
     integer  :: jtop(bounds%begc:bounds%endc)      ! top level for each column (no longer all 1)
     real(r8) :: ax                                 ! used in iteration loop for calculating t_grnd (numerator of NR solution)
     real(r8) :: bx                                 ! used in iteration loop for calculating t_grnd (denomin. of NR solution)
-    real(r8) :: degdT                              ! d(eg)/dT
     real(r8) :: dqh(bounds%begp:bounds%endp)       ! diff of humidity between ref. height and surface
     real(r8) :: dth(bounds%begp:bounds%endp)       ! diff of virtual temp. between ref. height and surface
     real(r8) :: dthv                               ! diff of vir. poten. temp. between ref. height and surface
     real(r8) :: dzsur(bounds%begc:bounds%endc)     ! 1/2 the top layer thickness (m)
-    real(r8) :: eg                                 ! water vapor pressure at temperature T [pa]
     real(r8) :: htvp(bounds%begc:bounds%endc)      ! latent heat of vapor of water (or sublimation) [j/kg]
     real(r8) :: obu(bounds%begp:bounds%endp)       ! monin-obukhov length (m)
     real(r8) :: obuold(bounds%begp:bounds%endp)    ! monin-obukhov length of previous iteration
@@ -173,9 +171,7 @@ contains
     real(r8) :: t_grnd_temp                        ! Used in surface flux correction over frozen ground
     real(r8) :: betaprime(bounds%begc:bounds%endc) ! Effective beta: sabg_lyr(p,jtop) for snow layers, beta otherwise
     real(r8) :: e_ref2m                            ! 2 m height surface saturated vapor pressure [Pa]
-    real(r8) :: de2mdT                             ! derivative of 2 m height surface saturated vapor pressure on t_ref2m
     real(r8) :: qsat_ref2m                         ! 2 m height surface saturated specific humidity [kg/kg]
-    real(r8) :: dqsat2mdT                          ! derivative of 2 m height surface saturated specific humidity on t_ref2m
     real(r8) :: sabg_nir                           ! NIR that is absorbed (W/m^2)
 
     ! For calculating roughness lengths
@@ -273,6 +269,7 @@ contains
          eflx_gnet        =>    energyflux_inst%eflx_gnet_patch        , & ! Output: [real(r8) (:)   ]  net heat flux into ground (W/m**2)                
          taux             =>    energyflux_inst%taux_patch             , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)              
          tauy             =>    energyflux_inst%tauy_patch             , & ! Output: [real(r8) (:)   ]  wind (shear) stress: n-s (kg/m/s**2)              
+         dhsdt_canopy     =>    energyflux_inst%dhsdt_canopy_patch     , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm] 
 
          ks               =>    lakestate_inst%ks_col                  , & ! Output: [real(r8) (:)   ]  coefficient passed to LakeTemperature            
          ws               =>    lakestate_inst%ws_col                  , & ! Output: [real(r8) (:)   ]  surface friction velocity (m/s)                   
@@ -364,7 +361,8 @@ contains
          ! Saturated vapor pressure, specific humidity and their derivatives
          ! at lake surface
 
-         call QSat(t_grnd(c), forc_pbot(c), eg, degdT, qsatg(c), qsatgdT(c))
+         call QSat(t_grnd(c), forc_pbot(c), qsatg(c), &
+              qsdT = qsatgdT(c))
 
          ! Potential, virtual potential temperature, and wind speed at the
          ! reference height
@@ -380,6 +378,7 @@ contains
          c = patch%column(p)
          g = patch%gridcell(p)
 
+         dhsdt_canopy(p) = 0.0_r8
          nmozsgn(p) = 0
          obuold(p) = 0._r8
          displa(p) = 0._r8
@@ -491,7 +490,8 @@ contains
             ! Re-calculate saturated vapor pressure, specific humidity and their
             ! derivatives at lake surface
 
-            call QSat(t_grnd(c), forc_pbot(c), eg, degdT, qsatg(c), qsatgdT(c))
+            call QSat(t_grnd(c), forc_pbot(c), qsatg(c), &
+                 qsdT = qsatgdT(c))
 
             dth(p)=thm(p)-t_grnd(c)
             dqh(p)=forc_q(c)-qsatg(c)
@@ -643,7 +643,8 @@ contains
 
          ! 2 m height relative humidity
 
-         call QSat(t_ref2m(p), forc_pbot(c), e_ref2m, de2mdT, qsat_ref2m, dqsat2mdT)
+         call QSat(t_ref2m(p), forc_pbot(c), qsat_ref2m, &
+              es = e_ref2m)
          rh_ref2m(p) = min(100._r8, q_ref2m(p) / qsat_ref2m * 100._r8)
 
          ! Human Heat Stress

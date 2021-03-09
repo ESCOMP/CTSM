@@ -78,7 +78,7 @@ sub make_config_cache {
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0">Specifies clm physics</entry>
+<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies clm physics</entry>
 </config_definition>
 EOF
    $fh->close();
@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 949;
+my $ntests = 1551;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 591;
+   $ntests += 1044;
 }
 plan( tests=>$ntests );
 
@@ -164,7 +164,7 @@ my $mode = "-phys $phys";
 &make_config_cache($phys);
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
-my $real_par_file = "user_nl_clm_real_parameters";
+my $real_par_file = "user_nl_ctsm_real_parameters";
 my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
@@ -837,13 +837,23 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "useFATESWbMH"              =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_biomass_heat_storage=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "FireNoneButFATESfireon"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res none",
+                                     namelst=>"fates_spitfire_mode=4",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
+                                     namelst=>"fire_method='li2021gswpfrc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
      "createcropFalse"           =>{ options=>"-bgc bgc -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "useFATESWTransient"        =>{ options=>"-bgc fates -use_case 20thC_transient -envxml_dir . -no-megan -res 10x15",
-                                     namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -1033,11 +1043,6 @@ my %warntest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "maxpft_wrong"              =>{ options=>"-envxml_dir . -bgc cn",
-                                     namelst=>"maxpatch_pft=19",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
      "soilm_stream w transient"  =>{ options=>"-res 0.9x1.25 -envxml_dir . -use_case 20thC_transient",
                                      namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1071,15 +1076,18 @@ foreach my $key ( keys(%warntest) ) {
    system( "cat $tempfile" );
 }
 
+#
+# Loop over all physics versions
+#
+foreach my $phys ( "clm4_5", "clm5_0", "clm5_1" ) {
+$mode = "-phys $phys";
+&make_config_cache($phys);
 
 print "\n==================================================\n";
-print "Test ALL resolutions with CLM5.0 and SP \n";
+print "Test ALL resolutions with SP\n";
 print "==================================================\n";
 
 # Check for ALL resolutions with CLM50SP
-$phys = "clm5_0";
-$mode = "-phys $phys";
-&make_config_cache($phys);
 my $reslist = `../queryDefaultNamelist.pl -res list -s`;
 my @resolutions = split( / /, $reslist );
 my @regional;
@@ -1143,16 +1151,13 @@ foreach my $res ( @resolutions ) {
 }
 
 print "\n==================================================\n";
-print " Test important resolutions for CLM4.5 and BGC\n";
+print " Test important resolutions for BGC\n";
 print "==================================================\n";
 
-$phys = "clm4_5";
-$mode = "-phys $phys";
-&make_config_cache($phys);
 my @resolutions = ( "4x5", "10x15", "ne30np4", "ne16np4", "1.9x2.5", "0.9x1.25" );
 my @regional;
 my $nlbgcmode = "bgc";
-my $mode = "clm45-$nlbgcmode";
+my $mode = "$phys-$nlbgcmode";
 foreach my $res ( @resolutions ) {
    chomp($res);
    print "=== Test $res === \n";
@@ -1210,9 +1215,6 @@ print "Test crop resolutions \n";
 print "==================================================\n";
 
 # Check for crop resolutions
-$phys = "clm5_0";
-$mode = "-phys $phys";
-&make_config_cache($phys);
 my @crop_res = ( "1x1_numaIA", "1x1_smallvilleIA", "4x5", "10x15", "0.9x1.25", "1.9x2.5", "ne30np4" );
 foreach my $res ( @crop_res ) {
    $options = "-bgc bgc -crop -res $res -envxml_dir .";
@@ -1246,9 +1248,6 @@ print "==================================================\n";
 # use cases, but I've kept these pointing to the equivalent normal use
 # cases; I'm not sure if it's actually important to test this with all
 # of the different use cases.
-$phys = "clm4_5";
-$mode = "-phys $phys";
-&make_config_cache($phys);
 my @glc_res = ( "0.9x1.25", "1.9x2.5" );
 my @use_cases = ( "1850-2100_SSP1-2.6_transient",
                   "1850-2100_SSP2-4.5_transient",
@@ -1288,9 +1287,6 @@ foreach my $res ( @glc_res ) {
    }
 }
 # Transient 20th Century simulations
-$phys = "clm5_0";
-$mode = "-phys $phys";
-&make_config_cache($phys);
 my @tran_res = ( "0.9x1.25", "1.9x2.5", "ne30np4", "10x15" );
 my $usecase  = "20thC_transient";
 my $GLC_NEC         = 10;
@@ -1312,9 +1308,6 @@ foreach my $res ( @tran_res ) {
    &cleanup();
 }
 # Transient ssp_rcp scenarios that work
-$phys = "clm5_0";
-$mode = "-phys $phys";
-&make_config_cache($phys);
 my @tran_res = ( "0.9x1.25", "1.9x2.5", "10x15" );
 foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100_SSP1-2.6_transient", "1850-2100_SSP3-7.0_transient",
                       "1850-2100_SSP2-4.5_transient" ) {
@@ -1342,7 +1335,15 @@ foreach my $usecase ( "1850_control", "1850-2100_SSP5-8.5_transient", "1850-2100
       &cleanup();
    }
 }
+}  # End loop over all physics versions
+#
+# End loop over versions
+#
+
 # The SSP's that fail...
+$phys = "clm5_0";
+$mode = "-phys $phys";
+&make_config_cache($phys);
 my $res = "0.9x1.25";
 foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transient", "1850-2100_SSP1-1.9_transient",
                       "1850-2100_SSP4-6.0_transient" ) {
@@ -1354,10 +1355,10 @@ foreach my $usecase ( "1850-2100_SSP4-3.4_transient", "1850-2100_SSP5-3.4_transi
 }
 
 print "\n==================================================\n";
-print "Test clm4.5/clm5.0 resolutions \n";
+print "Test clm4.5/clm5.0/clm5_1 resolutions \n";
 print "==================================================\n";
 
-foreach my $phys ( "clm4_5", 'clm5_0' ) {
+foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
   my @clmoptions = ( "-bgc bgc -envxml_dir .", "-bgc bgc -envxml_dir . -clm_accelerated_spinup=on", "-bgc bgc -envxml_dir . -light_res 360x720",
@@ -1422,22 +1423,30 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
   &cleanup();
   # Run FATES mode for several resolutions and configurations
   my $clmoptions = "-bgc fates -envxml_dir . -no-megan";
-  my @clmres = ( "1x1_brazil", "5x5_amazon", "10x15", "1.9x2.5" );
+  my @clmres = ( "1x1_brazil", "5x5_amazon", "4x5", "1.9x2.5" );
   foreach my $res ( @clmres ) {
-     $options = "-res $res";
-     my @edoptions = ( "-use_case 2000_control", "", "-namelist \"&a use_lch4=.true.,use_nitrif_denitrif=.true./\"", "-clm_accelerated_spinup on" );
+     $options = "-res $res -clm_start_type cold";
+     my @edoptions = ( "-use_case 2000_control", 
+                       "-use_case 1850_control", 
+                       "", 
+                       "-namelist \"&a use_lch4=.true.,use_nitrif_denitrif=.true./\"", 
+                       "-clm_accelerated_spinup on" 
+                     );
      foreach my $edop (@edoptions ) {
+        if ( $res eq "5x5_amazon" && ($edop =~ /1850_control/) ) {
+           next;
+        }
         &make_env_run( );
         eval{ system( "$bldnml $options $clmoptions $edop  > $tempfile 2>&1 " ); };
         is( $@, '', "$options $edop" );
-        $cfiles->checkfilesexist( "$options $edop", $mode );
+        $cfiles->checkfilesexist( "$options $clmoptions $edop", $mode );
         $cfiles->shownmldiff( "default", "standard" );
         if ( defined($opts{'compare'}) ) {
-           $cfiles->doNOTdodiffonfile( "$tempfile", "$options $edop", $mode );
-           $cfiles->comparefiles( "$options $edop", $mode, $opts{'compare'} );
+           $cfiles->doNOTdodiffonfile( "$tempfile", "$options $clmoptions $edop", $mode );
+           $cfiles->comparefiles( "$options $clmoptions $edop", $mode, $opts{'compare'} );
         }
         if ( defined($opts{'generate'}) ) {
-           $cfiles->copyfiles( "$options $edop", $mode );
+           $cfiles->copyfiles( "$options $clmoptions $edop", $mode );
         }
         &cleanup();
      }
@@ -1449,10 +1458,16 @@ foreach my $phys ( "clm4_5", 'clm5_0' ) {
 my $res = "0.9x1.25";
 my $mask = "gx1v6";
 my $simyr = "1850";
-foreach my $phys ( "clm4_5", 'clm5_0' ) {
+foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   my $mode = "-phys $phys";
   &make_config_cache($phys);
-  foreach my $forc ( "CRUv7", "GSWP3v1", "cam6.0" ) {
+  my @forclist = ();
+  if ( $phys == "clm5_1" ) {
+    @forclist = ( "GSWP3v1" );
+  } else {
+    @forclist = ( "CRUv7", "GSWP3v1", "cam6.0" );
+  }
+  foreach my $forc ( @forclist ) {
      foreach my $bgc ( "sp", "bgc" ) {
         my $lndtuningmode = "${phys}_${forc}";
         my $clmoptions = "-res $res -mask $mask -sim_year $simyr -envxml_dir . -lnd_tuning_mod $lndtuningmode -bgc $bgc";

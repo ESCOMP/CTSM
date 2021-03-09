@@ -14,7 +14,7 @@ module initVerticalMod
   use spmdMod           , only : masterproc
   use clm_varpar        , only : nlevsno, nlevgrnd, nlevlak
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
-  use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
+  use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb, nlevmaxurbgrnd
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
   use clm_varctl        , only : use_bedrock, rundef
@@ -428,11 +428,21 @@ contains
              col%z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
              col%zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
              col%dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+             if (nlevgrnd < nlevurb) then
+                col%z(c,nlevgrnd+1:nlevurb)  = spval
+                col%zi(c,nlevgrnd+1:nlevurb) = spval
+                col%dz(c,nlevgrnd+1:nlevurb) = spval
+             end if
           end if
        else if (lun%itype(l) /= istdlak) then
           col%z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
           col%zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
           col%dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+          if (nlevgrnd < nlevurb) then
+             col%z(c,nlevgrnd+1:nlevurb)  = spval
+             col%zi(c,nlevgrnd+1:nlevurb) = spval
+             col%dz(c,nlevgrnd+1:nlevurb) = spval
+          end if
        end if
     end do
 
@@ -601,6 +611,11 @@ contains
           col%z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
           col%zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
           col%dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+          if (nlevgrnd < nlevurb) then
+             col%z(c,nlevgrnd+1:nlevurb)  = spval
+             col%zi(c,nlevgrnd+1:nlevurb) = spval
+             col%dz(c,nlevgrnd+1:nlevurb) = spval
+          end if
        end if
     end do
 
@@ -621,13 +636,13 @@ contains
           if (col%nbedrock(c) < nlevsoi) then
              col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
           end if
-          col%levgrnd_class(c, (nlevsoi + 1) : nlevgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
+          col%levgrnd_class(c, (nlevsoi + 1) : nlevmaxurbgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
        else
-          col%levgrnd_class(c, 1:nlevgrnd) = LEVGRND_CLASS_STANDARD
+          col%levgrnd_class(c, 1:nlevmaxurbgrnd) = LEVGRND_CLASS_STANDARD
        end if
     end do
 
-    do j = 1, nlevgrnd
+    do j = 1, nlevmaxurbgrnd
        do c = bounds%begc, bounds%endc
           if (col%z(c,j) == spval) then
              col%levgrnd_class(c,j) = ispval

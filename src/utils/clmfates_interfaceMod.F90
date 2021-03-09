@@ -59,7 +59,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : fates_inventory_ctrl_filename
- 
+   use clm_varctl        , only : use_nitrif_denitrif
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
    use clm_varcon        , only : denice
@@ -109,6 +109,8 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod, only : SetFatesGlobalElements
    use FatesInterfaceMod     , only : allocate_bcin
    use FatesInterfaceMod     , only : allocate_bcout
+   use FatesInterfaceMod     , only : allocate_bcpconst
+   use FatesInterfaceMod     , only : set_bcpconst
    use FatesInterfaceMod     , only : zero_bcs
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
@@ -118,7 +120,7 @@ module CLMFatesInterfaceMod
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
-   use EDTypesMod            , only : num_elements
+   use PRTGenericMod         , only : num_elements
    use FatesInterfaceTypesMod     , only : hlm_numlevgrnd
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
@@ -133,13 +135,14 @@ module CLMFatesInterfaceMod
    use EDCanopyStructureMod  , only : canopy_summarization, update_hlm_dynamics
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-   use EDPhysiologyMod       , only : FluxIntoLitterPools
+   use FatesSoilBGCFluxMod    , only : FluxIntoLitterPools
+   use FatesSoilBGCFluxMod    , only : UnPackNutrientAquisitionBCs
    use FatesPlantHydraulicsMod, only : hydraulics_drive
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use FATESFireBase          , only : fates_fire_base_type
-   use CNFireFactoryMod       , only : no_fire, scalar_lightning, &
+   use FATESFireFactoryMod    , only : no_fire, scalar_lightning, &
                                        successful_ignitions, anthro_ignitions
    use dynSubgridControlMod   , only : get_do_harvest
    use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
@@ -203,7 +206,7 @@ module CLMFatesInterfaceMod
       procedure, public :: wrap_accumulatefluxes
       procedure, public :: prep_canopyfluxes
       procedure, public :: wrap_canopy_radiation
-      procedure, public :: wrap_bgc_summary
+      procedure, public :: wrap_update_hifrq_hist
       procedure, public :: TransferZ0mDisp
       procedure, public :: InterpFileInputs  ! Interpolate inputs from files
       procedure, public :: Init2  ! Initialization after determining subgrid weights
@@ -288,6 +291,28 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('max_patch_per_site',ival=(natpft_size-1))
         
         call set_fates_ctrlparms('parteh_mode',ival=fates_parteh_mode)
+
+        ! CTSM-FATES is not fully coupled (yet)
+        ! So lets tell fates to use the RD competition mechanism
+        ! which has fewer boundary conditions (simpler)
+        call set_fates_ctrlparms('nu_com',cval='RD')
+
+        ! These may be in a non-limiting status (ie when supplements)
+        ! are added, but they are always allocated and cycled non-the less
+        ! FATES may want to interact differently with other models
+        ! that don't even have these arrays allocated.
+        ! FATES also checks that if NO3 is cycled in ELM, then
+        ! any plant affinity parameters are checked.
+
+        if(use_nitrif_denitrif) then
+           call set_fates_ctrlparms('nitrogen_spec',ival=1)
+        else
+           call set_fates_ctrlparms('nitrogen_spec',ival=2)
+        end if
+
+        ! Phosphorus is not tracked in CLM
+        call set_fates_ctrlparms('phosphorus_spec',ival=0)
+
         
         call set_fates_ctrlparms('spitfire_mode',ival=fates_spitfire_mode)
         call set_fates_ctrlparms('sf_nofire_def',ival=no_fire)
@@ -435,7 +460,7 @@ module CLMFatesInterfaceMod
       use FatesParameterDerivedMod, only : param_derived
       use subgridMod, only :  natveg_patch_exists
       use clm_instur       , only : wt_nat_patch
-      use CNFireFactoryMod , only: create_fates_fire_data_method
+      use FATESFireFactoryMod , only: create_fates_fire_data_method
 
       implicit none
       
@@ -546,9 +571,19 @@ module CLMFatesInterfaceMod
          ! Allocate the FATES boundary arrays (out)
          allocate(this%fates(nc)%bc_out(this%fates(nc)%nsites))
 
+
+         ! Parameter Constants defined by FATES, but used in ELM
+         ! Note that FATES has its parameters defined, so we can also set the values
+         call allocate_bcpconst(this%fates(nc)%bc_pconst,nlevdecomp)
+
+         ! This also needs 
+         call set_bcpconst(this%fates(nc)%bc_pconst,nlevdecomp)
+
+         
          ! Allocate and Initialize the Boundary Condition Arrays
          ! These are staticaly allocated at maximums, so
          ! No information about the patch or cohort structure is needed at this step
+
          
          do s = 1, this%fates(nc)%nsites
             
@@ -682,7 +717,7 @@ module CLMFatesInterfaceMod
       ! to process array bounding information 
       
       ! !USES
-      use CNFireFactoryMod, only: scalar_lightning
+      use FATESFireFactoryMod, only: scalar_lightning
 
       ! !ARGUMENTS:
       implicit none
@@ -764,6 +799,11 @@ module CLMFatesInterfaceMod
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
+         ! Decomposition fluxes
+         this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%w_scalar_col(c,1:nlevsoil)
+         this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%t_scalar_col(c,1:nlevsoil)
+
+         ! Soil water
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
@@ -823,6 +863,12 @@ module CLMFatesInterfaceMod
 
       end do
 
+      ! Nutrient uptake fluxes have been accumulating with each short
+      ! timestep, here, we unload them from the boundary condition
+      ! structures into the cohort structures.
+      call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
+
+      
       ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
       ! provided.
@@ -831,21 +877,15 @@ module CLMFatesInterfaceMod
       do s = 1,this%fates(nc)%nsites
 
             call ed_ecosystem_dynamics(this%fates(nc)%sites(s),    &
-                  this%fates(nc)%bc_in(s))
+                  this%fates(nc)%bc_in(s), & 
+                  this%fates(nc)%bc_out(s))
             
             call ed_update_site(this%fates(nc)%sites(s), &
-                  this%fates(nc)%bc_in(s))
-            
+                  this%fates(nc)%bc_in(s), & 
+                  this%fates(nc)%bc_out(s))
+
       enddo
       
-      ! call subroutine to aggregate fates litter output fluxes and 
-      ! package them for handing across interface
-      call FluxIntoLitterPools(this%fates(nc)%nsites, &
-            this%fates(nc)%sites,  &
-            this%fates(nc)%bc_in,  &
-            this%fates(nc)%bc_out)
-
-
       ! ---------------------------------------------------------------------------------
       ! Part III: Process FATES output into the dimensions and structures that are part
       ! of the HLMs API.  (column, depth, and litter fractions)
@@ -1297,9 +1337,20 @@ module CLMFatesInterfaceMod
                ! update type stuff, should consolidate (rgk 11-2016)
                do s = 1,this%fates(nc)%nsites
                   call ed_update_site( this%fates(nc)%sites(s), &
-                        this%fates(nc)%bc_in(s) )
-               end do
+                        this%fates(nc)%bc_in(s), & 
+                        this%fates(nc)%bc_out(s) )
 
+
+               ! This call sends internal fates variables into the
+               ! output boundary condition structures. Note: this is called
+               ! internally in fates dynamics as well.
+               call FluxIntoLitterPools(this%fates(nc)%sites(s), &
+                    this%fates(nc)%bc_in(s), & 
+                    this%fates(nc)%bc_out(s))
+                  
+               end do
+               
+               
                ! ------------------------------------------------------------------------
                ! Re-populate all the hydraulics variables that are dependent
                ! on the key hydro state variables and plant carbon/geometry
@@ -1412,7 +1463,8 @@ module CLMFatesInterfaceMod
            end do
            
            call set_site_properties(this%fates(nc)%nsites, &
-                                    this%fates(nc)%sites,this%fates(nc)%bc_in)
+                                    this%fates(nc)%sites,  &
+                                    this%fates(nc)%bc_in)
 
            ! ----------------------------------------------------------------------------
            ! Initialize Hydraulics Code if turned on
@@ -1459,7 +1511,16 @@ module CLMFatesInterfaceMod
 
            do s = 1,this%fates(nc)%nsites
               call ed_update_site(this%fates(nc)%sites(s), &
-                    this%fates(nc)%bc_in(s))
+                    this%fates(nc)%bc_in(s), & 
+                    this%fates(nc)%bc_out(s))
+
+              ! This call sends internal fates variables into the
+              ! output boundary condition structures. Note: this is called
+              ! internally in fates dynamics as well.
+              call FluxIntoLitterPools(this%fates(nc)%sites(s), &
+                   this%fates(nc)%bc_in(s), & 
+                   this%fates(nc)%bc_out(s))
+              
            end do
 
            ! ------------------------------------------------------------------------
@@ -1669,7 +1730,6 @@ module CLMFatesInterfaceMod
          t_soisno    => temperature_inst%t_soisno_col       , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)
          h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col , & ! Input: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          btran       => energyflux_inst%btran_patch         , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) 
-         btran2       => energyflux_inst%btran2_patch       , & ! Output: [real(r8) (:)   ]  
          rresis      => energyflux_inst%rresis_patch        , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd) 
          rootr       => soilstate_inst%rootr_patch          & ! Output: [real(r8) (:,:) ]  Fraction of water uptake in each layer
          )
@@ -1762,8 +1822,8 @@ module CLMFatesInterfaceMod
         ! Convert output BC's
         ! For CLM/ALM this wrapper provides return variables that should
         ! be similar to that of calc_root_moist_stress().  However,
-        ! CLM/ALM-FATES simulations will no make use of rresis, btran or btran2
-        ! outside of FATES. We do not have code in place to calculate btran2 or
+        ! CLM/ALM-FATES simulations will no make use of rresis or btran
+        ! outside of FATES. We do not have code in place to calculate or
         ! rresis right now, so we force to bad.  We have btran calculated so we
         ! pass it in case people want diagnostics.  rootr is actually the only
         ! variable that will be used, as it is needed to help distribute the
@@ -1783,7 +1843,6 @@ module CLMFatesInterfaceMod
                  ! it should not thought of as valid output until we decide to.
                  rootr(p,j)  = this%fates(nc)%bc_out(s)%rootr_pasl(ifp,j)
                  btran(p)    = this%fates(nc)%bc_out(s)%btran_pa(ifp)
-                 btran2(p)   = -999.9  ! Not available, force to nonsense
                  
               end do
            end do
@@ -1958,12 +2017,6 @@ module CLMFatesInterfaceMod
                                this%fates(nc)%bc_out, &
                                dtime)
 
-    
-    call this%fates_hist%update_history_prod(nc, &
-                               this%fates(nc)%nsites,  &
-                               this%fates(nc)%sites, &
-                               dtime)
-
    call t_stopf('fates_wrapaccfluxes')
 
  end subroutine wrap_accumulatefluxes
@@ -2060,28 +2113,29 @@ module CLMFatesInterfaceMod
 
  ! ======================================================================================
 
- subroutine wrap_bgc_summary(this, nc, soilbiogeochem_carbonflux_inst,     &
-                                    soilbiogeochem_carbonstate_inst)
-
-   
+ subroutine wrap_update_hifrq_hist(this, bounds_clump, &
+                                   soilbiogeochem_carbonflux_inst,     &
+                                   soilbiogeochem_carbonstate_inst)
 
     ! Arguments
     class(hlm_fates_interface_type), intent(inout)    :: this
-    integer          , intent(in)                     :: nc
+    type(bounds_type), intent(in)                     :: bounds_clump
     type(soilbiogeochem_carbonflux_type), intent(in)  :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonstate_type), intent(in) :: soilbiogeochem_carbonstate_inst
 
     ! locals
     real(r8) :: dtime
-    integer  :: s,c
+    integer  :: s, c, nc
 
-    call t_startf('fates_wrapbgcsummary')
+    call t_startf('fates_update_hifrq_hist')
 
     associate(& 
-        hr            => soilbiogeochem_carbonflux_inst%hr_col,      & ! (gC/m2/s) total heterotrophic respiration
+        hr            => soilbiogeochem_carbonflux_inst%hr_col,       & ! (gC/m2/s) total heterotrophic respiration
         totsomc       => soilbiogeochem_carbonstate_inst%totsomc_col, & ! (gC/m2) total soil organic matter carbon
         totlitc       => soilbiogeochem_carbonstate_inst%totlitc_col)   ! (gC/m2) total litter carbon in BGC pools
 
+      nc = bounds_clump%clump_index
+      
       ! Summarize Net Fluxes
       do s = 1, this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
@@ -2093,7 +2147,7 @@ module CLMFatesInterfaceMod
       dtime = get_step_size_real()
       
       ! Update history variables that track these variables
-      call this%fates_hist%update_history_cbal(nc, &
+      call this%fates_hist%update_history_hifrq(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
@@ -2101,9 +2155,9 @@ module CLMFatesInterfaceMod
 
     end associate
 
-    call t_stopf('fates_wrapbgcsummary')
+    call t_stopf('fates_wrap_hifrq_hist')
 
- end subroutine wrap_bgc_summary
+  end subroutine wrap_update_hifrq_hist
 
  ! ======================================================================================
 
@@ -2148,7 +2202,8 @@ module CLMFatesInterfaceMod
     return
  end subroutine TransferZ0mDisp
 
-  !-----------------------------------------------------------------------
+ !-----------------------------------------------------------------------
+ 
   subroutine InterpFileInputs(this, bounds)
     !
     ! !DESCRIPTION:
@@ -2181,7 +2236,7 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_interpfileinputs')
 
-    call this%fates_fire_data_method%CNFireInterp(bounds)
+    call this%fates_fire_data_method%FireInterp(bounds)
 
     call t_stopf('fates_interpfileinputs')
 
@@ -2209,7 +2264,7 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_init2')
 
-    call this%fates_fire_data_method%CNFireInit(bounds, NLFilename)
+    call this%fates_fire_data_method%FireInit(bounds, NLFilename)
 
     call t_stopf('fates_init2')
 
@@ -2306,7 +2361,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
-   use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8
+   use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2445,7 +2500,7 @@ module CLMFatesInterfaceMod
              site_fuel_r8, site_cwdsc_r8, &
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, & 
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
-             site_elcwd_r8, site_elage_r8)
+             site_elcwd_r8, site_elage_r8, site_agefuel_r8)
 
 
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
@@ -2818,6 +2873,10 @@ module CLMFatesInterfaceMod
 
    fates%elage_begin = 1
    fates%elage_end   = num_elements * nlevage
+
+   fates%agefuel_begin = 1
+   fates%agefuel_end   = nlevage * nfsc
+
 
    call t_stopf('fates_hlm2fatesbnds')
    

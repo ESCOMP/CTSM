@@ -485,7 +485,7 @@ contains
        end if
 
        ! Find which of the list of possible variables actually exists on the input file.
-       call find_var_on_file(ncidi, varname_i_options, varname_i)
+       call find_var_on_file(ncidi, varname_i_options, is_dim=.false., varname_on_file=varname_i)
 
        ! Note that, if none of the options are found, varname_i will be set to the first
        ! variable in the list, in which case the following code will determine that we

@@ -4,21 +4,10 @@ Originator(s):
 Date: 
 One-line Summary:
 
-Purpose of changes
-------------------
+Purpose and description of changes
+----------------------------------
 
 [Fill this in with details]
-
-
-Bugs fixed or introduced
-------------------------
-
-Issues fixed (include CTSM Issue #): [If none, remove this line]
-CIME Issues fixed (include issue #): [If none, remove this line]
-
-Known bugs introduced in this tag (include github issue ID): [If none, remove this line]
-
-Known bugs found since the previous tag (include github issue ID): [If none, remove this line]
 
 
 Significant changes to scientifically-supported configurations
@@ -29,14 +18,31 @@ Does this tag change answers significantly for any of the following physics conf
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
+[ ] clm5_1
+
 [ ] clm5_0
 
 [ ] ctsm5_0-nwp
 
 [ ] clm4_5
 
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+
+CIME Issues fixed (include issue #):
+
+Known bugs introduced in this tag (include issue #):
+
+Known bugs found since the previous tag (include issue #):
+
+
 Notes of particular relevance for users
 ---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for users (e.g., need to interpolate initial conditions):
 
@@ -46,55 +52,78 @@ Changes made to namelist defaults (e.g., changed parameter values):
 
 Changes to the datasets (e.g., parameter, surface or initial files):
 
-Substantial timing or memory changes: [For timing changes, can check PFS test(s) in the test suite]
+Substantial timing or memory changes:
+[For timing changes, you should at least check the PFS test in the test
+ suite, whether or not you expect timing changes: ensure that its run
+ time has not increased significantly relative to the baseline.]
 
-Notes of particular relevance for developers: (including Code reviews and testing)
+
+Notes of particular relevance for developers:
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing:
 
-Code reviewed by:
 
+Testing summary:
+----------------
+[... Remove before making master tag.
 
-CTSM testing:
+Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
+However, it occasionally makes sense to do more or less system testing;
+here is guidance on different available levels of system testing:
+    a) no system testing (for use when the only changes are ones that
+                          have absolutely no impact on system runs; this
+                          includes documentation-only tags, tags that
+                          just change the tools or some python code that
+                          does not impact system runs, etc.)
+    b) minimal (for use in rare cases where only a small change with 
+                known behavior is added ... eg. a minor bug fix. This
+		might be to just run the "short" test list, or to run
+		a single test. Whatever makes sense for the particular case.)
+    c) regular (regular tests on normal machines if CTSM source is modified)
+    d) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.) 
+		would be run as well)
 
-[... Remove before making master tag.  Available test levels:
+In addition, various other tests of the tools, python and perl
+infrastructure should be run when appropriate, as described below.
 
-    a) regular (must be run before handing off a tag to SEs and must be run
-     before committing a tag)
-    b) build_namelist (if namelists and/or build_system changed))
-    c) tools (only if tools are modified and no CTSM source is modified)
-    d) short (for use during development and in rare cases where only a small
-          change with known behavior is added ... eg. a minor bug fix)
-    e) doc (no source testing required)
+...]
 
-... ]
+[Remove any lines that don't apply.]
 
- [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist tests:
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
 
     cheyenne - 
 
-  tools-tests (test/tools):
+  tools-tests (test/tools) (if tools have been changed):
 
     cheyenne - 
 
-  PTCLM testing (tools/shared/PTCLM/test):
+  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
+  (PTCLM is being deprecated, so we only expect this to be done on occasion)
 
     cheyenne - 
 
-  python testing (see instructions in python/README.md; document testing done):
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
     (any machine) - 
 
-  regular tests (aux_clm):
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- 
     izumi ------- 
+  
+  fates tests:
+    cheyenne ---- 
+
+  any other testing (give details below):
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -104,8 +133,9 @@ Answer changes
 
 Changes answers relative to baseline:
 
-  If a tag changes answers relative to baseline comparison the
-  following should be filled in (otherwise remove this section):
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
 
   Summarize any changes to answers, i.e.,
     - what code configurations:
@@ -122,8 +152,9 @@ Changes answers relative to baseline:
    URL for LMWG diagnostics output used to validate new climate:
 	
 
-Detailed list of changes
-------------------------
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 

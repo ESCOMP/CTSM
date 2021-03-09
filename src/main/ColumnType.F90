@@ -20,7 +20,7 @@ module ColumnType
   !
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
+  use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak, nlevmaxurbgrnd
   use clm_varcon     , only : spval, ispval
   use shr_sys_mod    , only : shr_sys_abort
   use clm_varctl     , only : iulog
@@ -129,9 +129,9 @@ contains
 
     ! The following is set in initVerticalMod
     allocate(this%snl         (begc:endc))                     ; this%snl         (:)   = ispval  !* cannot be averaged up
-    allocate(this%dz          (begc:endc,-nlevsno+1:nlevgrnd)) ; this%dz          (:,:) = nan
-    allocate(this%z           (begc:endc,-nlevsno+1:nlevgrnd)) ; this%z           (:,:) = nan
-    allocate(this%zi          (begc:endc,-nlevsno+0:nlevgrnd)) ; this%zi          (:,:) = nan
+    allocate(this%dz          (begc:endc,-nlevsno+1:nlevmaxurbgrnd)) ; this%dz          (:,:) = nan
+    allocate(this%z           (begc:endc,-nlevsno+1:nlevmaxurbgrnd)) ; this%z           (:,:) = nan
+    allocate(this%zi          (begc:endc,-nlevsno+0:nlevmaxurbgrnd)) ; this%zi          (:,:) = nan
     allocate(this%zii         (begc:endc))                     ; this%zii         (:)   = nan
     allocate(this%lakedepth   (begc:endc))                     ; this%lakedepth   (:)   = spval  
     allocate(this%dz_lake     (begc:endc,nlevlak))             ; this%dz_lake     (:,:) = nan
@@ -148,7 +148,7 @@ contains
     allocate(this%hill_distance(begc:endc))                    ; this%hill_distance (:) = spval  
     allocate(this%hill_aspect(begc:endc))                      ; this%hill_aspect (:) = spval  
     allocate(this%nbedrock   (begc:endc))                      ; this%nbedrock   (:)   = ispval  
-    allocate(this%levgrnd_class(begc:endc,nlevgrnd))           ; this%levgrnd_class(:,:) = ispval
+    allocate(this%levgrnd_class(begc:endc,nlevmaxurbgrnd))     ; this%levgrnd_class(:,:) = ispval
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan

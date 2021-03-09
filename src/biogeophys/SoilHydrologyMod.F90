@@ -2654,7 +2654,7 @@ contains
 
              vol_ice = min(watsat(c,j), h2osoi_ice(c,j)/(dz(c,j)*denice))
              icefrac(c,j) = min(1._r8,vol_ice/watsat(c,j))
-             ice_imped(c,j)=10._r8**(-e_ice*icefrac(c,j))
+             ice_imped(c,j)=10._r8**(-params_inst%e_ice*icefrac(c,j))
           end do
        end do
 
@@ -2697,7 +2697,7 @@ contains
             dzsum  = dzsum + dzmm(c,j)
             icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
          end do
-         ice_imped_col(c)=10._r8**(-e_ice*(icefracsum/dzsum))         
+         ice_imped_col(c)=10._r8**(-params_inst%e_ice*(icefracsum/dzsum))         
       enddo
       
       do fc = 1, num_hillslope

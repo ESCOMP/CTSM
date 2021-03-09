@@ -88,6 +88,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
+         eflx_sh_stem            => energyflux_inst%eflx_sh_stem_patch      , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]
          eflx_h2osfc_to_snow_col => energyflux_inst%eflx_h2osfc_to_snow_col , & ! Input:  [real(r8) (:)   ]  col snow melt to h2osfc heat flux (W/m**2)
 
          forc_lwrad              => atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
@@ -315,6 +316,7 @@ contains
          ! Total fluxes (vegetation + ground)
 
          eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_grnd(p)
+         if (.not. lun%urbpoi(l)) eflx_sh_tot(p) = eflx_sh_tot(p) + eflx_sh_stem(p)
          qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
          eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -415,8 +417,9 @@ contains
             p = filter_nolakep(fp)
             c = patch%column(p)
 
-            if ((col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
-                 .and. col%itype(c) /= icol_roof) .or. ( j <= nlevurb)) then
+! Do this for perv and imperv road for -nlevsno+1,nlevgrnd
+            if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
+                 .and. col%itype(c) /= icol_roof) then
                ! area weight heat absorbed by snow layers
                if (j >= col%snl(c)+1 .and. j < 1) errsoi_patch(p) = errsoi_patch(p) &
                     - frac_sno_eff(c)*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
@@ -425,6 +428,24 @@ contains
             end if
          end do
       end do
+
+! Do this for sunwall, shadewall, roof but for -nlevsno+1,nlevurb
+      do j = -nlevsno+1,nlevurb
+         do fp = 1,num_urbanp
+            p = filter_urbanp(fp)
+            c = patch%column(p)
+
+            if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                 .or. col%itype(c) == icol_roof) then
+            ! area weight heat absorbed by snow layers
+               if (j >= col%snl(c)+1 .and. j < 1) errsoi_patch(p) = errsoi_patch(p) &
+                   - frac_sno_eff(c)*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
+               if (j >= 1) errsoi_patch(p) = errsoi_patch(p) &
+                   - (t_soisno(c,j)-tssbef(c,j))/fact(c,j)
+            end if
+         end do
+      end do
+
       call t_stopf('bgp2_loop_3')
       call t_startf('bgp2_loop_4')
 

@@ -46,9 +46,11 @@ module clm_instur
   ! subgrid glacier_mec sfc elevation
   real(r8), pointer :: topo_glc_mec(:,:) 
 
+  ! whether we have lake to initialise in each grid cell
+  logical , pointer :: haslake(:)
+
   ! subgrid hillslope hydrology constituents
   integer, pointer :: ncol_per_hillslope(:) 
-
   !-----------------------------------------------------------------------
 
 end module clm_instur

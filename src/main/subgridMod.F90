@@ -38,7 +38,8 @@ module subgridMod
   public :: subgrid_get_info_glacier_mec
   public :: subgrid_get_info_crop
   public :: crop_patch_exists ! returns true if the given crop patch should be created in memory
-
+  public :: lake_landunit_exists ! returns true if the lake landunit should be created in memory
+  
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: subgrid_get_info_urban
 
@@ -404,10 +405,10 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_lake'
     !-----------------------------------------------------------------------
 
-    ! We currently do NOT allow the lake landunit to expand via dynamic landunits, so we
-    ! only need to allocate space for it where its weight is currently non-zero.
-
-    if (wt_lunit(gi, istdlak) > 0.0_r8) then
+    ! We do allow the lake landunit to expand via dynamic landunits, so we
+    !  need to allocate space for where it is known that the lake unit will grow.
+    
+    if (lake_landunit_exists(gi) ) then
        npatches = 1
        ncols = 1
        nlunits = 1
@@ -496,7 +497,6 @@ contains
     !-----------------------------------------------------------------------
 
     npatches = 0
-
     do cft = cft_lb, cft_ub
        if (crop_patch_exists(gi, cft)) then
           npatches = npatches + 1
@@ -569,5 +569,46 @@ contains
     end if
 
   end function crop_patch_exists
+
+!-----------------------------------------------------------------------
+  function lake_landunit_exists(gi) result(exists)
+    !
+    ! !DESCRIPTION:
+    ! Returns true if a land unit for lakes should be created in memory
+    ! which is defined for gridcells which will grow lake, given by haslake
+    ! 
+    ! !USES:
+    use dynSubgridControlMod , only : get_do_transient_lakes
+    use clm_instur           , only : haslake
+    !
+    ! !ARGUMENTS:
+    logical :: exists  ! function result
+    integer, intent(in) :: gi  ! grid cell index
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'lake_landunit_exists'
+    !-----------------------------------------------------------------------
+
+    if (get_do_transient_lakes()) then
+       ! To support dynamic landunits, we initialise a lake land unit in each grid cell in which there are lakes. 
+       ! This is defined by the haslake variable
+       
+       if (haslake(gi)) then
+            exists = .true.
+       else
+            exists = .false.
+       end if
+        
+    else 
+        ! For a run without transient lakes, only allocate memory for lakes actually present in run)
+        if (wt_lunit(gi, istdlak) > 0.0_r8) then
+            exists = .true.
+        else
+            exists = .false.
+        end if
+    end if
+
+  end function lake_landunit_exists
 
 end module subgridMod
