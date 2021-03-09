@@ -397,25 +397,21 @@ contains
   end subroutine advertise_fields
 
   !===============================================================================
-  subroutine realize_fields(gcomp, Emesh, flds_scalar_name, flds_scalar_num, rc)
+  subroutine realize_fields(importState, exportState, Emesh, flds_scalar_name, flds_scalar_num, rc)
 
     ! input/output variables
-    type(ESMF_GridComp) , intent(inout) :: gcomp
-    type(ESMF_Mesh)     , intent(in)    :: Emesh
-    character(len=*)    , intent(in)    :: flds_scalar_name
-    integer             , intent(in)    :: flds_scalar_num
-    integer             , intent(out)   :: rc
+    type(ESMF_State) , intent(inout) :: importState
+    type(ESMF_State) , intent(inout) :: exportState
+    type(ESMF_Mesh)  , intent(in)    :: Emesh
+    character(len=*) , intent(in)    :: flds_scalar_name
+    integer          , intent(in)    :: flds_scalar_num
+    integer          , intent(out)   :: rc
 
     ! local variables
-    type(ESMF_State)     :: importState
-    type(ESMF_State)     :: exportState
     character(len=*), parameter :: subname='(lnd_import_export:realize_fields)'
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-
-    call NUOPC_ModelGet(gcomp, importState=importState, exportState=exportState, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     call fldlist_realize( &
          state=ExportState, &

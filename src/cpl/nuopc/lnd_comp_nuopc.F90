@@ -413,15 +413,11 @@ contains
        if (.not. scol_valid) then
           write(iulog,'(a)')' single column mode point does not contain any land - will set all export data to 0'
           ! if single column is not valid - set all export state fields to zero and return
-          call realize_fields(gcomp, mesh, flds_scalar_name, flds_scalar_num, rc)
+          call realize_fields(importState, exportState, mesh, flds_scalar_name, flds_scalar_num, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call NUOPC_ModelGet(gcomp, exportState=exportState, rc=rc)
+          call State_SetScalar(1._r8, flds_scalar_index_nx, exportState, flds_scalar_name, flds_scalar_num, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call State_SetScalar(1._r8, flds_scalar_index_nx, exportState, &
-               flds_scalar_name, flds_scalar_num, rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call State_SetScalar(1._r8, flds_scalar_index_ny, exportState, &
-               flds_scalar_name, flds_scalar_num, rc)
+          call State_SetScalar(1._r8, flds_scalar_index_ny, exportState, flds_scalar_name, flds_scalar_num, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call ESMF_StateGet(exportState, itemCount=fieldCount, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -592,7 +588,7 @@ contains
     ! ---------------------
     ! Realize the actively coupled fields
     ! ---------------------
-    call realize_fields(gcomp, mesh, flds_scalar_name, flds_scalar_num, rc)
+    call realize_fields(importState, exportState, mesh, flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! ---------------------
