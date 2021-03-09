@@ -76,6 +76,9 @@ module lnd_comp_nuopc
   real(R8)               :: orb_mvelp       ! attribute - moving vernal equinox longitude
   real(R8)               :: orb_eccen       ! attribute and update-  orbital eccentricity
 
+  logical                :: single_column   ! single column mode (nn search of domainfile)
+  logical                :: scol_valid      ! if single_column, does point have a mask of zero 
+
   character(len=*) , parameter :: orb_fixed_year       = 'fixed_year'
   character(len=*) , parameter :: orb_variable_year    = 'variable_year'
   character(len=*) , parameter :: orb_fixed_parameters = 'fixed_parameters'
@@ -281,11 +284,11 @@ contains
        write(iulog,'(a   )')' atm component                 = '//trim(atm_model)
        write(iulog,'(a   )')' rof component                 = '//trim(rof_model)
        write(iulog,'(a   )')' glc component                 = '//trim(glc_model)
-       write(iulog,'(a,L1 )')' atm_prognostic                = ',atm_prognostic
-       write(iulog,'(a,L1 )')' rof_prognostic                = ',rof_prognostic
-       write(iulog,'(a,L1 )')' glc_present                   = ',glc_present
+       write(iulog,'(a,l )')' atm_prognostic                = ',atm_prognostic
+       write(iulog,'(a,l )')' rof_prognostic                = ',rof_prognostic
+       write(iulog,'(a,l )')' glc_present                   = ',glc_present
        if (glc_present) then
-          write(iulog,'(a,L1)')' cism_evolve                    = ',cism_evolve
+          write(iulog,'(a,l)')' cism_evolve                    = ',cism_evolve
        end if
        write(iulog,'(a   )')' flds_scalar_name              = '//trim(flds_scalar_name)
        write(iulog,'(a,i8)')' flds_scalar_num               = ',flds_scalar_num
@@ -314,8 +317,9 @@ contains
     use clm_instMod               , only : lnd2atm_inst, lnd2glc_inst, water_inst
     use domainMod                 , only : ldomain
     use decompMod                 , only : ldecomp, bounds_type, get_proc_bounds
-    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_createmesh
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
+    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_single_column 
+    use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -330,6 +334,7 @@ contains
     type(ESMF_Time)         :: startTime             ! Start time
     type(ESMF_Time)         :: refTime               ! Ref time
     type(ESMF_TimeInterval) :: timeStep              ! Model timestep
+    type(ESMF_Calendar)     :: esmf_calendar         ! esmf calendar
     type(ESMF_CalKind_Flag) :: esmf_caltype          ! esmf calendar type
     integer                 :: ref_ymd               ! reference date (YYYYMMDD)
     integer                 :: ref_tod               ! reference time of day (sec)
@@ -349,14 +354,21 @@ contains
     integer                 :: lbnum                 ! input to memory diagnostic
     integer                 :: shrlogunit            ! original log unit
     type(bounds_type)       :: bounds                ! bounds
-    integer                 :: ni, nj
+    integer                 :: n, ni, nj
     character(len=CL)       :: cvalue                ! config data
     character(len=CL)       :: meshfile_mask
-    character(len=CL)       :: domain_file
     character(len=CL)       :: ctitle                ! case description title
     character(len=CL)       :: caseid                ! case identifier name
-    real(r8)                :: scmlat                ! single-column latitude
-    real(r8)                :: scmlon                ! single-column longitude
+    character(len=CL)       :: single_column_domainfile
+    real(r8)                :: scol_lat              ! single-column latitude
+    real(r8)                :: scol_lon              ! single-column longitude
+    real(r8)                :: scol_area             ! single-column area
+    real(r8)                :: scol_frac             ! single-column frac
+    integer                 :: scol_mask             ! single-column mask
+    type(ESMF_Field)        :: lfield
+    character(CL) ,pointer  :: lfieldnamelist(:) => null()
+    integer                 :: fieldCount
+    real(r8), pointer       :: fldptr(:)
     character(len=CL)       :: model_version         ! Model version
     character(len=CL)       :: hostname              ! hostname of machine running on
     character(len=CL)       :: username              ! user running the model
@@ -365,6 +377,73 @@ contains
 
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
+
+    !----------------------------------------------------------------------------
+    ! Single column logic - if mask is zero for nearest neighbor search then 
+    ! set all export state fields to zero and return
+    !----------------------------------------------------------------------------
+
+    ! If single_column is true - use single_column_domainfile to
+    ! obtain nearest neighbor values for scol_lon and scol_lat
+    ! If single_column is false and scol_lon and scol_lat are not equal to -999 then
+    ! use scol_lon and scol_lat directly
+
+    call NUOPC_CompAttributeGet(gcomp, name='scol_lon', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) scol_lon
+    call NUOPC_CompAttributeGet(gcomp, name='scol_lat', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) scol_lat
+    call NUOPC_CompAttributeGet(gcomp, name='single_column_domainfile', value=single_column_domainfile, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (scol_lon > -900. .and. scol_lat > -900.) then
+       if (trim(single_column_domainfile) /= 'null') then
+          single_column = .true.
+          write(iulog,'(a)')' single column mode is active:'
+          write(iulog,'(a,f13.5,a,f10.5,a)')' will find nearest neighbor values of ',scol_lon,' and ',&
+               scol_lat,' in '//trim(single_column_domainfile) 
+       else
+          single_column = .false.
+          write(iulog,'(a)')' single point mode is active'
+          write(iulog,'(a,f13.5,a,f13.5,a)')' scol_lon is ',scol_lon,' and scol_lat is '
+       end if
+       call lnd_set_mesh_for_single_column(single_column_domainfile, scol_lon, scol_lat,  &
+            scol_area, scol_mask, scol_frac, mesh, scol_valid, rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (.not. scol_valid) then
+          write(iulog,'(a)')' single column mode point does not contain any land - will set all export data to 0'
+          ! if single column is not valid - set all export state fields to zero and return
+          call realize_fields(gcomp, mesh, flds_scalar_name, flds_scalar_num, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call NUOPC_ModelGet(gcomp, exportState=exportState, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call State_SetScalar(1._r8, flds_scalar_index_nx, exportState, &
+               flds_scalar_name, flds_scalar_num, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call State_SetScalar(1._r8, flds_scalar_index_ny, exportState, &
+               flds_scalar_name, flds_scalar_num, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          call ESMF_StateGet(exportState, itemCount=fieldCount, rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
+          allocate(lfieldnamelist(fieldCount))
+          call ESMF_StateGet(exportState, itemNameList=lfieldnamelist, rc=rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
+          do n = 1, fieldCount
+             call ESMF_StateGet(exportState, itemName=trim(lfieldnamelist(n)), field=lfield, rc=rc)
+             if (chkerr(rc,__LINE__,u_FILE_u)) return
+             call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=rc)
+             if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             fldptr(:) = 0._r8
+          enddo
+          deallocate(lfieldnamelist)
+          ! *******************
+          ! *** RETURN HERE ***
+          ! *******************
+          RETURN
+       else
+          write(iulog,'(a,f10.5)')' single column mode lon/lat does contain land with land fraction ',scol_frac
+       end if
+    end if
 
     !----------------------------------------------------------------------------
     ! Reset shr logging to my log file
@@ -439,25 +518,6 @@ contains
     call NUOPC_CompAttributeGet(gcomp, name='model_version', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) model_version
-    call NUOPC_CompAttributeGet(gcomp, name='username', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) username
-    call NUOPC_CompAttributeGet(gcomp, name='hostname', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) hostname
-    call NUOPC_CompAttributeGet(gcomp, name='scmlon', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) scmlon
-    call NUOPC_CompAttributeGet(gcomp, name='scmlat', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) scmlat
-    call NUOPC_CompAttributeGet(gcomp, name='single_column', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) single_column
-    call NUOPC_CompAttributeGet(gcomp, name='start_type', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) starttype
-
 
     ! Note that we assume that CTSM's internal dtime matches the coupling time step.
     ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
@@ -475,6 +535,12 @@ contains
     ! ---------------------
     ! Initialize first phase of ctsm
     ! ---------------------
+    call NUOPC_CompAttributeGet(gcomp, name='hostname', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) hostname
+    call NUOPC_CompAttributeGet(gcomp, name='username', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) username
     call NUOPC_CompAttributeGet(gcomp, name='brnch_retain_casename', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) brnch_retain_casename
@@ -496,7 +562,7 @@ contains
     call clm_varctl_set(&
          caseid_in=caseid, ctitle_in=ctitle,                     &
          brnch_retain_casename_in=brnch_retain_casename,         &
-         single_column_in=single_column, scmlat_in=scmlat, scmlon_in=scmlon, &
+         single_column_in=single_column, scmlat_in=scol_lat, scmlon_in=scol_lon, &
          nsrest_in=nsrest, &
          version_in=model_version, &
          hostname_in=hostname, &
@@ -507,17 +573,13 @@ contains
     ! ---------------------
     ! Create ctsm decomp and domain info
     ! ---------------------
-    call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=model_meshfile, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (single_column) model_meshfile = 'create_mesh'
-
-    if (trim(model_meshfile) == 'create_mesh') then
-       call NUOPC_CompAttributeGet(gcomp, name='domain_lnd', value=domain_file, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call lnd_set_decomp_and_domain_from_createmesh(domain_file=domain_file, vm=vm, &
-            mesh_ctsm=mesh, ni=ni, nj=nj, rc=rc)
+    if (scol_lon > -900. .and. scol_lat > -900.) then
+       call lnd_set_decomp_and_domain_from_single_column(scol_lon, scol_lat, &
+            scol_area, scol_mask, scol_frac)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
+       call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=model_meshfile, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call NUOPC_CompAttributeGet(gcomp, name='mesh_mask', value=meshfile_mask, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call ESMF_GridCompGet(gcomp, vm=vm, rc=rc)
@@ -536,11 +598,6 @@ contains
     ! ---------------------
     ! Finish initializing ctsm
     ! ---------------------
-    ! If no land then abort for now
-    ! TODO: need to handle the case of noland with CMEPS
-    ! if ( noland ) then
-    !    call shr_sys_abort(trim(subname)//"ERROR: Currently cannot handle case of single column with non-land")
-    ! end if
     call initialize2(ni, nj)
 
     !--------------------------------
@@ -566,7 +623,6 @@ contains
     call State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call State_SetScalar(dble(ldomain%nj), flds_scalar_index_ny, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -596,6 +652,7 @@ contains
   end subroutine InitializeRealize
 
   !===============================================================================
+
   subroutine ModelAdvance(gcomp, rc)
 
     !------------------------
@@ -656,10 +713,17 @@ contains
     rc = ESMF_SUCCESS
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
-    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    !--------------------------------
+    ! Single column logic if nearest neighbor point has a mask of zero
+    !--------------------------------
+
+    if (single_column .and. .not. scol_valid) then
+       RETURN
+    end if
+
+    !--------------------------------
+    ! Reset share log units
+    !--------------------------------
 
     !$  call omp_set_num_threads(localPeCount)
 
@@ -674,8 +738,13 @@ contains
 #endif
 
     !--------------------------------
-    ! Query the Component for its clock, importState and exportState
+    ! Query the Component for its clock, importState and exportState and vm
     !--------------------------------
+
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
 
     call NUOPC_ModelGet(gcomp, modelClock=clock, importState=importState, exportState=exportState, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
