@@ -571,8 +571,8 @@ contains
    end subroutine UpdateUrbanPonding
 
    !-----------------------------------------------------------------------
-   subroutine WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
-        soilhydrology_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst) 
+   subroutine WaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
+        soilhydrology_inst, soilstate_inst, temperature_inst, waterstatebulk_inst, waterfluxbulk_inst)
      !
      ! !DESCRIPTION:
      ! Calculate watertable, considering aquifer recharge but no drainage.
@@ -584,14 +584,11 @@ contains
      ! !ARGUMENTS:
      type(bounds_type)        , intent(in)    :: bounds  
      integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
-     integer                  , intent(in)    :: num_urbanc           ! number of column urban points in column filter
-     integer                  , intent(in)    :: filter_urbanc(:)     ! column filter for urban points
      integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
      type(soilhydrology_type) , intent(inout) :: soilhydrology_inst
      type(soilstate_type)     , intent(in)    :: soilstate_inst
      type(temperature_type)   , intent(in)    :: temperature_inst
      type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
-     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
      type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
      !
      ! !LOCAL VARIABLES:
@@ -829,18 +826,6 @@ contains
              endif !k_frz > k_perch 
           endif
        end do
-
-       call RenewCondensation(&
-            bounds                   = bounds, &
-            num_hydrologyc           = num_hydrologyc, &
-            filter_hydrologyc        = filter_hydrologyc, &
-            num_urbanc               = num_urbanc, &
-            filter_urbanc            = filter_urbanc, &
-            soilhydrology_inst       = soilhydrology_inst, &
-            soilstate_inst           = soilstate_inst, &
-            waterstatebulk_inst      = waterstatebulk_inst, &
-            waterdiagnosticbulk_inst = waterdiagnosticbulk_inst, &
-            waterfluxbulk_inst       = waterfluxbulk_inst)
 
      end associate
 
