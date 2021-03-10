@@ -40,7 +40,7 @@ contains
     character(len=*), parameter :: subname = 'create_and_init_ozone_type'
     !-----------------------------------------------------------------------
     
-    if (ozone_method=='off') then 
+    if (ozone_method=='unset') then 
        allocate(ozone_off_type :: ozone)
     else 
        allocate(ozone_type :: ozone)

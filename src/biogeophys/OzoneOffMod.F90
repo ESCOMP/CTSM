@@ -65,7 +65,7 @@ contains
     type(bounds_type)     , intent(in)           :: bounds
     character(len=*), intent(in)                      :: ozone_method 
     
-    if (.not. ozone_method=='off' ) call endrun(' unconsistent choice of ozone stress method.')
+    if (.not. ozone_method=='unset' ) call endrun(' unconsistent choice of ozone stress method.')
 
     call this%InitAllocateBase(bounds)
     call this%InitColdBase(bounds)
