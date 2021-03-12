@@ -1,6 +1,10 @@
+hist_mfilt        = 365
+hist_nhtfrq       = -24
+hist_empty_htapes = .true.
+fates_spitfire_mode = 1
 hist_fincl1       = 'NPP','GPP','BTRAN','H2OSOI','TLAI','LITTER_IN','LITTER_OUT',
-   'FIRE_AREA','SCORCH_HEIGHT','FIRE_INTENSITY','FIRE_TFC_ROS','fire_fuel_mef',
-   'fire_fuel_bulkd','fire_fuel_sav','FIRE_NESTEROV_INDEX','PFTbiomass',
+   'FIRE_AREA','SCORCH_HEIGHT','FIRE_INTENSITY','FIRE_TFC_ROS','FIRE_FUEL_MEF',
+   'FIRE_FUEL_BULKD','FIRE_FUEL_SAV','FIRE_NESTEROV_INDEX','PFTbiomass',
    'PFTleafbiomass','FIRE_ROS','WIND','AREA_TREES','AREA_PLANT',
    'TOTSOMC','TOTLITC','T_SCALAR','NEP','HR','NPLANT_SCAG','NPLANT_SCPF',
    'BA_SCLS','NPP_BY_AGE','CWD_AG_CWDSC','PARSUN_Z_CNLF','PARSUN_Z_CNLFPFT','PARSHA_Z_CAN'

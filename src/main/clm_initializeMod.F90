@@ -24,8 +24,8 @@ module clm_initializeMod
   use PatchType       , only : patch         ! instance
   use reweightMod     , only : reweight_wrapup
   use filterMod       , only : allocFilters, filter, filter_inactive_and_active
-  use FatesInterfaceMod, only : set_fates_global_elements
   use dynSubgridControlMod, only: dynSubgridControl_init, get_reset_dynbal_baselines
+  use CLMFatesInterfaceMod, only : CLMFatesGlobals
   use SelfTestDriver, only : self_test_driver
 
   use clm_instMod
@@ -205,9 +205,10 @@ contains
     !
     ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
     ! to allocate space)
+    ! This also sets up various global constants in FATES
     ! ------------------------------------------------------------------------
 
-    call set_fates_global_elements(use_fates)
+    call CLMFatesGlobals()
 
     ! ------------------------------------------------------------------------
     ! Determine decomposition of subgrid scale landunits, columns, patches
@@ -291,7 +292,7 @@ contains
     use clm_varcon            , only : spval
     use clm_varctl            , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
     use clm_varctl            , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
-    use clm_varctl            , only : use_crop, ndep_from_cpl
+    use clm_varctl            , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb            , only : eccen, mvelpp, lambm0, obliqr
     use clm_time_manager      , only : get_step_size_real, get_curr_calday
     use clm_time_manager      , only : get_curr_date, get_nstep, advance_timestep
@@ -316,8 +317,9 @@ contains
     use controlMod            , only : NLFilename
     use clm_instMod           , only : clm_fates
     use BalanceCheckMod       , only : BalanceCheckInit
+    use FATESFireFactoryMod      , only : scalar_lightning
     !
-    ! !ARGUMENTS
+    ! !ARGUMENTS    
     !
     ! !LOCAL VARIABLES:
     integer               :: c,i,j,k,l,p! indices
@@ -526,6 +528,12 @@ contains
        end if
     else
        call SatellitePhenologyInit(bounds_proc)
+
+       ! fates_spitfire_mode is assigned an integer value in the namelist
+       ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+       if (fates_spitfire_mode > scalar_lightning) then
+          call clm_fates%Init2(bounds_proc, NLFilename)
+       end if
     end if
 
     if(use_soil_moisture_streams) then 
@@ -713,7 +721,11 @@ contains
        call crop_inst%initAccVars(bounds_proc)
     end if
 
-    !------------------------------------------------------------
+    if ( use_fates )then
+       call clm_fates%initAccVars(bounds_proc)
+    end if
+
+    !------------------------------------------------------------       
     ! Read monthly vegetation
     !------------------------------------------------------------
 

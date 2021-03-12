@@ -86,7 +86,7 @@ contains
 
     call this%ReadNL(NLFilename)
     call this%InitAllocate(bounds) 
-    call this%InitHistory(bounds)
+    call this%InitHistory(bounds, use_aquifer_layer)
     call this%InitCold(bounds, waterstatebulk_inst, use_aquifer_layer)
 
   end subroutine Init
@@ -150,7 +150,7 @@ contains
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
-  subroutine InitHistory(this, bounds)
+  subroutine InitHistory(this, bounds, use_aquifer_layer)
     !
     ! !USES:
     use histFileMod    , only : hist_addfld1d
@@ -158,6 +158,7 @@ contains
     ! !ARGUMENTS:
     class(soilhydrology_type) :: this
     type(bounds_type), intent(in) :: bounds  
+    logical          , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer           :: begc, endc
@@ -167,10 +168,12 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begg = bounds%begg; endg= bounds%endg
 
-    this%qcharge_col(begc:endc) = spval
-    call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
-         avgflag='A', long_name='aquifer recharge rate (natural vegetated and crop landunits only)', &
-         ptr_col=this%qcharge_col, l2g_scale_type='veg')
+    if (use_aquifer_layer) then
+       this%qcharge_col(begc:endc) = spval
+       call hist_addfld1d (fname='QCHARGE',  units='mm/s',  &
+            avgflag='A', long_name='aquifer recharge rate (natural vegetated and crop landunits only)', &
+            ptr_col=this%qcharge_col, l2g_scale_type='veg')
+    end if
 
     this%num_substeps_col(begc:endc) = spval
     call hist_addfld1d (fname='NSUBSTEPS',  units='unitless',  &

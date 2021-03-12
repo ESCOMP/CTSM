@@ -13,7 +13,7 @@ To use...
 
 on cheyenne
 
-qcmd -l walltime=06:00:00 -- ./test_driver.sh -i >& run.out &
+qcmd -l select=mem=109GB -l walltime=06:00:00 -- ./test_driver.sh -i >& run.out &
 
 Intended for use on NCAR machines cheyenne, geyser (DAV) and hobart.
 
