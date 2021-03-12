@@ -566,8 +566,6 @@ contains
    		 bgtr                                => cnveg_state_inst%bgtr_patch  , & ! Output: [real(r8) (:) ]  background transfer growth rate (1/s)             
    		 lgsf                                => cnveg_state_inst%lgsf_patch  , & ! Output: [real(r8) (:) ]  long growing season factor [0-1]                  
 
-   		 matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & ! Output:  [real(r8) (:,:,:)   ] (gN/m2/s) N transfer rate matrix
-   		 matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & ! Output:  [real(r8) (:,:,:)   ] (gC/m2/s) C transfer rate matrix
    		 ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
    		 ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
    		 ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
@@ -837,8 +835,6 @@ contains
          deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]   
-         matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & ! Output:  [real(r8) (:,:,:)   ] (gN/m2/s) N transfer rate matrix
-         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & ! Output:  [real(r8) (:,:,:)   ] (gC/m2/s) C transfer rate matrix
          ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
          ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
          ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
@@ -1229,8 +1225,6 @@ contains
          deadstemn_storage_to_xfer           =>    cnveg_nitrogenflux_inst%deadstemn_storage_to_xfer_patch     , & ! Output:  [real(r8) (:)   ]                                                    
          livecrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%livecrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)   ]                                                    
          deadcrootn_storage_to_xfer          =>    cnveg_nitrogenflux_inst%deadcrootn_storage_to_xfer_patch    , & ! Output:  [real(r8) (:)		 ] 
-         matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & ! Output:  [real(r8) (:,:,:)   ] (gN/m2/s) N transfer rate matrix
-         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & ! Output:  [real(r8) (:,:,:)   ] (gC/m2/s) C transfer rate matrix
          ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
          ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
          ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
@@ -2534,8 +2528,6 @@ contains
          deadstemn_xfer_to_deadstemn         =>    cnveg_nitrogenflux_inst%deadstemn_xfer_to_deadstemn_patch   , & ! Output:  [real(r8) (:) ]                                                    
          livecrootn_xfer_to_livecrootn       =>    cnveg_nitrogenflux_inst%livecrootn_xfer_to_livecrootn_patch , & ! Output:  [real(r8) (:) ]                                                    
          deadcrootn_xfer_to_deadcrootn       =>    cnveg_nitrogenflux_inst%deadcrootn_xfer_to_deadcrootn_patch , & ! Output:  [real(r8) (:) ]
-         matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & ! Output:  [real(r8) (:,:,:)   ] (gN/m2/s) N transfer rate matrix
-         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & ! Output:  [real(r8) (:,:,:)   ] (gC/m2/s) C transfer rate matrix
          ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
          ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
          ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
@@ -2765,8 +2757,6 @@ contains
          leafc_to_litter_fun   =>    cnveg_carbonflux_inst%leafc_to_litter_fun_patch   , & ! Output:  [real(r8) (:) ]  leaf C litterfall used by FUN (gC/m2/s)
          leafcn_offset         =>    cnveg_state_inst%leafcn_offset_patch              , & ! Output:  [real(r8) (:) ]  Leaf C:N used by FUN
 
-         matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & ! Output:  [real(r8) (:,:,:)   ] (gN/m2/s) N transfer rate matrix
-         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & ! Output:  [real(r8) (:,:,:)   ] (gC/m2/s) C transfer rate matrix
          ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
          ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
          ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
@@ -3150,8 +3140,6 @@ contains
          free_retransn_to_npool=>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch  , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
          paid_retransn_to_npool=>    cnveg_nitrogenflux_inst%retransn_to_npool_patch   , & ! Input: [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)
 
-         matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & ! Output:  [real(r8) (:,:,:)   ] (gN/m2/s) N transfer rate matrix
-         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & ! Output:  [real(r8) (:,:,:)   ] (gC/m2/s) C transfer rate matrix
          ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
          ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
          ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
@@ -3353,8 +3341,6 @@ contains
          livestemn_to_retransn    =>    cnveg_nitrogenflux_inst%livestemn_to_retransn_patch    , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_deadcrootn =>    cnveg_nitrogenflux_inst%livecrootn_to_deadcrootn_patch , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_retransn   =>    cnveg_nitrogenflux_inst%livecrootn_to_retransn_patch   , & ! Output: [real(r8) (:) ] 
-         matrix_nphtransfer                  =>    cnveg_nitrogenflux_inst%matrix_nphtransfer_patch            , & ! Output:  [real(r8) (:,:,:)   ] (gN/m2/s) N transfer rate matrix
-         matrix_phtransfer                   =>    cnveg_carbonflux_inst%matrix_phtransfer_patch               , & ! Output:  [real(r8) (:,:,:)   ] (gC/m2/s) C transfer rate matrix
          ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
          ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
          ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
