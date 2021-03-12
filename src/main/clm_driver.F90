@@ -1088,6 +1088,8 @@ contains
                soilbiogeochem_carbonflux_inst, &
                soilbiogeochem_carbonstate_inst)
 
+          call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
+          
           
           if( is_beg_curr_day() ) then
 

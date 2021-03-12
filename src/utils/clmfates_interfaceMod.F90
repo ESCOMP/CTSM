@@ -114,8 +114,8 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : zero_bcs
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
-
-
+   use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
+   
    use FatesHistoryInterfaceMod, only : fates_history_interface_type
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
@@ -218,7 +218,8 @@ module CLMFatesInterfaceMod
       procedure, private :: init_soil_depths
       procedure, public  :: ComputeRootSoilFlux
       procedure, public  :: wrap_hydraulics_drive
-
+      procedure, public  :: WrapUpdateFatesRmean
+      
    end type hlm_fates_interface_type
 
    ! hlm_bounds_to_fates_bounds is not currently called outside the interface.
@@ -241,7 +242,7 @@ module CLMFatesInterfaceMod
  contains
 
 
-   subroutine CLMFatesGlobals()
+   subroutine CLMFatesGlobals(dtime)
 
      ! --------------------------------------------------------------------------------
      ! This is one of the first calls to fates
@@ -253,6 +254,8 @@ module CLMFatesInterfaceMod
      ! over the NL variables to FATES global settings.
      ! --------------------------------------------------------------------------------  
 
+     real(r8), intent(in)                           :: dtime  ! main model timestep
+     
      logical                                        :: verbose_output
      integer                                        :: pass_masterproc
      integer                                        :: pass_vertsoilc
@@ -319,6 +322,7 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
         call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
         call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
+        call set_fates_ctrlparms('stepsize', rval = dtime)  !get_step_size_real())
         
         if(is_restart()) then
            pass_is_restart = 1
@@ -812,8 +816,6 @@ module CLMFatesInterfaceMod
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
             p = ifp+col%patchi(c)
-            this%fates(nc)%bc_in(s)%t_veg24_pa(ifp) = &
-                 temperature_inst%t_veg24_patch(p)
 
             this%fates(nc)%bc_in(s)%precip24_pa(ifp) = &
                   wateratm2lndbulk_inst%prec24_patch(p)
@@ -1074,6 +1076,7 @@ module CLMFatesInterfaceMod
 
              patch%is_veg(p) = .true.
              patch%wt_ed(p)  = this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+
              elai(p) = this%fates(nc)%bc_out(s)%elai_pa(ifp)
              tlai(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
              esai(p) = this%fates(nc)%bc_out(s)%esai_pa(ifp)
@@ -1092,7 +1095,7 @@ module CLMFatesInterfaceMod
              
 
           end do
-
+          
        end do
      end associate
 
@@ -1430,7 +1433,7 @@ module CLMFatesInterfaceMod
      type(waterdiagnosticbulk_type)          , intent(inout) :: waterdiagnosticbulk_inst
      type(canopystate_type)         , intent(inout) :: canopystate_inst
      type(soilstate_type)           , intent(inout) :: soilstate_inst
-
+     
      ! locals
      integer                                        :: nclumps
      integer                                        :: nc
@@ -1506,6 +1509,7 @@ module CLMFatesInterfaceMod
               call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
            end if
 
+           ! Newly initialized patches need a starting temperature
            call init_patches(this%fates(nc)%nsites, this%fates(nc)%sites, &
                              this%fates(nc)%bc_in)
 
@@ -2322,7 +2326,9 @@ module CLMFatesInterfaceMod
   end subroutine InitAccVars
 
   !-----------------------------------------------------------------------
-  subroutine UpdateAccVars(this, bounds)
+
+    subroutine UpdateAccVars(this, bounds_proc)
+   
     !
     ! !DESCRIPTION:
     ! Update any accumulation variables needed for FATES
@@ -2331,23 +2337,44 @@ module CLMFatesInterfaceMod
     !
     ! !ARGUMENTS:
     class(hlm_fates_interface_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds
+    type(bounds_type), intent(in)                  :: bounds_proc
     !
-    ! !LOCAL VARIABLES:
-
+  
     character(len=*), parameter :: subname = 'UpdateAccVars'
     !-----------------------------------------------------------------------
 
     call t_startf('fates_updateaccvars')
 
-    call this%fates_fire_data_method%UpdateAccVars( bounds )
-
+    call this%fates_fire_data_method%UpdateAccVars( bounds_proc )
+    
     call t_stopf('fates_updateaccvars')
 
   end subroutine UpdateAccVars
-
+  
  ! ======================================================================================
 
+  subroutine WrapUpdateFatesRmean(this, nc, temperature_inst)
+
+    class(hlm_fates_interface_type), intent(inout) :: this
+    type(temperature_type), intent(in)             :: temperature_inst
+
+    ! !LOCAL VARIABLES:
+    integer                     :: nc,s,c,p,ifp  ! indices and loop counters
+
+    do s = 1, this%fates(nc)%nsites
+       c = this%f2hmap(nc)%fcolumn(s)
+       do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+          p = ifp+col%patchi(c)
+          this%fates(nc)%bc_in(s)%tveg_pa(ifp) = temperature_inst%t_veg_patch(p)
+       end do
+    end do
+
+    call UpdateFatesRMeansTStep(this%fates(nc)%sites,this%fates(nc)%bc_in)
+    
+  end subroutine WrapUpdateFatesRmean
+  
+ ! ======================================================================================
+  
  subroutine init_history_io(this,bounds_proc)
 
    use histFileMod, only : hist_addfld1d, hist_addfld2d, hist_addfld_decomp 

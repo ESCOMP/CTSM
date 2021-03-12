@@ -612,6 +612,7 @@ contains
         bsha                    => energyflux_inst%bsha_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
       end if
 
+      
       ! Determine step size
 
       dtime = get_step_size_real()
@@ -627,7 +628,7 @@ contains
 
       fn = num_exposedvegp
       filterp(1:fn) = filter_exposedvegp(1:fn)
-
+      
       ! -----------------------------------------------------------------
       ! Time step initialization of photosynthesis variables
       ! -----------------------------------------------------------------

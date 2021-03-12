@@ -208,7 +208,7 @@ contains
     ! This also sets up various global constants in FATES
     ! ------------------------------------------------------------------------
 
-    call CLMFatesGlobals()
+    call CLMFatesGlobals(dtime)
 
     ! ------------------------------------------------------------------------
     ! Determine decomposition of subgrid scale landunits, columns, patches
