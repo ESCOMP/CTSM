@@ -7,7 +7,7 @@ module AerosolMod
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
   use decompMod        , only : bounds_type
-  use clm_varpar       , only : nlevsno, nlevgrnd 
+  use clm_varpar       , only : nlevsno, nlevgrnd, nlevmaxurbgrnd
   use clm_time_manager , only : get_step_size_real
   use atm2lndType      , only : atm2lnd_type
   use WaterFluxBulkType    , only : waterfluxbulk_type
@@ -373,8 +373,8 @@ contains
     logical :: readvar      ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(h2osoi_ice_col) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq_col) == (/bounds%endc,nlevgrnd/)), sourcefile, __LINE__)
+   SHR_ASSERT_ALL_FL((ubound(h2osoi_ice_col) == (/bounds%endc,nlevmaxurbgrnd/)), sourcefile, __LINE__)
+   SHR_ASSERT_ALL_FL((ubound(h2osoi_liq_col) == (/bounds%endc,nlevmaxurbgrnd/)), sourcefile, __LINE__)
 
     call restartvar(ncid=ncid, flag=flag, varname='mss_bcpho', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &

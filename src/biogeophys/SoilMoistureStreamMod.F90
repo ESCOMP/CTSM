@@ -1,5 +1,14 @@
 module SoilMoistureStreamMod
 
+  ! **********************************************************************
+  ! --------------------------- IMPORTANT NOTE ---------------------------
+  !
+  ! In cases using the NUOPC driver/mediator, we use a different version of this module,
+  ! based on CDEPS, which resides in src/cpl/nuopc/. Changes to the science here should
+  ! also be made in the similar file in src/cpl/nuopc. Once we start using CDEPS by
+  ! default, we can remove this version and move the CDEPS-based version into its place.
+  ! **********************************************************************
+
 #include "shr_assert.h"
 
   !-----------------------------------------------------------------------
@@ -14,7 +23,7 @@ module SoilMoistureStreamMod
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : scmlat,scmlon,single_column
+  use clm_varctl      , only : scmlat,scmlon,single_column, inst_name
   use clm_varctl      , only : iulog, use_soil_moisture_streams
   use clm_varcon      , only : grlnd
   use controlMod      , only : NLFilename
@@ -22,14 +31,14 @@ module SoilMoistureStreamMod
   use domainMod       , only : ldomain
   use fileutils       , only : getavu, relavu
   use LandunitType    , only : lun
-  use ColumnType      , only : col                
+  use ColumnType      , only : col
   use SoilStateType   , only : soilstate_type
   use WaterStateBulkType, only : waterstatebulk_type
   use perf_mod        , only : t_startf, t_stopf
   use spmdMod         , only : masterproc
   use spmdMod         , only : mpicom, comp_id
   use mct_mod
-  use ncdio_pio   
+  use ncdio_pio
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -45,7 +54,7 @@ module SoilMoistureStreamMod
   integer :: ism                          ! Soil moisture steram index
   integer, allocatable :: g_to_ig(:)      ! Array matching gridcell index to data index
   logical :: soilm_ignore_data_if_missing ! If should ignore overridding a point with soil moisture data
-                                          ! from the streams file, if the streams file shows that point 
+                                          ! from the streams file, if the streams file shows that point
                                           ! as missing (namelist item)
   !
   ! !PRIVATE TYPES:
@@ -55,7 +64,7 @@ module SoilMoistureStreamMod
   !-----------------------------------------------------------------------
 
 contains
-  
+
   !-----------------------------------------------------------------------
   !
   ! soil_moisture_init
@@ -67,7 +76,6 @@ contains
     !
     !
     ! !USES:
-    use clm_varctl       , only : inst_name
     use clm_time_manager , only : get_calendar
     use ncdio_pio        , only : pio_subsystem
     use shr_pio_mod      , only : shr_pio_getiotype
@@ -85,11 +93,11 @@ contains
     integer            :: i                          ! index
     integer            :: stream_year_first_soilm    ! first year in Ustar stream to use
     integer            :: stream_year_last_soilm     ! last year in Ustar stream to use
-    integer            :: model_year_align_soilm     ! align stream_year_first_soilm with 
+    integer            :: model_year_align_soilm     ! align stream_year_first_soilm with
     integer            :: nu_nml                     ! unit for namelist file
     integer            :: nml_error                  ! namelist i/o error flag
     integer            :: soilm_offset               ! Offset in time for dataset (sec)
-    type(mct_ggrid)    :: dom_clm                    ! domain information 
+    type(mct_ggrid)    :: dom_clm                    ! domain information
     character(len=CL)  :: stream_fldfilename_soilm   ! ustar stream filename to read
     character(len=CL)  :: soilm_tintalgo = 'linear'  ! Time interpolation alogrithm
 
@@ -147,9 +155,9 @@ contains
 
        write(iulog,*) ' '
        write(iulog,*) 'soil_moisture_stream settings:'
-       write(iulog,*) '  stream_year_first_soilm  = ',stream_year_first_soilm  
-       write(iulog,*) '  stream_year_last_soilm   = ',stream_year_last_soilm   
-       write(iulog,*) '  model_year_align_soilm   = ',model_year_align_soilm   
+       write(iulog,*) '  stream_year_first_soilm  = ',stream_year_first_soilm
+       write(iulog,*) '  stream_year_last_soilm   = ',stream_year_last_soilm
+       write(iulog,*) '  model_year_align_soilm   = ',model_year_align_soilm
        write(iulog,*) '  stream_fldfilename_soilm = ',trim(stream_fldfilename_soilm)
        write(iulog,*) '  soilm_tintalgo = ',trim(soilm_tintalgo)
        write(iulog,*) '  soilm_offset = ',soilm_offset
@@ -169,10 +177,10 @@ contains
     fldList = trim(soilmString)
 
     if (masterproc) write(iulog,*) 'fieldlist: ', trim(fldList)
-    
+
     call shr_strdata_create(sdat_soilm,name="soil_moisture",    &
-         pio_subsystem=pio_subsystem,                  & 
-         pio_iotype=shr_pio_getiotype(inst_name),      &
+         pio_subsystem=pio_subsystem,                  &
+         pio_iotype=shr_pio_getiotype(inst_name),          &
          mpicom=mpicom, compid=comp_id,                &
          gsmap=gsMap_lnd2Dsoi_gdc2glo, ggrid=dom_clm,  &
          nxg=ldomain%ni, nyg=ldomain%nj,               &
@@ -185,8 +193,8 @@ contains
          domFileName=trim(stream_fldFileName_soilm),   &
          domTvarName='time',                           &
          domXvarName='lon' ,                           &
-         domYvarName='lat' ,                           &  
-         domZvarName='levsoi' ,                        &  
+         domYvarName='lat' ,                           &
+         domZvarName='levsoi' ,                        &
          domAreaName='area',                           &
          domMaskName='mask',                           &
          filePath='',                                  &
@@ -299,7 +307,7 @@ contains
     SHR_ASSERT_FL( (lbound(sdat_soilm%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(sdat_soilm%avs(1)%rAttr,2) >= g_to_ig(bounds%endg)+(nlevsoi-1)*size(g_to_ig) ), sourcefile, __LINE__)
     associate( &
-         dz               =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                 
+         dz               =>    col%dz                                , & ! Input:  [real(r8) (:,:) ]  layer depth (m)
          watsat           =>    soilstate_inst%watsat_col             , & ! Input:  [real(r8) (:,:) ]  volumetric soil water at saturation (porosity)
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Input/Output:  [real(r8) (:,:) ]  liquid water (kg/m2)
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Input/Output:  [real(r8) (:,:) ]  ice water (kg/m2)
@@ -336,7 +344,7 @@ contains
       do g = bounds%begg, bounds%endg
          ig = g_to_ig(g)
          do j = 1, nlevsoi
-               
+
              !n = ig + (j-1)*size(g_to_ig)
              n = ig + (j-1)*size(g_to_ig)
 
@@ -350,28 +358,28 @@ contains
 
          end do
       end do
-      
+
       do c = bounds%begc, bounds%endc
          !
          ! Set variable for each gridcell/column combination
          !
          g = col%gridcell(c)
          ig = g_to_ig(g)
-            
+
          ! EBK Jan/2020, also check weights on gridcell (See https://github.com/ESCOMP/CTSM/issues/847)
          if ( (lun%itype(col%landunit(c)) == istsoil) .or. (lun%itype(col%landunit(c)) == istcrop) .and. &
               (col%wtgcell(c) /= 0._r8) ) then
             !       this is a 2d field (gridcell/nlevsoi) !
             do j = 1, nlevsoi
-               
+
                n = ig + (j-1)*size(g_to_ig)
 
                ! if soil water is zero, liq/ice fractions cannot be calculated
                if((h2osoi_liq(c, j) + h2osoi_ice(c, j)) > 0._r8) then
-                  
+
                   ! save original soil moisture value
                   h2osoi_vol_initial = h2osoi_vol(c,j)
-            
+
                   ! Check if the vegetated land mask from the dataset on the
                   ! file is different
                   if ( (h2osoi_vol_prs(g,j) == spval) .and. (h2osoi_vol_initial /= spval) )then
@@ -405,7 +413,7 @@ contains
                   call endrun(subname // ':: ERROR h2osoil liquid plus ice is zero')
                endif
             enddo
-         endif      
+         endif
       end do
 
     end associate

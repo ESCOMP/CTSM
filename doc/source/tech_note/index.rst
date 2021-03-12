@@ -5,9 +5,16 @@
 
 .. _tech_note:
 
-#####################################
+##################
 CLM Technical Note
-#####################################
+##################
+
+.. important::
+
+   **You are viewing the documentation for** |version_label_bold|. **There are separate
+   versions of this documentation for each maintained CTSM release (e.g., CLM5.0) and for
+   the latest development code. Use the menu at the top left to select the version of CTSM
+   you are using.**
 
 .. toctree::
    :maxdepth: 2

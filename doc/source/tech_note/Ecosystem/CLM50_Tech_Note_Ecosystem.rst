@@ -438,10 +438,10 @@ precipitation :math:`q_{rain}`  and solid precipitation
 However, in CLM5, the atmosphere's partitioning into liquid and solid
 precipitation is ignored. Instead, CLM repartitions total precipitation
 using a linear ramp. For most landunits, this ramp generates all snow
-below :math:`0 \textdegree C`, all rain above :math:`2 \textdegree C`,
+below :math:`0 ^{\circ} C`, all rain above :math:`2 ^{\circ} C`,
 and a mix of rain and snow for intermediate temperatures. For glaciers,
-the end points of the ramp are :math:`-2 \textdegree C` and :math:`0
-\textdegree C`, respectively. Changes to the phase of precipitation are
+the end points of the ramp are :math:`-2 ^{\circ} C` and :math:`0
+^{\circ} C`, respectively. Changes to the phase of precipitation are
 accompanied by a sensible heat flux (positive or negative) to conserve
 energy.
 

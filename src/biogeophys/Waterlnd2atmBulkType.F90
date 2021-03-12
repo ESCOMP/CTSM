@@ -12,7 +12,7 @@ module Waterlnd2atmBulkType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
-  use clm_varpar     , only : nlevgrnd
+  use clm_varpar     , only : nlevmaxurbgrnd
   use WaterLnd2atmType , only : waterlnd2atm_type
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
@@ -78,7 +78,7 @@ contains
 
     begg = bounds%begg; endg= bounds%endg
 
-    allocate(this%h2osoi_vol_grc     (begg:endg,1:nlevgrnd)) ; this%h2osoi_vol_grc     (:,:) = ival
+    allocate(this%h2osoi_vol_grc     (begg:endg,1:nlevmaxurbgrnd)) ; this%h2osoi_vol_grc     (:,:) = ival
 
   end subroutine InitBulkAllocate
 
