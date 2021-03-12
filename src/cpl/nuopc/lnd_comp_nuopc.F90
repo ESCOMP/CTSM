@@ -318,8 +318,8 @@ contains
     use domainMod                 , only : ldomain
     use decompMod                 , only : ldecomp, bounds_type, get_proc_bounds
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
-    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_single_column 
     use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
+    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column 
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -359,16 +359,18 @@ contains
     character(len=CL)       :: meshfile_mask
     character(len=CL)       :: ctitle                ! case description title
     character(len=CL)       :: caseid                ! case identifier name
-    character(len=CL)       :: single_column_domainfile
     real(r8)                :: scol_lat              ! single-column latitude
     real(r8)                :: scol_lon              ! single-column longitude
     real(r8)                :: scol_area             ! single-column area
     real(r8)                :: scol_frac             ! single-column frac
     integer                 :: scol_mask             ! single-column mask
+    character(len=CL)       :: single_column_lnd_domainfile
     type(ESMF_Field)        :: lfield
     character(CL) ,pointer  :: lfieldnamelist(:) => null()
     integer                 :: fieldCount
-    real(r8), pointer       :: fldptr(:)
+    integer                 :: rank
+    real(r8), pointer       :: fldptr1d(:)
+    real(r8), pointer       :: fldptr2d(:,:)
     character(len=CL)       :: model_version         ! Model version
     character(len=CL)       :: hostname              ! hostname of machine running on
     character(len=CL)       :: username              ! user running the model
@@ -383,7 +385,7 @@ contains
     ! set all export state fields to zero and return
     !----------------------------------------------------------------------------
 
-    ! If single_column is true - use single_column_domainfile to
+    ! If single_column is true - used single_column_domainfile to
     ! obtain nearest neighbor values for scol_lon and scol_lat
     ! If single_column is false and scol_lon and scol_lat are not equal to -999 then
     ! use scol_lon and scol_lat directly
@@ -394,30 +396,28 @@ contains
     call NUOPC_CompAttributeGet(gcomp, name='scol_lat', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) scol_lat
-    call NUOPC_CompAttributeGet(gcomp, name='single_column_domainfile', value=single_column_domainfile, rc=rc)
+    call NUOPC_CompAttributeGet(gcomp, name='single_column_lnd_domainfile', value=single_column_lnd_domainfile, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (scol_lon > -900. .and. scol_lat > -900.) then
-       if (trim(single_column_domainfile) /= 'null') then
-          single_column = .true.
-          write(iulog,'(a)')' single column mode is active:'
-          write(iulog,'(a,f13.5,a,f10.5,a)')' will find nearest neighbor values of ',scol_lon,' and ',&
-               scol_lat,' in '//trim(single_column_domainfile) 
-       else
-          single_column = .false.
-          write(iulog,'(a)')' single point mode is active'
-          write(iulog,'(a,f13.5,a,f13.5,a)')' scol_lon is ',scol_lon,' and scol_lat is '
-       end if
-       call lnd_set_mesh_for_single_column(single_column_domainfile, scol_lon, scol_lat,  &
-            scol_area, scol_mask, scol_frac, mesh, scol_valid, rc)
+
+    if (scol_lon > -999. .and. scol_lat > -999.) then
+       single_column = (trim(single_column_lnd_domainfile) /= 'null')
+
+       call NUOPC_CompAttributeGet(gcomp, name='scol_lndmask', value=cvalue, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) scol_mask
+
+       call NUOPC_CompAttributeGet(gcomp, name='scol_lndfrac', value=cvalue, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) scol_frac
+
+       call lnd_set_mesh_for_single_column(scol_lon, scol_lat, mesh, rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+       scol_valid = (scol_mask == 1)
        if (.not. scol_valid) then
           write(iulog,'(a)')' single column mode point does not contain any land - will set all export data to 0'
           ! if single column is not valid - set all export state fields to zero and return
           call realize_fields(importState, exportState, mesh, flds_scalar_name, flds_scalar_num, rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call State_SetScalar(1._r8, flds_scalar_index_nx, exportState, flds_scalar_name, flds_scalar_num, rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          call State_SetScalar(1._r8, flds_scalar_index_ny, exportState, flds_scalar_name, flds_scalar_num, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
           call ESMF_StateGet(exportState, itemCount=fieldCount, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -425,11 +425,21 @@ contains
           call ESMF_StateGet(exportState, itemNameList=lfieldnamelist, rc=rc)
           if (chkerr(rc,__LINE__,u_FILE_u)) return
           do n = 1, fieldCount
-             call ESMF_StateGet(exportState, itemName=trim(lfieldnamelist(n)), field=lfield, rc=rc)
-             if (chkerr(rc,__LINE__,u_FILE_u)) return
-             call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=rc)
-             if (ChkErr(rc,__LINE__,u_FILE_u)) return
-             fldptr(:) = 0._r8
+             if (trim(lfieldnamelist(n)) /= flds_scalar_name) then
+                call ESMF_StateGet(exportState, itemName=trim(lfieldnamelist(n)), field=lfield, rc=rc)
+                if (chkerr(rc,__LINE__,u_FILE_u)) return
+                call ESMF_FieldGet(lfield, rank=rank, rc=rc)
+                if (chkerr(rc,__LINE__,u_FILE_u)) return
+                if (rank == 2) then
+                   call ESMF_FieldGet(lfield, farrayPtr=fldptr2d, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                   fldptr2d(:,:) = 0._r8
+                else
+                   call ESMF_FieldGet(lfield, farrayPtr=fldptr1d, rc=rc)
+                   if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                   fldptr1d(:) = 0._r8
+                end if
+             end if
           enddo
           deallocate(lfieldnamelist)
           ! *******************
@@ -437,7 +447,8 @@ contains
           ! *******************
           RETURN
        else
-          write(iulog,'(a,f10.5)')' single column mode lon/lat does contain land with land fraction ',scol_frac
+          write(iulog,'(a,3(f10.5,2x))')' single column mode scol_lon/scol_lat/scol_frac is ',&
+               scol_lon,scol_lat,scol_frac
        end if
     end if
 
@@ -570,8 +581,7 @@ contains
     ! Create ctsm decomp and domain info
     ! ---------------------
     if (scol_lon > -900. .and. scol_lat > -900.) then
-       call lnd_set_decomp_and_domain_from_single_column(scol_lon, scol_lat, &
-            scol_area, scol_mask, scol_frac)
+       call lnd_set_decomp_and_domain_for_single_column(scol_lon, scol_lat, scol_mask, scol_frac)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
        call NUOPC_CompAttributeGet(gcomp, name='mesh_lnd', value=model_meshfile, rc=rc)
