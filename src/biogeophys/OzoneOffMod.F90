@@ -119,7 +119,11 @@ contains
     integer              , intent(in) :: num_exposedvegp
     integer              , intent(in) :: filter_exposedvegp(:)
 
-    ! Do nothing: Outputs (stress terms) are already fixed at 1 from cold start initialization
+    ! Check consistency in the stress_method.     
+    if (.not. this%stress_method=='unset' )        call endrun('Unconcistent set-uo for the ozone stress method')
+
+    ! Outputs (stress terms) are already fixed at 1 from cold start initialization
+
   end subroutine CalcOzoneStress
 
 end module OzoneOffMod
