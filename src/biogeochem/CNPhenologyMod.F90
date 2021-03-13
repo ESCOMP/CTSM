@@ -3482,8 +3482,16 @@ ptch: do fp = 1,num_soilp
                   else
                      livestemn_to_retransn(p)  = 0
                   end if
+                  ! WW change logic so livestem_retrans goes to npool (via
+                  ! free_retrans flux)
+                  ! this should likely be done more cleanly if it works, i.e. not
+                  ! update fluxes w/ states
+                  ! additional considerations for crop?
+                  ! The non-matrix version of this is in NStateUpdate1
                   if (use_fun) then
                      if (retransn(p) .gt. 0._r8) then
+                        ! The acc matrix check MUST be turned on, or this will
+                        ! fail with Nitrogen balance error EBK 03/11/2021
                         free_retransn_to_npool(p) = free_retransn_to_npool(p) + retransn(p) * matrix_update_phn(p,iretransn_to_iout, &
                                                     (livestemn_to_retransn(p) + livecrootn_to_retransn(p)) / retransn(p),dt,         &
                                                     cnveg_nitrogenflux_inst, matrixcheck_ph, acc=.true.)
