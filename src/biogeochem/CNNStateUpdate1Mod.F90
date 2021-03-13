@@ -18,9 +18,6 @@ module CNNStateUpdate1Mod
   use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
   use PatchType                       , only : patch                
-!KO
-  use CNVegMatrixMod                  , only : matrix_update_phn
-!KO
   !
   implicit none
   private
@@ -119,6 +116,7 @@ contains
          ivt                   => patch%itype                                    , & ! Input:  [integer  (:)     ]  patch vegetation type                                
 
          woody                 => pftcon%woody                                 , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
+
          nf_veg                => cnveg_nitrogenflux_inst                      , & ! Input:
          ns_veg                => cnveg_nitrogenstate_inst                     , & ! Output:
          nf_soil               => soilbiogeochem_nitrogenflux_inst               & ! Output:
@@ -219,15 +217,6 @@ contains
                   nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livecrootn_to_retransn_patch(p)
                end if
             else
-!KO
-               if (use_fun) then
-                  if (ns_veg%retransn_patch(p) .gt. 0._r8) then
-                     nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + ns_veg%retransn_patch(p) * matrix_update_phn(p,nf_veg%iretransn_to_iout_ph,(nf_veg%livestemn_to_retransn_patch(p)+nf_veg%livecrootn_to_retransn_patch(p))/ns_veg%retransn_patch(p),dt,nf_veg,.true.,.true.)
-                  else
-                     nf_veg%free_retransn_to_npool_patch(p) = 0._r8
-                  end if
-               end if
-!KO
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if 
