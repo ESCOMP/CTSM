@@ -3386,6 +3386,7 @@ contains
 
          livestemn                =>    cnveg_nitrogenstate_inst%livestemn_patch               , & ! Input:  [real(r8) (:) ]  (gN/m2) live stem N                               
          livecrootn               =>    cnveg_nitrogenstate_inst%livecrootn_patch              , & ! Input:  [real(r8) (:) ]  (gN/m2) live coarse root N                        
+         retransn                 =>    cnveg_nitrogenstate_inst%retransn_patch                , & ! Output: [real(r8)  (:)]
          
          livestemc_to_deadstemc   =>    cnveg_carbonflux_inst%livestemc_to_deadstemc_patch     , & ! Output: [real(r8) (:) ]                                                    
          livecrootc_to_deadcrootc =>    cnveg_carbonflux_inst%livecrootc_to_deadcrootc_patch   , & ! Output: [real(r8) (:) ]                                                    
@@ -3394,6 +3395,7 @@ contains
          livestemn_to_retransn    =>    cnveg_nitrogenflux_inst%livestemn_to_retransn_patch    , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_deadcrootn =>    cnveg_nitrogenflux_inst%livecrootn_to_deadcrootn_patch , & ! Output: [real(r8) (:) ]                                                    
          livecrootn_to_retransn   =>    cnveg_nitrogenflux_inst%livecrootn_to_retransn_patch   , & ! Output: [real(r8) (:) ] 
+         free_retransn_to_npool   =>    cnveg_nitrogenflux_inst%free_retransn_to_npool_patch   , & ! Input:  [real(r8) (:) ] free leaf N to retranslocated N pool (gN/m2/s)          
          ileafst_to_ileafxf_phc              =>    cnveg_carbonflux_inst%ileafst_to_ileafxf_ph                 , & ! Input: [integer (:)] Index of phenology related C transfer from leaf storage pool to leaf transfer pool
          ileafxf_to_ileaf_phc                =>    cnveg_carbonflux_inst%ileafxf_to_ileaf_ph                   , & ! Input: [integer (:)] Index of phenology related C transfer from leaf transfer pool to leaf pool
          ifrootst_to_ifrootxf_phc            =>    cnveg_carbonflux_inst%ifrootst_to_ifrootxf_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from fine root storage pool to fine root transfer pool
@@ -3432,6 +3434,7 @@ contains
          ileaf_to_iretransn_phn              =>    cnveg_nitrogenflux_inst%ileaf_to_iretransn_ph               , & ! Input: [integer (:)] Index of phenology related C transfer from leaf pool to retranslocation pool
          ilivestem_to_iretransn_phn          =>    cnveg_nitrogenflux_inst%ilivestem_to_iretransn_ph           , & ! Input: [integer (:)] Index of phenology related C transfer from live stem pool to retranslocation pool
          ilivecroot_to_iretransn_phn         =>    cnveg_nitrogenflux_inst%ilivecroot_to_iretransn_ph          , & ! Input: [integer (:)] Index of phenology related C transfer from live coarse root pool to retranslocation pool
+         iretransn_to_iout                   =>    cnveg_nitrogenflux_inst%iretransn_to_iout_ph                , & ! Input: [integer    ]
          igrain_to_iout_phn                  =>    cnveg_nitrogenflux_inst%igrain_to_iout_ph                     & ! Input: [integer (:)] Index of phenology related C transfer from grain pool to outside of vegetation pools
          )
 
@@ -3531,6 +3534,23 @@ ptch: do fp = 1,num_soilp
                                                 livestemn_to_retransn(p) / livestemn(p),dt,cnveg_nitrogenflux_inst,matrixcheck_ph,acc_ph) * livestemn(p)
                   else
                      livestemn_to_retransn(p)  = 0
+                  end if
+                  ! WW change logic so livestem_retrans goes to npool (via
+                  ! free_retrans flux)
+                  ! this should likely be done more cleanly if it works, i.e. not
+                  ! update fluxes w/ states
+                  ! additional considerations for crop?
+                  ! The non-matrix version of this is in NStateUpdate1
+                  if (use_fun) then
+                     if (retransn(p) .gt. 0._r8) then
+                        ! The acc matrix check MUST be turned on, or this will
+                        ! fail with Nitrogen balance error EBK 03/11/2021
+                        free_retransn_to_npool(p) = free_retransn_to_npool(p) + retransn(p) * matrix_update_phn(p,iretransn_to_iout, &
+                                                    (livestemn_to_retransn(p) + livecrootn_to_retransn(p)) / retransn(p),dt,         &
+                                                    cnveg_nitrogenflux_inst, matrixcheck_ph, acc=.true.)
+                     else
+                        free_retransn_to_npool(p) = 0._r8
+                     end if
                   end if
                end if !use_matrixcn
 

@@ -212,6 +212,7 @@ contains
                ! WW change logic so livestem_retrans goes to npool (via free_retrans flux)
                ! this should likely be done more cleanly if it works, i.e. not update fluxes w/ states
                ! additional considerations for crop?
+               ! Matrix version of this is in CNLivewoodTurnover
                if (use_fun ) then
                   nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livestemn_to_retransn_patch(p)
                   nf_veg%free_retransn_to_npool_patch(p) = nf_veg%free_retransn_to_npool_patch(p) + nf_veg%livecrootn_to_retransn_patch(p)
