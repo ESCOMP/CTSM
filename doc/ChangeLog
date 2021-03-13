@@ -1,4 +1,54 @@
 ===============================================================
+Tag name:  ctsm5.1.dev026
+Originator(s):  sacks (Bill Sacks)
+Date:  Mon Mar  8 13:20:33 MST 2021
+One-line Summary: Change f10 tests to use mg37 mask
+
+Purpose and description of changes
+----------------------------------
+
+The musgs mask will soon be dropped, and has already been dropped for
+nuopc
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing: All f10_f10_musgs tests changed to f10_f10_mg37
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- pass
+    izumi ------- pass
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+   BFAIL results for all f10 tests because the tests have changed, but
+   no answer changes
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev025
 Originator(s):  sacks (Bill Sacks)
 Date:  Tue Feb 23 11:20:17 MST 2021
