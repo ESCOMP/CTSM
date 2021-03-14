@@ -76,7 +76,6 @@ module lnd_comp_nuopc
   real(R8)               :: orb_mvelp       ! attribute - moving vernal equinox longitude
   real(R8)               :: orb_eccen       ! attribute and update-  orbital eccentricity
 
-  logical                :: single_column   ! single column mode (nn search of domainfile)
   logical                :: scol_valid      ! if single_column, does point have a mask of zero 
 
   character(len=*) , parameter :: orb_fixed_year       = 'fixed_year'
@@ -400,7 +399,7 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     if (scol_lon > -999. .and. scol_lat > -999.) then
-       single_column = (trim(single_column_lnd_domainfile) /= 'null')
+       single_column = (trim(single_column_lnd_domainfile) /= 'UNSET')
 
        call NUOPC_CompAttributeGet(gcomp, name='scol_lndmask', value=cvalue, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return

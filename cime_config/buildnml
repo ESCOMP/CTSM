@@ -153,7 +153,10 @@ def buildnml(case, caseroot, compname):
     
     inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")
     
-    lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
+    if (driver == 'mct'):
+        lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
+    else:
+        lndfrac_file = 'UNSET'
     
     config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
 

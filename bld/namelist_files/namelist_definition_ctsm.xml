@@ -62,7 +62,7 @@ Component name to use in history and restart files
        type="char*256" 
        category="datasets"
        input_pathname="abs" 
-       group="clm_inparm" 
+       group="clm_lndfrac" 
        valid_values="" >
 Full pathname of land fraction data file.
 </entry>

@@ -116,7 +116,7 @@ contains
     use clm_varpar                    , only : nlevsno
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl                    , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
+    use clm_varctl                    , only : use_century_decomp, use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use landunit_varcon               , only : landunit_varcon_init, max_lunit

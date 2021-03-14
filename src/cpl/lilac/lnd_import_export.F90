@@ -275,7 +275,7 @@ contains
     !---------------------------------------------------------------------------
 
     ! Implementation notes: The CTSM decomposition is set up so that ocean points appear
-    ! at the end of the vectors received from the coupler. Thus, in order to check if
+    ! at the end of the vectors received from the atm. Thus, in order to check if
     ! there are any points that the atmosphere considers land but CTSM considers ocean,
     ! it is sufficient to check the points following the typical ending bounds in the
     ! vectors received from the coupler.
@@ -291,7 +291,6 @@ contains
        if (atm_landfrac(n) > 0._r8) then
           write(iulog,*) 'At point ', n, ' atm landfrac = ', atm_landfrac(n)
           write(iulog,*) 'but CTSM thinks this is ocean.'
-          write(iulog,*) "Make sure the mask on CTSM's fatmlndfrc file agrees with the atmosphere's land mask"
           call shr_sys_abort( subname//&
                ' ERROR: atm landfrac > 0 for a point that CTSM thinks is ocean')
        end if

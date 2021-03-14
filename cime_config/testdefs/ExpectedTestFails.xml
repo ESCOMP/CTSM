@@ -30,7 +30,7 @@
 
   <!-- aux_clm test suite failures -->
 
-  <test name="ERS_Ln9.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.IHistClm50SpGs.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start">
+  <test name="ERS_Ln12.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.IHistClm50SpGs.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#1117</issue>

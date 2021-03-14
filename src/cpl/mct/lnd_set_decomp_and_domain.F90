@@ -1,8 +1,10 @@
 module lnd_set_decomp_and_domain
 
   use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl
-  use spmdMod      , only : masterproc
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
+  use spmdMod      , only : masterproc, mpicom
   use clm_varctl   , only : iulog
+  use abortutils   , only : endrun
   use perf_mod     , only : t_startf, t_stopf, t_barrierf
 
   implicit none
@@ -26,28 +28,52 @@ contains
 
     ! Initialize ldecomp and ldomain data types
 
+    use shr_nl_mod    , only: shr_nl_find_group_name
     use clm_varpar    , only: nlevsoi
-    use clm_varctl    , only: fatmlndfrc, use_soil_moisture_streams
+    use clm_varctl    , only: use_soil_moisture_streams
     use decompInitMod , only: decompInit_lnd, decompInit_lnd3D
     use decompMod     , only: bounds_type, get_proc_bounds
     use domainMod     , only: ldomain, domain_init, domain_check
+    use spmdMod       , only: MPI_CHARACTER
 
     ! input/output variables
     logical, intent(out) :: noland
     integer, intent(out) :: ni, nj ! global grid sizes
 
     ! local variables
-    integer ,pointer  :: amask(:)   ! global land mask
-    integer           :: begg, endg ! processor bounds
-    type(bounds_type) :: bounds     ! bounds
+    character(len=CL) :: fatmlndfrc = ' ' ! lnd frac file on atm grid
+    integer ,pointer  :: amask(:)         ! global land mask
+    integer           :: begg, endg       ! processor bounds
+    type(bounds_type) :: bounds           ! bounds
+    integer           :: unitn 
+    integer           :: ierr
     character(len=32) :: subname = 'lnd_set_decomp_and_domain_from_surfrd'
     !-----------------------------------------------------------------------
 
     ! Read in global land grid and land mask (amask)- needed to set decomposition
     ! global memory for amask is allocate in surfrd_get_glomask - must be deallocated below
+    namelist /clm_lndfrac/ fatmlndfrc
+
     if (masterproc) then
-       write(iulog,*) 'Attempting to read global land mask from ',trim(fatmlndfrc)
-    endif
+       open( newunit=unitn, file='lnd_in', status='old' )
+       call shr_nl_find_group_name(unitn, 'clm_lndfrac', status=ierr)
+       if (ierr == 0) then
+          read(unitn, clm_lndfrac, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg='ERROR reading clm_lndfrac namelist'//errMsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg='ERROR finding clm_lndfrac namelist'//errMsg(sourcefile, __LINE__))
+       end if
+       close(unitn)
+       if (fatmlndfrc == ' ') then
+          write(iulog,*) 'fatmlndfrc not set, setting frac/mask to 1'
+       else
+          write(iulog,*) 'Land frac data = ',trim(fatmlndfrc)
+          write(iulog,*) 'Attempting to read global land mask from ',trim(fatmlndfrc)
+       end if
+    end if
+    call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ierr)
 
     ! Get global mask, ni and nj
     call surfrd_get_globmask(filename=fatmlndfrc, mask=amask, ni=ni, nj=nj)
