@@ -87,6 +87,19 @@ Type of CO2 feedback.
 </entry>
 
 
+<entry id="o3_ppbv" type="real" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+Atmospheric O3 molar ratio (by volume) only used when o3_type==constant (nmol/mol)
+(Set by CCSM_O3_PPBV)
+</entry>
+
+<entry id="o3_type" type="char*16" category="clm_physics"
+       group="clm_inparm" valid_values="constant,diagnostic" >
+Type of O3 feedback.
+    constant   = use the input o3_ppbv value
+    disgnostic = use diagnostic values from the atmosphere
+</entry>
+
 <entry id="suplnitro" type="char*15" category="clm_physics"
        group="clm_inparm" valid_values="NONE,ALL" >
 Supplemental Nitrogen mode and for what type of vegetation it's turned on for. 
@@ -1096,8 +1109,10 @@ Initial seed Carbon to use at planting
 (only used when CN is on as well as crop)
 </entry>
 
-<entry id="use_ozone" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
+<entry id="ozone_method" type="char*32" category="physics"
+       group="clm_inparm" valid_values="unset,
+                                        stress_method_lombardozzi2015,
+                                        stress_method_falk" value="unset">
 Toggle to turn on ozone stress
 </entry>
 
