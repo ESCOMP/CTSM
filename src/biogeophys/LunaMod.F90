@@ -194,7 +194,7 @@ module LunaMod
   ! this subroutine updates the photosynthetic capacity as determined by Vcmax25 and Jmax25
   subroutine Update_Photosynthesis_Capacity(bounds, fn, filterp, &
     dayl_factor, atm2lnd_inst, temperature_inst, canopystate_inst, photosyns_inst, &
-    surfalb_inst, solarabs_inst, waterdiagnosticbulk_inst, frictionvel_inst)
+    surfalb_inst, solarabs_inst, waterdiagnosticbulk_inst, frictionvel_inst, ozone_inst)
     !
     ! !DESCRIPTION:
     ! Calculates Nitrogen fractionation within the leaf, based on optimum calculated fractions in rubisco, cholorophyll, 
@@ -234,7 +234,7 @@ module LunaMod
     type(solarabs_type)    , intent(inout) :: solarabs_inst
     type(waterdiagnosticbulk_type)  , intent(inout) :: waterdiagnosticbulk_inst
     type(frictionvel_type) , intent(inout) :: frictionvel_inst
-
+    class(ozone_base_type) , intent(in)    :: ozone_inst
     
     ! !LOCAL VARIABLES:
     !
@@ -321,8 +321,9 @@ module LunaMod
     pnlc_z        => photosyns_inst%pnlc_z_patch                      , & ! Output: [real(r8) (:,:) ] patch proportion of leaf nitrogen allocated for light capture for canopy layer 
     enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
     vcmx25_z_last_valid_patch   => photosyns_inst%vcmx25_z_last_valid_patch , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from end of the growing season for the previous year
-    jmx25_z_last_valid_patch    => photosyns_inst%jmx25_z_last_valid_patch                          & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from the end of the growing season for the previous year
-    )  
+    jmx25_z_last_valid_patch    => photosyns_inst%jmx25_z_last_valid_patch                         , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from the end of the growing season for the previous year
+    o3coefjmax => ozone_inst%o3coefjmaxsun_patch                   , & ! Input: [real(r8) (:)] ozone coef jmax sun
+  )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
 
@@ -417,7 +418,7 @@ module LunaMod
                          PNcbold   = 0.0_r8                                     
                          call NitrogenAllocation(FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, hourpd, &
                               tair10, tleafd10, tleafn10, &
-                              Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), &
+                              Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor(p), o3coefjmax(p), &
                               PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
                          vcmx25_opt= PNcbopt * FNCa * Fc25
                          jmx25_opt= PNetopt * FNCa * Fj25
@@ -994,8 +995,8 @@ end subroutine NitrogenAllocation
 
 subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
      CO2a10, O2a10, PARi10, PARimx10, rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Kj2Kc, JmaxCoef, Fc, Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, Kc, &
-     Kj, ci, Vcmax, Jmax, JmeanL, JmaxL, Net, Ncb, Nresp, PSN, RESP)
+     Kj2Kc, JmaxCoef, Fc, Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, o3coefjmax, &
+     Kc,  Kj, ci, Vcmax, Jmax, JmeanL, JmaxL, Net, Ncb, Nresp, PSN, RESP)
   implicit none
   integer,  intent (in) :: KcKjFlag                   !flag to indicate whether to update the Kc and Kj using the photosynthesis subroutine; 0--Kc and Kj need to be calculated; 1--Kc and Kj is prescribed.
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -1020,9 +1021,12 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8), intent (in) :: NUEcref                    !nitrogen use efficiency for carboxylation under reference climates
   real(r8), intent (in) :: NUEjref                    !nitrogen use efficiency for electron transport under reference climates
   real(r8), intent (in) :: NUEr                       !nitrogen use efficiency for respiration
+  real(r8), intent (in) :: o3coefjmax             !ozone coef jmax 
+
   real(r8), intent (inout) :: Kc                      !conversion factors from Vc,max to Wc 
   real(r8), intent (inout) :: Kj                      !conversion factor from electron transport rate to Wj 
   real(r8), intent (inout) :: ci                      !inter-cellular CO2 concentration (Pa) 
+
   real(r8), intent (out) :: Vcmax                     !the maximum carboxyaltion rate (umol/m2/s) 
   real(r8), intent (out) :: Jmax                      !the maximum electron transport rate (umol/m2/s) 
   real(r8), intent (out) :: JmaxL                     !the electron transport rate with maximum daily radiation (umol/m2/s)  
@@ -1048,7 +1052,12 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   theta = 0.292_r8 / (1.0_r8 + 0.076_r8 / (Nlc * Cb))
   ELTRNabsorb = theta * PARi10
   Jmaxb0act = params_inst%jmaxb0 * FNCa * Fj
-  Jmax = Jmaxb0act + JmaxCoef * ELTRNabsorb
+
+  ! Default value of o3coefjmax is 1 -->
+  !  o3coefjmax is only different from 1 if ozone_inst%stress_method == 'falk'
+  Jmax = Jmaxb0act + JmaxCoef * ELTRNabsorb * o3coefjmax 
+
+
   JmaxL = theta * PARimx10 / (sqrt(1.0_r8 + (theta * PARimx10 / Jmax)**2.0_r8))        
   NUEchg = (NUEc / NUEcref) * (NUEjref / NUEj)
   Wc2Wj = params_inst%wc2wjb0 * (NUEchg**0.5_r8)
