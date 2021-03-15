@@ -117,6 +117,16 @@ module OzoneMod
   real(r8), parameter :: broadleafCondSlope   = 0._r8      ! units = per mmol m^-2
   real(r8), parameter :: nonwoodyCondInt      = 0.7511_r8  ! units = unitless
   real(r8), parameter :: nonwoodyCondSlope    = 0._r8      ! units = per mmol m^-2
+  
+  ! Data is currently only available for broadleaf species (Dec 2020)
+  ! o3 intercepts and slopes for JmaxO3/Jmax0
+  real(r8), parameter :: needleleafJmaxInt   = 1._r8                     ! units = unitless 
+  real(r8), parameter :: needleleafJmaxSlope = 0._r8                ! units = per mmol m^-2
+  real(r8), parameter :: broadleafJmaxInt    = 1._r8                    ! units = unitless
+  real(r8), parameter :: broadleafJmaxSlope  = -0.0037_r8    ! units = per mmol m^-2
+  real(r8), parameter :: nonwoodyJmaxInt     = 1._r8               ! units = unitless
+  real(r8), parameter :: nonwoodyJmaxSlope   = 0._r8           ! units = per mmol m^-2
+
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -651,32 +661,29 @@ contains
 
     character(len=*), parameter :: subname = 'CalcOzoneStressFalk'
     !-----------------------------------------------------------------------
+    
+    associate( &
+         o3uptakesha => this%o3uptakesha_patch                     , & ! Input:  [real(r8) (:)] ozone dose
+         o3uptakesun => this%o3uptakesun_patch                     , & ! Input:  [real(r8) (:)] ozone dose
+         o3coefjmaxsha => this%o3coefjmaxsha_patch             , & ! Output: [real(r8) (:)] ozone coef jmax sha
+         o3coefjmaxsun => this%o3coefjmaxsun_patch              & ! Output: [real(r8) (:)] ozone coef jmax sun
+         )
+      
+    do fp = 1, num_exposedvegp
+       p = filter_exposedvegp(fp)
 
-    ! associate( &
-    !      o3uptakesha => this%o3uptakesha_patch                , & ! Input:  [real(r8) (:)] ozone dose
-    !      o3uptakesun => this%o3uptakesun_patch                , & ! Input:  [real(r8) (:)] ozone dose
-    !      o3coefvsha  => this%o3coefvsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
-    !      o3coefvsun  => this%o3coefvsun_patch                 , & ! Output: [real(r8) (:)] ozone coef
-    !      o3coefgsha  => this%o3coefgsha_patch                 , & ! Output: [real(r8) (:)] ozone coef
-    !      o3coefgsun  => this%o3coefgsun_patch                   & ! Output: [real(r8) (:)] ozone coef
-    !      )
+       ! Ozone stress for shaded leaves
+       call CalcOzoneStressFalkOnePoint( &
+            pft_type=patch%itype(p), o3uptake=o3uptakesha(p), &
+            o3coefjmax=o3coefjmaxsha(p))
 
-    ! do fp = 1, num_exposedvegp
-    !    p = filter_exposedvegp(fp)
+       ! Ozone stress for sunlit leaves
+       call CalcOzoneStressFalkOnePoint( &
+            pft_type=patch%itype(p), o3uptake=o3uptakesun(p), &
+            o3coefjmax=o3coefjmaxsun(p))
 
-    !    ! Ozone stress for shaded leaves
-    !    call CalcOzoneStressFalkOnePoint( &
-    !         pft_type=patch%itype(p), o3uptake=o3uptakesha(p), &
-    !         o3coefv=o3coefvsha(p), o3coefg=o3coefgsha(p))
-
-    !    ! Ozone stress for sunlit leaves
-    !    call CalcOzoneStressFalkOnePoint( &
-    !         pft_type=patch%itype(p), o3uptake=o3uptakesun(p), &
-    !         o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
-    ! end do
-
-
-    ! end associate
+    end do
+    end associate
 
   end subroutine CalcOzoneStressFalk
 
@@ -704,43 +711,29 @@ contains
 
     character(len=*), parameter :: subname = 'CalcOzoneStressFalkOnePoint'
     !-----------------------------------------------------------------------
-
-    ! if (o3uptake == 0._r8) then
-    !    ! No o3 damage if no o3 uptake
-    !    o3coefv = 1._r8
-    !    o3coefg = 1._r8
-    ! else
-    !    ! Determine parameter values for this pft
-    !    ! TODO(wjs, 2014-10-01) Once these parameters are moved into the params file, this
-    !    ! logic can be removed.
-    !    if (pft_type>3) then
-    !       if (pftcon%woody(pft_type)==0) then
-    !          photoInt   = nonwoodyPhotoInt
-    !          photoSlope = nonwoodyPhotoSlope
-    !          condInt    = nonwoodyCondInt
-    !          condSlope  = nonwoodyCondSlope
-    !       else
-    !          photoInt   = broadleafPhotoInt
-    !          photoSlope = broadleafPhotoSlope
-    !          condInt    = broadleafCondInt
-    !          condSlope  = broadleafCondSlope
-    !       end if
-    !    else
-    !       photoInt   = needleleafPhotoInt
-    !       photoSlope = needleleafPhotoSlope
-    !       condInt    = needleleafCondInt
-    !       condSlope  = needleleafCondSlope
-    !    end if
-
-    !    ! Apply parameter values to compute o3 coefficients
-    !    o3coefv = max(0._r8, min(1._r8, photoInt + photoSlope * o3uptake))
-    !    o3coefg = max(0._r8, min(1._r8, condInt  + condSlope  * o3uptake))
-
-    ! end if
+    ! TODO Should it really be a comparision with a real which is zero? 
+    if (o3uptake == 0._r8) then
+       o3coefjmax = 1._r8
+    else
+       ! Determine parameter values for this pft
+       ! TODO(wjs, 2014-10-01) Once these parameters are moved into the params file, this
+       ! logic can be removed.
+       if (pft_type>3) then
+          if (pftcon%woody(pft_type)==0) then
+             jmaxInt    = nonwoodyJmaxInt
+             jmaxSlope  = nonwoodyJmaxSlope
+          else
+             jmaxInt    = broadleafJmaxInt
+             jmaxSlope  = broadleafJmaxSlope
+          end if
+       else
+          jmaxInt    = needleleafJmaxInt
+          jmaxSlope  = needleleafJmaxSlope
+       end if
+       ! Apply parameter values to compute o3 coefficients
+       o3coefjmax = max(0._r8, min(1._r8, jmaxInt  + jmaxSlope  * o3uptake)) 
+    end if
 
   end subroutine CalcOzoneStressFalkOnePoint
-
-
- 
 
 end module OzoneMod
