@@ -1,0 +1,3 @@
+hist_empty_htapes = .true.
+use_fates_cohort_age_tracking=.true.
+hist_fincl1       = 'M9_SCPF','M10_SCPF','M10_CAPF','NPLANT_CACLS','NPLANT_CAPF', 'M9_SCLS','M10_SCLS','M10_CACLS'

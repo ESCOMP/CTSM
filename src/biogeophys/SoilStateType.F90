@@ -9,7 +9,7 @@ module SoilStateType
   use abortutils      , only : endrun
   use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno, nlevmaxurbgrnd
   use clm_varcon      , only : spval
-  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot
+  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot, use_fates
   use clm_varctl      , only : iulog, hist_wrtch4diag
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
@@ -214,15 +214,15 @@ contains
          avgflag='A', long_name='soil matric potential (natural vegetated and crop landunits only)', &
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
 
-       this%root_conductance_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
-          avgflag='A', long_name='root conductance each soil layer', &
-          ptr_patch=this%root_conductance_patch, default='inactive')
-
-       this%soil_conductance_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
-          avgflag='A', long_name='soil conductance in each soil layer', &
-          ptr_patch=this%soil_conductance_patch, default='inactive')
+    this%root_conductance_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
+         avgflag='A', long_name='root conductance each soil layer', &
+         ptr_patch=this%root_conductance_patch, default='inactive')
+    
+    this%soil_conductance_patch(begp:endp,:) = spval
+    call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
+         avgflag='A', long_name='soil conductance in each soil layer', &
+         ptr_patch=this%soil_conductance_patch, default='inactive')
 
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 
@@ -263,7 +263,7 @@ contains
        
     end if
 
-    if (use_cn) then
+    if (use_cn .or. use_fates) then
        this%soilpsi_col(begc:endc,:) = spval
        call hist_addfld2d (fname='SOILPSI', units='MPa', type2d='levgrnd', &
             avgflag='A', long_name='soil water potential in each soil layer', &

@@ -1,0 +1,5 @@
+hist_mfilt        = 365
+hist_nhtfrq       = -24
+hist_empty_htapes = .false.
+fates_parteh_mode = 2
+fates_spitfire_mode = 1

@@ -123,4 +123,25 @@
     </phase>
   </test>
 
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.hobart_nag.clm-FatesHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#667</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruGs.izumi_nag.clm-FatesHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#667</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Lm12.1x1_brazil.I2000Clm50FatesCruGs.cheyenne_intel.clm-Fates_nat_and_anthro_ignitions">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#667</issue>
+    </phase>
+  </test>
+
 </expectedFails> 
