@@ -812,7 +812,6 @@ contains
        if (      trim(stomatalcond_method) == 'Ball-Berry1987' ) then
           this%stomatalcond_mtd = stomatalcond_mtd_bb1987
        else if ( trim(stomatalcond_method) == 'Medlyn2011'     ) then
-          !zqz
           this%stomatalcond_mtd = stomatalcond_mtd_medlyn2011
        else
           call endrun(msg="ERROR bad value for stomtalcond_method in "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
