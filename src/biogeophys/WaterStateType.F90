@@ -578,6 +578,7 @@ contains
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name=this%info%lname('liquid water'), &
          units='kg/m2', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_liq_col)
 
     call restartvar(ncid=ncid, flag=flag, &
@@ -586,6 +587,7 @@ contains
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name=this%info%lname('ice lens'), &
          units='kg/m2', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_ice_col)
          
     call restartvar(ncid=ncid, flag=flag, &

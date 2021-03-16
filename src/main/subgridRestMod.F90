@@ -539,6 +539,21 @@ contains
     end if
     deallocate(temp2d)
 
+    ! Soil column variables
+
+    allocate(temp2d(bounds%begc:bounds%endc,1:nlevmaxurbgrnd))
+    if (flag == 'write') then
+       temp2d(bounds%begc:bounds%endc,1:nlevmaxurbgrnd) = col%dz(bounds%begc:bounds%endc,1:nlevmaxurbgrnd)
+    end if
+    call restartvar(ncid=ncid, flag=flag, varname='DZSOI', xtype=ncd_double,  &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., lowerb2=1, upperb2=nlevmaxurbgrnd, &
+         long_name='soil layer thickness', units='m', &
+         interpinic_flag='skip', readvar=readvar, data=temp2d)
+    if (flag == 'read') then
+       col%dz(bounds%begc:bounds%endc,1:nlevmaxurbgrnd) = temp2d(bounds%begc:bounds%endc,1:nlevmaxurbgrnd)
+    end if
+    deallocate(temp2d)
+
   end subroutine subgridRest_write_and_read
 
   !-----------------------------------------------------------------------

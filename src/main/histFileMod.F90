@@ -13,7 +13,7 @@ module histFileMod
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog, use_vertsoilc, use_fates, compname
-  use clm_varcon     , only : spval, ispval, dzsoi_decomp
+  use clm_varcon     , only : spval, ispval
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
   use GetGlobalValuesMod , only : GetGlobalIndexArray

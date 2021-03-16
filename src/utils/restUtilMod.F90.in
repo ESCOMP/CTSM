@@ -47,6 +47,9 @@ module restUtilMod
   integer,parameter, public :: iflag_noswitchdim = 0
   integer,parameter, public :: iflag_switchdim   = 1
 
+  integer,parameter, public :: iflag_no_scale_by_thickness = 0
+  integer,parameter, public :: iflag_scale_by_thickness = 1
+
   public :: restartvar
 
   ! Set values of a missing restart field from a template field, with some constant
@@ -356,7 +359,7 @@ contains
   !TYPE int,double
   subroutine restartvar_2d_{TYPE}_bounds(ncid, flag, varname, xtype, &
        dim1name, dim2name, switchdim, lowerb2, upperb2, &
-       long_name, units, interpinic_flag, data, readvar, &
+       long_name, units, scale_by_thickness, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
        imissing_value, ifill_value, flag_values, nvalid_range )
 
@@ -384,6 +387,7 @@ contains
     integer          , intent(in), optional :: lowerb2
     integer          , intent(in), optional :: upperb2 
     character(len=*) , intent(in), optional :: units            ! long name for variable
+    logical          , intent(in), optional :: scale_by_thickness  ! to scale by thickness in vertical interpolation or not
     character(len=*) , intent(in), optional :: comment          ! attribute
     character(len=*) , intent(in), optional :: flag_meanings(:) ! attribute
     real(r8)         , intent(in), optional :: missing_value    ! attribute for real
@@ -397,6 +401,7 @@ contains
     character(len=len(varname)) :: primary_varname ! first name in the varname list
     character(len=len(varname)) :: my_varname      ! actual varname to read/write
     integer          :: ivalue
+    logical          :: scale_by_thickness_local  ! set to .false. unless present(scale_by_thickness)
     type(var_desc_t) :: vardesc  ! local vardesc
     integer          :: status   ! return error code 
     integer          :: varid    ! returned var id
@@ -442,15 +447,33 @@ contains
        call ncd_putatt(ncid, varid, 'varnames_on_old_files', trim(varname))
 
        if (switchdim) then
-          status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag', 1)
+          status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag', iflag_switchdim)
        else
-          status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag', 0)
+          status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag', iflag_noswitchdim)
        end if
        status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag_values', (/0,1/))
        status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag_is_0', &
             "1st and 2nd dims are same as model representation")
        status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag_is_1', &
             "1st and 2nd dims are switched from model representation")
+
+       if (dim2name == 'levtot' .or. dim2name == 'levgrnd' .or. dim2name == 'levmaxurbgrnd') then
+          if (present(scale_by_thickness)) then
+             scale_by_thickness_local = scale_by_thickness
+          else
+             scale_by_thickness_local = .false.
+          end if
+          if (scale_by_thickness_local) then
+             status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_scale_by_thickness)
+          else
+             status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_no_scale_by_thickness)
+          end if
+          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_values', (/0,1/))
+          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_is_0', &
+               "scale_by_thickness is .false.")
+          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_is_1', &
+               "scale_by_thickness is .true.")
+       end if
 
        if (present(comment)) then
           call ncd_putatt(ncid, varid, 'comment', trim(comment))
