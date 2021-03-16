@@ -363,6 +363,7 @@ contains
     real(r8)                :: scol_area             ! single-column area
     real(r8)                :: scol_frac             ! single-column frac
     integer                 :: scol_mask             ! single-column mask
+    real(r8)                :: scol_spval
     character(len=CL)       :: single_column_lnd_domainfile
     type(ESMF_Field)        :: lfield
     character(CL) ,pointer  :: lfieldnamelist(:) => null()
@@ -386,7 +387,7 @@ contains
 
     ! If single_column is true - used single_column_domainfile to
     ! obtain nearest neighbor values for scol_lon and scol_lat
-    ! If single_column is false and scol_lon and scol_lat are not equal to -999 then
+    ! If single_column is false and scol_lon and scol_lat are not equal to scol_spval then
     ! use scol_lon and scol_lat directly
 
     call NUOPC_CompAttributeGet(gcomp, name='scol_lon', value=cvalue, rc=rc)
@@ -395,10 +396,13 @@ contains
     call NUOPC_CompAttributeGet(gcomp, name='scol_lat', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) scol_lat
+    call NUOPC_CompAttributeGet(gcomp, name='scol_spval', value=cvalue, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    read(cvalue,*) scol_spval
     call NUOPC_CompAttributeGet(gcomp, name='single_column_lnd_domainfile', value=single_column_lnd_domainfile, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    if (scol_lon > -999. .and. scol_lat > -999.) then
+    if (scol_lon > scol_spval .and. scol_lat > scol_spval) then
        single_column = (trim(single_column_lnd_domainfile) /= 'UNSET')
 
        call NUOPC_CompAttributeGet(gcomp, name='scol_lndmask', value=cvalue, rc=rc)
@@ -579,7 +583,7 @@ contains
     ! ---------------------
     ! Create ctsm decomp and domain info
     ! ---------------------
-    if (scol_lon > -900. .and. scol_lat > -900.) then
+    if (scol_lon > scol_spval .and. scol_lat > scol_spval) then
        call lnd_set_decomp_and_domain_for_single_column(scol_lon, scol_lat, scol_mask, scol_frac)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
