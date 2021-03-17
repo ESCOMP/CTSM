@@ -413,6 +413,12 @@ contains
   subroutine lnd_get_global_dims(ni, nj, gsize, isgrid2d)
 
     ! Determine global 2d sizes from read of dimensions of surface dataset
+    !
+    ! Meshes do not indicate if the mesh can be represented as a logically rectangular
+    ! grid. However, CTSM needs this information in the history file generation via the
+    ! logical variable isgrid2d. Since for CMEPS and LILAC there is no longer the need for
+    ! the fatmlndfrc file (where the isgrid2d variable was determined from before), the
+    ! surface dataset is now used to determine if the underlying grid is 2d or not.
 
     use clm_varctl  , only : fsurdat, single_column
     use fileutils   , only : getfil
