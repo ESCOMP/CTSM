@@ -641,51 +641,75 @@ baseline proportion of nitrogen allocated for electron transport (J)
 <entry id="use_fates" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the FATES model
-(use_fates= '.true.' is EXPERIMENTAL NOT SUPPORTED!)
+Functionally Assembled Terrestrial Ecosystem Simulator (FATES)
 </entry>
 
 <entry id="fates_parteh_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="1">
+        group="clm_inparm" valid_values="1,2">
 Switch deciding which nutrient model to use in FATES.
+(Only relevant if FATES is on)
 </entry>
 
-<entry id="use_fates_spitfire" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on spitfire module for modeling fire (only relevant if FATES is being used).
+<entry id="fates_spitfire_mode" type="integer" category="physics"
+        group="clm_inparm" valid_values="0,1,2,3,4" value=".false.">
+Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
+Allowed values are:
+ 0 : Simulations of fire are off
+ 1 : use a global constant lightning rate found in fates_params.
+ 2 : use an external lightning dataset. 
+ 3 : use an external confirmed ignitions dataset (not available through standard CSEM dataset collection).
+ 4 : use external lightning and population datasets to simulate both natural and anthropogenic
+ignitions.
+(Only relevant if FATES is on)
+</entry>
+
+<entry id="use_fates_fixed_biogeog" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false."> 
+Toggle to turn on fixed biogeography mode
+(Only relevant if FATES is on)
 </entry>
 
 <entry id="use_fates_logging" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the logging module (only relevant if FATES is being used).
+Toggle to turn on the logging module
+(Only relevant if FATES is on)
 </entry>
 
 <entry id="use_fates_planthydro" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on plant hydraulics (only relevant if FATES is on).
-(use_fates_planthydro=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on plant hydraulics
+(Only relevant if FATES is on)
+</entry>
+
+<entry id="use_fates_cohort_age_tracking" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on cohort age tracking (by default FATES only tracks age of patches)
+(Only relevant if FATES is on).
 </entry>
 
 <entry id="use_fates_ed_st3" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on Static Stand Structure Mode (only relevant if FATES is being used).
-(use_fates_ed_st3=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+(Only relevant if FATES is on).
 </entry>
 
 <entry id="use_fates_ed_prescribed_phys" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on prescribed physiology (only relevant if FATES is being used).
+Toggle to turn on prescribed physiology
+(Only relevant if FATES is on).
 </entry>
 
 <entry id="use_fates_inventory_init" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on inventory initialization to startup FATES (only relevant if FATES is being used).
-(use_fates_inventory_init=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+Toggle to turn on inventory initialization to startup FATES
+(Only relevant if FATES is on).
 </entry>
 
 <entry id="fates_inventory_ctrl_filename" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname to the inventory initialization control file.
 (Required, if use_fates_inventory_init=T)
+(Only relevant if FATES is on).
 </entry>
 
 <entry id="use_luna" type="logical" category="physics"
@@ -716,6 +740,7 @@ constants for biogeochem modules
 <entry id="fates_paramfile" type="char*256" category="datasets"
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname datafile with fates parameters
+(Only relevant if FATES is on).
 </entry>
 
 <entry id="fsurdat" type="char*256"     category="datasets"

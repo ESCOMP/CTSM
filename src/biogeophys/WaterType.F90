@@ -1009,8 +1009,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
-       num_soilp, filter_soilp, &
-       num_allc, filter_allc)
+       num_soilp, filter_soilp,    &
+       num_allc, filter_allc,      &
+       num_nolakec, filter_nolakec)
     !
     ! !DESCRIPTION:
     ! Compute end-of-timestep summaries of water diagnostic terms
@@ -1022,6 +1023,8 @@ contains
     integer           , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer           , intent(in)    :: num_allc        ! number of columns in allc filter
     integer           , intent(in)    :: filter_allc(:)  ! filter for all columns
+    integer           , intent(in)    :: num_nolakec        ! number of no-lake filter
+    integer           , intent(in)    :: filter_nolakec(:)  ! filter for no-lake columns
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -1037,6 +1040,8 @@ contains
             filter_soilp = filter_soilp, &
             num_allc = num_allc, &
             filter_allc = filter_allc, &
+            num_nolakec = num_nolakec, &
+            filter_nolakec = filter_nolakec, &
             waterstate_inst = bulk_or_tracer%waterstate_inst, &
             waterflux_inst = bulk_or_tracer%waterflux_inst)
        end associate
