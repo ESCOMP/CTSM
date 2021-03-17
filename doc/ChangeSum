@@ -1,5 +1,11 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev027    sacks 03/15/2021 Update cime and other externals; includes switch to pio2
+  ctsm5.1.dev026    sacks 03/08/2021 Change f10 tests to use mg37 mask
+  ctsm5.1.dev025    sacks 02/23/2021 Refactor ozone code, and misc. small fixes
+  ctsm5.1.dev024   slevis 02/20/2021 Grid cell-level error check for H2O
+  ctsm5.1.dev023     erik 02/11/2021 Calculate leaf biomass for non-woody PFTS, and a few other small answer changes
+  ctsm5.1.dev022 glemieux 02/05/2021 Merge fates_main_api into ctsm master
   ctsm5.1.dev021     erik 01/12/2021 Add option for biomass heat storage (BHS) to clm5_1 physics
   ctsm5.1.dev020     erik 12/30/2020 Potential roundoff changes in preparation for bio-mass heat storage option
   ctsm5.1.dev019    sacks 12/19/2020 Fix ndep from coupler
