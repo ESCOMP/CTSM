@@ -272,6 +272,8 @@ contains
           cism_evolve = .true.
        else if (trim(cvalue) == '.false.') then
           cism_evolve = .false.
+       else
+          call shr_sys_abort(subname//'Could not determine cism_evolve value '//trim(cvalue))
        endif
     end if
 

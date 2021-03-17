@@ -12,8 +12,8 @@ module lnd_set_decomp_and_domain
   public :: lnd_set_decomp_and_domain_from_surfrd
 
   ! private member routines
-  public :: surfrd_get_globmask  ! Reads global land mask (needed for setting domain decomp)
-  public :: surfrd_get_grid      ! Read grid/ladnfrac data into domain (after domain decomp)
+  private :: surfrd_get_globmask  ! Reads global land mask (needed for setting domain decomp)
+  private :: surfrd_get_grid      ! Read grid/ladnfrac data into domain (after domain decomp)
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
