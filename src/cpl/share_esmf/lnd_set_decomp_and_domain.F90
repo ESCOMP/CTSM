@@ -832,6 +832,17 @@ contains
   !===============================================================================
   subroutine lnd_set_read_write_landmask(write_file, read_file, lndmask_glob, lndfrac_glob, gsize)
 
+    ! This subroutine is currently unused (as of 2021-03-17), but it may be needed in the
+    ! future. Its purpose is: Now that we get landmask and landfrac at runtime, from
+    ! mapping the ocean mask to the land grid, it's possible that landfrac will be
+    ! roundoff-level different with different processor counts. Mariana Vertenstein
+    ! hasn't seen this happen yet, but if it does, then we can use this subroutine to
+    ! solve this issue in tests that change processor count (ERP, PEM). I think Mariana's
+    ! intent was: in the first run, we would write landmask and landfrac to a landfrac.nc
+    ! file; then, in the second run (with different processor count), we would read that
+    ! file rather than doing the mapping again. This way, both runs of the ERP or PEM
+    ! test would use consistent landmask and landfrac values.
+
     use ncdio_pio , only : ncd_io, file_desc_t, ncd_pio_openfile, ncd_pio_closefile
     use ncdio_pio , only : ncd_defdim, ncd_defvar, ncd_enddef, ncd_inqdlen
     use ncdio_pio , only : ncd_int, ncd_double, ncd_pio_createfile
