@@ -30,7 +30,7 @@ module lnd_set_decomp_and_domain
 contains
 !===============================================================================
 
-  subroutine lnd_set_decomp_and_domain_from_readmesh(mode, vm, meshfile_lnd, meshfile_mask, mesh_ctsm, &
+  subroutine lnd_set_decomp_and_domain_from_readmesh(vm, meshfile_lnd, meshfile_mask, mesh_ctsm, &
        ni, nj, rc)
 
     use decompInitMod , only : decompInit_ocn, decompInit_lnd, decompInit_lnd3D
@@ -40,7 +40,6 @@ contains
     use clm_varctl    , only : use_soil_moisture_streams
 
     ! input/output variables
-    character(len=*)    , intent(in)    :: mode  ! lilac or nuopc mode
     type(ESMF_VM)       , intent(in)    :: vm
     character(len=*)    , intent(in)    :: meshfile_lnd
     character(len=*)    , intent(in)    :: meshfile_mask
