@@ -850,7 +850,8 @@ contains
        do coi = begCohort,endCohort
           gindex(coi) = coStart(gi) + ioff(gi)
           ioff(gi) = ioff(gi) + 1
-          if ( mod(coi, fates_maxElementsPerSite ) == 0 ) gi = gi + 1
+!scs jks  ! comment out FATES doesn't need
+          !if ( mod(coi, fates_maxElementsPerSite ) == 0 ) gi = gi + 1
        enddo
        locsize = endCohort-begCohort+1
        globsize = numCohort
