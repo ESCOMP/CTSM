@@ -10,13 +10,14 @@ module lnd_set_decomp_and_domain
   private ! except
 
   ! Module public routines
-  public :: lnd_set_decomp_and_domain_from_readmesh
-  public :: lnd_set_decomp_and_domain_from_createmesh
+  public :: lnd_set_decomp_and_domain_from_readmesh    ! nuopc/cmeps
+  public :: lnd_set_decomp_and_domain_from_createmesh  ! nuopc/cmeps
 
   ! Module private routines
   private :: lnd_get_global_dims
   private :: lnd_set_lndmask_from_maskmesh
   private :: lnd_set_lndmask_from_lndmesh
+  private :: lnd_set_lndmask_from_fatmlndfrc
   private :: lnd_set_ldomain_gridinfo_from_mesh
   private :: chkerr
   private :: pio_check_err
@@ -30,7 +31,7 @@ module lnd_set_decomp_and_domain
 contains
 !===============================================================================
 
-  subroutine lnd_set_decomp_and_domain_from_readmesh(vm, meshfile_lnd, meshfile_mask, mesh_ctsm, &
+  subroutine lnd_set_decomp_and_domain_from_readmesh(driver, vm, meshfile_lnd, meshfile_mask, mesh_ctsm, &
        ni, nj, rc)
 
     use decompInitMod , only : decompInit_ocn, decompInit_lnd, decompInit_lnd3D
@@ -40,11 +41,12 @@ contains
     use clm_varctl    , only : use_soil_moisture_streams
 
     ! input/output variables
+    character(len=*)    , intent(in)    :: driver ! cmeps or lilac
     type(ESMF_VM)       , intent(in)    :: vm
     character(len=*)    , intent(in)    :: meshfile_lnd
     character(len=*)    , intent(in)    :: meshfile_mask
     type(ESMF_Mesh)     , intent(out)   :: mesh_ctsm
-    integer             , intent(out)   :: ni,nj ! global grid dimensions
+    integer             , intent(out)   :: ni,nj  ! global grid dimensions
     integer             , intent(out)   :: rc
 
     ! local variables
@@ -88,21 +90,27 @@ contains
     mesh_lndinput = ESMF_MeshCreate(filename=trim(meshfile_lnd), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Read in mask meshfile if needed
-    if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
-       mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
+    if (trim(driver) == 'cmeps') then
+       ! Read in mask meshfile if needed
+       if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
+          mesh_maskinput = ESMF_MeshCreate(filename=trim(meshfile_mask), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
 
-    ! Determine lndmask_glob and lndfrac_glob
-    if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
-       ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
-       call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! Determine lndmask_glob and lndfrac_glob
+       if (trim(meshfile_mask) /= trim(meshfile_lnd)) then
+          ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
+          call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       else
+          ! obtain land mask from land mesh file - assume that land frac is identical to land mask
+          call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+    else if (trim(driver) == 'lilac') then
+       call lnd_set_lndmask_from_fatmlndfrc(lndmask_glob, lndfrac_glob, ni,nj)
     else
-       ! obtain land mask from land mesh file - assume that land frac is identical to land mask
-       call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, lndfrac_glob, rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call shr_sys_abort('driver '//trim(driver)//' is not supported, must be lilac or cmeps')
     end if
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
@@ -307,8 +315,8 @@ contains
        call pio_check_err(rcode, 'pio_get_var for area in file '//trim(domain_file))
        scol_area = scol_data(1)
 
-       ! reset ni and nj to be single point values 
-       ni = 1   
+       ! reset ni and nj to be single point values
+       ni = 1
        nj = 1
 
        ! determine mincornerCoord and maxcornerCoord neede to create ESMF grid
@@ -677,6 +685,95 @@ contains
   end subroutine lnd_set_lndmask_from_lndmesh
 
   !===============================================================================
+  subroutine lnd_set_lndmask_from_fatmlndfrc(mask, frac, ni, nj)
+
+    ! Read the surface dataset grid related information
+    ! This is used to set the domain decomposition - so global data is read here
+
+    use clm_varctl , only : fatmlndfrc
+    use fileutils  , only : getfil
+    use ncdio_pio  , only : ncd_io, ncd_pio_openfile, ncd_pio_closefile, ncd_inqfdims, file_desc_t
+    use abortutils , only : endrun
+    use shr_log_mod, only : errMsg => shr_log_errMsg
+
+    ! input/output variables
+    integer         , pointer       :: mask(:)   ! grid mask
+    real(r8)        , pointer       :: frac(:)   ! grid fraction
+    integer         , intent(out)   :: ni, nj    ! global grid sizes
+
+    ! local variables
+    logical               :: isgrid2d
+    integer               :: dimid,varid ! netCDF id's
+    integer               :: ns          ! size of grid on file
+    integer               :: n,i,j       ! index
+    integer               :: ier         ! error status
+    type(file_desc_t)     :: ncid        ! netcdf id
+    character(len=256)    :: varname     ! variable name
+    character(len=256)    :: locfn       ! local file name
+    logical               :: readvar     ! read variable in or not
+    integer , allocatable :: idata2d(:,:)
+    real(r8), allocatable :: rdata2d(:,:)
+    character(len=32) :: subname = 'lnd_set_mask_from_fatmlndfrc' ! subroutine name
+    !-----------------------------------------------------------------------
+
+    ! Open file
+    call getfil( fatmlndfrc, locfn, 0 )
+    call ncd_pio_openfile (ncid, trim(locfn), 0)
+
+    ! Determine dimensions and if grid file is 2d or 1d
+    call ncd_inqfdims(ncid, isgrid2d, ni, nj, ns)
+    if (masterproc) then
+       write(iulog,*)'lat/lon grid flag (isgrid2d) is ',isgrid2d
+    end if
+
+    if (isgrid2d) then
+       ! Grid is 2d
+       allocate(idata2d(ni,nj))
+       idata2d(:,:) = 1
+       call ncd_io(ncid=ncid, varname='mask', data=idata2d, flag='read', readvar=readvar)
+       if (readvar) then
+          do j = 1,nj
+             do i = 1,ni
+                n = (j-1)*ni + i
+                mask(n) = idata2d(i,j)
+             enddo
+          enddo
+       else
+          call endrun( msg=' ERROR: mask not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
+       end if
+       deallocate(idata2d)
+       allocate(rdata2d(ni,nj))
+       rdata2d(:,:) = 1._r8
+       call ncd_io(ncid=ncid, varname='frac', data=rdata2d, flag='read', readvar=readvar)
+       if (readvar) then
+          do j = 1,nj
+             do i = 1,ni
+                n = (j-1)*ni + i
+                frac(n) = rdata2d(i,j)
+             enddo
+          enddo
+       else
+          call endrun( msg=' ERROR: mask not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
+       end if
+       deallocate(rdata2d)
+    else
+       ! Grid is not 2d
+       call ncd_io(ncid=ncid, varname='mask', data=mask, flag='read', readvar=readvar)
+       if (.not. readvar) then
+          call endrun( msg=' ERROR: mask not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
+       end if
+       call ncd_io(ncid=ncid, varname='frac', data=frac, flag='read', readvar=readvar)
+       if (.not. readvar) then
+          call endrun( msg=' ERROR: frac not on fatmlndfrc file'//errMsg(sourcefile, __LINE__))
+       end if
+    end if
+
+    ! Close file
+    call ncd_pio_closefile(ncid)
+
+  end subroutine lnd_set_lndmask_from_fatmlndfrc
+
+  !===============================================================================
   subroutine lnd_set_ldomain_gridinfo_from_mesh(mesh, vm, gindex, begg, endg, isgrid2d, ni, nj, ldomain, rc)
 
     use domainMod  , only : domain_type, lon1d, lat1d
@@ -893,5 +990,6 @@ contains
     end if
 
   end subroutine lnd_set_read_write_landmask
+
 
 end module lnd_set_decomp_and_domain

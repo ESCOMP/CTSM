@@ -39,7 +39,7 @@ module lnd_comp_esmf
   use clm_driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
-  use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_readmesh
+  use lnd_set_decomp_and_domain, only :lnd_set_decomp_and_domain_from_readmesh
 
   implicit none
   private                         ! By default make data private except
@@ -339,11 +339,11 @@ contains
     !----------------------
     ! Initialize decomposition (ldecomp) and domain (ldomain) types and generate land mesh
     !----------------------
-    call ESMF_VMGetCurrent(vm, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    call lnd_set_decomp_and_domain_from_readmesh(vm=vm, &
-         meshfile_lnd=lnd_mesh_filename, meshfile_mask=lnd_mesh_filename, mesh_ctsm=lnd_mesh, ni=ni, nj=nj, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    ! TODO: generalize this so that a mask mesh is read in like for nuopc/cmeps
+    ! For now set the meshfile_mask equal to the model_meshfile
+    call lnd_set_decomp_and_domain_from_readmesh(driver='lilac', vm=vm, &
+         meshfile_lnd=lnd_mesh_filename, meshfile_mask=lnd_mesh_filename, &
+         mesh_ctsm=lnd_mesh, ni=ni, nj=nj, rc=rc)
 
     !--------------------------------
     ! Finish initializing ctsm
