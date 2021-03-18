@@ -1,4 +1,87 @@
 ===============================================================
+Tag name:  ctsm5.1.dev028
+Originator(s):  swensosc (Sean Swenson)
+Date:  Wed Mar 17 20:08:51 MDT 2021
+One-line Summary: Change limitation of top layer evaporation/sublimation
+
+Purpose and description of changes
+----------------------------------
+
+Sublimation from top soil layer and evaporation/sublimation from top
+snow layer needs to be limited to ensure moisture states do not become
+negative. The original formulation did not always work, so we added a
+new limitation to SoilFluxesMod.
+
+Also removes a limitation in SoilHydrologyMod that seemed not to
+conserve energy and should no longer be necessary with the reworked
+limitation in SoilFluxesMod.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1253 (h2osoi_ice can go significantly negative)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- The old flux limitation in SoilHydrologyMod has been replaced by a
+  truncation of roundoff-level values followed by a check that the final
+  state is non-negative. Although this check hasn't been triggered in
+  any of our testing, it's possible that we'll run into situations where
+  we need to relax the tolerance for this check.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated carefully, but expected to be larger than
+      roundoff/same climate
+    
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+	
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1282
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev027
 Originator(s):  sacks (Bill Sacks)
 Date:  Mon Mar 15 14:05:20 MDT 2021
