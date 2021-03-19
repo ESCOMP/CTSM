@@ -307,7 +307,7 @@ or tests listed individually on the command line (via the -t/--testname argument
                         help='Queue to which tests are submitted.\n'
                         'If not provided, uses machine default.')
 
-    parser.add_argument('--retry',
+    parser.add_argument('--retry', type=int,
                         help='Argument to create_test: Number of times to retry failed tests.\n'
                         'Default for this machine: {}'.format(
                             default_machine.create_test_retry))
