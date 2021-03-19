@@ -453,6 +453,8 @@ contains
           write(iulog,'(a,3(f10.5,2x))')' single column mode scol_lon/scol_lat/scol_frac is ',&
                scol_lon,scol_lat,scol_frac
        end if
+    else
+       single_column = .false.
     end if
 
     !----------------------------------------------------------------------------
