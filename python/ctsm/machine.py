@@ -3,9 +3,9 @@
 
 import logging
 from collections import namedtuple
+from CIME.utils import get_project  # pylint: disable=import-error
 from ctsm.joblauncher.job_launcher_factory import \
     create_job_launcher, JOB_LAUNCHER_NOBATCH
-from CIME.utils import get_project  # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
