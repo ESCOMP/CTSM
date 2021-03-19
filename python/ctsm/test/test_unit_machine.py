@@ -9,7 +9,7 @@ import os
 from ctsm import add_cime_to_path # pylint: disable=unused-import
 from ctsm import unit_testing
 
-from ctsm.machine import create_machine, get_possibly_overridden_baseline_dir
+from ctsm.machine import create_machine, get_possibly_overridden_mach_value
 from ctsm.machine_utils import get_user
 from ctsm.machine_defaults import MACHINE_DEFAULTS, MachineDefaults, QsubDefaults
 from ctsm.joblauncher.job_launcher_no_batch import JobLauncherNoBatch
@@ -23,7 +23,8 @@ from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_QSUB, JOB_LAUNCHE
 class TestCreateMachine(unittest.TestCase):
     """Tests of create_machine"""
 
-    def assertMachineInfo(self, machine, name, scratch_dir, baseline_dir, account):
+    def assertMachineInfo(self, machine, name, scratch_dir, baseline_dir, account,
+                          create_test_retry=0):
         """Asserts that the basic machine info is as expected.
 
         This does NOT dive down into the job launcher"""
@@ -31,6 +32,7 @@ class TestCreateMachine(unittest.TestCase):
         self.assertEqual(machine.scratch_dir, scratch_dir)
         self.assertEqual(machine.baseline_dir, baseline_dir)
         self.assertEqual(machine.account, account)
+        self.assertEqual(machine.create_test_retry, create_test_retry)
 
     def assertNoBatchInfo(self, machine, nice_level=None):
         """Asserts that the machine's launcher is of type JobLauncherNoBatch"""
@@ -62,6 +64,7 @@ class TestCreateMachine(unittest.TestCase):
                 scratch_dir=os.path.join(os.path.sep, 'glade', 'scratch', get_user()),
                 baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
                 account_required=True,
+                create_test_retry=2,
                 job_launcher_defaults={
                     JOB_LAUNCHER_QSUB: QsubDefaults(
                         queue='regular',
@@ -130,7 +133,8 @@ class TestCreateMachine(unittest.TestCase):
                                                         'scratch',
                                                         get_user()),
                                baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
-                               account='a123')
+                               account='a123',
+                               create_test_retry=2)
         self.assertQsubInfo(machine=machine,
                             queue='regular',
                             walltime='06:00:00',
@@ -152,7 +156,8 @@ class TestCreateMachine(unittest.TestCase):
                                name='cheyenne',
                                scratch_dir='/custom/path/to/scratch',
                                baseline_dir=os.path.join(os.path.sep, 'my', 'baselines'),
-                               account='a123')
+                               account='a123',
+                               create_test_retry=2)
         self.assertQsubInfo(machine=machine,
                             queue='custom_queue',
                             walltime='9:87:65',
@@ -161,29 +166,35 @@ class TestCreateMachine(unittest.TestCase):
                             extra_args='--custom args')
 
     # ------------------------------------------------------------------------
-    # Tests of get_possibly_overridden_baseline_dir
+    # Tests of get_possibly_overridden_mach_value
     # ------------------------------------------------------------------------
 
     def test_baselineDir_overridden(self):
-        """Tests get_possibly_overridden_baseline_dir when baseline_dir is provided"""
+        """Tests get_possibly_overridden_mach_value when baseline_dir is provided"""
         defaults = self.create_defaults()
         machine = create_machine('cheyenne', defaults, account='a123')
-        baseline_dir = get_possibly_overridden_baseline_dir(machine, baseline_dir='mypath')
+        baseline_dir = get_possibly_overridden_mach_value(machine,
+                                                          varname='baseline_dir',
+                                                          value='mypath')
         self.assertEqual(baseline_dir, 'mypath')
 
     def test_baselineDir_default(self):
-        """Tests get_possibly_overridden_baseline_dir when baseline_dir is not provided"""
+        """Tests get_possibly_overridden_mach_value when baseline_dir is not provided"""
         defaults = self.create_defaults()
         machine = create_machine('cheyenne', defaults, account='a123')
-        baseline_dir = get_possibly_overridden_baseline_dir(machine, baseline_dir=None)
+        baseline_dir = get_possibly_overridden_mach_value(machine,
+                                                          varname='baseline_dir',
+                                                          value=None)
         self.assertEqual(baseline_dir, os.path.join(os.path.sep, 'my', 'baselines'))
 
     def test_baselineDir_noDefault(self):
-        """Tests get_possibly_overridden_baseline_dir when baseline_dir is not provided
+        """Tests get_possibly_overridden_mach_value when baseline_dir is not provided
         and there is no default"""
         machine = create_machine('unknown_test_machine', MACHINE_DEFAULTS,
                                  account='a123')
-        baseline_dir = get_possibly_overridden_baseline_dir(machine, baseline_dir=None)
+        baseline_dir = get_possibly_overridden_mach_value(machine,
+                                                          varname='baseline_dir',
+                                                          value=None)
         self.assertIsNone(baseline_dir)
 
 if __name__ == '__main__':
