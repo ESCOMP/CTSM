@@ -140,7 +140,7 @@ contains
     ! CLM namelist settings
 
     namelist /clm_inparm/ &
-         finidat, nrevsn, &
+         fatmlndfrc, finidat, nrevsn, &
          finidat_interp_dest, &
          use_init_interp, compname
 
@@ -649,6 +649,7 @@ contains
     call mpi_bcast (finidat_interp_source, len(finidat_interp_source), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (finidat_interp_dest, len(finidat_interp_dest), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsurdat, len(fsurdat), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (paramfile, len(paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics, len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowaging,  len(fsnowaging),   MPI_CHARACTER, 0, mpicom, ier)
@@ -890,6 +891,11 @@ contains
        write(iulog,*) '   fsurdat, surface dataset not set'
     else
        write(iulog,*) '   surface data   = ',trim(fsurdat)
+    end if
+    if (fatmlndfrc == ' ') then
+       write(iulog,*) '   fatmlndfrc not set, setting frac/mask to 1'
+    else
+       write(iulog,*) '   land frac data = ',trim(fatmlndfrc)
     end if
     write(iulog,*) '   Number of ACTIVE PFTS (0 means input pft data NOT collapsed to n_dom_pfts) =', n_dom_pfts
     write(iulog,*) '   Number of ACTIVE LANDUNITS (0 means input landunit data NOT collapsed to n_dom_landunits) =', n_dom_landunits

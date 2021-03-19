@@ -61,7 +61,6 @@ def buildnml(case, caseroot, compname):
     run_reftod = case.get_value("RUN_REFTOD")
     glc_nec = case.get_value("GLC_NEC")
     mask = case.get_value("MASK_GRID")
-    driver = case.get_value("COMP_INTERFACE").lower()
 
     # -----------------------------------------------------
     # Set ctsmconf
@@ -153,10 +152,7 @@ def buildnml(case, caseroot, compname):
     
     inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")
     
-    if (driver == 'mct'):
-        lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
-    else:
-        lndfrac_file = 'UNSET'
+    lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
     
     config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
 

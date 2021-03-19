@@ -1781,19 +1781,15 @@ sub setup_logic_lnd_frac {
       $log->fatal_error("Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE " .
                   "env variables) AND fatmlndfrac on namelist");
     }
-    if ($opts->{$var} ne 'UNSET') {
-        my $lnd_frac = SetupTools::expand_xml_var( $opts->{$var}, $envxml_ref);
-        add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fatmlndfrc','val'=>$lnd_frac );
-    }
+    my $lnd_frac = SetupTools::expand_xml_var( $opts->{$var}, $envxml_ref);
+    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fatmlndfrc','val'=>$lnd_frac );
   }
 
-  if ($opts->{$var} ne 'UNSET') { 
-      # Get the fraction file
-      if (defined $nl->get_value('fatmlndfrc')) {
-          # do nothing - use value provided by config_grid.xml and clm.cpl7.template
-      } else {
-          $log->fatal_error("fatmlndfrc was NOT sent into CLM build-namelist.");
-      }
+  # Get the fraction file
+  if (defined $nl->get_value('fatmlndfrc')) {
+    # do nothing - use value provided by config_grid.xml and clm.cpl7.template
+  } else {
+    $log->fatal_error("fatmlndfrc was NOT sent into CLM build-namelist.");
   }
 }
 
@@ -3936,10 +3932,6 @@ sub write_output_files {
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm
                cnprecision_inparm clm_glacier_behavior crop irrigation_inparm
                surfacealbedo_inparm water_tracers_inparm);
-
-  if ($opts->{'lnd_frac'} ne 'UNSET') {
-      push @groups, "clm_lndfrac";
-  }
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);
