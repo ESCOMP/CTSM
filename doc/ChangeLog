@@ -1,4 +1,86 @@
 ===============================================================
+Tag name:  ctsm5.1.dev029
+Originator(s):  mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date:  Thu Mar 18 21:21:21 MDT 2021
+One-line Summary: Rework domain initialization for nuopc
+
+Purpose and description of changes
+----------------------------------
+
+Total rework of land domain initialization - no longer need domain files
+to be created with NUOPC cap.
+
+Also, significant performance improvements with the NUOPC cap.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- We still need to figure out how to apply this to LILAC: for now, LILAC
+  is still using the old method (as is MCT): reading domain information
+  from fatmlndfrac
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for NUOPC and
+limited changes for LILAC
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NUOPC, and limited changes for LILAC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+      For nuopc: changes in area (relatively large differences in the
+      f10 test in the test suite, but Mariana saw only very small
+      changes in an f09 case), landfrac; these influence l2r fields,
+      which in turn influence TWS and methane fields.
+      
+      For lilac: just changes in area
+      
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? Examination of cprnc diffs.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- rtm: rtm1_0_74 -> rtm1_0_75
+- mosart: branch_tag/pio2.n01_mosart1_0_38 -> mosart1_0_41
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1258
+- https://github.com/ESCOMP/CTSM/pull/1236 (closed and replaced by 1258)
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev028
 Originator(s):  swensosc (Sean Swenson)
 Date:  Wed Mar 17 20:08:51 MDT 2021
