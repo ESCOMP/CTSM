@@ -283,11 +283,11 @@ contains
        write(iulog,'(a   )')' atm component                 = '//trim(atm_model)
        write(iulog,'(a   )')' rof component                 = '//trim(rof_model)
        write(iulog,'(a   )')' glc component                 = '//trim(glc_model)
-       write(iulog,'(a,l )')' atm_prognostic                = ',atm_prognostic
-       write(iulog,'(a,l )')' rof_prognostic                = ',rof_prognostic
-       write(iulog,'(a,l )')' glc_present                   = ',glc_present
+       write(iulog,'(a,L1 )')' atm_prognostic                = ',atm_prognostic
+       write(iulog,'(a,L1 )')' rof_prognostic                = ',rof_prognostic
+       write(iulog,'(a,L1 )')' glc_present                   = ',glc_present
        if (glc_present) then
-          write(iulog,'(a,l)')' cism_evolve                    = ',cism_evolve
+          write(iulog,'(a,L1)')' cism_evolve                    = ',cism_evolve
        end if
        write(iulog,'(a   )')' flds_scalar_name              = '//trim(flds_scalar_name)
        write(iulog,'(a,i8)')' flds_scalar_num               = ',flds_scalar_num
