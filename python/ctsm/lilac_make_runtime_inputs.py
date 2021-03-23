@@ -8,11 +8,11 @@ import logging
 from configparser import ConfigParser
 from configparser import NoSectionError, NoOptionError
 
+from CIME.buildnml import create_namelist_infile # pylint: disable=import-error
+
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
-
-from CIME.buildnml import create_namelist_infile # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
