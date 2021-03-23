@@ -15,7 +15,7 @@ module lnd2atmMod
   use clm_varctl           , only : iulog, use_lch4
   use seq_drydep_mod       , only : n_drydep, drydep_method, DD_XLND
   use decompMod            , only : bounds_type
-  use subgridAveMod        , only : p2g, c2g
+  use subgridAveMod        , only : p2g, c2g, l2g
   use filterColMod         , only : filter_col_type, col_filter_from_logical_array
   use lnd2atmType          , only : lnd2atm_type
   use atm2lndType          , only : atm2lnd_type
@@ -346,6 +346,22 @@ contains
          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
+    call l2g( bounds, &
+         water_inst%waterfluxbulk_inst%qstreamflow_lun (bounds%begl:bounds%endl), &
+         water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc   (bounds%begg:bounds%endg), &
+         l2g_scale_type='unity' )
+    ! convert from m3/s to mm/s (discharge to flux)
+    do g = bounds%begg, bounds%endg
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
+            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
+            * 1.e3_r8 / (1.e6_r8 * grc%area(g)) 
+    enddo
+    
+    ! for now, set surface runoff to zero and subsurface runoff to streamflow
+    ! instead of modifying src/cpl/*/lnd_import_export.F90
+    water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg) = 0._r8
+    water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg)
+    
     do c = bounds%begc, bounds%endc
        if (col%active(c)) then
           ! It's not entirely appropriate to put qflx_liq_from_ice_col into

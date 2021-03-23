@@ -1855,6 +1855,7 @@ contains
      !
      ! !USES:
      use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
+     use LandunitType     , only : lun                
      use landunit_varcon  , only : istsoil
      !
      ! !ARGUMENTS:
@@ -1869,7 +1870,7 @@ contains
      !
      ! !LOCAL VARIABLES:
      character(len=32) :: subname = 'PerchedLateralFlowHillslope' ! subroutine name
-     integer  :: c,j,fc,i,g                              ! indices
+     integer  :: c,j,fc,i,l,g                              ! indices
      real(r8) :: dtime                                   ! land model time step (sec)
      real(r8) :: drainage_tot
      real(r8) :: drainage_layer
@@ -1880,6 +1881,7 @@ contains
      real(r8) :: wtsub
      real(r8) :: q_perch
      real(r8) :: q_perch_max
+     real(r8) :: stream_water_depth               ! depth of water in stream channel
 
      character(len=32) :: transmissivity_method = 'layersum'
 !     character(len=32) :: baseflow_method = 'kinematic'
@@ -1905,9 +1907,8 @@ contains
           frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Input:  [real(r8) (:)   ] frost table depth (m)                             
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Input:  [real(r8) (:)   ] perched water table depth (m)                     
-          
-          tdepth             =>    wateratm2lndbulk_inst%tdepth_grc      , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
-          tdepth_bankfull    =>    wateratm2lndbulk_inst%tdepthmax_grc   , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
+          stream_water_volume =>    waterstatebulk_inst%stream_water_lun , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
+
 
           qflx_drain_perched =>    waterfluxbulk_inst%qflx_drain_perched_col , & ! Output: [real(r8) (:)   ] perched wt sub-surface runoff (mm H2O /s)         
 
@@ -1942,7 +1943,7 @@ contains
        ! compute drainage from perched saturated region
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
-
+          l = col%landunit(c)
           qflx_drain_perched(c)     = 0._r8
           qflx_drain_perched_out(c) = 0._r8
           qflx_drain_perched_vol(c) = 0._r8
@@ -1952,7 +1953,7 @@ contains
              if (lun%itype(col%landunit(c)) == istsoil) then 
 
                 ! calculate head gradient
-                g = col%gridcell(c)
+
                 ! kinematic wave approximation
                 if (baseflow_method == 'kinematic') then
                    dgrad = col%hill_slope(c)
@@ -1964,16 +1965,19 @@ contains
                            - (col%hill_elev(col%cold(c))-zwt_perched(col%cold(c)))
                       dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
                    else
+                      stream_water_depth = stream_water_volume(l) &
+                           /lun%stream_channel_length(l)/lun%stream_channel_width(l)
+
                       ! flow between channel and lowest column
                       ! bankfull height is defined to be zero
                       dgrad = (col%hill_elev(c)-zwt_perched(c)) &
                            ! ignore overbankfull storage
-                           - min(max((tdepth(g) - tdepth_bankfull(g)), &
+                           - min(max((stream_water_depth - lun%stream_channel_depth(l)), &
                            (col%hill_elev(c)-frost_table(c))),0._r8)
 
                       dgrad = dgrad / (col%hill_distance(c))
                       ! dgrad cannot be negative when channel is empty
-                      if (tdepth(g) <= 0._r8) then
+                      if (stream_water_depth <= 0._r8) then
                          dgrad = max(dgrad, 0._r8)
                       endif
                    endif
@@ -2013,7 +2017,7 @@ contains
                    endif
                 else
                    ! transmissivity of losing stream (c_src == ispval)
-                   transmis = k_anisotropic*(1.e-3_r8*hksat(c,k_perch(c_dst)))*tdepth(g)
+                   transmis = k_anisotropic*(1.e-3_r8*hksat(c,k_perch(c_dst)))*stream_water_depth
                 endif
 
                 qflx_drain_perched_vol(c) = transmis*col%hill_width(c)*dgrad
@@ -2583,6 +2587,7 @@ contains
      logical  :: no_lateral_flow = .false.
      real(r8) :: transmis                         ! transmissivity
      real(r8) :: dgrad                            ! hydraulic head gradient
+     real(r8) :: stream_water_depth               ! depth of water in stream channel
      real(r8), parameter :: n_baseflow = 1        ! drainage power law exponent
      real(r8), parameter :: k_anisotropic = 1._r8 ! anisotropy scalar
      real(r8) :: qflx_latflow_out_vol(bounds%begc:bounds%endc) 
@@ -2611,9 +2616,6 @@ contains
           qflx_latflow_in    =>    waterfluxbulk_inst%qflx_latflow_in_col, & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
           qdischarge         =>    waterfluxbulk_inst%qdischarge_col     , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
 
-          tdepth             =>    wateratm2lndbulk_inst%tdepth_grc      , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
-          tdepth_bankfull    =>    wateratm2lndbulk_inst%tdepthmax_grc   , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
-
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           c_param            =>    soilhydrology_inst%c_param_col        , & ! Input:  [real(r8) (:)   ] baseflow exponent (Qb)                             
           Dsmax              =>    soilhydrology_inst%dsmax_col          , & ! Input:  [real(r8) (:)   ] max. velocity of baseflow (mm/day)
@@ -2630,6 +2632,7 @@ contains
           qcharge            =>    soilhydrology_inst%qcharge_col        , & ! Input:  [real(r8) (:)   ] aquifer recharge rate (mm/s)                      
           origflag           =>    soilhydrology_inst%origflag           , & ! Input:  logical
           h2osfcflag         =>    soilhydrology_inst%h2osfcflag         , & ! Input:  logical
+          stream_water_volume =>    waterstatebulk_inst%stream_water_lun     , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
           
           qflx_snwcp_liq     =>    waterfluxbulk_inst%qflx_snwcp_liq_col     , & ! Output: [real(r8) (:)   ] excess rainfall due to snow capping (mm H2O /s) [+]
           qflx_ice_runoff_xs =>    waterfluxbulk_inst%qflx_ice_runoff_xs_col , & ! Output: [real(r8) (:)   ] solid runoff from excess ice in soil (mm H2O /s) [+]
@@ -2702,6 +2705,7 @@ contains
       
       do fc = 1, num_hillslope
          c = filter_hillslopec(fc)
+         l = col%landunit(c)
          g = col%gridcell(c)
          
          ! kinematic wave approximation
@@ -2716,16 +2720,18 @@ contains
                     - (col%hill_elev(col%cold(c))-zwt(col%cold(c)))
                dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
             else
+               stream_water_depth = stream_water_volume(l) &
+                    /lun%stream_channel_length(l)/lun%stream_channel_width(l)
+               
                ! flow between channel and lowest column
                ! bankfull height is defined to be zero
                dgrad = (col%hill_elev(c)-zwt(c)) &
-                    !                     - (tdepth(g) - tdepth_bankfull(g))
                     ! ignore overbankfull storage
-                    - min((tdepth(g) - tdepth_bankfull(g)),0._r8)
+                    - min((stream_water_depth - lun%stream_channel_depth(l)),0._r8)
                
                dgrad = dgrad / (col%hill_distance(c))
                ! dgrad cannot be negative when channel is empty
-               if (tdepth(g) <= 0._r8) then
+               if (stream_water_depth <= 0._r8) then
                   dgrad = max(dgrad, 0._r8)
                endif
                ! add vertical drainage for losing streams
@@ -2772,7 +2778,7 @@ contains
             endif
          else
             ! transmissivity of losing stream (c_src == ispval)
-            transmis = (1.e-3_r8*ice_imped(c,jwt(c)+1)*hksat(c,jwt(c)+1))*tdepth(g)
+            transmis = (1.e-3_r8*ice_imped(c,jwt(c)+1)*hksat(c,jwt(c)+1))*stream_water_depth
          endif
          ! adjust transmissivity by 'anisotropy factor'
          transmis = k_anisotropic*transmis
@@ -2785,9 +2791,13 @@ contains
          ! include ice impedance in transmissivity
          qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
          
-         ! currently this is redundant to above
-         qdischarge(c) = qflx_latflow_out_vol(c)
-         
+         ! qdischarge from lowest column is qflx_latflow_out_vol
+         ! scaled by total area of column in gridcell divided by column area
+         if (col%cold(c) == ispval) then
+            qdischarge(c) = qflx_latflow_out_vol(c) &
+                 *(grc%area(g)*1.e6*col%wtgcell(c)/col%hill_area(c))
+         endif
+
          ! convert volumetric flow to equivalent flux
          qflx_latflow_out(c) = 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(c)
          

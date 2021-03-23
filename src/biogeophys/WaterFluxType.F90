@@ -10,7 +10,7 @@ module WaterFluxType
   use clm_varpar     , only : nlevsno, nlevsoi
   use clm_varcon     , only : spval
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
@@ -26,7 +26,7 @@ module WaterFluxType
 
      class(water_info_base_type), pointer :: info
 
-     ! water fluxes are in units or mm/s
+     ! water fluxes are in units of mm/s
 
      real(r8), pointer :: qflx_through_snow_patch  (:)   ! patch canopy throughfall of snow (mm H2O/s)
      real(r8), pointer :: qflx_through_liq_patch  (:)    ! patch canopy throughfal of liquid (rain+irrigation) (mm H2O/s)
@@ -75,6 +75,7 @@ module WaterFluxType
      real(r8), pointer :: qflx_latflow_in_col      (:)   ! col hillslope lateral flow input (mm/s) 
      real(r8), pointer :: qflx_latflow_out_col     (:)   ! col hillslope lateral flow output (mm/s) 
      real(r8), pointer :: qdischarge_col           (:)   ! col hillslope discharge (m3/s)
+     real(r8), pointer :: qstreamflow_lun          (:)   ! lun stream discharge (m3/s)
      real(r8), pointer :: qflx_drain_perched_col   (:)   ! col sub-surface runoff from perched wt (mm H2O /s)                                                                                                      
      real(r8), pointer :: qflx_top_soil_col        (:)   ! col net water input into soil from top (mm/s)
      real(r8), pointer :: qflx_floodc_col          (:)   ! col flood water flux at column level
@@ -290,6 +291,9 @@ contains
     call AllocateVar1d(var = this%qdischarge_col, name = 'qdischarge_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qstreamflow_lun, name = 'qstreamflow_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_LANDUNIT)
     call AllocateVar1d(var = this%qflx_top_soil_col, name = 'qflx_top_soil_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
@@ -406,6 +410,7 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
+    integer           :: begl, endl
     integer           :: begg, endg
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
@@ -510,6 +515,15 @@ contains
          avgflag='A', &
          long_name=this%info%lname('hillslope discharge from column'), &
          ptr_col=this%qdischarge_col, c2l_scale_type='urbanf')
+
+    this%qstreamflow_lun(begl:endl) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('QSTREAMFLOW'),  &
+         units='m3/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('streamflow discharge'), &
+         l2g_scale_type='veg', &
+         ptr_lunit=this%qstreamflow_lun)
 
     this%qflx_drain_perched_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -894,7 +908,12 @@ contains
           this%qdischarge_col(c) = 0._r8
        end if
     end do
-
+    do l = bounds%begl, bounds%endl
+       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+          this%qstreamflow_lun(l) = 0._r8
+       end if
+    end do
+          
   end subroutine InitCold
 
   !------------------------------------------------------------------------

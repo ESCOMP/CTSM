@@ -23,7 +23,6 @@ module HydrologyDrainageMod
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake
   use LandunitType      , only : lun                
   use ColumnType        , only : col   
-  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -60,6 +59,8 @@ contains
     use clm_time_manager , only : get_step_size_real, get_nstep
     use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, PerchedLateralFlowHillslope, LateralFlowPowerLaw, LateralFlowHillslope
     use SoilWaterMovementMod , only : use_aquifer_layer
+    use HillslopeHydrologyMod, only : streamflow_manning, HillslopeStreamOutflow, HillslopeUpdateStreamWater
+    
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -80,9 +81,9 @@ contains
     type(soilstate_type)     , intent(inout) :: soilstate_inst
     type(waterstatebulk_type)    , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)    , intent(inout) :: waterdiagnosticbulk_inst
-    type(waterbalance_type)    , intent(inout) :: waterbalancebulk_inst
+    type(waterbalance_type)      , intent(inout) :: waterbalancebulk_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
-    type(wateratm2lndbulk_type)     , intent(inout) :: wateratm2lndbulk_inst
+    type(wateratm2lndbulk_type)  , intent(inout) :: wateratm2lndbulk_inst
     type(glacier_smb_type)   , intent(in)    :: glacier_smb_inst
     !
     ! !LOCAL VARIABLES:
@@ -156,6 +157,15 @@ contains
                  soilhydrology_inst, soilstate_inst, &
                  waterstatebulk_inst, waterfluxbulk_inst, &
                  wateratm2lndbulk_inst)
+
+            call HillslopeStreamOutflow(bounds,&
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 streamflow_method=streamflow_manning)
+
+            call HillslopeUpdateStreamWater(bounds, &
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 wateratm2lndbulk_inst)
+            
          else
             call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
                  num_urbanc, filter_urbanc,&
