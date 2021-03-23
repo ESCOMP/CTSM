@@ -310,6 +310,14 @@ contains
          interpinic_flag='skip', readvar=readvar, data=temp2d_r)
     deallocate(temp2d_r)
 
+    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd))
+    temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd) = col%dz(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd)
+    call restartvar(ncid=ncid, flag=flag, varname='DZSOI', xtype=ncd_double,  &
+         dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true., &
+         long_name='soil layer thickness', units='m', &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_r)
+    deallocate(temp2d_r)
+
     deallocate(rcarr, icarr)
 
     !------------------------------------------------------------------
@@ -420,6 +428,17 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z_p', xtype=ncd_double, &
          dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='layer depth, excluding snow layers, patch-level', units='m', &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_r)
+    deallocate(temp2d_r)
+
+    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevmaxurbgrnd))
+    do p=bounds%begp,bounds%endp
+       c = patch%column(p)
+       temp2d_r(p, 1:nlevmaxurbgrnd) = col%dz(c, 1:nlevmaxurbgrnd)
+    end do
+    call restartvar(ncid=ncid, flag=flag, varname='DZSOI_p', xtype=ncd_double, &
+         dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
+         long_name='soil layer thickness, patch-level', units='m', &
          interpinic_flag='skip', readvar=readvar, data=temp2d_r)
     deallocate(temp2d_r)
 
@@ -536,21 +555,6 @@ contains
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%zi(bounds%begc:bounds%endc,-nlevsno:-1) = temp2d(bounds%begc:bounds%endc,-nlevsno:-1) 
-    end if
-    deallocate(temp2d)
-
-    ! Soil column variables
-
-    allocate(temp2d(bounds%begc:bounds%endc,1:nlevmaxurbgrnd))
-    if (flag == 'write') then
-       temp2d(bounds%begc:bounds%endc,1:nlevmaxurbgrnd) = col%dz(bounds%begc:bounds%endc,1:nlevmaxurbgrnd)
-    end if
-    call restartvar(ncid=ncid, flag=flag, varname='DZSOI', xtype=ncd_double,  &
-         dim1name='column', dim2name='levgrnd', switchdim=.true., lowerb2=1, upperb2=nlevmaxurbgrnd, &
-         long_name='soil layer thickness', units='m', &
-         interpinic_flag='skip', readvar=readvar, data=temp2d)
-    if (flag == 'read') then
-       col%dz(bounds%begc:bounds%endc,1:nlevmaxurbgrnd) = temp2d(bounds%begc:bounds%endc,1:nlevmaxurbgrnd)
     end if
     deallocate(temp2d)
 

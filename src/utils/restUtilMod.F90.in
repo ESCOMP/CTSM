@@ -47,6 +47,24 @@ module restUtilMod
   integer,parameter, public :: iflag_noswitchdim = 0
   integer,parameter, public :: iflag_switchdim   = 1
 
+  ! iflag_no_scale_by_thickness => init_interp WILL NOT scale these soil
+  !   variables by soil layer thickness. This is the default option.
+  !   Currently these variables get interpolated linearly and
+  !   without weighting by soil layer thickness.
+  ! iflag_scale_by_thickness => init_interp WILL scale these soil variables
+  !   by soil layer thickness to interpolate correctly from
+  !   the soil profile present in the initial/restart file to the soil profile
+  !   used by the model. For an example of setting this option to .true.,
+  !   see H2OSOI_LIQ in subroutine Restart in WaterStateType.F90.
+  !   Soil variables of so called extensive properties require this
+  !   scaling for correct interpolation. Extensive properties depend on the
+  !   sample size. H2OSOI_LIQ with units of kg/m2 contains fewer kg of
+  !   water in thinner layers than in thicker layers.
+  !   Scaling the quantity by layer thickness contributes the correct amount
+  !   of water by adding rather than averaging amounts during interpolation.
+  !   Not scaling by thickness results in underestimated soil water when
+  !   interpolating from a finer to a coarser soil profile and
+  !   overestimated soil water in the opposite case.
   integer,parameter, public :: iflag_no_scale_by_thickness = 0
   integer,parameter, public :: iflag_scale_by_thickness = 1
 
