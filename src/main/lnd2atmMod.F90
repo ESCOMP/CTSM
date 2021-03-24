@@ -159,6 +159,7 @@ contains
     !
     ! !USES:
     use ch4varcon  , only : ch4offline
+    use clm_varctl , only : use_hillslope
     !
     ! !ARGUMENTS:
     type(bounds_type)           , intent(in)    :: bounds  
@@ -350,7 +351,8 @@ contains
          water_inst%waterfluxbulk_inst%qstreamflow_lun (bounds%begl:bounds%endl), &
          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc   (bounds%begg:bounds%endg), &
          l2g_scale_type='unity' )
-    ! convert from m3/s to mm/s (discharge to flux)
+    
+    ! convert streamflow from m3/s to mm/s (discharge to flux)
     do g = bounds%begg, bounds%endg
        water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
             water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
@@ -359,8 +361,10 @@ contains
     
     ! for now, set surface runoff to zero and subsurface runoff to streamflow
     ! instead of modifying src/cpl/*/lnd_import_export.F90
-    water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg) = 0._r8
-    water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg)
+    if(use_hillslope) then 
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg) = 0._r8
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg)
+    endif
     
     do c = bounds%begc, bounds%endc
        if (col%active(c)) then

@@ -375,7 +375,7 @@ contains
           
           do nh = 1, nhillslope
              if(hillslope_area(nh) > 0._r8) then
-                nhill_per_landunit(nh) = grc%area(g)*1.e6*lun%wtgcell(l) &
+                nhill_per_landunit(nh) = grc%area(g)*1.e6_r8*lun%wtgcell(l) &
                      *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
              endif
           enddo
@@ -399,7 +399,7 @@ contains
           if (sum(hillslope_area) == 0._r8) then
              do c = lun%coli(l), lun%colf(l)
                 nh = col%hillslope_ndx(c)
-                col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6 ! km2 to m2
+                col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6_r8 ! km2 to m2
                 col%hill_distance(c) = sqrt(col%hill_area(c)) &
                      *((c-lun%coli(l))/ncol_per_hillslope(nh))
                 col%hill_width(c)    = sqrt(col%hill_area(c))
@@ -424,7 +424,7 @@ contains
              endif
              check_weight = check_weight + col%wtlunit(c)
           enddo
-          if (abs(1._r8 - check_weight) > 1.e-6) then 
+          if (abs(1._r8 - check_weight) > 1.e-6_r8) then 
              write(iulog,*) 'col%wtlunit does not sum to 1: ', check_weight
              write(iulog,*) 'weights: ', col%wtlunit(lun%coli(l):lun%colf(l))
              write(iulog,*) ' '
@@ -1016,6 +1016,7 @@ contains
 
     integer               :: c, l, g, i, j
     real(r8) :: qflx_surf_vol                           ! volumetric surface runoff (m3/s)
+    real(r8) :: qflx_drain_perched_vol                  ! volumetric perched water table runoff (m3/s)
     real(r8) :: dtime                                   ! land model time step (sec)
 
     character(len=*), parameter :: subname = 'HillslopeUpdateStreamWater'
@@ -1025,7 +1026,9 @@ contains
          stream_water_volume     =>    waterstatebulk_inst%stream_water_lun    , & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
          qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun      , & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
          qdischarge              =>    waterfluxbulk_inst%qdischarge_col       , & ! Input: [real(r8) (:)   ]  discharge from columns (m3/s)
-         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col          & ! Output: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
+         qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col, & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
+         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        , & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
+         stream_water_depth      =>    waterstatebulk_inst%stream_water_depth_lun & ! Output:  [real(r8) (:)   ] stream water depth (m)
          )
 
        ! Get time step
@@ -1036,18 +1039,21 @@ contains
           
           if(lun%itype(l) == istsoil) then            
              do c = lun%coli(l), lun%colf(l)
-                qflx_surf_vol = qflx_surf(c)*1.e-3 &
-                     *(grc%area(g)*1.e6*col%wtgcell(c))
+                qflx_surf_vol = qflx_surf(c)*1.e-3_r8 &
+                     *(grc%area(g)*1.e6_r8*col%wtgcell(c))
+                qflx_drain_perched_vol = qflx_drain_perched(c)*1.e-3_r8 &
+                     *(grc%area(g)*1.e6_r8*col%wtgcell(c))
                 stream_water_volume(l) = stream_water_volume(l) &
-                     + (qdischarge(c) + qflx_surf_vol) * dtime
+                     + (qdischarge(c) + qflx_drain_perched_vol &
+                     + qflx_surf_vol) * dtime
              enddo
              stream_water_volume(l) = stream_water_volume(l) &
                   - qstreamflow(l) * dtime
+             
+             stream_water_depth(l) = stream_water_volume(l) &
+                  /lun%stream_channel_length(l) &
+                  /lun%stream_channel_width(l)
 
-             write(iulog,*) 'checktdepth2: ',stream_water_volume(l),qstreamflow(l)
-             write(iulog,*) 'checktdepth3: ',lun%stream_channel_length(l), &
-                  lun%stream_channel_width(l),lun%stream_channel_depth(l)
-             write(iulog,*) ' '
           endif
        enddo
       

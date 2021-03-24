@@ -52,9 +52,9 @@ module WaterStateType
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
      ! Hillslope stream variables
-     real(r8), pointer :: stream_water_lun       (:)   ! landunit water in the streams (m3)
+     real(r8), pointer :: stream_water_lun       (:)   ! landunit volume of water in the streams (m3)
+     real(r8), pointer :: stream_water_depth_lun (:)   ! landunit depth of water in the streams (m3)
 
-     
    contains
 
      procedure, public  :: Init
@@ -157,6 +157,9 @@ contains
     call AllocateVar1d(var = this%stream_water_lun, name = 'stream_water_lun', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_LANDUNIT)
+    call AllocateVar1d(var = this%stream_water_depth_lun, name = 'stream_water_depth_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_LANDUNIT)
 
   end subroutine InitAllocate
 
@@ -169,6 +172,8 @@ contains
     ! !USES:
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use clm_varctl     , only : use_soil_moisture_streams
+    use GridcellType   , only : grc  
+
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
@@ -281,8 +286,15 @@ contains
        this%stream_water_lun(begl:endl) = spval
        call hist_addfld1d (fname=this%info%fname('STREAM_WATER_VOLUME'),  units='m3',  &
             avgflag='A', &
-            long_name=this%info%lname('water in stream channel (hillslope hydrology only)'), &
+            long_name=this%info%lname('volume of water in stream channel (hillslope hydrology only)'), &
             ptr_lunit=this%stream_water_lun, l2g_scale_type='veg',  default='inactive')
+
+       this%stream_water_depth_lun(begl:endl) = spval
+       call hist_addfld1d (fname=this%info%fname('STREAM_WATER_DEPTH'),  units='m',  &
+            avgflag='A', &
+            long_name=this%info%lname('depth of water in stream channel (hillslope hydrology only)'), &
+            ptr_lunit=this%stream_water_depth_lun, l2g_scale_type='veg',  default='inactive')
+       
     end if
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
