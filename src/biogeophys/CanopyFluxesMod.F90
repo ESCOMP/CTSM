@@ -450,6 +450,7 @@ contains
          slatop                 => pftcon%slatop                                , & ! SLA at top of canopy [m^2/gC]
          fbw                    => pftcon%fbw                                   , & ! Input:  fraction of biomass that is water
          nstem                  => pftcon%nstem                                 , & ! Input:  stem number density (#ind/m2)
+         woody                  => pftcon%woody                                 , & ! Input:  woody flag
          rstem_per_dbh          => pftcon%rstem_per_dbh                         , & ! Input:  stem resistance per stem diameter (s/m**2)
          wood_density           => pftcon%wood_density                          , & ! Input:  dry wood density (kg/m3)
 
@@ -860,13 +861,25 @@ bioms:   do f = 1, fn
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
+         if(.true.) then ! woody(patch%itype(p))==0) then ! Keep old parametrization for grasses/crops
+             lt = min(elai(p)+esai(p), tlsai_crit)
+             egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
+             displa(p) = egvf * displa(p)
+             z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
+         else
+             if(elai(p)==0) then
+                 displa(p) = htop(p) * (1.0_r8 - (1.0_r8 - exp(-2.25_r8 * 7.24_r8 * nstem(patch%itype(p)))) & 
+                     / (2.25_r8 * 7.24_r8 * nstem(patch%itype(p))))
+             else
+                 displa(p) = htop(p) * (1.0_r8 - (1.0_r8 - exp(-2.25_r8 * 7.24_r8 * nstem(patch%itype(p)))) & 
+                     / (2.25_r8 * 7.24_r8 * nstem(patch%itype(p))) * (1.0_r8 - exp(-0.273_r8 * elai(p))) & 
+                     / (0.273_r8 * elai(p)))
+             end if
+             z0mv(p)   = htop(p) * 0.264_r8 * (1._r8 - displa(p) / htop(p))
+         end if 
+             z0hv(p)   = z0mv(p)
+             z0qv(p)   = z0mv(p)
 
-         lt = min(elai(p)+esai(p), tlsai_crit)
-         egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
-         displa(p) = egvf * displa(p)
-         z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
-         z0hv(p)   = z0mv(p)
-         z0qv(p)   = z0mv(p)
       end do
 
       found = .false.

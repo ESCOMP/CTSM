@@ -294,26 +294,20 @@ contains
             avgflag='A', long_name='leaf boundary resistance', &
             ptr_patch=this%rb1_patch, default='inactive')
 
-       if (use_cn) then
        this%z0hv_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0HV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, sensible heat', &
             ptr_patch=this%z0hv_patch, default='inactive')
-    end if
 
-    if (use_cn) then
        this%z0mv_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0MV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, momentum', &
             ptr_patch=this%z0mv_patch, default='inactive')
-    end if
 
-    if (use_cn) then
        this%z0qv_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0QV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, latent heat', &
             ptr_patch=this%z0qv_patch, default='inactive')
-    end if
 
     if (use_luna) then
        call hist_addfld1d (fname='RB10', units='s/m', &

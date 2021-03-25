@@ -44,7 +44,7 @@ module histFileMod
   integer , public, parameter :: max_flds = 2500        ! max number of history fields
   integer , public, parameter :: max_namlen = 64        ! maximum number of characters for field name
   integer , public, parameter :: scale_type_strlen = 32 ! maximum number of characters for scale types
-  integer , private, parameter :: avgflag_strlen = 3 ! maximum number of characters for avgflag
+  integer , private, parameter :: avgflag_strlen = 1 ! maximum number of characters for avgflag
   integer , private, parameter :: hist_dim_name_length = 16 ! lenngth of character strings in dimension names
 
   ! Possible ways to treat multi-layer snow fields at times when no snow is present in a
@@ -1286,6 +1286,8 @@ contains
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
     use decompMod       , only : BOUNDS_LEVEL_PROC
+    use clm_varcon      , only : degpsec, isecspday
+    use clm_time_manager, only : get_step_size, get_curr_date
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1314,6 +1316,16 @@ contains
     integer j
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_1d'
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
+    integer :: year                      ! year (0, ...) for nstep
+    integer :: month                     ! month (1, ..., 12) for nstep
+    integer :: day                       ! day of month (1, ..., 31) for nstep
+    integer :: secs                      ! seconds into current date for nstep
+    integer :: local_secpl               ! seconds into current date in local time
+    integer :: dtime                     ! timestep size [seconds]
+    integer :: tod                       ! Desired local solar time of output in seconds
+    integer, allocatable :: grid_index(:)             ! Grid cell index for longitude
+    integer, allocatable :: tods(:)
+
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
@@ -1332,8 +1344,12 @@ contains
     l2g_scale_type =  tape(t)%hlist(f)%field%l2g_scale_type
     hpindex        =  tape(t)%hlist(f)%field%hpindex
     field          => clmptr_rs(hpindex)%ptr
+    tods = (/0, 0, 0, 10800, 43200, 54000, 0, 10800, 54000 /)
 
     ! set variables to check weights when allocate all pfts
+
+    dtime = get_step_size()
+    call get_curr_date (year, month, day, secs)
 
     map2gcell = .false.
     if (type1d_out == nameg .or. type1d_out == grlnd) then
@@ -1458,25 +1474,60 @@ contains
              endif
              nacs(k,1) = 1
           end do
+       case ('L') ! Local solar time          
+               tod = tods(t)
+               do k = beg1d_out, end1d_out
+                     if (field_gcell(k) /= spval) then
+
+                        local_secpl = secs + grc%londeg(k)/degpsec
+                        local_secpl = mod(local_secpl,isecspday)
+
+                        if (local_secpl >= tod - dtime .and. local_secpl < tod) then
+                            if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                            hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(dtime-tod+local_secpl)
+                            nacs(k,1) = nacs(k,1) + dtime-tod+local_secpl
+                        else if (local_secpl >= tod .and. local_secpl < tod + dtime) then
+                            if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                            hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(dtime+tod-local_secpl)
+                            nacs(k,1) = nacs(k,1) + dtime+tod-local_secpl
+                        end if
+
+                        if (tod < dtime .and. local_secpl > isecspday-dtime) then
+                            local_secpl = local_secpl - isecspday
+                            if (local_secpl >= tod - dtime .and. local_secpl < tod) then
+                                if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                                hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(dtime-tod+local_secpl)
+                                nacs(k,1) = nacs(k,1) + dtime-tod+local_secpl
+                            end if
+                        end if
+ 
+                     else
+                        if (nacs(k,1) == 0) hbuf(k,1) = spval
+                     end if
+               end do                
        case default
-          write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+                write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
+                call endrun(msg=errMsg(sourcefile, __LINE__))
+
        end select
        deallocate( field_gcell )
 
     else  ! Do not map to gridcell
-
+       allocate( grid_index(beg1d:end1d) )
        ! For data defined on the pft, col or landunit, we need to check if a point is active
        ! to determine whether that point should be assigned spval
        if (type1d == namep) then
           check_active = .true.
           active => patch%active
+          grid_index = patch%gridcell
        else if (type1d == namec) then
           check_active = .true.
           active => col%active
+          grid_index = col%gridcell
        else if (type1d == namel) then
           check_active = .true.
           active =>lun%active
+          grid_index = lun%gridcell
        else
           check_active = .false.
        end if
@@ -1559,9 +1610,59 @@ contains
              end if
              nacs(k,1) = 1
           end do
+       case ('L') ! Local solar time      
+               tod = tods(t)
+
+          if ( end1d .eq. ubound(field,1) ) then
+             k_offset = 0
+          else
+             k_offset = 1 - beg1d 
+          endif
+               do k = beg1d, end1d
+                     valid = .true.
+                     if (check_active) then
+                        if (.not. active(k)) then
+                           valid = .false.
+                        else
+                           local_secpl = secs + grc%londeg(grid_index(k))/degpsec
+                        end if
+                     else
+                        local_secpl = secs + grc%londeg(k)/degpsec  
+                      
+                     end if                           
+                     local_secpl = mod(local_secpl,isecspday)
+
+                     if (valid) then
+                        if (local_secpl >= tod - dtime .and. local_secpl < tod .and. field(k+k_offset) /= spval) then
+                            if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                            hbuf(k,1) = hbuf(k,1) + field(k+k_offset)*real(dtime-tod+local_secpl)
+                            nacs(k,1) = nacs(k,1) + dtime-tod+local_secpl
+                        else if (local_secpl >= tod .and. local_secpl < tod + dtime .and. field(k+k_offset) /= spval) then    
+                         if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                            hbuf(k,1) = hbuf(k,1) + field(k+k_offset)*real(dtime+tod-local_secpl)
+                            nacs(k,1) = nacs(k,1) + dtime+tod-local_secpl
+                        end if
+
+                        if (tod < dtime .and. local_secpl > isecspday-dtime .and. field(k+k_offset) /= spval) then
+                            local_secpl = local_secpl - isecspday
+                            if (local_secpl >= tod - dtime .and. local_secpl < tod) then
+                                if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                                hbuf(k,1) = hbuf(k,1) + field(k+k_offset)*real(dtime-tod+local_secpl)
+                                nacs(k,1) = nacs(k,1) + dtime-tod+local_secpl
+                            end if
+                        end if
+
+                     else
+                        if (nacs(k,1) == 0) hbuf(k,1) = spval
+                     end if
+               end do    
+             
        case default
-          write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+ 
+              write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
+              call endrun(msg=errMsg(sourcefile, __LINE__))
+        
+
        end select
     end if
 
@@ -1581,6 +1682,8 @@ contains
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
     use decompMod       , only : BOUNDS_LEVEL_PROC
     use clm_varctl      , only : iulog
+    use clm_varcon      , only : degpsec, isecspday
+    use clm_time_manager, only : get_step_size, get_curr_date
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1612,6 +1715,15 @@ contains
                                         !(this refers to a point being active, NOT a history field being active)
     real(r8), allocatable :: field_gcell(:,:) ! gridcell level field (used if mapping to gridcell is done)
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
+    integer :: year                      ! year (0, ...) for nstep
+    integer :: month                     ! month (1, ..., 12) for nstep
+    integer :: day                       ! day of month (1, ..., 31) for nstep
+    integer :: secs                      ! seconds into current date for nstep
+    integer :: local_secpl               ! seconds into current date in local time
+    integer :: dtime                     ! timestep size [seconds]
+    integer :: tod                       ! Desired local solar time of output in seconds
+    integer, allocatable :: grid_index(:)             ! Grid cell index for longitude   
+    integer, allocatable :: tods(:)
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
@@ -1630,6 +1742,7 @@ contains
     l2g_scale_type      =  tape(t)%hlist(f)%field%l2g_scale_type
     no_snow_behavior    =  tape(t)%hlist(f)%field%no_snow_behavior
     hpindex             =  tape(t)%hlist(f)%field%hpindex
+    tods = (/0, 0, 0, 10800, 43200, 54000, 0, 10800, 54000 /)
 
 
     if (no_snow_behavior /= no_snow_unset) then
@@ -1655,6 +1768,9 @@ contains
        field => clmptr_ra(hpindex)%ptr(:,1:num2d)
        field_allocated = .false.
     end if
+
+    dtime = get_step_size()
+    call get_curr_date (year, month, day, secs)
 
     ! set variables to check weights when allocate all pfts
 
@@ -1787,6 +1903,41 @@ contains
                 nacs(k,j) = 1
              end do
           end do
+       case ('L') ! Local solar time
+               tod = tods(t)
+          do j = 1,num2d
+               do k = beg1d_out, end1d_out
+                     if (field_gcell(k,j) /= spval) then
+
+                        local_secpl = secs + grc%londeg(k)/degpsec                        
+                        local_secpl = mod(local_secpl,isecspday)
+
+                        if (local_secpl >= tod - dtime .and. local_secpl < tod) then
+                            if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                            hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(dtime-tod+local_secpl)
+                            nacs(k,j) = nacs(k,j) + dtime-tod+local_secpl
+                        else if (local_secpl >= tod .and. local_secpl < tod + dtime) then
+                            if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                            hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(dtime+tod-local_secpl)
+                            nacs(k,j) = nacs(k,j) + dtime+tod-local_secpl
+                        end if
+
+                        if (tod < dtime .and. local_secpl > isecspday-dtime) then
+                            local_secpl = local_secpl - isecspday
+                            if (local_secpl >= tod - dtime .and. local_secpl < tod) then
+                                if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                                hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(dtime-tod+local_secpl)
+                                nacs(k,j) = nacs(k,j) + dtime-tod+local_secpl
+                            end if
+                        end if
+
+                     else
+                        if (nacs(k,j) == 0) hbuf(k,j) = spval
+                        
+                     end if
+               end do 
+          end do
+
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1800,12 +1951,18 @@ contains
        if (type1d == namep) then
           check_active = .true.
           active => patch%active
+          allocate(grid_index(bounds%begg:bounds%endg) )
+          grid_index = patch%gridcell
        else if (type1d == namec) then
           check_active = .true.
           active => col%active
+          allocate(grid_index(bounds%begg:bounds%endg) )
+          grid_index = col%gridcell
        else if (type1d == namel) then
           check_active = .true.
           active =>lun%active
+          allocate(grid_index(bounds%begg:bounds%endg) )
+          grid_index = lun%gridcell
        else
           check_active = .false.
        end if
@@ -1894,6 +2051,48 @@ contains
                 nacs(k,j) = 1
              end do
           end do
+       case ('L') ! Local solar time
+               tod = tods(t)
+          do j = 1,num2d
+
+               do k = beg1d, end1d
+                     valid = .true.
+                     if (check_active) then
+                        if (.not. active(k)) then
+                           valid = .false.
+                        else
+                           local_secpl = secs + grc%londeg(grid_index(k))/degpsec
+                        end if
+                     else
+                        local_secpl = secs + grc%londeg(k)/degpsec
+                     end if                           
+                     local_secpl = mod(local_secpl,isecspday)
+
+                     if (valid) then
+                        if (local_secpl >= tod - dtime .and. local_secpl < tod .and. field(k-beg1d+1,j) /= spval) then
+                            if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                            hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(dtime-tod+local_secpl)
+                            nacs(k,j) = nacs(k,j) + dtime-tod+local_secpl
+                        else if (local_secpl >= tod .and. local_secpl < tod + dtime .and. field(k-beg1d+1,j) /= spval) then
+                            if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                            hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(dtime+tod-local_secpl)
+                            nacs(k,j) = nacs(k,j) + dtime+tod-local_secpl
+                        end if
+
+                        if (tod < dtime .and. local_secpl > isecspday-dtime .and. field(k-beg1d+1,j) /= spval) then
+                            local_secpl = local_secpl - isecspday
+                            if (local_secpl >= tod - dtime .and. local_secpl < tod) then
+                                if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                                hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(dtime-tod+local_secpl)
+                                nacs(k,j) = nacs(k,j) + dtime-tod+local_secpl
+                            end if
+                        end if
+
+                     else
+                        if (nacs(k,j) == 0) hbuf(k,j) = spval
+                     end if
+               end do  
+          end do  
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -2038,7 +2237,7 @@ contains
        nacs      => tape(t)%hlist(f)%nacs
        hbuf      => tape(t)%hlist(f)%hbuf
 
-       if (avgflag == 'A') then
+       if (avgflag == 'A' .or. avgflag == 'L') then
           aflag = .true.
        else
           aflag = .false.
@@ -2048,6 +2247,8 @@ contains
           do k = beg1d, end1d
              if (aflag .and. nacs(k,j) /= 0) then
                 hbuf(k,j) = hbuf(k,j) / float(nacs(k,j))
+             elseif(avgflag == 'L' .and. nacs(k,j) == 0) then
+                hbuf(k,j) = spval
              end if
           end do
        end do
@@ -3129,6 +3330,8 @@ contains
     real(r8), pointer :: histo(:,:)      ! temporary
     real(r8), pointer :: hist1do(:)      ! temporary
     character(len=*),parameter :: subname = 'hfields_write'
+    integer :: tod                       ! Desired local solar time of output in seconds
+
 !-----------------------------------------------------------------------
 
     ! Write/define 1d topological info
@@ -3176,6 +3379,8 @@ contains
              avgstr = 'minimum'
           case ('SUM')
              avgstr = 'sum'
+          case ('L')
+             avgstr = 'inst. local time'
           case default
              write(iulog,*) trim(subname),' ERROR: unknown time averaging flag (avgflag)=',avgflag
              call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -5548,7 +5753,7 @@ contains
        valid = .true.
     else if (avgflag == 'A' .or. avgflag == 'I' .or. &
          avgflag == 'X' .or. avgflag == 'M' .or. &
-         avgflag == 'SUM') then
+         avgflag == 'SUM' .or. avgflag == 'L') then
        valid = .true.
     else
        valid = .false.

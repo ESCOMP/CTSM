@@ -200,7 +200,6 @@ contains
          avgflag='A', long_name='Aboveground leaf biomass', &
          ptr_patch=this%leaf_biomass_patch, default='inactive')
 
-    if (use_cn .or. use_fates) then
        this%fsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='FSUN', units='proportion', &
             avgflag='A', long_name='sunlit fraction of canopy', &
@@ -220,7 +219,7 @@ contains
        call hist_addfld1d (fname='DISPLA', units='m', &
             avgflag='A', long_name='displacement height', &
             ptr_patch=this%displa_patch, default='inactive')
-    end if
+
 
        this%z0m_patch(begp:endp) = spval
        call hist_addfld1d (fname='Z0M', units='m', &

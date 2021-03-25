@@ -144,6 +144,11 @@ User-defined number of soil layers required to be set in the namelist when the u
 <default>Default: iundef</default>
 </entry>
 
+<entry id="use_individual_pft_soil_column" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, each pft exists on a separate soil column.
+</entry>
+
 <entry id="use_bedrock" type="logical" category="clm_physics"
        group="clm_inparm" valid_values="" >
 If TRUE, use variable soil depth.
@@ -764,7 +769,7 @@ If TRUE, write master field list to separate file for documentation purposes
 </entry>
 
 <entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
-       group="clm_inparm" valid_values="A,I,X,M" >
+       group="clm_inparm" valid_values="A,I,X,M,L" >
 Per file averaging flag.
     'A' (average over history period)
     'I' (instantaneous)
