@@ -290,7 +290,7 @@ contains
   end subroutine check_npts
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest, scale_by_thickness)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -319,12 +319,12 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
+    logical  , intent(in)    :: scale_by_thickness
     !
     ! !LOCAL VARIABLES:
     integer :: lev_dest
     integer :: level_class_dest
     integer :: lev_source
-    logical :: scale_by_thickness = .false.  ! TODO where/how to read from finidat
 
     ! source information for this index_dest
     real(r8) :: my_level_classes_source(this%nlev_source)
@@ -578,13 +578,22 @@ contains
 
     ! Assemble the weights for scaling certain variables by soil thicknesses
     if (scale_by_thickness) then
-       if (dzsoi_source(index_lower) == 0._r8 .or. &
-           dzsoi_source(index_lower+1) == 0._r8) then
-          call endrun(msg=subname//' ERROR: about to divide by zero... '// &
+       if (dzsoi_source(index_lower) == 0._r8) then
+          call endrun(msg=subname//' ERROR case 1: about to divide by 0 '// &
                errMsg(sourcefile, __LINE__))
+       else
+          wt_lower = dzsoi_dest / dzsoi_source(index_lower)
        end if
-       wt_lower = dzsoi_dest / dzsoi_source(index_lower)
-       wt_lower_plus_1 = dzsoi_dest / dzsoi_source(index_lower+1)
+       if (.not. copylevel) then
+          if (dzsoi_source(index_lower+1) == 0._r8) then
+             call endrun(msg=subname//' ERROR case 2: about to divide by 0 '// &
+                  errMsg(sourcefile, __LINE__))
+          else
+             wt_lower_plus_1 = dzsoi_dest / dzsoi_source(index_lower+1)
+          end if
+       else  ! if (copylevel) then wt_lower_plus_1 set but not used
+          wt_lower_plus_1 = wt_lower
+       end if
     else  ! no scaling; scale factors equal 1
        wt_lower = 1.0_r8
        wt_lower_plus_1 = wt_lower

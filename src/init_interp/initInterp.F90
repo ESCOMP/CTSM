@@ -22,7 +22,7 @@ module initInterpMod
   use clm_varctl     , only: iulog
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
-  use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
+  use restUtilMod    , only: iflag_copy, iflag_skip, iflag_area
   use IssueFixedMetadataHandler, only : copy_issue_fixed_metadata
   use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
@@ -203,6 +203,8 @@ contains
     integer            :: dimidso(3) = -1 ! netCDF dimension ids
     integer            :: status          ! return code
     integer            :: iflag_interpinic
+    integer            :: iflag_scale_by_thickness  ! 1=true/0=false flag to scale vertically interpolated variable by soil thickness or not
+    logical            :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness or not
     real(r8)           :: rvalue
     integer            :: ivalue 
     integer            :: spinup_state_i, spinup_state_o
@@ -455,6 +457,25 @@ contains
           CYCLE
        end if
 
+       !---------------------------------------------------
+       ! Get scale_by_thickness value (.true./.false.) from output
+       ! file to avoid backwards compatibility issue.
+       ! TODO status before the next pio_get_att returns 0; however, after
+       !      the call, the model just crashes when the attribute is missing.
+       !      How to check for the attribute to avoid
+       !      hardwiring the variable names below? Ideas:
+       !      - call read_issue_fixed_metadata?
+       !---------------------------------------------------
+
+       scale_by_thickness = .false.  ! default value
+
+       if  ( trim(varname) == 'H2OSOI_LIQ' .or. trim(varname) == 'H2OSOI_ICE') then
+          status = pio_get_att(ncido, vardesc, 'scale_by_thickness_flag', iflag_scale_by_thickness)
+          if (iflag_scale_by_thickness == 1) then
+             scale_by_thickness = .true.
+          end if
+       end if
+
        !---------------------------------------------------          
        ! Read metadata telling us possible variable names on input file;
        ! determine which of these is present on the input file
@@ -648,7 +669,7 @@ contains
           call interp_2d_double(var2d_i, var2d_o, &
                begi, endi, bego, endo, &
                sgridindex, &
-               interp_multilevel_container)
+               interp_multilevel_container, scale_by_thickness)
 
        else
 
@@ -1082,7 +1103,7 @@ contains
 
   subroutine interp_2d_double (var2di, var2do, &
        begi, endi, bego, endo, sgridindex, &
-       interp_multilevel_container)
+       interp_multilevel_container, scale_by_thickness)
 
     ! --------------------------------------------------------------------
     ! arguments
@@ -1092,6 +1113,7 @@ contains
     integer           , intent(in)    :: bego, endo
     integer           , intent(in)    :: sgridindex(bego:)
     type(interp_multilevel_container_type), intent(in) :: interp_multilevel_container
+    logical           , intent(in)    :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness or not
     !
     ! local variables
     class(interp_multilevel_type), pointer :: multilevel_interpolator
@@ -1158,7 +1180,8 @@ contains
           call multilevel_interpolator%interp_multilevel( &
                data_dest    = rbuf2do(no,:), &
                data_source  = rbuf2do_levelsi(no,:), &
-               index_dest   = no - bego + 1)
+               index_dest   = no - bego + 1, &
+               scale_by_thickness = scale_by_thickness)
        end if
     end do
 
