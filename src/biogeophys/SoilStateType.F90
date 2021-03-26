@@ -384,11 +384,13 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='SMP', xtype=ncd_double,  &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='soil matric potential', units='mm', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%smp_l_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='HK', xtype=ncd_double,  &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='hydraulic conductivity', units='mm/s', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%hk_l_col)
 
      if( use_dynroot ) then
