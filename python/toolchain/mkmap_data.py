@@ -27,10 +27,16 @@ from gen_mksurf_namelist import get_parser, build_nl
 __author__ = 'Negin Sobhani'
 __email__ = 'negins@ucar.edu'
 
+#def create_job (****):
+    #"pbs script that gets submited" 
+
+def submit_job (file_name):
+    qsub file_name
 
 def get_pair(line):
     line = re.sub('=', '', line)
     key, sep, value = line.strip( ).partition(" ")
+    value = value.strip()
     return key, value
 
 def name_weightfile(src_res, src_mask, dst_res,dst_mask):
@@ -44,7 +50,7 @@ def read_nl (nl_fname):
             key, value = get_pair(line)
             nl_d[key] = value
     print ('gitdescribe   : ', nl_d['gitdescribe'])
-    print ('use_transient : ',nl_d['use_transient'])
+    print ('use_transient : ', nl_d['use_transient'].strip())
 
     print ('start_year    : ', nl_d['start_year'])
     print ('end_year      : ', nl_d['end_year'])
@@ -82,38 +88,64 @@ def main ():
     dst_mesh_file = nl_d['dst_mesh_file']
     dst_res, dst_mask = parse_mesh_fname(dst_mesh_file)
 
-    print ('dst_mesh_file is :',  dst_mesh_file)
+    print ('dst_mesh_file :',  dst_mesh_file)
 
-    print ('-----------------------')
 
-    raw_file = "/glade/scratch/negins/mksrf_landuse_histclm50_LUH2_1934.c201018.nc"
+    src_flist = [
+                'mksrf_fsoitex',
+                'mksrf_forganic',
+                #'mksrf_flakwat',
+                'mksrf_fwetlnd',
+                'mksrf_fmax',
+                #'mksrf_fglacier',
+                'mksrf_fvocef',
+                'mksrf_furbtopo',
+                'mksrf_fgdp',
+                'mksrf_fpeat',
+                #'mksrf_fsoildepth',
+                'mksrf_fabm',
+                'mksrf_furban',
+                #'mksrf_ftopostats',
+                'mksrf_fvegtyp',
+                'mksrf_fsoicol',
+                'mksrf_flai'
+                ]
 
-    ds = xr.open_dataset(raw_file)
-    src_mesh_file = input_path + ds.src_mesh_file
-    src_res, src_mask = parse_mesh_fname(src_mesh_file)
+    for src_file in src_flist:
+        src_fname = nl_d[src_file].strip()
+        print (src_file, " : ", src_fname)
+        ds = xr.open_dataset(src_fname)
+        src_mesh_file = input_path+ ds.src_mesh_file
+        src_res, src_mask = parse_mesh_fname(src_mesh_file)
 
-    print ('src_mesh_file is : ', src_mesh_file)
+        lrg_args = " "
+        if (src_res =="3minx3min"):
+            print ("src_res is: ", src_res)
+            lrg_args=" --64bit_offset "
 
-    print ('-----------------------')
+        print ('src_mesh_file is : ', src_mesh_file)
 
-    w_fname = name_weightfile (src_res, src_mask, dst_res, dst_mask) 
 
-    print ("weight_fname is : ", w_fname)
+        w_fname = name_weightfile (src_res, src_mask, dst_res, dst_mask) 
 
-    esmf_bin_path = "/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/"
-    esmf_regrid = esmf_bin_path + "/ESMF_RegridWeightGen"
+        print ("weight_fname is : ", w_fname)
 
-    cmd = esmf_regrid + " --ignore_unmapped"
+        esmf_bin_path = "/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/"
+        esmf_regrid = esmf_bin_path + "/ESMF_RegridWeightGen"
 
-    cmd = cmd + " -s " + src_mesh_file + " -d " +dst_mesh_file
-    cmd = cmd + " -m conserve "+" -w "+ w_fname
-    cmd = cmd + "  --src_type SCRIP  --dst_type SCRIP"
+        cmd = esmf_regrid + " --ignore_unmapped"
 
-    if os.path.isfile(w_fname):
-        print ('weight file ', w_fname, 'already exists!')
-    else:
-        print (cmd)
-        os.system(cmd)
+        cmd = cmd + " -s " + src_mesh_file + " -d " +dst_mesh_file
+        cmd = cmd + " -m conserve "+" -w "+ w_fname
+        cmd = cmd + lrg_args
+        cmd = cmd + "  --src_type SCRIP  --dst_type SCRIP"
+
+        if os.path.isfile(w_fname):
+            print ('weight file ', w_fname, 'already exists!')
+        else:
+            print (cmd)
+            os.system(cmd)
+        print ('-----------------------')
 
     '''
      /glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/ESMF_RegridWeightGen
