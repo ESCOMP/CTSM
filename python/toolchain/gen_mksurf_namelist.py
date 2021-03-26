@@ -151,6 +151,12 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
     Build the namelist/control file for ****. 
     """
 
+    run_type = check_run_type(start_year, end_year)
+    if (run_type == "transient"):
+        create_landuse(start_year, end_year)
+        lu_fname = landuse_filename (start_year, end_year)
+    else:
+        lu_fname = " "
     namelist_fname = name_nl (start_year,end_year, res, ssp_rcp, num_pft)
     namelist_file = open (namelist_fname,'w')
 
@@ -196,6 +202,7 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
             "start_year       = "+start_year.__str__() + "\n"
             "end_year         = "+end_year.__str__() + "\n"
             "mksrf_dyn_lu     = "+input_path+ "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629" + "\n"
+            "mksrf_fdynuse    = "+lu_fname + "\n"
             "\n&vic\n"
             "use_vic          = "+vic_flag.__str__()+"\n"
             "mksrf_fvic       = "+input_path+"mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc\n"
@@ -291,6 +298,13 @@ def landuse_filename(start_year, end_year):
     lu_fname = "landuse_timeseries_hist_78pfts_simyr"+str(start_year)+"-"+str(end_year)+".txt"
     return (lu_fname)
 
+def check_run_type (start_year, end_year):
+    if (end_year > start_year):
+        run_type = "transient"
+    else:
+        run_type = "timeslice"
+    return (run_type)
+
 def main ():
     print ('Testing gen_mksurf_namelist...')
 
@@ -316,11 +330,7 @@ def main ():
         end_year = start_year
 
     check_endyear (start_year, end_year)
-    if (end_year > start_year):
-        run_type = "transient"
-    else:
-        run_type = "timeslice"
-
+    run_type = check_run_type(start_year, end_year)
 
     if crop_flag:
         num_pft      = "78"
@@ -352,8 +362,6 @@ def main ():
     #elif (run_type =="transient"):
     #    start_year, end_year = sim_range.split("-")
 
-
-    create_landuse(start_year, end_year)
     build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, run_type, vic_flag, glc_flag)
 
 if __name__ == "__main__":
