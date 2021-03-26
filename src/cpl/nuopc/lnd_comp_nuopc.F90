@@ -395,11 +395,15 @@ contains
     call NUOPC_CompAttributeGet(gcomp, name='scol_lat', value=cvalue, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     read(cvalue,*) scol_lat
-    call NUOPC_CompAttributeGet(gcomp, name='scol_spval', value=cvalue, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    read(cvalue,*) scol_spval
     call NUOPC_CompAttributeGet(gcomp, name='single_column_lnd_domainfile', value=single_column_lnd_domainfile, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! TODO: there is a problem retrieving scol_spval from the driver - for now
+    ! hard-wire scol_spval - this needs to be fixed
+    scol_spval = -999._r8
+    ! call NUOPC_CompAttributeGet(gcomp, name='scol_spval', value=cvalue, rc=rc)
+    ! if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! read(cvalue,*) scol_spval
 
     if (scol_lon > scol_spval .and. scol_lat > scol_spval) then
        single_column = (trim(single_column_lnd_domainfile) /= 'UNSET')
