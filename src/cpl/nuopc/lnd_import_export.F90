@@ -218,11 +218,11 @@ contains
        if (flds_co2b .or. flds_co2c) send_co2_to_atm = .true.
        if (flds_co2a .or. flds_co2b .or. flds_co2c) recv_co2_fr_atm = .true.
        if (masterproc) then
-          write(iulog,'(a,L1)') 'flds_co2a= ',flds_co2a
-          write(iulog,'(a,L1)') 'flds_co2b= ',flds_co2b
-          write(iulog,'(a,L1)') 'flds_co2c= ',flds_co2c
-          write(iulog,'(a,L1)') 'sending co2 to atm     = ',send_co2_to_atm
-          write(iulog,'(a,L1)') 'receiving co2 from atm = ',recv_co2_fr_atm
+          write(iulog,'(a,L2)') 'flds_co2a= ',flds_co2a
+          write(iulog,'(a,L2)') 'flds_co2b= ',flds_co2b
+          write(iulog,'(a,L2)') 'flds_co2c= ',flds_co2c
+          write(iulog,'(a,L2)') 'sending co2 to atm     = ',send_co2_to_atm
+          write(iulog,'(a,L2)') 'receiving co2 from atm = ',recv_co2_fr_atm
        end if
     end if
 

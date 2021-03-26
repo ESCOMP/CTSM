@@ -473,8 +473,8 @@ def _check_and_transform_os(os_type):
                   'cnl': 'CNL'}
     try:
         os_type_transformed = transforms[os_type]
-    except KeyError:
-        raise ValueError("Unknown OS: {}".format(os_type))
+    except KeyError as exc:
+        raise ValueError("Unknown OS: {}".format(os_type)) from exc
     return os_type_transformed
 
 def _get_case_dir(build_dir):
