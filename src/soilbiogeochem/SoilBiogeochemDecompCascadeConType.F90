@@ -27,6 +27,7 @@ module SoilBiogeochemDecompCascadeConType
      character(len=8)  , pointer  :: decomp_pool_name_history(:)       ! name of pool for history files
      character(len=20) , pointer  :: decomp_pool_name_long(:)          ! name of pool for netcdf long names
      character(len=8)  , pointer  :: decomp_pool_name_short(:)         ! name of pool for netcdf short names
+     logical           , pointer  :: is_microbe(:)                     ! TRUE => pool is a microbe pool
      logical           , pointer  :: is_litter(:)                      ! TRUE => pool is a litter pool
      logical           , pointer  :: is_soil(:)                        ! TRUE => pool is a soil pool
      logical           , pointer  :: is_cwd(:)                         ! TRUE => pool is a cwd pool
@@ -72,6 +73,7 @@ contains
     allocate(decomp_cascade_con%decomp_pool_name_history(ibeg:ndecomp_pools))
     allocate(decomp_cascade_con%decomp_pool_name_long(ibeg:ndecomp_pools))
     allocate(decomp_cascade_con%decomp_pool_name_short(ibeg:ndecomp_pools))
+    allocate(decomp_cascade_con%is_microbe(ibeg:ndecomp_pools))
     allocate(decomp_cascade_con%is_litter(ibeg:ndecomp_pools))
     allocate(decomp_cascade_con%is_soil(ibeg:ndecomp_pools))
     allocate(decomp_cascade_con%is_cwd(ibeg:ndecomp_pools))
@@ -93,6 +95,7 @@ contains
     decomp_cascade_con%decomp_pool_name_restart(ibeg:ndecomp_pools)       = ''
     decomp_cascade_con%decomp_pool_name_long(ibeg:ndecomp_pools)          = ''
     decomp_cascade_con%decomp_pool_name_short(ibeg:ndecomp_pools)         = ''
+    decomp_cascade_con%is_microbe(ibeg:ndecomp_pools)                     = .false.
     decomp_cascade_con%is_litter(ibeg:ndecomp_pools)                      = .false.
     decomp_cascade_con%is_soil(ibeg:ndecomp_pools)                        = .false.
     decomp_cascade_con%is_cwd(ibeg:ndecomp_pools)                         = .false.
