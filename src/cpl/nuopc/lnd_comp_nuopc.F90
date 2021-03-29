@@ -171,7 +171,7 @@ contains
     integer           :: lmpicom
     integer           :: ierr
     integer           :: n
-    integer           :: localpet
+    integer           :: localPet    ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
     integer           :: compid      ! component id
     integer           :: shrlogunit  ! original log unit
     character(len=CL) :: cvalue
@@ -328,7 +328,7 @@ contains
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_VM)           :: vm
+    type(ESMF_VM)           :: vm                    ! Virtual machine, description of parallel procesors being used (both MPI and OpenMP)
     type(ESMF_Time)         :: currTime              ! Current time
     type(ESMF_Time)         :: startTime             ! Start time
     type(ESMF_Time)         :: refTime               ! Ref time
@@ -342,8 +342,8 @@ contains
     integer                 :: curr_ymd              ! Start date (YYYYMMDD)
     integer                 :: curr_tod              ! Start time of day (sec)
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
-    integer                 :: localPet
-    integer                 :: localpecount
+    integer                 :: localPet              ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
+    integer                 :: localPeCount          ! Number of local Processors
     real(r8)                :: nextsw_cday           ! calday from clock of next radiation computation
     character(len=CL)       :: starttype             ! start-type (startup, continue, branch, hybrid)
     character(len=CL)       :: calendar              ! calendar type name
@@ -352,9 +352,9 @@ contains
     integer                 :: lbnum                 ! input to memory diagnostic
     integer                 :: shrlogunit            ! original log unit
     type(bounds_type)       :: bounds                ! bounds
-    integer                 :: n, ni, nj
+    integer                 :: n, ni, nj             ! Indices
     character(len=CL)       :: cvalue                ! config data
-    character(len=CL)       :: meshfile_mask
+    character(len=CL)       :: meshfile_mask         ! filename of mesh file with land mask
     character(len=CL)       :: ctitle                ! case description title
     character(len=CL)       :: caseid                ! case identifier name
     real(r8)                :: scol_lat              ! single-column latitude
@@ -362,14 +362,14 @@ contains
     real(r8)                :: scol_area             ! single-column area
     real(r8)                :: scol_frac             ! single-column frac
     integer                 :: scol_mask             ! single-column mask
-    real(r8)                :: scol_spval
-    character(len=CL)       :: single_column_lnd_domainfile
-    type(ESMF_Field)        :: lfield
-    character(CL) ,pointer  :: lfieldnamelist(:) => null()
-    integer                 :: fieldCount
-    integer                 :: rank
-    real(r8), pointer       :: fldptr1d(:)
-    real(r8), pointer       :: fldptr2d(:,:)
+    real(r8)                :: scol_spval            ! single-column special value to indicate it isn't set
+    character(len=CL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
+    type(ESMF_Field)        :: lfield                         ! Land field read in
+    character(CL) ,pointer  :: lfieldnamelist(:) => null()    ! Land field namelist item sent with land field
+    integer                 :: fieldCount                     ! Number of fields on export state
+    integer                 :: rank                           ! Rank of field (1D or 2D)
+    real(r8), pointer       :: fldptr1d(:)                    ! 1D field pointer
+    real(r8), pointer       :: fldptr2d(:,:)                  ! 2D field pointer
     character(len=CL)       :: model_version         ! Model version
     character(len=CL)       :: hostname              ! hostname of machine running on
     character(len=CL)       :: username              ! user running the model
@@ -704,8 +704,8 @@ contains
     integer                :: tod_sync       ! Sync current time of day (sec)
     integer                :: dtime          ! time step increment (sec)
     integer                :: nstep          ! time step index
-    integer                :: localPet
-    integer                :: localpecount
+    integer                :: localPet       ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
+    integer                :: localPeCount   ! Number of local Processors
     logical                :: rstwr          ! .true. ==> write restart file before returning
     logical                :: nlend          ! .true. ==> last time-step
     logical                :: dosend         ! true => send data back to driver
