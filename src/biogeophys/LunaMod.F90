@@ -323,7 +323,7 @@ module LunaMod
     enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
     vcmx25_z_last_valid_patch   => photosyns_inst%vcmx25_z_last_valid_patch , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from end of the growing season for the previous year
     jmx25_z_last_valid_patch    => photosyns_inst%jmx25_z_last_valid_patch                         , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from the end of the growing season for the previous year
-    o3coefjmax => ozone_inst%o3coefjmaxsun_patch                   ! Input: [real(r8) (:)] ozone coef jmax sun
+    o3coefjmax => ozone_inst%o3coefjmaxsun_patch          &         ! Input: [real(r8) (:)] ozone coef jmax sun
   )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
