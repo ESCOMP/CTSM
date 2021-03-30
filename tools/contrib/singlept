@@ -17,19 +17,80 @@ import numpy as np
 import xarray as xr
 
 
+def setup_logging(log_path, log_level):
+    """
+    Setup logging to log to console and log file.
+
+    #  Log Levels
+    # ------------
+    # CRITICAL  50
+    # ERROR     40
+    # WARNING   30
+    # INFO      20
+    # DEBUG     10
+    # NOTSET     0
+    """
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+
+    # setup log file
+    one_MB = 1000000
+    handler = logging.handlers.RotatingFileHandler(
+        log_path, maxBytes=(one_MB * 20), backupCount=5)
+
+    fmt = logging.Formatter(
+            '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+            datefmt='%y-%m-%d %H:%M:%S')
+
+    handler.setFormatter(fmt)
+    root_logger.addHandler(handler)
+
+    # setup logging to console
+    strm_hndlr = logging.StreamHandler(sys.stdout)
+    strm_hndlr.setFormatter(fmt)
+    root_logger.addHandler(strm_hndlr)
+
+    # redirect stdout/err to log file
+    StreamToLogger.setup_stdout()
+    StreamToLogger.setup_stderr()
+
+
 
 class StreamToLogger(object):
-    """ 
-    Fake file-like stream object that redirects writes to a logger instance.
     """
+    Custom class to log all stdout and stderr streams.
     """
-    Custom class to log all stdout and stderr streams
-    """
-    def __init__(self, logger, log_level=logging.INFO):
+    def __init__(self, stream, logger, log_level=logging.INFO,
+                 also_log_to_stream=False):
         self.logger = logger
+        self.stream = stream
         self.log_level = log_level
         self.linebuf = ''
-        
+        self.also_log_to_stream = also_log_to_stream
+
+    @classmethod
+    def setup_stdout(cls, also_log_to_stream=True):
+        """
+        Setup logger for stdout
+        """
+        stdout_logger = logging.getLogger('STDOUT')
+        sl = StreamToLogger(
+            sys.stdout, stdout_logger, logging.INFO, also_log_to_stream
+        )
+        sys.stdout = sl
+
+    @classmethod
+    def setup_stderr(cls, also_log_to_stream=True):
+        """
+        Setup logger for stdout
+        """
+        stderr_logger = logging.getLogger('STDERR')
+        sl = StreamToLogger(
+            sys.stderr, stderr_logger, logging.ERROR, also_log_to_stream
+        )
+        sys.stderr = sl
+
     def write(self, buf):
         temp_linebuf = self.linebuf + buf 
         self.linebuf = ''
@@ -43,7 +104,7 @@ class StreamToLogger(object):
                 self.logger.log(self.log_level, line.rstrip())
             else:
                 self.linebuf += line
-        
+
     def flush(self):
         if self.linebuf != '': 
             self.logger.log(self.log_level, self.linebuf.rstrip())                                                
@@ -72,23 +133,17 @@ def AddTagToFilename(filename, tag):
 
 def main ():
 
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s:%(levelname)s:%(name)s:%(message)s',
-        filename="out.log",
-        filemode='a'
-    )   
-     
-    stdout_logger = logging.getLogger('STDOUT')
-    sl = StreamToLogger(stdout_logger, logging.INFO)
-    sys.stdout = sl
-     
-    stderr_logger = logging.getLogger('STDERR')
-    sl = StreamToLogger(stderr_logger, logging.ERROR)
-    sys.stderr = sl
+    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
+    # create dir if it does not exist
+    log_dir = os.path.dirname(log_file)
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+
+    log_level =  logging.DEBUG
+    setup_logging(log_file, log_level)
 
 
-    print( "singlept script to extract out a single point from the global CTSM inputdata datasets\n" )
+    print( "singlept script to extract out a single point from the global CTSM inputdata datasets." )
     myname=getuser()
     pwd=os.getcwd()
     print("User = "+myname)
