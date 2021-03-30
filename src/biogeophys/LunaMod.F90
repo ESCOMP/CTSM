@@ -216,7 +216,7 @@ module LunaMod
     use quadraticMod          , only : quadratic
     use CNSharedParamsMod     , only : CNParamsShareInst
     use shr_infnan_mod, only : isnan => shr_infnan_isnan
-    use ozone_base_type,  only : ozone_base_type
+    use OzoneBaseMod,  only : ozone_base_type
         
     implicit none
     
