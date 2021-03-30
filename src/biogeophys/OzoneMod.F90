@@ -64,7 +64,8 @@ module OzoneMod
 
      ! Private routines
      ! procedure, private :: ReadNamelist
-     procedure, private :: InitAllocate
+     procedure, private :
+: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
 

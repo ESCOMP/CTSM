@@ -19,6 +19,12 @@ module OzoneOffMod
   ! !PUBLIC TYPES:
   type, extends(ozone_base_type), public :: ozone_off_type
      private
+     ! Private data members 
+     integer :: stress_method  ! Which ozone stress parameterization we're using in this run
+
+     real(r8), pointer :: o3uptakesha_patch(:) ! ozone dose, shaded leaves (mmol O3/m^2)
+     real(r8), pointer :: o3uptakesun_patch(:) ! ozone dose, sunlit leaves (mmol O3/m^2)
+
    contains
      procedure, public :: Init
      procedure, public :: Restart
