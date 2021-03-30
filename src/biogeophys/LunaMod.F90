@@ -809,7 +809,7 @@ end subroutine Clear24_Climate_LUNA
 !************************************************************************************************************************************************
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,o3coefjmax &
+     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,o3coefjmax, &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
