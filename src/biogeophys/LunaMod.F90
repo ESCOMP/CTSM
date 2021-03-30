@@ -941,7 +941,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
         KcKjFlag = 1
         call Nitrogen_investments (KcKjFlag,FNCa, Nlc2, forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, &
              tair10, tleafd10c,tleafn10c, &
-             Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, Kc, Kj, ci, &
+             Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, o3coefjmax, &
+             Kc, Kj, ci, &
              Vcmax, Jmax,JmeanL,JmaxL, Net2, Ncb2, Nresp2, PSN2, RESP2)
 
         Npsntarget2 = Nlc2 + Ncb2 + Net2
@@ -969,7 +970,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
         KcKjFlag = 1
         call Nitrogen_investments (KcKjFlag,FNCa, Nlc1,forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, &
              tair10, tleafd10c,tleafn10c, &
-             Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, Kc, Kj, ci,&
+             Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref,NUEr, o3coefjmax, &
+             Kc, Kj, ci,&
              Vcmax, Jmax,JmeanL,JmaxL, Net1, Ncb1, Nresp1, PSN1, RESP1)
         Npsntarget1 = Nlc1 + Ncb1 + Net1
         Carboncost1 = (Npsntarget - Npsntarget1) * NMCp25 * Cv * (RespTBernacchi(tleafd10c) * hourpd + &
