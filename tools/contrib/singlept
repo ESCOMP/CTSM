@@ -6,6 +6,7 @@
 #
 
 #  Import libraries
+from __future__ import print_function
 import sys
 import os
 import logging
@@ -14,6 +15,7 @@ import string
 import subprocess
 import numpy as np
 import xarray as xr
+
 
 
 class StreamToLogger(object):
@@ -51,17 +53,9 @@ class StreamToLogger(object):
 
 def error( desc ):
      "error function"
-     mprint( "ERROR:: "+desc )
+     print( "ERROR:: "+desc )
      os.abort()
 
-def mprint(mstr):
-    "Print function whether python-2 or python-3"
-    # six.py or import __future__ print_function could be used instead...
-    vnum=sys.version_info[0]
-    if vnum == 3:
-        print(mstr)
-    if vnum == 2:
-        print mstr
 
 def AddTagToFilename(filename, tag):
     "Add a tag to a filename"
@@ -94,11 +88,11 @@ def main ():
     sys.stderr = sl
 
 
-    mprint( "singlept script to extract out a single point from the global CTSM inputdata datasets\n" )
+    print( "singlept script to extract out a single point from the global CTSM inputdata datasets\n" )
     myname=getuser()
     pwd=os.getcwd()
-    mprint("User = "+myname)
-    mprint("Current directory = "+pwd+"\n")
+    print("User = "+myname)
+    print("Current directory = "+pwd+"\n")
 
     '''
 #------------------------------------------------------------------#
@@ -213,7 +207,7 @@ def main ():
 
 #--  Create CTSM domain file
     if create_domain:
-        mprint( "Open: "+fdomain )
+        print( "Open: "+fdomain )
         f1  = xr.open_dataset(fdomain)
         # create 1d coordinate variables to enable sel() method
         lon0=np.asarray(f1['xc'][0,:])
@@ -234,12 +228,12 @@ def main ():
         wfile=fdomain2
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
-        mprint('created file '+fdomain2)
+        print('created file '+fdomain2)
         f1.close(); f2.close(); f3.close()
 
 #--  Create CTSM surface data file
     if create_surfdata:
-        mprint( "Open: "+fsurf )
+        print( "Open: "+fsurf )
         f1  = xr.open_dataset(fsurf)
         # create 1d variables
         lon0=np.asarray(f1['LONGXY'][0,:])
@@ -276,7 +270,7 @@ def main ():
         f3 = f3.transpose(u'time', u'cft', u'lsmpft', u'natpft', u'nglcec', u'nglcecp1', u'nlevsoi', u'nlevurb', u'numrad', u'numurbl', 'lsmlat', 'lsmlon')
         # mode 'w' overwrites file
         f3.to_netcdf(path=fsurf2, mode='w')
-        mprint('created file '+fsurf2)
+        print('created file '+fsurf2)
         f1.close(); f2.close(); f3.close()
 
         ''' this is buggy; can't re-write a file within the same session
@@ -303,7 +297,7 @@ def main ():
         '''
 #--  Create CTSM transient landuse data file
     if create_landuse:
-        mprint( "Open: "+fluse )
+        print( "Open: "+fluse )
         f1  = xr.open_dataset(fluse)
         # create 1d variables
         lon0=np.asarray(f1['LONGXY'][0,:])
@@ -331,17 +325,17 @@ def main ():
         x.attrs['long_name']='Year of PFT data'
         f3['YEAR'] = x
         #print(x)
-        #mprint(f3)
+        #print(f3)
         #stop
         # mode 'w' overwrites file
         f3.to_netcdf(path=fluse2, mode='w')
-        mprint('created file '+fluse2)
+        print('created file '+fluse2)
         f1.close(); f2.close(); f3.close()
 
 #--  Create single point atmospheric forcing data
     if create_datm:
         #--  create datm domain file
-        mprint( "Open: "+fdatmdomain )
+        print( "Open: "+fdatmdomain )
         f1  = xr.open_dataset(fdatmdomain)
         # create 1d coordinate variables to enable sel() method
         lon0=np.asarray(f1['xc'][0,:])
@@ -362,7 +356,7 @@ def main ():
         wfile=fdatmdomain2
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
-        mprint('created file '+fdatmdomain2)
+        print('created file '+fdatmdomain2)
         f1.close(); f2.close(); f3.close()
 
         #--  specify subdirectory names and filename prefixes
@@ -397,7 +391,7 @@ def main ():
 
         nm=len(infile)
         for n in range(nm):
-            mprint(outfile[n]+'\n')
+            print(outfile[n]+'\n')
             file_in = infile[n]
             file_out = outfile[n]
         
@@ -425,9 +419,9 @@ def main ():
             f1.close(); f2.close(); f3.close()
 
           
-        mprint('datm files written to: '+dir_output_datm)
+        print('datm files written to: '+dir_output_datm)
 
-    mprint( "\nSuccessfully ran script\n\n" )
+    print( "\nSuccessfully ran script\n\n" )
 
 
 if __name__ == "__main__":
