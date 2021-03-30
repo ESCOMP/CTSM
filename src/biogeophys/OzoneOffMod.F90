@@ -72,7 +72,8 @@ contains
     character(len=*), intent(in)                      :: ozone_method 
     
     if (.not. ozone_method=='unset' ) call endrun(' unconsistent choice of ozone stress method.')
-
+    
+    this%stress_method = ozone_method
     call this%InitAllocateBase(bounds)
     call this%InitColdBase(bounds)
 
