@@ -327,7 +327,7 @@ contains
          long_name='ozone uptake for sunlit leaves', units='mmol m^-3', &
          readvar=readvar, interpinic_flag='interp', data=this%o3uptakesun_patch)
 
-    if (this%ozone_method == 'ozone_method_falk') then 
+    if (this%stress_method == 'ozone_method_falk') then 
        !
        call restartvar(ncid=ncid, flag=flag, varname='o3coefjmaxsun', xtype=ncd_double, &
             dim1name='pft', &
