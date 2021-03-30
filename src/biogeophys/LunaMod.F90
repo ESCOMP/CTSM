@@ -216,6 +216,7 @@ module LunaMod
     use quadraticMod          , only : quadratic
     use CNSharedParamsMod     , only : CNParamsShareInst
     use shr_infnan_mod, only : isnan => shr_infnan_isnan
+    use ozone_base_type,  only : ozone_base_type
         
     implicit none
     
@@ -808,7 +809,7 @@ end subroutine Clear24_Climate_LUNA
 !************************************************************************************************************************************************
 !Use the LUNA model to calculate the Nitrogen partioning 
 subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PARimx10,rb10, hourpd, tair10, tleafd10, tleafn10, &
-     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor, &
+     Jmaxb1, PNlcold, PNetold, PNrespold, PNcbold, dayl_factor,o3coefjmax &
      PNstoreopt, PNlcopt, PNetopt, PNrespopt, PNcbopt)
   implicit none
   real(r8), intent (in) :: FNCa                       !Area based functional nitrogen content (g N/m2 leaf)
@@ -829,6 +830,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
   real(r8), intent (in) :: PNcbold                    !old value of the proportion of nitrogen allocated to carboxylation (unitless)  
   real(r8), intent (in) :: dayl_factor                !daylight scale factor
+  real(r8), intent (in) :: o3coefjmax              !ozone coef jmax 
+
   real(r8), intent (out):: PNstoreopt                 !optimal proportion of nitrogen for storage 
   real(r8), intent (out):: PNlcopt                    !optimal proportion of nitrogen for light capture 
   real(r8), intent (out):: PNetopt                    !optimal proportion of nitrogen for electron transport 
@@ -923,7 +926,8 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
      call NUE(O2a10, ci, tair10, tleafd10c, NUEj, NUEc, Kj2Kc)
      call Nitrogen_investments (KcKjFlag,FNCa, Nlc, forc_pbot10, relh10, CO2a10,O2a10, PARi10c, PARimx10c,rb10, hourpd, tair10, &
           tleafd10c,tleafn10c, &
-          Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, Kc, Kj, ci, &
+          Kj2Kc, JmaxCoef, Fc,Fj, NUEc, NUEj, NUEcref, NUEjref, NUEr, o3coefjmax, & 
+          Kc, Kj, ci, &
           Vcmax, Jmax,JmeanL,JmaxL, Net, Ncb, Nresp, PSN, RESP)
 
      Npsntarget = Nlc + Ncb + Net                                                         !target nitrogen allocated to photosynthesis, which may be lower or higher than Npsn_avail
