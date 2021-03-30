@@ -26,7 +26,7 @@ contains
     ! particular type is determined based on the use_ozone namelist parameter.
     !
     ! !USES:
-    use clm_varctl   , only : use_ozone
+    use clm_varctl   , only : use_method
     use OzoneBaseMod , only : ozone_base_type
     use OzoneOffMod  , only : ozone_off_type
     use OzoneMod     , only : ozone_type
