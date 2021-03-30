@@ -63,7 +63,7 @@ module OzoneMod
      procedure, public :: CalcOzoneStress
 
      ! Private routines
-     procedure, private :: ReadNamelist
+     ! procedure, private :: ReadNamelist
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
