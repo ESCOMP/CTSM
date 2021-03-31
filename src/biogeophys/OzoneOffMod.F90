@@ -61,13 +61,21 @@ contains
 
 
   subroutine Init(this,  bounds, ozone_method)
+    !
+    ! !DESCRIPTION:
+    ! Initialize ozone data structure
+    !
+    ! ! USES:
+    use abortutils,only : endrun
+    !
+    ! !ARGUMENTS:
     class(ozone_off_type) , intent(inout) :: this
     type(bounds_type)     , intent(in)           :: bounds
     character(len=*), intent(in)                      :: ozone_method 
-    
+    !-----------------------------------------------------------------------
+
     if (ozone_method /= 'unset' ) call endrun(' unconsistent choice of ozone_method in init OzoneOffMod.')
     
-    this%stress_method = ozone_method
     call this%InitAllocateBase(bounds)
     call this%InitColdBase(bounds)
 

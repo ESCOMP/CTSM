@@ -327,7 +327,7 @@ contains
          long_name='ozone uptake for sunlit leaves', units='mmol m^-3', &
          readvar=readvar, interpinic_flag='interp', data=this%o3uptakesun_patch)
 
-    if (this%stress_method == 'ozone_method_falk') then 
+    if (this%stress_method == stress_method_falk) then 
        !
        call restartvar(ncid=ncid, flag=flag, varname='o3coefjmaxsun', xtype=ncd_double, &
             dim1name='pft', &
@@ -688,9 +688,7 @@ contains
   end subroutine CalcOzoneStressFalk
 
   !-----------------------------------------------------------------------
-  subroutine CalcOzoneStressFalkOnePoint( &
-       pft_type, o3uptake, &
-       o3coefv, o3coefg)
+  subroutine CalcOzoneStressFalkOnePoint( pft_type, o3uptake, o3coefjmax)
     !
     ! !DESCRIPTION:
     ! Calculates ozone stress for a single point, for just sunlit or shaded leaves
@@ -698,16 +696,20 @@ contains
     ! This subroutine uses the Falk formulation for ozone stress
     !
     ! !ARGUMENTS:
-    integer  , intent(in)    :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
-    real(r8) , intent(in)    :: o3uptake   ! ozone entering the leaf
-    real(r8) , intent(out)   :: o3coefv    ! ozone coefficient for photosynthesis (0 - 1)
-    real(r8) , intent(out)   :: o3coefg    ! ozone coefficient for conductance (0 - 1)
+    integer  , intent(in)        :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
+    real(r8) , intent(in)         :: o3uptake   ! ozone entering the leaf
+    real(r8) , intent(inout) :: o3coefjmax  ! ozone coefficient for max. electron transport rate
+    !real(r8) , intent(out)   :: o3coefv    ! ozone coefficient for photosynthesis (0 - 1)
+   ! real(r8) , intent(out)   :: o3coefg    ! ozone coefficient for conductance (0 - 1)
     !
     ! !LOCAL VARIABLES:
-    real(r8) :: photoInt       ! intercept for photosynthesis
-    real(r8) :: photoSlope     ! slope for photosynthesis
-    real(r8) :: condInt        ! intercept for conductance
-    real(r8) :: condSlope      ! slope for conductance
+    ! !LOCAL VARIABLES:
+    real(r8) :: jmaxInt        ! intercept for max. electron transport rate
+    real(r8) :: jmaxSlope      ! slope for max. electron transport rate
+    !real(r8) :: photoInt       ! intercept for photosynthesis
+    !real(r8) :: photoSlope     ! slope for photosynthesis
+    !real(r8) :: condInt        ! intercept for conductance
+    !real(r8) :: condSlope      ! slope for conductance
 
     character(len=*), parameter :: subname = 'CalcOzoneStressFalkOnePoint'
     !-----------------------------------------------------------------------
