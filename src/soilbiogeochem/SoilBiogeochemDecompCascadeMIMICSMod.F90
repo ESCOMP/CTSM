@@ -1,15 +1,15 @@
-module SoilBiogeochemDecompCascadeBGCMod
+module SoilBiogeochemDecompCascadeMIMICSMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Sets the coeffiecients used in the decomposition cascade submodel.  
-  ! This uses the CENTURY/BGC parameters
+  ! This uses the MIMICS parameters.
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+  use clm_varpar                         , only : nlevdecomp
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
@@ -32,10 +32,10 @@ module SoilBiogeochemDecompCascadeBGCMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: DecompCascadeBGCreadNML         ! Read in namelist
+  public :: DecompCascadeMIMICSreadNML      ! Read in namelist
   public :: readParams                      ! Read in parameters from params file
-  public :: init_decompcascade_bgc          ! Initialization
-  public :: decomp_rate_constants_bgc       ! Figure out decomposition rates
+  public :: init_decompcascade_mimics       ! Initialization
+  public :: decomp_rate_constants_mimics    ! Figure out decomposition rates
   !
   ! !PUBLIC DATA MEMBERS 
   logical , public :: normalize_q10_to_century_tfunc = .true.! do we normalize the century decomp. rates so that they match the CLM Q10 at a given tep?
@@ -51,28 +51,52 @@ module SoilBiogeochemDecompCascadeBGCMod
   integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metobolic
   integer, private, parameter :: i_litr2   = i_cel_lit  ! Second litter pool, cellulose
   integer, private, parameter :: i_litr3   = i_lig_lit  ! Third litter pool, lignin
+  integer, private, parameter :: i_micr1   = i_micr_r   ! First microbial pool, copiotrophic, as labeled in Wieder et al. 2015
+  integer, private, parameter :: i_micr2   = i_micr_k   ! Second microbial pool, oligotrophic, as labeled in Wieder et al. 2015
 
   type, private :: params_type
      real(r8):: cn_s1_bgc     !C:N for SOM 1
      real(r8):: cn_s2_bgc     !C:N for SOM 2
      real(r8):: cn_s3_bgc     !C:N for SOM 3
 
-     real(r8):: rf_l1s1_bgc   !respiration fraction litter 1 -> SOM 1
-     real(r8):: rf_l2s1_bgc
-     real(r8):: rf_l3s2_bgc
+     ! TODO slevis: New rf params in MIMICS. Update params file accordingly.
+     !              I haven't identified what these correspond to in testbed.
+     real(r8):: rf_l1m1_mimics  !respiration fraction litter 1 -> microbial 1
+     real(r8):: rf_l2m1_mimics
+     real(r8):: rf_l3m1_mimics
 
-     real(r8):: rf_s2s1_bgc    
-     real(r8):: rf_s2s3_bgc    
-     real(r8):: rf_s3s1_bgc    
+     real(r8):: rf_l1m2_mimics
+     real(r8):: rf_l2m2_mimics
+     real(r8):: rf_l3m2_mimics
 
+     real(r8):: rf_s1s3_mimics  ! respiration fraction soil 1 -> soil 3
+     real(r8):: rf_s2s3_mimics
+     real(r8):: rf_s3m1_mimics
+     real(r8):: rf_s3m2_mimics
+
+     real(r8):: rf_m1s1_mimics
+     real(r8):: rf_m1s2_mimics
+     real(r8):: rf_m1s3_mimics
+
+     real(r8):: rf_m2s1_mimics
+     real(r8):: rf_m2s2_mimics
+     real(r8):: rf_m2s3_mimics
+
+     ! TODO slevis: Keep these?
      real(r8):: rf_cwdl2_bgc 
      real(r8):: rf_cwdl3_bgc
 
-     real(r8):: tau_l1_bgc    ! 1/turnover time of  litter 1 from Century (l/18.5) (1/yr)
-     real(r8):: tau_l2_l3_bgc ! 1/turnover time of  litter 2 and litter 3 from Century (1/4.9) (1/yr)
-     real(r8):: tau_s1_bgc    ! 1/turnover time of  SOM 1 from Century (1/7.3) (1/yr)
-     real(r8):: tau_s2_bgc    ! 1/turnover time of  SOM 2 from Century (1/0.2) (1/yr)
-     real(r8):: tau_s3_bgc    ! 1/turnover time of  SOM 3 from Century (1/0.0045) (1/yr)
+     ! TODO slevis: tau params are functions (Vmax and Km) in MIMICS. Also new
+     !              tau params define microbial turnover to SOM. Update params
+     !              file if necessary.
+     real(r8):: tau_l1_mimics     ! 1/turnover time of litter 1 (1/yr)
+     real(r8):: tau_l2_l3_mimics  ! 1/turnover time of litter 2 and 3 (1/yr)
+     real(r8):: tau_s1_mimics     ! 1/turnover time of SOM 1 (1/yr)
+     real(r8):: tau_s2_mimics     ! 1/turnover time of SOM 2 (1/yr)
+     real(r8):: tau_s3_mimics     ! 1/turnover time of SOM 3 (1/yr)
+     real(r8):: tau_m1_mimics     ! 1/turnover time of microbial 1 (1/yr)
+     real(r8):: tau_m2_mimics     ! 1/turnover time of microbial 2 (1/yr)
+     ! TODO slevis: Keep?
      real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
 
      real(r8) :: cwd_fcel_bgc !cellulose fraction for CWD
@@ -97,10 +121,11 @@ module SoilBiogeochemDecompCascadeBGCMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine DecompCascadeBGCreadNML( NLFilename )
+  subroutine DecompCascadeMIMCSreadNML( NLFilename )
     !
     ! !DESCRIPTION:
-    ! Read the namelist for soil BGC Decomposition Cascade
+    ! Read the namelist for soil MIMICS Decomposition Cascade
+    ! TODO slevis: Modify for MIMICS if necessary
     !
     ! !USES:
     use fileutils      , only : getavu, relavu, opnfil
@@ -118,7 +143,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=*), parameter :: subname = 'DecompCascadeBGCreadNML'
+    character(len=*), parameter :: subname = 'DecompCascadeMIMICSreadNML'
     character(len=*), parameter :: nmlname = 'CENTURY_soilBGCDecompCascade'
     !-----------------------------------------------------------------------
     real(r8) :: initial_Cstocks(nsompools), initial_Cstocks_depth
@@ -159,7 +184,7 @@ contains
     params_inst%initial_Cstocks(:)    = initial_Cstocks(:)
     params_inst%initial_Cstocks_depth = initial_Cstocks_depth
 
-  end subroutine DecompCascadeBGCreadNML
+  end subroutine DecompCascadeMIMICSreadNML
 
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
@@ -173,39 +198,16 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'CNDecompBgcParamsType'
-    character(len=100) :: errCode = 'Error reading in CN const file '
+    character(len=32)  :: subname = 'readParams'
+    character(len=100) :: errCode = 'Error reading MIMICS params '
     logical            :: readv   ! has variable been read in or not
     real(r8)           :: tempr   ! temporary to read in constant
     character(len=100) :: tString ! temp. var for reading
     !-----------------------------------------------------------------------
 
     ! Read off of netcdf file
-    tString='tau_l1'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_l1_bgc=tempr
-
-    tString='tau_l2_l3'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_l2_l3_bgc=tempr
-
-    tString='tau_s1'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_s1_bgc=tempr
-
-    tString='tau_s2'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_s2_bgc=tempr
-
-    tString='tau_s3'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_s3_bgc=tempr
-
+    ! TODO slevis: new params will be added here and in the params file
+    ! TODO slevis: Keep tau_cwd?
     tString='tau_cwd'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -226,35 +228,86 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cn_s3_bgc=tempr
 
-    tString='rf_l1s1_bgc'
+    ! TODO slevis: rf params changing
+    tString='rf_l1m1_mimics'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_l1s1_bgc=tempr
+    params_inst%rf_l1m1_mimics=tempr
 
-    tString='rf_l2s1_bgc'
+    tString='rf_l2m1_mimics'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_l2s1_bgc=tempr
+    params_inst%rf_l2m1_mimics=tempr
 
-    tString='rf_l3s2_bgc'
+    tString='rf_l3m1_mimics'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_l3s2_bgc=tempr   
+    params_inst%rf_l3m1_mimics=tempr
 
-    tString='rf_s2s1_bgc'
+    tString='rf_l1m2_mimics'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_s2s1_bgc=tempr
+    params_inst%rf_l1m2_mimics=tempr
 
-    tString='rf_s2s3_bgc'
+    tString='rf_l2m2_mimics'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_s2s3_bgc=tempr
+    params_inst%rf_l2m2_mimics=tempr
 
-    tString='rf_s3s1_bgc'
+    tString='rf_l3m2_mimics'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_s3s1_bgc=tempr
+    params_inst%rf_l3m2_mimics=tempr
+
+    tString='rf_s1s3_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_s1s3_mimics=tempr
+
+    tString='rf_s2s3_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_s2s3_mimics=tempr
+
+    tString='rf_s3m1_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_s3m1_mimics=tempr
+
+    tString='rf_s3m2_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_s3m2_mimics=tempr
+
+    tString='rf_m1s1_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_m1s1_mimics=tempr
+
+    tString='rf_m1s2_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_m1s2_mimics=tempr
+
+    tString='rf_m1s3_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_m1s3_mimics=tempr
+
+    tString='rf_m2s1_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_m2s1_mimics=tempr
+
+    tString='rf_m2s2_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_m2s2_mimics=tempr
+
+    tString='rf_m2s3_mimics'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%rf_m2s3_mimics=tempr
 
     tString='rf_cwdl2_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -294,11 +347,11 @@ contains
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, soilstate_inst )
+  subroutine init_decompcascade_mimcs(bounds, soilbiogeochem_state_inst, soilstate_inst )
     !
     ! !DESCRIPTION:
-    !  initialize rate constants and decomposition pathways following the decomposition cascade of the BGC model.
-    !  written by C. Koven 
+    ! initialize rate constants and decomposition pathways following the
+    ! decomposition cascade of the MIMICS model.
     !
     ! !USES:
     !
@@ -309,16 +362,26 @@ contains
     !
     ! !LOCAL VARIABLES
     !-- properties of each decomposing pool
-    real(r8) :: rf_l1s1
-    real(r8) :: rf_l2s1
-    real(r8) :: rf_l3s2
-    !real(r8) :: rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
-    !real(r8) :: rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8), allocatable :: rf_s1s2(:,:)
-    real(r8), allocatable :: rf_s1s3(:,:)
-    real(r8) :: rf_s2s1
+    real(r8) :: rf_l1m1
+    real(r8) :: rf_l2m1
+    real(r8) :: rf_l3m1
+    real(r8) :: rf_l1m2
+    real(r8) :: rf_l2m2
+    real(r8) :: rf_l3m2
+    real(r8) :: rf_s1s3
     real(r8) :: rf_s2s3
-    real(r8) :: rf_s3s1
+    real(r8) :: rf_s3m1
+    real(r8) :: rf_s3m2
+    real(r8) :: rf_m1s1
+    real(r8) :: rf_m1s2
+    real(r8) :: rf_m1s3
+    real(r8) :: rf_m2s1
+    real(r8) :: rf_m2s2
+    real(r8) :: rf_m2s3
+    ! TODO slevis: Already exists as scalar but keep temporarily as a template
+    !              for new params not coming from the params file.
+    !              Also keeping other params that I'm not sure about, yet.
+    real(r8), allocatable :: rf_s1s3(:,:)
     real(r8) :: rf_cwdl2
     real(r8) :: rf_cwdl3
     real(r8) :: cwd_fcel
@@ -326,21 +389,26 @@ contains
     real(r8) :: cn_s1
     real(r8) :: cn_s2
     real(r8) :: cn_s3
-    !real(r8) :: f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
-    !real(r8) :: f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8), allocatable :: f_s1s2(:,:)
     real(r8), allocatable :: f_s1s3(:,:)
-    real(r8) :: f_s2s1
     real(r8) :: f_s2s3
 
-    integer :: i_l1s1
-    integer :: i_l2s1
-    integer :: i_l3s2
-    integer :: i_s1s2
+    integer :: i_l1m1
+    integer :: i_l2m1
+    integer :: i_l3m1
+    integer :: i_l1m2
+    integer :: i_l2m2
+    integer :: i_l3m2
     integer :: i_s1s3
-    integer :: i_s2s1
     integer :: i_s2s3
-    integer :: i_s3s1
+    integer :: i_s3m1
+    integer :: i_s3m2
+    integer :: i_s3m3
+    integer :: i_m1s1
+    integer :: i_m1s2
+    integer :: i_m1s3
+    integer :: i_m2s1
+    integer :: i_m2s2
+    integer :: i_m2s3
     integer :: i_cwdl2
     integer :: i_cwdl3
     real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
@@ -358,6 +426,7 @@ contains
          cascade_donor_pool             => decomp_cascade_con%cascade_donor_pool                 , & ! Output: [integer           (:)     ]  which pool is C taken from for a given decomposition step 
          cascade_receiver_pool          => decomp_cascade_con%cascade_receiver_pool              , & ! Output: [integer           (:)     ]  which pool is C added to for a given decomposition step   
          floating_cn_ratio_decomp_pools => decomp_cascade_con%floating_cn_ratio_decomp_pools     , & ! Output: [logical           (:)     ]  TRUE => pool has fixed C:N ratio                          
+         is_microbe                     => decomp_cascade_con%is_microbe                         , & ! Output: [logical           (:)     ]  TRUE => pool is microbial
          is_litter                      => decomp_cascade_con%is_litter                          , & ! Output: [logical           (:)     ]  TRUE => pool is a litter pool                             
          is_soil                        => decomp_cascade_con%is_soil                            , & ! Output: [logical           (:)     ]  TRUE => pool is a soil pool                               
          is_cwd                         => decomp_cascade_con%is_cwd                             , & ! Output: [logical           (:)     ]  TRUE => pool is a cwd pool                                
@@ -371,9 +440,7 @@ contains
 
          )
 
-      allocate(rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
-      allocate(f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
 
       !------- time-constant coefficients ---------- !
@@ -383,12 +450,22 @@ contains
       cn_s3 = params_inst%cn_s3_bgc
 
       ! set respiration fractions for fluxes between compartments
-      rf_l1s1 = params_inst%rf_l1s1_bgc
-      rf_l2s1 = params_inst%rf_l2s1_bgc
-      rf_l3s2 = params_inst%rf_l3s2_bgc
-      rf_s2s1 = params_inst%rf_s2s1_bgc
-      rf_s2s3 = params_inst%rf_s2s3_bgc
-      rf_s3s1 = params_inst%rf_s3s1_bgc
+      rf_l1m1 = params_inst%rf_l1m1_mimics
+      rf_l2m1 = params_inst%rf_l2m1_mimics
+      rf_l3m1 = params_inst%rf_l3m1_mimics
+      rf_l1m2 = params_inst%rf_l1m2_mimics
+      rf_l2m2 = params_inst%rf_l2m2_mimics
+      rf_l3m2 = params_inst%rf_l3m2_mimics
+      rf_s1s3 = params_inst%rf_s1s3_mimics
+      rf_s2s3 = params_inst%rf_s2s3_mimics
+      rf_s3m1 = params_inst%rf_s3m1_mimics
+      rf_s3m2 = params_inst%rf_s3m2_mimics
+      rf_m1s1 = params_inst%rf_m1s1_mimics
+      rf_m1s2 = params_inst%rf_m1s2_mimics
+      rf_m1s3 = params_inst%rf_m1s3_mimics
+      rf_m2s1 = params_inst%rf_m2s1_mimics
+      rf_m2s2 = params_inst%rf_m2s2_mimics
+      rf_m2s3 = params_inst%rf_m2s3_mimics
 
       rf_cwdl2 = params_inst%rf_cwdl2_bgc
       rf_cwdl3 = params_inst%rf_cwdl3_bgc
@@ -398,16 +475,18 @@ contains
       cwd_flig = params_inst%cwd_flig_bgc
 
       ! set path fractions
-      f_s2s1 = 0.42_r8/(0.45_r8)
       f_s2s3 = 0.03_r8/(0.45_r8)
 
       ! some of these are dependent on the soil texture properties
+      ! TODO slevis: Template for calculated mimics params?
+      !              But soil texture remains const with time.
+      !              So one-time initializations here and time-dep params
+      !              in subr. decomp_rate_constants_mimics.
+
       do c = bounds%begc, bounds%endc
          do j = 1, nlevdecomp
             t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - cellsand(c,j))
-            f_s1s2(c,j) = 1._r8 - .004_r8 / (1._r8 - t)
             f_s1s3(c,j) = .004_r8 / (1._r8 - t)
-            rf_s1s2(c,j) = t
             rf_s1s3(c,j) = t
          end do
       end do
@@ -419,6 +498,7 @@ contains
       decomp_cascade_con%decomp_pool_name_history(i_litr1) = 'LITR1'
       decomp_cascade_con%decomp_pool_name_long(i_litr1) = 'litter 1'
       decomp_cascade_con%decomp_pool_name_short(i_litr1) = 'L1'
+      is_microbe(i_litr1) = .false.
       is_litter(i_litr1) = .true.
       is_soil(i_litr1) = .false.
       is_cwd(i_litr1) = .false.
@@ -433,6 +513,7 @@ contains
       decomp_cascade_con%decomp_pool_name_history(i_litr2) = 'LITR2'
       decomp_cascade_con%decomp_pool_name_long(i_litr2) = 'litter 2'
       decomp_cascade_con%decomp_pool_name_short(i_litr2) = 'L2'
+      is_microbe(i_litr2) = .false.
       is_litter(i_litr2) = .true.
       is_soil(i_litr2) = .false.
       is_cwd(i_litr2) = .false.
@@ -447,6 +528,7 @@ contains
       decomp_cascade_con%decomp_pool_name_history(i_litr3) = 'LITR3'
       decomp_cascade_con%decomp_pool_name_long(i_litr3) = 'litter 3'
       decomp_cascade_con%decomp_pool_name_short(i_litr3) = 'L3'
+      is_microbe(i_litr3) = .false.
       is_litter(i_litr3) = .true.
       is_soil(i_litr3) = .false.
       is_cwd(i_litr3) = .false.
@@ -463,6 +545,7 @@ contains
          decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
          decomp_cascade_con%decomp_pool_name_long(i_cwd) = 'coarse woody debris'
          decomp_cascade_con%decomp_pool_name_short(i_cwd) = 'CWD'
+         is_microbe(i_cwd) = .false.
          is_litter(i_cwd) = .false.
          is_soil(i_cwd) = .false.
          is_cwd(i_cwd) = .true.
@@ -483,6 +566,7 @@ contains
       decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
       decomp_cascade_con%decomp_pool_name_long(i_soil1) = 'soil 1'
       decomp_cascade_con%decomp_pool_name_short(i_soil1) = 'S1'
+      is_microbe(i_soil1) = .false.
       is_litter(i_soil1) = .false.
       is_soil(i_soil1) = .true.
       is_cwd(i_soil1) = .false.
@@ -502,6 +586,7 @@ contains
       decomp_cascade_con%decomp_pool_name_history(i_soil2) = 'SOIL2'
       decomp_cascade_con%decomp_pool_name_long(i_soil2) = 'soil 2'
       decomp_cascade_con%decomp_pool_name_short(i_soil2) = 'S2'
+      is_microbe(i_soil2) = .false.
       is_litter(i_soil2) = .false.
       is_soil(i_soil2) = .true.
       is_cwd(i_soil2) = .false.
@@ -521,6 +606,7 @@ contains
       decomp_cascade_con%decomp_pool_name_history(i_soil3) = 'SOIL3'
       decomp_cascade_con%decomp_pool_name_long(i_soil3) = 'soil 3'
       decomp_cascade_con%decomp_pool_name_short(i_soil3) = 'S3'
+      is_microbe(i_soil3) = .false.
       is_litter(i_soil3) = .false.
       is_soil(i_soil3) = .true.
       is_cwd(i_soil3) = .false.
@@ -529,6 +615,36 @@ contains
       is_metabolic(i_soil3) = .false.
       is_cellulose(i_soil3) = .false.
       is_lignin(i_soil3) = .false.
+
+      floating_cn_ratio_decomp_pools(i_micr1) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_micr1) = 'micr1'
+      decomp_cascade_con%decomp_pool_name_history(i_micr1) = 'MICR1'
+      decomp_cascade_con%decomp_pool_name_long(i_micr1) = 'microbial 1'
+      decomp_cascade_con%decomp_pool_name_short(i_micr1) = 'M1'
+      is_microbe(i_micr1) = .true.
+      is_litter(i_micr1) = .false.
+      is_soil(i_micr1) = .false.
+      is_cwd(i_micr1) = .false.
+      initial_cn_ratio(i_micr1) = 90._r8
+      initial_stock(i_micr1) = 0._r8
+      is_metabolic(i_micr1) = .false.
+      is_cellulose(i_micr1) = .false.
+      is_lignin(i_micr1) = .false.
+
+      floating_cn_ratio_decomp_pools(i_micr2) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_micr2) = 'micr2'
+      decomp_cascade_con%decomp_pool_name_history(i_micr2) = 'MICR2'
+      decomp_cascade_con%decomp_pool_name_long(i_micr2) = 'microbial 2'
+      decomp_cascade_con%decomp_pool_name_short(i_micr2) = 'M2'
+      is_microbe(i_micr2) = .true.
+      is_litter(i_micr2) = .false.
+      is_soil(i_micr2) = .false.
+      is_cwd(i_micr2) = .false.
+      initial_cn_ratio(i_micr2) = 90._r8
+      initial_stock(i_micr2) = 0._r8
+      is_metabolic(i_micr2) = .false.
+      is_cellulose(i_micr2) = .false.
+      is_lignin(i_micr2) = .false.
 
 
       speedup_fac = 1._r8
@@ -539,6 +655,7 @@ contains
       spinup_factor(i_litr2) = 1._r8
       spinup_factor(i_litr3) = 1._r8
       !CWD
+      ! TODO slevis: tau params changing
       if (.not. use_fates) then
          spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
       end if
@@ -547,6 +664,9 @@ contains
       !som2,3
       spinup_factor(i_soil2) = max(1._r8, (speedup_fac * params_inst%tau_s2_bgc))
       spinup_factor(i_soil3) = max(1._r8, (speedup_fac * params_inst%tau_s3_bgc))
+      ! micr1,2
+      spinup_factor(i_micr1) = 1._r8
+      spinup_factor(i_micr2) = 1._r8
 
       if ( masterproc ) then
          write(iulog,*) 'Spinup_state ',spinup_state
@@ -554,71 +674,128 @@ contains
       end if
 
       !----------------  list of transitions and their time-independent coefficients  ---------------!
-      i_l1s1 = 1
-      decomp_cascade_con%cascade_step_name(i_l1s1) = 'L1S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
-      cascade_donor_pool(i_l1s1) = i_litr1
-      cascade_receiver_pool(i_l1s1) = i_soil1
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
+      i_l1m1 = 1
+      decomp_cascade_con%cascade_step_name(i_l1m1) = 'L1M1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = rf_l1m1
+      cascade_donor_pool(i_l1m1) = i_litr1
+      cascade_receiver_pool(i_l1m1) = i_micr1
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = 1.0_r8
 
-      i_l2s1 = 2
-      decomp_cascade_con%cascade_step_name(i_l2s1) = 'L2S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = rf_l2s1
-      cascade_donor_pool(i_l2s1) = i_litr2
-      cascade_receiver_pool(i_l2s1) = i_soil1
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)= 1.0_r8
+      i_l2m1 = 2
+      decomp_cascade_con%cascade_step_name(i_l2m1) = 'L2M1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1) = rf_l2m1
+      cascade_donor_pool(i_l2m1) = i_litr2
+      cascade_receiver_pool(i_l2m1) = i_micr1
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1)= 1.0_r8
 
-      i_l3s2 = 3
-      decomp_cascade_con%cascade_step_name(i_l3s2) = 'L3S2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = rf_l3s2
-      cascade_donor_pool(i_l3s2) = i_litr3
-      cascade_receiver_pool(i_l3s2) = i_soil2
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 1.0_r8
+      i_l3m1 = 3
+      decomp_cascade_con%cascade_step_name(i_l3m1) = 'L3M1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3m1) = rf_l3m1
+      cascade_donor_pool(i_l3m1) = i_litr3
+      cascade_receiver_pool(i_l3m1) = i_micr1
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3m1)= 1.0_r8
 
-      i_s1s2 = 4
-      decomp_cascade_con%cascade_step_name(i_s1s2) = 'S1S2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
-      cascade_donor_pool(i_s1s2) = i_soil1
-      cascade_receiver_pool(i_s1s2) = i_soil2
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
+      i_l1m2 = 4
+      decomp_cascade_con%cascade_step_name(i_l1m2) = 'L1M2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = rf_l1m2
+      cascade_donor_pool(i_l1m2) = i_litr1
+      cascade_receiver_pool(i_l1m2) = i_micr2
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = 1.0_r8
 
-      i_s1s3 = 5
+      i_l2m2 = 5
+      decomp_cascade_con%cascade_step_name(i_l2m2) = 'L2M2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2) = rf_l2m2
+      cascade_donor_pool(i_l2m2) = i_litr2
+      cascade_receiver_pool(i_l2m2) = i_micr2
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2)= 1.0_r8
+
+      i_l3m2 = 6
+      decomp_cascade_con%cascade_step_name(i_l3m2) = 'L3M2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3m2) = rf_l3m2
+      cascade_donor_pool(i_l3m2) = i_litr3
+      cascade_receiver_pool(i_l3m2) = i_micr2
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3m2)= 1.0_r8
+
+      i_s1s3 = 7
       decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
       cascade_donor_pool(i_s1s3) = i_soil1
       cascade_receiver_pool(i_s1s3) = i_soil3
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
 
-      i_s2s1 = 6
-      decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
-      cascade_donor_pool(i_s2s1) = i_soil2
-      cascade_receiver_pool(i_s2s1) = i_soil1
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
-
-      i_s2s3 = 7 
+      i_s2s3 = 8
       decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
       cascade_donor_pool(i_s2s3) = i_soil2
       cascade_receiver_pool(i_s2s3) = i_soil3
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
 
-      i_s3s1 = 8
-      decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
-      cascade_donor_pool(i_s3s1) = i_soil3
-      cascade_receiver_pool(i_s3s1) = i_soil1
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
+      i_s3m1 = 9
+      decomp_cascade_con%cascade_step_name(i_s3m1) = 'S3M1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m1) = rf_s3m1
+      cascade_donor_pool(i_s3m1) = i_soil3
+      cascade_receiver_pool(i_s3m1) = i_micr1
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m1) = 1.0_r8
 
+      i_s3m2 = 10
+      decomp_cascade_con%cascade_step_name(i_s3m2) = 'S3M2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m2) = rf_s3m2
+      cascade_donor_pool(i_s3m2) = i_soil3
+      cascade_receiver_pool(i_s3m2) = i_micr2
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m2) = 1.0_r8
+
+      i_m1s1 = 11
+      decomp_cascade_con%cascade_step_name(i_m1s1) = 'M1S1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = rf_m1s1
+      cascade_donor_pool(i_m1s1) = i_micr1
+      cascade_receiver_pool(i_m1s1) = i_soil1
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = 1.0_r8
+
+      i_m1s2 = 12
+      decomp_cascade_con%cascade_step_name(i_m1s2) = 'M1S2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = rf_m1s2
+      cascade_donor_pool(i_m1s2) = i_micr1
+      cascade_receiver_pool(i_m1s2) = i_soil2
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = 1.0_r8
+
+      i_m1s3 = 13
+      decomp_cascade_con%cascade_step_name(i_m1s3) = 'M1S3'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = rf_m1s3
+      cascade_donor_pool(i_m1s3) = i_micr1
+      cascade_receiver_pool(i_m1s3) = i_soil3
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = 1.0_r8
+
+      i_m2s1 = 15
+      decomp_cascade_con%cascade_step_name(i_m2s1) = 'M2S1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = rf_m2s1
+      cascade_donor_pool(i_m2s1) = i_micr2
+      cascade_receiver_pool(i_m2s1) = i_soil1
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = 1.0_r8
+
+      i_m2s2 = 16
+      decomp_cascade_con%cascade_step_name(i_m2s2) = 'M2S2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = rf_m2s2
+      cascade_donor_pool(i_m2s2) = i_micr2
+      cascade_receiver_pool(i_m2s2) = i_soil2
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = 1.0_r8
+
+      i_m2s3 = 17
+      decomp_cascade_con%cascade_step_name(i_m2s3) = 'M2S3'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = rf_m2s3
+      cascade_donor_pool(i_m2s3) = i_micr2
+      cascade_receiver_pool(i_m2s3) = i_soil3
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = 1.0_r8
+
+      ! TODO slevis: Keep these?
       if (.not. use_fates) then
-         i_cwdl2 = 9
+         i_cwdl2 = 18
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_litr2
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
          
-         i_cwdl3 = 10
+         i_cwdl3 = 19
          decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
          cascade_donor_pool(i_cwdl3) = i_cwd
@@ -626,22 +803,20 @@ contains
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
       end if
 
-      deallocate(rf_s1s2)
       deallocate(rf_s1s3)
-      deallocate(f_s1s2)
       deallocate(f_s1s3)
 
     end associate
 
-  end subroutine init_decompcascade_bgc
+  end subroutine init_decompcascade_mimics
 
   !-----------------------------------------------------------------------
-  subroutine decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
+  subroutine decomp_rate_constants_mimics(bounds, num_soilc, filter_soilc, &
        soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
-    !  calculate rate constants and decomposition pathways for the CENTURY decomposition cascade model
-    !  written by C. Koven based on original CLM4 decomposition cascade
+    ! Calculate rate constants and decomposition pathways for the MIMICS
+    ! decomposition cascade model
     !
     ! !USES:
     use clm_time_manager , only : get_days_per_year
@@ -667,6 +842,8 @@ contains
     real(r8):: k_s1                         ! decomposition rate constant SOM 1 (1/sec)
     real(r8):: k_s2                         ! decomposition rate constant SOM 2 (1/sec)
     real(r8):: k_s3                         ! decomposition rate constant SOM 3 (1/sec)
+    real(r8):: k_m1                         ! decomposition rate constant microbial 1 (1/sec)
+    real(r8):: k_m2                         ! decomposition rate constant microbial 2 (1/sec)
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
     real(r8):: cwdc_loss                    ! fragmentation rate for CWD carbon (gC/m2/s)
     real(r8):: cwdn_loss                    ! fragmentation rate for CWD nitrogen (gN/m2/s)
@@ -687,6 +864,8 @@ contains
     real(r8):: spinup_geogterm_s1(bounds%begc:bounds%endc) ! geographically-varying spinup term for s1
     real(r8):: spinup_geogterm_s2(bounds%begc:bounds%endc) ! geographically-varying spinup term for s2
     real(r8):: spinup_geogterm_s3(bounds%begc:bounds%endc) ! geographically-varying spinup term for s3
+    real(r8):: spinup_geogterm_m1(bounds%begc:bounds%endc) ! geographically-varying spinup term for m1
+    real(r8):: spinup_geogterm_m2(bounds%begc:bounds%endc) ! geographically-varying spinup term for m2
 
     !-----------------------------------------------------------------------
 
@@ -729,12 +908,71 @@ contains
       ! Set "decomp_depth_efolding" parameter
       decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
 
+! TODO slevis: tau params are changing; map to Wieder et al. 2015
+! From testbed code
+! ------------------
+
+! Vmax, tau*, and Km are time-dependent
+
+! Table B1 Wieder et al. 2015 gives
+! Vslope = 0.063, Vint = 5.47, av = 8e-6
+! Vmod_r = 10,2,10, Vmod_K = 3,3,2 (for LITm,s,SOMa --> MICr,K respectively)
+
+! Vmax(npt,R1) = exp(Vslope(R1) * Tsoi_day_avg_C + Vint(R1)) * av * Vmod(R1)
+! Vmax(npt,R2) = exp(Vslope(R2) * Tsoi_day_avg_C + Vint(R2)) * av * Vmod(R2)
+! Vmax(npt,R3) = exp(Vslope(R3) * Tsoi_day_avg_C + Vint(R3)) * av * Vmod(R3)
+! Vmax(npt,K1) = exp(Vslope(K1) * Tsoi_day_avg_C + Vint(K1)) * av * Vmod(K1)
+! Vmax(npt,K2) = exp(Vslope(K2) * Tsoi_day_avg_C + Vint(K2)) * av * Vmod(K2)
+! Vmax(npt,K3) = exp(Vslope(K3) * Tsoi_day_avg_C + Vint(K3)) * av * Vmod(K3)
+
+! ---
+! Solving for tauR (tau_m1 here?) & tauK (tau_m2 here?)
+
+! fmet_p(1) = 0.85, fmet_p(2) = 0.85, fmet_p(3) = 0.013
+! ligninNratioAvg(npt) =  &
+!  ( ligninNratio(npt,leaf)  * (cleaf2met(npt) + cleaf2str(npt)) &
+!  + ligninNratio(npt,froot) * (croot2met(npt) + croot2str(npt)) &
+!  + ligninNratio(npt,wood)  * (cwd2str(npt)) ) &
+!  / max(0.001, cleaf2met(npt)+cleaf2str(npt)+croot2met(npt)+croot2str(npt)+cwd2str(npt))
+! set limits on Lignin:N to keep fmet > 0.2
+! necessary for litter quality in boreal forests with high cwd flux
+! ligninNratioAvg(npt) = min(40.0, ligninNratioAvg(npt))
+! fmet(npt) = fmet_p(1) * (fmet_p(2) - fmet_p(3) * ligninNratioAvg(npt))
+
+! tauModDenom = 100, tauMod_min = 0.8, tauMod_max = 1.2
+! tauMod(npt) = sqrt(avg_ann_npp_gC_m2_yr / tauModDenom)
+! tauMod(npt) = min(tauMod_max, max(tauMod_min, tauMod(npt)))
+
+! tauR is tau_m1, right? tau_r(1) = 5.2e-4_r8, tau_r(2) = 0.3_r8 or 0.4?
+! tauR(npt) = tau_r(1) * exp(tau_r(2) * fmet(npt)) * tauMod(npt)
+
+! tauK is tau_m2, right? tau_k(1) = 2.4e-4_r8, tau_k(2) = 0.1_r8
+! tauK(npt) = tau_k(1) * exp(tau_k(2) * fmet(npt)) * tauMod(npt)
+! ---
+
+! Table B1 Wieder et al. 2015 gives
+! Kslope = 0.017, 0.027, 0.017 (for LITm,s,SOMa --> MICr and K)
+! Kint = 3.19, aK = 10
+! Kmod_r = 0.125,0.5,0.25*P_scalar, Kmod_K = 0.5,0.25,0.167*P_scalar
+! P_scalar = (2 * exp(-2 * sqrt(fclay)))**(-1)
+
+! Km(npt,R1) = exp(Kslope(R1) * Tsoi_day_avg_C + Kint(R1)) * ak / Kmod(npt,R1)
+! Km(npt,R2) = exp(Kslope(R2) * Tsoi_day_avg_C + Kint(R2)) * ak / Kmod(npt,R2)
+! Km(npt,R3) = exp(Kslope(R3) * Tsoi_day_avg_C + Kint(R3)) * ak / Kmod(npt,R3)
+! Km(npt,K1) = exp(Kslope(K1) * Tsoi_day_avg_C + Kint(K1)) * ak / Kmod(npt,K1)
+! Km(npt,K2) = exp(Kslope(K2) * Tsoi_day_avg_C + Kint(K2)) * ak / Kmod(npt,K2)
+! Km(npt,K3) = exp(Kslope(K3) * Tsoi_day_avg_C + Kint(K3)) * ak / Kmod(npt,K3)
+
+! STILL MISSING N-related stuff: DIN...
+
       ! translate to per-second time constant
       k_l1 = 1._r8    / (secspday * days_per_year * params_inst%tau_l1_bgc)
       k_l2_l3 = 1._r8 / (secspday * days_per_year * params_inst%tau_l2_l3_bgc)
       k_s1 = 1._r8    / (secspday * days_per_year * params_inst%tau_s1_bgc)
       k_s2 = 1._r8    / (secspday * days_per_year * params_inst%tau_s2_bgc)
       k_s3 = 1._r8    / (secspday * days_per_year * params_inst%tau_s3_bgc)
+      k_m1 = 1._r8    / (secspday * days_per_year * params_inst%tau_m1_mimics)
+      k_m2 = 1._r8    / (secspday * days_per_year * params_inst%tau_m2_mimics)
       k_frag = 1._r8  / (secspday * days_per_year * params_inst%tau_cwd_bgc)
 
      ! calc ref rate
@@ -782,6 +1020,18 @@ contains
                spinup_geogterm_s3(c) = 1._r8
             endif
             !
+            if ( abs(spinup_factor(i_micr1) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_m1(c) = spinup_factor(i_micr1) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            else
+               spinup_geogterm_m1(c) = 1._r8
+            endif
+            !
+            if ( abs(spinup_factor(i_micr2) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_m2(c) = spinup_factor(i_micr2) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            else
+               spinup_geogterm_m2(c) = 1._r8
+            endif
+            !
          end do
       else
          do fc = 1,num_soilc
@@ -792,10 +1042,21 @@ contains
             spinup_geogterm_s1(c) = 1._r8
             spinup_geogterm_s2(c) = 1._r8
             spinup_geogterm_s3(c) = 1._r8
+            spinup_geogterm_m1(c) = 1._r8
+            spinup_geogterm_m2(c) = 1._r8
          end do
       endif
 
       !--- time dependent coefficients-----!
+      ! TODO slevis: Not immediately obvious how to reduce the if-else
+      !      repetition, bc t_scalar, w_scalar, o_scalar sum all j
+      !      to layer 1 in the if, while they do not in the else.
+      !      Other changes that would be necessary:
+      !      - set fr = 1 in the else,
+      !      - use a new nlevd = nlev_soildecomp_standard in the if and
+      !                  nlevd = nlevdecomp in the else,
+      !      - keep if (j==1) t_scalar(c,:) = 0._r8 from the if?
+      !      - keep P. Thornton's comment from the else
       if ( nlevdecomp .eq. 1 ) then
 
          ! calculate function to weight the temperature and water potential scalars
@@ -805,7 +1066,6 @@ contains
          ! the following normalizes values in fr so that they
          ! sum to 1.0 across top nlevdecomp levels on a column
          frw(bounds%begc:bounds%endc) = 0._r8
-         nlev_soildecomp_standard=5
          allocate(fr(bounds%begc:bounds%endc,nlev_soildecomp_standard))
          do j=1,nlev_soildecomp_standard
             do fc = 1,num_soilc
@@ -975,84 +1235,68 @@ contains
 
       end if
 
-      if ( normalize_q10_to_century_tfunc ) then
-         ! scale all decomposition rates by a constant to compensate for offset between original CENTURY temp func and Q10
-         normalization_factor = (catanf(normalization_tref)/catanf_30) / (q10**((normalization_tref-25._r8)/10._r8))
-         do j = 1, nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               t_scalar(c,j) = t_scalar(c,j) * normalization_factor
-            end do
-         end do
-      endif
+!     ! TODO slevis: Commented out. Should I have kept these lines?
+!     if ( normalize_q10_to_century_tfunc ) then
+!        ! scale all decomposition rates by a constant to compensate for offset between original CENTURY temp func and Q10
+!        normalization_factor = (catanf(normalization_tref)/catanf_30) / (q10**((normalization_tref-25._r8)/10._r8))
+!        do j = 1, nlevdecomp
+!           do fc = 1,num_soilc
+!              c = filter_soilc(fc)
+!              t_scalar(c,j) = t_scalar(c,j) * normalization_factor
+!           end do
+!        end do
+!     endif
 
-      if (use_vertsoilc) then
-         ! add a term to reduce decomposition rate at depth
-         ! for now used a fixed e-folding depth
-         do j = 1, nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               depth_scalar(c,j) = exp(-zsoi(j)/decomp_depth_efolding)
-            end do
+      ! Term that reduces decomposition rate at depth
+      ! TODO slevis: Reduced code repetition by defining
+      !              depth_scalar(c,j) = 1.0_r8 in the else instead of
+      !              repeating the decomp_k lines.
+      do j = 1, nlevdecomp
+         do fc = 1, num_soilc
+            c = filter_soilc(fc)
+            if (use_vertsoilc) then
+               ! Using fixed e-folding depth as in
+               ! SoilBiogeochemDecompCascadeBGCMod.F90
+               depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
+            else
+               depth_scalar(c,j) = 1.0_r8
+            end if
          end do
-      end if
+      end do
 
       ! calculate rate constants for all litter and som pools
-      if (use_vertsoilc) then
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_l1(c)
-               decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_l23(c)
-               decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_l23(c)
-               decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_s1(c)
-               decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_s2(c)
-               decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_s3(c)
-            end do
-         end do
-      else
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c)
-               decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
-               decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
-               decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
-               decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c)
-               decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
-            end do
-         end do
-      end if
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c)
+            decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
+            decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
 
-      ! do the same for cwd, but only if fates is not enabled, because fates handles CWD on its own structure
-      if (.not. use_fates) then
-         if (use_vertsoilc) then
-            do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
-                  decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
-                       o_scalar(c,j) * spinup_geogterm_cwd(c)
-               end do
-            end do
-         else
-            do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
-                  decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * &
-                       o_scalar(c,j) * spinup_geogterm_cwd(c)
-               end do
-            end do
-         end if
-      end if
+            decomp_k(c,j,i_micr1) = k_m1    * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_m1(c)
+            decomp_k(c,j,i_micr2) = k_m2    * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_m2(c)
+
+            decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
+            decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c)
+            decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
+            ! Same for cwd but only if fates not enabled; fates handles cwd on
+            ! its own structure
+            if (.not. use_fates) then
+               decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_cwd(c)
+            end if
+         end do
+      end do
 
     end associate
 
- end subroutine decomp_rate_constants_bgc
+ end subroutine decomp_rate_constants_mimics
 
-end module SoilBiogeochemDecompCascadeBGCMod
+end module SoilBiogeochemDecompCascadeMIMICSMod
