@@ -70,12 +70,12 @@ module ColumnType
      integer,  pointer :: cold                 (:)   ! column index of downhill column (hillslope hydrology)
      integer,  pointer :: hillslope_ndx        (:)   ! hillslope identifier
      integer,  pointer :: hill_pftndx          (:)   ! specified (single) pft index of column
-     real(r8), pointer :: hill_elev            (:)   ! mean elevation of column relative to mean gridcell elevation
-     real(r8), pointer :: hill_slope           (:)   ! mean along-hill slope
-     real(r8), pointer :: hill_area            (:)   ! mean surface area
-     real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column 
-     real(r8), pointer :: hill_distance        (:)   ! along-hill distance of column from bottom of hillslope
-     real(r8), pointer :: hill_aspect          (:)   ! azimuth angle of column wrt to north, positive to east
+     real(r8), pointer :: hill_elev            (:)   ! mean elevation of column relative to mean gridcell elevation (m)
+     real(r8), pointer :: hill_slope           (:)   ! mean along-hill slope (m/m)
+     real(r8), pointer :: hill_area            (:)   ! mean surface area (m2)
+     real(r8), pointer :: hill_width           (:)   ! across-hill width of bottom boundary of column (m)
+     real(r8), pointer :: hill_distance        (:)   ! along-hill distance of column from bottom of hillslope (m)
+     real(r8), pointer :: hill_aspect          (:)   ! azimuth angle of column wrt to north, positive to east (radians)
 
      ! other column characteristics
      logical , pointer :: hydrologically_active(:)   ! true if this column is a hydrologically active type

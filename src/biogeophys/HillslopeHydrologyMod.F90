@@ -83,7 +83,10 @@ contains
     integer               :: ierr                 ! error code
     integer               :: c, l, g, i, j, ci, nh       ! indices
 
-    real(r8)              :: hillslope_area       ! total area of hillslope
+    real(r8)              :: ncol_per_hillslope(nhillslope) ! number of columns per hillslope
+    real(r8)              :: hillslope_area(nhillslope)     ! area of hillslope
+    real(r8)              :: nhill_per_landunit(nhillslope) ! total number of each representative hillslope per landunit
+    real(r8)              :: check_weight
 
     character(len=*), parameter :: subname = 'InitHillslope'
 
@@ -315,45 +318,65 @@ contains
 
           enddo
 
-          ! Calculate total (representative) hillslope area on landunit
-          ! weighted relative to one another via pct_hillslope
-          hillslope_area = 0._r8
+          ! Calculate total area of each hillslope in landunit and
+          ! number of columns in each hillslope
+          ncol_per_hillslope(:)= 0._r8
+          hillslope_area(:)    = 0._r8
           do c = lun%coli(l), lun%colf(l)
              nh = col%hillslope_ndx(c)
              if (nh > 0) then
-                hillslope_area = hillslope_area &
-                     + col%hill_area(c)*(pct_hillslope(l,nh)*0.01_r8)
+                ncol_per_hillslope(nh) = ncol_per_hillslope(nh) + 1
+                hillslope_area(nh) = hillslope_area(nh) + col%hill_area(c)
              endif
           enddo
+
+          ! Total area occupied by each hillslope (m2) is
+          ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
+          ! Number of representative hillslopes per landunit
+          ! is the total area divided by individual area
           
+          do nh = 1, nhillslope
+             if(hillslope_area(nh) > 0._r8) then
+                nhill_per_landunit(nh) = grc%area(g)*1.e6_r8*lun%wtgcell(l) &
+                     *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
+             endif
+          enddo
+                       
           ! if missing hillslope information on surface dataset, fill data
           ! and recalculate hillslope_area
-          if (hillslope_area == 0._r8) then
+          if (sum(hillslope_area) == 0._r8) then
              do c = lun%coli(l), lun%colf(l)
-                col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6 ! km2 to m2
-                col%hill_distance(c) = sqrt(col%hill_area(c))
+                nh = col%hillslope_ndx(c)
+                col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6_r8 ! km2 to m2
+                col%hill_distance(c) = sqrt(col%hill_area(c)) &
+                     *((c-lun%coli(l))/ncol_per_hillslope(nh))
                 col%hill_width(c)    = sqrt(col%hill_area(c))
-                col%hill_elev(c)     = col%topo_std(c)
+                col%hill_elev(c)     = col%topo_std(c) &
+                     *((c-lun%coli(l))/ncol_per_hillslope(nh))
                 col%hill_slope(c)    = tan((rpi/180.)*col%topo_slope(c))
                 col%hill_aspect(c)   = (rpi/2.) ! east (arbitrarily chosen)
                 nh = col%hillslope_ndx(c)
                 pct_hillslope(l,nh)  = 100/nhillslope
-                hillslope_area = hillslope_area &
-                     + col%hill_area(c)*(pct_hillslope(l,nh)*0.01_r8)
              enddo
           endif
           
           ! Recalculate column weights using input areas
+          check_weight = 0._r8
           do c = lun%coli(l), lun%colf(l)
              nh = col%hillslope_ndx(c)
              if (nh > 0) then
-                col%wtlunit(c) = col%hill_area(c) &
-                     * (pct_hillslope(l,nh)*0.01_r8)/hillslope_area
+                col%wtlunit(c) = (col%hill_area(c)/hillslope_area(nh)) &
+                     * (pct_hillslope(l,nh)*0.01_r8)
              else
                 col%wtlunit(c) = 0._r8
              endif
+             check_weight = check_weight + col%wtlunit(c)
           enddo
-
+          if (abs(1._r8 - check_weight) > 1.e-6_r8) then 
+             write(iulog,*) 'col%wtlunit does not sum to 1: ', check_weight
+             write(iulog,*) 'weights: ', col%wtlunit(lun%coli(l):lun%colf(l))
+             write(iulog,*) ' '
+          endif
        endif
     enddo
     
