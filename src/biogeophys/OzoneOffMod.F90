@@ -19,12 +19,6 @@ module OzoneOffMod
   ! !PUBLIC TYPES:
   type, extends(ozone_base_type), public :: ozone_off_type
      private
-     ! Private data members 
-     integer :: stress_method  ! Which ozone stress parameterization we're using in this run
-
-     real(r8), pointer :: o3uptakesha_patch(:) ! ozone dose, shaded leaves (mmol O3/m^2)
-     real(r8), pointer :: o3uptakesun_patch(:) ! ozone dose, sunlit leaves (mmol O3/m^2)
-
    contains
      procedure, public :: Init
      procedure, public :: Restart
@@ -71,7 +65,7 @@ contains
     type(bounds_type)     , intent(in)           :: bounds
     character(len=*), intent(in)                      :: ozone_method 
     
-    if (.not. ozone_method=='unset' ) call endrun(' unconsistent choice of ozone stress method.')
+    if (ozone_method /= 'unset' ) call endrun(' unconsistent choice of ozone_method in init OzoneOffMod.')
     
     this%stress_method = ozone_method
     call this%InitAllocateBase(bounds)
@@ -126,8 +120,6 @@ contains
     integer              , intent(in) :: num_exposedvegp
     integer              , intent(in) :: filter_exposedvegp(:)
 
-    ! Check consistency in the stress_method.     
-    if (.not. this%stress_method=='unset' )        call endrun('Unconcistent set-uo for the ozone stress method')
 
     ! Outputs (stress terms) are already fixed at 1 from cold start initialization
 
