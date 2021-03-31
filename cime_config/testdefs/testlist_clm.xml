@@ -55,7 +55,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ln12" grid="C96_t061" compset="I2000Clm50SpRs" testmods="clm/default">
+  <test name="SMS_Ln9" grid="C96_t061" compset="I2000Clm50SpRs" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -191,7 +191,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ln12_P144x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline2005Start">
+  <test name="SMS_Ln9_P144x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline2005Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -200,7 +200,7 @@
       <option name="comment">Do a test similar to FXHIST starting at a 2005 start date, will interpoalte from the 2003 IC file</option>
     </options>
   </test>
-  <test name="SMS_D_Ln12_P480x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
+  <test name="SMS_D_Ln9_P480x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -209,7 +209,7 @@
       <option name="comment">Run a transient case with standalone settings similar to the FXHIST waccm test</option>
     </options>
   </test>
-  <test name="SMS_D_Ln12_P480x3_Vnuopc" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
+  <test name="SMS_D_Ln9_P480x3_Vnuopc" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -330,7 +330,7 @@
       <option name="wallclock">00:60:00</option>
     </options>
   </test>
-  <test name="SMS_Ln12_P360x2" grid="C96_C96_mg17" compset="IHistClm50BgcCrop" testmods="clm/default">
+  <test name="SMS_Ln9_P360x2" grid="C96_C96_mg17" compset="IHistClm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1062,13 +1062,13 @@
       <option name="comment"  >Test transient PFTs (via HIST) in conjunction with changing glacier area. This test also covers the reset_dynbal_baselines option. CISM is not answer preserving across processor changes, but short test length should be OK.</option>
     </options>
   </test>
-  <test name="SMS_Ln12" grid="C96_C96_mg17" compset="IHistClm50Sp" testmods="clm/decStart">
+  <test name="SMS_Ln9" grid="C96_C96_mg17" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
-      <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No need to run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing. decStart doesn't accomplish a lot in this very short test, but we're using it anyway to be consistent with other Hist tests.</option>
+      <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No need to run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
   <test name="ERS_D_Ld10" grid="f10_f10_mg37" compset="IHistClm50Sp" testmods="clm/collapse_pfts_78_to_16_decStart_f10">
@@ -1414,17 +1414,17 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ln12" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
+  <test name="ERS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases, be sure to run with stub GLC
-for ERS test as otherwise it won't work for a sub-day test (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
+      <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases, 
+                (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
     </options>
   </test>
-  <test name="SMS_Ln12" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
+  <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1433,7 +1433,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment"  >Run ARCTICGRIS for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
     </options>
   </test>
-  <test name="SMS_Ln12" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="ISSP585Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="ISSP585Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1442,7 +1442,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment"  >Run ARCTICGRIS for future transient case (do not run this expensive test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
     </options>
   </test>
-  <test name="SMS_Ln12" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_2013Start">
+  <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_2013Start">
     <machines>
       <machine name="cheyenne" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1471,7 +1471,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment"  >Science support for IHistClm50Sp at f19</option>
     </options>
   </test>
-  <test name="SMS_Ln12" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm50Sp" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1480,7 +1480,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment"  >Run ne30np4.pg2 to make sure will work for CAM"</option>
     </options>
   </test>
-  <test name="SMS_Ln12" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS_Ln9" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
