@@ -2771,11 +2771,7 @@ contains
           call ncd_defvar(varname='levdcmp', xtype=tape(t)%ncprec, dim1name='levdcmp', &
                long_name='coordinate levels for soil decomposition variables', units='m', ncid=nfid(t))
 
-          if(use_hillslope)then
-
-          if (tape(t)%dov2xy) then
-             !pass
-          else
+          if(use_hillslope .and. .not.tape(t)%dov2xy) then
              call ncd_defvar(varname='hslp_distance', xtype=ncd_double, &
                   dim1name=namec, long_name='hillslope column distance', &
                   units='m', ncid=nfid(t))             
@@ -2803,7 +2799,6 @@ contains
              call ncd_defvar(varname='hslp_colu', xtype=ncd_int, &
                   dim1name=namec, long_name='hillslope uphill column index', &
                   ncid=nfid(t))             
-          end if
           end if
 
           if(use_fates)then
@@ -2878,7 +2873,7 @@ contains
              call ncd_io(varname='levdcmp', data=zsoi_1d, ncid=nfid(t), flag='write')
           end if
 
-          if (.not.tape(t)%dov2xy) then             
+          if(use_hillslope .and. .not.tape(t)%dov2xy) then
              call ncd_io(varname='hslp_distance' , data=col%hill_distance, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_width' , data=col%hill_width, dim1name=namec, ncid=nfid(t), flag='write')
              call ncd_io(varname='hslp_area' , data=col%hill_area, dim1name=namec, ncid=nfid(t), flag='write')

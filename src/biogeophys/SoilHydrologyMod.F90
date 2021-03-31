@@ -2785,8 +2785,12 @@ contains
          ! include ice impedance in transmissivity
          qflx_latflow_out_vol(c) = transmis*col%hill_width(c)*dgrad
          
-         ! currently this is redundant to above
-         qdischarge(c) = qflx_latflow_out_vol(c)
+         ! qdischarge from lowest column is qflx_latflow_out_vol
+         ! scaled by total area of column in gridcell divided by column area
+         if (col%cold(c) == ispval) then
+            qdischarge(c) = qflx_latflow_out_vol(c) &
+                 *(grc%area(g)*1.e6*col%wtgcell(c)/col%hill_area(c))
+         endif
          
          ! convert volumetric flow to equivalent flux
          qflx_latflow_out(c) = 1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(c)
