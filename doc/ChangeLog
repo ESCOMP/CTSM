@@ -1,12 +1,24 @@
 ===============================================================
 Tag name:  ctsm5.1.dev030
-Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Wed Mar 31 01:05:50 MDT 2021
+Originator(s):  mvertens / erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Mar 31 16:46:04 MDT 2021
 One-line Summary: New single column functionality for the NUOPC cap
 
 Purpose and description of changes
 ----------------------------------
 
+Implemented new nuopc/cmeps single column functionality.
+
+In config/cesm/config_files.xml - single point domains are only used 
+for mct/cpl7. For cmeps single point meshes are now generated on the 
+fly and component domains files are no longer needed.
+env_run.xml variables PTS_LAT, PTS_LON and PTS_DOMAINFILE are used 
+to determine if there is a single point or single column run.
+If PTS_LAT and PTS_LON are not -999 and PTS_DOMAINFILE is UNSET, 
+then you have a single point run and the exact values of PTS_LAT
+and PTS_LON are used.  If PTS_LAT and PTS_LON are not -999 and 
+PTS_DOMAINFILE is not UNSET, then then the cmeps driver will recognize the nearest neighbor
+values of PTS_LAT and PTS_LON in PTS_DOMAINFILE as the single column lat and lon to use.
 
 
 Significant changes to scientifically-supported configurations
@@ -30,25 +42,18 @@ Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #):
-
-CIME Issues fixed (include issue #):
+   Fixes #1312 -- Add NUOPC tests
+   Fixes #1302 -- Setup to allow landuse.timeseries file for high resolution cases for 2000-2025
+   Fixes #1183 -- mkmapdata needs input option for large file support, current defaults unsuitable for high res grids.
 
 Known bugs introduced in this tag (include issue #):
 
 Known bugs found since the previous tag (include issue #):
-
+   #1317 -- MPI timeout for some izumi_nag tests reading in datm forcing files in NUOPC cap 
+   #1314 -- Send unset value for scol_lat/lon from driver
 
 Notes of particular relevance for users
 ---------------------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for users (e.g., need to interpolate initial conditions):
-
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-
-Changes made to namelist defaults (e.g., changed parameter values):
-
-Changes to the datasets (e.g., parameter, surface or initial files):
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -56,8 +61,11 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Nine step tests changed so that they have ROF run at same frequency as ATM (like the similar CAM tests)
+  as these will fail with NUOPC since it doesn't allow you to end not on an even time-step for all components.
+  One of these tests changed to a CAM type test from decStart
 
-Changes to tests or testing:
+Changes to tests or testing: Add more NUOPC tests to test list
 
 
 Testing summary: regular
@@ -66,27 +74,22 @@ Testing summary: regular
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne - 
+    cheyenne - PASS
 
   tools-tests (test/tools) (if tools have been changed):
 
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
-  (PTCLM is being deprecated, so we only expect this to be done on occasion)
-
-    cheyenne - 
+    cheyenne - OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    (any machine) - 
+    cheyenne -- FAIL
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK
     izumi ------- OK
   
-  any other testing (give details below):
+  any other testing (give details below): Ran full izumi test list for nuopc driver (failed tests appear above)
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
