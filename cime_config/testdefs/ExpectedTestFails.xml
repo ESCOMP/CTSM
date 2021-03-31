@@ -44,6 +44,20 @@
     </phase>
   </test>
 
+  <test name="SMS_D_Lm1_Mmpi-serial_Vnuopc.CLM_USRDAT.I1PtClm50SpRs.cheyenne_intel.clm-USUMB">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#3905</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PtClm50SpRs.cheyenne_intel.clm-USUMB">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#3905</issue>
+    </phase>
+  </test>
+
   <test name="SMS_Ld5_D_P48x1_Vnuopc.f10_f10_mg37.IHistClm51Bgc.izumi_nag.clm-decStart">
     <phase name="RUN">
       <status>FAIL</status>
