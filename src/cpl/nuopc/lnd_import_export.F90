@@ -541,26 +541,18 @@ contains
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! optional atm input fields
-    if (fldchk(importState, Faxa_bcph)) then
-       ! 1 = bcphidry, 2 = bcphodry, 3 = bcphiwet
-       call state_getimport_2d(importState, Faxa_bcph, atm2lnd_inst%forc_aer_grc(begg:,1:3), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
-    if (fldchk(importState, Faxa_ocph)) then
-       ! 4 = ocphidry, 5 = ocphodry, 6 = ocphiwet
-       call state_getimport_2d(importState, Faxa_ocph, atm2lnd_inst%forc_aer_grc(begg:,4:6), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
-    if (fldchk(importState, Faxa_dstwet)) then
-       ! 7 = dstwet1, 9 = dstwet2, 11 = dstwet3, 13 = dstwet4
-       call state_getimport_2d(importState, Faxa_dstwet, atm2lnd_inst%forc_aer_grc(begg:,7:13:2), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
-    if (fldchk(importState, Faxa_dstdry)) then
-       ! 8 = dstdry1, 10 = dstdry2, 12 = dstdry3, 14 = dstdry4
-       call state_getimport_2d(importState, Faxa_dstdry, atm2lnd_inst%forc_aer_grc(begg:,8:14:2), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
+    ! 1 = bcphidry, 2 = bcphodry, 3 = bcphiwet
+    call state_getimport_2d(importState, Faxa_bcph, atm2lnd_inst%forc_aer_grc(begg:,1:3), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! 4 = ocphidry, 5 = ocphodry, 6 = ocphiwet
+    call state_getimport_2d(importState, Faxa_ocph, atm2lnd_inst%forc_aer_grc(begg:,4:6), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! 7 = dstwet1, 9 = dstwet2, 11 = dstwet3, 13 = dstwet4
+    call state_getimport_2d(importState, Faxa_dstwet, atm2lnd_inst%forc_aer_grc(begg:,7:13:2), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    ! 8 = dstdry1, 10 = dstdry2, 12 = dstdry3, 14 = dstdry4
+    call state_getimport_2d(importState, Faxa_dstdry, atm2lnd_inst%forc_aer_grc(begg:,8:14:2), rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
     if (fldchk(importState, Sa_methane)) then
        call state_getimport_1d(importState, Sa_methane, atm2lnd_inst%forc_pch4_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -778,28 +770,20 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! optional fields
-       if (fldchk(exportState, Fall_flxdst)) then
-          call state_setexport_2d(exportState, Fall_flxdst, lnd2atm_inst%flxdst_grc(begg:,1:4), &
-               minus= .true., rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
+       call state_setexport_2d(exportState, Fall_flxdst, lnd2atm_inst%flxdst_grc(begg:,1:4), &
+            minus= .true., rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (fldchk(exportState, Fall_methane)) then
           call state_setexport_1d(exportState, Fall_methane, lnd2atm_inst%ch4_surf_flux_tot_grc(begg:), &
                minus=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
-       if (fldchk(exportState, Sl_u10)) then
-          call state_setexport_1d(exportState, Sl_u10, lnd2atm_inst%u_ref10m_grc(begg:), rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
-       if (fldchk(exportState, Sl_ram1)) then
-          call state_setexport_1d(exportState, Sl_ram1, lnd2atm_inst%ram1_grc(begg:), rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
-       if (fldchk(exportState, Sl_fv)) then
-          call state_setexport_1d(exportState, Sl_fv, lnd2atm_inst%fv_grc(begg:), rc=rc)
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       end if
+       call state_setexport_1d(exportState, Sl_u10, lnd2atm_inst%u_ref10m_grc(begg:), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call state_setexport_1d(exportState, Sl_ram1, lnd2atm_inst%ram1_grc(begg:), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       call state_setexport_1d(exportState, Sl_fv, lnd2atm_inst%fv_grc(begg:), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (fldchk(exportState, Sl_soilw)) then
           call state_setexport_1d(exportState, Sl_soilw, waterlnd2atmbulk_inst%h2osoi_vol_grc(begg:,1), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
