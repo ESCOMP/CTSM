@@ -40,18 +40,18 @@ module lnd_comp_nuopc
   private ! except
 
   ! Module public routines
-  public  :: SetServices
-  public  :: SetVM
+  public  :: SetServices         ! Setup the pointers to the function calls for the different models phases (initialize, run, finalize)
+  public  :: SetVM               ! Set the virtual machine description of the paralell model (both MPI and OpenMP)
 
   ! Module private routines
-  private :: InitializeP0
-  private :: InitializeAdvertise
-  private :: InitializeRealize
-  private :: ModelSetRunClock
-  private :: ModelAdvance
-  private :: ModelFinalize
-  private :: clm_orbital_init
-  private :: clm_orbital_update
+  private :: InitializeP0        ! Phase zero of initialization
+  private :: InitializeAdvertise ! Advertise the fields that can be passed
+  private :: InitializeRealize   ! Realize the list of fields that will be exchanged
+  private :: ModelSetRunClock    ! Set the run clock
+  private :: ModelAdvance        ! Advance the model
+  private :: ModelFinalize       ! Finalize the model
+  private :: clm_orbital_init    ! Initialize the orbital information
+  private :: clm_orbital_update  ! Update the orbital information
 
   !--------------------------------------------------------------------------
   ! Private module data
@@ -94,6 +94,7 @@ contains
 !===============================================================================
 
   subroutine SetServices(gcomp, rc)
+    ! Setup the pointers to the function calls for the different models phases (initialize, run, finalize)
     type(ESMF_GridComp)  :: gcomp
     integer, intent(out) :: rc
 
@@ -142,6 +143,7 @@ contains
   !===============================================================================
   subroutine InitializeP0(gcomp, importState, exportState, clock, rc)
 
+    ! Phase zero initialization
     ! input/output variables
     type(ESMF_GridComp)   :: gcomp
     type(ESMF_State)      :: importState, exportState
@@ -160,6 +162,7 @@ contains
   !===============================================================================
   subroutine InitializeAdvertise(gcomp, importState, exportState, clock, rc)
 
+    ! Advertise the fields that can be exchanged
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
     type(ESMF_State)     :: importState, exportState
@@ -311,6 +314,7 @@ contains
   !===============================================================================
   subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
 
+    ! Realize the list of fields that will be exchanged
     !$  use omp_lib, only : omp_set_num_threads
     use ESMF                      , only : ESMF_VM, ESMF_VMGet
     use clm_instMod               , only : lnd2atm_inst, lnd2glc_inst, water_inst
