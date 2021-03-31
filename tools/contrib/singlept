@@ -131,6 +131,70 @@ def AddTagToFilename(filename, tag):
     return( basename[:cend]+"_"+tag+basename[cend:] )
         
 
+def create_domain_at_point (plat, plon,fdomain , fdomain2 ):
+        print( "Open: "+fdomain )
+        f1  = xr.open_dataset(fdomain)
+        # create 1d coordinate variables to enable sel() method
+        lon0=np.asarray(f1['xc'][0,:])
+        lat0=np.asarray(f1['yc'][:,0])
+        lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
+        lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
+        # assign() not working on cheyenne
+        #f2=f1.assign({'lon':lon,'lat':lat})
+        #f2=f1.assign()
+        f2 = f1.copy()
+        f2['lon'] = lon 
+        f2['lat'] = lat 
+        f2.reset_coords(['xc','yc'])
+        # extract gridcell closest to plon/plat
+        f3 = f2.sel(ni=plon,nj=plat,method='nearest')
+        # expand dimensions
+        f3 = f3.expand_dims(['nj','ni'])
+ 
+        wfile=fdomain2
+        # mode 'w' overwrites file
+        f3.to_netcdf(path=wfile, mode='w')
+        print('Successfully created file (fdomain2)'+fdomain2)
+        f1.close(); f2.close(); f3.close()
+
+
+def create_landuse_at_point (plat, plon,fluse , fluse2 ):
+        print( "Open: "+fluse )
+        f1  = xr.open_dataset(fluse)
+        # create 1d variables
+        lon0=np.asarray(f1['LONGXY'][0,:])
+        lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
+        lat0=np.asarray(f1['LATIXY'][:,0])
+        lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
+        #f2=f1.assign({'lon':lon,'lat':lat})
+        f2=f1.assign()
+        f2['lon'] = lon 
+        f2['lat'] = lat 
+        # extract gridcell closest to plon/plat
+        f3 = f2.sel(lsmlon=plon,lsmlat=plat,method='nearest')
+ 
+        # expand dimensions
+        f3 = f3.expand_dims(['lsmlat','lsmlon'])
+        # specify dimension order 
+        #f3 = f3.transpose('time','lat','lon')
+        f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
+        #f3['YEAR'] = f3['YEAR'].squeeze()
+ 
+        # revert expand dimensions of YEAR
+        year = np.squeeze(np.asarray(f3['YEAR']))
+        x = xr.DataArray(year, coords={'time':f3['time']}, dims='time', name='YEAR')
+        x.attrs['units']='unitless'
+        x.attrs['long_name']='Year of PFT data'
+        f3['YEAR'] = x 
+        #print(x)
+        #print(f3)
+        #stop
+        # mode 'w' overwrites file
+        f3.to_netcdf(path=fluse2, mode='w')
+        print('created file (fluse2)'+fluse2)
+        f1.close(); f2.close(); f3.close()
+
+
 def create_datm_at_point (plat, plon, fdatmdomain, fdatmdomain2):
     print( "Open: "+fdatmdomain )
     f1  = xr.open_dataset(fdatmdomain)
@@ -287,30 +351,7 @@ def main ():
 
     #--  Create CTSM domain file
     if create_domain:
-        print( "Open: "+fdomain )
-        f1  = xr.open_dataset(fdomain)
-        # create 1d coordinate variables to enable sel() method
-        lon0=np.asarray(f1['xc'][0,:])
-        lat0=np.asarray(f1['yc'][:,0])
-        lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
-        lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
-        # assign() not working on cheyenne
-        #f2=f1.assign({'lon':lon,'lat':lat})
-        #f2=f1.assign()
-        f2 = f1.copy()
-        f2['lon'] = lon
-        f2['lat'] = lat
-        f2.reset_coords(['xc','yc'])
-        # extract gridcell closest to plon/plat
-        f3 = f2.sel(ni=plon,nj=plat,method='nearest')
-        # expand dimensions
-        f3 = f3.expand_dims(['nj','ni'])
-
-        wfile=fdomain2
-        # mode 'w' overwrites file
-        f3.to_netcdf(path=wfile, mode='w')
-        print('Successfully created file (fdomain2)'+fdomain2)
-        f1.close(); f2.close(); f3.close()
+        create_domain_at_point (plat, plon,fdomain , fdomain2 )
 
     #--  Create CTSM surface data file
     if create_surfdata:
@@ -382,40 +423,7 @@ def main ():
         '''
 #--  Create CTSM transient landuse data file
     if create_landuse:
-        print( "Open: "+fluse )
-        f1  = xr.open_dataset(fluse)
-        # create 1d variables
-        lon0=np.asarray(f1['LONGXY'][0,:])
-        lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
-        lat0=np.asarray(f1['LATIXY'][:,0])
-        lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
-        #f2=f1.assign({'lon':lon,'lat':lat})
-        f2=f1.assign()
-        f2['lon'] = lon
-        f2['lat'] = lat
-        # extract gridcell closest to plon/plat
-        f3 = f2.sel(lsmlon=plon,lsmlat=plat,method='nearest')
-
-        # expand dimensions
-        f3 = f3.expand_dims(['lsmlat','lsmlon'])
-        # specify dimension order 
-        #f3 = f3.transpose('time','lat','lon')
-        f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
-        #f3['YEAR'] = f3['YEAR'].squeeze()
-
-        # revert expand dimensions of YEAR
-        year = np.squeeze(np.asarray(f3['YEAR']))
-        x = xr.DataArray(year, coords={'time':f3['time']}, dims='time', name='YEAR')
-        x.attrs['units']='unitless'
-        x.attrs['long_name']='Year of PFT data'
-        f3['YEAR'] = x
-        #print(x)
-        #print(f3)
-        #stop
-        # mode 'w' overwrites file
-        f3.to_netcdf(path=fluse2, mode='w')
-        print('created file (fluse2)'+fluse2)
-        f1.close(); f2.close(); f3.close()
+        create_landuse_at_point(plat, plon, fluse, fluse2)
 
     #--  Create single point atmospheric forcing data
     if create_datm:
