@@ -147,12 +147,12 @@ def main ():
     myname=getuser()
     pwd=os.getcwd()
     print("User = "+myname)
-    print("Current directory = "+pwd+"\n")
+    print("Current directory = "+pwd)
 
     '''
-#------------------------------------------------------------------#
-#---------------------  Instructions  -----------------------------#
-#------------------------------------------------------------------#
+    #------------------------------------------------------------------#
+    #---------------------  Instructions  -----------------------------#
+    #------------------------------------------------------------------#
     load the following into your local environment
     module load python/2.7.14
     ncar_pylib
@@ -197,33 +197,33 @@ def main ():
 
     '''
 
-#  Set control flags
+    #  Set control flags
 
-#-- Setup by default to run for Harvard Forest
+    #-- Setup by default to run for Harvard Forest
 
-#--  Specify point to extract
+    #--  Specify point to extract
     plon = 287.8 
     plat = 42.5
 
-#--  Create regional CLM domain file
+    #--  Create regional CLM domain file
     create_domain   = True
-#--  Create CLM surface data file
+    #--  Create CLM surface data file
     create_surfdata = True
-#--  Create CLM surface data file
+    #--  Create CLM surface data file
     create_landuse  = True
-#--  Create single point DATM atmospheric forcing data
-    create_datm     = False
-    datm_syr=1901
+    #--  Create single point DATM atmospheric forcing data
+    create_datm     = True
+    datm_syr=2013
     datm_eyr=2014
 
-#--  Modify landunit structure
+    #--  Modify landunit structure
     overwrite_single_pft = True
     dominant_pft         = 7 #BETr
     zero_nonveg_landunits= True
     uniform_snowpack     = True
     no_saturation_excess = True
 
-#--  Specify input and output directories
+    #--  Specify input and output directories
     dir_output='/glade/scratch/'+myname+'/single_point/'
     if ( not os.path.isdir( dir_output ) ):
         os.mkdir( dir_output )
@@ -234,33 +234,33 @@ def main ():
     if ( not os.path.isdir( dir_output_datm ) ):
         os.mkdir( dir_output_datm )
 
-#--  Set input and output filenames
+    #--  Set input and output filenames
     tag=str(plon)+'_'+str(plat)
 
-#--  Set time stamp
+    #--  Set time stamp
     command='date "+%y%m%d"'
     x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
     x=x2.communicate()
     timetag = x[0].strip()
 
-#--  Specify land domain file  ---------------------------------
+    #--  Specify land domain file  ---------------------------------
     fdomain  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
     fdomain2 = dir_output + AddTagToFilename( fdomain, tag )
 
-#--  Specify surface data file  --------------------------------
+    #--  Specify surface data file  --------------------------------
     fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
 
     fsurf2   = dir_output + AddTagToFilename( fsurf, tag )
 
-#--  Specify landuse file  -------------------------------------
+    #--  Specify landuse file  -------------------------------------
     fluse    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc'
     fluse2   = dir_output + AddTagToFilename( fluse, tag )
 
-#--  Specify datm domain file  ---------------------------------
+    #--  Specify datm domain file  ---------------------------------
     fdatmdomain = dir_clm_forcedata+'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc'
     fdatmdomain2  = dir_output_datm+AddTagToFilename( fdatmdomain, tag )
 
-#--  Create CTSM domain file
+    #--  Create CTSM domain file
     if create_domain:
         print( "Open: "+fdomain )
         f1  = xr.open_dataset(fdomain)
@@ -271,10 +271,11 @@ def main ():
         lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
         # assign() not working on cheyenne
         #f2=f1.assign({'lon':lon,'lat':lat})
-        f2=f1.assign()
+        #f2=f1.assign()
+        f2 = f1.copy()
         f2['lon'] = lon
         f2['lat'] = lat
-        f2.reset_coords(['xc','yc'],inplace=True)
+        f2.reset_coords(['xc','yc'])
         # extract gridcell closest to plon/plat
         f3 = f2.sel(ni=plon,nj=plat,method='nearest')
         # expand dimensions
@@ -283,10 +284,10 @@ def main ():
         wfile=fdomain2
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
-        print('created file '+fdomain2)
+        print('Successfully created file (fdomain2)'+fdomain2)
         f1.close(); f2.close(); f3.close()
 
-#--  Create CTSM surface data file
+    #--  Create CTSM surface data file
     if create_surfdata:
         print( "Open: "+fsurf )
         f1  = xr.open_dataset(fsurf)
@@ -296,36 +297,40 @@ def main ():
         lat0=np.asarray(f1['LATIXY'][:,0])
         lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
         #f2=f1.assign({'lon':lon,'lat':lat})
-        f2=f1.assign()
+        #f2=f1.assign()
+        f2 = f1.copy()
         f2['lon'] = lon
         f2['lat'] = lat
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=plon,lsmlat=plat,method='nearest')
         # expand dimensions
         f3 = f3.expand_dims(['lsmlat','lsmlon'])
-
         # modify surface data properties
         if overwrite_single_pft:
-            f3['PCT_NAT_PFT'][:,:,:] = 0
-            f3['PCT_NAT_PFT'][:,:,dominant_pft] = 100
+            #f3['PCT_NAT_PFT'][:,:,:] = 0
+            #f3['PCT_NAT_PFT'][:,:,dominant_pft] = 100
+            print ("skip for now")
         if zero_nonveg_landunits:
-            f3['PCT_NATVEG'][:,:]  = 100
-            f3['PCT_CROP'][:,:]    = 0
-            f3['PCT_LAKE'][:,:]    = 0.
-            f3['PCT_WETLAND'][:,:] = 0.
-            f3['PCT_URBAN'][:,:,]   = 0.
-            f3['PCT_GLACIER'][:,:] = 0.
+            #f3['PCT_NATVEG'][:,:]  = 100
+            #f3['PCT_CROP'][:,:]    = 0
+            #f3['PCT_LAKE'][:,:]    = 0.
+            #f3['PCT_WETLAND'][:,:] = 0.
+            #f3['PCT_URBAN'][:,:,]   = 0.
+            #f3['PCT_GLACIER'][:,:] = 0.
+            print ("skip for now")
         if uniform_snowpack:
-            f3['STD_ELEV'][:,:] = 20.
+            #f3['STD_ELEV'][:,:] = 20.
+            print ("skip for now")
         if no_saturation_excess:
-            f3['FMAX'][:,:] = 0.
+            #f3['FMAX'][:,:] = 0.
+            print ("skip for now")
 
         # specify dimension order 
         #f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
         f3 = f3.transpose(u'time', u'cft', u'lsmpft', u'natpft', u'nglcec', u'nglcecp1', u'nlevsoi', u'nlevurb', u'numrad', u'numurbl', 'lsmlat', 'lsmlon')
         # mode 'w' overwrites file
         f3.to_netcdf(path=fsurf2, mode='w')
-        print('created file '+fsurf2)
+        print('created file (fsurf2)'+fsurf2)
         f1.close(); f2.close(); f3.close()
 
         ''' this is buggy; can't re-write a file within the same session
@@ -384,7 +389,7 @@ def main ():
         #stop
         # mode 'w' overwrites file
         f3.to_netcdf(path=fluse2, mode='w')
-        print('created file '+fluse2)
+        print('created file (fluse2)'+fluse2)
         f1.close(); f2.close(); f3.close()
 
 #--  Create single point atmospheric forcing data
@@ -402,7 +407,7 @@ def main ():
         f2=f1.assign()
         f2['lon'] = lon
         f2['lat'] = lat
-        f2.reset_coords(['xc','yc'],inplace=True)
+        f2.reset_coords(['xc','yc'])
         # extract gridcell closest to plon/plat
         f3 = f2.sel(ni=plon,nj=plat,method='nearest')
         # expand dimensions
@@ -446,7 +451,7 @@ def main ():
 
         nm=len(infile)
         for n in range(nm):
-            print(outfile[n]+'\n')
+            print(outfile[n])
             file_in = infile[n]
             file_out = outfile[n]
         
@@ -461,7 +466,7 @@ def main ():
             f2=f1.assign()
             f2['lon'] = lon
             f2['lat'] = lat
-            f2.reset_coords(['LONGXY','LATIXY'],inplace=True)
+            f2.reset_coords(['LONGXY','LATIXY'])
             # extract gridcell closest to plon/plat
             f3  = f2.sel(lon=plon,lat=plat,method='nearest')
             # expand dimensions
@@ -476,7 +481,7 @@ def main ():
           
         print('datm files written to: '+dir_output_datm)
 
-    print( "\nSuccessfully ran script\n\n" )
+    print( "Successfully ran script." )
 
 
 if __name__ == "__main__":
