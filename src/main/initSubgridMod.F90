@@ -167,7 +167,7 @@ contains
     integer :: ltype         ! landunit type
     logical :: error         ! error flag
     !------------------------------------------------------------------------------
-
+!$OMP CRITICAL
     associate( &
          begg => bounds%begg, &
          endg => bounds%endg, &
@@ -325,7 +325,7 @@ contains
     if (masterproc) write(iulog,*) ' '
 
     end associate
-    
+!$OMP END CRITICAL    
   end subroutine clm_ptrs_check
 
   !-----------------------------------------------------------------------
