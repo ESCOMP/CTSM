@@ -1127,9 +1127,9 @@ contains
     DA_nstep = get_nstep_since_startup_or_lastDA_restart_or_pause()
     if (DA_nstep <= skip_steps )then
        if (masterproc) then
-!$OMP CRITICAL
+!$OMP MASTER
           write(iulog,*) '--WARNING-- skipping CN balance check for first timesteps after startup or data assimilation'
-!$OMP END CRITICAL
+!$OMP END MASTER
        end if
     else
 
