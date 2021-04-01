@@ -12,6 +12,7 @@ MachineDefaults = namedtuple('MachineDefaults', ['job_launcher_type',
                                                  'scratch_dir',
                                                  'baseline_dir',
                                                  'account_required',
+                                                 'create_test_retry',
                                                  'job_launcher_defaults'])
 # job_launcher_type: one of the JOB_LAUNCHERs defined in job_launcher_factory
 # scratch_dir: str
@@ -21,6 +22,7 @@ MachineDefaults = namedtuple('MachineDefaults', ['job_launcher_type',
 #     have 0, 1 or multiple job_launcher_defaults. (It can be useful to have defaults even
 #     for the non-default job launcher for this machine, in case the user chooses a
 #     non-default launcher.)
+# create_test_retry: int: Default number of times to retry a create_test job on this machine
 # account_required: bool: whether an account number is required on this machine (not
 #     really a default, but used for error-checking)
 
@@ -40,6 +42,7 @@ MACHINE_DEFAULTS = {
         scratch_dir=os.path.join(os.path.sep, 'glade', 'scratch', get_user()),
         baseline_dir=os.path.join(os.path.sep, 'glade', 'p', 'cgd', 'tss', 'ctsm_baselines'),
         account_required=True,
+        create_test_retry=0,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='regular',
@@ -49,13 +52,14 @@ MACHINE_DEFAULTS = {
                 # to add more flexibility in the future, making the node / proc counts
                 # individually selectable
                 required_args=
-                '-l select=1:ncpus=36:mpiprocs=1 -r n -l inception=login')
+                '-l select=1:ncpus=36:mpiprocs=1 -r n -l inception=login -k oed')
             }),
     'hobart': MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,
         scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
         baseline_dir=os.path.join(os.path.sep, 'fs', 'cgd', 'csm', 'ccsm_baselines'),
         account_required=False,
+        create_test_retry=0,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='medium',
@@ -68,6 +72,9 @@ MACHINE_DEFAULTS = {
         scratch_dir=os.path.join(os.path.sep, 'scratch', 'cluster', get_user()),
         baseline_dir=os.path.join(os.path.sep, 'fs', 'cgd', 'csm', 'ccsm_baselines'),
         account_required=False,
+        # jobs on izumi experience a high frequency of failures, often at the very end of
+        # the job; so we'll automatically retry a failed job once before giving up on it
+        create_test_retry=1,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='medium',

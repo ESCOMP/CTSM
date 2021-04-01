@@ -39,6 +39,7 @@ module lnd_comp_esmf
   use clm_driver        , only : clm_drv
   use lnd_import_export , only : import_fields, export_fields
   use lnd_shr_methods   , only : chkerr, state_diagnose
+  use lnd_set_decomp_and_domain, only :lnd_set_decomp_and_domain_from_readmesh
 
   implicit none
   private                         ! By default make data private except
@@ -129,12 +130,10 @@ contains
     ! mesh generation
     type(ESMF_Mesh)            :: lnd_mesh
     character(ESMF_MAXSTR)     :: lnd_mesh_filename          ! full filepath of land mesh file
-    integer                    :: nlnd, nocn                 ! local size ofarrays
     integer, pointer           :: gindex(:)                  ! global index space for land and ocean points
-    integer, pointer           :: gindex_lnd(:)              ! global index space for just land points
-    integer, pointer           :: gindex_ocn(:)              ! global index space for just ocean points
     type(ESMF_DistGrid)        :: distgrid
     integer                    :: fileunit
+    integer                    :: ni, nj
 
     ! clock info
     character(len=CL)          :: calendar                   ! calendar type name
@@ -320,87 +319,41 @@ contains
     call set_timemgr_init( &
          calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
          ref_ymd_in=ref_ymd, ref_tod_in=ref_tod, dtime_in=dtime_lilac)
+    call ESMF_LogWrite(subname//"ctsm time manager initialized....", ESMF_LOGMSG_INFO)
 
     !----------------------
     ! Read namelist, grid and surface data
     !----------------------
-
     ! set default values for run control variables
     call clm_varctl_set(caseid_in=caseid, nsrest_in=nsrest)
-    call ESMF_LogWrite(subname//"default values for run control variables are set...", ESMF_LOGMSG_INFO)
-
-    !----------------------
     ! Initialize glc_elevclass module
-    !----------------------
-
     call glc_elevclass_init(glc_nec)
+    call ESMF_LogWrite(subname//"default values for run control variables are set...", ESMF_LOGMSG_INFO)
 
     !----------------------
     ! Call initialize1
     !----------------------
-
-    ! Note that the memory for gindex_ocn will be allocated in the following call
-
-    call initialize1(dtime=dtime_lilac, gindex_ocn=gindex_ocn)
-
-    call ESMF_LogWrite(subname//"ctsm time manager initialized....", ESMF_LOGMSG_INFO)
+    call initialize1(dtime=dtime_lilac)
     call ESMF_LogWrite(subname//"ctsm initialize1 done...", ESMF_LOGMSG_INFO)
 
-    !--------------------------------
-    ! generate the land mesh on ctsm distribution
-    !--------------------------------
-
-    ! obtain global index array for just land points which includes mask=0 or ocean points
-    call get_proc_bounds( bounds )
-
-    nlnd = bounds%endg - bounds%begg + 1
-    allocate(gindex_lnd(nlnd))
-    do g = bounds%begg,bounds%endg
-       n = 1 + (g - bounds%begg)
-       gindex_lnd(n) = ldecomp%gdc2glo(g)
-    end do
-
-    call ESMF_LogWrite(subname//"obtained global index", ESMF_LOGMSG_INFO)
-
-    ! create a global index that includes both land and ocean points
-    nocn = size(gindex_ocn)
-    allocate(gindex(nlnd + nocn))
-    do n = 1,nlnd+nocn
-       if (n <= nlnd) then
-          gindex(n) = gindex_lnd(n)
-       else
-          gindex(n) = gindex_ocn(n-nlnd)
-       end if
-    end do
-
-    ! create distGrid from global index array
-    DistGrid = ESMF_DistGridCreate(arbSeqIndexList=gindex, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    deallocate(gindex)
-    call ESMF_LogWrite(subname//"DistGrid created......", ESMF_LOGMSG_INFO)
-
-    ! create esmf mesh using distgrid and lnd_mesh_filename
-    lnd_mesh = ESMF_MeshCreate(filename=trim(lnd_mesh_filename), fileformat=ESMF_FILEFORMAT_ESMFMESH, &
-         elementDistgrid=Distgrid, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) then
-       call shr_sys_abort("Error in creating mesh "// trim(lnd_mesh_filename))
-    end if
-    if (masterproc) then
-       write(iulog,*)'mesh file for domain is ',trim(lnd_mesh_filename)
-    end if
-    call ESMF_LogWrite(subname//" Create Mesh using file ...."//trim(lnd_mesh_filename), ESMF_LOGMSG_INFO)
+    !----------------------
+    ! Initialize decomposition (ldecomp) and domain (ldomain) types and generate land mesh
+    !----------------------
+    ! TODO: generalize this so that a mask mesh is read in like for nuopc/cmeps
+    ! For now set the meshfile_mask equal to the model_meshfile
+    call lnd_set_decomp_and_domain_from_readmesh(driver='lilac', vm=vm, &
+         meshfile_lnd=lnd_mesh_filename, meshfile_mask=lnd_mesh_filename, &
+         mesh_ctsm=lnd_mesh, ni=ni, nj=nj, rc=rc)
 
     !--------------------------------
     ! Finish initializing ctsm
     !--------------------------------
-
-    call initialize2()
+    call initialize2(ni,nj)
     call ESMF_LogWrite(subname//"ctsm initialize2 done...", ESMF_LOGMSG_INFO)
 
     !--------------------------------
     ! Create import state (only assume input from atm - not rof and glc)
     !--------------------------------
-
     ! create an empty field bundle for import of atm fields
     c2l_fb_atm = ESMF_FieldBundleCreate (name='c2l_fb_atm', rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -476,6 +429,8 @@ contains
     !--------------------------------
     ! Fill in ctsm export state
     !--------------------------------
+
+    call get_proc_bounds( bounds )
 
     call export_fields(export_state, bounds, rc=rc)
     if (rc /= ESMF_SUCCESS) call ESMF_Finalize(rc=rc, endflag=ESMF_END_ABORT)
@@ -859,15 +814,6 @@ contains
     !--------------------------------
     ! diagnostics
     !--------------------------------
-
-    !if (dbug > 1) then
-    !   call State_diagnose(exportState,subname//':ES',rc=rc)
-    !   if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    !   if (masterproc) then
-    !      call log_clock_advance(clock, 'CTSM', iulog, rc)
-    !      if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    !   end if
-    !end if
 
     call ESMF_LogWrite(subname//' done', ESMF_LOGMSG_INFO)
 
