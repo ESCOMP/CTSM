@@ -3,6 +3,7 @@
 import logging
 import sys
 import string
+import pdb
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,6 @@ def abort(errmsg):
     No traceback is given, but if the logging level is DEBUG, then we'll enter pdb
     """
     if logger.isEnabledFor(logging.DEBUG):
-        import pdb
         pdb.set_trace()
 
     sys.exit('ERROR: {}'.format(errmsg))
