@@ -64,8 +64,6 @@ module clm_varpar
 
   ! constants for decomposition cascade
 
-  integer, public, parameter :: i_micr_r   = 1
-  integer, public, parameter :: i_micr_k   = i_micr_r + 1
   integer, public, parameter :: i_met_lit  = 1
   integer, public, parameter :: i_cel_lit  = i_met_lit + 1
   integer, public, parameter :: i_lig_lit  = i_cel_lit + 1
