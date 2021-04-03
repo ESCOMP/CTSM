@@ -1,4 +1,121 @@
 ===============================================================
+Tag name:  ctsm5.1.dev030
+Originator(s):  mvertens / erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Mar 31 16:46:04 MDT 2021
+One-line Summary: New single column functionality for the NUOPC cap
+
+Purpose and description of changes
+----------------------------------
+
+Implemented new nuopc/cmeps single column functionality.
+
+In config/cesm/config_files.xml - single point domains are only used 
+for mct/cpl7. For cmeps single point meshes are now generated on the 
+fly and component domains files are no longer needed.
+env_run.xml variables PTS_LAT, PTS_LON and PTS_DOMAINFILE are used 
+to determine if there is a single point or single column run.
+If PTS_LAT and PTS_LON are not -999 and PTS_DOMAINFILE is UNSET, 
+then you have a single point run and the exact values of PTS_LAT
+and PTS_LON are used.  If PTS_LAT and PTS_LON are not -999 and 
+PTS_DOMAINFILE is not UNSET, then then the cmeps driver will recognize the nearest neighbor
+values of PTS_LAT and PTS_LON in PTS_DOMAINFILE as the single column lat and lon to use.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #1312 -- Add NUOPC tests
+   Fixes #1302 -- Setup to allow landuse.timeseries file for high resolution cases for 2000-2025
+   Fixes #1183 -- mkmapdata needs input option for large file support, current defaults unsuitable for high res grids.
+
+Known bugs introduced in this tag (include issue #):
+
+Known bugs found since the previous tag (include issue #):
+   #1317 -- MPI timeout for some izumi_nag tests reading in datm forcing files in NUOPC cap 
+   #1314 -- Send unset value for scol_lat/lon from driver
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Nine step tests changed so that they have ROF run at same frequency as ATM (like the similar CAM tests)
+  as these will fail with NUOPC since it doesn't allow you to end not on an even time-step for all components.
+  One of these tests changed to a CAM type test from decStart
+
+Changes to tests or testing: Add more NUOPC tests to test list
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne -- FAIL
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below): Ran full izumi test list for nuopc driver (failed tests appear above)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+   (List of fields change though)
+	
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, CDEPS, CMEPS
+   cime  to cime5.8.39
+   CDEPS to v0.5.0
+   CMEPS to v0.5.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1309 -- New single column functionality for NUOPC/CMEPS
+   #1310 -- run_sys_tests: add --retry option on izumi 
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev029
 Originator(s):  mvertens (Mariana Vertenstein), sacks (Bill Sacks)
 Date:  Thu Mar 18 21:21:21 MDT 2021
