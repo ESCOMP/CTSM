@@ -35,15 +35,15 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   public :: DecompCascadeMIMICSreadNML      ! Read in namelist
   public :: readParams                      ! Read in parameters from params file
   public :: init_decompcascade_mimics       ! Initialization
-  public :: decomp_rate_constants_mimics    ! Figure out decomposition rates
+  public :: decomp_rates_mimics             ! Figure out decomposition rates
   !
   ! !PUBLIC DATA MEMBERS 
   !
   ! !PRIVATE DATA MEMBERS 
 
-  integer, private, parameter :: nsompools = 3          ! Number of SOM pools
+  integer, private, parameter :: npools = 8             ! Number of pools
   integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metobolic
-  integer, private :: i_litr2 = -9  ! Second litter pool, lignin in MIMICS
+  integer, private :: i_litr2 = -9  ! Second litter pool, structural in MIMICS (cellulose + lignin)
   integer, private :: i_micr1 = -9  ! First microbial pool, copiotrophic, as labeled in Wieder et al. 2015
   integer, private :: i_micr2 = -9  ! Second microbial pool, oligotrophic, as labeled in Wieder et al. 2015
   integer, private :: i_cwd   = -9  ! Coarse woody debris pool
@@ -52,9 +52,6 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   integer, private :: i_soil3 = -9  ! SOM third pool, available SOM (som_a in Wieder et al. 2015)
 
   type, private :: params_type
-     ! TODO slevis: soil/litter C:N is not defined in MIMICS. Microbial C:N is
-     !              a parameter that varies with litter quality (fmet).
-
      ! TODO slevis: New rf params in MIMICS. Update params file accordingly.
      !              I haven't identified what these correspond to in testbed.
      real(r8):: rf_l1m1_mimics  ! respiration fraction litter 1 -> microbe 1
@@ -66,20 +63,22 @@ module SoilBiogeochemDecompCascadeMIMICSMod
 
      real(r8):: rf_cwdl2_mimics
 
-     ! TODO slevis: Introduce Vmax and Km. Also tau params that define
-     !              microbial turnover to SOM are functions.
-     real(r8):: tau_m1_mimics     ! 1/turnover time of microbial 1 (1/yr)
-     real(r8):: tau_m2_mimics     ! 1/turnover time of microbial 2 (1/yr)
      real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
 
      real(r8) :: cwd_flig_bgc !
 
-     real(r8) :: k_frag_bgc   !fragmentation rate for CWD
      real(r8) :: minpsi_bgc   !minimum soil water potential for heterotrophic resp
      real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
 
-     real(r8) :: initial_Cstocks(nsompools) ! Initial Carbon stocks for a cold-start
-     real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
+     ! TODO BFB refactor: We will first merge a refactor branch to CTSM main
+     ! TODO BFB refactor: Add these two to the params file and rm the
+     !                    subroutines that read these params from the namelist
+     !                    If Melannie's values from the testbed differ from the
+     !                    values used for BGC, may need separate _mimics _bgc
+     !                    params. BGC default values here were 200 and 0.3
+     ! TODO keeping the depth param in case needed for spin-ups
+     real(r8) :: initial_Cstocks(npools)  ! Initial Carbon stocks for a cold-start
+     real(r8) :: initial_Cstocks_depth    ! Soil depth for initial Carbon stocks for a cold-start
      
   end type params_type
   !
@@ -91,72 +90,6 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   !-----------------------------------------------------------------------
 
 contains
-
-  !-----------------------------------------------------------------------
-  subroutine DecompCascadeMIMCSreadNML( NLFilename )
-    !
-    ! !DESCRIPTION:
-    ! Read the namelist for soil MIMICS Decomposition Cascade
-    ! TODO slevis: Modify for MIMICS if necessary
-    !
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use abortutils     , only : endrun
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-
-    character(len=*), parameter :: subname = 'DecompCascadeMIMICSreadNML'
-    character(len=*), parameter :: nmlname = 'CENTURY_soilBGCDecompCascade'
-    !-----------------------------------------------------------------------
-    real(r8) :: initial_Cstocks(nsompools), initial_Cstocks_depth
-    namelist /CENTURY_soilBGCDecompCascade/ initial_Cstocks, initial_Cstocks_depth
-
-    ! Initialize options to default values, in case they are not specified in
-    ! the namelist
-
-    initial_Cstocks(:)    = 200._r8
-    initial_Cstocks_depth = 0.3
-
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=CENTURY_soilBGCDecompCascade, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(__FILE__, __LINE__))
-       end if
-       call relavu( unitn )
-    end if
-
-    call shr_mpi_bcast (initial_Cstocks      , mpicom)
-    call shr_mpi_bcast (initial_Cstocks_depth, mpicom)
-
-    if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=CENTURY_soilBGCDecompCascade)
-       write(iulog,*) ' '
-    end if
-
-    params_inst%initial_Cstocks(:)    = initial_Cstocks(:)
-    params_inst%initial_Cstocks_depth = initial_Cstocks_depth
-
-  end subroutine DecompCascadeMIMICSreadNML
 
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
@@ -178,7 +111,12 @@ contains
     !-----------------------------------------------------------------------
 
     ! Read off of netcdf file
-    ! TODO slevis: Add new params here and in the params file
+    ! TODO slevis: Add new params here and in the params file.
+    !      Read MIMICS-specific params here and shared params like this:
+    !      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
+    ! TODO BFB refactor: Remove k_frag everywhere and from params file
+    ! TODO BFB refactor: Rename tau_cwd and cwd_flig to *_bgc
+    ! TODO BFB refactor: *bgc are examples of shared params so chg accordingly
     tString='tau_cwd'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -219,11 +157,6 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_cwdl2_mimics=tempr
 
-    tString='k_frag'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%k_frag_bgc=tempr
-
     tString='minpsi_hr'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -234,15 +167,16 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%maxpsi_bgc=tempr 
 
+    ! TODO cwd_flig is used in cwd --> l2 so keeping for now
     tString='cwd_flig'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cwd_flig_bgc=tempr 
-    
+
   end subroutine readParams
 
   !-----------------------------------------------------------------------
-  subroutine init_decompcascade_mimcs(bounds, soilbiogeochem_state_inst, soilstate_inst )
+  subroutine init_decompcascade_mimics(bounds, soilbiogeochem_state_inst, soilstate_inst )
     !
     ! !DESCRIPTION:
     ! initialize rate constants and decomposition pathways following the
@@ -278,6 +212,8 @@ contains
     integer :: i_l1m2
     integer :: i_l2m2
     integer :: i_s3m2
+    integer :: i_s1s3
+    integer :: i_s2s3
     integer :: i_cwdl2
     real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
 
@@ -330,9 +266,8 @@ contains
 
       ! some of these are dependent on the soil texture properties
       ! TODO slevis: Template for calculated mimics params?
-      !              But soil texture remains const with time.
-      !              So one-time initializations here and time-dep params
-      !              in subr. decomp_rate_constants_mimics.
+      !              One-time initializations here and time-dep params
+      !              in subr. decomp_rates_mimics.
 
       do c = bounds%begc, bounds%endc
          do j = 1, nlevdecomp
@@ -353,8 +288,8 @@ contains
       is_litter(i_litr1) = .true.
       is_soil(i_litr1) = .false.
       is_cwd(i_litr1) = .false.
-      initial_cn_ratio(i_litr1) = 90._r8
-      initial_stock(i_litr1) = 0._r8
+      initial_cn_ratio(i_litr1) = 10._r8  ! 90 in BGC; not used in MIMICS
+      initial_stock(i_litr1) = params_inst%initial_Cstocks(i_litr1)
       is_metabolic(i_litr1) = .true.
       is_cellulose(i_litr1) = .false.
       is_lignin(i_litr1) = .false.
@@ -369,15 +304,12 @@ contains
       is_litter(i_litr2) = .true.
       is_soil(i_litr2) = .false.
       is_cwd(i_litr2) = .false.
-      initial_cn_ratio(i_litr2) = 90._r8
-      initial_stock(i_litr2) = 0._r8
+      initial_cn_ratio(i_litr2) = 10._r8  ! 90 in BGC; not used in MIMICS
+      initial_stock(i_litr2) = params_inst%initial_Cstocks(i_litr2)
       is_metabolic(i_litr2) = .false.
-      is_cellulose(i_litr2) = .true.  ! TODO ??
+      is_cellulose(i_litr2) = .true.
       is_lignin(i_litr2) = .true.
 
-      ! TODO slevis: clm_varpar hardwires i_cwd = 4 or = 0 if (use_fates)
-      !              I recommend replacing the hardwired value with one that we
-      !              update here on the fly. Same for i_soil1,2,3 & i_micr1,2.
       i_cwd = i_litr2
       if (.not. use_fates) then
          ! CWD
@@ -391,15 +323,15 @@ contains
          is_litter(i_cwd) = .false.
          is_soil(i_cwd) = .false.
          is_cwd(i_cwd) = .true.
-         initial_cn_ratio(i_cwd) = 90._r8
-         initial_stock(i_cwd) = 0._r8
+         initial_cn_ratio(i_cwd) = 10._r8  ! 90 in BGC; not used in MIMICS
+         initial_stock(i_cwd) = params_inst%initial_Cstocks(i_cwd)
          is_metabolic(i_cwd) = .false.
          is_cellulose(i_cwd) = .false.
          is_lignin(i_cwd) = .false.
       endif
 
       i_soil1 = i_cwd + 1
-      floating_cn_ratio_decomp_pools(i_soil1) = .false.
+      floating_cn_ratio_decomp_pools(i_soil1) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
       decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
       decomp_cascade_con%decomp_pool_name_long(i_soil1) = 'soil 1'
@@ -408,14 +340,14 @@ contains
       is_litter(i_soil1) = .false.
       is_soil(i_soil1) = .true.
       is_cwd(i_soil1) = .false.
-      initial_cn_ratio(i_soil1) = cn_s1  ! TODO ??
-      initial_stock(i_soil1) = params_inst%initial_Cstocks(1)
+      initial_cn_ratio(i_soil1) = 10._r8  ! cn_s1 in BGC; not used in MIMICS
+      initial_stock(i_soil1) = params_inst%initial_Cstocks(i_soil1)
       is_metabolic(i_soil1) = .false.
       is_cellulose(i_soil1) = .false.
       is_lignin(i_soil1) = .false.
 
       i_soil2 = i_soil1 + 1
-      floating_cn_ratio_decomp_pools(i_soil2) = .false.
+      floating_cn_ratio_decomp_pools(i_soil2) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_soil2) = 'soil2'
       decomp_cascade_con%decomp_pool_name_history(i_soil2) = 'SOIL2'
       decomp_cascade_con%decomp_pool_name_long(i_soil2) = 'soil 2'
@@ -424,14 +356,14 @@ contains
       is_litter(i_soil2) = .false.
       is_soil(i_soil2) = .true.
       is_cwd(i_soil2) = .false.
-      initial_cn_ratio(i_soil2) = cn_s2  ! TODO ??
-      initial_stock(i_soil2) = params_inst%initial_Cstocks(2)
+      initial_cn_ratio(i_soil2) = 10._r8  ! cn_s2 in BGC; not used in MIMICS
+      initial_stock(i_soil2) = params_inst%initial_Cstocks(i_soil2)
       is_metabolic(i_soil2) = .false.
       is_cellulose(i_soil2) = .false.
       is_lignin(i_soil2) = .false.
 
       i_soil3 = i_soil2 + 1
-      floating_cn_ratio_decomp_pools(i_soil3) = .false.
+      floating_cn_ratio_decomp_pools(i_soil3) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_soil3) = 'soil3'
       decomp_cascade_con%decomp_pool_name_history(i_soil3) = 'SOIL3'
       decomp_cascade_con%decomp_pool_name_long(i_soil3) = 'soil 3'
@@ -440,8 +372,8 @@ contains
       is_litter(i_soil3) = .false.
       is_soil(i_soil3) = .true.
       is_cwd(i_soil3) = .false.
-      initial_cn_ratio(i_soil3) = cn_s3  ! TODO ??
-      initial_stock(i_soil3) = params_inst%initial_Cstocks(3)
+      initial_cn_ratio(i_soil3) = 10._r8  ! cn_s3 in BGC; not used in MIMICS
+      initial_stock(i_soil3) = params_inst%initial_Cstocks(i_soil3)
       is_metabolic(i_soil3) = .false.
       is_cellulose(i_soil3) = .false.
       is_lignin(i_soil3) = .false.
@@ -456,8 +388,8 @@ contains
       is_litter(i_micr1) = .false.
       is_soil(i_micr1) = .false.
       is_cwd(i_micr1) = .false.
-      initial_cn_ratio(i_micr1) = 90._r8
-      initial_stock(i_micr1) = 0._r8
+      initial_cn_ratio(i_micr1) = 10._r8  ! MIMICS may use this
+      initial_stock(i_micr1) = params_inst%initial_Cstocks(i_micr1)
       is_metabolic(i_micr1) = .false.
       is_cellulose(i_micr1) = .false.
       is_lignin(i_micr1) = .false.
@@ -472,28 +404,25 @@ contains
       is_litter(i_micr2) = .false.
       is_soil(i_micr2) = .false.
       is_cwd(i_micr2) = .false.
-      initial_cn_ratio(i_micr2) = 90._r8
-      initial_stock(i_micr2) = 0._r8
+      initial_cn_ratio(i_micr2) = 10._r8  ! MIMICS may use this
+      initial_stock(i_micr2) = params_inst%initial_Cstocks(i_micr2)
       is_metabolic(i_micr2) = .false.
       is_cellulose(i_micr2) = .false.
       is_lignin(i_micr2) = .false.
 
       speedup_fac = 1._r8
 
-      !lit1
+      !lit1,2
       spinup_factor(i_litr1) = 1._r8
-      !lit2
       spinup_factor(i_litr2) = 1._r8
       !CWD
       if (.not. use_fates) then
          spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
       end if
-      !som1
+      !som1,2,3
       spinup_factor(i_soil1) = 1._r8
-      !som2,3
-      ! TODO slevis: change these to 1?
-      spinup_factor(i_soil2) = max(1._r8, (speedup_fac * params_inst%tau_s2_bgc))
-      spinup_factor(i_soil3) = max(1._r8, (speedup_fac * params_inst%tau_s3_bgc))
+      spinup_factor(i_soil2) = 1._r8  ! BGC used same formula as for cwd but...
+      spinup_factor(i_soil3) = 1._r8  ! ...w the respective tau_s values
       ! micr1,2
       spinup_factor(i_micr1) = 1._r8
       spinup_factor(i_micr2) = 1._r8
@@ -546,8 +475,23 @@ contains
       cascade_receiver_pool(i_s3m2) = i_micr2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m2) = 1.0_r8
 
+      ! TODO Should I have kept code corresponding to the s1_s3 s2_s3 transfers?
+      i_s1s3 = 7
+      decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3
+      cascade_donor_pool(i_s1s3) = i_soil1
+      cascade_receiver_pool(i_s1s3) = i_soil3
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = 1.0_r8
+
+      i_s2s3 = 8
+      decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
+      cascade_donor_pool(i_s2s3) = i_soil2
+      cascade_receiver_pool(i_s2s3) = i_soil3
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = 1.0_r8
+
       if (.not. use_fates) then
-         i_cwdl2 = 7
+         i_cwdl2 = 9
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
@@ -563,7 +507,7 @@ contains
   end subroutine init_decompcascade_mimics
 
   !-----------------------------------------------------------------------
-  subroutine decomp_rate_constants_mimics(bounds, num_soilc, filter_soilc, &
+  subroutine decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
        soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
@@ -587,16 +531,33 @@ contains
     real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
     real(r8), allocatable:: fr(:,:)         ! column-level rooting fraction by soil depth
     real(r8):: psi                          ! temporary soilpsi for water scalar
-    real(r8):: k_l1                         ! decomposition rate constant litter 1 (1/sec)
-    real(r8):: k_l2                         ! decomposition rate constant litter 2 (1/sec)
-    real(r8):: k_s1                         ! decomposition rate constant SOM 1 (1/sec)
-    real(r8):: k_s2                         ! decomposition rate constant SOM 2 (1/sec)
-    real(r8):: k_s3                         ! decomposition rate constant SOM 3 (1/sec)
+    real(r8):: k_l1_m1                      ! decomposition rate constant litter 1 (1/sec)
+    real(r8):: k_l2_m1                      ! decomposition rate constant litter 2 (1/sec)
+    real(r8):: k_s3_m1                      ! decomposition rate constant SOM 3 (1/sec)
+    real(r8):: k_l1_m2                      ! decomposition rate constant litter 1 (1/sec)
+    real(r8):: k_l2_m2                      ! decomposition rate constant litter 2 (1/sec)
+    real(r8):: k_s3_m2                      ! decomposition rate constant SOM 3 (1/sec)
+    real(r8):: k_s1_s3                      ! decomposition rate constant SOM 1 (1/sec)
+    real(r8):: k_s2_s3                      ! decomposition rate constant SOM 2 (1/sec)
     real(r8):: k_m1                         ! decomposition rate constant microbial 1 (1/sec)
     real(r8):: k_m2                         ! decomposition rate constant microbial 2 (1/sec)
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
-    real(r8):: cwdc_loss                    ! fragmentation rate for CWD carbon (gC/m2/s)
-    real(r8):: cwdn_loss                    ! fragmentation rate for CWD nitrogen (gN/m2/s)
+    real(r8):: vmax_l1_m1_mimics            !
+    real(r8):: vmax_l2_m1_mimics            !
+    real(r8):: vmax_s3_m1_mimics            !
+    real(r8):: vmax_l1_m2_mimics            !
+    real(r8):: vmax_l2_m2_mimics            !
+    real(r8):: vmax_s3_m2_mimics            !
+    real(r8):: tau_s1_s3_mimics             !
+    real(r8):: tau_s2_s3_mimics             !
+    real(r8):: tau_m1_mimics                !
+    real(r8):: tau_m2_mimics                !
+    real(r8):: km_l1_m1_mimics              !
+    real(r8):: km_l2_m1_mimics              !
+    real(r8):: km_s3_m1_mimics              !
+    real(r8):: km_l1_m2_mimics              !
+    real(r8):: km_l2_m2_mimics              !
+    real(r8):: km_s3_m2_mimics              !
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
     integer :: c, fc, j, k, l
     real(r8):: days_per_year                ! days per year
@@ -695,14 +656,23 @@ contains
 ! STILL MISSING N-related stuff: DIN...
 
       ! translate to per-second time constant
-      k_l1 = 1._r8    / (secspday * days_per_year * params_inst%tau_l1_bgc)
-      k_l2 = 1._r8    / (secspday * days_per_year * params_inst%tau_l2_bgc)
-      k_s1 = 1._r8    / (secspday * days_per_year * params_inst%tau_s1_bgc)
-      k_s2 = 1._r8    / (secspday * days_per_year * params_inst%tau_s2_bgc)
-      k_s3 = 1._r8    / (secspday * days_per_year * params_inst%tau_s3_bgc)
-      k_m1 = 1._r8    / (secspday * days_per_year * params_inst%tau_m1_mimics)
-      k_m2 = 1._r8    / (secspday * days_per_year * params_inst%tau_m2_mimics)
-      k_frag = 1._r8  / (secspday * days_per_year * params_inst%tau_cwd_bgc)
+      ! TODO Vmax terms replace k_* terms (easy) but Km terms and biomass pools
+      !      need to come in and be used where currently only the decomp_k
+      !      terms are in use. Refactor the hooks to make them general so that
+      !      they can work for both BGC and MIMICS? OR make separate sections
+      !      of code for use_century_decomp vs use_mimics_decomp.
+      ! TODO Should I have kept code corresponding to the s1_s3 s2_s3 transfers?
+      k_l1_m1 = 1._r8    / (secspday * days_per_year * vmax_l1_m1_mimics)
+      k_l2_m1 = 1._r8    / (secspday * days_per_year * vmax_l2_m1_mimics)
+      k_s3_m1 = 1._r8    / (secspday * days_per_year * vmax_s3_m1_mimics)
+      k_l1_m2 = 1._r8    / (secspday * days_per_year * vmax_l1_m2_mimics)
+      k_l2_m2 = 1._r8    / (secspday * days_per_year * vmax_l2_m2_mimics)
+      k_s3_m2 = 1._r8    / (secspday * days_per_year * vmax_s3_m2_mimics)
+      k_s1_s3 = 1._r8    / (secspday * days_per_year * tau_s1_s3_mimics)
+      k_s2_s3 = 1._r8    / (secspday * days_per_year * tau_s2_s3_mimics)
+      k_m1 = 1._r8    / (secspday * days_per_year * tau_m1_mimics)
+      k_m2 = 1._r8    / (secspday * days_per_year * tau_m2_mimics)
+      k_frag = 1._r8  / (secspday * days_per_year * tau_cwd_bgc)
 
      ! calc ref rate
       if ( spinup_state >= 1 ) then
@@ -897,9 +867,9 @@ contains
       end if
 
       ! Term that reduces decomposition rate at depth
-      ! TODO slevis: Reduced code repetition by defining
-      !              depth_scalar(c,j) = 1.0_r8 in the else instead of
-      !              repeating the decomp_k lines.
+      ! TODO BFB refactor: Reduced code repetition by defining
+      !      depth_scalar(c,j) = 1.0_r8 in the else instead of repeating the
+      !      decomp_k lines. Do this in BGC, too.
       do j = 1, nlevdecomp
          do fc = 1, num_soilc
             c = filter_soilc(fc)
@@ -914,6 +884,11 @@ contains
       end do
 
       ! calculate rate constants for all litter and som pools
+      ! TODO I will start updating this section when I feel confident in my list
+      !      of k_ factors. For example
+      !      - Should decomp_k be dimensioned (c,j,i_l1m1) instead?
+      !      - Should there be two sets of decomp_k, the first corresponding to
+      !        vmax and the second to km?
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
@@ -944,6 +919,6 @@ contains
 
     end associate
 
- end subroutine decomp_rate_constants_mimics
+ end subroutine decomp_rates_mimics
 
 end module SoilBiogeochemDecompCascadeMIMICSMod

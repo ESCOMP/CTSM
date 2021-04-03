@@ -228,25 +228,30 @@ contains
        write(iulog, *)
     end if
 
+    ! TODO BFB refactor: How to derive these instead of hardwiring?
     if ( use_fates ) then
+       ! TODO BFB refactor: Rm i_cwd from here and replace everywhere with my
+       !                    corresponding MIMICS implementation
        i_cwd = 0
        if (use_century_decomp) then
           ndecomp_pools = 6
           ndecomp_cascade_transitions = 8
        else if (use_mimics_decomp) then
-          ndecomp_pools = ?  ! TODO slevis: derive inst. of hardwiring?
+          ndecomp_pools = ?
           ndecomp_cascade_transitions = ?
        else
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 7
        end if
     else
+       ! TODO BFB refactor: Rm i_cwd from here and replace everywhere with my
+       !                    corresponding MIMICS implementation
        i_cwd = 4
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
        else if (use_mimics_decomp) then
-          ndecomp_pools = ?  ! TODO slevis: derive inst. of hardwiring?
+          ndecomp_pools = ?
           ndecomp_cascade_transitions = ?
        else
           ndecomp_pools = 8
