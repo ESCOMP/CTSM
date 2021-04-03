@@ -132,9 +132,9 @@ def buildnml(case, caseroot, compname):
         # This is the case for compsets without CISM, where the CISM_USE_ANTARCTICA xml
         # variable isn't defined
         glc_use_antarctica_flag = ""
-    elif cism_use_antarctica == "FALSE":
+    elif cism_use_antarctica.upper() == "FALSE":
         glc_use_antarctica_flag = ""
-    elif cism_use_antarctica == "TRUE":
+    elif cism_use_antarctica.upper() == "TRUE":
         glc_use_antarctica_flag = "-glc_use_antarctica"
     else:
         expect(False, "Unexpected value for CISM_USE_ANTARCTICA: {}".format(cism_use_antarctica))
