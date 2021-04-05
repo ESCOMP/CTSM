@@ -643,7 +643,7 @@ contains
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use shr_const_mod  , only : SHR_CONST_TKFRZ
     use clm_varcon     , only : denice, denh2o, sb
-    use landunit_varcon, only : istwet, istsoil, istdlak, istice_mec
+    use landunit_varcon, only : istwet, istsoil, istdlak, istice
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
     use clm_varctl     , only : iulog, use_vancouver, use_mexicocity
@@ -692,7 +692,7 @@ contains
          ! Below snow temperatures - nonlake points (lake points are set below)
          if (.not. lun%lakpoi(l)) then
 
-            if (lun%itype(l)==istice_mec) then
+            if (lun%itype(l)==istice) then
                this%t_soisno_col(c,1:nlevgrnd) = 250._r8
 
             else if (lun%itype(l) == istwet) then

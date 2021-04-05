@@ -293,8 +293,8 @@ contains
          'ilun_crop', &
          subgrid_special_indices%ilun_crop)
     status = pio_get_att(ncidi, pio_global, &
-         'ilun_landice_multiple_elevation_classes', &
-         subgrid_special_indices%ilun_landice_multiple_elevation_classes)
+         'ilun_landice', &
+         subgrid_special_indices%ilun_landice)
     status = pio_get_att(ncidi, pio_global, &
          'created_glacier_mec_landunits', &
          created_glacier_mec_landunits)
@@ -308,8 +308,8 @@ contains
             subgrid_special_indices%ilun_vegetated_or_bare_soil
        write(iulog,*)'ilun_crop                               = ' , &
             subgrid_special_indices%ilun_crop
-       write(iulog,*)'ilun_landice_multiple_elevation_classes = ' , &
-            subgrid_special_indices%ilun_landice_multiple_elevation_classes
+       write(iulog,*)'ilun_landice = ' , &
+            subgrid_special_indices%ilun_landice
        write(iulog,*)'create_glacier_mec_landunits            = ', &
             trim(created_glacier_mec_landunits)
     end if

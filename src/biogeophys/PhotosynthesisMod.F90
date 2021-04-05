@@ -950,7 +950,7 @@ contains
     ! Time step initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice_mec, istwet
+    use landunit_varcon, only : istsoil, istcrop, istice, istwet
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
@@ -990,7 +990,7 @@ contains
           endif
        end if
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop &
-            .or. lun%itype(l) == istice_mec &
+            .or. lun%itype(l) == istice &
             .or. lun%itype(l) == istwet) then
           if (use_c13) then
              this%rc13_canair_patch(p) = 0._r8

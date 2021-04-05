@@ -32,7 +32,7 @@ module BalanceCheckMod
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
   use PatchType          , only : patch                
-  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
+  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   !
@@ -798,7 +798,7 @@ contains
 
                  if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
                       lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
-                      lun%itype(l) == istice_mec) then
+                      lun%itype(l) == istice) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                           + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
                           + qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) &

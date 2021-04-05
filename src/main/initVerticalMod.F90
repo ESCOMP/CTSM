@@ -22,7 +22,7 @@ module initVerticalMod
   use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
-  use landunit_varcon   , only : istdlak, istice_mec
+  use landunit_varcon   , only : istdlak, istice
   use fileutils         , only : getfil
   use LandunitType      , only : lun                
   use GridcellType      , only : grc                
@@ -760,7 +760,7 @@ contains
     ! from the upper layers.
     !
     ! !USES:
-    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istice, isturb_MIN, isturb_MAX
     use column_varcon  , only : icol_road_perv
     !
     ! !ARGUMENTS:
@@ -784,7 +784,7 @@ contains
     ! == istdlak - that way, hasBedrock(lake) would be more likely to get updated
     ! correctly if the lake logic changes.
 
-    if (lun_itype == istice_mec) then
+    if (lun_itype == istice) then
        hasBedrock = .false.
     else if (lun_itype >= isturb_MIN .and. lun_itype <= isturb_MAX) then
        if (col_itype == icol_road_perv) then

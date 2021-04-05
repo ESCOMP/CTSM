@@ -803,7 +803,7 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "glc_nec inconsistent"      =>{ options=>"-envxml_dir .",
-                                     namelst=>"maxpatch_glcmec=5",
+                                     namelst=>"maxpatch_glc=5",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },

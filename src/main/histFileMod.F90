@@ -2086,7 +2086,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
+    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, nlevdecomp_full
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
     use clm_varctl      , only : version, hostname, username, conventions, source
@@ -2234,10 +2234,10 @@ contains
        call ncd_defdim(lnfid, 'cft', cft_size, dimid)
        call htape_add_cft_metadata(lnfid)
     end if
-    call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glcmec , dimid)
+    call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glc , dimid)
     ! elevclas (in contrast to glc_nec) includes elevation class 0 (bare land)
     ! (although on the history file it will go 1:(nec+1) rather than 0:nec)
-    call ncd_defdim(lnfid, 'elevclas' , maxpatch_glcmec + 1, dimid)
+    call ncd_defdim(lnfid, 'elevclas' , maxpatch_glc + 1, dimid)
 
     do n = 1,num_subs
        call ncd_defdim(lnfid, subs_name(n), subs_dim(n), dimid)
@@ -4781,7 +4781,7 @@ contains
                         ptr_gcell, ptr_lunit, ptr_col, ptr_patch, ptr_lnd, &
                         ptr_atm, p2c_scale_type, c2l_scale_type, &
                         l2g_scale_type, set_lake, set_nolake, set_urb, set_nourb, &
-                        set_noglcmec, set_spec, default)
+                        set_noglc, set_spec, default)
     !
     ! !DESCRIPTION:
     ! Initialize a single level history field. The pointer, ptrhist,
@@ -4809,7 +4809,7 @@ contains
     real(r8)        , optional, intent(in) :: set_nolake     ! value to set non-lakes to
     real(r8)        , optional, intent(in) :: set_urb        ! value to set urban to
     real(r8)        , optional, intent(in) :: set_nourb      ! value to set non-urban to
-    real(r8)        , optional, intent(in) :: set_noglcmec   ! value to set non-glacier_mec to
+    real(r8)        , optional, intent(in) :: set_noglc      ! value to set non-glacier to
     real(r8)        , optional, intent(in) :: set_spec       ! value to set special to
     character(len=*), optional, intent(in) :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
     character(len=*), optional, intent(in) :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits
@@ -4911,10 +4911,10 @@ contains
              if (lun%ifspecial(l)) ptr_col(c) = set_spec
           end do
        end if
-       if (present(set_noglcmec)) then
+       if (present(set_noglc)) then
           do c = bounds%begc,bounds%endc
              l =col%landunit(c)
-             if (.not.(lun%glcmecpoi(l))) ptr_col(c) = set_noglcmec
+             if (.not.(lun%glcpoi(l))) ptr_col(c) = set_noglc
           end do
        endif
 
@@ -4952,10 +4952,10 @@ contains
              if (lun%ifspecial(l)) ptr_patch(p) = set_spec
           end do
        end if
-       if (present(set_noglcmec)) then
+       if (present(set_noglc)) then
           do p = bounds%begp,bounds%endp
              l =patch%landunit(p)
-             if (.not.(lun%glcmecpoi(l))) ptr_patch(p) = set_noglcmec
+             if (.not.(lun%glcpoi(l))) ptr_patch(p) = set_noglc
           end do
        end if
     else
@@ -5015,7 +5015,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs,nlevsoi
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec
+    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc
     use landunit_varcon , only : max_lunit
     !
     ! !ARGUMENTS:
@@ -5148,11 +5148,11 @@ contains
           call endrun()
        end if
     case ('glc_nec')
-       num2d = maxpatch_glcmec
+       num2d = maxpatch_glc
     case ('elevclas')
        ! add one because indexing starts at 0 (elevclas, unlike glc_nec, includes the
        ! bare ground "elevation class")
-       num2d = maxpatch_glcmec + 1
+       num2d = maxpatch_glc + 1
     case ('levsno')
        num2d = nlevsno
     case ('nlevcan')

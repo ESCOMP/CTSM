@@ -337,7 +337,7 @@ contains
     ! accordingly.
     !
     ! !USES:
-    use landunit_varcon , only : istice_mec, istdlak, isturb_MIN, isturb_MAX, landunit_is_special
+    use landunit_varcon , only : istice, istdlak, isturb_MIN, isturb_MAX, landunit_is_special
     !
     ! !ARGUMENTS:
     integer  , intent(inout) :: li      ! input value is index of last landunit added; output value is index of this newly-added landunit
@@ -358,10 +358,10 @@ contains
 
     lun%ifspecial(li) = landunit_is_special(ltype)
 
-    if (ltype == istice_mec) then
-       lun%glcmecpoi(li) = .true.
+    if (ltype == istice) then
+       lun%glcpoi(li) = .true.
     else
-       lun%glcmecpoi(li) = .false.
+       lun%glcpoi(li) = .false.
     end if
 
     if (ltype == istdlak) then

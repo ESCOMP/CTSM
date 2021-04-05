@@ -9,7 +9,7 @@ module ColumnType
   !   1  => (istsoil)          soil (vegetated or bare soil)
   !   2  => (istcrop)          crop (only for crop configuration)
   !   3  => (UNUSED)           (formerly non-multiple elevation class land ice; currently unused)
-  !   4  => (istice_mec)       land ice (multiple elevation classes)   
+  !   4  => (istice)           land ice
   !   5  => (istdlak)          deep lake
   !   6  => (istwet)           wetland
   !   71 => (icol_roof)        urban roof

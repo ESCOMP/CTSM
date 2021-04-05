@@ -1905,7 +1905,7 @@ sub setup_logic_glacier {
      $log->fatal_error("glc_do_dynglacier can only be set via the env variable $clm_upvar: it can NOT be set in user_nl_clm");
   }
 
-  my $var = "maxpatch_glcmec";
+  my $var = "maxpatch_glc";
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'val'=>$nl_flags->{'glc_nec'} );
 
   my $val = $nl->get_value($var);

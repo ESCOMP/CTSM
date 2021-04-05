@@ -37,7 +37,7 @@ module dynConsBiogeophysMod
   use ColumnType              , only : col
   use PatchType               , only : patch
   use clm_varcon              , only : tfrz, cpliq, hfus, ispval
-  use landunit_varcon         , only : istsoil, istice_mec
+  use landunit_varcon         , only : istsoil, istice
   use dynSubgridControlMod    , only : get_for_testing_zero_dynbal_fluxes
   use filterColMod            , only : filter_col_type, col_filter_from_ltypes
   !
@@ -64,7 +64,7 @@ module dynConsBiogeophysMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine dyn_hwcontent_set_baselines(bounds, num_icemecc, filter_icemecc, &
+  subroutine dyn_hwcontent_set_baselines(bounds, num_icec, filter_icec, &
        num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, lakestate_inst, water_inst, temperature_inst, &
        reset_all_baselines, reset_lake_baselines)
@@ -99,8 +99,8 @@ contains
     ! The following filter should include inactive as well as active points. This could
     ! be important if an inactive point later becomes active, so that we have an
     ! appropriate baseline value for that point.
-    integer, intent(in) :: num_icemecc  ! number of points in filter_icemecc
-    integer, intent(in) :: filter_icemecc(:) ! filter for icemec (i.e., glacier) columns
+    integer, intent(in) :: num_icec  ! number of points in filter_icec
+    integer, intent(in) :: filter_icec(:) ! filter for ice (i.e., glacier) columns
     integer, intent(in) :: num_lakec  ! number of points in filter_lakec
     integer, intent(in) :: filter_lakec(:) ! filter for lake columns
 
@@ -136,14 +136,14 @@ contains
     ! value for that point.
     natveg_and_glc_filterc = col_filter_from_ltypes( &
          bounds = bounds, &
-         ltypes = [istsoil, istice_mec], &
+         ltypes = [istsoil, istice], &
          include_inactive = .true.)
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
 
        call dyn_water_content_set_baselines(bounds, natveg_and_glc_filterc, &
-            num_icemecc, filter_icemecc, num_lakec, filter_lakec, &
+            num_icec, filter_icec, num_lakec, filter_lakec, &
             bulk_or_tracer%waterstate_inst, lakestate_inst, &
             reset_all_baselines = reset_all_baselines, &
             reset_lake_baselines = reset_lake_baselines)
@@ -151,7 +151,7 @@ contains
     end do
        
     call dyn_heat_content_set_baselines(bounds, natveg_and_glc_filterc, &
-         num_icemecc, filter_icemecc, num_lakec, filter_lakec, &
+         num_icec, filter_icec, num_lakec, filter_lakec, &
          urbanparams_inst, soilstate_inst, lakestate_inst, water_inst%waterstatebulk_inst, &
          temperature_inst, &
          reset_all_baselines = reset_all_baselines, &
@@ -161,7 +161,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine dyn_water_content_set_baselines(bounds, natveg_and_glc_filterc, &
-       num_icemecc, filter_icemecc, num_lakec, filter_lakec, &
+       num_icec, filter_icec, num_lakec, filter_lakec, &
        waterstate_inst, lakestate_inst, &
        reset_all_baselines, reset_lake_baselines)
     !
@@ -174,8 +174,8 @@ contains
     type(filter_col_type), intent(in) :: natveg_and_glc_filterc  ! filter for natural veg and glacier columns
 
     ! The following filter should include inactive as well as active points
-    integer, intent(in) :: num_icemecc  ! number of points in filter_icemecc
-    integer, intent(in) :: filter_icemecc(:) ! filter for icemec (i.e., glacier) columns
+    integer, intent(in) :: num_icec  ! number of points in filter_icec
+    integer, intent(in) :: filter_icec(:) ! filter for ice (i.e., glacier) columns
     integer, intent(in) :: num_lakec  ! number of points in filter_lakec
     integer, intent(in) :: filter_lakec(:) ! filter for lake columns
 
@@ -218,10 +218,10 @@ contains
        ! under the glacial ice. Let's assume that the soil state under each glacier column is
        ! the same as the soil state in the natural vegetation landunit on that grid cell. We
        ! subtract this from the dynbal baseline variables to indicate a missing stock.
-       call set_glacier_baselines(bounds, num_icemecc, filter_icemecc, &
+       call set_glacier_baselines(bounds, num_icec, filter_icec, &
             vals_col = soil_liquid_mass_col(bounds%begc:bounds%endc), &
             baselines_col = dynbal_baseline_liq(bounds%begc:bounds%endc))
-       call set_glacier_baselines(bounds, num_icemecc, filter_icemecc, &
+       call set_glacier_baselines(bounds, num_icec, filter_icec, &
             vals_col = soil_ice_mass_col(bounds%begc:bounds%endc), &
             baselines_col = dynbal_baseline_ice(bounds%begc:bounds%endc))
     end if
@@ -251,7 +251,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine dyn_heat_content_set_baselines(bounds, natveg_and_glc_filterc, &
-       num_icemecc, filter_icemecc, num_lakec, filter_lakec, &
+       num_icec, filter_icec, num_lakec, filter_lakec, &
        urbanparams_inst, soilstate_inst, lakestate_inst, waterstatebulk_inst, &
        temperature_inst, &
        reset_all_baselines, reset_lake_baselines)
@@ -264,10 +264,10 @@ contains
     type(filter_col_type), intent(in) :: natveg_and_glc_filterc  ! filter for natural veg and glacier columns
 
     ! The following filter should include inactive as well as active points
-    integer, intent(in) :: num_icemecc       ! number of points in filter_icemecc
-    integer, intent(in) :: filter_icemecc(:) ! filter for icemec (i.e., glacier) columns
-    integer, intent(in) :: num_lakec         ! number of points in filter_lakec
-    integer, intent(in) :: filter_lakec(:)   ! filter for lake columns
+    integer, intent(in) :: num_icec        ! number of points in filter_icec
+    integer, intent(in) :: filter_icec(:)  ! filter for ice (i.e., glacier) columns
+    integer, intent(in) :: num_lakec       ! number of points in filter_lakec
+    integer, intent(in) :: filter_lakec(:) ! filter for lake columns
 
     type(urbanparams_type), intent(in)    :: urbanparams_inst
     type(soilstate_type)  , intent(in)    :: soilstate_inst
@@ -319,7 +319,7 @@ contains
        ! energy (or water) content of a given column (as long as that baseline doesn't
        ! change over time). By using the baselines computed here, we reduce the dynbal
        ! fluxes to more reasonable values.
-       call set_glacier_baselines(bounds, num_icemecc, filter_icemecc, &
+       call set_glacier_baselines(bounds, num_icec, filter_icec, &
             vals_col = soil_heat_col(bounds%begc:bounds%endc), &
             baselines_col = dynbal_baseline_heat(bounds%begc:bounds%endc))
     end if
@@ -344,7 +344,7 @@ contains
   end subroutine dyn_heat_content_set_baselines
 
   !-----------------------------------------------------------------------
-  subroutine set_glacier_baselines(bounds, num_icemecc, filter_icemecc, &
+  subroutine set_glacier_baselines(bounds, num_icec, filter_icec, &
        vals_col, baselines_col)
     !
     ! !DESCRIPTION:
@@ -358,11 +358,11 @@ contains
     type(bounds_type), intent(in) :: bounds
 
     ! The following filter should include inactive as well as active points
-    integer, intent(in) :: num_icemecc  ! number of points in filter_icemecc
-    integer, intent(in) :: filter_icemecc(:) ! filter for icemec (i.e., glacier) columns
+    integer, intent(in) :: num_icec  ! number of points in filter_icec
+    integer, intent(in) :: filter_icec(:) ! filter for ice (i.e., glacier) columns
 
     real(r8), intent(in) :: vals_col( bounds%begc: ) ! values in each column; must be set for at least natural veg and glacier columns
-    real(r8), intent(inout) :: baselines_col( bounds%begc: ) ! baselines in each column; will be set for all points in the icemecc filter
+    real(r8), intent(inout) :: baselines_col( bounds%begc: ) ! baselines in each column; will be set for all points in the icec filter
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c, l, g  ! indices
@@ -391,8 +391,8 @@ contains
          c2l_scale_type = 'urbanf', &
          include_inactive = .true.)
 
-    do fc = 1, num_icemecc
-       c = filter_icemecc(fc)
+    do fc = 1, num_icec
+       c = filter_icec(fc)
        g = col%gridcell(c)
 
        ! Start by setting the baseline for this glacier column equal to the value in this
