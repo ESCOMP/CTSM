@@ -402,12 +402,12 @@ contains
     logical          , intent(in)           :: switchdim
     character(len=*) , intent(in)           :: long_name        ! long name for variable
     character(len=*) , intent(in)           :: interpinic_flag  ! interpolate variable using interpinic ('interp', 'copy', 'skip' or 'area': see iflag meanings defined at the top of this module)
+    logical          , intent(in)           :: scale_by_thickness  ! to scale by thickness in vertical interpolation or not
     {VTYPE}          , pointer              :: data(:,:)        ! raw data
     logical          , intent(out)          :: readvar          ! was var read?
     integer          , intent(in), optional :: lowerb2
     integer          , intent(in), optional :: upperb2 
     character(len=*) , intent(in), optional :: units            ! long name for variable
-    logical          , intent(in), optional :: scale_by_thickness  ! to scale by thickness in vertical interpolation or not
     character(len=*) , intent(in), optional :: comment          ! attribute
     character(len=*) , intent(in), optional :: flag_meanings(:) ! attribute
     real(r8)         , intent(in), optional :: missing_value    ! attribute for real
@@ -476,20 +476,17 @@ contains
        status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag_is_1', &
             "1st and 2nd dims are switched from model representation")
 
-       ! We require scale_by_thickness for certain variables. See extensive
-       ! explanation near the top of this module.
-       if (present(scale_by_thickness)) then
-          if (scale_by_thickness) then
-             status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_scale_by_thickness)
-          else
-             status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_no_scale_by_thickness)
-          end if
-          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_values', (/0,1/))
-          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_is_0', &
-               "scale_by_thickness is .false.")
-          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_is_1', &
-               "scale_by_thickness is .true.")
+       ! scale_by_thickness explanation near the top of this module
+       if (scale_by_thickness) then
+          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_scale_by_thickness)
+       else
+          status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_no_scale_by_thickness)
        end if
+       status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_values', (/0,1/))
+       status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_is_0', &
+            "scale_by_thickness is .false.")
+       status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag_is_1', &
+            "scale_by_thickness is .true.")
 
        if (present(comment)) then
           call ncd_putatt(ncid, varid, 'comment', trim(comment))
