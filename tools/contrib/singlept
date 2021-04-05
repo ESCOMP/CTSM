@@ -7,14 +7,102 @@
 
 #  Import libraries
 from __future__ import print_function
+
 import sys
 import os
-import logging
-from getpass import getuser
 import string
+import logging
 import subprocess
+import argparse
+
 import numpy as np
 import xarray as xr
+
+from getpass import getuser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
+
+def get_parser():                                                                                                                                                                                  
+        """Get parser object for this script."""
+        parser = ArgumentParser(description=__doc__,
+                                formatter_class=ArgumentDefaultsHelpFormatter)
+        #parser = ArgumentParser(description='Setting the flags for running ./singlept script.')
+        ## Add information about if this is optional and default
+        parser.add_argument('--lat',
+                    help='Single point latitude.', 
+                    action="store",
+                    dest="plat",
+                    required=False,
+                    type = plat_type,
+                    default=42.5)
+        parser.add_argument('--lon',
+                    help='Single point longitude.', 
+                    action="store",
+                    dest="plon",
+                    required=False,
+                    type = plon_type,
+                    default= 287.8 )
+        parser.add_argument('--domain',
+                    help='Flag for creating CLM domain file at single point.', 
+                    action="store",
+                    dest="create_domain",
+                    required = False,
+                    type = bool, 
+                    default = True)
+        parser.add_argument('--surface',
+                    help='Flag for creating surface data file at single point.', 
+                    action="store",
+                    dest="create_surfdata",
+                    required = False,
+                    type = bool, 
+                    default = True)
+        parser.add_argument('--landuse',
+                    help='Flag for creating landuse data file at single point.', 
+                    action="store",
+                    dest="create_landuse",
+                    required = False,
+                    type = bool, 
+                    default = True)
+        parser.add_argument('--datm',
+                    help='Flag for creating DATM atmospheric forcing data at single point.', 
+                    action="store",
+                    dest="create_datm",
+                    required = False,
+                    type = bool, 
+                    default = False)
+        parser.add_argument('--datm_syr',
+                    help='Start year for creating DATM atmospheric forcing at single point.', 
+                    action="store",
+                    dest="datm_syr",
+                    required = False,
+                    type = int, 
+                    default = 1901)
+        parser.add_argument('--datm_eyr',
+                    help='End year for creating DATM atmospheric forcing at single point.', 
+                    action="store",
+                    dest="datm_eyr",
+                    required = False,
+                    type = int,
+                    default = 2014)
+        parser.add_argument('--nocrop', 
+                    help='Create datasets without the extensive list of prognostic crop types', 
+                    action="store_false", 
+                    dest="crop_flag", 
+                    default=True)
+        return parser
+
+def plat_type(x):
+    x = float(x)
+    if (x < -90) or (x > 90):
+        raise argparse.ArgumentTypeError("ERROR: Latitude of single point should be between -90 and 90.")
+    return x
+
+
+def plon_type(x):
+    x = float(x)
+    if (x < 0) or (x > 360):
+        raise argparse.ArgumentTypeError("ERROR: Latitude of single point should be between 0 and 360.")
+    return x
 
 
 def setup_logging(log_path, log_level):
@@ -111,6 +199,14 @@ class StreamToLogger(object):
         self.linebuf = ''
 
 
+#def SinglePointCase (self, plat, plon):
+#    """
+#    A case to encapsulate single point cases.
+#    """
+#    def __init__(self,plat, plon):
+#        self.plat = plat
+#        self.plon = plon 
+
 
 def error( desc ):
      "error function"
@@ -161,6 +257,7 @@ def create_domain_at_point (plat, plon,fdomain , fdomain2 ):
 def create_landuse_at_point (plat, plon,fluse , fluse2 ):
         print( "Open: "+fluse )
         f1  = xr.open_dataset(fluse)
+        print (f1)
         # create 1d variables
         lon0=np.asarray(f1['LONGXY'][0,:])
         lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
@@ -170,6 +267,8 @@ def create_landuse_at_point (plat, plon,fluse , fluse2 ):
         f2=f1.assign()
         f2['lon'] = lon 
         f2['lat'] = lat 
+        print ("lat : ", lat)
+        print ("lon : ", lon)  
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=plon,lsmlat=plat,method='nearest')
  
@@ -182,6 +281,7 @@ def create_landuse_at_point (plat, plon,fluse , fluse2 ):
  
         # revert expand dimensions of YEAR
         year = np.squeeze(np.asarray(f3['YEAR']))
+        print (year)
         x = xr.DataArray(year, coords={'time':f3['time']}, dims='time', name='YEAR')
         x.attrs['units']='unitless'
         x.attrs['long_name']='Year of PFT data'
@@ -222,21 +322,8 @@ def create_datm_at_point (plat, plon, fdatmdomain, fdatmdomain2):
 
 def main ():
 
-    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
-    # create dir if it does not exist
-    log_dir = os.path.dirname(log_file)
-    if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
-
-    log_level =  logging.DEBUG
-    setup_logging(log_file, log_level)
 
 
-    print( "singlept script to extract out a single point from the global CTSM inputdata datasets." )
-    myname=getuser()
-    pwd=os.getcwd()
-    print("User = "+myname)
-    print("Current directory = "+pwd)
 
     '''
     #------------------------------------------------------------------#
@@ -286,24 +373,30 @@ def main ():
 
     '''
 
+    args = get_parser().parse_args()
+
     #  Set control flags
 
     #-- Setup by default to run for Harvard Forest
 
     #--  Specify point to extract
-    plon = 287.8 
-    plat = 42.5
+    plon = args.plon 
+    plat = args.plat
 
     #--  Create regional CLM domain file
-    create_domain   = True
+    create_domain   = args.create_domain
     #--  Create CLM surface data file
-    create_surfdata = True
+    create_surfdata = args.create_surfdata
     #--  Create CLM surface data file
-    create_landuse  = True
+    create_landuse  = args.create_landuse
     #--  Create single point DATM atmospheric forcing data
-    create_datm     = True
-    datm_syr=2013
-    datm_eyr=2014
+    create_datm     = args.create_datm
+    datm_syr = args.datm_syr
+    datm_eyr = args.datm_eyr
+
+    crop_flag = args.crop_flag
+
+
 
     #--  Modify landunit structure
     overwrite_single_pft = True
@@ -312,8 +405,41 @@ def main ():
     uniform_snowpack     = True
     no_saturation_excess = True
 
+
+    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
+    # create dir if it does not exist
+    log_dir = os.path.dirname(log_file)
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+
+    log_level =  logging.DEBUG
+    setup_logging(log_file, log_level)
+
+    print( "singlept script to extract out a single point from the global CTSM inputdata datasets." )
+    myname=getuser()
+    pwd=os.getcwd()
+    print("User = "+myname)
+    print("Current directory = "+pwd)
+
+
+
+
+
+
+
+
+    if crop_flag:
+        num_pft      = "78"
+    else: 
+        num_pft      = "16"
+
+
+    logging.debug(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
+
+
+
     #--  Specify input and output directories
-    dir_output='/glade/scratch/'+myname+'/single_point/'
+    dir_output='/glade/scratch/'+myname+'/single_point_negin/'
     if ( not os.path.isdir( dir_output ) ):
         os.mkdir( dir_output )
     dir_inputdata='/glade/p/cesmdata/cseg/inputdata/'
@@ -363,33 +489,30 @@ def main ():
         lat0=np.asarray(f1['LATIXY'][:,0])
         lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
         #f2=f1.assign({'lon':lon,'lat':lat})
-        #f2=f1.assign()
-        f2 = f1.copy()
+        f2=f1.assign()
+        #f2 = f1.copy()
         f2['lon'] = lon
         f2['lat'] = lat
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=plon,lsmlat=plat,method='nearest')
         # expand dimensions
-        f3 = f3.expand_dims(['lsmlat','lsmlon'])
+        f3 = f3.expand_dims(['lsmlat','lsmlon']).copy(deep=True)
+
         # modify surface data properties
         if overwrite_single_pft:
-            #f3['PCT_NAT_PFT'][:,:,:] = 0
-            #f3['PCT_NAT_PFT'][:,:,dominant_pft] = 100
-            print ("skip for now")
+            f3['PCT_NAT_PFT'][:,:,:] = 0
+            f3['PCT_NAT_PFT'][:,:,dominant_pft] = 100
         if zero_nonveg_landunits:
-            #f3['PCT_NATVEG'][:,:]  = 100
-            #f3['PCT_CROP'][:,:]    = 0
-            #f3['PCT_LAKE'][:,:]    = 0.
-            #f3['PCT_WETLAND'][:,:] = 0.
-            #f3['PCT_URBAN'][:,:,]   = 0.
-            #f3['PCT_GLACIER'][:,:] = 0.
-            print ("skip for now")
+            f3['PCT_NATVEG'][:,:]  = 100
+            f3['PCT_CROP'][:,:]    = 0
+            f3['PCT_LAKE'][:,:]    = 0.
+            f3['PCT_WETLAND'][:,:] = 0.
+            f3['PCT_URBAN'][:,:,]   = 0.
+            f3['PCT_GLACIER'][:,:] = 0.
         if uniform_snowpack:
-            #f3['STD_ELEV'][:,:] = 20.
-            print ("skip for now")
+            f3['STD_ELEV'][:,:] = 20.
         if no_saturation_excess:
-            #f3['FMAX'][:,:] = 0.
-            print ("skip for now")
+            f3['FMAX'][:,:] = 0.
 
         # specify dimension order 
         #f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
