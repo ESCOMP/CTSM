@@ -704,7 +704,7 @@ contains
          xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name=this%info%lname('snow layer effective radius'), &
-         units='um', &
+         units='um', scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%snw_rds_col)
     if (flag == 'read' .and. .not. readvar) then
        ! NOTE(wjs, 2018-08-03) There was some code here that looked like it was just for

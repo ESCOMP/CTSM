@@ -868,23 +868,27 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='GSSUN', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='sunlit leaf stomatal conductance', units='umol H20/m2/s', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sun_patch)
     
     call restartvar(ncid=ncid, flag=flag, varname='GSSHA', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='shaded leaf stomatal conductance', units='umol H20/m2/s', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sha_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='GSSUNLN', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
          units='umol H20/m2/s', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sun_ln_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='GSSHALN', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon', &
          units='umol H20/m2/s', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%gs_mol_sha_ln_patch)
     
     call restartvar(ncid=ncid, flag=flag, varname='lnca', xtype=ncd_double,  &
@@ -895,26 +899,32 @@ contains
       call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Maximum carboxylation rate at 25 Celcius for canopy layers', units='umol CO2/m**2/s', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%vcmx25_z_patch)
       call restartvar(ncid=ncid, flag=flag, varname='jmx25_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='Maximum rate of electron transport at 25 Celcius for canopy layers', units='umol electrons/m**2/s', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_patch)
       call restartvar(ncid=ncid, flag=flag, varname='vcmx25_z_last_valid_patch:vcmx_prevyr', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='avg carboxylation rate at 25 celsius for canopy layers', units='umol CO2/m**2/s', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%vcmx25_z_last_valid_patch)
       call restartvar(ncid=ncid, flag=flag, varname='jmx25_z_last_valid_patch:jmx_prevyr', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='avg rate of electron transport at 25 Celcius for canopy layers', units='umol electrons/m**2/s', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%jmx25_z_last_valid_patch)
       call restartvar(ncid=ncid, flag=flag, varname='pnlc_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='proportion of leaf nitrogen allocated for light capture', units='unitless', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%pnlc_z_patch )
       call restartvar(ncid=ncid, flag=flag, varname='enzs_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='enzyme decay status during stress: 1.0-fully active; 0.0-all decayed', units='unitless', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%enzs_z_patch )
       call restartvar(ncid=ncid, flag=flag, varname='gpp24', xtype=ncd_double,  &
             dim1name='pft', long_name='accumulative gross primary production', units='umol CO2/m**2 ground/day', &

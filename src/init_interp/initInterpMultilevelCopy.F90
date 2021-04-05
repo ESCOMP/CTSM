@@ -107,6 +107,7 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((size(data_source) == size(data_dest)), sourcefile, __LINE__)
+    SHR_ASSERT_FL((scale_by_thickness == .false.), sourcefile, __LINE__)
 
     ! Note that it's safe to do whole-array assignment here because we never decompose
     ! along the level dimension (in contrast to the spatial dimension, where you need to

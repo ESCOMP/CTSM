@@ -534,7 +534,6 @@ contains
        ! uses a different soil profile than the one found in the finidata file.
        ! Without this call the run still aborts if it can't find the necessary
        ! variables, but it does not provide a helpful error message.
-       ! TODO Need similar call to check for scale_by_thickness
        call interp_levgrnd_check_source_file(ncid_source, dzsoi_varname)
        ! Set dzsoi_data_source
        dzs_source = interp_2dvar_type( &
@@ -573,8 +572,7 @@ contains
        ! to avoid stopping or crashing the model due to missing dzsoi
        ! in the finidat file. We do this for backwards compatibility when the
        ! soil profile in the run is the same as in the finidat file and the
-       ! finidat file does not include dzsoi and scale_by_thickness as
-       ! metadata, yet.
+       ! finidat file does not include dzsoi, yet.
        !
        ! Skipping these calls is a problem only in the off chance that the
        ! source and dest soil profiles differ despite having the same col_z at

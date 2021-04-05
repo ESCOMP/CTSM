@@ -434,6 +434,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname="sminn_vr", xtype=ncd_double,  &
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='',  units='gN/m3', fill_value=spval, &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=ptr2d)
     else
        ptr1d => this%sminn_vr_col(:,1)
@@ -455,6 +456,7 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double, &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
                long_name='', units='gN/m3', &
+               scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
        else
           ptr1d => this%decomp_npools_vr_col(:,1,k)
@@ -474,6 +476,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname="col_ntrunc_vr", xtype=ncd_double,  &
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
             long_name='',  units='gN/m3', fill_value=spval, &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=ptr2d)
     else
        ptr1d => this%ntrunc_vr_col(:,1)
@@ -490,6 +493,7 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname='smin_no3_vr', xtype=ncd_double, &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
                long_name='', units='gN/m3', &
+               scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)
        else
           ptr1d => this%smin_no3_vr_col(:,1)
@@ -510,6 +514,7 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname='smin_nh4_vr', xtype=ncd_double, &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
                long_name='', units='gN/m3', &
+               scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
        else
           ptr1d => this%smin_nh4_vr_col(:,1)

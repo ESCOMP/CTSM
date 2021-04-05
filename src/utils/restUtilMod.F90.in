@@ -47,24 +47,26 @@ module restUtilMod
   integer,parameter, public :: iflag_noswitchdim = 0
   integer,parameter, public :: iflag_switchdim   = 1
 
-  ! iflag_no_scale_by_thickness => init_interp WILL NOT scale these soil
-  !   variables by soil layer thickness. This is the default option.
-  !   Currently these variables get interpolated linearly and
-  !   without weighting by soil layer thickness.
-  ! iflag_scale_by_thickness => init_interp WILL scale these soil variables
-  !   by soil layer thickness to interpolate correctly from
-  !   the soil profile present in the initial/restart file to the soil profile
-  !   used by the model. For an example of setting this option to .true.,
-  !   see H2OSOI_LIQ in subroutine Restart in WaterStateType.F90.
-  !   Soil variables of so called extensive properties require this
-  !   scaling for correct interpolation. Extensive properties depend on the
-  !   sample size. H2OSOI_LIQ with units of kg/m2 contains fewer kg of
-  !   water in thinner layers than in thicker layers.
-  !   Scaling the quantity by layer thickness contributes the correct amount
-  !   of water by adding rather than averaging amounts during interpolation.
-  !   Not scaling by thickness results in underestimated soil water when
-  !   interpolating from a finer to a coarser soil profile and
-  !   overestimated soil water in the opposite case.
+  ! iflag_no_scale_by_thickness => init_interp WILL NOT scale these variables
+  !   by layer thickness. This is the default option. Currently these variables
+  !   get interpolated linearly without weighting by layer thickness.
+  ! iflag_scale_by_thickness => init_interp WILL scale these variables by layer
+  !   thickness to interpolate correctly from the vertical profile present in
+  !   the initial/restart file to the profile used by the model. For an example
+  !   of setting this option to .true., see H2OSOI_LIQ in subr. Restart in
+  !   WaterStateType.F90.
+  !   Variables of so called extensive properties require this scaling for
+  !   correct interpolation because extensive properties depend on the sample
+  !   size. H2OSOI_LIQ with units of kg/m2 contains fewer kg of water in thinner
+  !   soil layers than in thicker soil layers. Scaling the quantity by layer
+  !   thickness contributes the correct amount of water by adding rather than
+  !   averaging amounts during interpolation. Not scaling by thickness results
+  !   in underestimated soil water when interpolating from a finer to a coarser
+  !   soil profile and overestimated soil water in the opposite case.
+  !   We require this flag for initial/restart variables with dim2name values:
+  !   levmaxurbgrnd, levgrnd, levtot, levsno, levsno1, levlak, levcan, vegwcs,
+  !   numrad
+  !   as long as these variables do not set interpinic_flag = 'skip'
   integer,parameter, public :: iflag_no_scale_by_thickness = 0
   integer,parameter, public :: iflag_scale_by_thickness = 1
 
@@ -419,7 +421,6 @@ contains
     character(len=len(varname)) :: primary_varname ! first name in the varname list
     character(len=len(varname)) :: my_varname      ! actual varname to read/write
     integer          :: ivalue
-    logical          :: scale_by_thickness_local  ! set to .false. unless present(scale_by_thickness)
     type(var_desc_t) :: vardesc  ! local vardesc
     integer          :: status   ! return error code 
     integer          :: varid    ! returned var id
@@ -475,13 +476,10 @@ contains
        status = PIO_put_att(ncid, vardesc%varid, 'switchdim_flag_is_1', &
             "1st and 2nd dims are switched from model representation")
 
-       if (dim2name == 'levtot' .or. dim2name == 'levgrnd' .or. dim2name == 'levmaxurbgrnd') then
-          if (present(scale_by_thickness)) then
-             scale_by_thickness_local = scale_by_thickness
-          else
-             scale_by_thickness_local = .false.
-          end if
-          if (scale_by_thickness_local) then
+       ! We require scale_by_thickness for certain variables. See extensive
+       ! explanation near the top of this module.
+       if (present(scale_by_thickness)) then
+          if (scale_by_thickness) then
              status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_scale_by_thickness)
           else
              status = PIO_put_att(ncid, vardesc%varid, 'scale_by_thickness_flag', iflag_no_scale_by_thickness)

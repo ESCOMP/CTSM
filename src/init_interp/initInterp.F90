@@ -203,8 +203,6 @@ contains
     integer            :: dimidso(3) = -1 ! netCDF dimension ids
     integer            :: status          ! return code
     integer            :: iflag_interpinic
-    integer            :: iflag_scale_by_thickness  ! 1=true/0=false flag to scale vertically interpolated variable by soil thickness or not
-    logical            :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness or not
     real(r8)           :: rvalue
     integer            :: ivalue 
     integer            :: spinup_state_i, spinup_state_o
@@ -457,25 +455,6 @@ contains
           CYCLE
        end if
 
-       !---------------------------------------------------
-       ! Get scale_by_thickness value (.true./.false.) from output
-       ! file to avoid backwards compatibility issue.
-       ! TODO status before the next pio_get_att returns 0; however, after
-       !      the call, the model just crashes when the attribute is missing.
-       !      How to check for the attribute to avoid
-       !      hardwiring the variable names below? Ideas:
-       !      - call read_issue_fixed_metadata?
-       !---------------------------------------------------
-
-       scale_by_thickness = .false.  ! default value
-
-       if  ( trim(varname) == 'H2OSOI_LIQ' .or. trim(varname) == 'H2OSOI_ICE') then
-          status = pio_get_att(ncido, vardesc, 'scale_by_thickness_flag', iflag_scale_by_thickness)
-          if (iflag_scale_by_thickness == 1) then
-             scale_by_thickness = .true.
-          end if
-       end if
-
        !---------------------------------------------------          
        ! Read metadata telling us possible variable names on input file;
        ! determine which of these is present on the input file
@@ -669,7 +648,7 @@ contains
           call interp_2d_double(var2d_i, var2d_o, &
                begi, endi, bego, endo, &
                sgridindex, &
-               interp_multilevel_container, scale_by_thickness)
+               interp_multilevel_container, ncido)
 
        else
 
@@ -1103,26 +1082,30 @@ contains
 
   subroutine interp_2d_double (var2di, var2do, &
        begi, endi, bego, endo, sgridindex, &
-       interp_multilevel_container, scale_by_thickness)
+       interp_multilevel_container, ncido)
 
     ! --------------------------------------------------------------------
     ! arguments
     class(interp_2dvar_type), intent(inout) :: var2di  ! variable on input file
     class(interp_2dvar_type), intent(inout) :: var2do  ! variable on output file
+    type(file_desc_t)       , intent(inout) :: ncido
     integer           , intent(in)    :: begi, endi
     integer           , intent(in)    :: bego, endo
     integer           , intent(in)    :: sgridindex(bego:)
     type(interp_multilevel_container_type), intent(in) :: interp_multilevel_container
-    logical           , intent(in)    :: scale_by_thickness  ! true/false flag to scale vertically interpolated variable by soil thickness or not
     !
     ! local variables
     class(interp_multilevel_type), pointer :: multilevel_interpolator
+    type(Var_desc_t)    :: vardesc              ! pio variable descriptor
     integer             :: no                   ! index
     integer             :: level                ! level index
     integer             :: nlevi                ! number of input levels
     real(r8), pointer   :: rbuf2do(:,:)         ! output array
     real(r8), pointer   :: rbuf1di(:)           ! one level of input array
     real(r8), pointer   :: rbuf2do_levelsi(:,:) ! array on output horiz grid, but input levels
+    logical             :: scale_by_thickness   ! true/false flag to scale vertically interpolated variable by soil thickness or not
+    integer             :: iflag_scale_by_thickness  ! 1=true/0=false flag
+    integer             :: status               ! return code
     ! --------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(sgridindex) == (/endo/)), sourcefile, __LINE__)
@@ -1167,6 +1150,16 @@ contains
     deallocate(rbuf1di)
 
     ! Now do the vertical interpolation
+
+    ! For vertical interpolation, first get scale_by_thickness flag
+    ! from the output file
+    scale_by_thickness = .false.  ! default value
+    status = pio_inq_varid (ncido, trim(var2do%get_varname()), vardesc)
+    status = pio_get_att(ncido, vardesc, 'scale_by_thickness_flag', &
+                         iflag_scale_by_thickness)
+    if (iflag_scale_by_thickness == 1) then
+       scale_by_thickness = .true.
+    end if
 
     ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
     ! resolving the generic reference here, giving the message: 'No specific

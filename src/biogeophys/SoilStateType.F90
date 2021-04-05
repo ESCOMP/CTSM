@@ -397,6 +397,7 @@ contains
          call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
               dim1name='pft', dim2name='levgrnd', switchdim=.true., &
               long_name='root fraction', units='', &
+              scale_by_thickness=.false., &
               interpinic_flag='interp', readvar=readrootfr, data=this%rootfr_patch)
      else
          readrootfr = .false.

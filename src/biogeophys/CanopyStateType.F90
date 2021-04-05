@@ -581,6 +581,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='vegwp', xtype=ncd_double,  &
             dim1name='pft', dim2name='vegwcs', switchdim=.true., &
             long_name='vegetation water matric potential', units='mm', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%vegwp_patch) 
 
        call restartvar(ncid=ncid, flag=flag, varname='VEGWPLN', xtype=ncd_double,  &

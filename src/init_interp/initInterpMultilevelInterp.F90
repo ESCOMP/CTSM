@@ -161,6 +161,7 @@ contains
 
     npts = size(coordinates_source, 2)
     SHR_ASSERT_FL((size(coordinates_dest, 2) == npts), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(dzsoi_source, 2) == npts), sourcefile, __LINE__)
     SHR_ASSERT_FL((size(dzsoi_dest, 2) == npts), sourcefile, __LINE__)
 
     nlev_source = size(coordinates_source, 1)
@@ -230,6 +231,7 @@ contains
 
     this%npts = size(coordinates_source, 2)
     SHR_ASSERT_FL((size(coordinates_dest, 2) == this%npts), sourcefile, __LINE__)
+
     this%nlev_source = size(coordinates_source, 1)
     this%nlev_dest = size(coordinates_dest, 1)
 
