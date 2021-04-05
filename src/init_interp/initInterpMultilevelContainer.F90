@@ -415,6 +415,7 @@ contains
 
     integer :: level, g  ! loop indices
     integer :: nlev_source
+    logical :: on_source
 
     character(len=*), parameter :: levmaxurbgrnd_name = 'levmaxurbgrnd'
 
@@ -527,14 +528,12 @@ contains
     end do
     deallocate(coord_data_source_sgrid_1d)
 
-    if (coord_data_source(beg_dest,1) /= coord_data_dest(beg_dest,1)) then
-       ! The following call checks whether the finidat file contains the
-       ! necessary metadata for a vertical interpolation with scaling by soil
-       ! layer thickness. Scaling by thickness is necessary only if the run
-       ! uses a different soil profile than the one found in the finidata file.
-       ! Without this call the run still aborts if it can't find the necessary
-       ! variables, but it does not provide a helpful error message.
-       call interp_levgrnd_check_source_file(ncid_source, dzsoi_varname)
+    ! The following call checks whether the finidat source file contains
+    ! DZSOI, necessary for the vertical interpolation with scaling by layer
+    ! thickness. Scaling by thickness is necessary only if the run uses a
+    ! different vertical profile than the one found in the finidata file.
+    call check_var(ncid_source, dzsoi_varname, on_source)
+    if (on_source) then
        ! Set dzsoi_data_source
        dzs_source = interp_2dvar_type( &
             varname = dzsoi_varname, &
@@ -564,9 +563,8 @@ contains
                data_out = dzsoi_data_source(:,level))
        end do
        deallocate(dzsoi_data_source_sgrid_1d)
-    else  ! coord_data_source(beg_dest,1) == coord_data_dest(beg_dest,1)
-       ! When this is true, we assume identical source and dest soil profiles,
-       ! so we skip the calls to
+    else if (levmaxurbgrnd_source == levmaxurbgrnd_dest) then
+       ! When same number of layers and .not. on_source, we skip the calls to
        ! (a) interp_levgrnd_check_source_file(ncid_source, dzsoi_varname)
        ! (b) dzs_source%readlevel_double(dzsoi_data_source...
        ! to avoid stopping or crashing the model due to missing dzsoi
@@ -575,8 +573,8 @@ contains
        ! finidat file does not include dzsoi, yet.
        !
        ! Skipping these calls is a problem only in the off chance that the
-       ! source and dest soil profiles differ despite having the same col_z at
-       ! beg_dest and layer 1. The model will handle such cases without scaling
+       ! source and dest soil profiles differ despite having the same number of
+       ! layers. The model will handle such cases without scaling
        ! the finidat variables that need scaling by soil layer thickness.
        allocate(dzsoi_data_source(beg_dest:end_dest, nlev_source))
        do level = 1, nlev_source
@@ -584,6 +582,8 @@ contains
              dzsoi_data_source(g,level) = dzsoi_data_dest(g,level)
           end do
        end do
+    else  ! fail with helpful error message
+       call interp_levgrnd_check_source_file(ncid_source, dzsoi_varname)
     end if
 
     ! NOTE(wjs, 2015-10-18) The following check is helpful while we still have old initial
