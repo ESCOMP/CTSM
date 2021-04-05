@@ -1229,6 +1229,8 @@ contains
          gs_mol     => photosyns_inst%gs_mol_patch           , & ! Output: [real(r8) (:,:) ]  leaf stomatal conductance (umol H2O/m**2/s)
          gs_mol_sun_ln => photosyns_inst%gs_mol_sun_ln_patch , & ! Output: [real(r8) (:,:) ]  sunlit leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
          gs_mol_sha_ln => photosyns_inst%gs_mol_sha_ln_patch , & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
+         gs_mol_sun => photosyns_inst%gs_mol_sun_patch       , & ! Output: [real(r8) (:,:) ]  patch sunlit leaf stomatal conductance (umol H2O/m**2/s)
+         gs_mol_sha => photosyns_inst%gs_mol_sha_patch       , & ! Output: [real(r8) (:,:) ]  patch shaded leaf stomatal conductance (umol H2O/m**2/s)
          vcmax_z    => photosyns_inst%vcmax_z_patch          , & ! Output: [real(r8) (:,:) ]  maximum rate of carboxylation (umol co2/m**2/s)
          cp         => photosyns_inst%cp_patch               , & ! Output: [real(r8) (:)   ]  CO2 compensation point (Pa)
          kc         => photosyns_inst%kc_patch               , & ! Output: [real(r8) (:)   ]  Michaelis-Menten constant for CO2 (Pa)
@@ -1243,6 +1245,7 @@ contains
          lnc        => photosyns_inst%lnca_patch             , & ! Output: [real(r8) (:)   ]  top leaf layer leaf N concentration (gN leaf/m^2)
          light_inhibit=> photosyns_inst%light_inhibit        , & ! Input:  [logical        ]  flag if light should inhibit respiration
          leafresp_method=> photosyns_inst%leafresp_method    , & ! Input:  [integer        ]  method type to use for leaf-maint.-respiration at 25C canopy top
+         medlynintercept  => pftcon%medlynintercept          , & ! Input:  [real(r8) (:)   ]  Intercept for Medlyn stomatal conductance model method
          stomatalcond_mtd=> photosyns_inst%stomatalcond_mtd  , & ! Input:  [integer        ]  method type to use for stomatal conductance.GC.fnlprmsn15_r22845
          leaf_mr_vcm => canopystate_inst%leaf_mr_vcm           & ! Input:  [real(r8)       ]  scalar constant of leaf respiration with Vcmax
          )
@@ -1700,7 +1703,20 @@ contains
 
                ! End of ci iteration.  Check for an < 0, in which case gs_mol = bbb
 
-               if (an(p,iv) < 0._r8) gs_mol(p,iv) = bbb(p)
+               if (an(p,iv) < 0._r8) then
+                  if (stomatalcond_mtd == stomatalcond_mtd_bb1987) then
+                     gs_mol(p,iv) = bbb(p)
+                  else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
+                     gs_mol(p,iv) = medlynintercept(patch%itype(p))
+                  end if
+               end if
+
+               ! Write stomatal conductance to the appropriate phase
+               if (phase=='sun') then
+                  gs_mol_sun(p,iv) = gs_mol(p,iv)
+               else if (phase=='sha') then
+                  gs_mol_sha(p,iv) = gs_mol(p,iv)
+               end if
 
                ! Use time period 1 hour before and 1 hour after local noon inclusive (11AM-1PM)
                if ( is_near_local_noon( grc%londeg(g), deltasec=3600 ) )then
@@ -1759,16 +1775,16 @@ contains
                end if
 
                ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
-
-               hs = (gb_mol(p)*ceair + gs_mol(p,iv)*esat_tv(p)) / ((gb_mol(p)+gs_mol(p,iv))*esat_tv(p))
-               rh_leaf(p) = hs
-               gs_mol_err = mbb(p)*max(an(p,iv), 0._r8)*hs/cs*forc_pbot(c) + bbb(p)
-
-               if (abs(gs_mol(p,iv)-gs_mol_err) > 1.e-01_r8) then
-                  write (iulog,*) 'Ball-Berry error check - stomatal conductance error:'
-                  write (iulog,*) gs_mol(p,iv), gs_mol_err
-               end if
-
+               if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
+                  hs = (gb_mol(p)*ceair + gs_mol(p,iv)*esat_tv(p)) / ((gb_mol(p)+gs_mol(p,iv))*esat_tv(p))
+                  rh_leaf(p) = hs
+                  gs_mol_err = mbb(p)*max(an(p,iv), 0._r8)*hs/cs*forc_pbot(c) + bbb(p)
+                  
+                  if (abs(gs_mol(p,iv)-gs_mol_err) > 1.e-01_r8) then
+                     write (iulog,*) 'Ball-Berry error check - stomatal conductance error:'
+                     write (iulog,*) gs_mol(p,iv), gs_mol_err
+                  end if
+               endif
             end if    ! night or day if branch
          end do       ! canopy layer loop
       end do          ! patch loop
@@ -2370,7 +2386,7 @@ contains
     !local variables
     real(r8) :: ai                  ! intermediate co-limited photosynthesis (umol CO2/m**2/s)
     real(r8) :: cs                  ! CO2 partial pressure at leaf surface (Pa)
-
+    real(r8) :: term                 ! intermediate in Medlyn stomatal model
     real(r8) :: aquad, bquad, cquad  ! terms for quadratic equations
     real(r8) :: r1, r2               ! roots of quadratic equation
     !------------------------------------------------------------------------------
@@ -2379,6 +2395,9 @@ contains
          forc_pbot  => atm2lnd_inst%forc_pbot_downscaled_col   , & ! Output: [real(r8) (:)   ]  atmospheric pressure (Pa)
          c3flag     => photosyns_inst%c3flag_patch             , & ! Output: [logical  (:)   ]  true if C3 and false if C4
          ivt        => patch%itype                             , & ! Input:  [integer  (:)   ]  patch vegetation type
+         medlynslope      => pftcon%medlynslope                , & ! Input:  [real(r8) (:)   ]  Slope for Medlyn stomatal conductance model method
+         medlynintercept  => pftcon%medlynintercept            , & ! Input:  [real(r8) (:)   ]  Intercept for Medlyn stomatal conductance model method
+         stomatalcond_mtd => photosyns_inst%stomatalcond_mtd   , & ! Input:  [integer        ]  method type to use for stomatal conductance
          ac         => photosyns_inst%ac_patch                 , & ! Output: [real(r8) (:,:) ]  Rubisco-limited gross photosynthesis (umol CO2/m**2/s)
          aj         => photosyns_inst%aj_patch                 , & ! Output: [real(r8) (:,:) ]  RuBP-limited gross photosynthesis (umol CO2/m**2/s)
          ap         => photosyns_inst%ap_patch                 , & ! Output: [real(r8) (:,:) ]  product-limited (C3) or CO2-limited (C4) gross photosynthesis (umol CO2/m**2/s)
@@ -2440,15 +2459,30 @@ contains
          return
       endif
       ! Quadratic gs_mol calculation with an known. Valid for an >= 0.
-      ! With an <= 0, then gs_mol = bbb
-
+      ! With an <= 0, then gs_mol = bbb or medlyn intercept
       cs = cair - 1.4_r8/gb_mol * an(p,iv) * forc_pbot(c)
       cs = max(cs,1.e-06_r8)
-      aquad = cs
-      bquad = cs*(gb_mol - bbb(p)) - mbb(p)*an(p,iv)*forc_pbot(c)
-      cquad = -gb_mol*(cs*bbb(p) + mbb(p)*an(p,iv)*forc_pbot(c)*rh_can)
-      call quadratic (aquad, bquad, cquad, r1, r2)
-      gs_mol = max(r1,r2)
+      if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
+          term = 1.6_r8 * an(p,iv) / (cs / forc_pbot(c) * 1.e06_r8)
+          aquad = 1.0_r8
+          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+               (gb_mol*1.e-06_r8 * rh_can))
+          cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
+               (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
+               (1.0 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
+
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol = max(r1,r2) * 1.e06_r8
+       else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
+          aquad = cs
+          bquad = cs*(gb_mol - bbb(p)) - mbb(p)*an(p,iv)*forc_pbot(c)
+          cquad = -gb_mol*(cs*bbb(p) + mbb(p)*an(p,iv)*forc_pbot(c)*rh_can)
+          call quadratic (aquad, bquad, cquad, r1, r2)
+          gs_mol = max(r1,r2)
+       end if
+
+
+
 
       ! Derive new estimate for ci
 
