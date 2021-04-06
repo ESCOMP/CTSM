@@ -199,37 +199,32 @@ class StreamToLogger(object):
         self.linebuf = ''
 
 
-#def SinglePointCase (self, plat, plon):
-#    """
-#    A case to encapsulate single point cases.
-#    """
-#    def __init__(self,plat, plon):
-#        self.plat = plat
-#        self.plon = plon 
+
+class SinglePointCase :
+    """
+    A case to encapsulate single point cases.
+    """
+
+    def __init__(self,plat, plon, create_domain, create_surfdata, create_landuse, create_datm):
+        self.plat = plat
+        self.plon = plon
+        self.create_domain = create_domain
+        self.create_surfdata = create_surfdata
+        self.create_landuse = create_landuse
+        self.create_datm = create_datm
+
+    def __str__(self):
+        return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item])
+                    for item in sorted(self.__dict__))
+                    )
+
+    def create_tag(self):
+        self.tag=str(self.plon)+'_'+str(self.plat)
 
 
-def error( desc ):
-     "error function"
-     print( "ERROR:: "+desc )
-     os.abort()
-
-
-def AddTagToFilename(filename, tag):
-    "Add a tag to a filename"
-    # Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
-    # Add the tag to just before that ending part
-    basename = os.path.basename(filename)
-    cend = -10
-    if ( basename[cend] == "c" ):
-       cend = cend - 1
-    if ( (basename[cend] != ".") and (basename[cend] != "_") ):
-       error( "Trouble figuring out where to add tag to filename:"+filename )
-    return( basename[:cend]+"_"+tag+basename[cend:] )
-        
-
-def create_domain_at_point (plat, plon,fdomain , fdomain2 ):
-        print( "Open: "+fdomain )
-        f1  = xr.open_dataset(fdomain)
+    def create_domain_at_point (self): 
+        print( "Open: "+self.fdomain )
+        f1  = xr.open_dataset(self.fdomain)
         # create 1d coordinate variables to enable sel() method
         lon0=np.asarray(f1['xc'][0,:])
         lat0=np.asarray(f1['yc'][:,0])
@@ -243,20 +238,19 @@ def create_domain_at_point (plat, plon,fdomain , fdomain2 ):
         f2['lat'] = lat 
         f2.reset_coords(['xc','yc'])
         # extract gridcell closest to plon/plat
-        f3 = f2.sel(ni=plon,nj=plat,method='nearest')
+        f3 = f2.sel(ni=self.plon,nj=self.plat,method='nearest')
         # expand dimensions
         f3 = f3.expand_dims(['nj','ni'])
- 
-        wfile=fdomain2
+                        
+        wfile=self.fdomain2
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
-        print('Successfully created file (fdomain2)'+fdomain2)
+        print('Successfully created file (fdomain2)'+self.fdomain2)
         f1.close(); f2.close(); f3.close()
 
-
-def create_landuse_at_point (plat, plon,fluse , fluse2 ):
-        print( "Open: "+fluse )
-        f1  = xr.open_dataset(fluse)
+    def create_landuse_at_point (self):
+        print( "Open: "+self.fluse )
+        f1  = xr.open_dataset(self.fluse)
         print (f1)
         # create 1d variables
         lon0=np.asarray(f1['LONGXY'][0,:])
@@ -270,7 +264,7 @@ def create_landuse_at_point (plat, plon,fluse , fluse2 ):
         print ("lat : ", lat)
         print ("lon : ", lon)  
         # extract gridcell closest to plon/plat
-        f3 = f2.sel(lsmlon=plon,lsmlat=plat,method='nearest')
+        f3 = f2.sel(lsmlon=self.plon,lsmlat=self.plat,method='nearest')
  
         # expand dimensions
         f3 = f3.expand_dims(['lsmlat','lsmlon'])
@@ -290,34 +284,186 @@ def create_landuse_at_point (plat, plon,fluse , fluse2 ):
         #print(f3)
         #stop
         # mode 'w' overwrites file
-        f3.to_netcdf(path=fluse2, mode='w')
-        print('created file (fluse2)'+fluse2)
+        f3.to_netcdf(path=self.fluse2, mode='w')
+        print('created file (fluse2)'+self.fluse2)
         f1.close(); f2.close(); f3.close()
 
+    def create_surfdata_at_point(self):
+        print( "Open: "+self.fsurf )
+        f1  = xr.open_dataset(self.fsurf)
+        # create 1d variables
+        lon0=np.asarray(f1['LONGXY'][0,:])
+        lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
+        lat0=np.asarray(f1['LATIXY'][:,0])
+        lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
+        #f2=f1.assign({'lon':lon,'lat':lat})
+        f2=f1.assign()
+        #f2 = f1.copy()
+        f2['lon'] = lon
+        f2['lat'] = lat
+        # extract gridcell closest to plon/plat
+        f3 = f2.sel(lsmlon=self.plon,lsmlat=self.plat,method='nearest')
+        # expand dimensions
+        f3 = f3.expand_dims(['lsmlat','lsmlon']).copy(deep=True)
 
-def create_datm_at_point (plat, plon, fdatmdomain, fdatmdomain2):
-    print( "Open: "+fdatmdomain )
-    f1  = xr.open_dataset(fdatmdomain)
-    # create 1d coordinate variables to enable sel() method
-    lon0=np.asarray(f1['xc'][0,:])
-    lat0=np.asarray(f1['yc'][:,0])
-    lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
-    lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
-          
-    #f2=f1.assign({'lon':lon,'lat':lat})
-    f2=f1.assign()
-    f2['lon'] = lon
-    f2['lat'] = lat
-    f2.reset_coords(['xc','yc'])
-    # extract gridcell closest to plon/plat
-    f3 = f2.sel(ni=plon,nj=plat,method='nearest')
-    # expand dimensions
-    f3 = f3.expand_dims(['nj','ni'])
-    wfile=fdatmdomain2
-    # mode 'w' overwrites file
-    f3.to_netcdf(path=wfile, mode='w')
-    print('created file '+fdatmdomain2)
-    f1.close(); f2.close(); f3.close()
+        # modify surface data properties
+        if self.overwrite_single_pft:
+            f3['PCT_NAT_PFT'][:,:,:] = 0
+            f3['PCT_NAT_PFT'][:,:,self.dominant_pft] = 100
+        if self.zero_nonveg_landunits:
+            f3['PCT_NATVEG'][:,:]  = 100
+            f3['PCT_CROP'][:,:]    = 0
+            f3['PCT_LAKE'][:,:]    = 0.
+            f3['PCT_WETLAND'][:,:] = 0.
+            f3['PCT_URBAN'][:,:,]   = 0.
+            f3['PCT_GLACIER'][:,:] = 0.
+        if self.uniform_snowpack:
+            f3['STD_ELEV'][:,:] = 20.
+        if self.no_saturation_excess:
+            f3['FMAX'][:,:] = 0.
+
+        # specify dimension order 
+        #f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
+        f3 = f3.transpose(u'time', u'cft', u'lsmpft', u'natpft', u'nglcec', u'nglcecp1', u'nlevsoi', u'nlevurb', u'numrad', u'numurbl', 'lsmlat', 'lsmlon')
+        # mode 'w' overwrites file
+        f3.to_netcdf(path=self.fsurf2, mode='w')
+        print('created file (fsurf2)'+self.fsurf2)
+        f1.close(); f2.close(); f3.close()
+
+        ''' this is buggy; can't re-write a file within the same session
+        # modify new surface data file
+        if overwrite_single_pft:
+            f1  = xr.open_dataset(fsurf2)
+            f1['PCT_NAT_PFT'][:,:,:] = 0
+            f1['PCT_NAT_PFT'][:,:,dominant_pft] = 100
+            f1.to_netcdf(path='~/junk.nc', mode='w')
+            #f1.to_netcdf(path=fsurf2, mode='w')
+            f1.close()
+        if zero_nonveg_landunits:
+            #f1  = xr.open_dataset(fsurf2)
+            f1  = xr.open_dataset('~/junk.nc')
+            f1['PCT_NATVEG']  = 100
+            f1['PCT_CROP']    = 0
+            f1['PCT_LAKE']    = 0.
+            f1['PCT_WETLAND'] = 0.
+            f1['PCT_URBAN']   = 0.
+            f1['PCT_GLACIER'] = 0.
+            #f1.to_netcdf(path=fsurf2, mode='w')
+            f1.to_netcdf(path='~/junk2.nc', mode='w')
+            f1.close()
+        '''
+    def create_datmdomain_at_point (self):
+        print( "Open: "+self.fdatmdomain )
+        f1  = xr.open_dataset(self.fdatmdomain)
+        # create 1d coordinate variables to enable sel() method
+        lon0=np.asarray(f1['xc'][0,:])
+        lat0=np.asarray(f1['yc'][:,0])
+        lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
+        lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
+              
+        #f2=f1.assign({'lon':lon,'lat':lat})
+        f2=f1.assign()
+        f2['lon'] = lon
+        f2['lat'] = lat
+        f2.reset_coords(['xc','yc'])
+        # extract gridcell closest to plon/plat
+        f3 = f2.sel(ni=self.plon,nj=self.plat,method='nearest')
+        # expand dimensions
+        f3 = f3.expand_dims(['nj','ni'])
+        wfile=self.fdatmdomain2
+        # mode 'w' overwrites file
+        f3.to_netcdf(path=wfile, mode='w')
+        print('created file '+self.fdatmdomain2)
+        f1.close(); f2.close(); f3.close()
+
+    def extract_at(self, file_in, file_out):
+        f1  = xr.open_dataset(file_in)
+        # create 1d coordinate variables to enable sel() method
+        lon0=np.asarray(f1['LONGXY'][0,:])
+        lat0=np.asarray(f1['LATIXY'][:,0])
+        lon=xr.DataArray(lon0,name='lon',dims='lon',coords={'lon':lon0})
+        lat=xr.DataArray(lat0,name='lat',dims='lat',coords={'lat':lat0})
+        #f2=f1.assign({'lon':lon,'lat':lat})
+        f2=f1.assign()
+        f2['lon'] = lon
+        f2['lat'] = lat
+        f2.reset_coords(['LONGXY','LATIXY'])
+        # extract gridcell closest to plon/plat
+        f3  = f2.sel(lon=self.plon,lat=self.plat,method='nearest')
+        # expand dimensions
+        f3 = f3.expand_dims(['lat','lon'])
+        # specify dimension order 
+        f3 = f3.transpose(u'scalar','time','lat','lon')
+
+        # mode 'w' overwrites file
+        f3.to_netcdf(path=file_out, mode='w')
+        f1.close(); f2.close(); f3.close()
+
+    def create_datm_at_point(self):
+        #--  specify subdirectory names and filename prefixes
+        solrdir = 'Solar/'
+        precdir = 'Precip/'
+        tpqwldir = 'TPHWL/'
+        prectag = 'clmforc.GSWP3.c2011.0.5x0.5.Prec.'
+        solrtag = 'clmforc.GSWP3.c2011.0.5x0.5.Solr.'
+        tpqwtag = 'clmforc.GSWP3.c2011.0.5x0.5.TPQWL.'
+
+        #--  create data files  
+        infile=[]
+        outfile=[]
+        for y in range(self.datm_syr,self.datm_eyr+1):
+          ystr=str(y)
+          for m in range(1,13):
+             mstr=str(m) 
+             if m < 10:
+                mstr='0'+mstr
+
+             dtag=ystr+'-'+mstr
+
+             fsolar=self.dir_input_datm+solrdir+solrtag+dtag+'.nc'
+             fsolar2=self.dir_output_datm+solrtag+self.tag+'.'+dtag+'.nc'
+             fprecip=self.dir_input_datm+precdir+prectag+dtag+'.nc'
+             fprecip2=self.dir_output_datm+prectag+self.tag+'.'+dtag+'.nc'
+             ftpqw=self.dir_input_datm+tpqwldir+tpqwtag+dtag+'.nc'
+             ftpqw2=self.dir_output_datm+tpqwtag+self.tag+'.'+dtag+'.nc'
+
+             infile+=[fsolar,fprecip,ftpqw]
+             outfile+=[fsolar2,fprecip2,ftpqw2]
+
+        nm=len(infile)
+        for n in range(nm):
+            print(outfile[n])
+            file_in = infile[n]
+            file_out = outfile[n]
+            self.extract_at(file_in, file_out)
+
+
+        print('datm files written to: '+dir_output_datm)
+
+
+def error( desc ):
+     "error function"
+     print( "ERROR:: "+desc )
+     os.abort()
+
+
+def AddTagToFilename(filename, tag):
+    "Add a tag to a filename"
+    # Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
+    # Add the tag to just before that ending part
+    print (filename)
+    print (tag)
+    basename = os.path.basename(filename)
+    cend = -10
+    if ( basename[cend] == "c" ):
+       cend = cend - 1
+    if ( (basename[cend] != ".") and (basename[cend] != "_") ):
+       error( "Trouble figuring out where to add tag to filename:"+filename )
+    return( basename[:cend]+"_"+tag+basename[cend:] )
+        
+
+
+
 
 
 def main ():
@@ -406,6 +552,16 @@ def main ():
     no_saturation_excess = True
 
 
+    single_point = SinglePointCase(plat, plon, create_domain, create_surfdata, create_landuse, create_datm)
+    single_point.overwrite_single_pft = overwrite_single_pft
+    single_point.dominant_pft = dominant_pft
+    single_point.zero_nonveg_landunits = zero_nonveg_landunits
+    single_point.uniform_snowpack = uniform_snowpack
+    single_point.no_saturation_excess = no_saturation_excess
+    single_point.create_tag()
+    print (single_point)
+
+
     log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
     # create dir if it does not exist
     log_dir = os.path.dirname(log_file)
@@ -421,27 +577,22 @@ def main ():
     print("User = "+myname)
     print("Current directory = "+pwd)
 
-
-
-
-
-
-
-
     if crop_flag:
         num_pft      = "78"
     else: 
         num_pft      = "16"
 
 
-    logging.debug(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
+    print(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
 
 
 
+    #--  Set input and output filenames
     #--  Specify input and output directories
     dir_output='/glade/scratch/'+myname+'/single_point_negin/'
     if ( not os.path.isdir( dir_output ) ):
         os.mkdir( dir_output )
+
     dir_inputdata='/glade/p/cesmdata/cseg/inputdata/'
     dir_clm_forcedata='/glade/p/cgd/tss/CTSM_datm_forcing_data/'
     dir_input_datm=dir_clm_forcedata+'/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/'
@@ -449,169 +600,60 @@ def main ():
     if ( not os.path.isdir( dir_output_datm ) ):
         os.mkdir( dir_output_datm )
 
-    #--  Set input and output filenames
-    tag=str(plon)+'_'+str(plat)
 
     #--  Set time stamp
     command='date "+%y%m%d"'
     x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
     x=x2.communicate()
     timetag = x[0].strip()
+    print (timetag)
 
     #--  Specify land domain file  ---------------------------------
     fdomain  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
-    fdomain2 = dir_output + AddTagToFilename( fdomain, tag )
+    fdomain2 = dir_output + AddTagToFilename( fdomain, single_point.tag )
+    #SinglePointCase.set_fdomain (fdomain)
+    single_point.fdomain = fdomain
+    single_point.fdomain2 = fdomain2
 
     #--  Specify surface data file  --------------------------------
     fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
-
-    fsurf2   = dir_output + AddTagToFilename( fsurf, tag )
+    fsurf2   = dir_output + AddTagToFilename( fsurf, single_point.tag )
+    single_point.fsurf = fsurf
+    single_point.fsurf2 = fsurf2
 
     #--  Specify landuse file  -------------------------------------
     fluse    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc'
-    fluse2   = dir_output + AddTagToFilename( fluse, tag )
-
+    fluse2   = dir_output + AddTagToFilename( fluse, single_point.tag )
+    single_point.fluse = fluse
+    single_point.fluse2 = fluse2
     #--  Specify datm domain file  ---------------------------------
     fdatmdomain = dir_clm_forcedata+'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc'
-    fdatmdomain2  = dir_output_datm+AddTagToFilename( fdatmdomain, tag )
+    fdatmdomain2  = dir_output_datm+AddTagToFilename( fdatmdomain, single_point.tag )
+    single_point.fdatmdomain = fdatmdomain
+    single_point.fdatmdomain2 = fdatmdomain2
 
     #--  Create CTSM domain file
     if create_domain:
-        create_domain_at_point (plat, plon,fdomain , fdomain2 )
+        single_point.create_domain_at_point()
+        #create_domain_at_point (plat, plon,fdomain , fdomain2 )
 
     #--  Create CTSM surface data file
     if create_surfdata:
-        print( "Open: "+fsurf )
-        f1  = xr.open_dataset(fsurf)
-        # create 1d variables
-        lon0=np.asarray(f1['LONGXY'][0,:])
-        lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
-        lat0=np.asarray(f1['LATIXY'][:,0])
-        lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
-        #f2=f1.assign({'lon':lon,'lat':lat})
-        f2=f1.assign()
-        #f2 = f1.copy()
-        f2['lon'] = lon
-        f2['lat'] = lat
-        # extract gridcell closest to plon/plat
-        f3 = f2.sel(lsmlon=plon,lsmlat=plat,method='nearest')
-        # expand dimensions
-        f3 = f3.expand_dims(['lsmlat','lsmlon']).copy(deep=True)
+        single_point.create_surfdata_at_point()
 
-        # modify surface data properties
-        if overwrite_single_pft:
-            f3['PCT_NAT_PFT'][:,:,:] = 0
-            f3['PCT_NAT_PFT'][:,:,dominant_pft] = 100
-        if zero_nonveg_landunits:
-            f3['PCT_NATVEG'][:,:]  = 100
-            f3['PCT_CROP'][:,:]    = 0
-            f3['PCT_LAKE'][:,:]    = 0.
-            f3['PCT_WETLAND'][:,:] = 0.
-            f3['PCT_URBAN'][:,:,]   = 0.
-            f3['PCT_GLACIER'][:,:] = 0.
-        if uniform_snowpack:
-            f3['STD_ELEV'][:,:] = 20.
-        if no_saturation_excess:
-            f3['FMAX'][:,:] = 0.
-
-        # specify dimension order 
-        #f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
-        f3 = f3.transpose(u'time', u'cft', u'lsmpft', u'natpft', u'nglcec', u'nglcecp1', u'nlevsoi', u'nlevurb', u'numrad', u'numurbl', 'lsmlat', 'lsmlon')
-        # mode 'w' overwrites file
-        f3.to_netcdf(path=fsurf2, mode='w')
-        print('created file (fsurf2)'+fsurf2)
-        f1.close(); f2.close(); f3.close()
-
-        ''' this is buggy; can't re-write a file within the same session
-        # modify new surface data file
-        if overwrite_single_pft:
-            f1  = xr.open_dataset(fsurf2)
-            f1['PCT_NAT_PFT'][:,:,:] = 0
-            f1['PCT_NAT_PFT'][:,:,dominant_pft] = 100
-            f1.to_netcdf(path='~/junk.nc', mode='w')
-            #f1.to_netcdf(path=fsurf2, mode='w')
-            f1.close()
-        if zero_nonveg_landunits:
-            #f1  = xr.open_dataset(fsurf2)
-            f1  = xr.open_dataset('~/junk.nc')
-            f1['PCT_NATVEG']  = 100
-            f1['PCT_CROP']    = 0
-            f1['PCT_LAKE']    = 0.
-            f1['PCT_WETLAND'] = 0.
-            f1['PCT_URBAN']   = 0.
-            f1['PCT_GLACIER'] = 0.
-            #f1.to_netcdf(path=fsurf2, mode='w')
-            f1.to_netcdf(path='~/junk2.nc', mode='w')
-            f1.close()
-        '''
-#--  Create CTSM transient landuse data file
+    #--  Create CTSM transient landuse data file
     if create_landuse:
-        create_landuse_at_point(plat, plon, fluse, fluse2)
+        single_point.create_landuse_at_point()
 
     #--  Create single point atmospheric forcing data
     if create_datm:
-        create_datm_at_point(plat, plon, fdatmdomain, fdatmdomain2)
-        #--  specify subdirectory names and filename prefixes
-        solrdir = 'Solar/'
-        precdir = 'Precip/'
-        tpqwldir = 'TPHWL/'
-        prectag = 'clmforc.GSWP3.c2011.0.5x0.5.Prec.'
-        solrtag = 'clmforc.GSWP3.c2011.0.5x0.5.Solr.'
-        tpqwtag = 'clmforc.GSWP3.c2011.0.5x0.5.TPQWL.'
-
-        #--  create data files  
-        infile=[]
-        outfile=[]
-        for y in range(datm_syr,datm_eyr+1):
-          ystr=str(y)
-          for m in range(1,13):
-             mstr=str(m) 
-             if m < 10:
-                mstr='0'+mstr
-
-             dtag=ystr+'-'+mstr
-
-             fsolar=dir_input_datm+solrdir+solrtag+dtag+'.nc'
-             fsolar2=dir_output_datm+solrtag+tag+'.'+dtag+'.nc'
-             fprecip=dir_input_datm+precdir+prectag+dtag+'.nc'
-             fprecip2=dir_output_datm+prectag+tag+'.'+dtag+'.nc'
-             ftpqw=dir_input_datm+tpqwldir+tpqwtag+dtag+'.nc'
-             ftpqw2=dir_output_datm+tpqwtag+tag+'.'+dtag+'.nc'
-
-             infile+=[fsolar,fprecip,ftpqw]
-             outfile+=[fsolar2,fprecip2,ftpqw2]
-
-        nm=len(infile)
-        for n in range(nm):
-            print(outfile[n])
-            file_in = infile[n]
-            file_out = outfile[n]
-        
-        
-            f1  = xr.open_dataset(file_in)
-            # create 1d coordinate variables to enable sel() method
-            lon0=np.asarray(f1['LONGXY'][0,:])
-            lat0=np.asarray(f1['LATIXY'][:,0])
-            lon=xr.DataArray(lon0,name='lon',dims='lon',coords={'lon':lon0})
-            lat=xr.DataArray(lat0,name='lat',dims='lat',coords={'lat':lat0})
-            #f2=f1.assign({'lon':lon,'lat':lat})
-            f2=f1.assign()
-            f2['lon'] = lon
-            f2['lat'] = lat
-            f2.reset_coords(['LONGXY','LATIXY'])
-            # extract gridcell closest to plon/plat
-            f3  = f2.sel(lon=plon,lat=plat,method='nearest')
-            # expand dimensions
-            f3 = f3.expand_dims(['lat','lon'])
-            # specify dimension order 
-            f3 = f3.transpose(u'scalar','time','lat','lon')
-
-            # mode 'w' overwrites file
-            f3.to_netcdf(path=file_out, mode='w')
-            f1.close(); f2.close(); f3.close()
-
-          
-        print('datm files written to: '+dir_output_datm)
+        single_point.create_datmdomain_at_point()
+        #create_datmdomain_at_point(plat, plon, fdatmdomain, fdatmdomain2)
+        single_point.datm_syr =datm_syr
+        single_point.datm_eyr =datm_eyr
+        single_point.dir_input_datm = dir_input_datm
+        single_point.dir_output_datm = dir_output_datm
+        single_point.create_datm_at_point()
 
     print( "Successfully ran script." )
 
