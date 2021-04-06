@@ -150,6 +150,7 @@ module CLMFatesInterfaceMod
    use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
    use FatesConstantsMod      , only : hlm_harvest_area_fraction
    use FatesConstantsMod      , only : hlm_harvest_carbon
+   use FatesConstantsMod      , only : itrue, ifalse
    use perf_mod               , only : t_startf, t_stopf
    implicit none
    
@@ -919,7 +920,7 @@ module CLMFatesInterfaceMod
       call this%wrap_update_hlmfates_dyn(nc,               &
                                          bounds_clump,     &
                                          waterdiagnosticbulk_inst,  &
-                                         canopystate_inst)
+                                         canopystate_inst, ifalse)
       
       ! ---------------------------------------------------------------------------------
       ! Part IV: 
@@ -942,7 +943,7 @@ module CLMFatesInterfaceMod
    ! ------------------------------------------------------------------------------------
 
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
-        waterdiagnosticbulk_inst, canopystate_inst)
+        waterdiagnosticbulk_inst, canopystate_inst, is_called_at_restart)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -956,7 +957,8 @@ module CLMFatesInterfaceMod
      integer                 , intent(in)           :: nc
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
-     
+     integer                 , intent(in)           :: is_called_at_restart  ! ifalse = daily timestep, itrue = restart
+
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch 
      integer :: p       ! HLM patch index
@@ -991,7 +993,7 @@ module CLMFatesInterfaceMod
        ! Canopy diagnostics for FATES
        call canopy_summarization(this%fates(nc)%nsites, &
             this%fates(nc)%sites,  &
-            this%fates(nc)%bc_in)
+            this%fates(nc)%bc_in, is_called_at_restart)
 
        ! Canopy diagnostic outputs for HLM
        call update_hlm_dynamics(this%fates(nc)%nsites, &
@@ -1390,7 +1392,7 @@ module CLMFatesInterfaceMod
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterdiagnosticbulk_inst,canopystate_inst)
+                     waterdiagnosticbulk_inst,canopystate_inst, itrue)
 
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
@@ -1527,7 +1529,7 @@ module CLMFatesInterfaceMod
            ! Update diagnostics of FATES ecosystem structure used in HLM.
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                waterdiagnosticbulk_inst,canopystate_inst)
+                waterdiagnosticbulk_inst,canopystate_inst, ifalse)
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
@@ -1609,6 +1611,7 @@ module CLMFatesInterfaceMod
 
            end do
         end do
+
 
         ! -------------------------------------------------------------------------------
         ! Call FATES public function to calculate internal sun/shade structures
