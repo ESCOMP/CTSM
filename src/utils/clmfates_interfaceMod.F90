@@ -133,6 +133,7 @@ module CLMFatesInterfaceMod
    use EDBtranMod            , only : btran_ed, &
                                       get_active_suction_layers
    use EDCanopyStructureMod  , only : canopy_summarization, update_hlm_dynamics
+   use EDCanopyStructureMod  , only : UpdateFatesAvgSnowDepth
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
    use FatesSoilBGCFluxMod    , only : FluxIntoLitterPools
@@ -990,10 +991,15 @@ module CLMFatesInterfaceMod
           this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_eff(c)
        end do
        
+       ! Only update the fates internal snow burial if this is not a restart
+       if(is_called_at_restart==ifalse) then
+          call UpdateFatesAvgSnowDepth(this%fates(nc)%sites,this%fates(nc)%bc_in)
+       end if
+       
        ! Canopy diagnostics for FATES
        call canopy_summarization(this%fates(nc)%nsites, &
             this%fates(nc)%sites,  &
-            this%fates(nc)%bc_in, is_called_at_restart)
+            this%fates(nc)%bc_in)
 
        ! Canopy diagnostic outputs for HLM
        call update_hlm_dynamics(this%fates(nc)%nsites, &
