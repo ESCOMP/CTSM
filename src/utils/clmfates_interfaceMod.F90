@@ -151,7 +151,6 @@ module CLMFatesInterfaceMod
    use dynHarvestMod          , only : dynHarvest_interp_resolve_harvesttypes
    use FatesConstantsMod      , only : hlm_harvest_area_fraction
    use FatesConstantsMod      , only : hlm_harvest_carbon
-   use FatesConstantsMod      , only : itrue, ifalse
    use perf_mod               , only : t_startf, t_stopf
    implicit none
    
@@ -921,7 +920,7 @@ module CLMFatesInterfaceMod
       call this%wrap_update_hlmfates_dyn(nc,               &
                                          bounds_clump,     &
                                          waterdiagnosticbulk_inst,  &
-                                         canopystate_inst, ifalse)
+                                         canopystate_inst, .false.)
       
       ! ---------------------------------------------------------------------------------
       ! Part IV: 
@@ -944,7 +943,7 @@ module CLMFatesInterfaceMod
    ! ------------------------------------------------------------------------------------
 
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
-        waterdiagnosticbulk_inst, canopystate_inst, is_called_at_restart)
+        waterdiagnosticbulk_inst, canopystate_inst, is_initing_from_restart)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -958,7 +957,10 @@ module CLMFatesInterfaceMod
      integer                 , intent(in)           :: nc
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
-     integer                 , intent(in)           :: is_called_at_restart  ! ifalse = daily timestep, itrue = restart
+
+     ! is this being called during a read from restart sequence (if so then use the restarted fates
+     ! snow depth variable rather than the CLM variable).
+     logical                 , intent(in)           :: is_initing_from_restart
 
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch 
@@ -992,7 +994,7 @@ module CLMFatesInterfaceMod
        end do
        
        ! Only update the fates internal snow burial if this is not a restart
-       if(is_called_at_restart==ifalse) then
+       if (.not. is_initing_from_restart) then
           call UpdateFatesAvgSnowDepth(this%fates(nc)%sites,this%fates(nc)%bc_in)
        end if
        
@@ -1398,7 +1400,7 @@ module CLMFatesInterfaceMod
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterdiagnosticbulk_inst,canopystate_inst, itrue)
+                     waterdiagnosticbulk_inst,canopystate_inst, .true.)
 
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
@@ -1535,7 +1537,7 @@ module CLMFatesInterfaceMod
            ! Update diagnostics of FATES ecosystem structure used in HLM.
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                waterdiagnosticbulk_inst,canopystate_inst, ifalse)
+                waterdiagnosticbulk_inst,canopystate_inst, .false.)
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
