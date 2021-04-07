@@ -23,8 +23,7 @@ module SoilMoistureStreamMod
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : scmlat,scmlon,single_column, inst_name
-  use clm_varctl      , only : iulog, use_soil_moisture_streams
+  use clm_varctl      , only : iulog, use_soil_moisture_streams, inst_name
   use clm_varcon      , only : grlnd
   use controlMod      , only : NLFilename
   use decompMod       , only : gsMap_lnd2Dsoi_gdc2glo

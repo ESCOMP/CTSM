@@ -100,8 +100,8 @@ class TestRunSysTests(unittest.TestCase):
         (1) The use of a testlist argument
 
         (2) The standard arguments to create_test (the path to create_test, the arguments
-        --test-id and --output-root, the absence of --compare and --generate, and (on this
-        unknown machine) the absence of --baseline-root)
+        --test-id, --output-root and --retry, the absence of --compare and --generate, and
+        (on this unknown machine) the absence of --baseline-root)
 
         (3) That a cs.status.fails file was created
         """
@@ -119,6 +119,7 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, command, r'--test-id +{}\s'.format(self._expected_testid()))
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
         six.assertRegex(self, command, r'--output-root +{}\s'.format(expected_testroot_path))
+        six.assertRegex(self, command, r'--retry +0(\s|$)')
         six.assertRegex(self, command, r'test1 +test2(\s|$)')
         assertNotRegex(self, command, r'--compare\s')
         assertNotRegex(self, command, r'--generate\s')
@@ -151,6 +152,7 @@ class TestRunSysTests(unittest.TestCase):
                       baseline_root='myblroot',
                       walltime='3:45:67',
                       queue='runqueue',
+                      retry=5,
                       extra_create_test_args='--some extra --createtest args')
 
         all_commands = machine.job_launcher.get_commands()
@@ -166,6 +168,7 @@ class TestRunSysTests(unittest.TestCase):
         six.assertRegex(self, command, r'--walltime +3:45:67(\s|$)')
         six.assertRegex(self, command, r'--queue +runqueue(\s|$)')
         six.assertRegex(self, command, r'--project +myaccount(\s|$)')
+        six.assertRegex(self, command, r'--retry +5(\s|$)')
         six.assertRegex(self, command, r'--some +extra +--createtest +args(\s|$)')
 
         expected_cs_status = os.path.join(expected_testroot,
