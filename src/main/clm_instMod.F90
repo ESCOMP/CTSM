@@ -581,7 +581,8 @@ contains
             waterdiagnosticbulk_inst=water_inst%waterdiagnosticbulk_inst, &
             waterstatebulk_inst=water_inst%waterstatebulk_inst, &
             canopystate_inst=canopystate_inst, &
-            soilstate_inst=soilstate_inst)
+            soilstate_inst=soilstate_inst, &
+            active_layer_inst=active_layer_inst)
 
     end if
 
