@@ -339,7 +339,7 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_swvdf   )
 
     ! from atm - black carbon deposition fluxes (3)
-v    ! (1) => bcphidry, (2) => bcphodry, (3) => bcphiwet
+    ! (1) => bcphidry, (2) => bcphodry, (3) => bcphiwet
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_bcph,  ungridded_lbound=1, ungridded_ubound=3)
 
     ! from atm - organic carbon deposition fluxes (3)

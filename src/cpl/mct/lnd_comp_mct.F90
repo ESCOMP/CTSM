@@ -29,12 +29,6 @@ module lnd_comp_mct
   private :: lnd_domain_mct    ! set the land model domain information
   private :: lnd_handle_resume ! handle pause/resume signals from the coupler
 
-#ifdef COMPARE_TO_NUOPC
-  logical         :: compare_to_nuopc = .true.
-#else
-  logical         :: compare_to_nuopc = .false.
-#endif
-
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -254,16 +248,16 @@ contains
        call seq_infodata_PutData(infodata, lnd_nx=ldomain%ni, lnd_ny=ldomain%nj)
 
        ! Get infodata info
-       if (compare_to_nuopc) then
-          if (nsrest == nsrStartup) then
-             call ESMF_ClockGet( Eclock, currTime=currTime)
-             call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday)
-          else
-             call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
-          end if
+#if (defined COMPARE_TO_NUOPC)
+       if (nsrest == nsrStartup) then
+          call ESMF_ClockGet( Eclock, currTime=currTime)
+          call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday)
        else
           call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
        end if
+#else
+       call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
+#endif
        call lnd_handle_resume( cdata_l )
 
        ! Reset shr logging to original values
