@@ -63,7 +63,7 @@ contains
   !DIMS 1,2
   !TYPE text,int,double
   subroutine restartvar_{DIMS}d_{TYPE}(&
-       ncid, flag, varname, xtype, dim1name, dim2name, &
+       ncid, flag, varname, xtype, dim1name, &
        long_name, units, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
        imissing_value, ifill_value, flag_values, nvalid_range )
@@ -79,7 +79,6 @@ contains
     {VTYPE}           , pointer              :: data{DIMSTR}
     logical           , intent(inout)        :: readvar          ! was var read?
     character(len=*)  , intent(in), optional :: dim1name         ! dimension name
-    character(len=*)  , intent(in), optional :: dim2name         ! dimension name
     character(len=*)  , intent(in), optional :: units            ! long name for variable
     character(len=*)  , intent(in), optional :: comment          ! attribute
     character(len=*)  , intent(in), optional :: flag_meanings(:) ! attribute
