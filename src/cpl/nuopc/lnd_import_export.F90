@@ -339,7 +339,7 @@ contains
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_swvdf   )
 
     ! from atm - black carbon deposition fluxes (3)
-    ! (1) => bcphidry, (2) => bcphodry, (3) => bcphiwet
+v    ! (1) => bcphidry, (2) => bcphodry, (3) => bcphiwet
     call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_bcph,  ungridded_lbound=1, ungridded_ubound=3)
 
     ! from atm - organic carbon deposition fluxes (3)
@@ -557,17 +557,52 @@ contains
        call state_getimport_1d(importState, Sa_methane, atm2lnd_inst%forc_pch4_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
-    if (fldchk(importState, Faxa_ndep)) then
-       ! The mediator is sending ndep in units if kgN/m2/s - and ctsm
-       ! uses units of gN/m2/sec so the following conversion needs to happen
-       call state_getimport_2d(importState, Faxa_ndep, forc_ndep(begg:,:), rc=rc)
+
+    ! Flooding from river
+    ! sign convention is positive downward and hierarchy is atm/glc/lnd/rof/ice/ocn.
+    ! so water sent from rof to land is negative,
+    ! change the sign to indicate addition of water to system.
+    if (fldchk(importState, Flrr_flood)) then
+       call state_getimport_1d(importState, Flrr_flood, wateratm2lndbulk_inst%forc_flood_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
-          atm2lnd_inst%forc_ndep_grc(g) = (forc_ndep(g,1) + forc_ndep(g,2))*1000._r8
+          wateratm2lndbulk_inst%forc_flood_grc(g) = -wateratm2lndbulk_inst%forc_flood_grc(g)
        end do
+    else
+       wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
+    end if
+    if (fldchk(importState, Flrr_volr)) then
+       call state_getimport_1d(importState, Flrr_volr, wateratm2lndbulk_inst%volr_grc(begg:), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       do g = begg, endg
+          wateratm2lndbulk_inst%volr_grc(g) = wateratm2lndbulk_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
+       end do
+    else
+       wateratm2lndbulk_inst%volr_grc(:) = 0._r8
+    end if
+    if (fldchk(importState, Flrr_volrmch)) then
+       call state_getimport_1d(importState, Flrr_volrmch, wateratm2lndbulk_inst%volrmch_grc(begg:), rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       do g = begg, endg
+          wateratm2lndbulk_inst%volrmch_grc(g) = wateratm2lndbulk_inst%volrmch_grc(g) * (ldomain%area(g) * 1.e6_r8)
+       end do
+    else
+       wateratm2lndbulk_inst%volrmch_grc(:) = 0._r8
     end if
 
+    !--------------------------
+    ! Derived quantities for required fields
+    ! and corresponding error checks
+    !--------------------------
+
+    call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
+       forc_rainc, forc_rainl, forc_snowc, forc_snowl)
+
+    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
+
     ! Atmosphere co2
+    ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
+    ! Note that forc_pbot is in Pa
     ! Set default value to a constant and overwrite for prognostic and diagnostic
     do g = begg,endg
        co2_ppmv_input(g) = co2_ppmv
@@ -602,8 +637,6 @@ contains
        end if
     end if
 
-    ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
-    ! Note that forc_pbot is in Pa
     do g = begg,endg
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
        atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_input(g) * 1.e-6_r8 * forc_pbot
@@ -615,36 +648,15 @@ contains
        end do
     end if
 
-    ! Flooding from river
-    ! sign convention is positive downward and hierarchy is atm/glc/lnd/rof/ice/ocn.
-    ! so water sent from rof to land is negative,
-    ! change the sign to indicate addition of water to system.
-    if (fldchk(importState, Flrr_flood)) then
-       call state_getimport_1d(importState, Flrr_flood, wateratm2lndbulk_inst%forc_flood_grc(begg:), rc=rc)
+    ! Atmosphere ndep
+    if (fldchk(importState, Faxa_ndep)) then
+       ! The mediator is sending ndep in units if kgN/m2/s - and ctsm
+       ! uses units of gN/m2/sec so the following conversion needs to happen
+       call state_getimport_2d(importState, Faxa_ndep, forc_ndep(begg:,:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        do g = begg, endg
-          wateratm2lndbulk_inst%forc_flood_grc(g) = -wateratm2lndbulk_inst%forc_flood_grc(g)
+          atm2lnd_inst%forc_ndep_grc(g) = (forc_ndep(g,1) + forc_ndep(g,2))*1000._r8
        end do
-    else
-       wateratm2lndbulk_inst%forc_flood_grc(:) = 0._r8
-    end if
-    if (fldchk(importState, Flrr_volr)) then
-       call state_getimport_1d(importState, Flrr_volr, wateratm2lndbulk_inst%volr_grc(begg:), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg, endg
-          wateratm2lndbulk_inst%volr_grc(g) = wateratm2lndbulk_inst%volr_grc(g) * (ldomain%area(g) * 1.e6_r8)
-       end do
-    else
-       wateratm2lndbulk_inst%volr_grc(:) = 0._r8
-    end if
-    if (fldchk(importState, Flrr_volrmch)) then
-       call state_getimport_1d(importState, Flrr_volrmch, wateratm2lndbulk_inst%volrmch_grc(begg:), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       do g = begg, endg
-          wateratm2lndbulk_inst%volrmch_grc(g) = wateratm2lndbulk_inst%volrmch_grc(g) * (ldomain%area(g) * 1.e6_r8)
-       end do
-    else
-       wateratm2lndbulk_inst%volrmch_grc(:) = 0._r8
     end if
 
     ! Land-ice (glc) fields
@@ -671,16 +683,6 @@ contains
        call glc2lnd_inst%set_glc2lnd_fields_nuopc( bounds, glc_present, &
             frac_grc, topo_grc, hflx_grc, icemask_grc, icemask_coupled_fluxes_grc )
     end if
-
-    !--------------------------
-    ! Derived quantities for required fields
-    ! and corresponding error checks
-    !--------------------------
-
-    call derive_quantities(bounds, atm2lnd_inst, wateratm2lndbulk_inst, &
-       forc_rainc, forc_rainl, forc_snowc, forc_snowl)
-
-    call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
 
   end subroutine import_fields
 
