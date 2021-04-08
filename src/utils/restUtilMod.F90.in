@@ -24,6 +24,9 @@ module restUtilMod
   !-----------------------------------------------------------------------
 
   interface restartvar
+     ! DIMS 2 refers to variables with degenerate second dimension, i.e. with
+     ! size(second dimension) = 1. For variables with non-degenerate second
+     ! dimension, call restartvar_2d_{TYPE}_bounds.
      !DIMS 0,1,2
      !TYPE text,int,double
      module procedure restartvar_{DIMS}d_{TYPE}
@@ -133,7 +136,6 @@ contains
     ! Local variables
     character(len=len(varname)) :: primary_varname ! first name in the varname list
     character(len=len(varname)) :: my_varname      ! actual varname to read/write
-    integer          :: ivalue
     type(var_desc_t) :: vardesc  ! local vardesc
     integer          :: status   ! return error code 
     integer          :: varid
@@ -223,7 +225,7 @@ contains
   !DIMS 1,2
   !TYPE text,int,double
   subroutine restartvar_{DIMS}d_{TYPE}(&
-       ncid, flag, varname, xtype, dim1name, dim2name, &
+       ncid, flag, varname, xtype, dim1name, &
        long_name, units, interpinic_flag, data, readvar, &
        comment, flag_meanings, missing_value, fill_value, &
        imissing_value, ifill_value, flag_values, nvalid_range, is_spatial )
@@ -235,6 +237,12 @@ contains
     ! files, in case variables have been renamed. For example, if variable 'foo' was
     ! recently renamed to 'bar', then varname should be 'bar:foo'. For flag = 'write',
     ! the first name in the list is used.
+    !
+    ! NB. dim2name (previously optional argument here) has been removed.
+    ! Call this version of restartvar_ ONLY for 1d variables and varables with
+    ! degenerate second dimension, i.e. with size(second dimension) = 1.
+    ! For variables with non-degenerate second dimension, call
+    ! restartvar_2d_{TYPE}_bounds.
 
     !----------------------------------------------------
     ! Arguments
@@ -247,7 +255,6 @@ contains
     {VTYPE}           , pointer              :: data{DIMSTR}
     logical           , intent(inout)        :: readvar          ! was var read?
     character(len=*)  , intent(in), optional :: dim1name         ! dimension name
-    character(len=*)  , intent(in), optional :: dim2name         ! dimension name
     character(len=*)  , intent(in), optional :: units            ! long name for variable
     character(len=*)  , intent(in), optional :: comment          ! attribute
     character(len=*)  , intent(in), optional :: flag_meanings(:) ! attribute
@@ -269,6 +276,13 @@ contains
     integer          :: varid
     integer          :: lxtype   ! local external type (in case logical variable)
     !----------------------------------------------------
+
+    ! Assert that 2d variables coming through this subroutine have degenerate
+    ! second dimension, i.e. size(second dimension) = 1
+    ivalue = size(shape(data))
+    if (ivalue == 2) then
+       SHR_ASSERT_FL((size(data, ivalue) == 1), sourcefile, __LINE__)
+    end if
 
     if (present(is_spatial)) then
        l_is_spatial = is_spatial
@@ -298,13 +312,9 @@ contains
        if (.not. present(dim1name)) then
           call ncd_defvar(ncid=ncid, varname=trim(my_varname), xtype=lxtype, &
                long_name=trim(long_name), units=units)
-       else if (.not. present(dim2name)) then 
+       else
           call ncd_defvar(ncid=ncid, varname=trim(my_varname), xtype=lxtype, &
                dim1name=trim(dim1name), &
-               long_name=trim(long_name), units=units)
-       else if (present(dim2name)) then
-          call ncd_defvar(ncid=ncid, varname=trim(my_varname), xtype=lxtype, &
-               dim1name=trim(dim1name), dim2name=trim(dim2name), &
                long_name=trim(long_name), units=units)
        end if
 
@@ -419,7 +429,6 @@ contains
     ! Local variables
     character(len=len(varname)) :: primary_varname ! first name in the varname list
     character(len=len(varname)) :: my_varname      ! actual varname to read/write
-    integer          :: ivalue
     type(var_desc_t) :: vardesc  ! local vardesc
     integer          :: status   ! return error code 
     integer          :: varid    ! returned var id
