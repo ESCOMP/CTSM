@@ -700,6 +700,7 @@ contains
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double, &
                dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
                long_name=accum(nf)%desc, units=accum(nf)%units, &
+               switchdim=.false., scale_by_thickness=.false., &
                interpinic_flag='interp', &
                data=accum(nf)%val, readvar=readvar)
        end if
@@ -717,6 +718,7 @@ contains
                dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
                long_name='number of accumulated steps for '//trim(accum(nf)%name), &
                units='-', &
+               switchdim=.false., scale_by_thickness=.false., &
                interpinic_flag='interp', &
                data=accum(nf)%nsteps, readvar=readvar)
        end if

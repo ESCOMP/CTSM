@@ -66,7 +66,6 @@ module restUtilMod
   !   We require this flag for initial/restart variables with dim2name values:
   !   levmaxurbgrnd, levgrnd, levtot, levsno, levsno1, levlak, levcan, vegwcs,
   !   numrad
-  !   as long as these variables do not set interpinic_flag = 'skip'
   integer,parameter, public :: iflag_no_scale_by_thickness = 0
   integer,parameter, public :: iflag_scale_by_thickness = 1
 
