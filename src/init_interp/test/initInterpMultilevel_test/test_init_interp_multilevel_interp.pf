@@ -94,7 +94,7 @@ contains
          coordinates_source = coordinates, &
          coordinates_dest   = coordinates)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_source, data_dest)
 
@@ -102,6 +102,8 @@ contains
 
   @Test
   subroutine allWithinBounds_interpolates(this)
+    ! TODO Bill recommended starting from this test and expanding to the new
+    !      tests that use scale_by_thickness=.true.
     ! If the destination has different levels, but all levels are within the bounds of
     ! the source, the destination data should simply be interpolated from the source data.
     !
@@ -115,11 +117,13 @@ contains
     real(r8), parameter :: coordinates_source(5) = [21._r8, 22._r8, 23._r8, 24._r8, 25._r8]
     real(r8), parameter :: coordinates_dest(3) = [21.5_r8, 22.75_r8, 24.5_r8]
 
+    ! TODO add the dzsoi args to all the _no_levclasses and _with_levclasses
+    !      in this and three(?) other files
     interpolator = create_interpolator_no_levclasses( &
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected = [11.5_r8, 12.75_r8, 14.5_r8]
 
@@ -142,7 +146,7 @@ contains
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_source(3), data_dest)
 
@@ -163,7 +167,7 @@ contains
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_source(1), data_dest)
 
@@ -186,7 +190,7 @@ contains
          coordinates_dest   = coordinates_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_orig, data_dest)
   end subroutine noSourceLevels_leavesDestinationUnchanged
@@ -216,7 +220,7 @@ contains
          level_classes_dest   = level_classes_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_orig, data_dest)
 
@@ -245,7 +249,7 @@ contains
          level_classes_dest   = level_classes_dest)
 
     data_dest(1) = data_orig
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(data_orig, data_dest)
   end subroutine destLevelIsSpval_leavesDestinationUnchanged
@@ -275,7 +279,7 @@ contains
          level_classes_source = level_classes_source, &
          level_classes_dest   = level_classes_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected = [12._r8, 63._r8]
 
@@ -318,7 +322,7 @@ contains
          coordinates_dest   = coordinates_dest)
 
     data_dest(1) = spval
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     @assertEqual(spval, data_dest)
   end subroutine destIsSpval_leavesDestinationUnchanged
@@ -343,7 +347,7 @@ contains
          coordinates_source = coordinates_source, &
          coordinates_dest   = coordinates_dest)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected(1) = 12.5_r8
     @assertEqual(data_dest_expected, data_dest, tolerance=tol)

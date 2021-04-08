@@ -79,7 +79,7 @@ contains
          num_second_levels_source = nlev_source_second, &
          num_second_levels_dest = nlev_dest_second)
     
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     ! No assert section: mocks do the asserts for us
 
@@ -124,7 +124,7 @@ contains
          num_second_levels_source = nlev_source_second, &
          num_second_levels_dest = nlev_dest_second)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     ! Determine expected result
     ! The first set of levels involves a simple copy:
