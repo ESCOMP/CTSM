@@ -15,7 +15,7 @@ module BiogeophysPreFluxCalcsMod
   use ColumnType              , only : col
   use LandunitType            , only : lun
   use clm_varcon              , only : spval
-  use clm_varpar              , only : nlevgrnd, nlevsno, nlevurb
+  use clm_varpar              , only : nlevgrnd, nlevsno, nlevurb, nlevmaxurbgrnd
   use clm_varctl              , only : use_fates
   use pftconMod               , only : pftcon
   use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
@@ -54,6 +54,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine BiogeophysPreFluxCalcs(bounds, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
+       num_urbanc, filter_urbanc, &
        clm_fates, atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
        soilstate_inst, temperature_inst, &
        wateratm2lndbulk_inst, waterdiagnosticbulk_inst, waterstatebulk_inst)
@@ -67,6 +68,8 @@ contains
     integer                        , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
     integer                        , intent(in)    :: num_nolakep       ! number of column non-lake points in patch filter
     integer                        , intent(in)    :: filter_nolakep(:) ! patch filter for non-lake points
+    integer                        , intent(in)    :: num_urbanc        ! number of urban columns in clump
+    integer                        , intent(in)    :: filter_urbanc(:)  ! urban column filter
     type(hlm_fates_interface_type) , intent(in)    :: clm_fates
     type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
     type(canopystate_type)         , intent(inout) :: canopystate_inst
@@ -95,6 +98,7 @@ contains
     call CalcInitialTemperatureAndEnergyVars(bounds, &
          num_nolakec, filter_nolakec,                       &
          num_nolakep, filter_nolakep,                       &
+         num_urbanc, filter_urbanc,                         &
          atm2lnd_inst, canopystate_inst, frictionvel_inst, &
          wateratm2lndbulk_inst, &
          waterdiagnosticbulk_inst, waterstatebulk_inst, &
@@ -163,6 +167,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CalcInitialTemperatureAndEnergyVars(bounds, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
+       num_urbanc, filter_urbanc, &
        atm2lnd_inst, canopystate_inst, frictionvel_inst, &
        wateratm2lndbulk_inst, waterdiagnosticbulk_inst, waterstatebulk_inst, &
        temperature_inst, energyflux_inst)
@@ -178,6 +183,8 @@ contains
     integer                        , intent(in)    :: filter_nolakec(:) ! column filter for non-lake points
     integer                        , intent(in)    :: num_nolakep       ! number of column non-lake points in patch filter
     integer                        , intent(in)    :: filter_nolakep(:) ! patch filter for non-lake points
+    integer                        , intent(in)    :: num_urbanc        ! number of urban columns in clump
+    integer                        , intent(in)    :: filter_urbanc(:)  ! urban column filter
     type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
     type(canopystate_type)         , intent(in)    :: canopystate_inst
     type(frictionvel_type)         , intent(in)    :: frictionvel_inst
@@ -238,20 +245,33 @@ contains
     do j = -nlevsno+1, nlevgrnd
        do fc = 1,num_nolakec
           c = filter_nolakec(fc)
-          if ((col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
-               .or. col%itype(c) == icol_roof) .and. j > nlevurb) then
-             tssbef(c,j) = spval 
-          else
+          if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
+               .and. col%itype(c) /= icol_roof) then
              tssbef(c,j) = t_soisno(c,j)
           end if
-          ! record t_h2osfc prior to updating
-          t_h2osfc_bef(c) = t_h2osfc(c)   
+       end do
+    end do
+
+    do j = -nlevsno+1, nlevmaxurbgrnd
+       do fc = 1,num_urbanc
+          c = filter_urbanc(fc)
+          if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+               .or. col%itype(c) == icol_roof) then
+             if (j > nlevurb) then
+                tssbef(c,j) = spval 
+             else
+                tssbef(c,j) = t_soisno(c,j)
+             end if
+          end if
        end do
     end do
 
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
        l = col%landunit(c)
+
+       ! record t_h2osfc prior to updating
+       t_h2osfc_bef(c) = t_h2osfc(c)
 
        ! ground temperature is weighted average of exposed soil, snow, and h2osfc
        if (snl(c) < 0) then

@@ -324,11 +324,11 @@ contains
     character(len=*), parameter :: subname = 'set_glc2lnd_fields_nuopc'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT((ubound(frac_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(topo_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(hflx_grc, 1) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(icemask_grc,1) == bounds%endg), errMsg(sourcefile, __LINE__))
-    SHR_ASSERT((ubound(icemask_coupled_fluxes_grc,1) == bounds%endg), errMsg(sourcefile, __LINE__))
+    SHR_ASSERT_FL((ubound(frac_grc, 1) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(topo_grc, 1) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(hflx_grc, 1) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(icemask_grc,1) == bounds%endg), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(icemask_coupled_fluxes_grc,1) == bounds%endg), sourcefile, __LINE__)
 
     if (glc_present) then
        do g = bounds%begg, bounds%endg

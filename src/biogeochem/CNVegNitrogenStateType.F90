@@ -71,6 +71,7 @@ module CNVegNitrogenStateType
      real(r8), pointer :: totn_p2c_col             (:) ! (gN/m2) totn_patch averaged to col
      real(r8), pointer :: totn_col                 (:) ! (gN/m2) total column nitrogen, incl veg
      real(r8), pointer :: totecosysn_col           (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
+     real(r8), pointer :: totn_grc                 (:) ! (gN/m2) total gridcell nitrogen
 
    contains
 
@@ -166,6 +167,7 @@ contains
     allocate(this%totn_p2c_col             (begc:endc)) ; this%totn_p2c_col             (:) = nan
     allocate(this%totn_col                 (begc:endc)) ; this%totn_col                 (:) = nan
     allocate(this%totecosysn_col           (begc:endc)) ; this%totecosysn_col           (:) = nan
+    allocate(this%totn_grc                 (begg:endg)) ; this%totn_grc                 (:) = nan
 
   end subroutine InitAllocate
 
@@ -510,6 +512,7 @@ contains
 
     do g = bounds%begg, bounds%endg
        this%seedn_grc(g) = 0._r8
+       this%totn_grc(g)  = 0._r8
     end do
 
     ! now loop through special filters and explicitly set the variables that
@@ -526,7 +529,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine Restart ( this,  bounds, ncid, flag, leafc_patch, &
                        leafc_storage_patch, frootc_patch, frootc_storage_patch, &
-                       deadstemc_patch, filter_reseed_patch, num_reseed_patch )
+                       deadstemc_patch, filter_reseed_patch, num_reseed_patch, &
+                       spinup_factor_deadwood )
     !
     ! !DESCRIPTION: 
     ! Read/write restart data 
@@ -551,6 +555,7 @@ contains
     real(r8)          , intent(in) :: deadstemc_patch(bounds%begp:)
     integer           , intent(in) :: filter_reseed_patch(:)
     integer           , intent(in) :: num_reseed_patch
+    real(r8)          , intent(in) :: spinup_factor_deadwood
     !
     ! !LOCAL VARIABLES:
     integer            :: i, p, l
@@ -716,18 +721,18 @@ contains
        if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools out of AD spinup mode'
           exit_spinup = .true.
-          if ( masterproc ) write(iulog, *) 'Multiplying stemn and crootn by 10 for exit spinup '
+          if ( masterproc ) write(iulog, *) 'Multiplying stemn and crootn by ', spinup_factor_deadwood, 'for exit spinup '
           do i = bounds%begp,bounds%endp
-             this%deadstemn_patch(i) = this%deadstemn_patch(i) * 10._r8
-             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * 10._r8
+             this%deadstemn_patch(i) = this%deadstemn_patch(i) * spinup_factor_deadwood
+             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * spinup_factor_deadwood
           end do
        else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools into AD spinup mode'
           enter_spinup = .true.
-          if ( masterproc ) write(iulog, *) 'Dividing stemn and crootn by 10 for enter spinup '
+          if ( masterproc ) write(iulog, *) 'Dividing stemn and crootn by ', spinup_factor_deadwood, 'for enter spinup '
           do i = bounds%begp,bounds%endp
-             this%deadstemn_patch(i) = this%deadstemn_patch(i) / 10._r8
-             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) / 10._r8
+             this%deadstemn_patch(i) = this%deadstemn_patch(i) / spinup_factor_deadwood
+             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) / spinup_factor_deadwood
           end do
        endif
 
@@ -1051,9 +1056,6 @@ contains
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
 
     end do
-    
-    
-    
 
   end subroutine Summary_nitrogenstate
 

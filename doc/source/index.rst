@@ -3,10 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the CLM documentation
-==================================
+Welcome to the CTSM documentation for |version_label|
+=====================================================
 
-This document has two major sections.
+.. important::
+
+   **You are viewing the documentation for** |version_label_bold|. **There are separate
+   versions of this documentation for each maintained CTSM release (e.g., CLM5.0) and for
+   the latest development code. Use the menu at the top left to select the version of CTSM
+   you are using.**
+
+This document has three major sections.
 
 .. toctree::
    :maxdepth: 2
@@ -14,6 +21,7 @@ This document has two major sections.
 
    users_guide/index.rst
    tech_note/index.rst
+   lilac/index.rst
 
 Indices and tables
 ==================

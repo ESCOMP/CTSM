@@ -13,7 +13,7 @@ module clm_varcon
                            SHR_CONST_RHOICE,SHR_CONST_TKFRZ,SHR_CONST_REARTH, &
                            SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
                            SHR_CONST_RGAS, SHR_CONST_PSTD,                    &
-                           SHR_CONST_MWDAIR, SHR_CONST_MWWV
+                           SHR_CONST_MWDAIR, SHR_CONST_MWWV, SHR_CONST_CPFW
   use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
   use clm_varpar   , only: ngases
   use clm_varpar   , only: nlayer
@@ -44,7 +44,6 @@ module clm_varcon
   ! Initialize physical constants
   !------------------------------------------------------------------
 
-  real(r8), public, parameter :: e_ice=6.0                          ! soil ice impedance factor
   real(r8), public, parameter :: pc = 0.4                           ! threshold probability
   real(r8), public, parameter :: mu = 0.13889                       ! connectivity exponent 
   real(r8), public, parameter :: secsphr = 3600._r8                 ! Seconds in an hour
@@ -82,6 +81,8 @@ module clm_varcon
   real(r8), public :: alpha_aero = 1.0_r8                           ! constant for aerodynamic parameter weighting
   real(r8), public :: tlsai_crit = 2.0_r8                           ! critical value of elai+esai for which aerodynamic parameters are maximum
   real(r8), public :: watmin = 0.01_r8                              ! minimum soil moisture (mm)
+  real(r8), public :: c_water = SHR_CONST_CPFW                      ! specific heat of water   [J/kg/K]
+  real(r8), public :: c_dry_biomass  = 1400_r8                      ! specific heat of dry biomass
 
   real(r8), public :: re = SHR_CONST_REARTH*0.001_r8                ! radius of earth (km)
 
@@ -113,18 +114,17 @@ module clm_varcon
 
   real(r8), public :: capr   = 0.34_r8      ! Tuning factor to turn first layer T into surface T
   real(r8), public :: cnfac  = 0.5_r8       ! Crank Nicholson factor between 0 and 1
-  real(r8), public :: ssi    = 0.033_r8     ! Irreducible water saturation of snow
-  real(r8), public :: wimp   = 0.05_r8      ! Water impremeable if porosity less than wimp
   real(r8), public :: pondmx = 0.0_r8       ! Ponding depth (mm)
   real(r8), public :: pondmx_urban = 1.0_r8 ! Ponding depth for urban roof and impervious road (mm)
 
   real(r8), public :: thk_bedrock = 3.0_r8  ! thermal conductivity of 'typical' saturated granitic rock 
                                     ! (Clauser and Huenges, 1995)(W/m/K)
-  real(r8), public :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000) !scs
+  real(r8), public :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
   real(r8), public, parameter :: zmin_bedrock = 0.4_r8 ! minimum soil depth [m]
 
   real(r8), public, parameter :: aquifer_water_baseline = 5000._r8 ! baseline value for water in the unconfined aquifer [mm]
-
+  real(r8), public, parameter :: c_to_b = 2.0_r8         ! conversion between mass carbon and total biomass (g biomass /g C)
+  
   !!! C13
   real(r8), public, parameter :: preind_atm_del13c = -6.0   ! preindustrial value for atmospheric del13C
   real(r8), public, parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0  ! 13C/12C

@@ -8,7 +8,7 @@ module HydrologyDrainageMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro
-  use clm_varcon        , only : e_ice, denh2o, denice, rpi, spval
+  use clm_varcon        , only : denh2o, denice, rpi, spval
   use atm2lndType       , only : atm2lnd_type
   use glc2lndMod        , only : glc2lnd_type
   use SoilHydrologyType , only : soilhydrology_type  
@@ -151,9 +151,18 @@ contains
       do j = 1, nlevgrnd
          do fc = 1, num_nolakec
             c = filter_nolakec(fc)
-            if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
-                 .or. ctype(c) == icol_roof) .and. j > nlevurb) then
-            else
+            if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall &
+                 .and. ctype(c) /= icol_roof) then
+               h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
+            end if
+         end do
+      end do
+
+      do j = 1, nlevurb
+         do fc = 1, num_urbanc
+            c = filter_urbanc(fc)
+            if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                 .or. col%itype(c) == icol_roof) then
                h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
             end if
          end do

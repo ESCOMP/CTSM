@@ -144,7 +144,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use FATESFireBase          , only : fates_fire_base_type
-   use CNFireFactoryMod       , only : no_fire, scalar_lightning, &
+   use FATESFireFactoryMod    , only : no_fire, scalar_lightning, &
                                        successful_ignitions, anthro_ignitions
    use dynSubgridControlMod   , only : get_do_harvest
    use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
@@ -478,7 +478,7 @@ module CLMFatesInterfaceMod
       use FatesParameterDerivedMod, only : param_derived
       use subgridMod, only :  natveg_patch_exists
       use clm_instur       , only : wt_nat_patch
-      use CNFireFactoryMod , only: create_fates_fire_data_method
+      use FATESFireFactoryMod , only: create_fates_fire_data_method
 
       implicit none
       
@@ -736,7 +736,7 @@ module CLMFatesInterfaceMod
       ! to process array bounding information 
       
       ! !USES
-      use CNFireFactoryMod, only: scalar_lightning
+      use FATESFireFactoryMod, only: scalar_lightning
       use subgridMod, only :  natveg_patch_exists
 
       ! !ARGUMENTS:
@@ -819,6 +819,11 @@ module CLMFatesInterfaceMod
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
+         ! Decomposition fluxes
+         this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%w_scalar_col(c,1:nlevsoil)
+         this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%t_scalar_col(c,1:nlevsoil)
+
+         ! Soil water
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
@@ -1773,7 +1778,6 @@ module CLMFatesInterfaceMod
          t_soisno    => temperature_inst%t_soisno_col       , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)
          h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col , & ! Input: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
          btran       => energyflux_inst%btran_patch         , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1) 
-         btran2       => energyflux_inst%btran2_patch       , & ! Output: [real(r8) (:)   ]  
          rresis      => energyflux_inst%rresis_patch        , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd) 
          rootr       => soilstate_inst%rootr_patch          & ! Output: [real(r8) (:,:) ]  Fraction of water uptake in each layer
          )
@@ -1866,8 +1870,8 @@ module CLMFatesInterfaceMod
         ! Convert output BC's
         ! For CLM/ALM this wrapper provides return variables that should
         ! be similar to that of calc_root_moist_stress().  However,
-        ! CLM/ALM-FATES simulations will no make use of rresis, btran or btran2
-        ! outside of FATES. We do not have code in place to calculate btran2 or
+        ! CLM/ALM-FATES simulations will no make use of rresis or btran
+        ! outside of FATES. We do not have code in place to calculate or
         ! rresis right now, so we force to bad.  We have btran calculated so we
         ! pass it in case people want diagnostics.  rootr is actually the only
         ! variable that will be used, as it is needed to help distribute the
@@ -1887,7 +1891,6 @@ module CLMFatesInterfaceMod
                  ! it should not thought of as valid output until we decide to.
                  rootr(p,j)  = this%fates(nc)%bc_out(s)%rootr_pasl(ifp,j)
                  btran(p)    = this%fates(nc)%bc_out(s)%btran_pa(ifp)
-                 btran2(p)   = -999.9  ! Not available, force to nonsense
                  
               end do
            end do
@@ -2283,7 +2286,7 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_interpfileinputs')
 
-    call this%fates_fire_data_method%CNFireInterp(bounds)
+    call this%fates_fire_data_method%FireInterp(bounds)
 
     call t_stopf('fates_interpfileinputs')
 
@@ -2311,7 +2314,7 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_init2')
 
-    call this%fates_fire_data_method%CNFireInit(bounds, NLFilename)
+    call this%fates_fire_data_method%FireInit(bounds, NLFilename)
 
     call t_stopf('fates_init2')
 
@@ -2408,7 +2411,7 @@ module CLMFatesInterfaceMod
    use FatesIOVariableKindMod, only : site_scagpft_r8, site_agepft_r8
    use FatesIOVariableKindMod, only : site_can_r8, site_cnlf_r8, site_cnlfpft_r8
    use FatesIOVariableKindMod, only : site_height_r8, site_elem_r8, site_elpft_r8
-   use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8
+   use FatesIOVariableKindMod, only : site_elcwd_r8, site_elage_r8, site_agefuel_r8
    use FatesIODimensionsMod, only : fates_bounds_type
 
 
@@ -2547,7 +2550,7 @@ module CLMFatesInterfaceMod
              site_fuel_r8, site_cwdsc_r8, &
              site_can_r8,site_cnlf_r8, site_cnlfpft_r8, site_scag_r8, & 
              site_scagpft_r8, site_agepft_r8, site_elem_r8, site_elpft_r8, &
-             site_elcwd_r8, site_elage_r8)
+             site_elcwd_r8, site_elage_r8, site_agefuel_r8)
 
 
            d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
@@ -2922,6 +2925,10 @@ module CLMFatesInterfaceMod
 
    fates%elage_begin = 1
    fates%elage_end   = num_elements * nlevage
+
+   fates%agefuel_begin = 1
+   fates%agefuel_end   = nlevage * nfsc
+
 
    call t_stopf('fates_hlm2fatesbnds')
    

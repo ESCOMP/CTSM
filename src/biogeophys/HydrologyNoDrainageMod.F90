@@ -8,7 +8,7 @@ Module HydrologyNoDrainageMod
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use clm_varctl        , only : iulog, use_vichydro, use_fates
-  use clm_varcon        , only : e_ice, denh2o, denice, rpi, spval
+  use clm_varcon        , only : denh2o, denice, rpi, spval
   use CLMFatesInterfaceMod, only : hlm_fates_interface_type
   use atm2lndType       , only : atm2lnd_type
   use AerosolMod        , only : aerosol_type
@@ -245,11 +245,8 @@ contains
          snowice            => b_waterdiagnostic_inst%snowice_col            , & ! Output: [real(r8) (:)   ]  average snow ice lens                   
          snowliq            => b_waterdiagnostic_inst%snowliq_col            , & ! Output: [real(r8) (:)   ]  average snow liquid water               
          snow_persistence   => b_waterstate_inst%snow_persistence_col   , & ! Output: [real(r8) (:)   ]  counter for length of time snow-covered
-         h2osoi_liqice_10cm => b_waterdiagnostic_inst%h2osoi_liqice_10cm_col , & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
          h2osoi_ice         => b_waterstate_inst%h2osoi_ice_col         , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
          h2osoi_liq         => b_waterstate_inst%h2osoi_liq_col         , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
-         h2osoi_ice_tot     => b_waterdiagnostic_inst%h2osoi_ice_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
-         h2osoi_liq_tot     => b_waterdiagnostic_inst%h2osoi_liq_tot_col     , & ! Output: [real(r8) (:)   ]  vertically summed liquid water (kg/m2)   
          h2osoi_vol         => b_waterstate_inst%h2osoi_vol_col         , & ! Output: [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
          h2osno_top         => b_waterdiagnostic_inst%h2osno_top_col         , & ! Output: [real(r8) (:)   ]  mass of snow in top layer (col) [kg]    
          wf                 => b_waterdiagnostic_inst%wf_col                 , & ! Output: [real(r8) (:)   ]  soil water as frac. of whc for top 0.05 m 
@@ -357,9 +354,9 @@ contains
       end if
 
       if (use_aquifer_layer()) then
-         call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
+         call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
               soilhydrology_inst, soilstate_inst, temperature_inst, b_waterstate_inst, &
-              b_waterdiagnostic_inst, b_waterflux_inst)
+              b_waterflux_inst)
       else
 
          call PerchedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -370,12 +367,12 @@ contains
               num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
               b_waterstate_inst, b_waterflux_inst) 
 
-         call RenewCondensation(bounds, num_hydrologyc, filter_hydrologyc, &
-              num_urbanc, filter_urbanc,&
-              soilhydrology_inst, soilstate_inst, &
-              b_waterstate_inst, b_waterdiagnostic_inst, b_waterflux_inst)
-         
-      endif
+      end if
+
+      call RenewCondensation(bounds, num_hydrologyc, filter_hydrologyc, &
+           num_urbanc, filter_urbanc,&
+           soilhydrology_inst, soilstate_inst, &
+           b_waterstate_inst, b_waterdiagnostic_inst, b_waterflux_inst)
 
       ! BUG(wjs, 2019-09-16, ESCOMP/ctsm#762) This is needed so that we can test the
       ! tracerization of the following snow stuff without having tracerized everything
@@ -511,9 +508,6 @@ contains
          if (.not. lun%urbpoi(l)) then
             t_soi_10cm(c) = 0._r8
             tsoi17(c) = 0._r8
-            h2osoi_liqice_10cm(c) = 0._r8
-            h2osoi_liq_tot(c) = 0._r8
-            h2osoi_ice_tot(c) = 0._r8
          end if
       end do
       do j = 1, nlevsoi
@@ -538,21 +532,12 @@ contains
                if (zi(c,j) <= 0.1_r8) then
                   fracl = 1._r8
                   t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
-                  h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
-                       (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
-                       fracl
                else
                   if (zi(c,j) > 0.1_r8 .and. zi(c,j-1) < 0.1_r8) then
                      fracl = (0.1_r8 - zi(c,j-1))/dz(c,j)
                      t_soi_10cm(c) = t_soi_10cm(c) + t_soisno(c,j)*dz(c,j)*fracl
-                     h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
-                          (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
-                          fracl
                   end if
                end if
-
-               h2osoi_liq_tot(c) = h2osoi_liq_tot(c) + h2osoi_liq(c,j)
-               h2osoi_ice_tot(c) = h2osoi_ice_tot(c) + h2osoi_ice(c,j)
 
             end if
          end do
@@ -590,9 +575,18 @@ contains
       do j = 1, nlevgrnd
          do fc = 1, num_nolakec
             c = filter_nolakec(fc)
-            if ((ctype(c) == icol_sunwall .or. ctype(c) == icol_shadewall &
-                 .or. ctype(c) == icol_roof) .and. j > nlevurb) then
-            else
+            if (ctype(c) /= icol_sunwall .and. ctype(c) /= icol_shadewall &
+                 .and. ctype(c) /= icol_roof) then
+               h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
+            end if
+         end do
+      end do
+
+      do j = 1, nlevurb
+         do fc = 1, num_urbanc
+            c = filter_urbanc(fc)
+            if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall &
+                 .or. col%itype(c) == icol_roof) then
                h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
             end if
          end do

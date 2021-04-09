@@ -97,7 +97,7 @@ sub make_config_cache {
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0">Specifies clm physics</entry>
+<entry id="phys" value="$phys" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies clm physics</entry>
 </config_definition>
 EOF
    $fh->close();

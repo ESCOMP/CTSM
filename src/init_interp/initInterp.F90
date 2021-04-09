@@ -210,15 +210,15 @@ contains
     integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
     integer            :: npftso, ncolso, nlunso, ngrcso 
     logical            :: glc_elevclasses_same
-    integer , pointer  :: pftindx(:)
-    integer , pointer  :: colindx(:)     
-    integer , pointer  :: lunindx(:)     
-    integer , pointer  :: grcindx(:) 
-    logical , pointer  :: pft_activei(:), pft_activeo(:) 
-    logical , pointer  :: col_activei(:), col_activeo(:) 
-    logical , pointer  :: lun_activei(:), lun_activeo(:)
-    logical , pointer  :: grc_activei(:), grc_activeo(:)
-    integer , pointer  :: sgridindex(:)
+    integer , allocatable, target  :: pftindx(:)
+    integer , allocatable, target  :: colindx(:)
+    integer , allocatable, target  :: lunindx(:)
+    integer , allocatable, target  :: grcindx(:)
+    logical , allocatable  :: pft_activei(:), pft_activeo(:)
+    logical , allocatable  :: col_activei(:), col_activeo(:)
+    logical , allocatable  :: lun_activei(:), lun_activeo(:)
+    logical , allocatable  :: grc_activei(:), grc_activeo(:)
+    integer , pointer      :: sgridindex(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
     type(interp_multilevel_container_type) :: interp_multilevel_container
     type(interp_2dvar_type) :: var2d_i, var2d_o  ! holds metadata for 2-d variables
@@ -400,7 +400,7 @@ contains
     if (masterproc) then
        write(iulog,*)'setting up interpolators for multi-level variables'
     end if
-    interp_multilevel_container = interp_multilevel_container_type( &
+    call interp_multilevel_container%init( &
          ncid_source = ncidi, ncid_dest = ncido, &
          bounds_source = bounds_i, bounds_dest = bounds_o, &
          pftindex = pftindx, colindex = colindx)
@@ -485,7 +485,7 @@ contains
        end if
 
        ! Find which of the list of possible variables actually exists on the input file.
-       call find_var_on_file(ncidi, varname_i_options, varname_i)
+       call find_var_on_file(ncidi, varname_i_options, is_dim=.false., varname_on_file=varname_i)
 
        ! Note that, if none of the options are found, varname_i will be set to the first
        ! variable in the list, in which case the following code will determine that we
@@ -698,6 +698,20 @@ contains
        write (iulog,*) ' Successfully created initial condition file mapped from input IC file'
     end if
 
+    sgridindex => null()
+    deallocate(pftindx)
+    deallocate(colindx)
+    deallocate(lunindx)
+    deallocate(grcindx)
+    deallocate(pft_activei)
+    deallocate(col_activei)
+    deallocate(lun_activei)
+    deallocate(grc_activei)
+    deallocate(pft_activeo)
+    deallocate(col_activeo)
+    deallocate(lun_activeo)
+    deallocate(grc_activeo)
+
   end subroutine initInterp
 
   !-----------------------------------------------------------------------
@@ -823,9 +837,6 @@ contains
        call endrun('Unhandled interp_method'//errMsg(sourcefile, __LINE__))
     end select
 
-    deallocate(subgridi%lat, subgridi%lon, subgridi%coslat)
-    deallocate(subgrido%lat, subgrido%lon, subgrido%coslat)
-    
   end subroutine findMinDist
 
  !=======================================================================
@@ -1158,6 +1169,7 @@ contains
     call var2do%writevar_double(rbuf2do)
        
     deallocate(rbuf2do, rbuf2do_levelsi)
+    multilevel_interpolator => null()
 
   end subroutine interp_2d_double
 

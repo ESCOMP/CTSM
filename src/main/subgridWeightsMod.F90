@@ -301,7 +301,7 @@ contains
     ! Determine whether the given landunit is active
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istice_mec, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istsoil, istice_mec, isturb_MIN, isturb_MAX, istdlak
     !
     ! !ARGUMENTS:
     implicit none
@@ -361,7 +361,15 @@ contains
        if (lun%itype(l) == istsoil) then
           is_active_l = .true.
        end if
-
+       
+       ! Set all lake land units to active
+       ! By doing this, lakes are also run virtually in grid cells which will grow
+       ! lakes during the transient run. 
+       
+       if (lun%itype(l) == istdlak) then
+            is_active_l = .true.
+        end if
+       
     end if
 
   end function is_active_l
