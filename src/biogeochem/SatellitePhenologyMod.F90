@@ -17,7 +17,6 @@ module SatellitePhenologyMod
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : scmlat,scmlon,single_column
   use clm_varctl      , only : iulog, use_lai_streams, inst_name
   use clm_varcon      , only : grlnd
   use controlMod      , only : NLFilename
@@ -501,7 +500,6 @@ contains
     use domainMod   , only : ldomain
     use fileutils   , only : getfil
     use clm_varctl  , only : fsurdat
-    use shr_scam_mod, only : shr_scam_getCloseLatLon
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in) :: bounds
@@ -511,7 +509,6 @@ contains
     type(file_desc_t) :: ncid             ! netcdf id
     real(r8), pointer :: annlai(:,:)      ! 12 months of monthly lai from input data set
     real(r8), pointer :: mlai(:,:)        ! lai read from input files
-    real(r8):: closelat,closelon          ! single column vars
     integer :: ier                        ! error code
     integer :: g,k,l,m,n,p                ! indices
     integer :: ni,nj,ns                   ! indices
@@ -520,7 +517,6 @@ contains
     integer :: nlon_i                     ! number of input data longitudes
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data patch types
-    integer :: closelatidx,closelonidx    ! single column vars
     logical :: isgrid2d                   ! true => file is 2d
     character(len=256) :: locfn           ! local file name
     character(len=32) :: subname = 'readAnnualVegetation'
@@ -552,11 +548,6 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
     call check_dim_size(ncid, 'lsmpft', maxsoil_patches)
-
-    if (single_column) then
-       call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
-            closelat, closelon, closelatidx, closelonidx)
-    endif
 
     do k=1,12   !! loop over months and read vegetated data
 
@@ -600,7 +591,6 @@ contains
     use pftconMod        , only : noveg
     use fileutils        , only : getfil
     use spmdMod          , only : masterproc, mpicom, MPI_REAL8, MPI_INTEGER
-    use shr_scam_mod     , only : shr_scam_getCloseLatLon
     use clm_time_manager , only : get_nstep
     use netcdf
     !
@@ -620,8 +610,6 @@ contains
     integer :: nlat_i                     ! number of input data latitudes
     integer :: npft_i                     ! number of input data patch types
     integer :: ier                        ! error code
-    integer :: closelatidx,closelonidx
-    real(r8):: closelat,closelon
     logical :: readvar
     real(r8), pointer :: mlai(:,:)        ! lai read from input files
     real(r8), pointer :: msai(:,:)        ! sai read from input files
@@ -650,11 +638,6 @@ contains
 
     call getfil(fveg, locfn, 0)
     call ncd_pio_openfile (ncid, trim(locfn), 0)
-
-    if (single_column) then
-       call shr_scam_getCloseLatLon (ncid, scmlat, scmlon, closelat, closelon,&
-            closelatidx, closelonidx)
-    endif
 
     do k=1,2   !loop over months and read vegetated data
 
