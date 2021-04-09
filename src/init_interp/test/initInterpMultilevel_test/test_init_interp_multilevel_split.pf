@@ -102,6 +102,11 @@ contains
          [21._r8, 22._r8, 23._r8]
     real(r8), parameter :: coordinates_dest_second(nlev_dest_second) = &
          [21.5_r8, 22.5_r8]
+    ! The dzsoi_* values have no effect when scale_by_thickness = .false.
+    real(r8), parameter :: dzsoi_source_second(nlev_source_second) = &
+         [1._r8, 2._r8, 3._r8]
+    real(r8), parameter :: dzsoi_dest_second(nlev_dest_second) = &
+         [1._r8, 2._r8]
 
     real(r8) :: data_dest(nlev_dest_first + nlev_dest_second) = 0._r8
     real(r8) :: data_dest_expected(nlev_dest_first + nlev_dest_second) = 0._r8
@@ -115,6 +120,8 @@ contains
     interp_second = create_multilevel_interp_no_levclasses( &
          coordinates_source = coordinates_source_second, &
          coordinates_dest = coordinates_dest_second, &
+         dzsoi_source = dzsoi_source_second, &
+         dzsoi_dest = dzsoi_dest_second, &
          index_dest = index_dest, &
          npts_dest = npts_dest)
 
