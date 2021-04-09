@@ -45,7 +45,7 @@ contains
     ! !USES:
     use shr_kind_mod     , only : shr_kind_cl
     use abortutils       , only : endrun
-    use clm_time_manager , only : get_nstep, set_timemgr_init, set_nextsw_cday
+    use clm_time_manager , only : get_nstep, set_timemgr_init
     use clm_initializeMod, only : initialize1, initialize2
     use clm_instMod      , only : water_inst, lnd2atm_inst, lnd2glc_inst
     use clm_varctl       , only : finidat, single_column, clm_varctl_set, iulog
@@ -90,7 +90,6 @@ contains
     logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
     real(r8) :: scmlat                               ! single-column latitude
     real(r8) :: scmlon                               ! single-column longitude
-    real(r8) :: nextsw_cday                          ! calday from clock of next radiation computation
     character(len=SHR_KIND_CL) :: caseid             ! case identifier name
     character(len=SHR_KIND_CL) :: ctitle             ! case description title
     character(len=SHR_KIND_CL) :: starttype          ! start-type (startup, continue, branch, hybrid)
@@ -109,7 +108,6 @@ contains
     type(bounds_type) :: bounds                      ! bounds
     logical :: noland
     integer :: ni,nj
-    type(ESMF_Time) :: currTime
     real(r8)         , parameter :: rundef = -9999999._r8
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
@@ -246,18 +244,6 @@ contains
        ! Fill in infodata settings
        call seq_infodata_PutData(infodata, lnd_prognostic=.true.)
        call seq_infodata_PutData(infodata, lnd_nx=ldomain%ni, lnd_ny=ldomain%nj)
-
-       ! Get infodata info
-#if (defined COMPARE_TO_NUOPC)
-       if (nsrest == nsrStartup) then
-          call ESMF_ClockGet( Eclock, currTime=currTime)
-          call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday)
-       else
-          call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
-       end if
-#else
-       call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
-#endif
        call lnd_handle_resume( cdata_l )
 
        ! Reset shr logging to original values

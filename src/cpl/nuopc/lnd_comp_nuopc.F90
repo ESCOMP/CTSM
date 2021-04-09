@@ -348,7 +348,6 @@ contains
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
     integer                 :: localPet              ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
     integer                 :: localPeCount          ! Number of local Processors
-    real(r8)                :: nextsw_cday           ! calday from clock of next radiation computation
     character(len=CL)       :: starttype             ! start-type (startup, continue, branch, hybrid)
     character(len=CL)       :: calendar              ! calendar type name
     logical                 :: brnch_retain_casename ! flag if should retain the case name on a branch start type
@@ -625,17 +624,6 @@ contains
     call export_fields(gcomp, bounds, glc_present, rof_prognostic, &
          water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    ! Get calendar day of nextsw calculation
-    if (nsrest == nsrStartup) then
-       call ESMF_ClockGet( clock, currTime=currTime, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
-
-    call set_nextsw_cday(nextsw_cday)
 
     ! Set scalars in export state
     call State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, &
