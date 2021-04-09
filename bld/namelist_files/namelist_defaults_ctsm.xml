@@ -98,9 +98,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Method to use for stomatal conducatance -->
 <stomatalcond_method phys="clm5_1"  use_hydrstress=".true." >Medlyn2011</stomatalcond_method>
-<stomatalcond_method phys="clm5_1"  use_hydrstress=".false.">Ball-Berry1987</stomatalcond_method>
+<stomatalcond_method phys="clm5_1"  use_hydrstress=".false.">Medlyn2011</stomatalcond_method>
 <stomatalcond_method phys="clm5_0"  use_hydrstress=".true." >Medlyn2011</stomatalcond_method>
-<stomatalcond_method phys="clm5_0"  use_hydrstress=".false.">Ball-Berry1987</stomatalcond_method>
+<stomatalcond_method phys="clm5_0"  use_hydrstress=".false.">Medlyn2011</stomatalcond_method>
 <stomatalcond_method phys="clm4_5"                          >Ball-Berry1987</stomatalcond_method>
 
 <!-- Carbon isotope concentration files -->
