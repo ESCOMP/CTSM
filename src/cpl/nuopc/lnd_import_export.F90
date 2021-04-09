@@ -601,8 +601,6 @@ contains
     call check_for_errors(bounds, atm2lnd_inst, wateratm2lndbulk_inst)
 
     ! Atmosphere co2
-    ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
-    ! Note that forc_pbot is in Pa
     ! Set default value to a constant and overwrite for prognostic and diagnostic
     do g = begg,endg
        co2_ppmv_input(g) = co2_ppmv
@@ -637,6 +635,8 @@ contains
        end if
     end if
 
+    ! Note that the following does unit conversions from ppmv to partial pressures (Pa)
+    ! Note that forc_pbot is in Pa
     do g = begg,endg
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
        atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_input(g) * 1.e-6_r8 * forc_pbot

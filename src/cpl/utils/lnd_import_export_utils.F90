@@ -28,7 +28,6 @@ contains
     ! Convert the input data from the mediator to the land model
     !-------------------------------------------------------------------------
 
-    use clm_varctl, only: co2_ppmv
     use clm_varcon, only: rair, o2_molar_const
     use QSatMod, only: QSat
 
