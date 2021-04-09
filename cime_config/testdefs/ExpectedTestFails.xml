@@ -30,10 +30,59 @@
 
   <!-- aux_clm test suite failures -->
 
-  <test name="ERS_Ln9.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.IHistClm50SpGs.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start">
+  <test name="ERS_Ln12.ne0ARCTICne30x4_ne0ARCTICne30x4_mt12.IHistClm50SpGs.cheyenne_intel.clm-clm50cam6LndTuningMode_1979Start">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#1117</issue>
+    </phase>
+  </test>
+
+  <test name="DAE_N2_D_Lh12_Vnuopc.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-DA_multidrv">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>ESCOMP/CMEPS#175</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Lm1_Mmpi-serial_Vnuopc.CLM_USRDAT.I1PtClm50SpRs.cheyenne_intel.clm-USUMB">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#3905</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Lm1_Mmpi-serial.CLM_USRDAT.I1PtClm50SpRs.cheyenne_intel.clm-USUMB">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#3905</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Ld5_D_P48x1_Vnuopc.f10_f10_mg37.IHistClm51Bgc.izumi_nag.clm-decStart">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#1317</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_P48x1_D_Ld5_Vnuopc.f10_f10_mg37.I2000Clm50Cn.izumi_nag.clm-default">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#1317</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Vnuopc.f10_f10_mg37.I2000Clm50BgcCrop.izumi_pgi.clm-crop">
+    <phase name="BUILD">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#3496</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_D_Vnuopc.f10_f10_mg37.I2000Clm51BgcCrop.izumi_pgi.clm-crop">
+    <phase name="BUILD">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#3496</issue>
     </phase>
   </test>
 

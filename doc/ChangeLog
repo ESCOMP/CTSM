@@ -1,4 +1,399 @@
 ===============================================================
+Tag name:  ctsm5.1.dev030
+Originator(s):  mvertens / erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Mar 31 16:46:04 MDT 2021
+One-line Summary: New single column functionality for the NUOPC cap
+
+Purpose and description of changes
+----------------------------------
+
+Implemented new nuopc/cmeps single column functionality.
+
+In config/cesm/config_files.xml - single point domains are only used 
+for mct/cpl7. For cmeps single point meshes are now generated on the 
+fly and component domains files are no longer needed.
+env_run.xml variables PTS_LAT, PTS_LON and PTS_DOMAINFILE are used 
+to determine if there is a single point or single column run.
+If PTS_LAT and PTS_LON are not -999 and PTS_DOMAINFILE is UNSET, 
+then you have a single point run and the exact values of PTS_LAT
+and PTS_LON are used.  If PTS_LAT and PTS_LON are not -999 and 
+PTS_DOMAINFILE is not UNSET, then then the cmeps driver will recognize the nearest neighbor
+values of PTS_LAT and PTS_LON in PTS_DOMAINFILE as the single column lat and lon to use.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #1312 -- Add NUOPC tests
+   Fixes #1302 -- Setup to allow landuse.timeseries file for high resolution cases for 2000-2025
+   Fixes #1183 -- mkmapdata needs input option for large file support, current defaults unsuitable for high res grids.
+
+Known bugs introduced in this tag (include issue #):
+
+Known bugs found since the previous tag (include issue #):
+   #1317 -- MPI timeout for some izumi_nag tests reading in datm forcing files in NUOPC cap 
+   #1314 -- Send unset value for scol_lat/lon from driver
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Nine step tests changed so that they have ROF run at same frequency as ATM (like the similar CAM tests)
+  as these will fail with NUOPC since it doesn't allow you to end not on an even time-step for all components.
+  One of these tests changed to a CAM type test from decStart
+
+Changes to tests or testing: Add more NUOPC tests to test list
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne -- FAIL
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below): Ran full izumi test list for nuopc driver (failed tests appear above)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+   (List of fields change though)
+	
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, CDEPS, CMEPS
+   cime  to cime5.8.39
+   CDEPS to v0.5.0
+   CMEPS to v0.5.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1309 -- New single column functionality for NUOPC/CMEPS
+   #1310 -- run_sys_tests: add --retry option on izumi 
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev029
+Originator(s):  mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date:  Thu Mar 18 21:21:21 MDT 2021
+One-line Summary: Rework domain initialization for nuopc
+
+Purpose and description of changes
+----------------------------------
+
+Total rework of land domain initialization - no longer need domain files
+to be created with NUOPC cap.
+
+Also, significant performance improvements with the NUOPC cap.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- We still need to figure out how to apply this to LILAC: for now, LILAC
+  is still using the old method (as is MCT): reading domain information
+  from fatmlndfrac
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for NUOPC and
+limited changes for LILAC
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NUOPC, and limited changes for LILAC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+      For nuopc: changes in area (relatively large differences in the
+      f10 test in the test suite, but Mariana saw only very small
+      changes in an f09 case), landfrac; these influence l2r fields,
+      which in turn influence TWS and methane fields.
+      
+      For lilac: just changes in area
+      
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? Examination of cprnc diffs.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- rtm: rtm1_0_74 -> rtm1_0_75
+- mosart: branch_tag/pio2.n01_mosart1_0_38 -> mosart1_0_41
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1258
+- https://github.com/ESCOMP/CTSM/pull/1236 (closed and replaced by 1258)
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev028
+Originator(s):  swensosc (Sean Swenson)
+Date:  Wed Mar 17 20:08:51 MDT 2021
+One-line Summary: Change limitation of top layer evaporation/sublimation
+
+Purpose and description of changes
+----------------------------------
+
+Sublimation from top soil layer and evaporation/sublimation from top
+snow layer needs to be limited to ensure moisture states do not become
+negative. The original formulation did not always work, so we added a
+new limitation to SoilFluxesMod.
+
+Also removes a limitation in SoilHydrologyMod that seemed not to
+conserve energy and should no longer be necessary with the reworked
+limitation in SoilFluxesMod.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1253 (h2osoi_ice can go significantly negative)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- The old flux limitation in SoilHydrologyMod has been replaced by a
+  truncation of roundoff-level values followed by a check that the final
+  state is non-negative. Although this check hasn't been triggered in
+  any of our testing, it's possible that we'll run into situations where
+  we need to relax the tolerance for this check.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated carefully, but expected to be larger than
+      roundoff/same climate
+    
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+	
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1282
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev027
+Originator(s):  sacks (Bill Sacks)
+Date:  Mon Mar 15 14:05:20 MDT 2021
+One-line Summary: Update cime and other externals; includes switch to pio2
+
+Purpose and description of changes
+----------------------------------
+
+Updates cime and other externals to version in cesm2_3_alpha02b (with
+some minor changes to cime on top of that). This includes substantial
+changes to cime, including switching to PIO2 rather than PIO1.
+
+Also:
+
+- For LILAC, changes default pio_rearranger now that we're using PIO2 by
+  default
+
+- In run_sys_tests, adds '-k oed' to qsub command on cheyenne; this is
+  useful now that qpeek is disabled on cheyenne (this puts the job's
+  stdout and stderr files directly in their final location from the
+  beginning, rather than keeping them in some temporary location on the
+  compute node until the job completes)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1175 (Once there is a cime tag with pio2 as the
+  default, update to it)
+- Resolves ESCOMP/CTSM#1194 (Once we switch to pio2 by default, change
+  the default rearranger used in LILAC)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- PIO2 is now the default. This has been tested extensively, but let us
+  know if you run into any I/O related issues. Also, from testing we've
+  done, I/O performance looks better than with PIO1 in many cases, but
+  also let us know if you see a substantial degradation in I/O
+  performance.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- Some I/O-related defaults change with the use of PIO2 rather than PIO1
+
+Substantial timing or memory changes:
+- Various changes due to the change to PIO2, some of them large. For the
+  most part, timing improves with PIO2, particularly for production
+  resolutions.
+- The PFS test and many others show a substantial improvement in timing.
+  This is especially noticeable in initialization time. For example, the
+  initialization time of
+  PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel dropped from 111 sec
+  to 34 sec. (These tests were run a couple of weeks apart, before and
+  after a cheyenne upgrade, so there may be some machine variability in
+  these numbers, but I saw a big improvement a few months ago with a
+  more objective comparison.)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- pass
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for nuopc
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Just with nuopc driver
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated
+
+   The only test that changes answers is
+   SMS_D_Ld5_Vnuopc.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-default
+
+   (There are NLCOMP failures in all tests, though, due to the update to pio2.)
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- CISM: cism2_1_69 -> cism2_1_75
+- RTM: rtm1_0_73 -> rtm1_0_74
+- MOSART: mosart1_0_38 -> branch_tag/pio2.n01_mosart1_0_38
+- CIME: branch_tags/cime5.8.32_a02 -> branch_tags/cime5.8.37_a02
+- CMEPS: 7654038 -> c4acaa8
+- CDEPS: 45b7a85 -> 1f02a73
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev026
 Originator(s):  sacks (Bill Sacks)
 Date:  Mon Mar  8 13:20:33 MST 2021

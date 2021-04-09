@@ -14,6 +14,7 @@
 # -t <type>          Output type, supported values are [regional, global]
 # -r <res>           Output resolution
 # -b                 use batch mode (not default)
+# -i                 High resolution mode (Only used with -f)
 # -l                 list mapping files required (so can use check_input_data to get them)
 # -d                 debug usage -- display mkmapdata that will be run but don't execute them
 # -v                 verbose usage -- log more information on what is happening
@@ -68,6 +69,8 @@ usage() {
   echo "     you need to have a separate batch script for a supported machine"
   echo "     that calls this script interactively - you cannot submit this"
   echo "     script directly to the batch system"
+  echo "[-i|--hires]"
+  echo "     Output maps are high resolution and large file support should be used"
   echo "[-l|--list]"
   echo "     List mapping files required (use check_input_data to get them)"
   echo "     also writes data to $outfilelist"
@@ -137,6 +140,7 @@ list="no"
 outgrid=""
 gridfile="default"
 fast="no"
+netcdfout="none"
 
 while [ $# -gt 0 ]; do
    case $1 in
@@ -151,6 +155,9 @@ while [ $# -gt 0 ]; do
 	   ;;
        --fast)
 	   fast="YES"
+	   ;;
+       -i|--hires)
+           netcdfout="64bit_offset"
 	   ;;
        -l|--list)
 	   debug="YES"
@@ -202,12 +209,11 @@ if [ "$gridfile" != "default" ]; then
        exit 1
     fi
     
-    # For now, make some assumptions about user-specified grids --
-    # that they are SCRIP format, and small enough to not require
-    # large file support for the output mapping file. In the future,
-    # we may want to provide command-line options to allow the user to
-    # override these defaults.
-    DST_LRGFIL="none"
+    # For now, maked the assumption about user-specified grids --
+    # that they are SCRIP format. In the future we may want to 
+    # provide a command-line options to allow the user to
+    # override that default.
+    DST_LRGFIL=$netcdfout
     DST_TYPE="SCRIP"
 else
     if [ "$res" = "default" ]; then

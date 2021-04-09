@@ -1,5 +1,9 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev030     erik 03/31/2021 New single column functionality for the NUOPC cap
+  ctsm5.1.dev029 mvertens 03/18/2021 Rework domain initialization for nuopc
+  ctsm5.1.dev028 swensosc 03/17/2021 Change limitation of top layer evaporation/sublimation
+  ctsm5.1.dev027    sacks 03/15/2021 Update cime and other externals; includes switch to pio2
   ctsm5.1.dev026    sacks 03/08/2021 Change f10 tests to use mg37 mask
   ctsm5.1.dev025    sacks 02/23/2021 Refactor ozone code, and misc. small fixes
   ctsm5.1.dev024   slevis 02/20/2021 Grid cell-level error check for H2O
