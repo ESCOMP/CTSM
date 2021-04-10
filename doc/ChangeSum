@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev032 mvertens 04/10/2021 Fix bugs in co2 from atmosphere
+  ctsm5.1.dev031 jedwards 04/10/2021 Update externals and fixes for nuopc threading
   ctsm5.1.dev030     erik 03/31/2021 New single column functionality for the NUOPC cap
   ctsm5.1.dev029 mvertens 03/18/2021 Rework domain initialization for nuopc
   ctsm5.1.dev028 swensosc 03/17/2021 Change limitation of top layer evaporation/sublimation

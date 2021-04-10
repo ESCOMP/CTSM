@@ -78,6 +78,8 @@ module lnd_comp_nuopc
 
   logical                :: scol_valid      ! if single_column, does point have a mask of zero 
 
+  integer                :: nthrds          ! Number of threads per task in this component  
+
   character(len=*) , parameter :: orb_fixed_year       = 'fixed_year'
   character(len=*) , parameter :: orb_variable_year    = 'variable_year'
   character(len=*) , parameter :: orb_fixed_parameters = 'fixed_parameters'
@@ -475,13 +477,24 @@ contains
        call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:start::',lbnum)
     endif
 #endif
-
-    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    !$  call omp_set_num_threads(localPeCount)
+    !----------------------------------------------------------------------------                               
+    ! Initialize component threading                                                                            
+    !----------------------------------------------------------------------------                               
+                                                                                                                
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)                                               
+    if (chkerr(rc,__LINE__,u_FILE_u)) return                                                                    
+    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)                                              
+    if (chkerr(rc,__LINE__,u_FILE_u)) return                                                                    
+                                                                                                                
+    if(localPeCount == 1) then                                                                                  
+       call NUOPC_CompAttributeGet(gcomp, "nthreads", value=cvalue, rc=rc)                                      
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return     
+       read(cvalue,*) nthrds                                                                                    
+    else                                                                                                        
+       nthrds = localPeCount                                                                                    
+    endif                                                                                                       
+                                                                                                                
+    !$  call omp_set_num_threads(nthrds)                                                                        
 
     !----------------------
     ! Consistency check on namelist filename
@@ -727,16 +740,11 @@ contains
        RETURN
     end if
 
+    !$  call omp_set_num_threads(nthrds)
+
     !--------------------------------
     ! Reset share log units
     !--------------------------------
-
-    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    !$  call omp_set_num_threads(localPeCount)
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_setLogUnit (iulog)

@@ -68,7 +68,7 @@ contains
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set
     use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
-    use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd         
+    use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd
     use ESMF
     !
     ! !ARGUMENTS:
