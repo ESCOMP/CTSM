@@ -1,4 +1,97 @@
 ===============================================================
+Tag name:  ctsm5.1.dev031
+Originator(s): jedwards (Jim Edwards), sacks (Bill Sacks)
+Date:  Sat Apr 10 07:33:49 MDT 2021
+One-line Summary: Update externals and fixes for nuopc threading
+
+Purpose and description of changes
+----------------------------------
+
+(1) Some fixes for threading with the nuopc/cmeps driver. (However,
+    threading with nuopc/cmeps still doesn't work completely: see
+    https://github.com/ESCOMP/CTSM/issues/1331.)
+
+(2) Updates externals to versions needed for these nuopc threading changes
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Known bugs introduced in this tag (include issue #):
+- https://github.com/ESCOMP/CTSM/issues/1331 Some runs with NUOPC driver
+  with multiple threads can hang
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Temporarily changed
+  SMS_D_Ln9_P480x3_Vnuopc.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+  to use a 480x1 layout so that it will pass reliably (see
+  https://github.com/ESCOMP/CTSM/issues/1331)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES (but very limited)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NUOPC driver with CISM
+    - what platforms/compilers: cheyenne_intel; maybe others
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
+
+    For an unknown reason, the new externals lead to small differences
+    in global sums in the CMEPS driver/mediator. For what we assume is
+    the same reason, lnd -> glc fields can change by roundoff (probably
+    due to the global renormalization).
+
+    The only test in the aux_clm test suite where this shows up is
+    ERS_Ly3_P72x2_Vnuopc.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     Inspection of cpl hist files
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cism: cism2_1_75 -> cism_1_78
+- rtm: rtm1_0_75 -> rtm1_0_76
+- mosart: mosart1_0_41 -> mosart1_0_42
+- cime: cime5.8.39 -> cime5.8.42
+- cmeps: v0.5.0 -> v0.9.0
+- cdeps: v0.5.0 -> v0.6.0
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1319
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev030
 Originator(s):  mvertens / erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Mar 31 16:46:04 MDT 2021
