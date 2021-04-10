@@ -273,7 +273,7 @@ contains
     use clm_instMod     ,  only : water_inst, lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
     use clm_driver      ,  only : clm_drv
     use clm_time_manager,  only : get_curr_date, get_nstep, get_curr_calday, get_step_size
-    use clm_time_manager,  only : advance_timestep, set_nextsw_cday,update_rad_dtime
+    use clm_time_manager,  only : advance_timestep, update_rad_dtime
     use decompMod       ,  only : get_proc_bounds
     use abortutils      ,  only : endrun
     use clm_varctl      ,  only : iulog
@@ -357,7 +357,6 @@ contains
          curr_yr=yr_sync, curr_mon=mon_sync, curr_day=day_sync)
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
-    call set_nextsw_cday( nextsw_cday )
     dtime = get_step_size()
 
     ! Handle pause/resume signals from coupler

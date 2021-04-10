@@ -32,7 +32,7 @@ module lnd_comp_esmf
   use clm_varctl        , only : nsrStartup, nsrContinue
   use clm_varctl        , only : inst_index, inst_suffix, inst_name
   use clm_time_manager  , only : set_timemgr_init, advance_timestep
-  use clm_time_manager  , only : set_nextsw_cday, update_rad_dtime
+  use clm_time_manager  , only : update_rad_dtime
   use clm_time_manager  , only : get_nstep, get_step_size
   use clm_time_manager  , only : get_curr_date, get_curr_calday
   use clm_initializeMod , only : initialize1, initialize2

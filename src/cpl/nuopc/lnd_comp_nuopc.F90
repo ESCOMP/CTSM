@@ -26,7 +26,7 @@ module lnd_comp_nuopc
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
-  use clm_time_manager       , only : set_nextsw_cday, update_rad_dtime
+  use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
   use clm_time_manager       , only : get_curr_date, get_curr_calday
   use clm_initializeMod      , only : initialize1, initialize2
@@ -770,7 +770,6 @@ contains
     call State_GetScalar(importState, &
          flds_scalar_index_nextsw_cday, nextsw_cday, &
          flds_scalar_name, flds_scalar_num, rc)
-    call set_nextsw_cday( nextsw_cday )
 
     ! Get proc bounds
     call get_proc_bounds(bounds)
