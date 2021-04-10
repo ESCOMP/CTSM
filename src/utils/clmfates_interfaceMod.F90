@@ -104,7 +104,7 @@ module CLMFatesInterfaceMod
 !   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
-   use FatesInterfaceTypesMod , only : fates_interface_type
+   use FatesInterfaceMod , only : fates_interface_type
    use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
    use FatesInterfaceMod, only : SetFatesGlobalElements
    use FatesInterfaceMod     , only : allocate_bcin
@@ -1335,7 +1335,8 @@ module CLMFatesInterfaceMod
                ! Convert newly read-in vectors into the FATES namelist state variables
                ! ------------------------------------------------------------------------
                call this%fates_restart%create_patchcohort_structure(nc, &
-                    this%fates(nc)%nsites, this%fates(nc)%sites, this%fates(nc)%bc_in)
+                    this%fates(nc)%nsites, this%fates(nc)%sites, this%fates(nc)%bc_in, &
+                    this%fates(nc)%bc_out)
                
                call this%fates_restart%get_restart_vectors(nc, this%fates(nc)%nsites, &
                     this%fates(nc)%sites )
@@ -1470,7 +1471,9 @@ module CLMFatesInterfaceMod
            call get_clump_bounds(nc, bounds_clump)
 
            do s = 1,this%fates(nc)%nsites
-              call init_site_vars(this%fates(nc)%sites(s),this%fates(nc)%bc_in(s) )
+              call init_site_vars(this%fates(nc)%sites(s), &
+                                  this%fates(nc)%bc_in(s), &
+                                  this%fates(nc)%bc_out(s) )
               call zero_site(this%fates(nc)%sites(s))
            end do
            
