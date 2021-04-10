@@ -1,4 +1,89 @@
 ===============================================================
+Tag name:  ctsm5.1.dev032
+Originator(s): mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date:  Sat Apr 10 09:47:25 MDT 2021
+One-line Summary: Fix bugs in co2 from atmosphere
+
+Purpose and description of changes
+----------------------------------
+
+ctsm5.1.dev002 introduced bugs when receiving co2 from the atmosphere,
+both for mct and nuopc:
+- For mct, with spatially-varying co2 from atmosphere, all grid cells on
+  a given processor were given the co2 value from the last grid cell on
+  that processor
+- For nuopc, co2 from atmosphere was ignored and overridden with a
+  constant co2 value
+
+This tag fixes both of those bugs.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1327 (When using co2 from atmosphere with mct, it
+  looks like values are taken just from the last gridcell on each proc)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Cases where CTSM receives CO2 from atmosphere
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      potentially new climate
+
+   Answer changes due to fixing these issues:
+   - For mct, with spatially-varying co2 from atmosphere, all grid cells on
+     a given processor were given the co2 value from the last grid cell on
+     that processor
+   - For nuopc, co2 from atmosphere was ignored and overridden with a
+     constant co2 value
+
+   In the test suite, this leads to changes in:
+   - ERP_D_Ld10_P36x2_Vnuopc.f10_f10_mg37.IHistClm51BgcCrop.cheyenne_intel.clm-ciso_decStart
+   - ERS_Ly3_P72x2_Vnuopc.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+   - SMS_D_Ln9_P480x1_Vnuopc.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+
+   But more widespread changes are expected - including for mct - if
+   coupled runs can generate spatially-varying co2 from atm
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+- Merges the first part of the changes in
+  https://github.com/ESCOMP/CTSM/pull/1330
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev031
 Originator(s): jedwards (Jim Edwards), sacks (Bill Sacks)
 Date:  Sat Apr 10 07:33:49 MDT 2021
