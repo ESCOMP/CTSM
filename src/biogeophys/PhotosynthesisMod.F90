@@ -1652,7 +1652,11 @@ contains
                psn_wc_z(p,iv) = 0._r8
                psn_wj_z(p,iv) = 0._r8
                psn_wp_z(p,iv) = 0._r8
-               rs_z(p,iv) = min(rsmax0, 1._r8/bbb(p) * cf)
+               if (      stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
+                  rs_z(p,iv) = min(rsmax0, 1._r8/bbb(p) * cf)
+               else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
+                  rs_z(p,iv) = min(rsmax0, 1._r8/medlynintercept(patch%itype(p)) * cf)
+               end if
                ci_z(p,iv) = 0._r8
                rh_leaf(p) = 0._r8
 
