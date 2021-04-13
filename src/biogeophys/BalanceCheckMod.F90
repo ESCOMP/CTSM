@@ -11,6 +11,7 @@ module BalanceCheckMod
   use decompMod          , only : bounds_type
   use abortutils         , only : endrun
   use clm_varctl         , only : iulog
+  use clm_varctl         , only : use_fates_planthydro
   use clm_varcon         , only : namep, namec, nameg
   use clm_varpar         , only : nlevsoi
   use GetGlobalValuesMod , only : GetGlobalIndex
@@ -723,7 +724,7 @@ contains
 
        errh2o_max_val = maxval(abs(errh2o_grc(bounds%begg:bounds%endg)))
 
-       if (errh2o_max_val > h2o_warning_thresh) then
+       if (errh2o_max_val > h2o_warning_thresh .and. .not.use_fates_planthydro) then
 
           indexg = maxloc( abs(errh2o_grc(bounds%begg:bounds%endg)), 1 ) + bounds%begg - 1
           write(iulog,*)'WARNING:  grid cell-level water balance error ',&
