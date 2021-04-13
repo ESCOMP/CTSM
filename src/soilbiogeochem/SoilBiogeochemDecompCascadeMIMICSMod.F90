@@ -511,7 +511,7 @@ contains
        soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     !
     ! !DESCRIPTION:
-    ! Calculate rate constants and decomposition pathways for the MIMICS
+    ! Calculate rates and decomposition pathways for the MIMICS
     ! decomposition cascade model
     !
     ! !USES:
@@ -531,16 +531,16 @@ contains
     real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
     real(r8), allocatable:: fr(:,:)         ! column-level rooting fraction by soil depth
     real(r8):: psi                          ! temporary soilpsi for water scalar
-    real(r8):: k_l1_m1                      ! decomposition rate constant litter 1 (1/sec)
-    real(r8):: k_l2_m1                      ! decomposition rate constant litter 2 (1/sec)
-    real(r8):: k_s3_m1                      ! decomposition rate constant SOM 3 (1/sec)
-    real(r8):: k_l1_m2                      ! decomposition rate constant litter 1 (1/sec)
-    real(r8):: k_l2_m2                      ! decomposition rate constant litter 2 (1/sec)
-    real(r8):: k_s3_m2                      ! decomposition rate constant SOM 3 (1/sec)
-    real(r8):: k_s1_s3                      ! decomposition rate constant SOM 1 (1/sec)
-    real(r8):: k_s2_s3                      ! decomposition rate constant SOM 2 (1/sec)
-    real(r8):: k_m1                         ! decomposition rate constant microbial 1 (1/sec)
-    real(r8):: k_m2                         ! decomposition rate constant microbial 2 (1/sec)
+    real(r8):: k_l1_m1                      ! decomposition rate litter 1 (1/sec)
+    real(r8):: k_l2_m1                      ! decomposition rate litter 2 (1/sec)
+    real(r8):: k_s3_m1                      ! decomposition rate SOM 3 (1/sec)
+    real(r8):: k_l1_m2                      ! decomposition rate litter 1 (1/sec)
+    real(r8):: k_l2_m2                      ! decomposition rate litter 2 (1/sec)
+    real(r8):: k_s3_m2                      ! decomposition rate SOM 3 (1/sec)
+    real(r8):: k_s1_s3                      ! decomposition rate SOM 1 (1/sec)
+    real(r8):: k_s2_s3                      ! decomposition rate SOM 2 (1/sec)
+    real(r8):: k_m1                         ! decomposition rate microbe 1 (1/sec)
+    real(r8):: k_m2                         ! decomposition rate microbe 2 (1/sec)
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
     real(r8):: vmax_l1_m1_mimics            !
     real(r8):: vmax_l2_m1_mimics            !
@@ -587,7 +587,7 @@ contains
          
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
-         decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)
+         decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
 
@@ -799,6 +799,7 @@ contains
             end do
          end do
 
+         ! TODO Discuss @wwieder's concerns about breaking the methane code
          if (use_lch4) then
             ! Calculate ANOXIA
             if (anoxia) then
@@ -883,7 +884,7 @@ contains
          end do
       end do
 
-      ! calculate rate constants for all litter and som pools
+      ! calculate rates for all litter and som pools
       ! TODO I will start updating this section when I feel confident in my list
       !      of k_ factors. For example
       !      - Should decomp_k be dimensioned (c,j,i_l1m1) instead?
