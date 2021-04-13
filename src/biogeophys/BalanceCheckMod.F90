@@ -724,6 +724,8 @@ contains
 
        errh2o_max_val = maxval(abs(errh2o_grc(bounds%begg:bounds%endg)))
 
+       ! BUG(rgk, 2021-04-13, ESCOMP/CTSM#1314) Temporarily bypassing gridcell-level check with use_fates_planthydro until issue 1314 is resolved
+       
        if (errh2o_max_val > h2o_warning_thresh .and. .not.use_fates_planthydro) then
 
           indexg = maxloc( abs(errh2o_grc(bounds%begg:bounds%endg)), 1 ) + bounds%begg - 1
