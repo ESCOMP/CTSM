@@ -8,7 +8,7 @@ module CNCStateUpdate1Mod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp
   use clm_time_manager                   , only : get_step_size_real
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varpar                         , only : i_met_lit, i_litr2, i_litr3, i_cwd
   use pftconMod                          , only : npcropmin, nc3crop, pftcon
   use abortutils                         , only : endrun
   use decompMod                          , only : bounds_type
@@ -71,9 +71,9 @@ contains
              c = filter_soilc_with_inactive(fc)
              cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
                   cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
-             cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
+             cs_soil%decomp_cpools_vr_col(c,j,i_litr2) = cs_soil%decomp_cpools_vr_col(c,j,i_litr2) + &
                   cf_veg%dwt_frootc_to_litr_cel_c_col(c,j) * dt
-             cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + &
+             cs_soil%decomp_cpools_vr_col(c,j,i_litr3) = cs_soil%decomp_cpools_vr_col(c,j,i_litr3) + &
                   cf_veg%dwt_frootc_to_litr_lig_c_col(c,j) * dt
              cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + &
                   ( cf_veg%dwt_livecrootc_to_cwdc_col(c,j) + cf_veg%dwt_deadcrootc_to_cwdc_col(c,j) ) * dt
@@ -91,8 +91,8 @@ contains
     ! CStateUpdate1) if use_fates is true? Specifically, some portion or all of the fluxes
     ! from these updates in CStateUpdate1:
     ! cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = cf_soil%FATES_c_to_litr_lab_c_col(c,j) * dt
-    ! cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = cf_soil%FATES_c_to_litr_cel_c_col(c,j) * dt
-    ! cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = cf_soil%FATES_c_to_litr_lig_c_col(c,j) * dt
+    ! cf_soil%decomp_cpools_sourcesink_col(c,j,i_litr2) = cf_soil%FATES_c_to_litr_cel_c_col(c,j) * dt
+    ! cf_soil%decomp_cpools_sourcesink_col(c,j,i_litr3) = cf_soil%FATES_c_to_litr_lig_c_col(c,j) * dt
 
     end associate
 
@@ -197,9 +197,9 @@ contains
                ! phenology and dynamic land cover fluxes
                cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = &
                     cf_veg%phenology_c_to_litr_met_c_col(c,j) *dt
-               cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = &
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_litr2) = &
                     cf_veg%phenology_c_to_litr_cel_c_col(c,j) *dt
-               cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = &
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_litr3) = &
                     cf_veg%phenology_c_to_litr_lig_c_col(c,j) *dt
    
                ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
@@ -216,8 +216,8 @@ contains
                ! TODO(wjs, 2017-01-02) Should some portion or all of the following fluxes
                ! be moved to the updates in CStateUpdateDynPatch?
                cf_soil%decomp_cpools_sourcesink_col(c,j,i_met_lit) = cf_soil%FATES_c_to_litr_lab_c_col(c,j) * dt
-               cf_soil%decomp_cpools_sourcesink_col(c,j,i_cel_lit) = cf_soil%FATES_c_to_litr_cel_c_col(c,j) * dt
-               cf_soil%decomp_cpools_sourcesink_col(c,j,i_lig_lit) = cf_soil%FATES_c_to_litr_lig_c_col(c,j) * dt
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_litr2) = cf_soil%FATES_c_to_litr_cel_c_col(c,j) * dt
+               cf_soil%decomp_cpools_sourcesink_col(c,j,i_litr3) = cf_soil%FATES_c_to_litr_lig_c_col(c,j) * dt
             end do
          end do
       endif

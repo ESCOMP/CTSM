@@ -8,7 +8,7 @@ module CNNStateUpdate1Mod
   use shr_kind_mod                    , only: r8 => shr_kind_r8
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
-  use clm_varpar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varpar                      , only : i_met_lit, i_litr2, i_litr3, i_cwd
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
   use clm_varcon                      , only : nitrif_n2o_loss_frac
   use pftconMod                       , only : npcropmin, pftcon
@@ -67,9 +67,9 @@ contains
           c = filter_soilc_with_inactive(fc)
           ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + &
                nf_veg%dwt_frootn_to_litr_met_n_col(c,j) * dt
-          ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + &
+          ns_soil%decomp_npools_vr_col(c,j,i_litr2) = ns_soil%decomp_npools_vr_col(c,j,i_litr2) + &
                nf_veg%dwt_frootn_to_litr_cel_n_col(c,j) * dt
-          ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + &
+          ns_soil%decomp_npools_vr_col(c,j,i_litr3) = ns_soil%decomp_npools_vr_col(c,j,i_litr3) + &
                nf_veg%dwt_frootn_to_litr_lig_n_col(c,j) * dt
           ns_soil%decomp_npools_vr_col(c,j,i_cwd) = ns_soil%decomp_npools_vr_col(c,j,i_cwd) + &
                ( nf_veg%dwt_livecrootn_to_cwdn_col(c,j) + nf_veg%dwt_deadcrootn_to_cwdn_col(c,j) ) * dt
@@ -132,10 +132,10 @@ contains
             nf_soil%decomp_npools_sourcesink_col(c,j,i_met_lit) = &
                  nf_veg%phenology_n_to_litr_met_n_col(c,j) * dt
 
-            nf_soil%decomp_npools_sourcesink_col(c,j,i_cel_lit) = &
+            nf_soil%decomp_npools_sourcesink_col(c,j,i_litr2) = &
                  nf_veg%phenology_n_to_litr_cel_n_col(c,j) * dt
 
-            nf_soil%decomp_npools_sourcesink_col(c,j,i_lig_lit) = &
+            nf_soil%decomp_npools_sourcesink_col(c,j,i_litr3) = &
                  nf_veg%phenology_n_to_litr_lig_n_col(c,j) * dt
 
             ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the

@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeCNMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varpar                         , only : i_met_lit, i_litr2, i_litr3, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -32,6 +32,13 @@ module SoilBiogeochemDecompCascadeCNMod
   public :: readParams
   public :: init_decompcascade_cn
   public :: decomp_rate_constants_cn
+
+  ! !PRIVATE DATA MEMBERS
+  integer, private            :: i_soil1   = -9         ! Soil Organic Matter (SOM) first pool
+  integer, private            :: i_soil2   = -9         ! SOM second pool
+  integer, private            :: i_soil3   = -9         ! SOM third pool
+  integer, private            :: i_soil4   = -9         ! SOM fourth pool
+  integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metabolic
 
   type, private :: params_type
      real(r8):: cn_s1_cn        !C:N for SOM 1
@@ -244,13 +251,6 @@ contains
     real(r8) :: cn_s3
     real(r8) :: cn_s4
 
-    integer :: i_litr1
-    integer :: i_litr2
-    integer :: i_litr3
-    integer :: i_soil1
-    integer :: i_soil2
-    integer :: i_soil3
-    integer :: i_soil4
     integer :: i_l1s1
     integer :: i_l2s2
     integer :: i_l3s3
@@ -302,7 +302,6 @@ contains
 
       !-------------------  list of pools and their attributes  ------------
 
-      i_litr1 = i_met_lit
       floating_cn_ratio_decomp_pools(i_litr1) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_litr1) = 'litr1'
       decomp_cascade_con%decomp_pool_name_history(i_litr1) = 'LITR1'
@@ -317,7 +316,7 @@ contains
       is_cellulose(i_litr1) = .false.
       is_lignin(i_litr1) = .false.
 
-      i_litr2 = i_cel_lit
+      i_litr2 = i_litr1 + 1
       floating_cn_ratio_decomp_pools(i_litr2) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_litr2) = 'litr2'
       decomp_cascade_con%decomp_pool_name_history(i_litr2) = 'LITR2'
@@ -332,7 +331,7 @@ contains
       is_cellulose(i_litr2) = .true.
       is_lignin(i_litr2) = .false.
 
-      i_litr3 = i_lig_lit
+      i_litr3 = i_litr2 + 1
       floating_cn_ratio_decomp_pools(i_litr3) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_litr3) = 'litr3'
       decomp_cascade_con%decomp_pool_name_history(i_litr3) = 'LITR3'
@@ -347,7 +346,9 @@ contains
       is_cellulose(i_litr3) = .false.
       is_lignin(i_litr3) = .true.
 
+      i_cwd = i_litr3
       if (.not. use_fates) then
+         i_cwd = i_litr3 + 1
          floating_cn_ratio_decomp_pools(i_cwd) = .true.
          decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
          decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
@@ -363,11 +364,7 @@ contains
          is_lignin(i_cwd) = .false.
       end if
 
-      if ( .not. use_fates ) then
-         i_soil1 = 5
-      else
-         i_soil1 = 4
-      endif
+      i_soil1 = i_cwd + 1
       floating_cn_ratio_decomp_pools(i_soil1) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
       decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
@@ -382,11 +379,7 @@ contains
       is_cellulose(i_soil1) = .false.
       is_lignin(i_soil1) = .false.
 
-      if ( .not. use_fates ) then
-         i_soil2 = 6
-      else
-         i_soil2 = 5
-      endif
+      i_soil2 = i_soil1 + 1
       floating_cn_ratio_decomp_pools(i_soil2) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_soil2) = 'soil2'
       decomp_cascade_con%decomp_pool_name_history(i_soil2) = 'SOIL2'
@@ -401,11 +394,7 @@ contains
       is_cellulose(i_soil2) = .false.
       is_lignin(i_soil2) = .false.
 
-      if ( .not. use_fates ) then
-         i_soil3 = 7
-      else
-         i_soil3 = 6
-      endif
+      i_soil3 = i_soil2 + 1
       floating_cn_ratio_decomp_pools(i_soil3) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_soil3) = 'soil3'
       decomp_cascade_con%decomp_pool_name_history(i_soil3) = 'SOIL3'
@@ -420,11 +409,7 @@ contains
       is_cellulose(i_soil3) = .false.
       is_lignin(i_soil3) = .false.
 
-      if ( .not. use_fates ) then
-         i_soil4 = 8
-      else
-         i_soil4 = 7
-      endif
+      i_soil4 = i_soil3 + 1
       floating_cn_ratio_decomp_pools(i_soil4) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_soil4) = 'soil4'
       decomp_cascade_con%decomp_pool_name_history(i_soil4) = 'SOIL4'

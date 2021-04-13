@@ -8,7 +8,7 @@ module CNNStateUpdate2Mod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevsoi, nlevdecomp
-  use clm_varpar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varpar                      , only : i_met_lit, i_litr2, i_litr3, i_cwd
   use clm_varctl                      , only : iulog
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
@@ -66,10 +66,10 @@ contains
 
             ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = &
                  ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + nf_veg%gap_mortality_n_to_litr_met_n_col(c,j) * dt
-            ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + nf_veg%gap_mortality_n_to_litr_cel_n_col(c,j) * dt
-            ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + nf_veg%gap_mortality_n_to_litr_lig_n_col(c,j) * dt
+            ns_soil%decomp_npools_vr_col(c,j,i_litr2) = &
+                 ns_soil%decomp_npools_vr_col(c,j,i_litr2) + nf_veg%gap_mortality_n_to_litr_cel_n_col(c,j) * dt
+            ns_soil%decomp_npools_vr_col(c,j,i_litr3) = &
+                 ns_soil%decomp_npools_vr_col(c,j,i_litr3) + nf_veg%gap_mortality_n_to_litr_lig_n_col(c,j) * dt
             ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
          end do
@@ -171,10 +171,10 @@ contains
             c = filter_soilc(fc)
             ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = &
                  ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + nf_veg%harvest_n_to_litr_met_n_col(c,j) * dt
-            ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + nf_veg%harvest_n_to_litr_cel_n_col(c,j) * dt
-            ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + nf_veg%harvest_n_to_litr_lig_n_col(c,j) * dt
+            ns_soil%decomp_npools_vr_col(c,j,i_litr2) = &
+                 ns_soil%decomp_npools_vr_col(c,j,i_litr2) + nf_veg%harvest_n_to_litr_cel_n_col(c,j) * dt
+            ns_soil%decomp_npools_vr_col(c,j,i_litr3) = &
+                 ns_soil%decomp_npools_vr_col(c,j,i_litr3) + nf_veg%harvest_n_to_litr_lig_n_col(c,j) * dt
             ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
          end do

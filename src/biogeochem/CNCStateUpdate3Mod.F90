@@ -9,7 +9,7 @@ module CNCStateUpdate3Mod
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
   use abortutils                     , only : endrun
   use clm_time_manager               , only : get_step_size_real
-  use clm_varpar                     , only : nlevdecomp, ndecomp_pools, i_cwd, i_met_lit, i_cel_lit, i_lig_lit
+  use clm_varpar                     , only : nlevdecomp, ndecomp_pools, i_cwd, i_met_lit, i_litr2, i_litr3
   use CNVegCarbonStateType          , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType           , only : cnveg_carbonflux_type
   use SoilBiogeochemCarbonStateType , only : soilbiogeochem_carbonstate_type
@@ -66,9 +66,9 @@ contains
             ! patch-level wood to column-level litter (uncombusted wood)
             cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
                  cf_veg%m_c_to_litr_met_fire_col(c,j)* dt
-            cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
+            cs_soil%decomp_cpools_vr_col(c,j,i_litr2) = cs_soil%decomp_cpools_vr_col(c,j,i_litr2) + &
                  cf_veg%m_c_to_litr_cel_fire_col(c,j)* dt
-            cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_lig_lit) + &
+            cs_soil%decomp_cpools_vr_col(c,j,i_litr3) = cs_soil%decomp_cpools_vr_col(c,j,i_litr3) + &
                  cf_veg%m_c_to_litr_lig_fire_col(c,j)* dt
          end do
       end do

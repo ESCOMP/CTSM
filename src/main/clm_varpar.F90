@@ -64,9 +64,9 @@ module clm_varpar
   ! constants for decomposition cascade
 
   integer, public, parameter :: i_met_lit  = 1
-  integer, public, parameter :: i_cel_lit  = i_met_lit + 1
-  integer, public, parameter :: i_lig_lit  = i_cel_lit + 1
-  integer, public    :: i_cwd
+  integer, public :: i_litr2 = -9  ! Second litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_litr3 = -9  ! Third litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_cwd   = -9  ! Index of the coarse woody debris pool; overwritten in SoilBiogeochemDecompCascade*Mod
 
   integer, public :: ndecomp_pools
   integer, public :: ndecomp_cascade_transitions
@@ -227,8 +227,17 @@ contains
        write(iulog, *)
     end if
 
+    ! We hardwire these parameters here because we use them
+    ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
+    ! init_decompcascade_bgc or init_decompcascade_cn, where they could have
+    ! otherwise been derived on the fly. For reference,
+    ! - in init_decompcascade_bgc
+    ! ndecomp_pools would get the value of i_soil3 and
+    ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
+    ! - in init_decompcascade_cn
+    ! ndecomp_pools would get the value of i_soil4 and
+    ! ndecomp_cascade_transitions would get the value of i_s4atm or i_cwdl3
     if ( use_fates ) then
-       i_cwd = 0
        if (use_century_decomp) then
           ndecomp_pools = 6
           ndecomp_cascade_transitions = 8
@@ -237,7 +246,6 @@ contains
           ndecomp_cascade_transitions = 7
        end if
     else
-       i_cwd = 4
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
