@@ -294,7 +294,7 @@ contains
     ! Read/Write module information to/from restart file.
     !
     ! !USES:
-    use clm_varcon       , only : nameg
+    use clm_varcon       , only : nameg, namec
     use ncdio_pio        , only : file_desc_t, ncd_double
     use restUtilMod
     !
@@ -328,6 +328,15 @@ contains
          long_name=this%info%lname('urban canopy specific humidity'), &
          units='kg/kg', &
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
+
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('TOTAL_PLANT_STORED_H2O'), &
+         xtype=ncd_double, dim1name=namec, &
+         long_name=this%info%lname('total plant stored water (for fates hydro)'), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%total_plant_stored_h2o_col)
+
 
   end subroutine Restart
 
