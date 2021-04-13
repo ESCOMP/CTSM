@@ -1324,16 +1324,18 @@ contains
 
          if (c3flag(p)) then
             qe(p) = 0._r8
-            bbbopt(p) = 10000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = 10000._r8
          else
             qe(p) = 0.05_r8
-            bbbopt(p) = 40000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = 40000._r8
          end if
 
          ! Soil water stress applied to Ball-Berry parameters
 
-         bbb(p) = max (bbbopt(p)*btran(p), 1._r8)
-         mbb(p) = mbbopt(patch%itype(p))
+         if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) then
+            bbb(p) = max (bbbopt(p)*btran(p), 1._r8)
+            mbb(p) = mbbopt(patch%itype(p))
+         end if
 
          ! kc, ko, cp, from: Bernacchi et al (2001) Plant, Cell and Environment 24:253-259
          !
@@ -2925,10 +2927,10 @@ contains
 
          if (c3flag(p)) then
             qe(p) = 0._r8
-            bbbopt(p) = 10000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = 10000._r8
          else
             qe(p) = 0.05_r8
-            bbbopt(p) = 40000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = 40000._r8
          end if
  
          if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
