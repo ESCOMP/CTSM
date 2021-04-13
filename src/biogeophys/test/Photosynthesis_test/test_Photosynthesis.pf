@@ -1,0 +1,27 @@
+module test_Photosynthesis
+  
+  ! Tests of PhotosynthesisMod.F90
+  
+  use pfunit_mod
+  use PhotosynthesisMod
+
+  implicit none
+  
+  @TestCase
+  type, extends(TestCase) :: TestPhotosynthesis
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestPhotosynthesis
+  
+contains
+  
+  subroutine setUp(this)
+    class(TestPhotosynthesis), intent(inout) :: this
+  end subroutine setUp
+  
+  subroutine tearDown(this)
+    class(TestPhotosynthesis), intent(inout) :: this
+  end subroutine tearDown
+
+end module test_Photosynthesis
