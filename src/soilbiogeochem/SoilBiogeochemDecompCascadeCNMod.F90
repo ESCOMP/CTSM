@@ -571,13 +571,6 @@ contains
      real(r8):: ck_frag                      ! corrected fragmentation rate constant CWD
      real(r8):: cwdc_loss                    ! fragmentation rate for CWD carbon (gC/m2/s)
      real(r8):: cwdn_loss                    ! fragmentation rate for CWD nitrogen (gN/m2/s)
-     integer :: i_litr1
-     integer :: i_litr2
-     integer :: i_litr3
-     integer :: i_soil1
-     integer :: i_soil2
-     integer :: i_soil3
-     integer :: i_soil4
      integer :: c, fc, j, k, l
      real(r8):: Q10                          ! temperature dependence
      real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
@@ -662,21 +655,6 @@ contains
           k_s2 = k_s2 * params_inst%spinup_vector(2)
           k_s3 = k_s3 * params_inst%spinup_vector(3)
           k_s4 = k_s4 * params_inst%spinup_vector(4)
-       endif
-
-       i_litr1 = 1
-       i_litr2 = 2
-       i_litr3 = 3
-       if (use_fates) then
-          i_soil1 = 4
-          i_soil2 = 5
-          i_soil3 = 6
-          i_soil4 = 7
-       else
-          i_soil1 = 5
-          i_soil2 = 6
-          i_soil3 = 7
-          i_soil4 = 8
        endif
 
        !--- time dependent coefficients-----!
@@ -842,64 +820,45 @@ contains
           o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
        end if
 
-       if (use_vertsoilc) then
-          ! add a term to reduce decomposition rate at depth
-          ! for now used a fixed e-folding depth
-          do j = 1, nlevdecomp
-             do fc = 1,num_soilc
-                c = filter_soilc(fc)
-                depth_scalar(c,j) = exp(-zsoi(j)/decomp_depth_efolding)
-             end do
+       ! add a term to reduce decomposition rate at depth
+       ! for now used a fixed e-folding depth
+       do j = 1, nlevdecomp
+          do fc = 1, num_soilc
+             c = filter_soilc(fc)
+             if (use_vertsoilc) then
+                depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
+             else
+                depth_scalar(c,j) = 1.0_r8
+             end if
           end do
-       end if
+       end do
 
-      ! calculate rate constants for all litter and som pools
-       if (use_vertsoilc) then
-          do j = 1,nlevdecomp
-             do fc = 1,num_soilc
-                c = filter_soilc(fc)
-                decomp_k(c,j,i_litr1) = k_l1 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_litr2) = k_l2 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_litr3) = k_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil1) = k_s1 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil2) = k_s2 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil3) = k_s3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil4) = k_s4 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-             end do
+       ! calculate rate constants for all litter and som pools
+       do j = 1,nlevdecomp
+          do fc = 1,num_soilc
+             c = filter_soilc(fc)
+             decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_litr2) = k_l2    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_litr3) = k_l3    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             decomp_k(c,j,i_soil4) = k_s4    * t_scalar(c,j) * w_scalar(c,j) * &
+                depth_scalar(c,j) * o_scalar(c,j) / dt
+             ! same for cwd but only if fates is not enabled; fates handles CWD
+             ! on its own structure
+             if (.not. use_fates) then
+                decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
+                   depth_scalar(c,j) * o_scalar(c,j) / dt
+             end if
           end do
-       else
-          do j = 1,nlevdecomp
-             do fc = 1,num_soilc
-                c = filter_soilc(fc)
-                decomp_k(c,j,i_litr1) = k_l1 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_litr2) = k_l2 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_litr3) = k_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil1) = k_s1 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil2) = k_s2 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil3) = k_s3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                decomp_k(c,j,i_soil4) = k_s4 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-             end do
-          end do
-       end if
-
-      ! do the same for cwd, but only if fates is not enabled (because fates handles CWD on its own structure
-       if (.not. use_fates) then
-          if (use_vertsoilc) then
-             do j = 1,nlevdecomp
-                do fc = 1,num_soilc
-                   c = filter_soilc(fc)
-                   decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) / dt
-                end do
-             end do
-          else
-             do j = 1,nlevdecomp
-                do fc = 1,num_soilc
-                   c = filter_soilc(fc)
-                   decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) / dt
-                end do
-             end do
-          end if
-       end if
+       end do
 
      end associate
 

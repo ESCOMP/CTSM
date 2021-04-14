@@ -974,70 +974,43 @@ contains
          end do
       endif
 
-      if (use_vertsoilc) then
-         ! add a term to reduce decomposition rate at depth
-         ! for now used a fixed e-folding depth
-         do j = 1, nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               depth_scalar(c,j) = exp(-zsoi(j)/decomp_depth_efolding)
-            end do
+      ! add a term to reduce decomposition rate at depth
+      ! for now used a fixed e-folding depth
+      do j = 1, nlevdecomp
+         do fc = 1, num_soilc
+            c = filter_soilc(fc)
+            if (use_vertsoilc) then
+               depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
+            else
+               depth_scalar(c,j) = 1.0_r8
+            end if
          end do
-      end if
+      end do
 
       ! calculate rate constants for all litter and som pools
-      if (use_vertsoilc) then
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_l1(c)
-               decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_l23(c)
-               decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_l23(c)
-               decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_s1(c)
-               decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_s2(c)
-               decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j) &
-                                       * spinup_geogterm_s3(c)
-            end do
+      do j = 1,nlevdecomp
+         do fc = 1,num_soilc
+            c = filter_soilc(fc)
+            decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * &
+               depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c)
+            decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
+               depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
+            decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
+               depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
+            decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
+               depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
+            decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * &
+               depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c)
+            decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * &
+               depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
+            ! same for cwd but only if fates is not enabled; fates handles CWD
+            ! on its own structure
+            if (.not. use_fates) then
+               decomp_k(c,j,i_cwd) = k_frag * t_scalar(c,j) * w_scalar(c,j) * &
+                  depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_cwd(c)
+            end if
          end do
-      else
-         do j = 1,nlevdecomp
-            do fc = 1,num_soilc
-               c = filter_soilc(fc)
-               decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c)
-               decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
-               decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
-               decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
-               decomp_k(c,j,i_soil2) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c)
-               decomp_k(c,j,i_soil3) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
-            end do
-         end do
-      end if
-
-      ! do the same for cwd, but only if fates is not enabled, because fates handles CWD on its own structure
-      if (.not. use_fates) then
-         if (use_vertsoilc) then
-            do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
-                  decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * depth_scalar(c,j) * &
-                       o_scalar(c,j) * spinup_geogterm_cwd(c)
-               end do
-            end do
-         else
-            do j = 1,nlevdecomp
-               do fc = 1,num_soilc
-                  c = filter_soilc(fc)
-                  decomp_k(c,j,i_cwd)   = k_frag  * t_scalar(c,j) * w_scalar(c,j) * &
-                       o_scalar(c,j) * spinup_geogterm_cwd(c)
-               end do
-            end do
-         end if
-      end if
+      end do
 
     end associate
 
