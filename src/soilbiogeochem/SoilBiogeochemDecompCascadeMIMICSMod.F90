@@ -868,9 +868,6 @@ contains
       end if
 
       ! Term that reduces decomposition rate at depth
-      ! TODO BFB refactor: Reduced code repetition by defining
-      !      depth_scalar(c,j) = 1.0_r8 in the else instead of repeating the
-      !      decomp_k lines. Do this in BGC, too.
       do j = 1, nlevdecomp
          do fc = 1, num_soilc
             c = filter_soilc(fc)
