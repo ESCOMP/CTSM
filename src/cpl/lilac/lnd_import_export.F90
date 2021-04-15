@@ -4,7 +4,7 @@ module lnd_import_export
   use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod           , only : shr_sys_abort
   use shr_const_mod         , only : fillvalue=>SHR_CONST_SPVAL
-  use clm_varctl            , only : iulog, ndep_from_cpl
+  use clm_varctl            , only : iulog, ndep_from_cpl, co2_ppmv
   use clm_time_manager      , only : get_nstep
   use clm_instMod           , only : atm2lnd_inst, lnd2atm_inst, water_inst
   use domainMod             , only : ldomain
@@ -69,6 +69,7 @@ contains
     real(r8)                  :: qsat_kg_kg                             ! saturation specific humidity (kg/kg)
     real(r8)                  :: forc_noy(bounds%begg:bounds%endg)
     real(r8)                  :: forc_nhx(bounds%begg:bounds%endg)
+    real(r8)                  :: forc_pbot  ! atmospheric pressure (Pa)
     character(len=*), parameter :: subname='(lnd_import_export:import_fields)'
 
     !---------------------------------------------------------------------------
@@ -246,6 +247,11 @@ contains
     call derive_quantities(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst, forc_rainc, forc_rainl, forc_snowc, forc_snowl)
 
     call check_for_errors(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst)
+
+    do g = begg, endg
+       forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
+       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv * 1.e-6_r8 * forc_pbot
+    end do
 
   end subroutine import_fields
 
