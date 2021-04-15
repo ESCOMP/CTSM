@@ -296,6 +296,7 @@ contains
     ! !USES:
     use clm_varcon       , only : nameg, namec
     use ncdio_pio        , only : file_desc_t, ncd_double
+    use clm_varctl         , only : use_fates_planthydro
     use restUtilMod
     !
     ! !ARGUMENTS:
@@ -329,14 +330,14 @@ contains
          units='kg/kg', &
          interpinic_flag='interp', readvar=readvar, data=this%qaf_lun)
 
-
-    call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('TOTAL_PLANT_STORED_H2O'), &
-         xtype=ncd_double, dim1name=namec, &
-         long_name=this%info%lname('total plant stored water (for fates hydro)'), &
-         units='kg/m2', &
-         interpinic_flag='interp', readvar=readvar, data=this%total_plant_stored_h2o_col)
-
+    if(use_fates_planthydro) then
+       call restartvar(ncid=ncid, flag=flag, &
+            varname=this%info%fname('TOTAL_PLANT_STORED_H2O'), &
+            xtype=ncd_double, dim1name=namec, &
+            long_name=this%info%lname('total plant stored water (for fates hydro)'), &
+            units='kg/m2', &
+            interpinic_flag='interp', readvar=readvar, data=this%total_plant_stored_h2o_col)
+    end if
 
   end subroutine Restart
 
