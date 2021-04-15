@@ -296,7 +296,7 @@ contains
     ! !USES:
     use clm_varcon       , only : nameg, namec
     use ncdio_pio        , only : file_desc_t, ncd_double
-    use clm_varctl         , only : use_fates_planthydro
+    use clm_varctl       , only : use_fates_planthydro
     use restUtilMod
     !
     ! !ARGUMENTS:
