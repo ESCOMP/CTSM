@@ -1,1 +1,3 @@
 ./xmlchange NEONSITE=TOOL
+./xmlchange PTS_LON=210.629872
+./xmlchange PTS_LAT=68.66045

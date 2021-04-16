@@ -1,1 +1,3 @@
 ./xmlchange NEONSITE=WREF
+./xmlchange PTS_LON=238.04162
+./xmlchange PTS_LAT=45.81637

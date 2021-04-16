@@ -1,1 +1,3 @@
 ./xmlchange NEONSITE=SJER
+./xmlchange PTS_LON=240.267
+./xmlchange PTS_LAT=37.107117
