@@ -18,6 +18,7 @@ import argparse
 import numpy as np
 import xarray as xr
 
+from datetime import date
 from getpass import getuser
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
@@ -42,34 +43,34 @@ def get_parser():
                     required=False,
                     type = plon_type,
                     default= 287.8 )
-        parser.add_argument('--domain',
+        parser.add_argument('--create_domain',
                     help='Flag for creating CLM domain file at single point.', 
                     action="store",
                     dest="create_domain",
                     required = False,
                     type = bool, 
-                    default = True)
-        parser.add_argument('--surface',
+                    default = False)
+        parser.add_argument('--create_surface',
                     help='Flag for creating surface data file at single point.', 
                     action="store",
                     dest="create_surfdata",
                     required = False,
                     type = bool, 
                     default = True)
-        parser.add_argument('--landuse',
-                    help='Flag for creating landuse data file at single point.', 
+        parser.add_argument('--create_landuse',
+                    help='Flag for creating landuse time-series data file at single point.', 
                     action="store",
                     dest="create_landuse",
                     required = False,
                     type = bool, 
-                    default = True)
-        parser.add_argument('--datm',
+                    default = False)
+        parser.add_argument('--create_datm',
                     help='Flag for creating DATM atmospheric forcing data at single point.', 
                     action="store",
                     dest="create_datm",
                     required = False,
                     type = bool, 
-                    default = False)
+                    default = True)
         parser.add_argument('--datm_syr',
                     help='Start year for creating DATM atmospheric forcing at single point.', 
                     action="store",
@@ -251,7 +252,7 @@ class SinglePointCase :
     def create_landuse_at_point (self):
         print( "Open: "+self.fluse )
         f1  = xr.open_dataset(self.fluse)
-        print (f1)
+        #print (f1)
         # create 1d variables
         lon0=np.asarray(f1['LONGXY'][0,:])
         lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
@@ -261,8 +262,6 @@ class SinglePointCase :
         f2=f1.assign()
         f2['lon'] = lon 
         f2['lat'] = lat 
-        print ("lat : ", lat)
-        print ("lon : ", lon)  
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=self.plon,lsmlat=self.plat,method='nearest')
  
@@ -460,16 +459,9 @@ def AddTagToFilename(filename, tag):
     if ( (basename[cend] != ".") and (basename[cend] != "_") ):
        error( "Trouble figuring out where to add tag to filename:"+filename )
     return( basename[:cend]+"_"+tag+basename[cend:] )
-        
-
-
-
 
 
 def main ():
-
-
-
 
     '''
     #------------------------------------------------------------------#
@@ -526,7 +518,7 @@ def main ():
     #-- Setup by default to run for Harvard Forest
 
     #--  Specify point to extract
-    plon = args.plon 
+    plon = args.plon
     plat = args.plat
 
     #--  Create regional CLM domain file
@@ -541,8 +533,6 @@ def main ():
     datm_eyr = args.datm_eyr
 
     crop_flag = args.crop_flag
-
-
 
     #--  Modify landunit structure
     overwrite_single_pft = True
@@ -559,10 +549,9 @@ def main ():
     single_point.uniform_snowpack = uniform_snowpack
     single_point.no_saturation_excess = no_saturation_excess
     single_point.create_tag()
-    print (single_point)
 
 
-    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
+    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/singlept.log"
     # create dir if it does not exist
     log_dir = os.path.dirname(log_file)
     if not os.path.exists(log_dir):
@@ -577,16 +566,22 @@ def main ():
     print("User = "+myname)
     print("Current directory = "+pwd)
 
+    import platform
+    print(platform.python_version())
+
     if crop_flag:
         num_pft      = "78"
     else: 
         num_pft      = "16"
 
 
+    print ('----------------------------------------------------------')
+    print ('                 SINGLE CASE SETUP                        ')
+    print ('----------------------------------------------------------')
+    print (single_point)
+
+
     print(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
-
-
-
     #--  Set input and output filenames
     #--  Specify input and output directories
     dir_output='/glade/scratch/'+myname+'/single_point_negin/'
