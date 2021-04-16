@@ -57,6 +57,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
 <spinup_state clm_accelerated_spinup="off"                               >0</spinup_state>
 
+<!-- Reseeding of dead plants normally only done for AD spinup -->
+<reseed_dead_plants clm_accelerated_spinup="on" use_cn=".true.">.true.</reseed_dead_plants>
+<reseed_dead_plants                                            >.false.</reseed_dead_plants>
+
 <for_testing_run_ncdiopio_tests>.false.</for_testing_run_ncdiopio_tests>
 
 <!-- Set to .true. in namelist to write hist fields master list file -->
