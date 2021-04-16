@@ -1,4 +1,246 @@
 ===============================================================
+Tag name:  ctsm5.1.dev033
+Originator(s): mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date:  Sat Apr 10 16:42:06 MDT 2021
+One-line Summary: Remove unnecessary settings of nextsw_cday
+
+Purpose and description of changes
+----------------------------------
+
+Remove setting of nextsw_cday in initialization: this hasn't been needed
+ever since we stopped calculating albedos in initialization.
+
+Also remove nextsw_cday from clm_time_manager: this was being set but
+was never referenced from here: instead, nextsw_cday was being passed as
+an argument to clm_drv.
+
+Also, updates cime to a branch tag where I have fixed the --retry option
+to create_test.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CIME Issues fixed (include issue #):
+- ESMCI/cime#3912 (create_test --retry fails if the test is doing
+  baseline generation)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.8.42 -> branch_tags/cime5.8.42_a01
+
+Pull Requests that document the changes (include PR ids):
+- Second part of https://github.com/ESCOMP/CTSM/pull/1330
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev032
+Originator(s): mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date:  Sat Apr 10 09:47:25 MDT 2021
+One-line Summary: Fix bugs in co2 from atmosphere
+
+Purpose and description of changes
+----------------------------------
+
+ctsm5.1.dev002 introduced bugs when receiving co2 from the atmosphere,
+both for mct and nuopc:
+- For mct, with spatially-varying co2 from atmosphere, all grid cells on
+  a given processor were given the co2 value from the last grid cell on
+  that processor
+- For nuopc, co2 from atmosphere was ignored and overridden with a
+  constant co2 value
+
+This tag fixes both of those bugs.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1327 (When using co2 from atmosphere with mct, it
+  looks like values are taken just from the last gridcell on each proc)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Cases where CTSM receives CO2 from atmosphere
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      potentially new climate
+
+   Answer changes due to fixing these issues:
+   - For mct, with spatially-varying co2 from atmosphere, all grid cells on
+     a given processor were given the co2 value from the last grid cell on
+     that processor
+   - For nuopc, co2 from atmosphere was ignored and overridden with a
+     constant co2 value
+
+   In the test suite, this leads to changes in:
+   - ERP_D_Ld10_P36x2_Vnuopc.f10_f10_mg37.IHistClm51BgcCrop.cheyenne_intel.clm-ciso_decStart
+   - ERS_Ly3_P72x2_Vnuopc.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+   - SMS_D_Ln9_P480x1_Vnuopc.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+
+   But more widespread changes are expected - including for mct - if
+   coupled runs can generate spatially-varying co2 from atm
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+- Merges the first part of the changes in
+  https://github.com/ESCOMP/CTSM/pull/1330
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev031
+Originator(s): jedwards (Jim Edwards), sacks (Bill Sacks)
+Date:  Sat Apr 10 07:33:49 MDT 2021
+One-line Summary: Update externals and fixes for nuopc threading
+
+Purpose and description of changes
+----------------------------------
+
+(1) Some fixes for threading with the nuopc/cmeps driver. (However,
+    threading with nuopc/cmeps still doesn't work completely: see
+    https://github.com/ESCOMP/CTSM/issues/1331.)
+
+(2) Updates externals to versions needed for these nuopc threading changes
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Known bugs introduced in this tag (include issue #):
+- https://github.com/ESCOMP/CTSM/issues/1331 Some runs with NUOPC driver
+  with multiple threads can hang
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Temporarily changed
+  SMS_D_Ln9_P480x3_Vnuopc.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+  to use a 480x1 layout so that it will pass reliably (see
+  https://github.com/ESCOMP/CTSM/issues/1331)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES (but very limited)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NUOPC driver with CISM
+    - what platforms/compilers: cheyenne_intel; maybe others
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
+
+    For an unknown reason, the new externals lead to small differences
+    in global sums in the CMEPS driver/mediator. For what we assume is
+    the same reason, lnd -> glc fields can change by roundoff (probably
+    due to the global renormalization).
+
+    The only test in the aux_clm test suite where this shows up is
+    ERS_Ly3_P72x2_Vnuopc.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     Inspection of cpl hist files
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cism: cism2_1_75 -> cism_1_78
+- rtm: rtm1_0_75 -> rtm1_0_76
+- mosart: mosart1_0_41 -> mosart1_0_42
+- cime: cime5.8.39 -> cime5.8.42
+- cmeps: v0.5.0 -> v0.9.0
+- cdeps: v0.5.0 -> v0.6.0
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1319
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev030
 Originator(s):  mvertens / erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Mar 31 16:46:04 MDT 2021

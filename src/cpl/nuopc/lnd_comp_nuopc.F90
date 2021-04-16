@@ -26,7 +26,7 @@ module lnd_comp_nuopc
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
   use clm_time_manager       , only : set_timemgr_init, advance_timestep
-  use clm_time_manager       , only : set_nextsw_cday, update_rad_dtime
+  use clm_time_manager       , only : update_rad_dtime
   use clm_time_manager       , only : get_nstep, get_step_size
   use clm_time_manager       , only : get_curr_date, get_curr_calday
   use clm_initializeMod      , only : initialize1, initialize2
@@ -77,6 +77,8 @@ module lnd_comp_nuopc
   real(R8)               :: orb_eccen       ! attribute and update-  orbital eccentricity
 
   logical                :: scol_valid      ! if single_column, does point have a mask of zero 
+
+  integer                :: nthrds          ! Number of threads per task in this component  
 
   character(len=*) , parameter :: orb_fixed_year       = 'fixed_year'
   character(len=*) , parameter :: orb_variable_year    = 'variable_year'
@@ -348,7 +350,6 @@ contains
     integer                 :: dtime_sync            ! coupling time-step from the input synchronization clock
     integer                 :: localPet              ! local PET (Persistent Execution Threads) (both MPI tasks and OpenMP threads)
     integer                 :: localPeCount          ! Number of local Processors
-    real(r8)                :: nextsw_cday           ! calday from clock of next radiation computation
     character(len=CL)       :: starttype             ! start-type (startup, continue, branch, hybrid)
     character(len=CL)       :: calendar              ! calendar type name
     logical                 :: brnch_retain_casename ! flag if should retain the case name on a branch start type
@@ -476,13 +477,24 @@ contains
        call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:start::',lbnum)
     endif
 #endif
-
-    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    !$  call omp_set_num_threads(localPeCount)
+    !----------------------------------------------------------------------------                               
+    ! Initialize component threading                                                                            
+    !----------------------------------------------------------------------------                               
+                                                                                                                
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)                                               
+    if (chkerr(rc,__LINE__,u_FILE_u)) return                                                                    
+    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)                                              
+    if (chkerr(rc,__LINE__,u_FILE_u)) return                                                                    
+                                                                                                                
+    if(localPeCount == 1) then                                                                                  
+       call NUOPC_CompAttributeGet(gcomp, "nthreads", value=cvalue, rc=rc)                                      
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return     
+       read(cvalue,*) nthrds                                                                                    
+    else                                                                                                        
+       nthrds = localPeCount                                                                                    
+    endif                                                                                                       
+                                                                                                                
+    !$  call omp_set_num_threads(nthrds)                                                                        
 
     !----------------------
     ! Consistency check on namelist filename
@@ -626,17 +638,6 @@ contains
          water_inst%waterlnd2atmbulk_inst, lnd2atm_inst, lnd2glc_inst, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
-    ! Get calendar day of nextsw calculation
-    if (nsrest == nsrStartup) then
-       call ESMF_ClockGet( clock, currTime=currTime, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_TimeGet( currTime, dayOfYear_r8=nextsw_cday, rc=rc )
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    end if
-
-    call set_nextsw_cday(nextsw_cday)
-
     ! Set scalars in export state
     call State_SetScalar(dble(ldomain%ni), flds_scalar_index_nx, exportState, &
          flds_scalar_name, flds_scalar_num, rc)
@@ -739,16 +740,11 @@ contains
        RETURN
     end if
 
+    !$  call omp_set_num_threads(nthrds)
+
     !--------------------------------
     ! Reset share log units
     !--------------------------------
-
-    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    !$  call omp_set_num_threads(localPeCount)
 
     call shr_file_getLogUnit (shrlogunit)
     call shr_file_setLogUnit (iulog)
@@ -774,7 +770,6 @@ contains
     call State_GetScalar(importState, &
          flds_scalar_index_nextsw_cday, nextsw_cday, &
          flds_scalar_name, flds_scalar_num, rc)
-    call set_nextsw_cday( nextsw_cday )
 
     ! Get proc bounds
     call get_proc_bounds(bounds)
