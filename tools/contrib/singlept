@@ -43,6 +43,13 @@ def get_parser():
                     required=False,
                     type = plon_type,
                     default= 287.8 )
+        parser.add_argument('--site',
+                    help='Site name or tag', 
+                    action="store",
+                    dest="site_name",
+                    required = False,
+                    type = str, 
+                    default = '')
         parser.add_argument('--create_domain',
                     help='Flag for creating CLM domain file at single point.', 
                     action="store",
@@ -58,7 +65,7 @@ def get_parser():
                     type = bool, 
                     default = True)
         parser.add_argument('--create_landuse',
-                    help='Flag for creating landuse time-series data file at single point.', 
+                    help='Flag for creating landuse data file at single point.', 
                     action="store",
                     dest="create_landuse",
                     required = False,
@@ -70,7 +77,7 @@ def get_parser():
                     dest="create_datm",
                     required = False,
                     type = bool, 
-                    default = True)
+                    default = False)
         parser.add_argument('--datm_syr',
                     help='Start year for creating DATM atmospheric forcing at single point.', 
                     action="store",
@@ -90,6 +97,12 @@ def get_parser():
                     action="store_false", 
                     dest="crop_flag", 
                     default=True)
+        parser.add_argument('--dompft', 
+                    help='Dominant PFT type', 
+                    action="store", 
+                    dest="dom_pft",
+                    type =int,
+                    default=7)
         return parser
 
 def plat_type(x):
@@ -252,7 +265,7 @@ class SinglePointCase :
     def create_landuse_at_point (self):
         print( "Open: "+self.fluse )
         f1  = xr.open_dataset(self.fluse)
-        #print (f1)
+        print (f1)
         # create 1d variables
         lon0=np.asarray(f1['LONGXY'][0,:])
         lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
@@ -262,6 +275,8 @@ class SinglePointCase :
         f2=f1.assign()
         f2['lon'] = lon 
         f2['lat'] = lat 
+        print ("lat : ", lat)
+        print ("lon : ", lon)  
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=self.plon,lsmlat=self.plat,method='nearest')
  
@@ -324,6 +339,22 @@ class SinglePointCase :
         # specify dimension order 
         #f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
         f3 = f3.transpose(u'time', u'cft', u'lsmpft', u'natpft', u'nglcec', u'nglcecp1', u'nlevsoi', u'nlevurb', u'numrad', u'numurbl', 'lsmlat', 'lsmlon')
+        attrs_list = f3.attrs
+        for attr in list(attrs_list):
+            print (attr)
+            #del(f3.attrs[attr])
+        today = date.today()
+        today_string = today.strftime("%d/%m/%Y")
+        f3.attrs['Created_on'] = today_string
+        f3.attrs['Created_by'] = "negins"
+        f3.attrs['Created_from'] = self.fsurf 
+        f3.attrs['Created_with'] = "/glade/scratch/negins/ctsm_singlept/tools/contrib/singlept.py"
+        del(f3.attrs['History_Log'])
+        del(f3.attrs['Logname'])
+        del(f3.attrs['Version'])
+        del(f3.attrs['Host'])
+        del(f3.attrs['Compiler_Optimized'])
+        
         # mode 'w' overwrites file
         f3.to_netcdf(path=self.fsurf2, mode='w')
         print('created file (fsurf2)'+self.fsurf2)
@@ -453,15 +484,39 @@ def AddTagToFilename(filename, tag):
     print (filename)
     print (tag)
     basename = os.path.basename(filename)
+    print ("basename : " ,basename)
     cend = -10
+    print ("the end: ", basename[cend:])
     if ( basename[cend] == "c" ):
        cend = cend - 1
     if ( (basename[cend] != ".") and (basename[cend] != "_") ):
        error( "Trouble figuring out where to add tag to filename:"+filename )
     return( basename[:cend]+"_"+tag+basename[cend:] )
+        
+
+def add_tag_to_surf_filename(filename, tag, site):
+    "Add a tag to a filename"
+    # Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
+    # Add the tag to just before that ending part
+    print (filename)
+    print (tag)
+    basename = os.path.basename(filename)
+    print ("basename : " ,basename)
+    items = basename.split('_')
+
+    today = date.today()
+    today_string = today.strftime("%y%m%d")
+    new_string = items[0]+"_"+items[2]+"_"+items[3]+"_"+items[4]+"_"+items[5]+"_"+items[6]+"_"+site+"_c"+today_string+".nc"
+    print (new_string)
+    return( new_string)
+
+
 
 
 def main ():
+
+
+
 
     '''
     #------------------------------------------------------------------#
@@ -518,7 +573,7 @@ def main ():
     #-- Setup by default to run for Harvard Forest
 
     #--  Specify point to extract
-    plon = args.plon
+    plon = args.plon 
     plat = args.plat
 
     #--  Create regional CLM domain file
@@ -534,9 +589,14 @@ def main ():
 
     crop_flag = args.crop_flag
 
+    site_name = args.site_name
+
     #--  Modify landunit structure
     overwrite_single_pft = True
-    dominant_pft         = 7 #BETr
+    #dominant_pft         = 7 #BETr
+    dominant_pft         = args.dom_pft
+    print ("dominant_pft;",dominant_pft)
+    print (type(dominant_pft))
     zero_nonveg_landunits= True
     uniform_snowpack     = True
     no_saturation_excess = True
@@ -549,9 +609,10 @@ def main ():
     single_point.uniform_snowpack = uniform_snowpack
     single_point.no_saturation_excess = no_saturation_excess
     single_point.create_tag()
+    print (single_point)
 
 
-    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/singlept.log"
+    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
     # create dir if it does not exist
     log_dir = os.path.dirname(log_file)
     if not os.path.exists(log_dir):
@@ -566,25 +627,19 @@ def main ():
     print("User = "+myname)
     print("Current directory = "+pwd)
 
-    import platform
-    print(platform.python_version())
-
     if crop_flag:
         num_pft      = "78"
     else: 
         num_pft      = "16"
 
 
-    print ('----------------------------------------------------------')
-    print ('                 SINGLE CASE SETUP                        ')
-    print ('----------------------------------------------------------')
-    print (single_point)
-
-
     print(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
+
+
+
     #--  Set input and output filenames
     #--  Specify input and output directories
-    dir_output='/glade/scratch/'+myname+'/single_point_negin/'
+    dir_output='/glade/scratch/'+myname+'/neon_surfdata_for_Jim_metadata/'
     if ( not os.path.isdir( dir_output ) ):
         os.mkdir( dir_output )
 
@@ -612,7 +667,7 @@ def main ():
 
     #--  Specify surface data file  --------------------------------
     fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
-    fsurf2   = dir_output + AddTagToFilename( fsurf, single_point.tag )
+    fsurf2   = dir_output + add_tag_to_surf_filename( fsurf, single_point.tag ,site_name)
     single_point.fsurf = fsurf
     single_point.fsurf2 = fsurf2
 
