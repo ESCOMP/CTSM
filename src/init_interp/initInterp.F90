@@ -210,6 +210,7 @@ contains
     integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
     integer            :: npftso, ncolso, nlunso, ngrcso 
     logical            :: glc_elevclasses_same
+    logical            :: att_found
     integer , allocatable, target  :: pftindx(:)
     integer , allocatable, target  :: colindx(:)
     integer , allocatable, target  :: lunindx(:)
@@ -292,9 +293,25 @@ contains
     status = pio_get_att(ncidi, pio_global, &
          'ilun_crop', &
          subgrid_special_indices%ilun_crop)
-    status = pio_get_att(ncidi, pio_global, &
-         'ilun_landice', &
-         subgrid_special_indices%ilun_landice)
+
+    ! BACKWARDS_COMPATIBILITY(wjs, 2021-04-16) ilun_landice_multiple_elevation_classes has
+    ! been renamed to ilun_landice. For now we need to handle both possibilities for the
+    ! sake of old initial conditions files. There is a chance that we had ilun_landice
+    ! alongside ilun_landice_multiple_elevation_classes on really old initial conditions
+    ! files; in that case, we want to use ilun_landice_multiple_elevation_classes. Once we
+    ! can rely on all initial conditions files having the new behavior, we can remove this
+    ! check_att call and just assume there is an ilun_landice attribute.
+    call check_att(ncidi, pio_global, 'ilun_landice_multiple_elevation_classes', att_found)
+    if (att_found) then
+       status = pio_get_att(ncidi, pio_global, &
+            'ilun_landice_multiple_elevation_classes', &
+            subgrid_special_indices%ilun_landice)
+    else
+       status = pio_get_att(ncidi, pio_global, &
+            'ilun_landice', &
+            subgrid_special_indices%ilun_landice)
+    end if
+
     status = pio_get_att(ncidi, pio_global, &
          'created_glacier_mec_landunits', &
          created_glacier_mec_landunits)
