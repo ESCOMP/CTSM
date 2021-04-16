@@ -19,4 +19,4 @@
 !----------------------------------------------------------------------------------
 
 finidat = "lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_brazil_hist_78pfts_CMIP6_simyr1850_c190214.nc"
-fsurdat = "atm/cdeps/single_point/NEON/surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_${NEONSITE}_c210415.nc"
+fsurdat = "lnd/clm2/surfdata_map/NEON/surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_${NEONSITE}_c210415.nc"
