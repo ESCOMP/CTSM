@@ -84,15 +84,6 @@ contains
 
        call QSat(forc_t, forc_pbot, qsat_kg_kg)
 
-       ! modify specific humidity if precip occurs
-       if (1==2) then
-          if ((forc_rainc(g) + forc_rainl(g)) > 0._r8) then
-             forc_q = 0.95_r8 * qsat_kg_kg
-            !forc_q = qsat_kg_kg
-             wateratm2lndbulk_inst%forc_q_not_downscaled_grc(g) = forc_q
-          endif
-       endif
-
        wateratm2lndbulk_inst%forc_rh_grc(g) = 100.0_r8*(forc_q / qsat_kg_kg)
     end do
 
