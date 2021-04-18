@@ -9,8 +9,8 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : nlevdecomp
-  use clm_varpar                         , only : i_met_lit
+  use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
+  use clm_varpar                         , only : i_met_lit, i_litr2, i_litr3, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -32,7 +32,6 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: DecompCascadeMIMICSreadNML      ! Read in namelist
   public :: readParams                      ! Read in parameters from params file
   public :: init_decompcascade_mimics       ! Initialization
   public :: decomp_rates_mimics             ! Figure out decomposition rates
@@ -41,17 +40,15 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   !
   ! !PRIVATE DATA MEMBERS 
 
-  integer, private, parameter :: npools = 8             ! Number of pools
-  integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metobolic
-  integer, private :: i_litr2 = -9  ! Second litter pool, structural in MIMICS (cellulose + lignin)
   integer, private :: i_micr1 = -9  ! First microbial pool, copiotrophic, as labeled in Wieder et al. 2015
   integer, private :: i_micr2 = -9  ! Second microbial pool, oligotrophic, as labeled in Wieder et al. 2015
-  integer, private :: i_cwd   = -9  ! Coarse woody debris pool
   integer, private :: i_soil1 = -9  ! Soil Organic Matter (SOM) first pool, protected SOM (som_p in Wieder et al. 2015)
   integer, private :: i_soil2 = -9  ! SOM second pool, recalcitrant SOM (som_c in Wieder et al. 2015)
   integer, private :: i_soil3 = -9  ! SOM third pool, available SOM (som_a in Wieder et al. 2015)
+  integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metobolic
 
   type, private :: params_type
+     ! TODO BFB refactor: First merge the refactor branch to CTSM main
      ! TODO slevis: New rf params in MIMICS. Update params file accordingly.
      !              I haven't identified what these correspond to in testbed.
      real(r8):: rf_l1m1_mimics  ! respiration fraction litter 1 -> microbe 1
@@ -65,19 +62,15 @@ module SoilBiogeochemDecompCascadeMIMICSMod
 
      real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
 
-     real(r8) :: cwd_flig_bgc !
+     real(r8) :: cwd_flig
 
      real(r8) :: minpsi_bgc   !minimum soil water potential for heterotrophic resp
      real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
 
-     ! TODO BFB refactor: We will first merge a refactor branch to CTSM main
-     ! TODO BFB refactor: Add these two to the params file and rm the
-     !                    subroutines that read these params from the namelist
-     !                    If Melannie's values from the testbed differ from the
-     !                    values used for BGC, may need separate _mimics _bgc
-     !                    params. BGC default values here were 200 and 0.3
-     ! TODO keeping the depth param in case needed for spin-ups
-     real(r8) :: initial_Cstocks(npools)  ! Initial Carbon stocks for a cold-start
+     ! TODO slevis: If Melannie's values from the testbed differ from the
+     !              values used for BGC, make separate _mimics params.
+     !              Keeping the _depth param in case needed for spin-ups.
+     real(r8), allocatable :: initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
      real(r8) :: initial_Cstocks_depth    ! Soil depth for initial Carbon stocks for a cold-start
      
   end type params_type
@@ -114,10 +107,8 @@ contains
     ! TODO slevis: Add new params here and in the params file.
     !      Read MIMICS-specific params here and shared params like this:
     !      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
-    ! TODO BFB refactor: Remove k_frag everywhere and from params file
-    ! TODO BFB refactor: Rename tau_cwd and cwd_flig to *_bgc
-    ! TODO BFB refactor: *bgc are examples of shared params so chg accordingly
-    tString='tau_cwd'
+    ! TODO BFB refactor: *_bgc are shared params so chg them accordingly
+    tString='tau_cwd_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_cwd_bgc=tempr
@@ -171,7 +162,17 @@ contains
     tString='cwd_flig'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%cwd_flig_bgc=tempr 
+    params_inst%cwd_flig=tempr
+
+    allocate(params_inst%initial_Cstocks(ndecomp_pools_max))
+    tString='initial_Cstocks_bgc'
+    call ncd_io(trim(tString), params_inst%initial_Cstocks(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    tString='initial_Cstocks_depth_bgc'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%initial_Cstocks_depth=tempr
 
   end subroutine readParams
 
@@ -259,7 +260,7 @@ contains
       rf_cwdl2 = params_inst%rf_cwdl2_mimics
 
       ! set the lignin fractions for coarse woody debris
-      cwd_flig = params_inst%cwd_flig_bgc
+      cwd_flig = params_inst%cwd_flig
 
       ! set path fractions
       f_s2s3 = 0.03_r8/(0.45_r8)
@@ -310,27 +311,7 @@ contains
       is_cellulose(i_litr2) = .true.
       is_lignin(i_litr2) = .true.
 
-      i_cwd = i_litr2
-      if (.not. use_fates) then
-         ! CWD
-         i_cwd = i_litr2 + 1
-         floating_cn_ratio_decomp_pools(i_cwd) = .true.
-         decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
-         decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
-         decomp_cascade_con%decomp_pool_name_long(i_cwd) = 'coarse woody debris'
-         decomp_cascade_con%decomp_pool_name_short(i_cwd) = 'CWD'
-         is_microbe(i_cwd) = .false.
-         is_litter(i_cwd) = .false.
-         is_soil(i_cwd) = .false.
-         is_cwd(i_cwd) = .true.
-         initial_cn_ratio(i_cwd) = 10._r8  ! 90 in BGC; not used in MIMICS
-         initial_stock(i_cwd) = params_inst%initial_Cstocks(i_cwd)
-         is_metabolic(i_cwd) = .false.
-         is_cellulose(i_cwd) = .false.
-         is_lignin(i_cwd) = .false.
-      endif
-
-      i_soil1 = i_cwd + 1
+      i_soil1 = i_litr2 + 1
       floating_cn_ratio_decomp_pools(i_soil1) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
       decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
@@ -409,6 +390,26 @@ contains
       is_metabolic(i_micr2) = .false.
       is_cellulose(i_micr2) = .false.
       is_lignin(i_micr2) = .false.
+
+      i_cwd = i_micr2
+      if (.not. use_fates) then
+         ! CWD
+         i_cwd = i_micr2 + 1
+         floating_cn_ratio_decomp_pools(i_cwd) = .true.
+         decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
+         decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
+         decomp_cascade_con%decomp_pool_name_long(i_cwd) = 'coarse woody debris'
+         decomp_cascade_con%decomp_pool_name_short(i_cwd) = 'CWD'
+         is_microbe(i_cwd) = .false.
+         is_litter(i_cwd) = .false.
+         is_soil(i_cwd) = .false.
+         is_cwd(i_cwd) = .true.
+         initial_cn_ratio(i_cwd) = 10._r8  ! 90 in BGC; not used in MIMICS
+         initial_stock(i_cwd) = params_inst%initial_Cstocks(i_cwd)
+         is_metabolic(i_cwd) = .false.
+         is_cellulose(i_cwd) = .false.
+         is_lignin(i_cwd) = .false.
+      endif
 
       speedup_fac = 1._r8
 
@@ -501,6 +502,7 @@ contains
 
       deallocate(rf_s1s3)
       deallocate(f_s1s3)
+      deallocate(params_inst%initial_Cstocks)
 
     end associate
 
@@ -745,13 +747,6 @@ contains
       endif
 
       !--- time dependent coefficients-----!
-      ! TODO slevis: Not immediately obvious how to reduce the if-else
-      !      repetition bc w_scalar, o_scalar sum all j
-      !      to layer 1 in the if, while they do not in the else.
-      !      Other changes that would be necessary:
-      !      - set fr = 1 in the else,
-      !      - use a new nlevd = nlev_soildecomp_standard in the if and
-      !                  nlevd = nlevdecomp in the else,
       if ( nlevdecomp .eq. 1 ) then
 
          ! calculate function to weight the temperature and water potential scalars

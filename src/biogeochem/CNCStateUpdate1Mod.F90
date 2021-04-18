@@ -69,14 +69,6 @@ contains
        do j = 1,nlevdecomp
           do fc = 1, num_soilc_with_inactive
              c = filter_soilc_with_inactive(fc)
-             ! TODO BFB refactor: In loops like this, we will run into trouble
-             !      with MIMICS bc we will have 2 instead of 3 litter pools. Can
-             !      address with if statements (NOT ideal) or
-             !      turn these repetitive lines into a loop BUT to do that
-             !      we need to turn dwt_frootc_to_litr_* into a 3d var.
-             !      There are 3 such loops here, 2 in CNCStateUpdate2, and one
-             !      in CNCStateUpdate1 and the pattern repeats in the
-             !      corresponding N modules.
              cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + &
                   cf_veg%dwt_frootc_to_litr_met_c_col(c,j) * dt
              cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) = cs_soil%decomp_cpools_vr_col(c,j,i_cel_lit) + &
