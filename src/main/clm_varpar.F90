@@ -233,10 +233,10 @@ contains
     ! init_decompcascade_bgc or init_decompcascade_cn, where they could have
     ! otherwise been derived on the fly. For reference,
     ! - in init_decompcascade_bgc
-    ! ndecomp_pools would get the value of i_soil3 and
+    ! ndecomp_pools would get the value of i_soil3 or i_cwd
     ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
     ! - in init_decompcascade_cn
-    ! ndecomp_pools would get the value of i_soil4 and
+    ! ndecomp_pools would get the value of i_soil4 or i_cwd
     ! ndecomp_cascade_transitions would get the value of i_s4atm or i_cwdl3
     if ( use_fates ) then
        if (use_century_decomp) then
@@ -255,7 +255,7 @@ contains
           ndecomp_cascade_transitions = 9
        end if
     endif
-    ndecomp_pools_max = 8
+    ndecomp_pools_max = 8  ! largest ndecomp_pools value above
 
   end subroutine clm_varpar_init
 
