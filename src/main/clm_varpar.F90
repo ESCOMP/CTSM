@@ -68,6 +68,7 @@ module clm_varpar
   integer, public :: i_litr3 = -9  ! Third litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_cwd   = -9  ! Index of the coarse woody debris pool; overwritten in SoilBiogeochemDecompCascade*Mod
 
+  integer, public :: ndecomp_pools_max
   integer, public :: ndecomp_pools
   integer, public :: ndecomp_cascade_transitions
 
@@ -254,6 +255,7 @@ contains
           ndecomp_cascade_transitions = 9
        end if
     endif
+    ndecomp_pools_max = 8
 
   end subroutine clm_varpar_init
 

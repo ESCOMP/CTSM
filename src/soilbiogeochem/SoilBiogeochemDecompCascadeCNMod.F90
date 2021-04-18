@@ -201,7 +201,7 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%k_s4_cn=tempr
 
-    tString='k_frag'
+    tString='k_frag_cn'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%k_frag_cn=tempr
@@ -346,25 +346,7 @@ contains
       is_cellulose(i_litr3) = .false.
       is_lignin(i_litr3) = .true.
 
-      i_cwd = i_litr3
-      if (.not. use_fates) then
-         i_cwd = i_litr3 + 1
-         floating_cn_ratio_decomp_pools(i_cwd) = .true.
-         decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
-         decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
-         decomp_cascade_con%decomp_pool_name_long(i_cwd) = 'coarse woody debris'
-         decomp_cascade_con%decomp_pool_name_short(i_cwd) = 'CWD'
-         is_litter(i_cwd) = .false.
-         is_soil(i_cwd) = .false.
-         is_cwd(i_cwd) = .true.
-         initial_cn_ratio(i_cwd) = 500._r8
-         initial_stock(i_cwd) = 0._r8
-         is_metabolic(i_cwd) = .false.
-         is_cellulose(i_cwd) = .false.
-         is_lignin(i_cwd) = .false.
-      end if
-
-      i_soil1 = i_cwd + 1
+      i_soil1 = i_litr3 + 1
       floating_cn_ratio_decomp_pools(i_soil1) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
       decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
@@ -423,6 +405,23 @@ contains
       is_metabolic(i_soil4) = .false.
       is_cellulose(i_soil4) = .false.
       is_lignin(i_soil4) = .false.
+
+      if (.not. use_fates) then
+         i_cwd = i_soil4 + 1
+         floating_cn_ratio_decomp_pools(i_cwd) = .true.
+         decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
+         decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
+         decomp_cascade_con%decomp_pool_name_long(i_cwd) = 'coarse woody debris'
+         decomp_cascade_con%decomp_pool_name_short(i_cwd) = 'CWD'
+         is_litter(i_cwd) = .false.
+         is_soil(i_cwd) = .false.
+         is_cwd(i_cwd) = .true.
+         initial_cn_ratio(i_cwd) = 500._r8
+         initial_stock(i_cwd) = 0._r8
+         is_metabolic(i_cwd) = .false.
+         is_cellulose(i_cwd) = .false.
+         is_lignin(i_cwd) = .false.
+      end if
 
       floating_cn_ratio_decomp_pools(i_atm) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_atm) = 'atmosphere'
@@ -561,16 +560,6 @@ contains
      real(r8):: k_s3                         ! decomposition rate constant SOM 3
      real(r8):: k_s4                         ! decomposition rate constant SOM 4
      real(r8):: k_frag                       ! fragmentation rate constant CWD
-     real(r8):: ck_l1                        ! corrected decomposition rate constant litter 1
-     real(r8):: ck_l2                        ! corrected decomposition rate constant litter 2
-     real(r8):: ck_l3                        ! corrected decomposition rate constant litter 3
-     real(r8):: ck_s1                        ! corrected decomposition rate constant SOM 1
-     real(r8):: ck_s2                        ! corrected decomposition rate constant SOM 2
-     real(r8):: ck_s3                        ! corrected decomposition rate constant SOM 3
-     real(r8):: ck_s4                        ! corrected decomposition rate constant SOM 4
-     real(r8):: ck_frag                      ! corrected fragmentation rate constant CWD
-     real(r8):: cwdc_loss                    ! fragmentation rate for CWD carbon (gC/m2/s)
-     real(r8):: cwdn_loss                    ! fragmentation rate for CWD nitrogen (gN/m2/s)
      integer :: c, fc, j, k, l
      real(r8):: Q10                          ! temperature dependence
      real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates

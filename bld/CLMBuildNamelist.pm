@@ -3594,10 +3594,10 @@ sub setup_logic_century_soilbgcdecompcascade {
 
   if ( (&value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates'))) &&
        &value_is_true($nl->get_value('use_century_decomp')) ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks',
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                 'use_cn' => $nl->get_value('use_cn'), 'use_fates' => $nl->get_value('use_fates'),
                 'use_century_decomp' => $nl->get_value('use_century_decomp') );
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks_depth', 
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
                 'use_cn' => $nl->get_value('use_cn'), 'use_fates' => $nl->get_value('use_fates'),
                 'use_century_decomp' => $nl->get_value('use_century_decomp') ); 
   }
