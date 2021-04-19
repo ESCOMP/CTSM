@@ -116,7 +116,6 @@ contains
 
   @Test
   subroutine allWithinBounds_interpolates(this)
-    ! TODO Start from this test to develop new tests w scale_by_thickness=.true.
     ! If the destination has different levels, but all levels are within the bounds of
     ! the source, the destination data should simply be interpolated from the source data.
     !
@@ -146,6 +145,86 @@ contains
     @assertEqual(data_dest_expected, data_dest, tolerance=tol)
 
   end subroutine allWithinBounds_interpolates
+
+  @Test
+  subroutine allWithinBounds_scaledInterp(this)
+    ! Similar to subroutine allWithinBounds_interpolates but with
+    ! scale_by_thickness=.true. to scale the interpolation according to
+    ! soil layer thickness, dzsoi.
+    !
+    ! In particular here we test:
+    ! 1st layer copying to 1st layer of same thickness dzsoi (no scaling)
+    ! 2nd layer copying to 2nd layer of half the thickness (scale * 0.5)
+    ! 2nd + 3rd layers interpolating to 3rd layer, where the scaling from the
+    ! thicknesses (dz) and the weighting from the overlapping depths both
+    ! contribute to the result.
+    !
+    ! The "copying" scenarios untangle the effect of scaling by thickness
+    ! (scale_by_thickness=.true.) from that of weighting by overlap.
+    ! The interpolation scheme is explained in a schematic available here:
+    ! https://docs.google.com/presentation/d/1ka1QkXqZcekQqCmj5S1eMGaEgM-pxZy5jwvvnNoasj4/edit?usp=sharing
+
+    class(TestInitInterpMultilevelInterp), intent(inout) :: this
+    type(interp_multilevel_interp_type) :: interpolator
+    real(r8) :: data_dest(3) = 0._r8
+    real(r8) :: data_dest_expected(3)
+    real(r8), parameter :: data_source(3)        = [1._r8, 1._r8, 1.5_r8]
+    real(r8), parameter :: coordinates_source(3) = [0.1_r8, 1.5_r8, 2.75_r8]
+    real(r8), parameter :: coordinates_dest(3)   = [0.5_r8, 1.25_r8, 2.5_r8]
+    real(r8), parameter :: dzsoi_source(3)       = [1._r8, 1._r8, 1.5_r8]
+    real(r8), parameter :: dzsoi_dest(3)         = [1._r8, 0.5_r8, 2._r8]
+
+    interpolator = create_interpolator_no_levclasses( &
+         coordinates_source = coordinates_source, &
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.true.)
+
+    data_dest_expected = [1._r8, 0.5_r8, 2._r8]
+
+    @assertEqual(data_dest_expected, data_dest, tolerance=tol)
+
+  end subroutine allWithinBounds_scaledInterp
+
+  @Test
+  subroutine greaterThanLastLevel_scaledInterp(this)
+    ! Similar to subroutine allWithinBounds_scaledInterp but with
+    ! last level destination depth greater than last level source depth as in
+    ! subroutine greaterThanLastLevel_copiesLastLevel.
+    !
+    ! In particular here we test:
+    ! 1st layer copying to 1st layer of same thickness dzsoi (no scaling)
+    ! 2nd layer copying to 2nd layer of half the thickness (scale * 0.5)
+    ! 2nd layer copying to 3rd layer of double the thickness (scale * 2)
+    !
+    ! The "copying" scenarios untangle the effect of scaling by thickness
+    ! (scale_by_thickness=.true.) from that of weighting by overlap.
+
+    class(TestInitInterpMultilevelInterp), intent(inout) :: this
+    type(interp_multilevel_interp_type) :: interpolator
+    real(r8) :: data_dest(3) = 0._r8
+    real(r8) :: data_dest_expected(3)
+    real(r8), parameter :: data_source(2)        = [1._r8, 1._r8]
+    real(r8), parameter :: coordinates_source(2) = [0.8_r8, 1.5_r8]
+    real(r8), parameter :: coordinates_dest(3)   = [0.5_r8, 1.25_r8, 2.5_r8]
+    real(r8), parameter :: dzsoi_source(2)       = [1._r8, 1._r8]
+    real(r8), parameter :: dzsoi_dest(3)         = [1._r8, 0.5_r8, 2._r8]
+
+    interpolator = create_interpolator_no_levclasses( &
+         coordinates_source = coordinates_source, &
+         coordinates_dest   = coordinates_dest, &
+         dzsoi_source       = dzsoi_source, &
+         dzsoi_dest         = dzsoi_dest)
+
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.true.)
+
+    data_dest_expected = [1._r8, 0.5_r8, 2._r8]
+
+    @assertEqual(data_dest_expected, data_dest, tolerance=tol)
+
+  end subroutine greaterThanLastLevel_scaledInterp
 
   @Test
   subroutine greaterThanLastLevel_copiesLastLevel(this)

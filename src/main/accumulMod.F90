@@ -267,7 +267,7 @@ contains
     if (present(scale_by_thickness)) then
        accum(nf)%scale_by_thickness = scale_by_thickness
     else
-       accum(nf)%scale_by_thickness = ' '
+       accum(nf)%scale_by_thickness = .false.
     end if
 
     ! Allocate and initialize accumulation field
@@ -731,6 +731,10 @@ contains
                interpinic_flag='interp', &
                data=accum(nf)%nsteps, readvar=readvar)
        else
+          ! Counterintuitive to scale NSTEPS by thickness and
+          ! counterintuitive to do vertical interpolation at all on NSTEPS.
+          ! NSTEPS will probably always be the same for all levels, so the
+          ! vertical interpolation will be trivial. Leaving this code as is.
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_int, &
                dim1name=accum(nf)%type1d, dim2name=accum(nf)%type2d, &
                long_name='number of accumulated steps for '//trim(accum(nf)%name), &

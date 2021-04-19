@@ -327,6 +327,7 @@ contains
     integer :: lev_dest
     integer :: level_class_dest
     integer :: lev_source
+    real(r8) :: dzsoi_dest_sum  ! Sum of the destination layer thickness (m)
 
     ! source information for this index_dest
     real(r8) :: my_level_classes_source(this%nlev_source)
@@ -352,6 +353,7 @@ contains
     my_coordinates_source(:)   = this%coordinates_source(:, index_dest)
     my_dzsoi_source(:)         = this%dzsoi_source(:, index_dest)
 
+    dzsoi_dest_sum = 0._r8
     do lev_dest = 1, this%nlev_dest
        level_class_dest = this%level_classes_dest(lev_dest, index_dest)
        if (level_class_dest /= ispval) then
@@ -368,8 +370,10 @@ contains
              call pack_wrapper(data_source_in_class, data_source, source_levels_in_class)
              call pack_wrapper(coordinates_source_in_class, my_coordinates_source, source_levels_in_class)
              call pack_wrapper(dzsoi_source_in_class, my_dzsoi_source, source_levels_in_class)
+             dzsoi_dest_sum = dzsoi_dest_sum + this%dzsoi_dest(lev_dest, index_dest)
              call this%interp_onelevel( &
                   data_dest = data_dest(lev_dest), &
+                  dzsoi_dest_sum = dzsoi_dest_sum, &
                   dzsoi_dest = this%dzsoi_dest(lev_dest, index_dest), &
                   coordinate_dest = this%coordinates_dest(lev_dest, index_dest), &
                   data_source = data_source_in_class, &
@@ -494,7 +498,7 @@ contains
   end subroutine confirm_monotonically_increasing
 
   !-----------------------------------------------------------------------
-  subroutine interp_onelevel(data_dest, dzsoi_dest, coordinate_dest, &
+  subroutine interp_onelevel(data_dest, dzsoi_dest_sum, dzsoi_dest, coordinate_dest, &
                              data_source, dzsoi_source, coordinates_source, &
                              scale_by_thickness)
     !
@@ -503,6 +507,7 @@ contains
     !
     ! !ARGUMENTS:
     real(r8), intent(inout) :: data_dest
+    real(r8), intent(in)    :: dzsoi_dest_sum
     real(r8), intent(in)    :: dzsoi_dest
     real(r8), intent(in)    :: coordinate_dest
     real(r8), intent(in)    :: data_source(:)
@@ -516,8 +521,10 @@ contains
     integer :: nlev_source
     integer :: lev
     integer :: index_lower
-    real(r8) :: wt_lower  ! Weight factor to scale the interpolation
-    real(r8) :: wt_lower_plus_1  ! Weight factor to scale the interpolation
+    real(r8) :: overlap_dest_lower  ! Overlap of the destination layer with one source layer
+    real(r8) :: overlap_dest_lower_plus_1  ! Overlap of the destination layer with the other source layer
+    real(r8) :: wt_lower  ! Weight factor for interpolation of extensive properties
+    real(r8) :: wt_lower_plus_1  ! Weight factor for interpolation of extensive properties
 
     real(r8), parameter :: eps = 1.e-13_r8
     character(len=*), parameter :: subname = 'interp_onelevel'
@@ -580,39 +587,68 @@ contains
 
     ! Assemble the weights for scaling certain variables by soil thicknesses
     if (scale_by_thickness) then
-       if (dzsoi_source(index_lower) == 0._r8) then
-          call endrun(msg=subname//' ERROR case 1: about to divide by 0 '// &
-               errMsg(sourcefile, __LINE__))
-       else
+       if (copylevel) then ! not using wt_lower_plus_1 and overlap_dest*
           wt_lower = dzsoi_dest / dzsoi_source(index_lower)
-       end if
-       if (.not. copylevel) then
-          if (dzsoi_source(index_lower+1) == 0._r8) then
-             call endrun(msg=subname//' ERROR case 2: about to divide by 0 '// &
+       else
+          ! Set wt_lower and overlap_dest_lower
+          SHR_ASSERT_FL((dzsoi_source(index_lower) > 0._r8), sourcefile, __LINE__)
+          overlap_dest_lower = max(0._r8, sum(dzsoi_source(1:index_lower)) - &
+                                          (dzsoi_dest_sum - dzsoi_dest))
+          wt_lower = overlap_dest_lower * dzsoi_dest / dzsoi_source(index_lower)
+
+          ! Set wt_lower_plus_one and overlap_dest_lower_plus_1
+          SHR_ASSERT_FL((dzsoi_source(index_lower+1) > 0._r8), sourcefile, __LINE__)
+          overlap_dest_lower_plus_1 = max(0._r8, &
+             dzsoi_dest_sum - sum(dzsoi_source(1:index_lower)))
+          wt_lower_plus_1 = overlap_dest_lower_plus_1 * dzsoi_dest / dzsoi_source(index_lower+1)
+          if (wt_lower <= 0._r8 .and. wt_lower_plus_1 <= 0._r8) then
+             write(iulog,*) 'Both wt_lower* are <= 0. This likely means that '
+             write(iulog,*) 'both overlap_dest* are <= 0.'
+             call endrun(msg=subname//' ERROR: This will lead to a divide by 0 in the interpolation '// &
                   errMsg(sourcefile, __LINE__))
-          else
-             wt_lower_plus_1 = dzsoi_dest / dzsoi_source(index_lower+1)
           end if
-       else  ! if (copylevel) then wt_lower_plus_1 set but not used
-          wt_lower_plus_1 = wt_lower
        end if
-    else  ! no scaling; scale factors equal 1
+    else  ! no scaling but still using wt_lower if (copylevel)
        wt_lower = 1.0_r8
-       wt_lower_plus_1 = wt_lower
     end if
 
     ! ------------------------------------------------------------------------
     ! Do the interpolation
+    ! Case 1: copylevel
+    !       Direct mapping. If scale_by_thickness=.true., we scale by
+    !       wt_lower = dzsoi_dest / dzsoi_source
+    ! Case 2a: interpolate with scale_by_thickness=.true.
+    !       The analytical solution looks like this:
+    !       data_dest = (data_source(index_lower  ) * wt_lower        + &
+    !                    data_source(index_lower+1) * wt_lower_plus_1 + &
+    !                    ...
+    !                    data_source(index_lower+n) * wt_lower_plus_n) / &
+    !                    sum(overlap_dest)
+    !       for all source layers overlapping with the destination layer. Here
+    !       we approximate with the two nearest overlapping source layers.
+    ! Case 2b: interpolate with scale_by_thickness=.false.
+    !       We use this formula:
+    !       data_dest = (data_source(index_lower  ) * distance_lower_plus_1 + &
+    !                    data_source(index_lower+1) * distance_lower) / &
+    !                   (distance_lower_plus_1 + distance_lower)
+    !       where we derive the distance variables from their respective
+    !       coordinates as an approximation of the more exact solution
+    !       derived from the corresponding overlaps between the destination
+    !       layer and each source layer.
     ! ------------------------------------------------------------------------
 
     if ( copylevel) then
        data_dest = data_source(index_lower) * wt_lower
+    else if (scale_by_thickness) then
+       data_dest = (data_source(index_lower  ) * wt_lower + &
+                    data_source(index_lower+1) * wt_lower_plus_1) / &
+                   (overlap_dest_lower + overlap_dest_lower_plus_1)
     else
        data_dest = &
-            data_source(index_lower+1) * wt_lower_plus_1 &
+            data_source(index_lower+1) &
             * (coordinate_dest - coordinates_source(index_lower)) &
             / (coordinates_source(index_lower+1) - coordinates_source(index_lower)) + &
-            data_source(index_lower) * wt_lower &
+            data_source(index_lower) &
             * (coordinates_source(index_lower+1) - coordinate_dest ) &
             / (coordinates_source(index_lower+1) - coordinates_source(index_lower))
     end if
