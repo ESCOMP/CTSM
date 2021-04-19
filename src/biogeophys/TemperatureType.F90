@@ -1329,6 +1329,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use CNSharedParamsMod, only : upper_soil_layer
     !
     ! !ARGUMENTS:
     class(temperature_type)                :: this
@@ -1460,9 +1461,10 @@ contains
     call update_accum_field  ('T10', this%t_ref2m_patch, nstep)
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
     
+    if ( upper_soil_layer /= 3 ) call endrun( "abort not 3" )
     do p = begp,endp    
        c = patch%column(p)  
-       rbufslp(p) = this%t_soisno_col(c,3)      
+       rbufslp(p) = this%t_soisno_col(c,upper_soil_layer)
     end do
     call update_accum_field  ('SOIL10', rbufslp, nstep)
     call extract_accum_field ('SOIL10', this%soila10_patch, nstep)

@@ -24,8 +24,20 @@ module CNSharedParamsMod
 
   type(CNParamsShareType), protected :: CNParamsShareInst
 
+  ! Public subroutines
+  public :: CNParamsReadShared
+  public :: CNParamsSetSoilDepth
+  public :: CNParamsReadShared_namelist
+
+  ! Public data
+
   logical, public :: use_fun      = .false.             ! Use the FUN2.0 model
   integer, public :: nlev_soildecomp_standard = 5
+  integer, public :: upper_soil_layer = -1              ! Upper soil layer to use for 10-day average in CNPhenology
+
+  ! Private subroutines and data
+
+  private :: CNParamsReadShared_netcdf
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -36,7 +48,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine CNParamsReadShared(ncid, namelist_file)
 
-    use ncdio_pio   , only : file_desc_t
+    use ncdio_pio      , only : file_desc_t
 
     type(file_desc_t), intent(inout) :: ncid   ! pio netCDF file id
     character(len=*),  intent(in) :: namelist_file
@@ -46,6 +58,13 @@ contains
 
   end subroutine CNParamsReadShared
   
+  !-----------------------------------------------------------------------
+
+  subroutine CNParamsSetSoilDepth( )
+    use initVerticalMod, only : find_soil_layer_containing_depth
+  ! Set the soil depth needed for CNPhenology
+    call find_soil_layer_containing_depth ( 0.12_r8, upper_soil_layer )
+  end subroutine CNParamsSetSoilDepth
   !-----------------------------------------------------------------------
   subroutine CNParamsReadShared_netcdf(ncid)
     !
