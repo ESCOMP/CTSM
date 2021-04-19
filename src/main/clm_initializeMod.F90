@@ -153,6 +153,7 @@ contains
     use controlMod                    , only : NLFilename
     use clm_instMod                   , only : clm_fates
     use BalanceCheckMod               , only : BalanceCheckInit
+    use CNSharedParamsMod             , only : CNParamsSetSoilDepth
     use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     use FATESFireFactoryMod           , only : scalar_lightning
     !
@@ -355,6 +356,7 @@ contains
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
 
+    call CNParamsSetSoilDepth()
     ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
     call SnowAge_init( )    ! SNICAR aging   parameters:

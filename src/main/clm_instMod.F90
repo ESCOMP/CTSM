@@ -193,6 +193,7 @@ contains
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
     
     use initVerticalMod                    , only : initVertical
+    use SnowHydrologyMod                   , only : InitSnowLayers
     use accumulMod                         , only : print_accum_fields 
     use SoilWaterRetentionCurveFactoryMod  , only : create_soil_water_retention_curve
     use decompMod                          , only : get_proc_bounds
@@ -263,9 +264,14 @@ contains
 
     call initVertical(bounds,               &
          glc_behavior, &
-         snow_depth_col(begc:endc),              &
          urbanparams_inst%thick_wall(begl:endl), &
          urbanparams_inst%thick_roof(begl:endl))
+
+    !-----------------------------------------------
+    ! Set cold-start values for snow levels, snow layers and snow interfaces 
+    !-----------------------------------------------
+
+    call InitSnowLayers(bounds, snow_depth_col(bounds%begc:bounds%endc))
 
     ! Initialize clm->drv and drv->clm data structures
 
