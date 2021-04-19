@@ -467,7 +467,7 @@ contains
     
     this%soila10_patch(begp:endp) = spval
     call hist_addfld1d (fname='SOIL10', units='K',  &
-         avgflag='A', long_name='10-day running mean of 3rd layer soil', &
+         avgflag='A', long_name='10-day running mean of 12cm layer soil', &
          ptr_patch=this%soila10_patch, default='inactive')
     
     this%t_a5min_patch(begp:endp) = spval
@@ -1461,7 +1461,9 @@ contains
     call update_accum_field  ('T10', this%t_ref2m_patch, nstep)
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
     
-    if ( upper_soil_layer /= 3 ) call endrun( "abort not 3" )
+    ! Accumulate and extract SOIL10, for a sepcific soil layer
+    !(acumulates SOIL10 as 10-day running mean)
+
     do p = begp,endp    
        c = patch%column(p)  
        rbufslp(p) = this%t_soisno_col(c,upper_soil_layer)

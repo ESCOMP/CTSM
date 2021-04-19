@@ -2,6 +2,8 @@ module CNSharedParamsMod
 
   !-----------------------------------------------------------------------
   !
+  ! Parameters that are shared by the Carbon Nitrogen Biogeochemistry modules
+  !
   ! !USES:
   use shr_kind_mod , only: r8 => shr_kind_r8
   implicit none
@@ -25,9 +27,9 @@ module CNSharedParamsMod
   type(CNParamsShareType), protected :: CNParamsShareInst
 
   ! Public subroutines
-  public :: CNParamsReadShared
-  public :: CNParamsSetSoilDepth
-  public :: CNParamsReadShared_namelist
+  public :: CNParamsReadShared              ! Read in CN shared parameters
+  public :: CNParamsSetSoilDepth            ! Set the soil depth needed for CNPhenology
+  public :: CNParamsReadShared_namelist     ! Read in CN shared namelist items
 
   ! Public data
 
@@ -37,7 +39,7 @@ module CNSharedParamsMod
 
   ! Private subroutines and data
 
-  private :: CNParamsReadShared_netcdf
+  private :: CNParamsReadShared_netcdf                  ! Read shared parameters from NetCDF file
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -62,7 +64,7 @@ contains
 
   subroutine CNParamsSetSoilDepth( )
     use initVerticalMod, only : find_soil_layer_containing_depth
-  ! Set the soil depth needed for CNPhenology
+    ! Set the soil depth needed for CNPhenology
     call find_soil_layer_containing_depth ( 0.12_r8, upper_soil_layer )
   end subroutine CNParamsSetSoilDepth
   !-----------------------------------------------------------------------

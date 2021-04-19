@@ -38,7 +38,7 @@ module WaterDiagnosticBulkType
 
      real(r8), pointer :: h2osno_total_col       (:)   ! col total snow water (mm H2O)
      real(r8), pointer :: snow_depth_col         (:)   ! col snow height of snow covered area (m)
-     real(r8), pointer :: snow_5day_col          (:)   ! col snow height 5 day avg
+     real(r8), pointer :: snow_5day_col          (:)   ! col snow height 5 day avg (m)
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
      real(r8), pointer :: bw_col                 (:,:) ! col partial density of water in the snow pack (ice + liquid) [kg/m3] 
@@ -79,17 +79,20 @@ module WaterDiagnosticBulkType
 
    contains
 
-     procedure, public  :: InitBulk
-     procedure, public  :: RestartBulk
-     procedure, public  :: Summary
-     procedure, public  :: ResetBulkFilter
-     procedure, public  :: ResetBulk
+     ! Public interfaces
+     procedure, public  :: InitBulk                     ! Initiatlization of bulk water diagnostics
+     procedure, public  :: RestartBulk                  ! Restart bulk water diagnostics
+     procedure, public  :: Summary                      ! Compute end of time-step summaries of terms
+     procedure, public  :: ResetBulkFilter              ! Reset the filter for bulk water
+     procedure, public  :: ResetBulk                    ! Reset bulk water characteristics
+     procedure, public :: InitAccBuffer                 ! Initialize accumulation buffers
+     procedure, public :: InitAccVars                   ! Initialize accumulation variables
+     procedure, public :: UpdateAccVars                 ! Update accumulation variables
+
+     ! Private subroutines
      procedure, private :: InitBulkAllocate 
      procedure, private :: InitBulkHistory  
      procedure, private :: InitBulkCold     
-     procedure, public :: InitAccBuffer
-     procedure, public :: InitAccVars
-     procedure, public :: UpdateAccVars
      procedure, private :: RestartBackcompatIssue783
 
   end type waterdiagnosticbulk_type
@@ -521,7 +524,8 @@ contains
   end subroutine InitBulkHistory
   
   !-----------------------------------------------------------------------
-   subroutine InitAccBuffer (this, bounds)
+
+  subroutine InitAccBuffer (this, bounds)
     !
     ! !DESCRIPTION:
     ! Initialize accumulation buffer for all required module accumulated fields
@@ -542,11 +546,11 @@ contains
             desc='5-day running mean of snowdepth', accum_type='runmean', accum_period=-5, &
             subgrid_type='column', numlev=1, init_value=0._r8)
 
-
   end subroutine InitAccBuffer
 
   !-----------------------------------------------------------------------
-   subroutine InitAccVars (this, bounds)
+
+  subroutine InitAccVars (this, bounds)
     ! !DESCRIPTION:
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
@@ -581,8 +585,11 @@ contains
 
   end subroutine InitAccVars
 
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+
   subroutine UpdateAccVars (this, bounds)
+    !
+    ! Update the accumulation variuables
     !
     ! USES
     use clm_time_manager, only : get_nstep
@@ -603,15 +610,11 @@ contains
 
     ! Allocate needed dynamic memory for single level patch field
 
-
-       ! Accumulate and extract snow 10 day
+    ! Accumulate and extract 5 day average of snow depth
     call update_accum_field  ('SNOW_5D', this%snow_depth_col, nstep)
     call extract_accum_field ('SNOW_5D', this%snow_5day_col, nstep)
 
-
-
   end subroutine UpdateAccVars
-
 
   !-----------------------------------------------------------------------
   
