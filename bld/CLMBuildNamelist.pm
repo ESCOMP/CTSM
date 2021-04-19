@@ -1102,6 +1102,12 @@ sub setup_cmdl_spinup {
        $nl_flags->{'bgc_spinup'} = "off";
        $val = $defaults->get_value($var);
     }
+    # For AD spinup mode by default reseed dead plants
+    if ( $nl_flags->{$var} ne "off" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
+                    $defaults, $nl, "reseed_dead_plants", clm_accelerated_spinup=>$nl_flags->{$var},
+                    use_cn=>$nl_flags->{'use_cn'} );
+    }
   } else {
     if ( defined($nl->get_value("spinup_state")) ) {
        $log->fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of CN or BGC," .
@@ -1615,6 +1621,11 @@ sub process_namelist_inline_logic {
   # namelist group: bgc_shared
   ##################################
   setup_logic_bgc_shared($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ##################################
+  # namelist group: cnphenology
+  ##################################
+  setup_logic_cnphenology($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
   #############################################
   # namelist group: soilwater_movement_inparm #
@@ -2680,6 +2691,24 @@ sub setup_logic_bgc_shared {
   # workaround.
   if ( &value_is_true($nl_flags->{'use_century_decomp'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnphenology {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  my @list  = (  "onset_thresh_depends_on_veg", "min_crtical_dayl_depends_on_lat" );
+  foreach my $var ( @list ) {
+    if (  &value_is_true($nl_flags->{'use_cn'}) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
+                   'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'} );
+    } else {
+       if ( defined($nl->get_value($var)) ) {
+          $log->fatal_error("$var should only be set if use_cn is on");
+       }
+    }
   }
 }
 
