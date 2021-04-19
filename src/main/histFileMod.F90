@@ -5592,11 +5592,11 @@ contains
     !-----------------------------------------------------------------------
 
     if (l2g_scale_type == 'unity') then
-       ! TODO(wjs, 2021-04-16) Once we consistently set l2g_scale_type for all variables,
-       ! and have stopped using other mechanisms (particularly the setting of variables to
-       ! spval everywhere) then we can stop setting this to 'unknown': we can instead set
-       ! this to something like 'all', with reasonable confidence that the field truly
-       ! applies over all landunits.
+       ! BUG(wjs, 2021-04-19, ESCOMP/CTSM#1347) Once we consistently set l2g_scale_type
+       ! for all variables, and have stopped using other mechanisms (particularly the
+       ! setting of variables to spval everywhere) then we can stop setting this to
+       ! 'unknown': we can instead set this to something like 'all', with reasonable
+       ! confidence that the field truly applies over all landunits.
        landunit_mask_string = 'unknown'
     else
        landunit_mask_string = l2g_scale_type
