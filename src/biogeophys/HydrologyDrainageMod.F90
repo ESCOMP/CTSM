@@ -49,7 +49,7 @@ contains
     ! Calculates soil/snow hydrology with drainage (subsurface runoff)
     !
     ! !USES:
-    use landunit_varcon  , only : istwet, istsoil, istice_mec, istcrop
+    use landunit_varcon  , only : istwet, istsoil, istice, istcrop
     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
     use clm_varcon       , only : denh2o, denice
     use clm_varctl       , only : use_vichydro
@@ -181,7 +181,7 @@ contains
          l = col%landunit(c)
          g = col%gridcell(c)
 
-         if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
+         if (lun%itype(l)==istwet .or. lun%itype(l)==istice) then
 
             qflx_drain(c)         = 0._r8
             qflx_drain_perched(c) = 0._r8

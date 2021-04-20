@@ -1,4 +1,225 @@
 ===============================================================
+Tag name:  ctsm5.1.dev035
+Originator(s):  sacks (Bill Sacks)
+Date:  Tue Apr 20 10:45:25 MDT 2021
+One-line Summary: Misc bfb enhancements and fixes
+
+Purpose and description of changes
+----------------------------------
+
+(1) If CISM is running over Antarctica, use virtual glacier columns over
+    Antarctica
+
+(2) Remove "mec" from some glacier/ice variable names (it is misleading
+    to have "mec" in variable names when the ice landunit can actually
+    have multiple columns *or* a single column) (ESCOMP/CTSM#1294)
+
+(3) Add history file metadata on each variable's l2g_scale_type (adds a
+    landunit_mask attribute) (ESCOMP/CTSM#1343)
+
+(4) Use python3 in more shebang lines - needed to run python unit tests
+    on cheyenne
+
+(5) New compset naming for IG compsets (ESCOMP/CTSM#1289)
+
+(6) Remove calculation of fun_cost_fix that is overwritten
+    (ESCOMP/CTSM#1115)
+
+(7) Bypass grid-level water mass check when fates hydro is active
+    (ESCOMP/CTSM#1334)
+
+(8) Remove some dead code (ESCOMP/CTSM#1333)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1115 (overwrite fun_cost_fix)
+- Resolves ESCOMP/CTSM#1289 (After updating to cism2_1_76 or later,
+  change compsets involving CISM)
+- Resolves ESCOMP/CTSM#1294 (Replace istice_mec with istice)
+- Resolves ESCOMP/CTSM#1333 (Remove some dead code)
+- Resolves ESCOMP/CTSM#1343 (Add landunit_mask (formerly l2g_scale_type)
+  metadata to history file)
+
+Notes of particular relevance for users
+---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Renamed maxpatch_glcmec to maxpatch_glc
+
+Substantial timing or memory changes:
+- Increase in land initialization time in the PFS test
+  (PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel); this is probably
+  due to machine variability because I don't think any of the changes in
+  this tag would have any significant impact on model initialization
+  time.
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - ok (tests pass, namelists differ as expected)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - pass (ran 'make test' on cheyenne and 'make all' on my Mac)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- One small piece is documented in https://github.com/ESCOMP/CTSM/pull/1334
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev034
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Apr 19 16:02:29 MDT 2021
+One-line Summary: Bring in Arctic changes to LUNA from Leah Birch
+
+Purpose and description of changes
+----------------------------------
+
+This is @lmbirch89 branch from #947 with the exception that Kattge is used in place of 
+Leuning in LUNA. Also the startup initial values in the luna bug fix branch #961 is 
+used in place of the updated values by @lmbirch89. The LUNA bug fixes have already come
+in, so these are some changes to improve arctic plants.
+
+We have addressed the issues in phenology and photosynthesis in the high latitudes. 
+Development was focused on PFT specific differences and we used observations to inform 
+model development. GPP is improved now such that the tundra is realistically less
+productive than the boreal forest.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #807 -- Revisit PFT optical properties per Majasalmi and Bright (2019)
+   Fixes #1307 -- Turn on reseed_dead_plants when you start AD spinup mode
+
+Known bugs introduced in this tag (include issue #):
+  #1346 -- Use of floating point flag onset_thresh is confusing in CNPhenologyMod
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist items: onset_thresh_depends_on_veg and min_crtical_dayl_depends_on_lat
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  reseed_dead_plants turned on when AD spinup mode turned on
+  onset_thresh_depends_on_veg and min_crtical_dayl_depends_on_lat turned on for clm5_1 physics
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+  New parameter file (same as start used in PPE work) also has additional fields on it
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  As noted in #1346 some of the logic in CNPhenology in CNSeasonDecidPhenology is a bit confusing.
+   The soil layer used was put in CNSharedParameters and needed it's own subroutine to prevent circular dependencies.
+   There are new accumulator variables added that area always turned on even when not needed. Doing this
+   in a reasonable manner (without having lots of CNPhenology logic spilled into base types) would require
+   a refactoring of a better way to figure this out.
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for clm5_1 physics
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_1
+    - what platforms/compilers: all
+    - nature of change: new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       oleson -- clm50_ctsm10d089_2deg_GSWP3V1_lmbirch_wkattge_jmaxb1-0.17_slatopA_1850AD
+
+   URL for LMWG diagnostics output used to validate new climate:
+     http://webext.cgd.ucar.edu/I1850/clm50_ctsm10d089_2deg_GSWP3V1_lmbirch_wkattge_jmaxb1-0.17_slatopA_1850AD/
+	
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):  #990
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #990 -- Arctic changes branch with Kattge in place of Leuning in LUNA
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev033
 Originator(s): mvertens (Mariana Vertenstein), sacks (Bill Sacks)
 Date:  Sat Apr 10 16:42:06 MDT 2021
