@@ -446,8 +446,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Mountain glaciers: single_at_atm_topo
      Greenland - inside CISM grid but outside Greenland itself: virtual
      Greenland itself: virtual
-     Antarctica: multiple -->
-<glacier_region_behavior>'single_at_atm_topo','virtual','virtual','multiple'</glacier_region_behavior>
+     Antarctica: multiple
+
+     If CISM is running over Antarctica, then we change the Antarctica
+     behavior to virtual. Note that the Greenland behavior is always
+     virtual, even if Greenland isn't included in this run.
+-->
+<glacier_region_behavior glc_use_antarctica="0">'single_at_atm_topo','virtual','virtual','multiple'</glacier_region_behavior>
+<glacier_region_behavior glc_use_antarctica="1">'single_at_atm_topo','virtual','virtual','virtual' </glacier_region_behavior>
 
 <!-- Default glacier melt behavior is:
      Mountain glaciers: remains_in_place

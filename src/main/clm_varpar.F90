@@ -86,7 +86,7 @@ module clm_varpar
   integer, public :: cft_ub             ! In arrays of PFTs, upper bound of PFTs on the crop landunit
   integer, public :: cft_size           ! Number of PFTs on crop landunit in arrays of PFTs
 
-  integer, public :: maxpatch_glcmec    ! max number of elevation classes
+  integer, public :: maxpatch_glc    ! max number of elevation classes
   integer, public :: max_patch_per_col
   !
   ! !PUBLIC MEMBER FUNCTIONS:

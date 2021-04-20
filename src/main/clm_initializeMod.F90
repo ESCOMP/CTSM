@@ -112,7 +112,7 @@ contains
     !
     ! !USES:
     use clm_varcon                    , only : spval
-    use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
+    use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glc
     use clm_varpar                    , only : nlevsno
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
@@ -212,8 +212,8 @@ contains
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
-    allocate (wt_glc_mec   (begg:endg, maxpatch_glcmec     ))
-    allocate (topo_glc_mec (begg:endg, maxpatch_glcmec     ))
+    allocate (wt_glc_mec   (begg:endg, maxpatch_glc     ))
+    allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
     allocate (haslake      (begg:endg                      ))
 
     ! Read list of Patches and their corresponding parameter values
@@ -385,8 +385,8 @@ contains
        call get_clump_bounds(nc, bounds_clump)
 
        call dyn_hwcontent_set_baselines(bounds_clump, &
-            filter_inactive_and_active(nc)%num_icemecc, &
-            filter_inactive_and_active(nc)%icemecc, &
+            filter_inactive_and_active(nc)%num_icec, &
+            filter_inactive_and_active(nc)%icec, &
             filter_inactive_and_active(nc)%num_lakec, &
             filter_inactive_and_active(nc)%lakec, &
             urbanparams_inst, soilstate_inst, lakestate_inst, water_inst, temperature_inst, &
@@ -529,8 +529,8 @@ contains
        call get_clump_bounds(nc, bounds_clump)
 
        call dyn_hwcontent_set_baselines(bounds_clump, &
-            filter_inactive_and_active(nc)%num_icemecc, &
-            filter_inactive_and_active(nc)%icemecc, &
+            filter_inactive_and_active(nc)%num_icec, &
+            filter_inactive_and_active(nc)%icec, &
             filter_inactive_and_active(nc)%num_lakec, &
             filter_inactive_and_active(nc)%lakec, &
             urbanparams_inst, soilstate_inst, lakestate_inst, &

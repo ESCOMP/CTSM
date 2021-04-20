@@ -11,7 +11,7 @@ module clm_instMod
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
   use clm_varctl      , only : use_century_decomp, use_crop, snow_cover_fraction_method, paramfile
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
-  use landunit_varcon , only : istice_mec, istsoil
+  use landunit_varcon , only : istice, istsoil
   use perf_mod        , only : t_startf, t_stopf
   use controlMod      , only : NLFilename
   use fileutils       , only : getfil
@@ -242,7 +242,7 @@ contains
        ! feedback may not activate on time (or at all). So, as a compromise, we start with
        ! a small amount of snow in places that are likely to be snow-covered for much or
        ! all of the year.
-       if (lun%itype(l)==istice_mec) then
+       if (lun%itype(l)==istice) then
           h2osno_col(c) = 100._r8
        else if (lun%itype(l)==istsoil .and. abs(grc%latdeg(g)) >= 60._r8) then 
           h2osno_col(c) = 100._r8

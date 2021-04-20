@@ -288,7 +288,7 @@ contains
     !
     ! !USES:
     use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use landunit_varcon , only : istwet, istsoil, istcrop, istice_mec  
+    use landunit_varcon , only : istwet, istsoil, istcrop, istice
     use column_varcon   , only : icol_road_perv, icol_road_imperv
     use clm_varcon      , only : denice, denh2o, bdsno 
     use clm_varcon      , only : tfrz, aquifer_water_baseline
@@ -385,7 +385,7 @@ contains
                      this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
                   endif
                end do
-            else if (lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istice) then
                nlevs = nlevgrnd 
                do j = 1, nlevs
                   this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
