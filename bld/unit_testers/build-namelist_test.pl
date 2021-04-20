@@ -84,9 +84,10 @@ EOF
    $fh->close();
 }
 
-sub cat_and_expand_vars {
+sub cat_and_create_namelistinfile {
 #
-# Concatenate the user_nl_clm files together and expand any environment variables in them
+# Concatenate the user_nl_clm files together and turn it into a namelist input file
+# that can be read in by build-namelist
 #
    my ($file1, $file2, $outfile) = @_;
 
@@ -162,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1555;
+my $ntests = 1739;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1044;
+   $ntests += 1185;
 }
 plan( tests=>$ntests );
 
@@ -353,14 +354,21 @@ print "=========================================================================
 my $phys = "clm5_1";
 $mode = "-phys $phys";
 &make_config_cache($phys);
-foreach my $site ( "ABBY" ) {
+foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO", "NIWO", 
+                   "ONAQ", "PUUM", "SERC", "SRER", "TALL", "TREE", "WOOD", "BARR", "BONA", 
+                   "DCFS", "DELA", "GUAN", "JERC", "KONZ", "MLBS", "NOGP", "ORNL", "RMNP", 
+                   "SJER", "STEI", "TEAK", "UKFS", "WREF", "BART", "CLBJ", "DSNY", "HARV", 
+                   "JORN", "LAJA", "MOAB", "OAES", "OSBS", "SCBI", "SOAP", "STER", "TOOL", 
+                   "UNDE", "YELL" 
+ ) {
    &make_env_run();
    #
    # Concatonate  default usermods and specific sitetogether expanding env variables while doing that
    # 
    my $neondir      = "../../cime_config/usermods_dirs/NEON";
    if ( ! -d "$neondir/$site" ) {
-      die "ERROR:: NEON site does not exist\n";
+      print "NEON directory is not there: $neondir/$site\n";
+      die "ERROR:: NEON site does not exist: $site\n";
    }
    my $neondefaultfile = "$neondir/defaults/user_nl_clm";
    my $neonsitefile = "$neondir/$site/user_nl_clm";
@@ -368,8 +376,8 @@ foreach my $site ( "ABBY" ) {
       $neonsitefile = undef;
    }
    $ENV{'NEONSITE'} = $site;
-   my $namelistfile = "temp.namelistinfile";
-   &cat_and_expand_vars( $neondefaultfile, $neonsitefile, $namelistfile );
+   my $namelistfile = "temp.namelistinfile_$site";
+   &cat_and_create_namelistinfile( $neondefaultfile, $neonsitefile, $namelistfile );
    #
    # Now run  the site
    # 
