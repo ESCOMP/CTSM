@@ -1672,6 +1672,15 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
+  <test name="SMS_D_Vnuopc" grid="CLM_USRDAT" compset="I1PtClm50Bgc" testmods="clm/NEON_YELL">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+    </options>
+  </test>
   <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>

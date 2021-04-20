@@ -84,6 +84,36 @@ EOF
    $fh->close();
 }
 
+sub cat_and_expand_vars {
+#
+# Concatenate the user_nl_clm files together and expand any environment variables in them
+#
+   my ($file1, $file2, $outfile) = @_;
+
+   my $fh    = IO::File->new($file1,   '<') or die "can't open file: $file1";
+   my $outfh = IO::File->new($outfile, '>') or die "can't open file: $outfile";
+   print $outfh "&clm_settings\n\n";
+   while ( my $line = <$fh> ) {
+     # Need to repeat this line for each env variable that might be in the line...
+     $line =~ s/\$\{?(\w+)\}?/$ENV{$1}/;
+     $line =~ s/\$\{?(\w+)\}?/$ENV{$1}/;
+     print $outfh " $line";
+   }
+   $fh->close();
+   if ( defined($file2) ) {
+      my $fh    = IO::File->new($file2,   '<') or die "can't open file: $file2";
+      while ( my $line = <$fh> ) {
+        # Need to repeat this line for each env variable that might be in the line...
+        $line =~ s/\$\{?(\w+)\}?/$ENV{$1}/;
+        $line =~ s/\$\{?(\w+)\}?/$ENV{$1}/;
+        print $outfh " $line";
+      }
+   }
+   print $outfh "\n/\n";
+   $fh->close();
+   $outfh->close();
+}
+
 #
 # Process command-line options.
 #
@@ -138,7 +168,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1551;
+my $ntests = 1555;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1044;
 }
@@ -321,6 +351,49 @@ foreach my $options ( "-configuration nwp",
    if ( defined($opts{'generate'}) ) {
       $cfiles->copyfiles( "$options", $mode );
    }
+   &cleanup();
+}
+print "\n===============================================================================\n";
+print "Test the NEON sites\n";
+print "=================================================================================\n";
+my $phys = "clm5_1";
+$mode = "-phys $phys";
+&make_config_cache($phys);
+foreach my $site ( "ABBY" ) {
+   &make_env_run();
+   #
+   # Concatonate  default usermods and specific sitetogether expanding env variables while doing that
+   # 
+   my $neondir      = "../../cime_config/usermods_dirs/NEON";
+   if ( ! -d "$neondir/$site" ) {
+      die "ERROR:: NEON site does not exist\n";
+   }
+   my $neondefaultfile = "$neondir/defaults/user_nl_clm";
+   my $neonsitefile = "$neondir/$site/user_nl_clm";
+   if ( ! -f $neonsitefile )  {
+      $neonsitefile = undef;
+   }
+   $ENV{'NEONSITE'} = $site;
+   my $namelistfile = "temp.namelistinfile";
+   &cat_and_expand_vars( $neondefaultfile, $neonsitefile, $namelistfile );
+   #
+   # Now run  the site
+   # 
+   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2000 -infile $namelistfile";
+   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   is( $@, '', "options: $options" );
+   $cfiles->checkfilesexist( "$options", $mode );
+   $cfiles->shownmldiff( "default", $mode );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   system( "/bin/rm $namelistfile" );
    &cleanup();
 }
 
