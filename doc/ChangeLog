@@ -1,4 +1,109 @@
 ===============================================================
+Tag name:  ctsm5.1.dev035
+Originator(s):  sacks (Bill Sacks)
+Date:  Tue Apr 20 10:45:25 MDT 2021
+One-line Summary: Misc bfb enhancements and fixes
+
+Purpose and description of changes
+----------------------------------
+
+(1) If CISM is running over Antarctica, use virtual glacier columns over
+    Antarctica
+
+(2) Remove "mec" from some glacier/ice variable names (it is misleading
+    to have "mec" in variable names when the ice landunit can actually
+    have multiple columns *or* a single column) (ESCOMP/CTSM#1294)
+
+(3) Add history file metadata on each variable's l2g_scale_type (adds a
+    landunit_mask attribute) (ESCOMP/CTSM#1343)
+
+(4) Use python3 in more shebang lines - needed to run python unit tests
+    on cheyenne
+
+(5) New compset naming for IG compsets (ESCOMP/CTSM#1289)
+
+(6) Remove calculation of fun_cost_fix that is overwritten
+    (ESCOMP/CTSM#1115)
+
+(7) Bypass grid-level water mass check when fates hydro is active
+    (ESCOMP/CTSM#1334)
+
+(8) Remove some dead code (ESCOMP/CTSM#1333)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1115 (overwrite fun_cost_fix)
+- Resolves ESCOMP/CTSM#1289 (After updating to cism2_1_76 or later,
+  change compsets involving CISM)
+- Resolves ESCOMP/CTSM#1294 (Replace istice_mec with istice)
+- Resolves ESCOMP/CTSM#1333 (Remove some dead code)
+- Resolves ESCOMP/CTSM#1343 (Add landunit_mask (formerly l2g_scale_type)
+  metadata to history file)
+
+Notes of particular relevance for users
+---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Renamed maxpatch_glcmec to maxpatch_glc
+
+Substantial timing or memory changes:
+- Increase in land initialization time in the PFS test
+  (PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel); this is probably
+  due to machine variability because I don't think any of the changes in
+  this tag would have any significant impact on model initialization
+  time.
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - ok (tests pass, namelists differ as expected)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - pass (ran 'make test' on cheyenne and 'make all' on my Mac)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- One small piece is documented in https://github.com/ESCOMP/CTSM/pull/1334
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev034
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon Apr 19 16:02:29 MDT 2021
