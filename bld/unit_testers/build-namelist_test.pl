@@ -94,18 +94,12 @@ sub cat_and_expand_vars {
    my $outfh = IO::File->new($outfile, '>') or die "can't open file: $outfile";
    print $outfh "&clm_settings\n\n";
    while ( my $line = <$fh> ) {
-     # Need to repeat this line for each env variable that might be in the line...
-     $line =~ s/\$\{?(\w+)\}?/$ENV{$1}/;
-     $line =~ s/\$\{?(\w+)\}?/$ENV{$1}/;
      print $outfh " $line";
    }
    $fh->close();
    if ( defined($file2) ) {
       my $fh    = IO::File->new($file2,   '<') or die "can't open file: $file2";
       while ( my $line = <$fh> ) {
-        # Need to repeat this line for each env variable that might be in the line...
-        $line =~ s/\$\{?(\w+)\}?/$ENV{$1}/;
-        $line =~ s/\$\{?(\w+)\}?/$ENV{$1}/;
         print $outfh " $line";
       }
    }
