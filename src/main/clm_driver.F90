@@ -26,7 +26,7 @@ module clm_driver
   use abortutils             , only : endrun
   !
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
-  use BalanceCheckMod        , only : BeginWaterBalance, BalanceCheck
+  use BalanceCheckMod        , only : WaterGridcellBalance, BeginWaterColumnBalance, BalanceCheck
   !
   use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
   use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
@@ -74,13 +74,11 @@ module clm_driver
   use DaylengthMod           , only : UpdateDaylength
   use perf_mod
   !
-  use clm_instMod            , only : nutrient_competition_method
   use GridcellType           , only : grc
   use LandunitType           , only : lun
   use ColumnType             , only : col
   use PatchType              , only : patch
   use clm_instMod
-  use clm_instMod            , only : soil_water_retention_curve
   use EDBGCDynMod            , only : EDBGCDyn, EDBGCDynSummary
   use SoilMoistureStreamMod  , only : PrescribedSoilMoistureInterp, PrescribedSoilMoistureAdvance
   !
@@ -327,6 +325,13 @@ contains
        end if
        call t_stopf('begcnbal_grc')
 
+       call t_startf('begwbal')
+       call WaterGridcellBalance(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            water_inst, lakestate_inst, &
+            use_aquifer_layer = use_aquifer_layer(), flag = 'begwb')
+       call t_stopf('begwbal')
     end do
     !$OMP END PARALLEL DO
 
@@ -362,9 +367,9 @@ contains
     ! For water: Currently, I believe this needs to be done after weights are updated for
     ! prescribed transient patches or CNDV, because column-level water is not generally
     ! conserved when weights change (instead the difference is put in the grid cell-level
-    ! terms, qflx_liq_dynbal, etc.). In the future, we may want to change the balance
-    ! checks to ensure that the grid cell-level water is conserved, considering
-    ! qflx_liq_dynbal; in this case, the call to BeginWaterBalance should be moved to
+    ! terms, qflx_liq_dynbal, etc.). Grid cell-level balance
+    ! checks ensure that the grid cell-level water is conserved by considering
+    ! qflx_liq_dynbal and calling WaterGridcellBalance
     ! before the weight updates.
     !
     ! For carbon & nitrogen: This needs to be done after dynSubgrid_driver, because the
@@ -382,7 +387,7 @@ contains
           call t_stopf('prescribed_sm')
        endif
        call t_startf('begwbal')
-       call BeginWaterBalance(bounds_clump,                   &
+       call BeginWaterColumnBalance(bounds_clump,             &
             filter(nc)%num_nolakec, filter(nc)%nolakec,       &
             filter(nc)%num_lakec, filter(nc)%lakec,           &
             water_inst, soilhydrology_inst, lakestate_inst, &
@@ -468,7 +473,7 @@ contains
             energyflux_inst)
 
        call topo_inst%UpdateTopo(bounds_clump, &
-            filter(nc)%num_icemecc, filter(nc)%icemecc, &
+            filter(nc)%num_icec, filter(nc)%icec, &
             glc2lnd_inst, glc_behavior, &
             atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
 
@@ -614,6 +619,8 @@ contains
             soilstate_inst, temperature_inst, &
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterstatebulk_inst)
+
+       call ozone_inst%CalcOzoneStress(bounds_clump, filter(nc)%num_exposedvegp, filter(nc)%exposedvegp)
 
        ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
        ! LakeFluxes... I'll probably leave it in place there.
@@ -1112,20 +1119,8 @@ contains
 
        call water_inst%Summary(bounds_clump, &
             filter(nc)%num_soilp, filter(nc)%soilp, &
-            filter(nc)%num_allc, filter(nc)%allc)
-
-       ! ============================================================================
-       ! Check the energy and water balance
-       ! ============================================================================
-
-       call t_startf('balchk')
-       call BalanceCheck(bounds_clump, &
             filter(nc)%num_allc, filter(nc)%allc, &
-            atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
-            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
-            water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
-            surfalb_inst, energyflux_inst, canopystate_inst)
-       call t_stopf('balchk')
+            filter(nc)%num_nolakec, filter(nc)%nolakec)
 
        ! ============================================================================
        ! Check the carbon and nitrogen balance
@@ -1279,6 +1274,30 @@ contains
     end do
     !$OMP END PARALLEL DO
     call t_stopf('lnd2glc')
+
+    ! ==========================================================================
+    ! Check the energy and water balance
+    ! ==========================================================================
+
+    call t_startf('balchk')
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1,nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call WaterGridcellBalance(bounds_clump, &
+            filter(nc)%num_nolakec, filter(nc)%nolakec, &
+            filter(nc)%num_lakec, filter(nc)%lakec, &
+            water_inst, lakestate_inst, &
+            use_aquifer_layer = use_aquifer_layer(), flag = 'endwb')
+       call BalanceCheck(bounds_clump, &
+            filter(nc)%num_allc, filter(nc)%allc, &
+            atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
+            water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
+            water_inst%waterbalancebulk_inst, water_inst%wateratm2lndbulk_inst, &
+            water_inst%waterlnd2atmbulk_inst, surfalb_inst, energyflux_inst, &
+            canopystate_inst)
+    end do
+    !$OMP END PARALLEL DO
+    call t_stopf('balchk')
 
     ! ============================================================================
     ! Write global average diagnostics to standard output

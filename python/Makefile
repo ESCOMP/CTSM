@@ -8,7 +8,7 @@ debug = not-set
 ifneq ($(python), not-set)
     PYTHON=$(python)
 else
-    PYTHON=python
+    PYTHON=python3
 endif
 
 ifneq ($(debug), not-set)
