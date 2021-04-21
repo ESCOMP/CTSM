@@ -56,7 +56,7 @@ def get_parser():
                     dest="create_domain",
                     required = False,
                     type = bool, 
-                    default = False)
+                    default = True)
         parser.add_argument('--create_surface',
                     help='Flag for creating surface data file at single point.', 
                     action="store",
@@ -70,7 +70,7 @@ def get_parser():
                     dest="create_landuse",
                     required = False,
                     type = bool, 
-                    default = False)
+                    default = True)
         parser.add_argument('--create_datm',
                     help='Flag for creating DATM atmospheric forcing data at single point.', 
                     action="store",
@@ -213,7 +213,6 @@ class StreamToLogger(object):
         self.linebuf = ''
 
 
-
 class SinglePointCase :
     """
     A case to encapsulate single point cases.
@@ -235,23 +234,48 @@ class SinglePointCase :
     def create_tag(self):
         self.tag=str(self.plon)+'_'+str(self.plat)
 
+    def create_1d_coord(self, filename, lon_varname , lat_varname,x_dim , y_dim ):
+        """
+        lon_varname : variable name that has 2d lon
+        lat_varname : variable name that has 2d lat
+        x_dim: dimension name in X -- lon
+        y_dim: dimension name in Y -- lat
+        """
+        print( "Open inside here: "+filename )                                                                                                     
+        f1 = xr.open_dataset(filename)
+        # create 1d coordinate variables to enable sel() method
+        lon0 = np.asarray(f1[lon_varname][0,:])
+        lat0 = np.asarray(f1[lat_varname][:,0])
+        lon = xr.DataArray(lon0,name='lon',dims=x_dim,coords={x_dim:lon0})
+        lat = xr.DataArray(lat0,name='lat',dims=y_dim,coords={y_dim:lat0})
+        # assign() not working on cheyenne
+        #f2=f1.assign({'lon':lon,'lat':lat})
+        f2=f1.assign()
+        #f2 = f1.copy()
+        f2['lon'] = lon 
+        f2['lat'] = lat 
+        f2.reset_coords([lon_varname,lat_varname])
+        self.f2 = f2
 
     def create_domain_at_point (self): 
-        print( "Open: "+self.fdomain )
-        f1  = xr.open_dataset(self.fdomain)
+        #print( "Open: "+self.fdomain )
+        #f1  = xr.open_dataset(self.fdomain)
         # create 1d coordinate variables to enable sel() method
-        lon0=np.asarray(f1['xc'][0,:])
-        lat0=np.asarray(f1['yc'][:,0])
-        lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
-        lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
+        #lon0=np.asarray(f1['xc'][0,:])
+        #lat0=np.asarray(f1['yc'][:,0])
+        #lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
+        #lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
         # assign() not working on cheyenne
         #f2=f1.assign({'lon':lon,'lat':lat})
         #f2=f1.assign()
-        f2 = f1.copy()
-        f2['lon'] = lon 
-        f2['lat'] = lat 
-        f2.reset_coords(['xc','yc'])
+        #f2 = f1.copy()
+        #f2['lon'] = lon 
+        #f2['lat'] = lat 
+        #f2.reset_coords(['xc','yc'])
+        filename = self.fdomain
+        self.create_1d_coord(filename, 'xc','yc','ni','nj')
         # extract gridcell closest to plon/plat
+        f2 = self.f2
         f3 = f2.sel(ni=self.plon,nj=self.plat,method='nearest')
         # expand dimensions
         f3 = f3.expand_dims(['nj','ni'])
@@ -260,23 +284,28 @@ class SinglePointCase :
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
         print('Successfully created file (fdomain2)'+self.fdomain2)
-        f1.close(); f2.close(); f3.close()
+        f2.close(); f3.close()
+
 
     def create_landuse_at_point (self):
-        print( "Open: "+self.fluse )
-        f1  = xr.open_dataset(self.fluse)
-        print (f1)
+        #print( "Open: "+self.fluse )
+        #f1  = xr.open_dataset(self.fluse)
+        #print (f1)
         # create 1d variables
-        lon0=np.asarray(f1['LONGXY'][0,:])
-        lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
-        lat0=np.asarray(f1['LATIXY'][:,0])
-        lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
+        #lon0=np.asarray(f1['LONGXY'][0,:])
+        #lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
+        #lat0=np.asarray(f1['LATIXY'][:,0])
+        #lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
         #f2=f1.assign({'lon':lon,'lat':lat})
-        f2=f1.assign()
-        f2['lon'] = lon 
-        f2['lat'] = lat 
-        print ("lat : ", lat)
-        print ("lon : ", lon)  
+        #f2=f1.assign()
+        #f2['lon'] = lon 
+        #f2['lat'] = lat 
+        #print ("lat : ", lat)
+        #print ("lon : ", lon)  
+        filename = self.fluse
+        self.create_1d_coord(filename, 'LONGXY','LATIXY','lsmlon','lsmlat')
+        print ("Successfully created 1d coord from:", filename)
+        f2 = self.f2
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=self.plon,lsmlat=self.plat,method='nearest')
  
@@ -300,7 +329,8 @@ class SinglePointCase :
         # mode 'w' overwrites file
         f3.to_netcdf(path=self.fluse2, mode='w')
         print('created file (fluse2)'+self.fluse2)
-        f1.close(); f2.close(); f3.close()
+        #f1.close(); 
+        f2.close(); f3.close()
 
     def create_surfdata_at_point(self):
         print( "Open: "+self.fsurf )
