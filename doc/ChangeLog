@@ -1,4 +1,100 @@
 ===============================================================
+Tag name:  ctsm5.1.dev036
+Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date:  Wed 21 Apr 2021 08:44:38 AM PDT
+One-line Summary: FATES tag update and snow occlusion of LAI fix
+
+Purpose and description of changes
+----------------------------------
+
+This tag updates the way in which fates is called during restarts to appropriately 
+handle the fates-side snow occlusion code.  Additionally, this update points to the 
+most recent fates tag, which includes a number of fates science updates (including
+the snow occlusion fix) and fates-side bug fixes (see below for list of issues 
+addressed).  
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  #1293 -- Update FATES on CTSM main-dev
+  NGEET/fates#359 -- ground snow is not occluding lai profile
+  NGEET/fates#709 -- Error Check issue in EDPatchDynamicsMod.F90: spawn_patches() causes problem with logging module
+  NGEET/fates#725 -- declaration of the prt pointer
+  NGEET/fates#713 -- Changes associated with patch fraction burnt
+  NGEET/fates#473 -- Update FIRE_AREA long name units
+  NGEET/fates#575 -- Clean up NaN and zeroing of fire variables in Patch and Cohort Dynamics
+
+Known bugs found since the previous tag (include issue #):
+  #1338 -- Floating point exception in fates gnu compiler regression test with ctsm5.1.dev027
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+  
+    ok: All non-fates testmods PASS b4b. Fates testmods have DIFF as expected due to update of fates science tag.
+
+  fates tests:
+    cheyenne ---- ok
+
+    ok: NLCOMP failures due to clm50_param file update relative to ctsm tag used on the last fates baseline. 
+
+    fates baseline: fates-sci.1.44.1_api.14.2.0-ctsm5.1.dev033-C30ca1849-F6065b9a2
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, only for fates
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all fates
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+    - fates-side review of expected differences for all PRs that changed answers (2 science updates
+      and 2 bug fixes)
+	
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+  fates: sci.1.43.2_api.14.2.0 -> sci.1.45.0_api.15.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  - https://github.com/ESCOMP/CTSM/pull/1324
+  - https://github.com/NGEET/fates/pull/734 
+  
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev035
 Originator(s):  sacks (Bill Sacks)
 Date:  Tue Apr 20 10:45:25 MDT 2021
@@ -1220,7 +1316,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name:  ctsm5.1.dev022
-Originator(s):  gregorylemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Fri Feb  5 00:03:28 MST 2021
 One-line Summary: Merge fates_main_api into ctsm master
 
