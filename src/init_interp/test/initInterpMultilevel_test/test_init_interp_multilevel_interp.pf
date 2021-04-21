@@ -155,14 +155,7 @@ contains
     ! In particular here we test:
     ! 1st layer copying to 1st layer of same thickness dzsoi (no scaling)
     ! 2nd layer copying to 2nd layer of half the thickness (scale * 0.5)
-    ! 2nd + 3rd layers interpolating to 3rd layer, where the scaling from the
-    ! thicknesses (dz) and the weighting from the overlapping depths both
-    ! contribute to the result.
-    !
-    ! The "copying" scenarios untangle the effect of scaling by thickness
-    ! (scale_by_thickness=.true.) from that of weighting by overlap.
-    ! The interpolation scheme is explained in a schematic available here:
-    ! https://docs.google.com/presentation/d/1ka1QkXqZcekQqCmj5S1eMGaEgM-pxZy5jwvvnNoasj4/edit?usp=sharing
+    ! 2nd + 3rd layers interpolating to 3rd layer
 
     class(TestInitInterpMultilevelInterp), intent(inout) :: this
     type(interp_multilevel_interp_type) :: interpolator
@@ -198,9 +191,6 @@ contains
     ! 1st layer copying to 1st layer of same thickness dzsoi (no scaling)
     ! 2nd layer copying to 2nd layer of half the thickness (scale * 0.5)
     ! 2nd layer copying to 3rd layer of double the thickness (scale * 2)
-    !
-    ! The "copying" scenarios untangle the effect of scaling by thickness
-    ! (scale_by_thickness=.true.) from that of weighting by overlap.
 
     class(TestInitInterpMultilevelInterp), intent(inout) :: this
     type(interp_multilevel_interp_type) :: interpolator
