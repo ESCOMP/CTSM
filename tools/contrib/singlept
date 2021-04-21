@@ -29,80 +29,180 @@ def get_parser():
                                 formatter_class=ArgumentDefaultsHelpFormatter)
         #parser = ArgumentParser(description='Setting the flags for running ./singlept script.')
         ## Add information about if this is optional and default
-        parser.add_argument('--lat',
+        subparsers = parser.add_subparsers(help='Two possible ways to run this sript', dest ='run_type')
+        sp_parser = subparsers.add_parser('sp', help = 'Run script for a single point')
+        rg_parser = subparsers.add_parser('reg', help = 'Run script for a region')
+
+ 
+        sp_parser.add_argument('--lat',
                     help='Single point latitude.', 
                     action="store",
                     dest="plat",
                     required=False,
                     type = plat_type,
                     default=42.5)
-        parser.add_argument('--lon',
+        sp_parser.add_argument('--lon',
                     help='Single point longitude.', 
                     action="store",
                     dest="plon",
                     required=False,
                     type = plon_type,
                     default= 287.8 )
-        parser.add_argument('--site',
+        sp_parser.add_argument('--site',
                     help='Site name or tag', 
                     action="store",
                     dest="site_name",
                     required = False,
                     type = str, 
                     default = '')
-        parser.add_argument('--create_domain',
+        sp_parser.add_argument('--create_domain',
                     help='Flag for creating CLM domain file at single point.', 
                     action="store",
                     dest="create_domain",
                     required = False,
                     type = bool, 
                     default = True)
-        parser.add_argument('--create_surface',
+        sp_parser.add_argument('--create_surface',
                     help='Flag for creating surface data file at single point.', 
                     action="store",
                     dest="create_surfdata",
                     required = False,
                     type = bool, 
                     default = True)
-        parser.add_argument('--create_landuse',
+        sp_parser.add_argument('--create_landuse',
                     help='Flag for creating landuse data file at single point.', 
                     action="store",
                     dest="create_landuse",
                     required = False,
                     type = bool, 
                     default = True)
-        parser.add_argument('--create_datm',
+        sp_parser.add_argument('--create_datm',
                     help='Flag for creating DATM atmospheric forcing data at single point.', 
                     action="store",
                     dest="create_datm",
                     required = False,
                     type = bool, 
                     default = False)
-        parser.add_argument('--datm_syr',
+        sp_parser.add_argument('--datm_syr',
                     help='Start year for creating DATM atmospheric forcing at single point.', 
                     action="store",
                     dest="datm_syr",
                     required = False,
                     type = int, 
                     default = 1901)
-        parser.add_argument('--datm_eyr',
+        sp_parser.add_argument('--datm_eyr',
                     help='End year for creating DATM atmospheric forcing at single point.', 
                     action="store",
                     dest="datm_eyr",
                     required = False,
                     type = int,
                     default = 2014)
-        parser.add_argument('--nocrop', 
+        sp_parser.add_argument('--nocrop', 
                     help='Create datasets without the extensive list of prognostic crop types', 
                     action="store_false", 
                     dest="crop_flag", 
                     default=True)
-        parser.add_argument('--dompft', 
+        sp_parser.add_argument('--dompft', 
                     help='Dominant PFT type', 
                     action="store", 
                     dest="dom_pft",
                     type =int,
                     default=7)
+
+        rg_parser.add_argument('--lat1',
+                    help='Region start latitude.', 
+                    action="store",   
+                    dest="lat1",      
+                    required=False,   
+                    type = plat_type, 
+                    default=-40)     
+        rg_parser.add_argument('--lat2',
+                    help='Region end latitude.', 
+                    action="store",   
+                    dest="lat2",      
+                    required=False,   
+                    type = plat_type, 
+                    default=15)     
+        rg_parser.add_argument('--lon1',        
+                    help='Region start longitude.', 
+                    action="store",   
+                    dest="lon1",      
+                    required=False,   
+                    type = plon_type, 
+                    default= 275. )  
+        rg_parser.add_argument('--lon2',        
+                    help='Region end longitude.', 
+                    action="store",   
+                    dest="lon2",      
+                    required=False,   
+                    type = plon_type, 
+                    default= 330. )  
+        rg_parser.add_argument('--reg',       
+                    help='Region name or tag',   
+                    action="store",   
+                    dest="reg_name", 
+                    required = False, 
+                    type = str,       
+                    default = '')     
+        rg_parser.add_argument('--create_domain',
+                    help='Flag for creating CLM domain file at single point.', 
+                    action="store",   
+                    dest="create_domain",      
+                    required = False, 
+                    type = bool,      
+                    default = True)   
+        rg_parser.add_argument('--create_surface',
+                    help='Flag for creating surface data file at single point.', 
+                    action="store",   
+                    dest="create_surfdata",    
+                    required = False, 
+                    type = bool,      
+                    default = True)   
+        rg_parser.add_argument('--create_landuse',
+                    help='Flag for creating landuse data file at single point.', 
+                    action="store",   
+                    dest="create_landuse",     
+                    required = False, 
+                    type = bool,      
+                    default = True)   
+        rg_parser.add_argument('--create_datm',
+                    help='Flag for creating DATM atmospheric forcing data at single point.', 
+                    action="store",   
+                    dest="create_datm",        
+                    required = False, 
+                    type = bool,      
+                    default = False)  
+        rg_parser.add_argument('--datm_syr',   
+                    help='Start year for creating DATM atmospheric forcing at single point.', 
+                    action="store",   
+                    dest="datm_syr",  
+                    required = False, 
+                    type = int,       
+                    default = 1901)
+
+        rg_parser.add_argument('--datm_eyr',
+                    help='End year for creating DATM atmospheric forcing at single point.', 
+                    action="store",
+                    dest="datm_eyr",
+                    required = False,
+                    type = int,
+                    default = 2014)
+        rg_parser.add_argument('--nocrop', 
+                    help='Create datasets without the extensive list of prognostic crop types', 
+                    action="store_false", 
+                    dest="crop_flag", 
+                    default=True)
+        rg_parser.add_argument('--dompft', 
+                    help='Dominant PFT type', 
+                    action="store", 
+                    dest="dom_pft",
+                    type =int,
+                    default=7)
+
+
+
+
+
         return parser
 
 def plat_type(x):
@@ -213,14 +313,11 @@ class StreamToLogger(object):
         self.linebuf = ''
 
 
-class SinglePointCase :
+class BaseCase : 
     """
-    A case to encapsulate single point cases.
+    Parent class to SinglePointCase and RegionalCase
     """
-
-    def __init__(self,plat, plon, create_domain, create_surfdata, create_landuse, create_datm):
-        self.plat = plat
-        self.plon = plon
+    def __init__(self, create_domain, create_surfdata, create_landuse, create_datm):
         self.create_domain = create_domain
         self.create_surfdata = create_surfdata
         self.create_landuse = create_landuse
@@ -228,13 +325,10 @@ class SinglePointCase :
 
     def __str__(self):
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item])
-                    for item in sorted(self.__dict__))
-                    )
+                    for item in sorted(self.__dict__)))
 
-    def create_tag(self):
-        self.tag=str(self.plon)+'_'+str(self.plat)
-
-    def create_1d_coord(self, filename, lon_varname , lat_varname,x_dim , y_dim ):
+    @staticmethod
+    def create_1d_coord(filename, lon_varname , lat_varname,x_dim , y_dim ):
         """
         lon_varname : variable name that has 2d lon
         lat_varname : variable name that has 2d lat
@@ -243,11 +337,13 @@ class SinglePointCase :
         """
         print( "Open inside here: "+filename )                                                                                                     
         f1 = xr.open_dataset(filename)
+
         # create 1d coordinate variables to enable sel() method
         lon0 = np.asarray(f1[lon_varname][0,:])
         lat0 = np.asarray(f1[lat_varname][:,0])
         lon = xr.DataArray(lon0,name='lon',dims=x_dim,coords={x_dim:lon0})
         lat = xr.DataArray(lat0,name='lat',dims=y_dim,coords={y_dim:lat0})
+
         # assign() not working on cheyenne
         #f2=f1.assign({'lon':lon,'lat':lat})
         f2=f1.assign()
@@ -255,67 +351,51 @@ class SinglePointCase :
         f2['lon'] = lon 
         f2['lat'] = lat 
         f2.reset_coords([lon_varname,lat_varname])
-        self.f2 = f2
+        return f2
 
-    def create_domain_at_point (self): 
-        #print( "Open: "+self.fdomain )
-        #f1  = xr.open_dataset(self.fdomain)
+
+class SinglePointCase (BaseCase):
+    """
+    A case to encapsulate single point cases.
+    """
+
+    def __init__(self, plat, plon, create_domain, create_surfdata, create_landuse, create_datm):
+        super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
+        self.plat = plat
+        self.plon = plon
+
+    def create_tag(self):
+        self.tag=str(self.plon)+'_'+str(self.plat)
+
+    def create_domain_at_point (self):
+        print ("Creating domain file at ", self.plon, self.plat)
         # create 1d coordinate variables to enable sel() method
-        #lon0=np.asarray(f1['xc'][0,:])
-        #lat0=np.asarray(f1['yc'][:,0])
-        #lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
-        #lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
-        # assign() not working on cheyenne
-        #f2=f1.assign({'lon':lon,'lat':lat})
-        #f2=f1.assign()
-        #f2 = f1.copy()
-        #f2['lon'] = lon 
-        #f2['lat'] = lat 
-        #f2.reset_coords(['xc','yc'])
-        filename = self.fdomain
-        self.create_1d_coord(filename, 'xc','yc','ni','nj')
+        f2 = self.create_1d_coord(self.fdomain_in, 'xc','yc','ni','nj')
         # extract gridcell closest to plon/plat
-        f2 = self.f2
         f3 = f2.sel(ni=self.plon,nj=self.plat,method='nearest')
         # expand dimensions
         f3 = f3.expand_dims(['nj','ni'])
-                        
-        wfile=self.fdomain2
+
+        wfile=self.fdomain_out
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
-        print('Successfully created file (fdomain2)'+self.fdomain2)
+        print('Successfully created file (fdomain_out)'+self.fdomain_out)
         f2.close(); f3.close()
 
 
     def create_landuse_at_point (self):
-        #print( "Open: "+self.fluse )
-        #f1  = xr.open_dataset(self.fluse)
-        #print (f1)
-        # create 1d variables
-        #lon0=np.asarray(f1['LONGXY'][0,:])
-        #lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
-        #lat0=np.asarray(f1['LATIXY'][:,0])
-        #lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
-        #f2=f1.assign({'lon':lon,'lat':lat})
-        #f2=f1.assign()
-        #f2['lon'] = lon 
-        #f2['lat'] = lat 
-        #print ("lat : ", lat)
-        #print ("lon : ", lon)  
-        filename = self.fluse
-        self.create_1d_coord(filename, 'LONGXY','LATIXY','lsmlon','lsmlat')
-        print ("Successfully created 1d coord from:", filename)
-        f2 = self.f2
+        print ("Creating landuse file at ", self.plon, self.plat, ".")
+        # create 1d coordinate variables to enable sel() method
+        f2 = self.create_1d_coord(self.fluse_in, 'LONGXY','LATIXY','lsmlon','lsmlat')
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=self.plon,lsmlat=self.plat,method='nearest')
- 
         # expand dimensions
         f3 = f3.expand_dims(['lsmlat','lsmlon'])
         # specify dimension order 
         #f3 = f3.transpose('time','lat','lon')
         f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
         #f3['YEAR'] = f3['YEAR'].squeeze()
- 
+
         # revert expand dimensions of YEAR
         year = np.squeeze(np.asarray(f3['YEAR']))
         print (year)
@@ -323,28 +403,18 @@ class SinglePointCase :
         x.attrs['units']='unitless'
         x.attrs['long_name']='Year of PFT data'
         f3['YEAR'] = x 
-        #print(x)
-        #print(f3)
-        #stop
+
+        wfile = self.luse_out
         # mode 'w' overwrites file
-        f3.to_netcdf(path=self.fluse2, mode='w')
-        print('created file (fluse2)'+self.fluse2)
-        #f1.close(); 
+        f3.to_netcdf(path=wfile, mode='w')
+        print('Successfully created file (luse_out)'+self.fluse_out,".")
         f2.close(); f3.close()
 
     def create_surfdata_at_point(self):
-        print( "Open: "+self.fsurf )
-        f1  = xr.open_dataset(self.fsurf)
-        # create 1d variables
-        lon0=np.asarray(f1['LONGXY'][0,:])
-        lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
-        lat0=np.asarray(f1['LATIXY'][:,0])
-        lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
-        #f2=f1.assign({'lon':lon,'lat':lat})
-        f2=f1.assign()
-        #f2 = f1.copy()
-        f2['lon'] = lon
-        f2['lat'] = lat
+        print ("Creating surface dataset file at ", self.plon, self.plat, ".")
+        # create 1d coordinate variables to enable sel() method
+        filename = self.fsurf_in
+        f2 = self.create_1d_coord(filename, 'LONGXY','LATIXY','lsmlon','lsmlat')
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=self.plon,lsmlat=self.plat,method='nearest')
         # expand dimensions
@@ -377,7 +447,7 @@ class SinglePointCase :
         today_string = today.strftime("%d/%m/%Y")
         f3.attrs['Created_on'] = today_string
         f3.attrs['Created_by'] = "negins"
-        f3.attrs['Created_from'] = self.fsurf 
+        f3.attrs['Created_from'] = self.fsurf_in 
         f3.attrs['Created_with'] = "/glade/scratch/negins/ctsm_singlept/tools/contrib/singlept.py"
         del(f3.attrs['History_Log'])
         del(f3.attrs['Logname'])
@@ -386,9 +456,10 @@ class SinglePointCase :
         del(f3.attrs['Compiler_Optimized'])
         
         # mode 'w' overwrites file
-        f3.to_netcdf(path=self.fsurf2, mode='w')
-        print('created file (fsurf2)'+self.fsurf2)
-        f1.close(); f2.close(); f3.close()
+        f3.to_netcdf(path=self.fsurf_out, mode='w')
+        print('created file (fsurf_out)'+self.fsurf_out)
+        #f1.close();
+        f2.close(); f3.close()
 
         ''' this is buggy; can't re-write a file within the same session
         # modify new surface data file
@@ -413,28 +484,19 @@ class SinglePointCase :
             f1.close()
         '''
     def create_datmdomain_at_point (self):
-        print( "Open: "+self.fdatmdomain )
-        f1  = xr.open_dataset(self.fdatmdomain)
+        print ("Creating DATM domain file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
-        lon0=np.asarray(f1['xc'][0,:])
-        lat0=np.asarray(f1['yc'][:,0])
-        lon=xr.DataArray(lon0,name='lon',dims='ni',coords={'ni':lon0})
-        lat=xr.DataArray(lat0,name='lat',dims='nj',coords={'nj':lat0})
-              
-        #f2=f1.assign({'lon':lon,'lat':lat})
-        f2=f1.assign()
-        f2['lon'] = lon
-        f2['lat'] = lat
-        f2.reset_coords(['xc','yc'])
+        filename = self.fdatmdomain
+        f2 = self.create_1d_coord(filename, 'xc','yc','ni','nj')
         # extract gridcell closest to plon/plat
         f3 = f2.sel(ni=self.plon,nj=self.plat,method='nearest')
         # expand dimensions
         f3 = f3.expand_dims(['nj','ni'])
-        wfile=self.fdatmdomain2
+        wfile=self.fdatmdomain_out
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
-        print('created file '+self.fdatmdomain2)
-        f1.close(); f2.close(); f3.close()
+        print('created file '+self.fdatmdomain_out)
+        f2.close(); f3.close()
 
     def extract_at(self, file_in, file_out):
         f1  = xr.open_dataset(file_in)
@@ -500,6 +562,83 @@ class SinglePointCase :
 
         print('datm files written to: '+dir_output_datm)
 
+class RegionalCase (BaseCase):
+    """
+    A case to encapsulate regional cases.
+    """
+
+    def __init__(self, lat1, lat2, lon1, lon2, reg_name, create_domain, create_surfdata, create_landuse, create_datm):
+        super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
+        self.lat1 = lat1
+        self.lat2 = lat2
+        self.lon1 = lon1
+        self.lon2 = lon2
+        self.reg_name = reg_name
+
+    def create_tag(self):
+        if self.reg_name:
+            self.tag = self.reg_name
+        else:
+            self.tag=str(self.lon1)+'-'+str(self.lon2)+'_'+str(self.lat1)+'-'+str(self.lat2)
+
+    def create_domain_at_reg (self):
+        #print ("Creating domain file at region", self.lon1+"-"+self.lat2,self.lat1+"-"+self.lat2)
+        print ("Creating domain file at region:", self.tag)
+        # create 1d coordinate variables to enable sel() method
+        f2 = self.create_1d_coord(self.fdomain_in, 'xc','yc','ni','nj')
+        lat = f2['lat']
+        lon = f2['lon']
+        # subset longitude and latitude arrays
+        xind=np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
+        yind=np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
+        f3=f2.isel(nj=yind,ni=xind)
+
+        wfile=self.fdomain_out
+        # mode 'w' overwrites file
+        f3.to_netcdf(path=wfile, mode='w')
+        print('Successfully created file (fdomain_out)'+self.fdomain_out)
+        f2.close(); f3.close()
+
+
+    def create_surfdata_at_reg(self):
+        #print ("Creating surface dataset file at region", self.lon1+"-"+self.lat2,self.lat1+"-"+self.lat2)
+        print ("Creating surface dataset file at region:", self.tag)
+        # create 1d coordinate variables to enable sel() method
+        filename = self.fsurf_in
+        f2 = self.create_1d_coord(filename, 'LONGXY','LATIXY','lsmlon','lsmlat')
+        lat = f2['lat']
+        lon = f2['lon']
+        # subset longitude and latitude arrays
+        xind=np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
+        yind=np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
+        f3=f2.isel(lsmlat=yind,lsmlon=xind)
+
+        # mode 'w' overwrites file
+        f3.to_netcdf(path=self.fsurf_out, mode='w')
+        print('created file (fsurf_out)'+self.fsurf_out)
+        #f1.close();
+        f2.close(); f3.close()
+
+
+    def create_landuse_at_reg (self):
+        #print ("Creating surface dataset file at region", self.lon1+"-"+self.lat2,self.lat1+"-"+self.lat2)
+        print ("Creating surface dataset file at region:",self.tag)
+        # create 1d coordinate variables to enable sel() method
+        f2 = self.create_1d_coord(self.fluse_in, 'LONGXY','LATIXY','lsmlon','lsmlat')
+        lat = f2['lat']
+        lon = f2['lon']
+        # subset longitude and latitude arrays
+        xind=np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
+        yind=np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
+        f3=f2.isel(lsmlat=yind,lsmlon=xind)
+
+        wfile=self.fluse_out
+        # mode 'w' overwrites file
+        f3.to_netcdf(path=wfile, mode='w')
+        print('Successfully created file (fdomain_out)'+self.fdomain_out)
+        f2.close(); f3.close()
+
+
 
 def error( desc ):
      "error function"
@@ -544,8 +683,6 @@ def add_tag_to_surf_filename(filename, tag, site):
 
 
 def main ():
-
-
 
     '''
     #------------------------------------------------------------------#
@@ -596,146 +733,239 @@ def main ():
     '''
 
     args = get_parser().parse_args()
+    print (args)
 
-    #  Set control flags
-
-    #-- Setup by default to run for Harvard Forest
-
-    #--  Specify point to extract
-    plon = args.plon 
-    plat = args.plat
-
-    #--  Create regional CLM domain file
-    create_domain   = args.create_domain
-    #--  Create CLM surface data file
-    create_surfdata = args.create_surfdata
-    #--  Create CLM surface data file
-    create_landuse  = args.create_landuse
-    #--  Create single point DATM atmospheric forcing data
-    create_datm     = args.create_datm
-    datm_syr = args.datm_syr
-    datm_eyr = args.datm_eyr
-
-    crop_flag = args.crop_flag
-
-    site_name = args.site_name
-
-    #--  Modify landunit structure
-    overwrite_single_pft = True
-    #dominant_pft         = 7 #BETr
-    dominant_pft         = args.dom_pft
-    print ("dominant_pft;",dominant_pft)
-    print (type(dominant_pft))
-    zero_nonveg_landunits= True
-    uniform_snowpack     = True
-    no_saturation_excess = True
+    if (args.run_type == "sp"):
+        print ("Running the script for Single Point.")
+    elif (args.run_type == "reg"):
+        print ("Running the script for Regional.")
 
 
-    single_point = SinglePointCase(plat, plon, create_domain, create_surfdata, create_landuse, create_datm)
-    single_point.overwrite_single_pft = overwrite_single_pft
-    single_point.dominant_pft = dominant_pft
-    single_point.zero_nonveg_landunits = zero_nonveg_landunits
-    single_point.uniform_snowpack = uniform_snowpack
-    single_point.no_saturation_excess = no_saturation_excess
-    single_point.create_tag()
-    print (single_point)
+    if (args.run_type == "sp"):
+
+        #--  Specify point to extract
+        plon = args.plon 
+        plat = args.plat
+
+        #--  Create regional CLM domain file
+        create_domain   = args.create_domain
+        #--  Create CLM surface data file
+        create_surfdata = args.create_surfdata
+        #--  Create CLM surface data file
+        create_landuse  = args.create_landuse
+        #--  Create single point DATM atmospheric forcing data
+        create_datm     = args.create_datm
+        datm_syr = args.datm_syr
+        datm_eyr = args.datm_eyr
+
+        crop_flag = args.crop_flag
+
+        site_name = args.site_name
+
+        #--  Modify landunit structure
+        overwrite_single_pft = True
+        #dominant_pft         = 7 #BETr
+        dominant_pft         = args.dom_pft
+        print ("dominant_pft;",dominant_pft)
+        print (type(dominant_pft))
+        zero_nonveg_landunits= True
+        uniform_snowpack     = True
+        no_saturation_excess = True
 
 
-    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
-    # create dir if it does not exist
-    log_dir = os.path.dirname(log_file)
-    if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
-
-    log_level =  logging.DEBUG
-    setup_logging(log_file, log_level)
-
-    print( "singlept script to extract out a single point from the global CTSM inputdata datasets." )
-    myname=getuser()
-    pwd=os.getcwd()
-    print("User = "+myname)
-    print("Current directory = "+pwd)
-
-    if crop_flag:
-        num_pft      = "78"
-    else: 
-        num_pft      = "16"
+        single_point = SinglePointCase(plat, plon, create_domain, create_surfdata, create_landuse, create_datm)
+        single_point.overwrite_single_pft = overwrite_single_pft
+        single_point.dominant_pft = dominant_pft
+        single_point.zero_nonveg_landunits = zero_nonveg_landunits
+        single_point.uniform_snowpack = uniform_snowpack
+        single_point.no_saturation_excess = no_saturation_excess
+        single_point.create_tag()
+        print (single_point)
 
 
-    print(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
+        log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
+        # create dir if it does not exist
+        log_dir = os.path.dirname(log_file)
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+
+        log_level =  logging.DEBUG
+        setup_logging(log_file, log_level)
+
+        print( "singlept script to extract out a single point from the global CTSM inputdata datasets." )
+        myname=getuser()
+        pwd=os.getcwd()
+        print("User = "+myname)
+        print("Current directory = "+pwd)
+
+        if crop_flag:
+            num_pft      = "78"
+        else: 
+            num_pft      = "16"
+
+
+        print(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
 
 
 
-    #--  Set input and output filenames
-    #--  Specify input and output directories
-    dir_output='/glade/scratch/'+myname+'/neon_surfdata_for_Jim_metadata/'
-    if ( not os.path.isdir( dir_output ) ):
-        os.mkdir( dir_output )
+        #--  Set input and output filenames
+        #--  Specify input and output directories
+        dir_output='/glade/scratch/'+myname+'/neon_surfdata_for_Jim_metadata/'
+        if ( not os.path.isdir( dir_output ) ):
+            os.mkdir( dir_output )
 
-    dir_inputdata='/glade/p/cesmdata/cseg/inputdata/'
-    dir_clm_forcedata='/glade/p/cgd/tss/CTSM_datm_forcing_data/'
-    dir_input_datm=dir_clm_forcedata+'/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/'
-    dir_output_datm=dir_output + 'datmdata/'
-    if ( not os.path.isdir( dir_output_datm ) ):
-        os.mkdir( dir_output_datm )
+        dir_inputdata='/glade/p/cesmdata/cseg/inputdata/'
+        dir_clm_forcedata='/glade/p/cgd/tss/CTSM_datm_forcing_data/'
+        dir_input_datm=dir_clm_forcedata+'/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/'
+        dir_output_datm=dir_output + 'datmdata/'
+        if ( not os.path.isdir( dir_output_datm ) ):
+            os.mkdir( dir_output_datm )
 
 
-    #--  Set time stamp
-    command='date "+%y%m%d"'
-    x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
-    x=x2.communicate()
-    timetag = x[0].strip()
-    print (timetag)
+        #--  Set time stamp
+        command='date "+%y%m%d"'
+        x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
+        x=x2.communicate()
+        timetag = x[0].strip()
+        print (timetag)
 
-    #--  Specify land domain file  ---------------------------------
-    fdomain  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
-    fdomain2 = dir_output + AddTagToFilename( fdomain, single_point.tag )
-    #SinglePointCase.set_fdomain (fdomain)
-    single_point.fdomain = fdomain
-    single_point.fdomain2 = fdomain2
+        #--  Specify land domain file  ---------------------------------
+        fdomain_in  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
+        fdomain_out = dir_output + AddTagToFilename( fdomain_in, single_point.tag )
+        #SinglePointCase.set_fdomain (fdomain)
+        single_point.fdomain_in = fdomain_in
+        single_point.fdomain_out = fdomain_out
 
-    #--  Specify surface data file  --------------------------------
-    fsurf    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
-    fsurf2   = dir_output + add_tag_to_surf_filename( fsurf, single_point.tag ,site_name)
-    single_point.fsurf = fsurf
-    single_point.fsurf2 = fsurf2
+        #--  Specify surface data file  --------------------------------
+        fsurf_in    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
+        fsurf_out   = dir_output + add_tag_to_surf_filename( fsurf_in, single_point.tag ,site_name)
+        single_point.fsurf_in = fsurf_in
+        single_point.fsurf_out = fsurf_out
 
-    #--  Specify landuse file  -------------------------------------
-    fluse    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc'
-    fluse2   = dir_output + AddTagToFilename( fluse, single_point.tag )
-    single_point.fluse = fluse
-    single_point.fluse2 = fluse2
-    #--  Specify datm domain file  ---------------------------------
-    fdatmdomain = dir_clm_forcedata+'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc'
-    fdatmdomain2  = dir_output_datm+AddTagToFilename( fdatmdomain, single_point.tag )
-    single_point.fdatmdomain = fdatmdomain
-    single_point.fdatmdomain2 = fdatmdomain2
+        #--  Specify landuse file  -------------------------------------
+        fluse_in    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc'
+        fluse_out   = dir_output + AddTagToFilename( fluse_in, single_point.tag )
+        single_point.fluse_in = fluse_in
+        single_point.fluse_out = fluse_out
+        #--  Specify datm domain file  ---------------------------------
+        fdatmdomain_in = dir_clm_forcedata+'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc'
+        fdatmdomain_out  = dir_output_datm+AddTagToFilename( fdatmdomain_in, single_point.tag )
+        single_point.fdatmdomain = fdatmdomain_in
+        single_point.fdatmdomain2 = fdatmdomain_out
 
-    #--  Create CTSM domain file
-    if create_domain:
-        single_point.create_domain_at_point()
-        #create_domain_at_point (plat, plon,fdomain , fdomain2 )
+        #--  Create CTSM domain file
+        if create_domain:
+            single_point.create_domain_at_point()
 
-    #--  Create CTSM surface data file
-    if create_surfdata:
-        single_point.create_surfdata_at_point()
+        #--  Create CTSM surface data file
+        if create_surfdata:
+            single_point.create_surfdata_at_point()
 
-    #--  Create CTSM transient landuse data file
-    if create_landuse:
-        single_point.create_landuse_at_point()
+        #--  Create CTSM transient landuse data file
+        if create_landuse:
+            single_point.create_landuse_at_point()
 
-    #--  Create single point atmospheric forcing data
-    if create_datm:
-        single_point.create_datmdomain_at_point()
-        #create_datmdomain_at_point(plat, plon, fdatmdomain, fdatmdomain2)
-        single_point.datm_syr =datm_syr
-        single_point.datm_eyr =datm_eyr
-        single_point.dir_input_datm = dir_input_datm
-        single_point.dir_output_datm = dir_output_datm
-        single_point.create_datm_at_point()
+        #--  Create single point atmospheric forcing data
+        if create_datm:
+            single_point.create_datmdomain_at_point()
+            #create_datmdomain_at_point(plat, plon, fdatmdomain, fdatmdomain2)
+            single_point.datm_syr =datm_syr
+            single_point.datm_eyr =datm_eyr
+            single_point.dir_input_datm = dir_input_datm
+            single_point.dir_output_datm = dir_output_datm
+            single_point.create_datm_at_point()
 
-    print( "Successfully ran script." )
+        print( "Successfully ran script for single point." )
 
+    elif (args.run_type == "reg"):
+        print ("running the script for the region")
+        #--  Specify region to extract
+        lat1 = args.lat1 
+        lat2 = args.lat2
+
+        lon1 = args.lon1
+        lon2 = args.lon2
+
+        #--  Create regional CLM domain file
+        create_domain   = args.create_domain
+        #--  Create CLM surface data file
+        create_surfdata = args.create_surfdata
+        #--  Create CLM surface data file
+        create_landuse  = args.create_landuse
+        #--  Create DATM atmospheric forcing data
+        create_datm     = args.create_datm
+
+        crop_flag = args.crop_flag
+
+        reg_name = args.reg_name
+
+        region = RegionalCase(lat1, lat2, lon1, lon2, reg_name, create_domain, create_surfdata, create_landuse, create_datm)
+
+        print (region)
+
+        myname=getuser()
+        pwd=os.getcwd()
+        print("User = "+myname)
+        print("Current directory = "+pwd)
+
+        if crop_flag:
+            num_pft      = "78"
+        else: 
+            num_pft      = "16"
+
+
+        print(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
+
+
+        region.create_tag()
+
+        #--  Set input and output filenames
+        #--  Specify input and output directories
+        dir_output='/glade/scratch/'+myname+'/region/'
+        if ( not os.path.isdir( dir_output ) ):
+            os.mkdir( dir_output )
+
+        dir_inputdata='/glade/p/cesmdata/cseg/inputdata/'
+        dir_clm_forcedata='/glade/p/cgd/tss/CTSM_datm_forcing_data/'
+
+        #--  Set time stamp
+        command='date "+%y%m%d"'
+        x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
+        x=x2.communicate()
+        timetag = x[0].strip()
+        print (timetag)
+
+        #--  Specify land domain file  ---------------------------------
+        fdomain_in  = dir_inputdata+'share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc'
+        fdomain_out = dir_output + 'domain.lnd.fv1.9x2.5_gx1v7.'+region.tag+'_170518.nc'
+        #SinglePointCase.set_fdomain (fdomain)
+        region.fdomain_in = fdomain_in
+        region.fdomain_out = fdomain_out
+
+        #--  Specify surface data file  --------------------------------
+        fsurf_in    = dir_inputdata+'lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc'
+        fsurf_out   = dir_output + 'surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_'+region.tag+'_c170824.nc'
+        region.fsurf_in = fsurf_in
+        region.fsurf_out = fsurf_out
+
+        #--  Specify landuse file  -------------------------------------
+        fluse_in    = dir_inputdata+'lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc'
+        fluse_out   = dir_output + 'landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_'+region.tag+'.c170824.nc'
+        region.fluse_in = fluse_in
+        region.fluse_out = fluse_out
+
+        #--  Create CTSM domain file
+        if create_domain:
+            region.create_domain_at_reg()
+
+        #--  Create CTSM surface data file
+        if create_surfdata:
+            region.create_surfdata_at_reg()
+
+        #--  Create CTSM transient landuse data file
+        if create_landuse:
+            region.create_landuse_at_reg()
+        print( "Successfully ran script for single point." )
 
 if __name__ == "__main__":
     main()
