@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev036
 Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date:  Wed 21 Apr 2021 08:44:38 AM PDT
+Date: Wed Apr 21 14:50:19 MDT 2021
 One-line Summary: FATES tag update and snow occlusion of LAI fix
 
 Purpose and description of changes
@@ -49,6 +49,14 @@ Testing summary: regular
 ----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - PASS
+
+   python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+       cheyenne - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
