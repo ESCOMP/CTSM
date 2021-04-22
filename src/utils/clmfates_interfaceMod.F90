@@ -133,6 +133,7 @@ module CLMFatesInterfaceMod
    use EDBtranMod            , only : btran_ed, &
                                       get_active_suction_layers
    use EDCanopyStructureMod  , only : canopy_summarization, update_hlm_dynamics
+   use EDCanopyStructureMod  , only : UpdateFatesAvgSnowDepth
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
    use FatesSoilBGCFluxMod    , only : FluxIntoLitterPools
@@ -919,7 +920,7 @@ module CLMFatesInterfaceMod
       call this%wrap_update_hlmfates_dyn(nc,               &
                                          bounds_clump,     &
                                          waterdiagnosticbulk_inst,  &
-                                         canopystate_inst)
+                                         canopystate_inst, .false.)
       
       ! ---------------------------------------------------------------------------------
       ! Part IV: 
@@ -942,7 +943,7 @@ module CLMFatesInterfaceMod
    ! ------------------------------------------------------------------------------------
 
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
-        waterdiagnosticbulk_inst, canopystate_inst)
+        waterdiagnosticbulk_inst, canopystate_inst, is_initing_from_restart)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -956,7 +957,11 @@ module CLMFatesInterfaceMod
      integer                 , intent(in)           :: nc
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
-     
+
+     ! is this being called during a read from restart sequence (if so then use the restarted fates
+     ! snow depth variable rather than the CLM variable).
+     logical                 , intent(in)           :: is_initing_from_restart
+
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch 
      integer :: p       ! HLM patch index
@@ -987,6 +992,11 @@ module CLMFatesInterfaceMod
           this%fates(nc)%bc_in(s)%snow_depth_si   = snow_depth(c)
           this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_eff(c)
        end do
+       
+       ! Only update the fates internal snow burial if this is not a restart
+       if (.not. is_initing_from_restart) then
+          call UpdateFatesAvgSnowDepth(this%fates(nc)%sites,this%fates(nc)%bc_in)
+       end if
        
        ! Canopy diagnostics for FATES
        call canopy_summarization(this%fates(nc)%nsites, &
@@ -1390,7 +1400,7 @@ module CLMFatesInterfaceMod
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterdiagnosticbulk_inst,canopystate_inst)
+                     waterdiagnosticbulk_inst,canopystate_inst, .true.)
 
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
@@ -1527,7 +1537,7 @@ module CLMFatesInterfaceMod
            ! Update diagnostics of FATES ecosystem structure used in HLM.
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                waterdiagnosticbulk_inst,canopystate_inst)
+                waterdiagnosticbulk_inst,canopystate_inst, .false.)
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
@@ -1609,6 +1619,7 @@ module CLMFatesInterfaceMod
 
            end do
         end do
+
 
         ! -------------------------------------------------------------------------------
         ! Call FATES public function to calculate internal sun/shade structures

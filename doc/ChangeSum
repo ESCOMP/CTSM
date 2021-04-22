@@ -1,5 +1,15 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev036 glemieux 04/21/2021 FATES tag update and snow occlusion of LAI fix
+  ctsm5.1.dev035    sacks 04/20/2021 Misc bfb enhancements and fixes
+  ctsm5.1.dev034     erik 04/19/2021 Bring in Arctic changes to LUNA from Leah Birch
+  ctsm5.1.dev033 mvertens 04/10/2021 Remove unnecessary settings of nextsw_cday
+  ctsm5.1.dev032 mvertens 04/10/2021 Fix bugs in co2 from atmosphere
+  ctsm5.1.dev031 jedwards 04/10/2021 Update externals and fixes for nuopc threading
+  ctsm5.1.dev030     erik 03/31/2021 New single column functionality for the NUOPC cap
+  ctsm5.1.dev029 mvertens 03/18/2021 Rework domain initialization for nuopc
+  ctsm5.1.dev028 swensosc 03/17/2021 Change limitation of top layer evaporation/sublimation
+  ctsm5.1.dev027    sacks 03/15/2021 Update cime and other externals; includes switch to pio2
   ctsm5.1.dev026    sacks 03/08/2021 Change f10 tests to use mg37 mask
   ctsm5.1.dev025    sacks 02/23/2021 Refactor ozone code, and misc. small fixes
   ctsm5.1.dev024   slevis 02/20/2021 Grid cell-level error check for H2O

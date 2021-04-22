@@ -172,6 +172,7 @@ module histFileMod
   private :: pointer_index             ! Track data pointer indices
   private :: max_nFields               ! The max number of fields on any tape
   private :: avgflag_valid             ! Whether a given avgflag is a valid option
+  private :: add_landunit_mask_metadata ! Add landunit_mask metadata for the given history field
   !
   ! !PRIVATE TYPES:
   ! Constants
@@ -2086,7 +2087,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, nlevurb, nlevmaxurbgrnd, numrad, nlevcan, nvegwcs,nlevsoi
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec, nlevdecomp_full
+    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc, nlevdecomp_full
     use landunit_varcon , only : max_lunit
     use clm_varctl      , only : caseid, ctitle, fsurdat, finidat, paramfile
     use clm_varctl      , only : version, hostname, username, conventions, source
@@ -2234,10 +2235,10 @@ contains
        call ncd_defdim(lnfid, 'cft', cft_size, dimid)
        call htape_add_cft_metadata(lnfid)
     end if
-    call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glcmec , dimid)
+    call ncd_defdim(lnfid, 'glc_nec' , maxpatch_glc , dimid)
     ! elevclas (in contrast to glc_nec) includes elevation class 0 (bare land)
     ! (although on the history file it will go 1:(nec+1) rather than 0:nec)
-    call ncd_defdim(lnfid, 'elevclas' , maxpatch_glcmec + 1, dimid)
+    call ncd_defdim(lnfid, 'elevclas' , maxpatch_glc + 1, dimid)
 
     do n = 1,num_subs
        call ncd_defdim(lnfid, subs_name(n), subs_dim(n), dimid)
@@ -2429,7 +2430,7 @@ contains
     character(len=max_chars) :: long_name ! variable long name
     character(len=max_namlen):: varname   ! variable name
     character(len=max_namlen):: units     ! variable units
-    character(len=scale_type_strlen) :: l2g_scale_type    ! scale type for subgrid averaging of landunits to grid cells
+    integer :: varid                      ! variable id
     !
     real(r8), pointer :: histi(:,:)       ! temporary
     real(r8), pointer :: histo(:,:)       ! temporary
@@ -2443,13 +2444,35 @@ contains
                                                         'BSW   ', &
                                                         'HKSAT '  &
                                                     /)
+    ! Scale type for subgrid averaging of landunits to grid cells
+    ! WJS (10-25-11): Note about l2g_scale_type in the following: ZSOI & DZSOI are
+    ! currently constant in space, except for urban points, so their scale type
+    ! doesn't matter at the moment as long as it excludes urban points. I am using
+    ! 'nonurb' so that the values are output everywhere where the fields are
+    ! constant (i.e., everywhere except urban points). For the other fields, I am
+    ! using 'veg' to be consistent with the l2g_scale_type that is now used for many
+    ! of the 3-d time-variant fields; in theory, though, one might want versions of
+    ! these variables output for different landunits.
+    character(len=scale_type_strlen) :: l2g_scale_type(nflds) = [ &
+         'nonurb', &  ! ZSOI
+         'nonurb', &  ! DZSOI
+         'veg   ', &  ! WATSAT
+         'veg   ', &  ! SUCSAT
+         'veg   ', &  ! BSW
+         'veg   '  &  ! HKSAT
+         ]
     real(r8), pointer :: histil(:,:)      ! temporary
     real(r8), pointer :: histol(:,:)
     integer, parameter :: nfldsl = 2
     character(len=*),parameter :: varnamesl(nfldsl) = (/ &
                                                           'ZLAKE ', &
                                                           'DZLAKE' &
-                                                      /)
+                                                          /)
+    ! Scale type for subgrid averaging of landunits to grid cells, for lake fields
+    character(len=scale_type_strlen) :: l2g_scale_typel(nfldsl) = [ &
+         'lake', &  ! ZLAKE
+         'lake'  &  ! DZLAKE
+         ]
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(watsat_col) == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
@@ -2486,12 +2509,16 @@ contains
              if (ldomain%isgrid2d) then
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnames(ifld)), xtype=tape(t)%ncprec,&
                      dim1name='lon', dim2name='lat', dim3name='levgrnd', &
-                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval, &
+                     varid=varid)
              else
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnames(ifld)), xtype=tape(t)%ncprec, &
-                        dim1name=grlnd, dim2name='levgrnd', &
-                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+                     dim1name=grlnd, dim2name='levgrnd', &
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval, &
+                     varid=varid)
              end if
+
+             call add_landunit_mask_metadata(nfid(t), varid, l2g_scale_type(ifld))
           else
              call ncd_defvar(ncid=nfid(t), varname=trim(varnames(ifld)), xtype=tape(t)%ncprec, &
                   dim1name=namec, dim2name='levgrnd', &
@@ -2520,30 +2547,6 @@ contains
 
        do ifld = 1,nflds
 
-          ! WJS (10-25-11): Note about l2g_scale_type in the following: ZSOI & DZSOI are
-          ! currently constant in space, except for urban points, so their scale type
-          ! doesn't matter at the moment as long as it excludes urban points. I am using
-          ! 'nonurb' so that the values are output everywhere where the fields are
-          ! constant (i.e., everywhere except urban points). For the other fields, I am
-          ! using 'veg' to be consistent with the l2g_scale_type that is now used for many
-          ! of the 3-d time-variant fields; in theory, though, one might want versions of
-          ! these variables output for different landunits.
-
-          ! Field indices MUST match varnames array order above!
-          if      (ifld == 1) then  ! ZSOI
-             l2g_scale_type = 'nonurb'
-          else if (ifld == 2) then  ! DZSOI
-             l2g_scale_type = 'nonurb'
-          else if (ifld == 3) then  ! WATSAT
-             l2g_scale_type = 'veg'
-          else if (ifld == 4) then  ! SUCSAT
-             l2g_scale_type = 'veg'
-          else if (ifld == 5) then  ! BSW
-             l2g_scale_type = 'veg'
-          else if (ifld == 6) then  ! HKSAT
-             l2g_scale_type = 'veg'
-          end if
-
           histi(:,:) = spval
           do lev = 1,nlevgrnd
              do c = bounds%begc,bounds%endc
@@ -2563,7 +2566,7 @@ contains
              call c2g(bounds, nlevgrnd, &
                   histi(bounds%begc:bounds%endc, :), &
                   histo(bounds%begg:bounds%endg, :), &
-                  c2l_scale_type='unity', l2g_scale_type=l2g_scale_type)
+                  c2l_scale_type='unity', l2g_scale_type=l2g_scale_type(ifld))
 
              if (ldomain%isgrid2d) then
                 call ncd_io(varname=trim(varnames(ifld)), dim1name=grlnd, &
@@ -2597,12 +2600,16 @@ contains
              if (ldomain%isgrid2d) then
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnamesl(ifld)), xtype=tape(t)%ncprec,&
                      dim1name='lon', dim2name='lat', dim3name='levlak', &
-                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval, &
+                     varid=varid)
              else
                 call ncd_defvar(ncid=nfid(t), varname=trim(varnamesl(ifld)), xtype=tape(t)%ncprec, &
-                        dim1name=grlnd, dim2name='levlak', &
-                     long_name=long_name, units=units, missing_value=spval, fill_value=spval)
+                     dim1name=grlnd, dim2name='levlak', &
+                     long_name=long_name, units=units, missing_value=spval, fill_value=spval, &
+                     varid=varid)
              end if
+
+             call add_landunit_mask_metadata(nfid(t), varid, l2g_scale_typel(ifld))
           else
              call ncd_defvar(ncid=nfid(t), varname=trim(varnamesl(ifld)), xtype=tape(t)%ncprec, &
                   dim1name=namec, dim2name='levlak', &
@@ -2646,7 +2653,7 @@ contains
              call c2g(bounds, nlevlak, &
                   histil(bounds%begc:bounds%endc, :), &
                   histol(bounds%begg:bounds%endg, :), &
-                  c2l_scale_type='unity', l2g_scale_type='lake')
+                  c2l_scale_type='unity', l2g_scale_type=l2g_scale_typel(ifld))
              if (ldomain%isgrid2d) then
                 call ncd_io(varname=trim(varnamesl(ifld)), dim1name=grlnd, &
                      data=histol, ncid=nfid(t), flag='write')
@@ -3116,6 +3123,7 @@ contains
     integer :: nt                        ! time index
     integer :: ier                       ! error status
     integer :: numdims                   ! number of dimensions
+    integer :: varid                     ! variable id
     character(len=avgflag_strlen) :: avgflag  ! time averaging flag
     character(len=max_chars) :: long_name! long name
     character(len=max_chars) :: units    ! units
@@ -3124,6 +3132,7 @@ contains
     character(len=hist_dim_name_length)  :: type1d          ! field 1d type
     character(len=hist_dim_name_length)  :: type1d_out      ! history output 1d type
     character(len=hist_dim_name_length)  :: type2d          ! history output 2d type
+    character(len=scale_type_strlen)     :: l2g_scale_type
     character(len=32) :: dim1name        ! temporary
     character(len=32) :: dim2name        ! temporary
     real(r8), pointer :: histo(:,:)      ! temporary
@@ -3147,21 +3156,22 @@ contains
 
        ! Set history field variables
 
-       varname    = tape(t)%hlist(f)%field%name
-       long_name  = tape(t)%hlist(f)%field%long_name
-       units      = tape(t)%hlist(f)%field%units
-       avgflag    = tape(t)%hlist(f)%avgflag
-       type1d     = tape(t)%hlist(f)%field%type1d
-       type1d_out = tape(t)%hlist(f)%field%type1d_out
-       beg1d      = tape(t)%hlist(f)%field%beg1d
-       end1d      = tape(t)%hlist(f)%field%end1d
-       beg1d_out  = tape(t)%hlist(f)%field%beg1d_out
-       end1d_out  = tape(t)%hlist(f)%field%end1d_out
-       num1d_out  = tape(t)%hlist(f)%field%num1d_out
-       type2d     = tape(t)%hlist(f)%field%type2d
-       numdims    = tape(t)%hlist(f)%field%numdims
-       num2d      = tape(t)%hlist(f)%field%num2d
-       nt         = tape(t)%ntimes
+       varname        = tape(t)%hlist(f)%field%name
+       long_name      = tape(t)%hlist(f)%field%long_name
+       units          = tape(t)%hlist(f)%field%units
+       avgflag        = tape(t)%hlist(f)%avgflag
+       type1d         = tape(t)%hlist(f)%field%type1d
+       type1d_out     = tape(t)%hlist(f)%field%type1d_out
+       beg1d          = tape(t)%hlist(f)%field%beg1d
+       end1d          = tape(t)%hlist(f)%field%end1d
+       beg1d_out      = tape(t)%hlist(f)%field%beg1d_out
+       end1d_out      = tape(t)%hlist(f)%field%end1d_out
+       num1d_out      = tape(t)%hlist(f)%field%num1d_out
+       type2d         = tape(t)%hlist(f)%field%type2d
+       numdims        = tape(t)%hlist(f)%field%numdims
+       num2d          = tape(t)%hlist(f)%field%num2d
+       l2g_scale_type = tape(t)%hlist(f)%field%l2g_scale_type
+       nt             = tape(t)%ntimes
 
        if (mode == 'define') then
 
@@ -3196,26 +3206,34 @@ contains
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name='time', &
                      long_name=long_name, units=units, cell_method=avgstr, &
-                     missing_value=spval, fill_value=spval)
+                     missing_value=spval, fill_value=spval, &
+                     varid=varid)
              else
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name=type2d, dim3name='time', &
                      long_name=long_name, units=units, cell_method=avgstr, &
-                     missing_value=spval, fill_value=spval)
+                     missing_value=spval, fill_value=spval, &
+                     varid=varid)
              end if
           else
              if (numdims == 1) then
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name=dim2name, dim3name='time', &
                      long_name=long_name, units=units, cell_method=avgstr, &
-                     missing_value=spval, fill_value=spval)
+                     missing_value=spval, fill_value=spval, &
+                     varid=varid)
              else
                 call ncd_defvar(ncid=nfid(t), varname=varname, xtype=tape(t)%ncprec, &
                      dim1name=dim1name, dim2name=dim2name, dim3name=type2d, dim4name='time', &
                      long_name=long_name, units=units, cell_method=avgstr, &
-                     missing_value=spval, fill_value=spval)
+                     missing_value=spval, fill_value=spval, &
+                     varid=varid)
              end if
           endif
+
+          if (type1d_out == nameg .or. type1d_out == grlnd) then
+             call add_landunit_mask_metadata(nfid(t), varid, l2g_scale_type)
+          end if
 
        else if (mode == 'write') then
 
@@ -4781,7 +4799,7 @@ contains
                         ptr_gcell, ptr_lunit, ptr_col, ptr_patch, ptr_lnd, &
                         ptr_atm, p2c_scale_type, c2l_scale_type, &
                         l2g_scale_type, set_lake, set_nolake, set_urb, set_nourb, &
-                        set_noglcmec, set_spec, default)
+                        set_noglc, set_spec, default)
     !
     ! !DESCRIPTION:
     ! Initialize a single level history field. The pointer, ptrhist,
@@ -4809,7 +4827,7 @@ contains
     real(r8)        , optional, intent(in) :: set_nolake     ! value to set non-lakes to
     real(r8)        , optional, intent(in) :: set_urb        ! value to set urban to
     real(r8)        , optional, intent(in) :: set_nourb      ! value to set non-urban to
-    real(r8)        , optional, intent(in) :: set_noglcmec   ! value to set non-glacier_mec to
+    real(r8)        , optional, intent(in) :: set_noglc      ! value to set non-glacier to
     real(r8)        , optional, intent(in) :: set_spec       ! value to set special to
     character(len=*), optional, intent(in) :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
     character(len=*), optional, intent(in) :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits
@@ -4911,10 +4929,10 @@ contains
              if (lun%ifspecial(l)) ptr_col(c) = set_spec
           end do
        end if
-       if (present(set_noglcmec)) then
+       if (present(set_noglc)) then
           do c = bounds%begc,bounds%endc
              l =col%landunit(c)
-             if (.not.(lun%glcmecpoi(l))) ptr_col(c) = set_noglcmec
+             if (.not.(lun%glcpoi(l))) ptr_col(c) = set_noglc
           end do
        endif
 
@@ -4952,10 +4970,10 @@ contains
              if (lun%ifspecial(l)) ptr_patch(p) = set_spec
           end do
        end if
-       if (present(set_noglcmec)) then
+       if (present(set_noglc)) then
           do p = bounds%begp,bounds%endp
              l =patch%landunit(p)
-             if (.not.(lun%glcmecpoi(l))) ptr_patch(p) = set_noglcmec
+             if (.not.(lun%glcpoi(l))) ptr_patch(p) = set_noglc
           end do
        end if
     else
@@ -5015,7 +5033,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs,nlevsoi
-    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glcmec
+    use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc
     use landunit_varcon , only : max_lunit
     !
     ! !ARGUMENTS:
@@ -5148,11 +5166,11 @@ contains
           call endrun()
        end if
     case ('glc_nec')
-       num2d = maxpatch_glcmec
+       num2d = maxpatch_glc
     case ('elevclas')
        ! add one because indexing starts at 0 (elevclas, unlike glc_nec, includes the
        ! bare ground "elevation class")
-       num2d = maxpatch_glcmec + 1
+       num2d = maxpatch_glc + 1
     case ('levsno')
        num2d = nlevsno
     case ('nlevcan')
@@ -5556,5 +5574,36 @@ contains
 
   end function avgflag_valid
 
+  !-----------------------------------------------------------------------
+  subroutine add_landunit_mask_metadata(ncid, varid, l2g_scale_type)
+    !
+    ! !DESCRIPTION:
+    ! Add landunit_mask metadata for the given history field
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t), intent(inout) :: ncid  ! netcdf file id
+    integer           , intent(in)    :: varid ! netcdf var id
+    character(len=*)  , intent(in)    :: l2g_scale_type ! l2g_scale_type for this variable
+    !
+    ! !LOCAL VARIABLES:
+    character(len=:), allocatable :: landunit_mask_string
+
+    character(len=*), parameter :: subname = 'add_landunit_mask_metadata'
+    !-----------------------------------------------------------------------
+
+    if (l2g_scale_type == 'unity') then
+       ! BUG(wjs, 2021-04-19, ESCOMP/CTSM#1347) Once we consistently set l2g_scale_type
+       ! for all variables, and have stopped using other mechanisms (particularly the
+       ! setting of variables to spval everywhere) then we can stop setting this to
+       ! 'unknown': we can instead set this to something like 'all', with reasonable
+       ! confidence that the field truly applies over all landunits.
+       landunit_mask_string = 'unknown'
+    else
+       landunit_mask_string = l2g_scale_type
+    end if
+
+    call ncd_putatt(ncid, varid, 'landunit_mask', landunit_mask_string)
+
+  end subroutine add_landunit_mask_metadata
 
 end module histFileMod

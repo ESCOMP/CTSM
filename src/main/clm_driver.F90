@@ -473,7 +473,7 @@ contains
             energyflux_inst)
 
        call topo_inst%UpdateTopo(bounds_clump, &
-            filter(nc)%num_icemecc, filter(nc)%icemecc, &
+            filter(nc)%num_icec, filter(nc)%icec, &
             glc2lnd_inst, glc_behavior, &
             atm_topo = atm2lnd_inst%forc_topo_grc(bounds_clump%begg:bounds_clump%endg))
 

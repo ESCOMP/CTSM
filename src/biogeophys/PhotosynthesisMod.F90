@@ -960,7 +960,7 @@ contains
     ! Time step initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice_mec, istwet
+    use landunit_varcon, only : istsoil, istcrop, istice, istwet
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
@@ -1000,7 +1000,7 @@ contains
           endif
        end if
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop &
-            .or. lun%itype(l) == istice_mec &
+            .or. lun%itype(l) == istice &
             .or. lun%itype(l) == istwet) then
           if (use_c13) then
              this%rc13_canair_patch(p) = 0._r8
@@ -3176,9 +3176,12 @@ contains
                kp25_sha = kp25top * nscaler_sha
 
                ! Adjust for temperature
-
+               ! Acclimation is done for Kattge
                vcmaxse = 668.39_r8 - 1.07_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
                jmaxse  = 659.70_r8 - 0.75_r8 * min(max((t10(p)-tfrz),11._r8),35._r8)
+               ! These values are used for Leuning
+               !vcmaxse = 486.0_r8
+               !jmaxse  = 495.0_r8
                tpuse = vcmaxse
                vcmaxc = fth25 (params_inst%vcmaxhd, vcmaxse)
                jmaxc  = fth25 (params_inst%jmaxhd, jmaxse)

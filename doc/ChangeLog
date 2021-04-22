@@ -1,4 +1,966 @@
 ===============================================================
+Tag name:  ctsm5.1.dev036
+Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Wed Apr 21 14:50:19 MDT 2021
+One-line Summary: FATES tag update and snow occlusion of LAI fix
+
+Purpose and description of changes
+----------------------------------
+
+This tag updates the way in which fates is called during restarts to appropriately 
+handle the fates-side snow occlusion code.  Additionally, this update points to the 
+most recent fates tag, which includes a number of fates science updates (including
+the snow occlusion fix) and fates-side bug fixes (see below for list of issues 
+addressed).  
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  #1293 -- Update FATES on CTSM main-dev
+  NGEET/fates#359 -- ground snow is not occluding lai profile
+  NGEET/fates#709 -- Error Check issue in EDPatchDynamicsMod.F90: spawn_patches() causes problem with logging module
+  NGEET/fates#725 -- declaration of the prt pointer
+  NGEET/fates#713 -- Changes associated with patch fraction burnt
+  NGEET/fates#473 -- Update FIRE_AREA long name units
+  NGEET/fates#575 -- Clean up NaN and zeroing of fire variables in Patch and Cohort Dynamics
+
+Known bugs found since the previous tag (include issue #):
+  #1338 -- Floating point exception in fates gnu compiler regression test with ctsm5.1.dev027
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - PASS
+
+   python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+       cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+  
+    ok: All non-fates testmods PASS b4b. Fates testmods have DIFF as expected due to update of fates science tag.
+
+  fates tests:
+    cheyenne ---- ok
+
+    ok: NLCOMP failures due to clm50_param file update relative to ctsm tag used on the last fates baseline. 
+
+    fates baseline: fates-sci.1.44.1_api.14.2.0-ctsm5.1.dev033-C30ca1849-F6065b9a2
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes, only for fates
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all fates
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): larger than roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+    - fates-side review of expected differences for all PRs that changed answers (2 science updates
+      and 2 bug fixes)
+	
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+  fates: sci.1.43.2_api.14.2.0 -> sci.1.45.0_api.15.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  - https://github.com/ESCOMP/CTSM/pull/1324
+  - https://github.com/NGEET/fates/pull/734 
+  
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev035
+Originator(s):  sacks (Bill Sacks)
+Date:  Tue Apr 20 10:45:25 MDT 2021
+One-line Summary: Misc bfb enhancements and fixes
+
+Purpose and description of changes
+----------------------------------
+
+(1) If CISM is running over Antarctica, use virtual glacier columns over
+    Antarctica
+
+(2) Remove "mec" from some glacier/ice variable names (it is misleading
+    to have "mec" in variable names when the ice landunit can actually
+    have multiple columns *or* a single column) (ESCOMP/CTSM#1294)
+
+(3) Add history file metadata on each variable's l2g_scale_type (adds a
+    landunit_mask attribute) (ESCOMP/CTSM#1343)
+
+(4) Use python3 in more shebang lines - needed to run python unit tests
+    on cheyenne
+
+(5) New compset naming for IG compsets (ESCOMP/CTSM#1289)
+
+(6) Remove calculation of fun_cost_fix that is overwritten
+    (ESCOMP/CTSM#1115)
+
+(7) Bypass grid-level water mass check when fates hydro is active
+    (ESCOMP/CTSM#1334)
+
+(8) Remove some dead code (ESCOMP/CTSM#1333)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1115 (overwrite fun_cost_fix)
+- Resolves ESCOMP/CTSM#1289 (After updating to cism2_1_76 or later,
+  change compsets involving CISM)
+- Resolves ESCOMP/CTSM#1294 (Replace istice_mec with istice)
+- Resolves ESCOMP/CTSM#1333 (Remove some dead code)
+- Resolves ESCOMP/CTSM#1343 (Add landunit_mask (formerly l2g_scale_type)
+  metadata to history file)
+
+Notes of particular relevance for users
+---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- Renamed maxpatch_glcmec to maxpatch_glc
+
+Substantial timing or memory changes:
+- Increase in land initialization time in the PFS test
+  (PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel); this is probably
+  due to machine variability because I don't think any of the changes in
+  this tag would have any significant impact on model initialization
+  time.
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - ok (tests pass, namelists differ as expected)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - pass (ran 'make test' on cheyenne and 'make all' on my Mac)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- One small piece is documented in https://github.com/ESCOMP/CTSM/pull/1334
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev034
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Apr 19 16:02:29 MDT 2021
+One-line Summary: Bring in Arctic changes to LUNA from Leah Birch
+
+Purpose and description of changes
+----------------------------------
+
+This is @lmbirch89 branch from #947 with the exception that Kattge is used in place of 
+Leuning in LUNA. Also the startup initial values in the luna bug fix branch #961 is 
+used in place of the updated values by @lmbirch89. The LUNA bug fixes have already come
+in, so these are some changes to improve arctic plants.
+
+We have addressed the issues in phenology and photosynthesis in the high latitudes. 
+Development was focused on PFT specific differences and we used observations to inform 
+model development. GPP is improved now such that the tundra is realistically less
+productive than the boreal forest.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #807 -- Revisit PFT optical properties per Majasalmi and Bright (2019)
+   Fixes #1307 -- Turn on reseed_dead_plants when you start AD spinup mode
+
+Known bugs introduced in this tag (include issue #):
+  #1346 -- Use of floating point flag onset_thresh is confusing in CNPhenologyMod
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist items: onset_thresh_depends_on_veg and min_crtical_dayl_depends_on_lat
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  reseed_dead_plants turned on when AD spinup mode turned on
+  onset_thresh_depends_on_veg and min_crtical_dayl_depends_on_lat turned on for clm5_1 physics
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+  New parameter file (same as start used in PPE work) also has additional fields on it
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  As noted in #1346 some of the logic in CNPhenology in CNSeasonDecidPhenology is a bit confusing.
+   The soil layer used was put in CNSharedParameters and needed it's own subroutine to prevent circular dependencies.
+   There are new accumulator variables added that area always turned on even when not needed. Doing this
+   in a reasonable manner (without having lots of CNPhenology logic spilled into base types) would require
+   a refactoring of a better way to figure this out.
+
+Testing summary: regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for clm5_1 physics
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm5_1
+    - what platforms/compilers: all
+    - nature of change: new climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       oleson -- clm50_ctsm10d089_2deg_GSWP3V1_lmbirch_wkattge_jmaxb1-0.17_slatopA_1850AD
+
+   URL for LMWG diagnostics output used to validate new climate:
+     http://webext.cgd.ucar.edu/I1850/clm50_ctsm10d089_2deg_GSWP3V1_lmbirch_wkattge_jmaxb1-0.17_slatopA_1850AD/
+	
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):  #990
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #990 -- Arctic changes branch with Kattge in place of Leuning in LUNA
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev033
+Originator(s): mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date:  Sat Apr 10 16:42:06 MDT 2021
+One-line Summary: Remove unnecessary settings of nextsw_cday
+
+Purpose and description of changes
+----------------------------------
+
+Remove setting of nextsw_cday in initialization: this hasn't been needed
+ever since we stopped calculating albedos in initialization.
+
+Also remove nextsw_cday from clm_time_manager: this was being set but
+was never referenced from here: instead, nextsw_cday was being passed as
+an argument to clm_drv.
+
+Also, updates cime to a branch tag where I have fixed the --retry option
+to create_test.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+CIME Issues fixed (include issue #):
+- ESMCI/cime#3912 (create_test --retry fails if the test is doing
+  baseline generation)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.8.42 -> branch_tags/cime5.8.42_a01
+
+Pull Requests that document the changes (include PR ids):
+- Second part of https://github.com/ESCOMP/CTSM/pull/1330
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev032
+Originator(s): mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date:  Sat Apr 10 09:47:25 MDT 2021
+One-line Summary: Fix bugs in co2 from atmosphere
+
+Purpose and description of changes
+----------------------------------
+
+ctsm5.1.dev002 introduced bugs when receiving co2 from the atmosphere,
+both for mct and nuopc:
+- For mct, with spatially-varying co2 from atmosphere, all grid cells on
+  a given processor were given the co2 value from the last grid cell on
+  that processor
+- For nuopc, co2 from atmosphere was ignored and overridden with a
+  constant co2 value
+
+This tag fixes both of those bugs.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1327 (When using co2 from atmosphere with mct, it
+  looks like values are taken just from the last gridcell on each proc)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Cases where CTSM receives CO2 from atmosphere
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      potentially new climate
+
+   Answer changes due to fixing these issues:
+   - For mct, with spatially-varying co2 from atmosphere, all grid cells on
+     a given processor were given the co2 value from the last grid cell on
+     that processor
+   - For nuopc, co2 from atmosphere was ignored and overridden with a
+     constant co2 value
+
+   In the test suite, this leads to changes in:
+   - ERP_D_Ld10_P36x2_Vnuopc.f10_f10_mg37.IHistClm51BgcCrop.cheyenne_intel.clm-ciso_decStart
+   - ERS_Ly3_P72x2_Vnuopc.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+   - SMS_D_Ln9_P480x1_Vnuopc.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+
+   But more widespread changes are expected - including for mct - if
+   coupled runs can generate spatially-varying co2 from atm
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+- Merges the first part of the changes in
+  https://github.com/ESCOMP/CTSM/pull/1330
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev031
+Originator(s): jedwards (Jim Edwards), sacks (Bill Sacks)
+Date:  Sat Apr 10 07:33:49 MDT 2021
+One-line Summary: Update externals and fixes for nuopc threading
+
+Purpose and description of changes
+----------------------------------
+
+(1) Some fixes for threading with the nuopc/cmeps driver. (However,
+    threading with nuopc/cmeps still doesn't work completely: see
+    https://github.com/ESCOMP/CTSM/issues/1331.)
+
+(2) Updates externals to versions needed for these nuopc threading changes
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Known bugs introduced in this tag (include issue #):
+- https://github.com/ESCOMP/CTSM/issues/1331 Some runs with NUOPC driver
+  with multiple threads can hang
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+- Temporarily changed
+  SMS_D_Ln9_P480x3_Vnuopc.f19_g17.IHistClm50Sp.cheyenne_intel.clm-waccmx_offline
+  to use a 480x1 layout so that it will pass reliably (see
+  https://github.com/ESCOMP/CTSM/issues/1331)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES (but very limited)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NUOPC driver with CISM
+    - what platforms/compilers: cheyenne_intel; maybe others
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): roundoff
+
+    For an unknown reason, the new externals lead to small differences
+    in global sums in the CMEPS driver/mediator. For what we assume is
+    the same reason, lnd -> glc fields can change by roundoff (probably
+    due to the global renormalization).
+
+    The only test in the aux_clm test suite where this shows up is
+    ERS_Ly3_P72x2_Vnuopc.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     Inspection of cpl hist files
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cism: cism2_1_75 -> cism_1_78
+- rtm: rtm1_0_75 -> rtm1_0_76
+- mosart: mosart1_0_41 -> mosart1_0_42
+- cime: cime5.8.39 -> cime5.8.42
+- cmeps: v0.5.0 -> v0.9.0
+- cdeps: v0.5.0 -> v0.6.0
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1319
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev030
+Originator(s):  mvertens / erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Mar 31 16:46:04 MDT 2021
+One-line Summary: New single column functionality for the NUOPC cap
+
+Purpose and description of changes
+----------------------------------
+
+Implemented new nuopc/cmeps single column functionality.
+
+In config/cesm/config_files.xml - single point domains are only used 
+for mct/cpl7. For cmeps single point meshes are now generated on the 
+fly and component domains files are no longer needed.
+env_run.xml variables PTS_LAT, PTS_LON and PTS_DOMAINFILE are used 
+to determine if there is a single point or single column run.
+If PTS_LAT and PTS_LON are not -999 and PTS_DOMAINFILE is UNSET, 
+then you have a single point run and the exact values of PTS_LAT
+and PTS_LON are used.  If PTS_LAT and PTS_LON are not -999 and 
+PTS_DOMAINFILE is not UNSET, then then the cmeps driver will recognize the nearest neighbor
+values of PTS_LAT and PTS_LON in PTS_DOMAINFILE as the single column lat and lon to use.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #1312 -- Add NUOPC tests
+   Fixes #1302 -- Setup to allow landuse.timeseries file for high resolution cases for 2000-2025
+   Fixes #1183 -- mkmapdata needs input option for large file support, current defaults unsuitable for high res grids.
+
+Known bugs introduced in this tag (include issue #):
+
+Known bugs found since the previous tag (include issue #):
+   #1317 -- MPI timeout for some izumi_nag tests reading in datm forcing files in NUOPC cap 
+   #1314 -- Send unset value for scol_lat/lon from driver
+
+Notes of particular relevance for users
+---------------------------------------
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Nine step tests changed so that they have ROF run at same frequency as ATM (like the similar CAM tests)
+  as these will fail with NUOPC since it doesn't allow you to end not on an even time-step for all components.
+  One of these tests changed to a CAM type test from decStart
+
+Changes to tests or testing: Add more NUOPC tests to test list
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne -- FAIL
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below): Ran full izumi test list for nuopc driver (failed tests appear above)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+   (List of fields change though)
+	
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, CDEPS, CMEPS
+   cime  to cime5.8.39
+   CDEPS to v0.5.0
+   CMEPS to v0.5.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1309 -- New single column functionality for NUOPC/CMEPS
+   #1310 -- run_sys_tests: add --retry option on izumi 
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev029
+Originator(s):  mvertens (Mariana Vertenstein), sacks (Bill Sacks)
+Date:  Thu Mar 18 21:21:21 MDT 2021
+One-line Summary: Rework domain initialization for nuopc
+
+Purpose and description of changes
+----------------------------------
+
+Total rework of land domain initialization - no longer need domain files
+to be created with NUOPC cap.
+
+Also, significant performance improvements with the NUOPC cap.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- We still need to figure out how to apply this to LILAC: for now, LILAC
+  is still using the old method (as is MCT): reading domain information
+  from fatmlndfrac
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for NUOPC and
+limited changes for LILAC
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NUOPC, and limited changes for LILAC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+      For nuopc: changes in area (relatively large differences in the
+      f10 test in the test suite, but Mariana saw only very small
+      changes in an f09 case), landfrac; these influence l2r fields,
+      which in turn influence TWS and methane fields.
+      
+      For lilac: just changes in area
+      
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? Examination of cprnc diffs.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- rtm: rtm1_0_74 -> rtm1_0_75
+- mosart: branch_tag/pio2.n01_mosart1_0_38 -> mosart1_0_41
+
+Pull Requests that document the changes (include PR ids):
+- https://github.com/ESCOMP/CTSM/pull/1258
+- https://github.com/ESCOMP/CTSM/pull/1236 (closed and replaced by 1258)
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev028
+Originator(s):  swensosc (Sean Swenson)
+Date:  Wed Mar 17 20:08:51 MDT 2021
+One-line Summary: Change limitation of top layer evaporation/sublimation
+
+Purpose and description of changes
+----------------------------------
+
+Sublimation from top soil layer and evaporation/sublimation from top
+snow layer needs to be limited to ensure moisture states do not become
+negative. The original formulation did not always work, so we added a
+new limitation to SoilFluxesMod.
+
+Also removes a limitation in SoilHydrologyMod that seemed not to
+conserve energy and should no longer be necessary with the reworked
+limitation in SoilFluxesMod.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1253 (h2osoi_ice can go significantly negative)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- The old flux limitation in SoilHydrologyMod has been replaced by a
+  truncation of roundoff-level values followed by a check that the final
+  state is non-negative. Although this check hasn't been triggered in
+  any of our testing, it's possible that we'll run into situations where
+  we need to relax the tolerance for this check.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: all
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated carefully, but expected to be larger than
+      roundoff/same climate
+    
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff? N/A
+	
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1282
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev027
+Originator(s):  sacks (Bill Sacks)
+Date:  Mon Mar 15 14:05:20 MDT 2021
+One-line Summary: Update cime and other externals; includes switch to pio2
+
+Purpose and description of changes
+----------------------------------
+
+Updates cime and other externals to version in cesm2_3_alpha02b (with
+some minor changes to cime on top of that). This includes substantial
+changes to cime, including switching to PIO2 rather than PIO1.
+
+Also:
+
+- For LILAC, changes default pio_rearranger now that we're using PIO2 by
+  default
+
+- In run_sys_tests, adds '-k oed' to qsub command on cheyenne; this is
+  useful now that qpeek is disabled on cheyenne (this puts the job's
+  stdout and stderr files directly in their final location from the
+  beginning, rather than keeping them in some temporary location on the
+  compute node until the job completes)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1175 (Once there is a cime tag with pio2 as the
+  default, update to it)
+- Resolves ESCOMP/CTSM#1194 (Once we switch to pio2 by default, change
+  the default rearranger used in LILAC)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+- PIO2 is now the default. This has been tested extensively, but let us
+  know if you run into any I/O related issues. Also, from testing we've
+  done, I/O performance looks better than with PIO1 in many cases, but
+  also let us know if you see a substantial degradation in I/O
+  performance.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+- Some I/O-related defaults change with the use of PIO2 rather than PIO1
+
+Substantial timing or memory changes:
+- Various changes due to the change to PIO2, some of them large. For the
+  most part, timing improves with PIO2, particularly for production
+  resolutions.
+- The PFS test and many others show a substantial improvement in timing.
+  This is especially noticeable in initialization time. For example, the
+  initialization time of
+  PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel dropped from 111 sec
+  to 34 sec. (These tests were run a couple of weeks apart, before and
+  after a cheyenne upgrade, so there may be some machine variability in
+  these numbers, but I saw a big improvement a few months ago with a
+  more objective comparison.)
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- pass
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but just for nuopc
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Just with nuopc driver
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Not investigated
+
+   The only test that changes answers is
+   SMS_D_Ld5_Vnuopc.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-default
+
+   (There are NLCOMP failures in all tests, though, due to the update to pio2.)
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- CISM: cism2_1_69 -> cism2_1_75
+- RTM: rtm1_0_73 -> rtm1_0_74
+- MOSART: mosart1_0_38 -> branch_tag/pio2.n01_mosart1_0_38
+- CIME: branch_tags/cime5.8.32_a02 -> branch_tags/cime5.8.37_a02
+- CMEPS: 7654038 -> c4acaa8
+- CDEPS: 45b7a85 -> 1f02a73
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev026
 Originator(s):  sacks (Bill Sacks)
 Date:  Mon Mar  8 13:20:33 MST 2021
@@ -362,7 +1324,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name:  ctsm5.1.dev022
-Originator(s):  gregorylemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Fri Feb  5 00:03:28 MST 2021
 One-line Summary: Merge fates_main_api into ctsm master
 
