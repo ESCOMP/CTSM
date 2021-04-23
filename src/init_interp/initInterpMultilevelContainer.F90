@@ -533,6 +533,7 @@ contains
     ! thickness. Scaling by thickness is necessary only if the run uses a
     ! different vertical profile than the one found in the finidata file.
     call check_var(ncid_source, dzsoi_varname, on_source)
+    allocate(dzsoi_data_source(beg_dest:end_dest, nlev_source))
     if (on_source) then
        ! Set dzsoi_data_source
        dzs_source = interp_2dvar_type( &
@@ -546,7 +547,6 @@ contains
             line = __LINE__)
        SHR_ASSERT_FL(dzs_source%get_vec_beg() == beg_source, sourcefile, __LINE__)
        SHR_ASSERT_FL(dzs_source%get_vec_end() == end_source, sourcefile, __LINE__)
-       allocate(dzsoi_data_source(beg_dest:end_dest, nlev_source))
        allocate(dzsoi_data_source_sgrid_1d(beg_source:end_source))
        do level = 1, nlev_source
           ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
@@ -576,14 +576,24 @@ contains
        ! source and dest soil profiles differ despite having the same number of
        ! layers. The model will handle such cases without scaling
        ! the finidat variables that need scaling by soil layer thickness.
-       allocate(dzsoi_data_source(beg_dest:end_dest, nlev_source))
        do level = 1, nlev_source
           do g = beg_dest, end_dest
              dzsoi_data_source(g,level) = dzsoi_data_dest(g,level)
           end do
        end do
-    else  ! fail with helpful error message
-       call interp_levgrnd_check_source_file(ncid_source, dzsoi_varname)
+    else  ! different number of layers and .not. on_source
+       ! Rather than failing when DZSOI is not present on the finidat file,
+       ! construct dzsoi_data_source from coord_data_source
+       do g = beg_dest, end_dest
+          dzsoi_data_source(g,1) = 2._r8 * coord_data_source(g,1)
+          if (nlev_source > 1) then
+             do level = 2, nlev_source
+                dzsoi_data_source(g,level) = 2._r8 * &
+                   (coord_data_source(g,level) - &
+                    sum(dzsoi_data_source(g,1:level-1)))
+             end do
+          end if
+       end do
     end if
 
     ! NOTE(wjs, 2015-10-18) The following check is helpful while we still have old initial
