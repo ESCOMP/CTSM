@@ -564,6 +564,7 @@ contains
        end do
        deallocate(dzsoi_data_source_sgrid_1d)
     else if (levmaxurbgrnd_source == levmaxurbgrnd_dest) then
+       ! BACKWARDS_COMPATIBILITY (slevis, 2021-04-22)
        ! When same number of layers and .not. on_source, we skip the calls to
        ! (a) interp_levgrnd_check_source_file(ncid_source, dzsoi_varname)
        ! (b) dzs_source%readlevel_double(dzsoi_data_source...
@@ -582,6 +583,7 @@ contains
           end do
        end do
     else  ! different number of layers and .not. on_source
+       ! BACKWARDS_COMPATIBILITY (slevis, 2021-04-22)
        ! Rather than failing when DZSOI is not present on the finidat file,
        ! construct dzsoi_data_source from coord_data_source
        do g = beg_dest, end_dest
