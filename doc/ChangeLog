@@ -42,7 +42,7 @@ Notes of particular relevance for users
 
 Caveats for users (e.g., need to interpolate initial conditions):
  For H2OSOI_LIQ, H2OSOI_ICE, SMP, and HK, from now on init_interp interpolates
- from the soil profile in finidat to the soil profile in the model run by
+ from the soil profile in finidat to the soil profile in the model by
  scaling these variables by dzsoi (layer thickness). This makes the vertical
  interpolation of these variables more accurate. Users need not do anything.
 
@@ -81,7 +81,7 @@ Testing summary:
 Answer changes
 --------------
 
-Changes answers relative to baseline:
+Changes answers relative to baseline: Yes
 
   [ If a tag changes answers relative to baseline comparison the
     following should be filled in (otherwise remove this section).
