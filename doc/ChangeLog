@@ -94,8 +94,8 @@ Changes answers relative to baseline: Yes
 
  scale_by_thickness=.true. for the four variables that require it (listed
  above). This causes answers to change for all tests in the test suite that
- interpolate from the soil profile found in finidat to the one used by the
- model.
+ interpolate from the soil profile found in finidat to a differing soil profile
+ used by the model.
 
 Other details
 -------------
