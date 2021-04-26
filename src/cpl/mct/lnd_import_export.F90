@@ -128,20 +128,6 @@ contains
        atm2lnd_inst%forc_aer_grc(g,13)               = x2l(index_x2l_Faxa_dstwet4,i)
        atm2lnd_inst%forc_aer_grc(g,14)               = x2l(index_x2l_Faxa_dstdry4,i)
 
-       ! Determine optional receive fields
-
-       if (index_x2l_Sa_co2prog /= 0) then
-          co2_ppmv_prog = x2l(index_x2l_Sa_co2prog,i)   ! co2 atm state prognostic
-       else
-          co2_ppmv_prog = co2_ppmv
-       end if
-
-       if (index_x2l_Sa_co2diag /= 0) then
-          co2_ppmv_diag = x2l(index_x2l_Sa_co2diag,i)   ! co2 atm state diagnostic
-       else
-          co2_ppmv_diag = co2_ppmv
-       end if
-
        if (index_x2l_Sa_methane /= 0) then
           atm2lnd_inst%forc_pch4_grc(g) = x2l(index_x2l_Sa_methane,i)
        endif
@@ -169,8 +155,21 @@ contains
     ! Note that forc_pbot is in Pa
 
     do g = begg,endg
+       i = 1 + (g - begg)
 
        forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
+
+       ! Determine optional receive fields
+       if (index_x2l_Sa_co2prog /= 0) then
+          co2_ppmv_prog = x2l(index_x2l_Sa_co2prog,i)   ! co2 atm state prognostic
+       else
+          co2_ppmv_prog = co2_ppmv
+       end if
+       if (index_x2l_Sa_co2diag /= 0) then
+          co2_ppmv_diag = x2l(index_x2l_Sa_co2diag,i)   ! co2 atm state diagnostic
+       else
+          co2_ppmv_diag = co2_ppmv
+       end if
 
        if (co2_type_idx == 1) then
           co2_ppmv_val = co2_ppmv_prog
@@ -182,7 +181,7 @@ contains
        if ( (co2_ppmv_val < 10.0_r8) .or. (co2_ppmv_val > 15000.0_r8) )then
           call endrun( sub//' ERROR: CO2 is outside of an expected range' )
        end if
-       atm2lnd_inst%forc_pco2_grc(g)   = co2_ppmv_val * 1.e-6_r8 * forc_pbot 
+       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_val * 1.e-6_r8 * forc_pbot 
        if (use_c13) then
           atm2lnd_inst%forc_pc13o2_grc(g) = co2_ppmv_val * c13ratio * 1.e-6_r8 * forc_pbot
        end if

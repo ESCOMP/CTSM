@@ -9,7 +9,7 @@ module TotalWaterAndHeatMod
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use decompMod          , only : bounds_type
   use clm_varcon         , only : cpice, cpliq, denh2o, denice, tfrz, hfus
-  use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb, nlevlak
+  use clm_varpar         , only : nlevgrnd, nlevsoi, nlevurb, nlevlak, nlevmaxurbgrnd
   use ColumnType         , only : col
   use LandunitType       , only : lun
   use subgridAveMod      , only : p2c
@@ -24,7 +24,7 @@ module TotalWaterAndHeatMod
   use LakeStateType      , only : lakestate_type
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
-  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
+  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -361,7 +361,7 @@ contains
          h2osoi_liq   =>    waterstate_inst%h2osoi_liq_col   & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)
          )
 
-    do j = 1, nlevgrnd
+    do j = 1, nlevmaxurbgrnd
        do fc = 1, num_c
           c = filter_c(fc)
           if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
@@ -373,7 +373,11 @@ contains
                 has_h2o = .false.
              end if
           else
-             has_h2o = .true.
+             if (j <= nlevgrnd) then
+                has_h2o = .true.
+             else
+                has_h2o = .false.
+             end if
           end if
 
           if (has_h2o) then
@@ -832,7 +836,7 @@ contains
        soil_latent_heat_liquid(c) = 0._r8
     end do
 
-    do j = 1, nlevgrnd
+    do j = 1, nlevmaxurbgrnd
        do fc = 1, num_c
           c = filter_c(fc)
           l = col%landunit(c)
@@ -854,16 +858,20 @@ contains
              end if
 
           else
-             has_h2o = .true.
+             if (j <= nlevgrnd) then
+                has_h2o = .true.
 
-             if (col%itype(c) == icol_road_imperv .and. j <= nlev_improad(l)) then
-                soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
-                     TempToHeat(temp = t_soisno(c,j), cv = (cv_improad(l,j) * dz(c,j)))
-             else if (lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec) then
-                ! Note that this also includes impervious roads below nlev_improad (where
-                ! we have soil)
-                soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
-                     TempToHeat(temp = t_soisno(c,j), cv = (csol(c,j)*(1-watsat(c,j))*dz(c,j)))
+                if (col%itype(c) == icol_road_imperv .and. j <= nlev_improad(l)) then
+                   soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
+                        TempToHeat(temp = t_soisno(c,j), cv = (cv_improad(l,j) * dz(c,j)))
+                else if (lun%itype(l) /= istwet .and. lun%itype(l) /= istice) then
+                   ! Note that this also includes impervious roads below nlev_improad (where
+                   ! we have soil)
+                   soil_heat_dry_mass(c) = soil_heat_dry_mass(c) + &
+                        TempToHeat(temp = t_soisno(c,j), cv = (csol(c,j)*(1-watsat(c,j))*dz(c,j)))
+                end if
+             else
+                has_h2o = .false.
              end if
           end if
 

@@ -38,6 +38,7 @@ module WaterDiagnosticBulkType
 
      real(r8), pointer :: h2osno_total_col       (:)   ! col total snow water (mm H2O)
      real(r8), pointer :: snow_depth_col         (:)   ! col snow height of snow covered area (m)
+     real(r8), pointer :: snow_5day_col          (:)   ! col snow height 5 day avg (m)
      real(r8), pointer :: snowdp_col             (:)   ! col area-averaged snow height (m)
      real(r8), pointer :: snow_layer_unity_col   (:,:) ! value 1 for each snow layer, used for history diagnostics
      real(r8), pointer :: bw_col                 (:,:) ! col partial density of water in the snow pack (ice + liquid) [kg/m3] 
@@ -78,11 +79,17 @@ module WaterDiagnosticBulkType
 
    contains
 
-     procedure, public  :: InitBulk
-     procedure, public  :: RestartBulk
-     procedure, public  :: Summary
-     procedure, public  :: ResetBulkFilter
-     procedure, public  :: ResetBulk
+     ! Public interfaces
+     procedure, public  :: InitBulk                     ! Initiatlization of bulk water diagnostics
+     procedure, public  :: RestartBulk                  ! Restart bulk water diagnostics
+     procedure, public  :: Summary                      ! Compute end of time-step summaries of terms
+     procedure, public  :: ResetBulkFilter              ! Reset the filter for bulk water
+     procedure, public  :: ResetBulk                    ! Reset bulk water characteristics
+     procedure, public :: InitAccBuffer                 ! Initialize accumulation buffers
+     procedure, public :: InitAccVars                   ! Initialize accumulation variables
+     procedure, public :: UpdateAccVars                 ! Update accumulation variables
+
+     ! Private subroutines
      procedure, private :: InitBulkAllocate 
      procedure, private :: InitBulkHistory  
      procedure, private :: InitBulkCold     
@@ -176,6 +183,7 @@ contains
 
     allocate(this%h2osno_total_col       (begc:endc))                     ; this%h2osno_total_col       (:)   = nan
     allocate(this%snow_depth_col         (begc:endc))                     ; this%snow_depth_col         (:)   = nan
+    allocate(this%snow_5day_col          (begc:endc))                     ; this%snow_5day_col          (:)   = nan
     allocate(this%snowdp_col             (begc:endc))                     ; this%snowdp_col             (:)   = nan
     allocate(this%snow_layer_unity_col   (begc:endc,-nlevsno+1:0))        ; this%snow_layer_unity_col   (:,:) = nan
     allocate(this%bw_col                 (begc:endc,-nlevsno+1:0))        ; this%bw_col                 (:,:) = nan   
@@ -400,6 +408,13 @@ contains
          avgflag='A', &
          long_name=this%info%lname('snow height of snow covered area'), &
          ptr_col=this%snow_depth_col, c2l_scale_type='urbanf')
+    this%snow_5day_col(begc:endc) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('SNOW_5D'),  &
+         units='m',  &
+         avgflag='A', &
+         long_name=this%info%lname('5day snow avg'), &
+         ptr_col=this%snow_5day_col, c2l_scale_type='urbanf', default='inactive')
 
     call hist_addfld1d ( &
          fname=this%info%fname('SNOW_DEPTH_ICE'), &
@@ -507,8 +522,102 @@ contains
          ptr_patch=this%qflx_prec_intr_patch, set_lake=0._r8)
 
   end subroutine InitBulkHistory
+  
+  !-----------------------------------------------------------------------
+
+  subroutine InitAccBuffer (this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialize accumulation buffer for all required module accumulated fields
+    ! This routine set defaults values that are then overwritten by the
+    ! restart file for restart or branch runs
+    !
+    ! !USES 
+    use clm_varcon  , only : spval
+    use accumulMod  , only : init_accum_field
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type)  :: this
+    type(bounds_type), intent(in) :: bounds
+    !---------------------------------------------------------------------
+
+    this%snow_5day_col(bounds%begc:bounds%endc) = spval
+    call init_accum_field (name='SNOW_5D', units='m', &
+            desc='5-day running mean of snowdepth', accum_type='runmean', accum_period=-5, &
+            subgrid_type='column', numlev=1, init_value=0._r8)
+
+  end subroutine InitAccBuffer
 
   !-----------------------------------------------------------------------
+
+  subroutine InitAccVars (this, bounds)
+    ! !DESCRIPTION:
+    ! Initialize module variables that are associated with
+    ! time accumulated fields. This routine is called for both an initial run
+    ! and a restart run (and must therefore must be called after the restart file 
+    ! is read in and the accumulation buffer is obtained)
+    !
+    ! !USES 
+    use accumulMod       , only : extract_accum_field
+    use clm_time_manager , only : get_nstep
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type) :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: begc, endc
+    integer  :: nstep
+    integer  :: ier
+    real(r8), pointer :: rbufslp(:)  ! temporary
+    !---------------------------------------------------------------------
+    begc = bounds%begc; endc = bounds%endc
+
+    ! Allocate needed dynamic memory for single level patch field
+    allocate(rbufslp(begc:endc), stat=ier)
+
+    ! Determine time step
+    nstep = get_nstep()
+    call extract_accum_field ('SNOW_5D', rbufslp, nstep)
+    this%snow_5day_col(begc:endc) = rbufslp(begc:endc)
+
+    deallocate(rbufslp)
+
+  end subroutine InitAccVars
+
+  !-----------------------------------------------------------------------
+
+  subroutine UpdateAccVars (this, bounds)
+    !
+    ! Update the accumulation variuables
+    !
+    ! USES
+    use clm_time_manager, only : get_nstep
+    use accumulMod      , only : update_accum_field, extract_accum_field
+    !
+    ! !ARGUMENTS:
+    class(waterdiagnosticbulk_type) :: this
+    type(bounds_type)              , intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: c                         ! indices
+    integer :: dtime                     ! timestep size [seconds]
+    integer :: nstep                     ! timestep number
+    integer :: ier                       ! error status
+    !---------------------------------------------------------------------
+
+    nstep = get_nstep()
+
+    ! Allocate needed dynamic memory for single level patch field
+
+    ! Accumulate and extract 5 day average of snow depth
+    call update_accum_field  ('SNOW_5D', this%snow_depth_col, nstep)
+    call extract_accum_field ('SNOW_5D', this%snow_5day_col, nstep)
+
+  end subroutine UpdateAccVars
+
+  !-----------------------------------------------------------------------
+  
   subroutine InitBulkCold(this, bounds, &
        snow_depth_input_col, h2osno_input_col)
     !
@@ -704,7 +813,7 @@ contains
          xtype=ncd_double,  &
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name=this%info%lname('snow layer effective radius'), &
-         units='um', &
+         units='um', scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%snw_rds_col)
     if (flag == 'read' .and. .not. readvar) then
        ! NOTE(wjs, 2018-08-03) There was some code here that looked like it was just for
@@ -829,31 +938,48 @@ contains
   subroutine Summary(this, bounds, &
        num_soilp, filter_soilp, &
        num_allc, filter_allc, &
+       num_nolakec, filter_nolakec, &
        waterstate_inst, waterflux_inst)
     !
     ! !DESCRIPTION:
     ! Compute end-of-timestep summaries of water diagnostic terms
     !
+    ! !USES:
+    use clm_varpar   , only : nlevsoi
     ! !ARGUMENTS:
     class(waterdiagnosticbulk_type) , intent(inout) :: this
     type(bounds_type)           , intent(in)    :: bounds
-    integer                     , intent(in)    :: num_soilp       ! number of patches in soilp filter
-    integer                     , intent(in)    :: filter_soilp(:) ! filter for soil patches
-    integer                     , intent(in)    :: num_allc        ! number of columns in allc filter
-    integer                     , intent(in)    :: filter_allc(:)  ! filter for all columns
+    integer                     , intent(in)    :: num_soilp          ! number of patches in soilp filter
+    integer                     , intent(in)    :: filter_soilp(:)    ! filter for soil patches
+    integer                     , intent(in)    :: num_allc           ! number of columns in allc filter
+    integer                     , intent(in)    :: filter_allc(:)     ! filter for all columns
+    integer                     , intent(in)    :: num_nolakec        ! number of columns in no-lake columnc filter
+    integer                     , intent(in)    :: filter_nolakec(:)  ! filter for no-lake  columns
     class(waterstate_type)      , intent(in)    :: waterstate_inst
     class(waterflux_type)       , intent(in)    :: waterflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: fp, p
-    integer :: fc, c
+    integer :: fp, p, j, l, fc, c            ! Indices
+    real(r8):: fracl                         ! fraction of soil layer contributing to 10cm total soil water
 
     character(len=*), parameter :: subname = 'Summary'
     !-----------------------------------------------------------------------
+    associate(                                                 &
+         dz                 => col%dz                        , & !  Input:  [real(r8) (:,:) ]  layer thickness depth (m)             
+         zi                 => col%zi                        , & !  Input:  [real(r8) (:,:) ]  interface depth (m)  
+
+         h2osoi_ice         => waterstate_inst%h2osoi_ice_col, & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
+         h2osoi_liq         => waterstate_inst%h2osoi_liq_col, & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)
+
+         h2osoi_ice_tot     => this%h2osoi_ice_tot_col       , & ! Output: [real(r8) (:)   ]  vertically summed ice lens (kg/m2)
+         h2osoi_liq_tot     => this%h2osoi_liq_tot_col       , & ! Output: [real(r8) (:)   ]  vertically summed liquid water (kg/m2)   
+         h2osoi_liqice_10cm => this%h2osoi_liqice_10cm_col     & ! Output: [real(r8) (:)   ]  liquid water + ice lens in top 10cm of soil (kg/m2)
+    )
 
     call this%waterdiagnostic_type%Summary(bounds, &
          num_soilp, filter_soilp, &
          num_allc, filter_allc, &
+         num_nolakec, filter_nolakec, &
          waterstate_inst, waterflux_inst)
 
     call waterstate_inst%CalculateTotalH2osno(bounds, num_allc, filter_allc, &
@@ -873,6 +999,40 @@ contains
             waterflux_inst%qflx_liq_grnd_col(c) + &
             waterflux_inst%qflx_snow_grnd_col(c)
     end do
+    do fc = 1, num_nolakec
+       c = filter_nolakec(fc)
+       l = col%landunit(c)
+       if (.not. lun%urbpoi(l)) then
+          h2osoi_liqice_10cm(c) = 0.0_r8
+          h2osoi_liq_tot(c) = 0._r8
+          h2osoi_ice_tot(c) = 0._r8
+       end if
+    end do
+    do j = 1, nlevsoi
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          l = col%landunit(c)
+          if (.not. lun%urbpoi(l)) then
+             if (zi(c,j) <= 0.1_r8) then
+                fracl = 1._r8
+                h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
+                     (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
+                     fracl
+             else
+                if (zi(c,j) > 0.1_r8 .and. zi(c,j-1) < 0.1_r8) then
+                   fracl = (0.1_r8 - zi(c,j-1))/dz(c,j)
+                   h2osoi_liqice_10cm(c) = h2osoi_liqice_10cm(c) + &
+                        (h2osoi_liq(c,j)+h2osoi_ice(c,j))* &
+                        fracl
+                end if
+             end if
+             h2osoi_liq_tot(c) = h2osoi_liq_tot(c) + h2osoi_liq(c,j)
+             h2osoi_ice_tot(c) = h2osoi_ice_tot(c) + h2osoi_ice(c,j)
+          end if
+       end do
+    end do
+
+    end associate
 
   end subroutine Summary
 

@@ -138,9 +138,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1516;
+my $ntests = 1552;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1017;
+   $ntests += 1044;
 }
 plan( tests=>$ntests );
 
@@ -445,6 +445,11 @@ my %failtest = (
                                      namelst=>"reseed_dead_plants=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
+                                   },
+     "onset_threh w SP"          =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"onset_thresh_depends_on_veg=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
      "dribble_crphrv w/o CN"     =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
@@ -803,7 +808,7 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "glc_nec inconsistent"      =>{ options=>"-envxml_dir .",
-                                     namelst=>"maxpatch_glcmec=5",
+                                     namelst=>"maxpatch_glc=5",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -837,18 +842,28 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "useFATESWbMH"              =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_biomass_heat_storage=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "FireNoneButFATESfireon"    =>{ options=>"-bgc fates -envxml_dir . -no-megan -light_res none",
+                                     namelst=>"fates_spitfire_mode=4",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "FireNoneButBGCfireon"    =>{ options=>"-bgc bgc -envxml_dir . -light_res none",
+                                     namelst=>"fire_method='li2021gswpfrc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
      "createcropFalse"           =>{ options=>"-bgc bgc -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "useFATESWTransient"        =>{ options=>"-bgc fates -use_case 20thC_transient -envxml_dir . -no-megan -res 10x15",
-                                     namelst=>"",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
      "usespitfireButNOTFATES"    =>{ options=>"-envxml_dir . -no-megan",
-                                     namelst=>"use_fates_spitfire=.true.",
+                                     namelst=>"fates_spitfire_mode>0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
@@ -1030,11 +1045,6 @@ my %warntest = (
                                    },
      "use_c14_wo_bgc"            =>{ options=>"-envxml_dir . -bgc cn",
                                      namelst=>"use_c14=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "maxpft_wrong"              =>{ options=>"-envxml_dir . -bgc cn",
-                                     namelst=>"maxpatch_pft=19",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -1418,22 +1428,30 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
   &cleanup();
   # Run FATES mode for several resolutions and configurations
   my $clmoptions = "-bgc fates -envxml_dir . -no-megan";
-  my @clmres = ( "1x1_brazil", "5x5_amazon", "10x15", "1.9x2.5" );
+  my @clmres = ( "1x1_brazil", "5x5_amazon", "4x5", "1.9x2.5" );
   foreach my $res ( @clmres ) {
-     $options = "-res $res";
-     my @edoptions = ( "-use_case 2000_control", "", "-namelist \"&a use_lch4=.true.,use_nitrif_denitrif=.true./\"", "-clm_accelerated_spinup on" );
+     $options = "-res $res -clm_start_type cold";
+     my @edoptions = ( "-use_case 2000_control", 
+                       "-use_case 1850_control", 
+                       "", 
+                       "-namelist \"&a use_lch4=.true.,use_nitrif_denitrif=.true./\"", 
+                       "-clm_accelerated_spinup on" 
+                     );
      foreach my $edop (@edoptions ) {
+        if ( $res eq "5x5_amazon" && ($edop =~ /1850_control/) ) {
+           next;
+        }
         &make_env_run( );
         eval{ system( "$bldnml $options $clmoptions $edop  > $tempfile 2>&1 " ); };
         is( $@, '', "$options $edop" );
-        $cfiles->checkfilesexist( "$options $edop", $mode );
+        $cfiles->checkfilesexist( "$options $clmoptions $edop", $mode );
         $cfiles->shownmldiff( "default", "standard" );
         if ( defined($opts{'compare'}) ) {
-           $cfiles->doNOTdodiffonfile( "$tempfile", "$options $edop", $mode );
-           $cfiles->comparefiles( "$options $edop", $mode, $opts{'compare'} );
+           $cfiles->doNOTdodiffonfile( "$tempfile", "$options $clmoptions $edop", $mode );
+           $cfiles->comparefiles( "$options $clmoptions $edop", $mode, $opts{'compare'} );
         }
         if ( defined($opts{'generate'}) ) {
-           $cfiles->copyfiles( "$options $edop", $mode );
+           $cfiles->copyfiles( "$options $clmoptions $edop", $mode );
         }
         &cleanup();
      }

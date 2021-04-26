@@ -1584,10 +1584,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
   real(r8), intent(in) :: tc_soisno ! soil temperature (degrees Celsius)
 
   if (fixer == 1 .and. crootfr > 1.e-6_r8) then
-     fun_cost_fix  = s_fix * (exp(a_fix + b_fix * tc_soisno * (1._r8 - 0.5_r8 * tc_soisno / c_fix)) - 2._r8)
-     
-     
-     ! New term to directly account for Ben Houlton's temperature response function. 
+     ! New term to directly account for Ben Houlton's temperature response function.
      ! Assumes s_fix is -6.  (RF, Jan 2015)  
      ! 1.25 converts from the Houlton temp response function to a 0-1 limitation factor. 
      ! The cost of N should probably be 6 gC/gN (or 9, including maintenance costs of nodules) 

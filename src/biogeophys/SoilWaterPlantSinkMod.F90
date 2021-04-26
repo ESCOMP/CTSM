@@ -274,27 +274,30 @@ contains
         integer  :: pi                                                    ! patch index
         real(r8) :: temp(bounds%begc:bounds%endc)                         ! accumulator for rootr weighting
         real(r8) :: grav2                 ! soil layer gravitational potential relative to surface (mm H2O)
+        real(r8) :: patchflux             ! patch level soil-to-plant water flux (mm/s)
         integer , parameter :: soil=1,root=4  ! index values
         !-----------------------------------------------------------------------   
         
         associate(&
-              k_soil_root         => soilstate_inst%k_soil_root_patch   , & ! Input:  [real(r8) (:,:) ]  
+              k_soil_root            => soilstate_inst%k_soil_root_patch         , & ! Input:  [real(r8) (:,:) ]  
                                                                             ! soil-root interface conductance (mm/s)
-              qflx_phs_neg_col    => waterfluxbulk_inst%qflx_phs_neg_col    , & ! Input:  [real(r8) (:)   ]  n
-                                                                            ! net neg hydraulic redistribution flux(mm H2O/s)
-              qflx_tran_veg_col   => waterfluxbulk_inst%qflx_tran_veg_col   , & ! Input:  [real(r8) (:)   ]  
+              qflx_phs_neg_col       => waterfluxbulk_inst%qflx_phs_neg_col      , & ! Output:  [real(r8) (:)   ] 
+                                                                            ! net neg hydraulic redistribution flux col (mm H2O/s)
+              qflx_hydr_redist_patch => waterfluxbulk_inst%qflx_hydr_redist_patch, & ! Output:  [real(r8) (:)   ] 
+                                                                            ! net neg hydraulic redistribution flux patch (mm H2O/s)
+              qflx_tran_veg_col      => waterfluxbulk_inst%qflx_tran_veg_col     , & ! Input:  [real(r8) (:)   ]  
                                                                             ! vegetation transpiration (mm H2O/s) (+ = to atm)
-              qflx_tran_veg_patch => waterfluxbulk_inst%qflx_tran_veg_patch , & ! Input:  [real(r8) (:)   ]  
+              qflx_tran_veg_patch    => waterfluxbulk_inst%qflx_tran_veg_patch   , & ! Input:  [real(r8) (:)   ]  
                                                                             ! vegetation transpiration (mm H2O/s) (+ = to atm)
-              qflx_rootsoi_col    => waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:)   ]
+              qflx_rootsoi_col       => waterfluxbulk_inst%qflx_rootsoi_col      , & ! Output: [real(r8) (:)   ]
                                                                             ! col root and soil water 
                                                                             ! exchange [mm H2O/s] [+ into root]
-              smp                 => soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix pot. [mm]
-              frac_veg_nosno      => canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)  ] 
+              smp                    => soilstate_inst%smp_l_col                 , & ! Input:  [real(r8) (:,:) ]  soil matrix pot. [mm]
+              frac_veg_nosno         => canopystate_inst%frac_veg_nosno_patch    , & ! Input:  [integer  (:)  ] 
                                                                             ! fraction of vegetation not 
                                                                             ! covered by snow (0 OR 1) [-]  
-              z                   => col%z                              , & ! Input: [real(r8) (:,:) ]  layer node depth (m)
-              vegwp               => canopystate_inst%vegwp_patch         & ! Input: [real(r8) (:,:) ]  vegetation water 
+              z                      => col%z                                    , & ! Input: [real(r8) (:,:) ]  layer node depth (m)
+              vegwp                  => canopystate_inst%vegwp_patch               & ! Input: [real(r8) (:,:) ]  vegetation water 
                                                                             ! matric potential (mm)
               )
           
@@ -308,10 +311,16 @@ contains
                 do pi = 1,max_patch_per_col
                    if (pi <= col%npatches(c)) then
                       p = col%patchi(c) + pi - 1
+                      if (j == 1) then
+                         qflx_hydr_redist_patch(p) = 0._r8
+                      end if
                       if (patch%active(p).and.frac_veg_nosno(p)>0) then 
                          if (patch%wtcol(p) > 0._r8) then
-                            temp(c) = temp(c) + k_soil_root(p,j) &
-                                  * (smp(c,j) - vegwp(p,4) - grav2)* patch%wtcol(p)
+                            patchflux = k_soil_root(p,j) * (smp(c,j) - vegwp(p,4) - grav2)
+                            if (patchflux <0) then
+                               qflx_hydr_redist_patch(p) = qflx_hydr_redist_patch(p) + patchflux
+                            end if
+                            temp(c) = temp(c) + patchflux * patch%wtcol(p)
                          endif
                       end if
                    end if

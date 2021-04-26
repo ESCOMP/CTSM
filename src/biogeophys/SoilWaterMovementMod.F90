@@ -599,6 +599,7 @@ contains
          qflx_infl         =>    waterfluxbulk_inst%qflx_infl_col       , & ! Input:  [real(r8) (:)   ]  infiltration (mm H2O /s)                          
 
          qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col    , & ! Output: [real(r8) (:,:) ]  vegetation/soil water exchange (mm H2O/s) (+ = to atm)
+         qflx_drain_vr_col =>    waterfluxbulk_inst%qflx_drain_vr_col   , & ! Input:  [real(r8) (:,:) ]  drainage from soil layers due to plant induced
          t_soisno          =>    temperature_inst%t_soisno_col        & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)                       
          )
 
@@ -1178,9 +1179,9 @@ contains
 
          smp_l             =>    soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
          hk_l              =>    soilstate_inst%hk_l_col            , & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
-         h2osoi_ice        =>    waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
-         h2osoi_liq        =>    waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col      &
+         h2osoi_ice        =>    waterstatebulk_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:) ]  ice water (kg/m2)                               
+         h2osoi_liq        =>    waterstatebulk_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
+         qflx_rootsoi_col  =>    waterfluxbulk_inst%qflx_rootsoi_col  &   
          )  ! end associate statement
 
       ! Get time step
@@ -2209,42 +2210,20 @@ contains
     bet = b(jtop)
 
     do j = lbj, ubj
-       if ((col%itype(ci) == icol_sunwall .or. col%itype(ci) == icol_shadewall &
-            .or. col%itype(ci) == icol_roof) .and. j <= nlevurb) then
-          if (j >= jtop) then
-             if (j == jtop) then
-                u(j) = r(j) / bet
-             else
-                gam(j) = c(j-1) / bet
-                bet = b(j) - a(j) * gam(j)
-                u(j) = (r(j) - a(j)*u(j-1)) / bet
-             end if
-          end if
-       else if (col%itype(ci) /= icol_sunwall .and. col%itype(ci) /= icol_shadewall &
-            .and. col%itype(ci) /= icol_roof) then
-          if (j >= jtop) then
-             if (j == jtop) then
-                u(j) = r(j) / bet
-             else
-                gam(j) = c(j-1) / bet
-                bet = b(j) - a(j) * gam(j)
-                u(j) = (r(j) - a(j)*u(j-1)) / bet
-             end if
+       if (j >= jtop) then
+          if (j == jtop) then
+             u(j) = r(j) / bet
+          else
+             gam(j) = c(j-1) / bet
+             bet = b(j) - a(j) * gam(j)
+             u(j) = (r(j) - a(j)*u(j-1)) / bet
           end if
        end if
     end do
 
     do j = ubj-1,lbj,-1
-       if ((col%itype(ci) == icol_sunwall .or. col%itype(ci) == icol_shadewall &
-            .or. col%itype(ci) == icol_roof) .and. j <= nlevurb-1) then
-          if (j >= jtop) then
-             u(j) = u(j) - gam(j+1) * u(j+1)
-          end if
-       else if (col%itype(ci) /= icol_sunwall .and. col%itype(ci) /= icol_shadewall &
-            .and. col%itype(ci) /= icol_roof) then
-          if (j >= jtop) then
-             u(j) = u(j) - gam(j+1) * u(j+1)
-          end if
+       if (j >= jtop) then
+          u(j) = u(j) - gam(j+1) * u(j+1)
        end if
     end do
     

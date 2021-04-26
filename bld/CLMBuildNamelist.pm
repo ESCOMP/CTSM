@@ -167,6 +167,7 @@ OPTIONS
                               (Note: buildnml copies the file for use by the driver)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
+     -glc_use_antarctica      Set defaults appropriate for runs that include Antarctica
      -help [or -h]            Print usage to STDOUT.
      -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
      -ignore_ic_date          Ignore the date on the initial condition files
@@ -253,6 +254,7 @@ sub process_commandline {
                clm_demand            => "null",
                help                  => 0,
                glc_nec               => "default",
+               glc_use_antarctica    => 0,
                light_res             => "default",
                lnd_tuning_mode       => "default",
                lnd_frac              => undef,
@@ -297,6 +299,7 @@ sub process_commandline {
              "note!"                     => \$opts{'note'},
              "megan!"                    => \$opts{'megan'},
              "glc_nec=i"                 => \$opts{'glc_nec'},
+             "glc_use_antarctica!"       => \$opts{'glc_use_antarctica'},
              "light_res=s"               => \$opts{'light_res'},
              "d:s"                       => \$opts{'dir'},
              "h|help"                    => \$opts{'help'},
@@ -765,8 +768,9 @@ sub setup_cmdl_fates_mode {
       }
     } else {
        # dis-allow fates specific namelist items with non-fates runs
-       my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
-                      "use_fates_inventory_init", "fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
+	my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
+		       "use_fates_cohort_age_tracking", 
+                      "use_fates_inventory_init","use_fates_fixed_biogeog", "fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
               $log->fatal_error("$var is being set, but can ONLY be set when -bgc fates option is used.\n");
@@ -907,52 +911,58 @@ sub setup_cmdl_fire_light_res {
   my $var = "light_res";
   my $val = $opts->{$var};
   if ( $val eq "default" ) {
-     $nl_flags->{$var} = remove_leading_and_trailing_quotes($defaults->get_value($var));
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
+                 'fates_spitfire_mode'=>$nl->get_value('fates_spitfire_mode'), 
+                 'use_fates'=>$nl_flags->{'use_fates'}, fire_method=>$nl->get_value('fire_method') );
+     $val              = remove_leading_and_trailing_quotes( $nl->get_value($var) );
+     $nl_flags->{$var} = $val;
   } else {
      my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
      if ( defined($fire_method) && $val ne "none" ) {
         if ( $fire_method eq "nofire" ) {
            $log->fatal_error("-$var option used with fire_method='nofire'. -$var can ONLY be used without the nofire option");
-        }
-     }
-     my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
-     if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
-        $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
-     }
-     if ( ! &value_is_true($nl->get_value('use_cn')) ) {
-        $log->fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
-     }
-     if ( &value_is_true($nl->get_value('use_cn')) && $val eq "none" ) {
-        $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
-     }
-     $nl_flags->{$var} = $val;
+         }
+       }
+       my $stream_fldfilename_lightng = remove_leading_and_trailing_quotes( $nl->get_value('stream_fldfilename_lightng') );
+       if ( defined($stream_fldfilename_lightng) && $val ne "none" ) {
+          $log->fatal_error("-$var option used while also explicitly setting stream_fldfilename_lightng filename which is a contradiction. Use one or the other not both.");
+       }
+       if ( ! &value_is_true($nl->get_value('use_cn')) ) {
+          $log->fatal_error("-$var option used CN is NOT on. -$var can only be used when CN is on (with bgc: cn or bgc)");
+       }
+       if ( &value_is_true($nl->get_value('use_cn')) && $val eq "none" ) {
+          $log->fatal_error("-$var option is set to none, but CN is on (with bgc: cn or bgc) which is a contradiction");
+       }
+       $nl_flags->{$var} = $val;
+    }
+    my $group = $definition->get_group_name($var);
+    $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
+    if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
+      my @valid_values   = $definition->get_valid_values( $var );
+      $log->fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values");
+    }
+    $log->verbose_message("Using $nl_flags->{$var} for $var.");
+    #
+    # Set flag if cn-fires are on or not
+    #
+    $var = "cnfireson";
+    if ( &value_is_true($nl->get_value('use_cn')) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
+    }
+    my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
+    if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) && ! &value_is_true($nl_flags->{'use_fates'}) ) {
+       $log->fatal_error("fire_method is being set while use_cn and use_fates are both false.");
+    }
+    if ( defined($fire_method) && $fire_method eq "nofire" ) {
+       $nl_flags->{$var} = ".false.";
+#   } elsif ( &value_is_true($nl->get_value('use_cn')) || $nl_flags->{'fates_spitfire_mode'} > 1 ) {
+    } elsif ( &value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates')) ) {
+       $nl_flags->{$var} = ".true.";
+    } else {
+       $nl_flags->{$var} = ".false.";
+    }
   }
-  my $group = $definition->get_group_name($var);
-  $nl->set_variable_value($group, $var, quote_string($nl_flags->{$var}) );
-  if (  ! $definition->is_valid_value( $var, $nl_flags->{$var}, 'noquotes'=>1 ) ) {
-     my @valid_values   = $definition->get_valid_values( $var );
-     $log->fatal_error("$var has a value (".$nl_flags->{$var}.") that is NOT valid. Valid values are: @valid_values");
-  }
-  $log->verbose_message("Using $nl_flags->{$var} for $var.");
-  #
-  # Set flag if cn-fires are on or not
-  #
-  $var = "cnfireson";
-  if ( &value_is_true($nl->get_value('use_cn')) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
-  }
-  my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
-  if ( defined($fire_method) && ! &value_is_true($nl_flags->{'use_cn'}) ) {
-     $log->fatal_error("fire_method is being set even though bgc is NOT cn or bgc.");
-  }
-  if ( defined($fire_method) && $fire_method eq "nofire" ) {
-     $nl_flags->{$var} = ".false.";
-  } elsif ( &value_is_true($nl->get_value('use_cn')) ) {
-     $nl_flags->{$var} = ".true.";
-  } else {
-     $nl_flags->{$var} = ".false.";
-  }
-}
 
 #-------------------------------------------------------------------------------
 
@@ -1008,24 +1018,6 @@ sub setup_cmdl_maxpft {
   }
   $nl_flags->{'maxpft'} = $val;
 
-  $var = "maxpatch_pft";
-  my $group = $definition->get_group_name($var);
-  if ( ! defined($nl->get_variable_value($group, $var)) ) {
-    $val = $nl_flags->{'maxpft'};
-    $nl->set_variable_value($group, $var, $val);
-  }
-  $val = $nl->get_variable_value($group, $var);
-  my @valid_values   = ($maxpatchpft{'.true.'}, $maxpatchpft{'.false.'}  );
-  my $found = 0;
-  foreach my $valid_val ( @valid_values ) {
-     if ( $val == $valid_val ) {
-       $found = 1;
-       last;
-     }
-  }
-  if ( ! $found ) {
-     $log->warning("$var has a value ($val) that is normally NOT valid. Normal valid values are: @valid_values");
-  }
 }
 
 #-------------------------------------------------------------------------------
@@ -1112,6 +1104,12 @@ sub setup_cmdl_spinup {
     } else {
        $nl_flags->{'bgc_spinup'} = "off";
        $val = $defaults->get_value($var);
+    }
+    # For AD spinup mode by default reseed dead plants
+    if ( $nl_flags->{$var} ne "off" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
+                    $defaults, $nl, "reseed_dead_plants", clm_accelerated_spinup=>$nl_flags->{$var},
+                    use_cn=>$nl_flags->{'use_cn'} );
     }
   } else {
     if ( defined($nl->get_value("spinup_state")) ) {
@@ -1514,6 +1512,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
   # namelist group: atm2lnd_inparm
@@ -1625,6 +1624,11 @@ sub process_namelist_inline_logic {
   # namelist group: bgc_shared
   ##################################
   setup_logic_bgc_shared($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+
+  ##################################
+  # namelist group: cnphenology
+  ##################################
+  setup_logic_cnphenology($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
   #############################################
   # namelist group: soilwater_movement_inparm #
@@ -1912,7 +1916,7 @@ sub setup_logic_glacier {
      $log->fatal_error("glc_do_dynglacier can only be set via the env variable $clm_upvar: it can NOT be set in user_nl_clm");
   }
 
-  my $var = "maxpatch_glcmec";
+  my $var = "maxpatch_glc";
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'val'=>$nl_flags->{'glc_nec'} );
 
   my $val = $nl->get_value($var);
@@ -1927,7 +1931,8 @@ sub setup_logic_glacier {
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
 
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'albice');
-  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior');
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior',
+              'glc_use_antarctica'=>$opts->{'glc_use_antarctica'});
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_melt_behavior');
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_ice_runoff_behavior');
 }
@@ -2080,7 +2085,6 @@ sub error_if_set {
    }
 }
 
-
 #-------------------------------------------------------------------------------
 
 sub setup_logic_soilstate {
@@ -2193,9 +2197,6 @@ sub setup_logic_surface_dataset {
 
   if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
-  }
-  if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_fates'}) ) {
-     $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with ecosystem dynamics (use_fates=.true)." );
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
               'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
@@ -2637,17 +2638,17 @@ sub setup_logic_do_harvest {
    # in any of these cases, a fatal error will be generated
    my $cannot_be_true = "";
 
-   if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
-      $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
-   } elsif (!&value_is_true($nl->get_value('use_cn'))) {
-      $cannot_be_true = "$var can only be set to true when running with CN (use_cn = true)";
-   } elsif (&value_is_true($nl->get_value('use_fates'))) {
-      $cannot_be_true = "$var currently doesn't work with ED";
-   }
+      if (string_is_undef_or_empty($nl->get_value('flanduse_timeseries'))) {
+         $cannot_be_true = "$var can only be set to true when running a transient case (flanduse_timeseries non-blank)";
+      }
 
-   if ($cannot_be_true) {
-      $default_val = ".false.";
-   }
+      elsif (!&value_is_true($nl->get_value('use_cn')) && !&value_is_true($nl->get_value('use_fates'))) {
+         $cannot_be_true = "$var can only be set to true when running with either CN or FATES";
+      }
+
+      if ($cannot_be_true) {
+         $default_val = ".false.";
+      }
 
    if (!$cannot_be_true) {
       # Note that, if the variable cannot be true, we don't call add_default
@@ -2694,6 +2695,24 @@ sub setup_logic_bgc_shared {
   # workaround.
   if ( &value_is_true($nl_flags->{'use_century_decomp'}) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
+  }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_cnphenology {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  my @list  = (  "onset_thresh_depends_on_veg", "min_crtical_dayl_depends_on_lat" );
+  foreach my $var ( @list ) {
+    if (  &value_is_true($nl_flags->{'use_cn'}) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
+                   'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'} );
+    } else {
+       if ( defined($nl->get_value($var)) ) {
+          $log->fatal_error("$var should only be set if use_cn is on");
+       }
+    }
   }
 }
 
@@ -3388,23 +3407,23 @@ sub setup_logic_lightning_streams {
   # lightning streams require CN/BGC
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
-  if ( &value_is_true($nl_flags->{'cnfireson'}) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 'use_cn'=>$nl_flags->{'use_cn'},
-                 'hgrid'=>$nl_flags->{'res'},
-                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
-                 'sim_year'=>$nl_flags->{'sim_year'},
-                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
-                 'sim_year'=>$nl_flags->{'sim_year'},
-                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
-     # Set align year, if first and last years are different
-     if ( $nl->get_value('stream_year_first_lightng') !=
-          $nl->get_value('stream_year_last_lightng') ) {
+    if ( $nl_flags->{'light_res'} ne "none" ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'lightngmapalgo', 
+                  'hgrid'=>$nl_flags->{'res'},
+                  'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'}  );
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_lightng', 
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_lightng', 
+                  'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+      # Set align year, if first and last years are different
+      if ( $nl->get_value('stream_year_first_lightng') !=
+           $nl->get_value('stream_year_last_lightng') ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'model_year_align_lightng', 'sim_year'=>$nl_flags->{'sim_year'},
                     'sim_year_range'=>$nl_flags->{'sim_year_range'});
      }
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 'use_cn'=>$nl_flags->{'use_cn'},
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 
                  'hgrid'=>$nl_flags->{'light_res'} );
   } else {
      # If bgc is NOT CN/CNDV then make sure none of the Lightng settings are set
@@ -3413,7 +3432,7 @@ sub setup_logic_lightning_streams {
           defined($nl->get_value('model_year_align_lightng'))  ||
           defined($nl->get_value('lightng_tintalgo'        ))  ||
           defined($nl->get_value('stream_fldfilename_lightng'))   ) {
-        $log->fatal_error("When bgc is SP (NOT CN or BGC) or fire_method==nofire none of: stream_year_first_lightng,\n" .
+        $log->fatal_error("When bgc is SP (NOT CN or BGC or FATES) or fire is turned off none of: stream_year_first_lightng,\n" .
                           "stream_year_last_lightng, model_year_align_lightng, lightng_tintalgo nor\n" .
                           "stream_fldfilename_lightng can be set!");
      }
@@ -3693,6 +3712,11 @@ sub setup_logic_canopyfluxes {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_undercanopy_stability' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'itmax_canopy_fluxes',
               'structure'=>$nl_flags->{'structure'});
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_biomass_heat_storage',
+              'use_fates'=>$nl_flags->{'use_fates'}, 'phys'=>$nl_flags->{'phys'} );
+  if ( &value_is_true($nl->get_value('use_biomass_heat_storage') ) && &value_is_true( $nl_flags->{'use_fates'}) ) {
+     $log->fatal_error('use_biomass_heat_storage can NOT be set to true when fates is on');
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -3879,8 +3903,8 @@ sub setup_logic_fates {
 
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
-        my @list  = (  "use_fates_spitfire", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
-                       "use_fates_inventory_init", "use_fates_logging","fates_parteh_mode" );
+        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys", 
+                       "use_fates_inventory_init","use_fates_fixed_biogeog", "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'} );
         }
@@ -3897,6 +3921,18 @@ sub setup_logic_fates {
            }
         }
     }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_misc {
+   #
+   # Set some misc options
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
 }
 
 #-------------------------------------------------------------------------------

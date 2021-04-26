@@ -665,6 +665,7 @@ contains
 
     call this%waterfluxbulk_inst%InitAccBuffer(bounds)
     call this%wateratm2lndbulk_inst%InitAccBuffer(bounds)
+    call this%waterdiagnosticbulk_inst%InitAccBuffer(bounds)
 
   end subroutine InitAccBuffer
 
@@ -685,6 +686,7 @@ contains
 
     call this%waterfluxbulk_inst%initAccVars(bounds)
     call this%wateratm2lndbulk_inst%initAccVars(bounds)
+    call this%waterdiagnosticbulk_inst%initAccVars(bounds)
 
   end subroutine InitAccVars
 
@@ -707,6 +709,7 @@ contains
 
     call this%waterfluxbulk_inst%UpdateAccVars(bounds)
     call this%wateratm2lndbulk_inst%UpdateAccVars(bounds)
+    call this%waterdiagnosticbulk_inst%UpdateAccVars(bounds)
 
   end subroutine UpdateAccVars
 
@@ -1009,8 +1012,9 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Summary(this, bounds, &
-       num_soilp, filter_soilp, &
-       num_allc, filter_allc)
+       num_soilp, filter_soilp,    &
+       num_allc, filter_allc,      &
+       num_nolakec, filter_nolakec)
     !
     ! !DESCRIPTION:
     ! Compute end-of-timestep summaries of water diagnostic terms
@@ -1022,6 +1026,8 @@ contains
     integer           , intent(in)    :: filter_soilp(:) ! filter for soil patches
     integer           , intent(in)    :: num_allc        ! number of columns in allc filter
     integer           , intent(in)    :: filter_allc(:)  ! filter for all columns
+    integer           , intent(in)    :: num_nolakec        ! number of no-lake filter
+    integer           , intent(in)    :: filter_nolakec(:)  ! filter for no-lake columns
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -1037,6 +1043,8 @@ contains
             filter_soilp = filter_soilp, &
             num_allc = num_allc, &
             filter_allc = filter_allc, &
+            num_nolakec = num_nolakec, &
+            filter_nolakec = filter_nolakec, &
             waterstate_inst = bulk_or_tracer%waterstate_inst, &
             waterflux_inst = bulk_or_tracer%waterflux_inst)
        end associate

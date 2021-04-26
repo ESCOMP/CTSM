@@ -14,7 +14,7 @@ module CNGapMortalityMod
   use shr_log_mod             , only : errMsg => shr_log_errMsg
   use pftconMod               , only : pftcon
   use CNDVType                , only : dgvs_type
-  use CNVegCarbonStateType    , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType    , only : cnveg_carbonstate_type, spinup_factor_deadwood
   use CNVegCarbonFluxType     , only : cnveg_carbonflux_type
   use CNVegNitrogenStateType  , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType   , only : cnveg_nitrogenflux_type
@@ -191,13 +191,8 @@ contains
          cnveg_carbonflux_inst%m_frootc_to_litter_patch(p)              = cnveg_carbonstate_inst%frootc_patch(p)              * m
          cnveg_carbonflux_inst%m_livestemc_to_litter_patch(p)           = cnveg_carbonstate_inst%livestemc_patch(p)           * m
          cnveg_carbonflux_inst%m_livecrootc_to_litter_patch(p)          = cnveg_carbonstate_inst%livecrootc_patch(p)          * m
-         if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
-           cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * 10._r8
-           cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * 10._r8
-         else
-           cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)           * m
-           cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p)          * m
-         end if
+         cnveg_carbonflux_inst%m_deadstemc_to_litter_patch(p)         = cnveg_carbonstate_inst%deadstemc_patch(p)  * m * spinup_factor_deadwood
+         cnveg_carbonflux_inst%m_deadcrootc_to_litter_patch(p)        = cnveg_carbonstate_inst%deadcrootc_patch(p) * m * spinup_factor_deadwood
 
          ! storage pools
          cnveg_carbonflux_inst%m_leafc_storage_to_litter_patch(p)       = cnveg_carbonstate_inst%leafc_storage_patch(p)       * m
@@ -228,8 +223,8 @@ contains
          cnveg_nitrogenflux_inst%m_livecrootn_to_litter_patch(p)       = cnveg_nitrogenstate_inst%livecrootn_patch(p)          * m
 
          if (spinup_state == 2 .and. .not. use_cndv) then   !accelerate mortality of dead woody pools 
-           cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * 10._r8
-           cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * 10._r8
+           cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)  * m * spinup_factor_deadwood
+           cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p) * m * spinup_factor_deadwood
          else
            cnveg_nitrogenflux_inst%m_deadstemn_to_litter_patch(p)      = cnveg_nitrogenstate_inst%deadstemn_patch(p)           * m 
            cnveg_nitrogenflux_inst%m_deadcrootn_to_litter_patch(p)     = cnveg_nitrogenstate_inst%deadcrootn_patch(p)          * m 

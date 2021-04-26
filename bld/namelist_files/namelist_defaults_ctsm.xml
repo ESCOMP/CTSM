@@ -57,6 +57,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <spinup_state clm_accelerated_spinup="on"  use_fates=".true." phys="clm4_5" >1</spinup_state>
 <spinup_state clm_accelerated_spinup="off"                               >0</spinup_state>
 
+<!-- Reseeding of dead plants normally only done for AD spinup -->
+<reseed_dead_plants clm_accelerated_spinup="on" use_cn=".true.">.true.</reseed_dead_plants>
+<reseed_dead_plants                                            >.false.</reseed_dead_plants>
+
+<for_testing_run_ncdiopio_tests>.false.</for_testing_run_ncdiopio_tests>
+
+<!-- Set to .true. in namelist to write hist fields master list file -->
+<hist_master_list_file>.false.</hist_master_list_file>
+
 <!-- In accelerated spinup mode reduce the amount of history output -->
 <hist_empty_htapes clm_accelerated_spinup="on">.true.</hist_empty_htapes>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true." use_cndv=".true."
@@ -176,7 +185,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_bedrock phys="clm5_0"  vichydro ="1"      >.false.</use_bedrock>
 <use_bedrock phys="clm5_0"                     >.true.</use_bedrock>
 <use_bedrock phys="clm4_5"                     >.false.</use_bedrock>
-
 
 <!-- Rooting profile namelist defaults -->
 <rooting_profile_method_water  phys="clm5_1" >1</rooting_profile_method_water>
@@ -307,6 +315,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_undercanopy_stability phys="clm5_0" >.false.</use_undercanopy_stability>
 <use_undercanopy_stability phys="clm4_5" >.true.</use_undercanopy_stability>
 
+<use_biomass_heat_storage  phys="clm5_1"                   >.true.</use_biomass_heat_storage>
+<use_biomass_heat_storage  phys="clm5_1" use_fates=".true.">.false.</use_biomass_heat_storage>
+<use_biomass_heat_storage                                  >.false.</use_biomass_heat_storage>
+
 <itmax_canopy_fluxes structure="standard">40</itmax_canopy_fluxes>
 <itmax_canopy_fluxes structure="fast"    >3</itmax_canopy_fluxes>
 
@@ -434,8 +446,14 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Mountain glaciers: single_at_atm_topo
      Greenland - inside CISM grid but outside Greenland itself: virtual
      Greenland itself: virtual
-     Antarctica: multiple -->
-<glacier_region_behavior>'single_at_atm_topo','virtual','virtual','multiple'</glacier_region_behavior>
+     Antarctica: multiple
+
+     If CISM is running over Antarctica, then we change the Antarctica
+     behavior to virtual. Note that the Greenland behavior is always
+     virtual, even if Greenland isn't included in this run.
+-->
+<glacier_region_behavior glc_use_antarctica="0">'single_at_atm_topo','virtual','virtual','multiple'</glacier_region_behavior>
+<glacier_region_behavior glc_use_antarctica="1">'single_at_atm_topo','virtual','virtual','virtual' </glacier_region_behavior>
 
 <!-- Default glacier melt behavior is:
      Mountain glaciers: remains_in_place
@@ -465,15 +483,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c200905.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c200905.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c200905.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c210305.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c210217.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c210217.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.8.0.0_12pft_c191216.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.14.0.0_12pft_c200921.nc</fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -541,6 +559,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <initial_seed_at_planting use_crop=".true." phys="clm5_0" >3.d00</initial_seed_at_planting>
 <initial_seed_at_planting use_crop=".true." phys="clm4_5" >1.d00</initial_seed_at_planting>
 
+<!-- CN Phenology -->
+<onset_thresh_depends_on_veg     use_cn=".true." phys="clm5_1" >.true.</onset_thresh_depends_on_veg>
+<min_crtical_dayl_depends_on_lat use_cn=".true." phys="clm5_1" >.true.</min_crtical_dayl_depends_on_lat>
+<onset_thresh_depends_on_veg                                   >.false.</onset_thresh_depends_on_veg>
+<min_crtical_dayl_depends_on_lat                               >.false.</min_crtical_dayl_depends_on_lat>
 
 <!-- turnover time modifications    -->
 <decomp_depth_efolding phys="clm4_5" >0.5</decomp_depth_efolding>
@@ -1521,17 +1544,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.climo1980-2014.MONS_c190709.nc</stream_fldfilename_soilm>
 
 <soilm_tintalgo>linear</soilm_tintalgo>
-
-<!-- Soilm moisture streams namelist defaults -->
-<!-- This is if you want to prescribe the soil moisture from input datasets rather than model it -->
-<use_soil_moisture_streams>.false.</use_soil_moisture_streams>
-<stream_year_first_soilm  >1997</stream_year_first_soilm>
-<stream_year_last_soilm   >1997</stream_year_last_soilm>
-<model_year_align_soilm   >1997</model_year_align_soilm>
-
-<stream_fldfilename_soilm hgrid="0.9x1.25">lnd/clm2/prescribed_data/LFMIP-pdLC-SST.H2OSOI.0.9x1.25.20levsoi.natveg.1980-2014.MONS_climo.c190716.nc</stream_fldfilename_soilm>
-
-<soilm_tintalgo>linear</soilm_tintalgo>
 <soilm_offset  >0</soilm_offset>
 
 <!-- LAI streams namelist defaults -->
@@ -1566,22 +1578,28 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <light_res    use_cn=".true." phys="clm4_5"        >94x192</light_res>
 <light_res    use_cn=".true." phys="clm5_0"        >94x192</light_res>
 <light_res    use_cn=".true." phys="clm5_1"        >360x720</light_res>
+<light_res    use_fates=".true."                         >none</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="0" >none</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="1" >none</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="2" >360x720</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="3" >360x720</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="4" >360x720</light_res>
 
-<stream_year_first_lightng use_cn=".true."   >0001</stream_year_first_lightng>
-<stream_year_last_lightng  use_cn=".true."   >0001</stream_year_last_lightng>
+<stream_year_first_lightng >0001</stream_year_first_lightng>
+<stream_year_last_lightng  >0001</stream_year_last_lightng>
 
-<stream_fldfilename_lightng hgrid="94x192"    use_cn=".true."   >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
-<stream_fldfilename_lightng hgrid="360x720"   use_cn=".true."   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng hgrid="94x192"    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
+<stream_fldfilename_lightng hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
 
-<lightngmapalgo use_cn=".true."                               >bilinear</lightngmapalgo>
+<lightngmapalgo >bilinear</lightngmapalgo>
 
-<lightngmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</lightngmapalgo>
-<lightngmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_brazil"          >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_mexicocityMEX"   >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_vancouverCAN"    >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_urbanc_alpha"    >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_camdenNJ"        >nn</lightngmapalgo>
+<lightngmapalgo hgrid="1x1_asphaltjungleNJ" >nn</lightngmapalgo>
+<lightngmapalgo hgrid="5x5_amazon"          >nn</lightngmapalgo>
 
 <!-- Population density streams namelist defaults -->
 <stream_year_first_popdens phys="clm4_5"  cnfireson=".true." sim_year_range="1850-2100"  >2015</stream_year_first_popdens>
@@ -1614,6 +1632,24 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_first_popdens use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
 <stream_year_last_popdens  use_cn=".true."   sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
 
+<stream_year_first_popdens use_fates=".true." sim_year="2010" >2010</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="2010" >2010</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="2000" >2000</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="2000" >2000</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="1850" >1850</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="1850" >1850</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="1000" >2000</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="1000" >2000</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="constant" sim_year_range="1000-1002" >2000</stream_year_last_popdens>
+
+<stream_year_first_popdens use_fates=".true." sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_first_popdens>
+<stream_year_last_popdens  use_fates=".true." sim_year="constant" sim_year_range="1000-1004" >2000</stream_year_last_popdens>
+
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
@@ -1632,6 +1668,24 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." >lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2016_c180202.nc</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP1-1.9" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP1-2.6" >lnd/clm2/firedata/clmforc.Li_2018_SSP1_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP2-4.5" >lnd/clm2/firedata/clmforc.Li_2018_SSP2_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP3-7.0" >lnd/clm2/firedata/clmforc.Li_2018_SSP3_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP4-6.0" >lnd/clm2/firedata/clmforc.Li_2018_SSP4_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP4-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP4_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP5-8.5" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+<stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
+</stream_fldfilename_popdens>
+
 <popdensmapalgo use_cn=".true."                               >bilinear</popdensmapalgo>
 
 <popdensmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</popdensmapalgo>
@@ -1641,6 +1695,16 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <popdensmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
+
+<popdensmapalgo use_fates=".true."                    >bilinear</popdensmapalgo>
+
+<popdensmapalgo use_fates=".true." hgrid="1x1_brazil"          >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_mexicocityMEX"   >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_vancouverCAN"    >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_urbanc_alpha"    >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
+<popdensmapalgo use_fates=".true." hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
 <!-- Urban time varying streams namelist defaults -->
 <stream_year_first_urbantv phys="clm5_1"  sim_year_range="1850-2100" >2015</stream_year_first_urbantv>
@@ -3581,12 +3645,14 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <use_nitrif_denitrif bgc_mode="fates"  >.false.</use_nitrif_denitrif>
 
 <!-- ===== FATES DEFAULTS =========== -->
-<use_fates_spitfire            use_fates=".true.">.false.</use_fates_spitfire>
+<fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
+<use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
 <use_fates_logging             use_fates=".true.">.false.</use_fates_logging>
 <use_fates_inventory_init      use_fates=".true.">.false.</use_fates_inventory_init>
+<use_fates_fixed_biogeog       use_fates=".true.">.false.</use_fates_fixed_biogeog>
 <fates_parteh_mode             use_fates=".true.">1</fates_parteh_mode>
 
 <!-- =========================================  -->

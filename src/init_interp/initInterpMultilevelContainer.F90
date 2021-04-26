@@ -21,7 +21,7 @@ module initInterpMultilevelContainer
   use initInterpMultilevelSplit  , only : interp_multilevel_split_type, create_interp_multilevel_split_type
   use initInterp2dvar            , only : interp_2dvar_type
   use initInterp1dData           , only : interp_1d_data
-  use ncdio_pio                  , only : file_desc_t, var_desc_t, check_var, ncd_io
+  use ncdio_pio                  , only : file_desc_t, var_desc_t, check_var, ncd_io, ncd_inqdlen, ncd_inqdid
   use clm_varctl                 , only : iulog
   use abortutils                 , only : endrun
   use shr_log_mod                , only : errMsg => shr_log_errMsg
@@ -46,6 +46,7 @@ module initInterpMultilevelContainer
      ! attribute.)
      type(interp_multilevel_copy_type), pointer   :: interp_multilevel_copy
      type(interp_multilevel_interp_type), pointer :: interp_multilevel_levgrnd_col
+     type(interp_multilevel_interp_type), pointer :: interp_multilevel_levmaxurbgrnd_col
      type(interp_multilevel_interp_type), pointer :: interp_multilevel_levgrnd_pft
      type(interp_multilevel_snow_type), pointer   :: interp_multilevel_levsno
      type(interp_multilevel_snow_type), pointer   :: interp_multilevel_levsno1
@@ -58,7 +59,9 @@ module initInterpMultilevelContainer
 
   ! Private routines
 
-  private :: create_interp_multilevel_levgrnd
+  private :: create_levgrnd_col_interpolators
+  private :: create_levgrnd_pft_interpolator
+  private :: get_levmaxurbgrnd_metadata
   private :: interp_levgrnd_check_source_file
   private :: create_snow_interpolators
 
@@ -91,6 +94,9 @@ contains
     integer, intent(in) :: colindex(:)
     !
     ! !LOCAL VARIABLES:
+    integer :: levgrnd_source ! size of the levgrnd dimension in source
+    integer :: levgrnd_dest   ! size of the levgrnd dimension in dest
+    integer :: dimid          ! dimension id
 
     character(len=*), parameter :: subname = 'init'
     !-----------------------------------------------------------------------
@@ -98,25 +104,40 @@ contains
     allocate(this%interp_multilevel_copy)
     this%interp_multilevel_copy = interp_multilevel_copy_type()
 
+    call ncd_inqdlen(ncid_source, dimid, levgrnd_source, name='levgrnd')
+    call ncd_inqdlen(ncid_dest  , dimid, levgrnd_dest  , name='levgrnd')
+
+    ! Note that there are two (often identical) interpolators for column-level levgrnd:
+    ! interp_multilevel_levgrnd_col is used for interpolating variables that are
+    ! dimensioned by levgrnd; interp_multilevel_levmaxurbgrnd_col is used as part of the
+    ! levtot interpolator for interpolating variables that are dimensioned by levtot,
+    ! because levtot is snow plus levmaxurbgrnd. If nlevgrnd >= nlevurb (which is often
+    ! the case), then these two are identical; however, if nlevgrnd < nlevurb for source
+    ! and/or destination, then interp_multilevel_levmaxurbgrnd_col will have additional
+    ! levels beyond those in interp_multilevel_levgrnd_col.
     allocate(this%interp_multilevel_levgrnd_col)
-    this%interp_multilevel_levgrnd_col = create_interp_multilevel_levgrnd( &
+    allocate(this%interp_multilevel_levmaxurbgrnd_col)
+    call create_levgrnd_col_interpolators( &
          ncid_source = ncid_source, &
          ncid_dest = ncid_dest, &
          bounds_source = bounds_source, &
          bounds_dest = bounds_dest, &
-         coord_varname = 'COL_Z', &
-         level_class_varname = 'LEVGRND_CLASS', &
-         sgridindex = colindex)
+         levgrnd_source = levgrnd_source, &
+         levgrnd_dest = levgrnd_dest, &
+         colindex = colindex, &
+         interp_multilevel_levgrnd_col = this%interp_multilevel_levgrnd_col, &
+         interp_multilevel_levmaxurbgrnd_col = this%interp_multilevel_levmaxurbgrnd_col)
 
     allocate(this%interp_multilevel_levgrnd_pft)
-    this%interp_multilevel_levgrnd_pft = create_interp_multilevel_levgrnd( &
+    call create_levgrnd_pft_interpolator( &
          ncid_source = ncid_source, &
          ncid_dest = ncid_dest, &
          bounds_source = bounds_source, &
          bounds_dest = bounds_dest, &
-         coord_varname = 'COL_Z_p', &
-         level_class_varname = 'LEVGRND_CLASS_p', &
-         sgridindex = pftindex)
+         levgrnd_source = levgrnd_source, &
+         levgrnd_dest = levgrnd_dest, &
+         pftindex = pftindex, &
+         interp_multilevel_levgrnd_pft = this%interp_multilevel_levgrnd_pft)
 
     allocate(this%interp_multilevel_levsno)
     allocate(this%interp_multilevel_levsno1)
@@ -128,13 +149,14 @@ contains
          bounds_dest = bounds_dest, &
          colindex = colindex)
 
-    ! levtot is two sets of levels: first snow, then levgrnd
+    ! levtot is two sets of levels: first snow, then levmaxurbgrnd (where levmaxurbgrnd =
+    ! max(levgrnd, levurb))
     allocate(this%interp_multilevel_levtot_col)
     this%interp_multilevel_levtot_col = create_interp_multilevel_split_type( &
          interpolator_first_levels = this%find_interpolator('levsno', 'column'), &
-         interpolator_second_levels = this%interp_multilevel_levgrnd_col, &
-         num_second_levels_source = this%interp_multilevel_levgrnd_col%get_nlev_source(), &
-         num_second_levels_dest = this%interp_multilevel_levgrnd_col%get_nlev_dest())
+         interpolator_second_levels = this%interp_multilevel_levmaxurbgrnd_col, &
+         num_second_levels_source = this%interp_multilevel_levmaxurbgrnd_col%get_nlev_source(), &
+         num_second_levels_dest = this%interp_multilevel_levmaxurbgrnd_col%get_nlev_dest())
 
   end subroutine init
 
@@ -166,6 +188,16 @@ contains
           interpolator => this%interp_multilevel_levgrnd_col
        case ('pft')
           interpolator => this%interp_multilevel_levgrnd_pft
+       case default
+          call error_not_found(subname, lev_dimname, vec_dimname)
+       end select
+    case ('levmaxurbgrnd')
+       select case (vec_dimname)
+       case ('column')
+          ! NOTE(wjs, 2020-10-23) Currently, no variables use this interpolator, but we
+          ! need it as part of the levtot interpolator, so we might as well support it as
+          ! a standalone interpolator in case it's needed in the future.
+          interpolator => this%interp_multilevel_levmaxurbgrnd_col
        case default
           call error_not_found(subname, lev_dimname, vec_dimname)
        end select
@@ -204,53 +236,205 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function create_interp_multilevel_levgrnd(ncid_source, ncid_dest, &
-       bounds_source, bounds_dest, &
-       coord_varname, level_class_varname, &
-       sgridindex) &
-       result(interpolator)
+  subroutine create_levgrnd_col_interpolators(ncid_source, ncid_dest, &
+       bounds_source, bounds_dest, colindex, levgrnd_source, levgrnd_dest, &
+       interp_multilevel_levgrnd_col, interp_multilevel_levmaxurbgrnd_col)
     !
     ! !DESCRIPTION:
-    ! Create the interpolator used to interpolate variables dimensioned by levgrnd
-    !
-    ! !USES:
+    ! Create the interp_multilevel_levgrnd_col and interp_multilevel_levmaxurbgrnd_col interpolators
     !
     ! !ARGUMENTS:
-    type(interp_multilevel_interp_type) :: interpolator  ! function result
+    type(file_desc_t), target, intent(inout) :: ncid_source
+    type(file_desc_t), target, intent(inout) :: ncid_dest
+    type(interp_bounds_type), intent(in) :: bounds_source
+    type(interp_bounds_type), intent(in) :: bounds_dest
+    integer, intent(in) :: colindex(:)  ! mappings from column-level source to dest points
+    integer, intent(in) :: levgrnd_source ! size of the levgrnd dimension in source
+    integer, intent(in) :: levgrnd_dest   ! size of the levgrnd dimension in dest
+    type(interp_multilevel_interp_type), intent(out) :: interp_multilevel_levgrnd_col
+    type(interp_multilevel_interp_type), intent(out) :: interp_multilevel_levmaxurbgrnd_col
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), allocatable :: coordinates_source(:,:)   ! [lev, vec]
+    real(r8), allocatable :: coordinates_dest(:,:)     ! [lev, vec]
+    real(r8), allocatable :: dzsoi_source(:,:)         ! [lev, vec]
+    real(r8), allocatable :: dzsoi_dest(:,:)           ! [lev, vec]
+    integer , allocatable :: level_classes_source(:,:) ! [lev, vec]
+    integer , allocatable :: level_classes_dest(:,:)   ! [lev, vec]
+
+    character(len=*), parameter :: subname = 'create_levgrnd_col_interpolators'
+    !-----------------------------------------------------------------------
+
+    call get_levmaxurbgrnd_metadata( &
+         ncid_source = ncid_source, &
+         ncid_dest = ncid_dest, &
+         bounds_source = bounds_source, &
+         bounds_dest = bounds_dest, &
+         coord_varname = 'COL_Z', &
+         dzsoi_varname = 'DZSOI', &
+         level_class_varname = 'LEVGRND_CLASS', &
+         sgridindex = colindex, &
+         coordinates_source = coordinates_source, &
+         coordinates_dest = coordinates_dest, &
+         dzsoi_source = dzsoi_source, &
+         dzsoi_dest = dzsoi_dest, &
+         level_classes_source = level_classes_source, &
+         level_classes_dest = level_classes_dest)
+
+    interp_multilevel_levmaxurbgrnd_col = interp_multilevel_interp_type( &
+         coordinates_source = coordinates_source, &
+         coordinates_dest = coordinates_dest, &
+         dzsoi_source = dzsoi_source, &
+         dzsoi_dest = dzsoi_dest, &
+         level_classes_source = level_classes_source, &
+         level_classes_dest = level_classes_dest, &
+         coord_varname = 'COL_Z')
+
+    interp_multilevel_levgrnd_col = interp_multilevel_interp_type( &
+         coordinates_source = coordinates_source(1:levgrnd_source, :), &
+         coordinates_dest = coordinates_dest(1:levgrnd_dest, :), &
+         dzsoi_source = dzsoi_source(1:levgrnd_source, :), &
+         dzsoi_dest = dzsoi_dest(1:levgrnd_dest, :), &
+         level_classes_source = level_classes_source(1:levgrnd_source, :), &
+         level_classes_dest = level_classes_dest(1:levgrnd_dest, :), &
+         coord_varname = 'COL_Z down to levgrnd')
+
+  end subroutine create_levgrnd_col_interpolators
+
+  !-----------------------------------------------------------------------
+  subroutine create_levgrnd_pft_interpolator(ncid_source, ncid_dest, &
+       bounds_source, bounds_dest, pftindex, levgrnd_source, levgrnd_dest, &
+       interp_multilevel_levgrnd_pft)
+    !
+    ! !DESCRIPTION:
+    ! Create the interp_multilevel_levgrnd_pft interpolator
+    !
+    ! !ARGUMENTS:
+    type(file_desc_t), target, intent(inout) :: ncid_source
+    type(file_desc_t), target, intent(inout) :: ncid_dest
+    type(interp_bounds_type), intent(in) :: bounds_source
+    type(interp_bounds_type), intent(in) :: bounds_dest
+    integer, intent(in) :: pftindex(:)  ! mappings from patch-level source to dest points
+    integer, intent(in) :: levgrnd_source ! size of the levgrnd dimension in source
+    integer, intent(in) :: levgrnd_dest   ! size of the levgrnd dimension in dest
+    type(interp_multilevel_interp_type), intent(out) :: interp_multilevel_levgrnd_pft
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), allocatable :: coordinates_source(:,:)   ! [lev, vec]
+    real(r8), allocatable :: coordinates_dest(:,:)     ! [lev, vec]
+    integer , allocatable :: level_classes_source(:,:) ! [lev, vec]
+    integer , allocatable :: level_classes_dest(:,:)   ! [lev, vec]
+    real(r8), allocatable :: dzsoi_source(:,:)         ! [lev, vec]
+    real(r8), allocatable :: dzsoi_dest(:,:)           ! [lev, vec]
+
+    character(len=*), parameter :: subname = 'create_levgrnd_pft_interpolator'
+    !-----------------------------------------------------------------------
+
+    call get_levmaxurbgrnd_metadata( &
+         ncid_source = ncid_source, &
+         ncid_dest = ncid_dest, &
+         bounds_source = bounds_source, &
+         bounds_dest = bounds_dest, &
+         coord_varname = 'COL_Z_p', &
+         dzsoi_varname = 'DZSOI_p', &
+         level_class_varname = 'LEVGRND_CLASS_p', &
+         sgridindex = pftindex, &
+         coordinates_source = coordinates_source, &
+         coordinates_dest = coordinates_dest, &
+         dzsoi_source = dzsoi_source, &
+         dzsoi_dest = dzsoi_dest, &
+         level_classes_source = level_classes_source, &
+         level_classes_dest = level_classes_dest)
+
+    interp_multilevel_levgrnd_pft = interp_multilevel_interp_type( &
+         coordinates_source = coordinates_source(1:levgrnd_source, :), &
+         coordinates_dest = coordinates_dest(1:levgrnd_dest, :), &
+         dzsoi_source = dzsoi_source(1:levgrnd_source, :), &
+         dzsoi_dest = dzsoi_dest(1:levgrnd_dest, :), &
+         level_classes_source = level_classes_source(1:levgrnd_source, :), &
+         level_classes_dest = level_classes_dest(1:levgrnd_dest, :), &
+         coord_varname = 'COL_Z_p down to levgrnd')
+
+  end subroutine create_levgrnd_pft_interpolator
+
+  !-----------------------------------------------------------------------
+  subroutine get_levmaxurbgrnd_metadata(ncid_source, ncid_dest, &
+       bounds_source, bounds_dest, &
+       coord_varname, dzsoi_varname, level_class_varname, sgridindex, &
+       coordinates_source, coordinates_dest, dzsoi_source, dzsoi_dest, &
+       level_classes_source, level_classes_dest)
+    !
+    ! !DESCRIPTION:
+    ! Get coordinate, dzsoi, and level class metadata for the levmaxurbgrnd dimension
+    !
+    ! !ARGUMENTS:
     type(file_desc_t), target, intent(inout) :: ncid_source
     type(file_desc_t), target, intent(inout) :: ncid_dest
     type(interp_bounds_type), intent(in) :: bounds_source
     type(interp_bounds_type), intent(in) :: bounds_dest
     character(len=*), intent(in) :: coord_varname
+    character(len=*), intent(in) :: dzsoi_varname
     character(len=*), intent(in) :: level_class_varname
     integer, intent(in) :: sgridindex(:)  ! mappings from source to dest points for the appropriate subgrid level (e.g., column-level mappings if this interpolator is for column-level data)
+
+    ! The following output arrays are all allocated in this subroutine:
+    real(r8), allocatable, intent(out) :: coordinates_source(:,:)   ! [lev, vec]
+    real(r8), allocatable, intent(out) :: coordinates_dest(:,:)     ! [lev, vec]
+    integer , allocatable, intent(out) :: level_classes_source(:,:) ! [lev, vec]
+    integer , allocatable, intent(out) :: level_classes_dest(:,:)   ! [lev, vec]
+    real(r8), allocatable, intent(out) :: dzsoi_source(:,:)         ! [lev, vec]
+    real(r8), allocatable, intent(out) :: dzsoi_dest(:,:)           ! [lev, vec]
     !
     ! !LOCAL VARIABLES:
     type(interp_2dvar_type) :: coord_source
     type(interp_2dvar_type) :: coord_dest
+    type(interp_2dvar_type) :: dzs_source
+    type(interp_2dvar_type) :: dzs_dest
     type(interp_2dvar_type) :: level_class_source
     type(interp_2dvar_type) :: level_class_dest
     real(r8), pointer     :: coord_data_source_sgrid_1d(:)          ! [vec] On the source grid
     real(r8), allocatable :: coord_data_source(:,:)                 ! [vec, lev] Interpolated to the dest grid, but source vertical grid
     real(r8), pointer     :: coord_data_dest(:,:)                   ! [vec, lev] Dest horiz & vertical grid
+    real(r8), pointer     :: dzsoi_data_source_sgrid_1d(:)          ! [vec] On the source grid
+    real(r8), allocatable :: dzsoi_data_source(:,:)                 ! [vec, lev] Interpolated to the dest grid, but source vertical grid
+    real(r8), pointer     :: dzsoi_data_dest(:,:)                   ! [vec, lev] Dest horiz & vertical grid
     integer , pointer     :: level_class_data_source_sgrid_1d(:)    ! [vec] On the source grid
     integer , allocatable :: level_class_data_source(:,:)           ! [vec, lev] Interpolated to the dest grid, but source vertical grid
     integer , pointer     :: level_class_data_dest(:,:)             ! [vec, lev] Dest horiz & vertical grid
-    real(r8), allocatable :: coord_data_source_transpose(:,:)       ! [lev, vec]
-    real(r8), allocatable :: coord_data_dest_transpose(:,:)         ! [lev, vec]
-    integer , allocatable :: level_class_data_source_transpose(:,:) ! [lev, vec]
-    integer , allocatable :: level_class_data_dest_transpose(:,:)   ! [lev, vec]
+
+    integer :: dimid ! netcdf dimension id
+    logical :: dimexist ! whether the given dimension exists on file
+
+    integer :: levmaxurbgrnd_source ! length of levmaxurbgrnd dimension on source file
+    integer :: levmaxurbgrnd_dest   ! length of levmaxurbgrnd dimension on dest file
 
     integer :: beg_dest
     integer :: end_dest
     integer :: beg_source
     integer :: end_source
 
-    integer :: level
+    integer :: level, g  ! loop indices
     integer :: nlev_source
+    logical :: on_source
 
-    character(len=*), parameter :: subname = 'create_interp_multilevel_levgrnd'
+    character(len=*), parameter :: levmaxurbgrnd_name = 'levmaxurbgrnd'
+
+    character(len=*), parameter :: subname = 'get_levmaxurbgrnd_metadata'
     !-----------------------------------------------------------------------
+
+    ! Get levmaxurbgrnd dimension size on source and dest
+    ! BACKWARDS_COMPATIBILITY(wjs, 2020-10-22) On older initial conditions files,
+    ! levmaxurbgrnd doesn't exist, but we can use levgrnd for the same purpose because
+    ! prior to the existence of levmaxurbgrnd, it was always the case that levgrnd >=
+    ! levurb.
+    call ncd_inqdid(ncid_source, levmaxurbgrnd_name, dimid, dimexist)
+    if (dimexist) then
+       call ncd_inqdlen(ncid_source, dimid, levmaxurbgrnd_source)
+    else
+       call ncd_inqdlen(ncid_source, dimid, levmaxurbgrnd_source, name='levgrnd')
+    end if
+    ! For dest, we can assume this dimension exists
+    call ncd_inqdlen(ncid_dest, dimid, levmaxurbgrnd_dest, name=levmaxurbgrnd_name)
 
     ! Set coord_data_dest
     coord_dest = interp_2dvar_type( &
@@ -263,8 +447,30 @@ contains
     ! match can be found for the generic subprogram call "READVAR"'. So we
     ! explicitly call the specific routine, rather than calling readvar.
     call coord_dest%readvar_double(coord_data_dest)
+    call shr_assert(coord_dest%get_nlev() == levmaxurbgrnd_dest, &
+         msg = 'dest '//coord_varname//' dimension length does not match expected levmaxurbgrnd size', &
+         file = sourcefile, &
+         line = __LINE__)
     beg_dest = coord_dest%get_vec_beg()
     end_dest = coord_dest%get_vec_end()
+
+    ! Set dzsoi_data_dest
+    dzs_dest = interp_2dvar_type( &
+         varname = dzsoi_varname, &
+         ncid = ncid_dest, &
+         file_is_dest = .true., &
+         bounds = bounds_dest)
+    ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
+    ! resolving the generic reference here, giving the message: 'No specific
+    ! match can be found for the generic subprogram call "READVAR"'. So we
+    ! explicitly call the specific routine, rather than calling readvar.
+    call dzs_dest%readvar_double(dzsoi_data_dest)
+    call shr_assert(dzs_dest%get_nlev() == levmaxurbgrnd_dest, &
+         msg = 'dest '//dzsoi_varname//' dimension length does not match expected levmaxurbgrnd size', &
+         file = sourcefile, &
+         line = __LINE__)
+    SHR_ASSERT_FL(dzs_dest%get_vec_beg() == beg_dest, sourcefile, __LINE__)
+    SHR_ASSERT_FL(dzs_dest%get_vec_end() == end_dest, sourcefile, __LINE__)
 
     ! Set level_class_data_dest
     level_class_dest = interp_2dvar_type( &
@@ -277,6 +483,10 @@ contains
     ! match can be found for the generic subprogram call "READVAR"'. So we
     ! explicitly call the specific routine, rather than calling readvar.
     call level_class_dest%readvar_int(level_class_data_dest)
+    call shr_assert(level_class_dest%get_nlev() == levmaxurbgrnd_dest, &
+         msg = 'dest '//level_class_varname//' dimension length does not match expected levmaxurbgrnd size', &
+         file = sourcefile, &
+         line = __LINE__)
     SHR_ASSERT_FL(level_class_dest%get_vec_beg() == beg_dest, sourcefile, __LINE__)
     SHR_ASSERT_FL(level_class_dest%get_vec_end() == end_dest, sourcefile, __LINE__)
 
@@ -285,7 +495,7 @@ contains
     ! conditions files have been phased out, we can remove this check. (Without this
     ! check, the run will still abort if it can't find the necessary variables - it just
     ! won't have a very helpful error message.)
-    call interp_levgrnd_check_source_file(ncid_source, coord_varname, level_class_varname)
+    call interp_levgrnd_check_source_file(ncid_source, coord_varname)
 
     ! Set coord_data_source
     coord_source = interp_2dvar_type( &
@@ -293,6 +503,10 @@ contains
          ncid = ncid_source, &
          file_is_dest = .false., &
          bounds = bounds_source)
+    call shr_assert(coord_source%get_nlev() == levmaxurbgrnd_source, &
+         msg = 'source '//coord_varname//' dimension length does not match expected levmaxurbgrnd size', &
+         file = sourcefile, &
+         line = __LINE__)
     nlev_source = coord_source%get_nlev()
     beg_source = coord_source%get_vec_beg()
     end_source = coord_source%get_vec_end()
@@ -314,13 +528,93 @@ contains
     end do
     deallocate(coord_data_source_sgrid_1d)
 
+    ! The following call checks whether the finidat source file contains
+    ! DZSOI, necessary for the vertical interpolation with scaling by layer
+    ! thickness. Scaling by thickness is necessary only if the run uses a
+    ! different vertical profile than the one found in the finidata file.
+    call check_var(ncid_source, dzsoi_varname, on_source)
+    allocate(dzsoi_data_source(beg_dest:end_dest, nlev_source))
+    if (on_source) then
+       ! Set dzsoi_data_source
+       dzs_source = interp_2dvar_type( &
+            varname = dzsoi_varname, &
+            ncid = ncid_source, &
+            file_is_dest = .false., &
+            bounds = bounds_source)
+       call shr_assert(dzs_source%get_nlev() == levmaxurbgrnd_source, &
+            msg = 'source '//dzsoi_varname//' dimension length does not match expected levmaxurbgrnd size', &
+            file = sourcefile, &
+            line = __LINE__)
+       SHR_ASSERT_FL(dzs_source%get_vec_beg() == beg_source, sourcefile, __LINE__)
+       SHR_ASSERT_FL(dzs_source%get_vec_end() == end_source, sourcefile, __LINE__)
+       allocate(dzsoi_data_source_sgrid_1d(beg_source:end_source))
+       do level = 1, nlev_source
+          ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
+          ! resolving the generic reference here, giving the message: 'No specific
+          ! match can be found for the generic subprogram call "READLEVEL"'. So we
+          ! explicitly call the specific routine, rather than calling readlevel.
+          call dzs_source%readlevel_double(dzsoi_data_source_sgrid_1d, level)
+          call interp_1d_data( &
+               begi = beg_source, endi = end_source, &
+               bego = beg_dest,   endo = end_dest, &
+               sgridindex = sgridindex, &
+               keep_existing = .false., &
+               data_in = dzsoi_data_source_sgrid_1d, &
+               data_out = dzsoi_data_source(:,level))
+       end do
+       deallocate(dzsoi_data_source_sgrid_1d)
+    else if (levmaxurbgrnd_source == levmaxurbgrnd_dest) then
+       ! BACKWARDS_COMPATIBILITY (slevis, 2021-04-22)
+       ! When same number of layers and .not. on_source, we skip the calls to
+       ! (a) interp_levgrnd_check_source_file(ncid_source, dzsoi_varname)
+       ! (b) dzs_source%readlevel_double(dzsoi_data_source...
+       ! to avoid stopping or crashing the model due to missing dzsoi
+       ! in the finidat file. We do this for backwards compatibility when the
+       ! soil profile in the run is the same as in the finidat file and the
+       ! finidat file does not include dzsoi, yet.
+       !
+       ! Skipping these calls is a problem only in the off chance that the
+       ! source and dest soil profiles differ despite having the same number of
+       ! layers. The model will handle such cases without scaling
+       ! the finidat variables that need scaling by soil layer thickness.
+       do level = 1, nlev_source
+          do g = beg_dest, end_dest
+             dzsoi_data_source(g,level) = dzsoi_data_dest(g,level)
+          end do
+       end do
+    else  ! different number of layers and .not. on_source
+       ! BACKWARDS_COMPATIBILITY (slevis, 2021-04-22)
+       ! Rather than failing when DZSOI is not present on the finidat file,
+       ! construct dzsoi_data_source from coord_data_source
+       do g = beg_dest, end_dest
+          dzsoi_data_source(g,1) = 2._r8 * coord_data_source(g,1)
+          if (nlev_source > 1) then
+             do level = 2, nlev_source
+                dzsoi_data_source(g,level) = 2._r8 * &
+                   (coord_data_source(g,level) - &
+                    sum(dzsoi_data_source(g,1:level-1)))
+             end do
+          end if
+       end do
+    end if
+
+    ! NOTE(wjs, 2015-10-18) The following check is helpful while we still have old initial
+    ! conditions files that do not have the necessary metadata. Once these old initial
+    ! conditions files have been phased out, we can remove this check. (Without this
+    ! check, the run will still abort if it can't find the necessary variables - it just
+    ! won't have a very helpful error message.)
+    call interp_levgrnd_check_source_file(ncid_source, level_class_varname)
+
     ! Set level_class_data_source
     level_class_source = interp_2dvar_type( &
          varname = level_class_varname, &
          ncid = ncid_source, &
          file_is_dest = .false., &
          bounds = bounds_source)
-    SHR_ASSERT_FL(level_class_source%get_nlev() == nlev_source, sourcefile, __LINE__)
+    call shr_assert(level_class_source%get_nlev() == levmaxurbgrnd_source, &
+         msg = 'source '//level_class_varname//' dimension length does not match expected levmaxurbgrnd size', &
+         file = sourcefile, &    
+         line = __LINE__)
     SHR_ASSERT_FL(level_class_source%get_vec_beg() == beg_source, sourcefile, __LINE__)
     SHR_ASSERT_FL(level_class_source%get_vec_end() == end_source, sourcefile, __LINE__)
     allocate(level_class_data_source(beg_dest:end_dest, nlev_source))
@@ -341,64 +635,56 @@ contains
     end do
     deallocate(level_class_data_source_sgrid_1d)
 
-    ! Create interpolator
-    call transpose_wrapper(coord_data_source_transpose, coord_data_source)
-    call transpose_wrapper(coord_data_dest_transpose, coord_data_dest)
-    call transpose_wrapper(level_class_data_source_transpose, level_class_data_source)
-    call transpose_wrapper(level_class_data_dest_transpose, level_class_data_dest)
-    interpolator = interp_multilevel_interp_type( &
-         coordinates_source = coord_data_source_transpose, &
-         coordinates_dest = coord_data_dest_transpose, &
-         level_classes_source = level_class_data_source_transpose, &
-         level_classes_dest = level_class_data_dest_transpose, &
-         coord_varname = coord_varname)
+    ! Set output arrays
+    call transpose_wrapper(coordinates_source, coord_data_source)
+    call transpose_wrapper(coordinates_dest, coord_data_dest)
+    call transpose_wrapper(dzsoi_source, dzsoi_data_source)
+    call transpose_wrapper(dzsoi_dest, dzsoi_data_dest)
+    call transpose_wrapper(level_classes_source, level_class_data_source)
+    call transpose_wrapper(level_classes_dest, level_class_data_dest)
 
     ! Deallocate pointers (allocatables are automatically deallocated)
     deallocate(coord_data_dest)
+    deallocate(dzsoi_data_dest)
     deallocate(level_class_data_dest)
 
-  end function create_interp_multilevel_levgrnd
+  end subroutine get_levmaxurbgrnd_metadata
 
   !-----------------------------------------------------------------------
-  subroutine interp_levgrnd_check_source_file(ncid_source, coord_varname, level_class_varname)
+  subroutine interp_levgrnd_check_source_file(ncid_source, varname)
     !
     ! !DESCRIPTION:
     ! Ensure that the necessary variables are present on the source file for the levgrnd
-    ! interpolator.
+    ! interpolator. In separate calls to this subroutine, we check for
+    ! - coord
+    ! - dzsoi
+    ! - level_class
     !
-    ! Aborts the run with a useful error message if either variable is missing
+    ! Aborts the run with a useful error message if variable is missing.
     !
     ! !USES:
     !
     ! !ARGUMENTS:
     type(file_desc_t), intent(inout) :: ncid_source
-    character(len=*) , intent(in) :: coord_varname
-    character(len=*) , intent(in) :: level_class_varname
+    character(len=*) , intent(in) :: varname
     !
     ! !LOCAL VARIABLES:
-    logical :: coord_on_source
-    logical :: level_class_on_source
-    type(var_desc_t) :: coord_source_vardesc  ! unused, but needed for check_var interface
-    type(var_desc_t) :: level_class_source_vardesc  ! unused, but needed for check_var interface
-    character(len=:), allocatable :: variables_missing
+    logical :: on_source
+    character(len=:), allocatable :: missing
 
     character(len=*), parameter :: subname = 'interp_levgrnd_check_source_file'
     !-----------------------------------------------------------------------
 
-    variables_missing = ' '
-    call check_var(ncid_source, coord_varname, coord_source_vardesc, coord_on_source)
-    if (.not. coord_on_source) then
-       variables_missing = variables_missing // coord_varname // ' '
+    missing = ' '
+    call check_var(ncid_source, varname, on_source)
+    if (.not. on_source) then
+       missing = missing // varname // ' '
     end if
-    call check_var(ncid_source, level_class_varname, level_class_source_vardesc, level_class_on_source)
-    if (.not. level_class_on_source) then
-       variables_missing = variables_missing // level_class_varname // ' '
-    end if
-    if (variables_missing /= ' ') then
+    if (missing /= ' ') then
        if (masterproc) then
           write(iulog,*) subname//&
                ' ERROR: source file for init_interp is missing the necessary variable(s):'
-          write(iulog,*) variables_missing
+          write(iulog,*) missing
           write(iulog,*) 'To solve this problem, run the model for a short time using this tag,'
           write(iulog,*) 'with a configuration that matches the source file, using the source'
           write(iulog,*) 'file as finidat (with use_init_interp = .false.), in order to'
@@ -413,7 +699,7 @@ contains
        end if
 
        call endrun(subname//' ERROR: source file for init_interp is missing '// &
-            variables_missing)
+            missing)
     end if
 
   end subroutine interp_levgrnd_check_source_file
@@ -501,6 +787,7 @@ contains
 
     deallocate(this%interp_multilevel_copy)
     deallocate(this%interp_multilevel_levgrnd_col)
+    deallocate(this%interp_multilevel_levmaxurbgrnd_col)
     deallocate(this%interp_multilevel_levgrnd_pft)
     deallocate(this%interp_multilevel_levsno)
     deallocate(this%interp_multilevel_levsno1)
