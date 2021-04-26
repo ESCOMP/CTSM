@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+  ctsm5.1.dev037   slevis 04/23/2021 Correct vertical interpolation in init_interp when soil thicknesses change
   ctsm5.1.dev036 glemieux 04/21/2021 FATES tag update and snow occlusion of LAI fix
   ctsm5.1.dev035    sacks 04/20/2021 Misc bfb enhancements and fixes
   ctsm5.1.dev034     erik 04/19/2021 Bring in Arctic changes to LUNA from Leah Birch

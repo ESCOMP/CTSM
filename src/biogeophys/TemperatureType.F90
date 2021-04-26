@@ -898,6 +898,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='T_SOISNO', xtype=ncd_double,   &
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name='soil-snow temperature', units='K', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%t_soisno_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='T_VEG', xtype=ncd_double,  &
@@ -921,6 +922,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='T_LAKE', xtype=ncd_double,  &
          dim1name='column', dim2name='levlak', switchdim=.true., &
          long_name='lake temperature', units='K', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%t_lake_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='T_GRND', xtype=ncd_double,  &
