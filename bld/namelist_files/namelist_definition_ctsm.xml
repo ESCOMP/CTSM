@@ -763,13 +763,14 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 If TRUE, write master field list to separate file for documentation purposes
 </entry>
 
-<entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
-       group="clm_inparm" valid_values="A,I,X,M" >
+<entry id="hist_avgflag_pertape" type="char*10(10)" category="history"
+       group="clm_inparm" valid_values="" >
 Per file averaging flag.
     'A' (average over history period)
     'I' (instantaneous)
     'X' (maximum over history period)
     'M' (minimum over history period)
+    'LXXXXX' (local solar time at XXXXX seconds of day)
 </entry>
 
 <entry id="hist_type1d_pertape" type="char*4(10)" category="history"
