@@ -354,6 +354,7 @@ case $hostname in
   esmfvers=8.0.0
   intelvers=19.0.5
   module purge
+  module load intel/$intelvers
   module load esmf_libs
   module load esmf_libs/$esmfvers
   module load ncl
