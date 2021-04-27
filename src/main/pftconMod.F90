@@ -121,6 +121,8 @@ module pftconMod
      real(r8), allocatable :: taul          (:,:) ! leaf transmittance: 1=vis, 2=nir
      real(r8), allocatable :: taus          (:,:) ! stem transmittance: 1=vis, 2=nir
      real(r8), allocatable :: z0mr          (:)   ! ratio of momentum roughness length to canopy top height (-)
+     real(r8), allocatable :: z0v_h         (:)   ! ratio of vegetation surface roughness length to canopy height for forests (-)
+     real(r8), allocatable :: z0v_alpha     (:)   ! alpha parameter for decrease of vegetation surface roughness with LAI for forests (-)
      real(r8), allocatable :: displar       (:)   ! ratio of displacement height to canopy top height (-)
      real(r8), allocatable :: roota_par     (:)   ! CLM rooting distribution parameter [1/m]
      real(r8), allocatable :: rootb_par     (:)   ! CLM rooting distribution parameter [1/m]
@@ -356,7 +358,9 @@ contains
     allocate( this%rhos          (0:mxpft,numrad) ) 
     allocate( this%taul          (0:mxpft,numrad) ) 
     allocate( this%taus          (0:mxpft,numrad) ) 
-    allocate( this%z0mr          (0:mxpft) )        
+    allocate( this%z0mr          (0:mxpft) )
+    allocate( this%z0v_h         (0:mxpft) )        
+    allocate( this%z0v_alpha     (0:mxpft) )                
     allocate( this%displar       (0:mxpft) )     
     allocate( this%roota_par     (0:mxpft) )   
     allocate( this%rootb_par     (0:mxpft) )   
@@ -497,7 +501,7 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage
+    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage, use_z0v_forest
     use spmdMod     , only : masterproc
     use CLMFatesParamInterfaceMod, only : FatesReadPFTs
     !
@@ -629,6 +633,21 @@ contains
 
     call ncd_io('z0mr', this%z0mr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    !
+    ! Use new vegetation surface roughness parameterization for forests
+    !
+    if( use_z0v_forest) then 
+       ! These will only be used for forest PFTs
+       call ncd_io('z0v_h', this%z0v_h, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_alpha', this%z0v_alpha, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    else
+       this%z0v_h = 0._r8
+       this%z0v_alpha = 0._r8
+    end if
 
     call ncd_io('displar', this%displar, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -1349,6 +1368,8 @@ contains
     deallocate( this%taul)
     deallocate( this%taus)
     deallocate( this%z0mr)
+    deallocate( this%z0v_h)
+    deallocate( this%z0v_alpha)
     deallocate( this%displar)
     deallocate( this%roota_par)
     deallocate( this%rootb_par)

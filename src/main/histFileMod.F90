@@ -44,7 +44,7 @@ module histFileMod
   integer , public, parameter :: max_flds = 2500        ! max number of history fields
   integer , public, parameter :: max_namlen = 64        ! maximum number of characters for field name
   integer , public, parameter :: scale_type_strlen = 32 ! maximum number of characters for scale types
-  integer , private, parameter :: avgflag_strlen = 1 ! maximum number of characters for avgflag
+  integer , private, parameter :: avgflag_strlen = 10 ! maximum number of characters for avgflag
   integer , private, parameter :: hist_dim_name_length = 16 ! lenngth of character strings in dimension names
 
   ! Possible ways to treat multi-layer snow fields at times when no snow is present in a
