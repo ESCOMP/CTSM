@@ -562,6 +562,6 @@ until ((nfile>${#INGRID[*]})); do
    nfile=nfile+1
 done
 
-echo "Successffully created needed mapping files for $res"
+echo "Successfully created needed mapping files for $res"
 
 exit 0
