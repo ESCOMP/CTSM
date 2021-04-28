@@ -1,4 +1,115 @@
 ===============================================================
+Tag name:  ctsm5.1.dev038
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Apr 27 23:51:04 MDT 2021
+One-line Summary: Bring in minor changes from the cesm2.2.0 release tag
+
+Purpose and description of changes
+----------------------------------
+
+Bring in the changes that went in the cesm2.2.0 release tag.
+Get the CLM offline tools working as well as the tools testing.
+Remove the finidat file for FATES as it was shown to be problematic
+in the release testing.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1134 mkmapdata.sh is not working
+  Fixes #1128 missing compset
+
+Known bugs found since the previous tag (include issue #):
+    #1358 -- C isotope fields can have garbage values starting in ctsm5.1.dev008
+    #1357 -- No output values in large lake gridcells in 0.5° resolution (hcru_hcru)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   Add a new compset alias: I2000Clm50FatesCruRsGs
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   Remove finidat file setting for FATES becaues it sometimes caused problems.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   A couple of the tools tests were changed
+
+
+Testing summary:  regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS
+
+  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
+  (PTCLM is being deprecated, so we only expect this to be done on occasion)
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+   cheyenne -- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below):
+
+      Ran mkmapdata.sh for 1-deg maps
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): PTCLM
+   PTCLM to PTCLM2_20200902
+
+Pull Requests that document the changes (include PR ids): #1179
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1179 -- Bring in changes from release-cesm2.2.01 to main-development
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev037
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date:  Fri Apr 23 10:06:32 MDT 2021
