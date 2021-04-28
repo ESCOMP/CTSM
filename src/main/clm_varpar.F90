@@ -66,7 +66,9 @@ module clm_varpar
   integer, public, parameter :: i_met_lit  = 1
   integer, public :: i_litr2 = -9  ! Second litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_litr3 = -9  ! Third litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
-  integer, public :: i_cwd   = -9  ! Index of the coarse woody debris pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_cwd      = -9  ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
 
   integer, public :: ndecomp_pools_max
   integer, public :: ndecomp_pools

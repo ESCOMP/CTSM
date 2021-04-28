@@ -8,7 +8,7 @@ module pftconMod
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub
+  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, ndecomp_pools
   use clm_varctl  , only : iulog, use_cndv, use_vertsoilc, use_crop
   !
   ! !PUBLIC TYPES:
@@ -200,6 +200,8 @@ module pftconMod
      real(r8), allocatable :: flivewd       (:)   ! allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
      real(r8), allocatable :: fcur          (:)   ! allocation parameter: fraction of allocation that goes to currently displayed growth, remainder to storage
      real(r8), allocatable :: fcurdv        (:)   ! alternate fcur for use with cndv
+     real(r8), allocatable :: lf_f          (:,:) ! leaf litter fractions
+     real(r8), allocatable :: fr_f          (:,:) ! fine root litter fractions
      real(r8), allocatable :: lf_flab       (:)   ! leaf litter labile fraction
      real(r8), allocatable :: lf_fcel       (:)   ! leaf litter cellulose fraction
      real(r8), allocatable :: lf_flig       (:)   ! leaf litter lignin fraction
@@ -414,6 +416,10 @@ contains
     allocate( this%flivewd       (0:mxpft) )      
     allocate( this%fcur          (0:mxpft) )         
     allocate( this%fcurdv        (0:mxpft) )       
+    ! Second dimension not i_litr_max because that parameter may obtain its
+    ! value after we've been through here
+    allocate( this%lf_f          (0:mxpft, 1:ndecomp_pools) )
+    allocate( this%fr_f          (0:mxpft, 1:ndecomp_pools) )
     allocate( this%lf_flab       (0:mxpft) )      
     allocate( this%lf_fcel       (0:mxpft) )      
     allocate( this%lf_flig       (0:mxpft) )      
@@ -752,6 +758,16 @@ contains
 
     call ncd_io('fr_flig', this%fr_flig, 'read', ncid, readvar=readv, posNOTonfile=.true.)    
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    ! Three hardwired fr_f* and lf_f* values: We pass them to 2d arrays for use
+    ! in do-loops. While executing the next few lines, we do not yet have access
+    ! to i_litr_min, i_litr_max.
+    this%fr_f(:,1) = this%fr_flab
+    this%fr_f(:,2) = this%fr_fcel
+    this%fr_f(:,3) = this%fr_flig
+    this%lf_f(:,1) = this%lf_flab
+    this%lf_f(:,2) = this%lf_fcel
+    this%lf_f(:,3) = this%lf_flig
 
     call ncd_io('leaf_long', this%leaf_long, 'read', ncid, readvar=readv, posNOTonfile=.true.)    
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -1406,9 +1422,11 @@ contains
     deallocate( this%flivewd)
     deallocate( this%fcur)
     deallocate( this%fcurdv)
+    deallocate( this%lf_f   )
     deallocate( this%lf_flab)
     deallocate( this%lf_fcel)
     deallocate( this%lf_flig)
+    deallocate( this%fr_f   )
     deallocate( this%fr_flab)
     deallocate( this%fr_fcel)
     deallocate( this%fr_flig)

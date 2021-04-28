@@ -11,7 +11,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools, ndecomp_pools_max
-  use clm_varpar                         , only : i_met_lit, i_litr2, i_litr3, i_cwd
+  use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit, i_litr2, i_litr3, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -349,6 +349,7 @@ contains
       initial_stock_soildepth = params_inst%initial_Cstocks_depth
 
       !-------------------  list of pools and their attributes  ------------
+      i_litr_min = 1
       floating_cn_ratio_decomp_pools(i_litr1) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_litr1) = 'litr1'
       decomp_cascade_con%decomp_pool_name_history(i_litr1) = 'LITR1'
@@ -392,6 +393,12 @@ contains
       is_metabolic(i_litr3) = .false.
       is_cellulose(i_litr3) = .false.
       is_lignin(i_litr3) = .true.
+
+      i_litr_max = i_litr3
+      if (i_litr_max > 3) then
+         call endrun(msg='ERROR: expecting i_litr_max <= 3; see pftconMod '//&
+              errMsg(sourcefile, __LINE__))
+      end if
 
       i_soil1 = i_litr3 + 1
       floating_cn_ratio_decomp_pools(i_soil1) = .false.

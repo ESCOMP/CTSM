@@ -4,7 +4,7 @@ module CNVegNitrogenFluxType
   use shr_infnan_mod                     , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
   use CNSharedParamsMod                  , only : use_fun
@@ -181,9 +181,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: wood_harvestn_patch                       (:)     ! patch total N losses to wood product pools (gN/m2/s)
      real(r8), pointer :: wood_harvestn_col                         (:)     ! col total N losses to wood product pools (gN/m2/s) (p2c)
      ! phenology: litterfall and crop fluxes
-     real(r8), pointer :: phenology_n_to_litr_met_n_col             (:,:)   ! col N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
-     real(r8), pointer :: phenology_n_to_litr_cel_n_col             (:,:)   ! col N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
-     real(r8), pointer :: phenology_n_to_litr_lig_n_col             (:,:)   ! col N fluxes associated with phenology (litterfall and crop) to litter lignin pool (gN/m3/s)
+     real(r8), pointer :: phenology_n_to_litr_n_col                 (:,:,:) ! col N fluxes associated with phenology (litterfall and crop) to litter pools (gN/m3/s)
 
      ! gap mortality fluxes
      real(r8), pointer :: gap_mortality_n_to_litr_met_n_col         (:,:)   ! col N fluxes associated with gap mortality to litter metabolic pool (gN/m3/s)
@@ -200,9 +198,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: dwt_conv_nflux_grc                        (:)     ! (gN/m2/s) dwt_conv_nflux_patch summed to the gridcell-level
      real(r8), pointer :: dwt_wood_productn_gain_patch              (:)     ! patch (gN/m2/s) addition to wood product pools from landcover change; even though this is a patch-level flux, it is expressed per unit GRIDCELL area
      real(r8), pointer :: dwt_crop_productn_gain_patch              (:)     ! patch (gN/m2/s) addition to crop product pool from landcover change; even though this is a patch-level flux, it is expressed per unit GRIDCELL area
-     real(r8), pointer :: dwt_frootn_to_litr_met_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
-     real(r8), pointer :: dwt_frootn_to_litr_cel_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
-     real(r8), pointer :: dwt_frootn_to_litr_lig_n_col              (:,:)   ! col (gN/m3/s) fine root to litter due to landcover change
+     real(r8), pointer :: dwt_frootn_to_litr_n_col                  (:,:,:) ! col (gN/m3/s) fine root to litter due to landcover change
      real(r8), pointer :: dwt_livecrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) live coarse root to CWD due to landcover change
      real(r8), pointer :: dwt_deadcrootn_to_cwdn_col                (:,:)   ! col (gN/m3/s) dead coarse root to CWD due to landcover change
 
@@ -444,9 +440,7 @@ contains
     allocate(this%dwt_crop_productn_gain_patch (begp:endp))                   ; this%dwt_crop_productn_gain_patch (:)   = nan
     allocate(this%wood_harvestn_col            (begc:endc))                   ; this%wood_harvestn_col            (:)   = nan
 
-    allocate(this%dwt_frootn_to_litr_met_n_col (begc:endc,1:nlevdecomp_full)) ; this%dwt_frootn_to_litr_met_n_col (:,:) = nan
-    allocate(this%dwt_frootn_to_litr_cel_n_col (begc:endc,1:nlevdecomp_full)) ; this%dwt_frootn_to_litr_cel_n_col (:,:) = nan
-    allocate(this%dwt_frootn_to_litr_lig_n_col (begc:endc,1:nlevdecomp_full)) ; this%dwt_frootn_to_litr_lig_n_col (:,:) = nan
+    allocate(this%dwt_frootn_to_litr_n_col     (begc:endc,1:nlevdecomp_full,1:i_litr_max)) ; this%dwt_frootn_to_litr_n_col (:,:,:) = nan
     allocate(this%dwt_livecrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_livecrootn_to_cwdn_col   (:,:) = nan
     allocate(this%dwt_deadcrootn_to_cwdn_col   (begc:endc,1:nlevdecomp_full)) ; this%dwt_deadcrootn_to_cwdn_col   (:,:) = nan
 
@@ -458,9 +452,7 @@ contains
     this%m_decomp_npools_to_fire_vr_col   (:,:,:) = nan
     this%m_decomp_npools_to_fire_col      (:,:)   = nan
 
-    allocate(this%phenology_n_to_litr_met_n_col     (begc:endc, 1:nlevdecomp_full))
-    allocate(this%phenology_n_to_litr_cel_n_col     (begc:endc, 1:nlevdecomp_full))
-    allocate(this%phenology_n_to_litr_lig_n_col     (begc:endc, 1:nlevdecomp_full))
+    allocate(this%phenology_n_to_litr_n_col         (begc:endc, 1:nlevdecomp_full, 1:ndecomp_pools))
     allocate(this%gap_mortality_n_to_litr_met_n_col (begc:endc, 1:nlevdecomp_full))
     allocate(this%gap_mortality_n_to_litr_cel_n_col (begc:endc, 1:nlevdecomp_full))
     allocate(this%gap_mortality_n_to_litr_lig_n_col (begc:endc, 1:nlevdecomp_full))
@@ -471,9 +463,7 @@ contains
     allocate(this%harvest_n_to_litr_lig_n_col       (begc:endc, 1:nlevdecomp_full))
     allocate(this%harvest_n_to_cwdn_col             (begc:endc, 1:nlevdecomp_full))
 
-    this%phenology_n_to_litr_met_n_col     (:,:) = nan
-    this%phenology_n_to_litr_cel_n_col     (:,:) = nan
-    this%phenology_n_to_litr_lig_n_col     (:,:) = nan
+    this%phenology_n_to_litr_n_col       (:,:,:) = nan
     this%gap_mortality_n_to_litr_met_n_col (:,:) = nan
     this%gap_mortality_n_to_litr_cel_n_col (:,:) = nan
     this%gap_mortality_n_to_litr_lig_n_col (:,:) = nan
@@ -544,6 +534,7 @@ contains
     integer        :: begp, endp
     integer        :: begc, endc
     integer        :: begg, endg
+    character(1)   :: k_str
     character(10)  :: active
     character(24)  :: fieldname
     character(100) :: longname
@@ -1037,20 +1028,16 @@ contains
          '(per-area-gridcell; only makes sense with dov2xy=.false.)', &
          ptr_patch=this%dwt_conv_nflux_patch, default='inactive')
     
-    this%dwt_frootn_to_litr_met_n_col(begc:endc,:) = spval
-    call hist_addfld_decomp (fname='DWT_FROOTN_TO_LITR_MET_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root to litter due to landcover change', &
-         ptr_col=this%dwt_frootn_to_litr_met_n_col, default='inactive')
-
-    this%dwt_frootn_to_litr_cel_n_col(begc:endc,:) = spval
-    call hist_addfld_decomp (fname='DWT_FROOTN_TO_LITR_CEL_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root to litter due to landcover change', &
-         ptr_col=this%dwt_frootn_to_litr_cel_n_col, default='inactive')
-
-    this%dwt_frootn_to_litr_lig_n_col(begc:endc,:) = spval
-    call hist_addfld_decomp (fname='DWT_FROOTN_TO_LITR_LIG_N', units='gN/m^2/s',  type2d='levdcmp', &
-         avgflag='A', long_name='fine root to litter due to landcover change', &
-         ptr_col=this%dwt_frootn_to_litr_lig_n_col, default='inactive')
+    do k = i_litr_min, i_litr_max
+       write(k_str,'(I1)') k  ! convert 1-digit integer to string
+       this%dwt_frootn_to_litr_n_col(begc:endc,:,k) = spval
+       data2dptr => this%dwt_frootn_to_litr_n_col(begc:endc,:,k)
+       fieldname = 'DWT_FROOTN_TO_LITR_'//k_str//'_N'
+       longname =  'fine root N to litter_'//k_str//' due to landcover change'
+       call hist_addfld_decomp (fname=fieldname, units='gN/m^2/s',  type2d='levdcmp', &
+            avgflag='A', long_name=longname, &
+            ptr_col=data2dptr, default='inactive')
+    end do
 
     this%dwt_livecrootn_to_cwdn_col(begc:endc,:) = spval
     call hist_addfld_decomp (fname='DWT_LIVECROOTN_TO_CWDN', units='gN/m^2/s',  type2d='levdcmp', &
@@ -1700,9 +1687,9 @@ contains
           i = filter_column(fi)
 
           ! phenology: litterfall and crop fluxes associated wit
-          this%phenology_n_to_litr_met_n_col(i,j)        = value_column
-          this%phenology_n_to_litr_cel_n_col(i,j)        = value_column
-          this%phenology_n_to_litr_lig_n_col(i,j)        = value_column
+          do k = i_litr_min, i_litr_max
+             this%phenology_n_to_litr_n_col(i,j,k)       = value_column
+          end do
 
           ! gap mortality
           this%gap_mortality_n_to_litr_met_n_col(i,j)    = value_column
@@ -1764,7 +1751,7 @@ contains
     type(bounds_type), intent(in)  :: bounds 
     !
     ! !LOCAL VARIABLES:
-    integer  :: c, g, j          ! indices
+    integer :: c, g, j, i       ! indices
     !-----------------------------------------------------------------------
 
     do g = bounds%begg, bounds%endg
@@ -1775,9 +1762,9 @@ contains
 
     do j = 1, nlevdecomp_full
        do c = bounds%begc,bounds%endc
-          this%dwt_frootn_to_litr_met_n_col(c,j) = 0._r8
-          this%dwt_frootn_to_litr_cel_n_col(c,j) = 0._r8
-          this%dwt_frootn_to_litr_lig_n_col(c,j) = 0._r8
+          do i = i_litr_min, i_litr_max
+             this%dwt_frootn_to_litr_n_col(c,j,i) = 0._r8
+          end do
           this%dwt_livecrootn_to_cwdn_col(c,j)   = 0._r8
           this%dwt_deadcrootn_to_cwdn_col(c,j)   = 0._r8
        end do

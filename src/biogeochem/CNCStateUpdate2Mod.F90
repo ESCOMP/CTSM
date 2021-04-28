@@ -9,7 +9,7 @@ module CNCStateUpdate2Mod
   use shr_log_mod                    , only : errMsg => shr_log_errMsg
   use abortutils                     , only : endrun
   use clm_time_manager               , only : get_step_size_real
-  use clm_varpar                     , only : nlevdecomp, i_met_lit, i_litr2, i_litr3, i_cwd
+  use clm_varpar                     , only : i_litr_min, i_litr_max, nlevdecomp, i_cwd
   use CNvegCarbonStateType           , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType            , only : cnveg_carbonflux_type
   use SoilBiogeochemCarbonStatetype  , only : soilbiogeochem_carbonstate_type
@@ -42,7 +42,7 @@ contains
     type(soilbiogeochem_carbonstate_type)  , intent(inout) :: soilbiogeochem_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: c ,p,j ! indices
+    integer  :: c,p,j,i  ! indices
     integer  :: fp,fc  ! lake filter indices
     real(r8) :: dt     ! radiation time step (seconds)
     !-----------------------------------------------------------------------
@@ -64,12 +64,11 @@ contains
             c = filter_soilc(fc)
 
             ! column gap mortality fluxes
-            cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = &
-                 cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + cf_veg%gap_mortality_c_to_litr_met_c_col(c,j) * dt
-            cs_soil%decomp_cpools_vr_col(c,j,i_litr2) = &
-                 cs_soil%decomp_cpools_vr_col(c,j,i_litr2) + cf_veg%gap_mortality_c_to_litr_cel_c_col(c,j) * dt
-            cs_soil%decomp_cpools_vr_col(c,j,i_litr3) = &
-                 cs_soil%decomp_cpools_vr_col(c,j,i_litr3) + cf_veg%gap_mortality_c_to_litr_lig_c_col(c,j) * dt
+            do i = i_litr_min, i_litr_max
+               cs_soil%decomp_cpools_vr_col(c,j,i) = &
+                 cs_soil%decomp_cpools_vr_col(c,j,i) + &
+                 cf_veg%gap_mortality_c_to_litr_c_col(c,j,i) * dt
+            end do
             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
 
@@ -150,7 +149,7 @@ contains
     type(soilbiogeochem_carbonstate_type)  , intent(inout) :: soilbiogeochem_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,j,k,l ! indices
+    integer :: c,p,j,k,l,i  ! indices
     integer :: fp,fc     ! lake filter indices
     real(r8):: dt        ! radiation time step (seconds)
     !-----------------------------------------------------------------------
@@ -170,12 +169,11 @@ contains
             c = filter_soilc(fc)
 
             ! column harvest fluxes
-            cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) = &
-                 cs_soil%decomp_cpools_vr_col(c,j,i_met_lit) + cf_veg%harvest_c_to_litr_met_c_col(c,j) * dt
-            cs_soil%decomp_cpools_vr_col(c,j,i_litr2) = &
-                 cs_soil%decomp_cpools_vr_col(c,j,i_litr2) + cf_veg%harvest_c_to_litr_cel_c_col(c,j) * dt
-            cs_soil%decomp_cpools_vr_col(c,j,i_litr3) = &
-                 cs_soil%decomp_cpools_vr_col(c,j,i_litr3) + cf_veg%harvest_c_to_litr_lig_c_col(c,j) * dt
+            do i = i_litr_min, i_litr_max
+               cs_soil%decomp_cpools_vr_col(c,j,i) = &
+                 cs_soil%decomp_cpools_vr_col(c,j,i) + &
+                 cf_veg%harvest_c_to_litr_c_col(c,j,i) * dt
+            end do
             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%harvest_c_to_cwdc_col(c,j)  * dt
 
