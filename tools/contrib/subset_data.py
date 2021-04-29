@@ -330,6 +330,11 @@ def plon_type(x):
         raise argparse.ArgumentTypeError("ERROR: Latitude of single point should be between 0 and 360 or -180 and 180.")
     return x
 
+def get_git_sha():
+    """
+    Returns Git short SHA for the currect directory.
+    """
+    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode() 
 
 class BaseCase : 
     """
@@ -414,9 +419,13 @@ class BaseCase :
         #update attributes
         today = date.today()
         today_string = today.strftime("%Y-%m-%d")
+
+        #get git hash
+        sha = get_git_sha()
+
         nc.attrs['Created_on'] = today_string
         nc.attrs['Created_by'] = myname
-        nc.attrs['Created_with'] = os.path.abspath(__file__)
+        nc.attrs['Created_with'] = os.path.abspath(__file__) + " -- "+sha
 
         #delete unrelated attributes if they exist
         del_attrs = ['source_code', 'SVN_url', 'hostname', 'history'
