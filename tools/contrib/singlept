@@ -10,10 +10,6 @@ load the following into your local environment
     module load python
     ncar_pylib
 
-This is the script for extracting single-point or regional surface
-dataset, domain file, landuse file, and DATM files from global 
-datasets.
-
 -------------------------------------------------------------------
 To see the available options for a single point:
     ./subset_data point --help
