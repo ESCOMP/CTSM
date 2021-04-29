@@ -179,19 +179,19 @@ def get_parser():
                     type =int,
                     default=7)
         pt_parser.add_argument('--unisnow', 
-                    help='Uniform snowpack option. [default: %(default)s]', 
+                    help='Create uniform snowpack. [default: %(default)s]', 
                     action="store", 
                     dest="uni_snow",
                     type =bool,
                     default=True)
         pt_parser.add_argument('--overwrite_single_pft', 
-                    help='Overwrite Signel PFT. [default: %(default)s]', 
+                    help='Make the whole grid 100% single PFT. [default: %(default)s]', 
                     action="store", 
                     dest="overwrite_single_pft",
                     type =bool,
                     default=True)
         pt_parser.add_argument('--zero_nonveg', 
-                    help='Zero Non Vegetation Landunits. [default: %(default)s]', 
+                    help='Set all non-vegetation landunits to zero. [default: %(default)s]', 
                     action="store", 
                     dest="zero_nonveg",
                     type =bool,
