@@ -130,7 +130,7 @@ def get_parser():
                     action="store_true",
                     dest="create_domain",
                     required = False,
-                    default = True)
+                    default = False)
         pt_parser.add_argument('--create_surface',
                     help='Flag for creating surface data file at single point. [default: %(default)s]', 
                     action="store",
@@ -144,7 +144,7 @@ def get_parser():
                     dest="create_landuse",
                     required = False,
                     type = bool, 
-                    default = True)
+                    default = False)
         pt_parser.add_argument('--create_datm',
                     help='Flag for creating DATM forcing data at single point. [default: %(default)s]', 
                     action="store",
@@ -421,20 +421,18 @@ class BaseCase :
 
         #delete unrelated attributes if they exist
         del_attrs = ['source_code', 'SVN_url', 'hostname', 'history'
-                     'History_Log', 'Logname', 'host', 'Version',
+                     'History_Log', 'Logname', 'Host', 'Version',
                      'Compiler_Optimized']
         attr_list = nc.attrs
 
-        print ('-----')
         for attr in del_attrs:
             if attr in attr_list:
+                #print ("This attr should be deleted:", attr)
                 del(nc.attrs[attr])
-                print ("This attribute deleted:", attr)
 
 
-        print ('-----')
-        for attr, value in attr_list.items():
-            print (attr + " = "+str(value))
+        #for attr, value in attr_list.items():
+        #    print (attr + " = "+str(value))
 
 
 
@@ -493,14 +491,11 @@ class SinglePointCase (BaseCase):
     def create_fileout_name( filename,tag):
 
         basename = os.path.basename(filename)
-        print ("basename : " ,basename)
         items = basename.split('_')
-        print (items)
         today = date.today()
         today_string = today.strftime("%y%m%d")
         new_string = items[0]+"_"+items[2]+"_"+items[3]+"_"+ items[4] \
                     +"_"+items[5]+"_"+items[6]+"_"+tag+"_c"+today_string+".nc"
-        print ("new_string;",new_string)
         return new_string
 
     def create_domain_at_point (self):
@@ -513,17 +508,19 @@ class SinglePointCase (BaseCase):
         # expand dimensions
         f3 = f3.expand_dims(['nj','ni'])
 
+        #update attributes
         self.update_metadata(f3)
+        f3.attrs['Created_from'] = self.fdomain_in
+
         wfile=self.fdomain_out
         f3.to_netcdf(path=wfile, mode='w')
         print('Successfully created file (fdomain_out)'+self.fdomain_out)
-        print( "----------------------------------------------------------------------")
         f2.close(); f3.close()
 
 
     def create_landuse_at_point (self):
         print( "----------------------------------------------------------------------")
-        print ("Now creating landuse file at ", self.plon, self.plat, ".")
+        print ("Creating landuse file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
         f2 = self.create_1d_coord(self.fluse_in, 'LONGXY','LATIXY','lsmlon','lsmlat')
         # extract gridcell closest to plon/plat
@@ -543,17 +540,19 @@ class SinglePointCase (BaseCase):
         x.attrs['long_name']='Year of PFT data'
         f3['YEAR'] = x 
 
+        #update attributes
         self.update_metadata(f3)
+        f3.attrs['Created_from'] = self.fluse_in
+
         wfile = self.fluse_out
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
         print('Successfully created file (luse_out)'+self.fluse_out,".")
-        print( "----------------------------------------------------------------------")
         f2.close(); f3.close()
 
     def create_surfdata_at_point(self):
         print( "----------------------------------------------------------------------")
-        print ("Now creating surface dataset file at ", self.plon, self.plat, ".")
+        print ("Creating surface dataset file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
         filename = self.fsurf_in
         f2 = self.create_1d_coord(filename, 'LONGXY','LATIXY','lsmlon','lsmlat')
@@ -585,13 +584,14 @@ class SinglePointCase (BaseCase):
         #update attributes
         self.update_metadata(f3)
         f3.attrs['Created_from'] = self.fsurf_in 
+        del(f3.attrs['History_Log'])
         # mode 'w' overwrites file
         f3.to_netcdf(path=self.fsurf_out, mode='w')
         print('Successfully created file (fsurf_out) :'+self.fsurf_out)
-        print( "----------------------------------------------------------------------")
         f2.close(); f3.close()
 
     def create_datmdomain_at_point(self):
+        print( "----------------------------------------------------------------------")
         print("Creating DATM domain file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
         filename = self.fdatmdomain_in
@@ -603,6 +603,7 @@ class SinglePointCase (BaseCase):
         wfile=self.fdatmdomain_out
         #update attributes
         self.update_metadata(f3)
+        f3.attrs['Created_from'] = self.fdatmdomain_in 
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
         print('Successfully created file (fdatmdomain_out) :'+self.fdatmdomain_out)
@@ -620,11 +621,15 @@ class SinglePointCase (BaseCase):
 
         #update attributes
         self.update_metadata(f3)
+        f3.attrs['Created_from'] = file_in 
         # mode 'w' overwrites file
         f3.to_netcdf(path=file_out, mode='w')
+        print('Successfully created file :'+ file_out)
         f2.close(); f3.close()
 
     def create_datm_at_point(self):
+        print( "----------------------------------------------------------------------")
+        print("Creating DATM files at ", self.plon, self.plat, ".")
         #--  specify subdirectory names and filename prefixes
         solrdir = 'Solar/'
         precdir = 'Precip/'
@@ -657,15 +662,13 @@ class SinglePointCase (BaseCase):
 
         nm=len(infile)
         for n in range(nm):
-            print ('~~~~')
-            print (n)
             print(outfile[n])
             file_in = infile[n]
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
 
-        print('datm files written to: '+dir_output_datm)
+        print('All DATM files are created in: '+self.dir_output_datm)
 
 class RegionalCase (BaseCase):
     """
