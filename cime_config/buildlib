@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-build clm library
+build ctsm library
 """
 import sys, os
 
@@ -64,6 +64,8 @@ def _write_ctsm_mk(gmake, gmake_opts, makefile, exeroot, libroot):
 # ======================================================================
 # The following settings are meant for internal use, and generally
 # should not be included directly in an atmosphere model's build.
+# NOTE: clm library name and subdirectory will eventually need to
+#       be updated to ctsm.
 # ======================================================================
 
 CTSM_BLD_DIR   = {ctsm_bld_dir}
@@ -92,7 +94,6 @@ def _main_func():
         gmake = case.get_value("GMAKE")
         gmake_opts = get_standard_makefile_args(case)
         driver = case.get_value("COMP_INTERFACE").lower()
-        cimeroot = case.get_value("CIMEROOT")
         lilac_mode = case.get_value("LILAC_MODE")
 
         if lilac_mode == 'on':
@@ -101,17 +102,21 @@ def _main_func():
         #-------------------------------------------------------
         # create Filepath file
         #-------------------------------------------------------
+        compname = case.get_value("COMP_LND")
         filepath_file = os.path.join(bldroot,"Filepath")
         if not os.path.isfile(filepath_file):
             caseroot = case.get_value("CASEROOT")
+            expect( ((compname == "clm") or (compname == "ctsm")), "Unexpected COMP_LND name: %s" % (compname))
 
-            paths = [os.path.join(caseroot,"SourceMods","src.clm"),
+            paths = [os.path.join(caseroot,"SourceMods","src."+compname),
+                     os.path.join(lnd_root,"src","cpl",driver),
                      os.path.join(lnd_root,"src","main"),
                      os.path.join(lnd_root,"src","biogeophys"),
                      os.path.join(lnd_root,"src","biogeochem"),
                      os.path.join(lnd_root,"src","soilbiogeochem"),
                      os.path.join(lnd_root,"src","dyn_subgrid"),
                      os.path.join(lnd_root,"src","init_interp"),
+                     os.path.join(lnd_root,"src","self_tests"),
                      os.path.join(lnd_root,"src","fates"),
                      os.path.join(lnd_root,"src","fates","main"),
                      os.path.join(lnd_root,"src","fates","biogeophys"),
@@ -120,15 +125,16 @@ def _main_func():
                      os.path.join(lnd_root,"src","fates","parteh"),
                      os.path.join(lnd_root,"src","utils"),
                      os.path.join(lnd_root,"src","cpl"),
-                     os.path.join(lnd_root,"src","cpl",driver)]
-            if driver == 'nuopc':
-                paths.append(os.path.join(cimeroot,"src","drivers","nuopc","nuopc_cap_share"))
+                     os.path.join(lnd_root,"src","cpl","utils")]
 
             if lilac_mode == 'on':
                 paths.append(os.path.join(lnd_root,"lilac","src"))
                 # If we want to build with a real river model (e.g., MOSART), we'll need
                 # to use its directories in place of stub_rof
                 paths.append(os.path.join(lnd_root,"lilac","stub_rof"))
+
+            if (driver == 'lilac' or driver == 'nuopc'):
+                paths.append(os.path.join(lnd_root,"src","cpl","share_esmf"))
 
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))
@@ -138,10 +144,10 @@ def _main_func():
         # create the library in libroot
         #-------------------------------------------------------
 
-        complib = os.path.join(libroot,"libclm.a")
+        complib = os.path.join(libroot,"lib%s.a"%(compname))
 
-        cmd = "{} complib -j {} MODEL=clm COMPLIB={} -f {} {}" \
-              .format(gmake, gmake_j, complib, makefile, gmake_opts)
+        cmd = "{} complib -j {} MODEL={} COMPLIB={} -f {} {}" \
+              .format(gmake, gmake_j, compname, complib, makefile, gmake_opts)
 
         rc, out, err = run_cmd(cmd)
         logger.info("%s: \n\n output:\n %s \n\n err:\n\n%s\n"%(cmd,out,err))

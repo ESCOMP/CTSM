@@ -55,7 +55,7 @@ contains
     ncid = file_desc_t()
     call add_vars_to_file(ncid, ['foo'])
 
-    call find_var_on_file(ncid, 'foo', actual)
+    call find_var_on_file(ncid, 'foo', is_dim=.false., varname_on_file=actual)
 
     @assertEqual('foo', actual)
   end subroutine test_find_var_on_file_oneElement_found
@@ -68,7 +68,7 @@ contains
 
     ncid = file_desc_t()
 
-    call find_var_on_file(ncid, 'foo', actual)
+    call find_var_on_file(ncid, 'foo', is_dim=.false., varname_on_file=actual)
 
     @assertEqual('foo', actual)
   end subroutine test_find_var_on_file_oneElement_notFound
@@ -82,7 +82,7 @@ contains
     ncid = file_desc_t()
     call add_vars_to_file(ncid, ['foo', 'bar', 'baz'])
 
-    call find_var_on_file(ncid, 'foo:bar:baz', actual)
+    call find_var_on_file(ncid, 'foo:bar:baz', is_dim=.false., varname_on_file=actual)
 
     @assertEqual('foo', actual)
   end subroutine test_find_var_on_file_3Elements_first
@@ -96,7 +96,7 @@ contains
     ncid = file_desc_t()
     call add_vars_to_file(ncid, ['bar', 'baz'])
 
-    call find_var_on_file(ncid, 'foo:bar:baz', actual)
+    call find_var_on_file(ncid, 'foo:bar:baz', is_dim=.false., varname_on_file=actual)
 
     @assertEqual('bar', actual)
   end subroutine test_find_var_on_file_3Elements_second
@@ -110,7 +110,7 @@ contains
     ncid = file_desc_t()
     call add_vars_to_file(ncid, ['baz'])
 
-    call find_var_on_file(ncid, 'foo:bar:baz', actual)
+    call find_var_on_file(ncid, 'foo:bar:baz', is_dim=.false., varname_on_file=actual)
 
     @assertEqual('baz', actual)
   end subroutine test_find_var_on_file_3Elements_third
@@ -123,7 +123,7 @@ contains
 
     ncid = file_desc_t()
 
-    call find_var_on_file(ncid, 'foo:bar:baz', actual)
+    call find_var_on_file(ncid, 'foo:bar:baz', is_dim=.false., varname_on_file=actual)
 
     @assertEqual('foo', actual)
   end subroutine test_find_var_on_file_3Elements_noneFound

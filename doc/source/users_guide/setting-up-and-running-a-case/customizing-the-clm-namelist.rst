@@ -43,7 +43,7 @@ Included in the table are the following pieces of information:
 
 Table 1-3. CLM History Fields
 -----------------------------
-Table goes here.
+For Table, please see :doc:`master_list_file`.
 
 
 ---------------------------------------------
@@ -73,7 +73,7 @@ Example 1-2. Default CLM Namelist
       fsnowaging = '/glade/p/cesm/cseg/inputdata/lnd/clm2/snicardata/snicar_drdt_bst_fit_60_c070416.nc'
       fsnowoptics = '/glade/p/cesm/cseg/inputdata/lnd/clm2/snicardata/snicar_optics_5bnd_c090915.nc'
       fsurdat = '/glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_0.9x1.25_simyr1850_c130415.nc'
-      maxpatch_glcmec = 0
+      maxpatch_glc = 0
       more_vertlayers = .false.
       nsegspc = 20
       spinup_state = 0

@@ -13,10 +13,10 @@ module initSubgridMod
   use clm_varctl     , only : iulog, use_fates
   use clm_varcon     , only : namep, namec, namel
   use decompMod      , only : bounds_type
-  use GridcellType   , only : grc
-  use LandunitType   , only : lun
-  use ColumnType     , only : col
-  use PatchType      , only : patch
+  use GridcellType   , only : grc                
+  use LandunitType   , only : lun                
+  use ColumnType     , only : col                
+  use PatchType      , only : patch                
   use column_varcon  , only : is_hydrologically_active
   !
   ! !PUBLIC TYPES:
@@ -37,27 +37,27 @@ module initSubgridMod
   !-----------------------------------------------------------------------
 
 contains
-
+  
   !------------------------------------------------------------------------------
   subroutine clm_ptrs_compdown(bounds)
     !
     ! !DESCRIPTION:
-    ! Assumes the part of the subgrid pointing up has been set.  Fills
+    ! Assumes the part of the subgrid pointing up has been set.  Fills 
     ! in the data pointing down.  Up is p_c, p_l, p_g, c_l, c_g, and l_g.
     !
     ! This algorithm assumes all indices besides grid cell are monotonically
     ! increasing.  (Note that grid cell index is NOT monotonically increasing,
-    ! hence we cannot set initial & final indices at the grid cell level -
+    ! hence we cannot set initial & final indices at the grid cell level - 
     ! grc%luni, grc%lunf, etc.)
     !
     ! Algorithm works as follows.  The p, c, and l loops march through
     ! the full arrays (nump, numc, and numl) checking the "up" indexes.
-    ! As soon as the "up" index of the current (p,c,l) cell changes relative
-    ! to the previous (p,c,l) cell, the *i array will be set to point down
+    ! As soon as the "up" index of the current (p,c,l) cell changes relative 
+    ! to the previous (p,c,l) cell, the *i array will be set to point down 
     ! to that cell.  The *f array follows the same logic, so it's always the
     ! last "up" index from the previous cell when an "up" index changes.
     !
-    ! For example, a case where p_c(1:4) = 1 and p_c(5:12) = 2.  This
+    ! For example, a case where p_c(1:4) = 1 and p_c(5:12) = 2.  This 
     ! subroutine will set c_pi(1) = 1, c_pf(1) = 4, c_pi(2) = 5, c_pf(2) = 12.
     !
     ! !USES
@@ -79,7 +79,7 @@ contains
     !--- Loop p through full local begp:endp length
     !--- Separately check the p_c, p_l, and p_g indexes for a change in
     !---   the "up" index.
-    !--- If there is a change, verify that the current c,l,g is within the
+    !--- If there is a change, verify that the current c,l,g is within the 
     !---   valid range, and set c_pi, l_pi, or g_pi to that current c,l,g
     !--- Constantly update the c_pf, l_pf, and g_pf array.  When the
     !---   g, l, c index changes, the *_pf array will be set correctly
@@ -151,7 +151,7 @@ contains
   subroutine clm_ptrs_check(bounds)
     !
     ! !DESCRIPTION:
-    ! Checks and writes out a summary of subgrid data
+    ! Checks subgrid data
     !
     ! !USES
     use clm_varcon, only : ispval
@@ -167,7 +167,7 @@ contains
     integer :: ltype         ! landunit type
     logical :: error         ! error flag
     !------------------------------------------------------------------------------
-!$OMP CRITICAL
+
     associate( &
          begg => bounds%begg, &
          endg => bounds%endg, &
@@ -178,8 +178,7 @@ contains
          begp => bounds%begp, &
          endp => bounds%endp  &
          )
-    if (masterproc) write(iulog,*) ' '
-    if (masterproc) write(iulog,*) '---clm_ptrs_check:'
+    
     !--- check index ranges ---
     error = .false.
     do g = begg, endg
@@ -190,12 +189,12 @@ contains
           end if
        end do
     end do
-
     if (error) then
-       write(iulog,*) '   clm_ptrs_check: g index ranges - ERROR'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       call endrun( &
+            msg = 'clm_ptrs_check: g index ranges - ERROR', &
+            additional_msg = errMsg(sourcefile, __LINE__))
     end if
-    if (masterproc) write(iulog,*) '   clm_ptrs_check: g index ranges - OK'
+
     error = .false.
     if (minval(lun%gridcell(begl:endl)) < begg .or. maxval(lun%gridcell(begl:endl)) > endg) error=.true.
     if (minval(lun%coli(begl:endl)) < begc .or. maxval(lun%coli(begl:endl)) > endc) error=.true.
@@ -203,10 +202,10 @@ contains
     if (minval(lun%patchi(begl:endl)) < begp .or. maxval(lun%patchi(begl:endl)) > endp) error=.true.
     if (minval(lun%patchf(begl:endl)) < begp .or. maxval(lun%patchf(begl:endl)) > endp) error=.true.
     if (error) then
-       write(iulog,*) '   clm_ptrs_check: l index ranges - ERROR'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       call endrun( &
+            msg = 'clm_ptrs_check: l index ranges - ERROR', &
+            additional_msg = errMsg(sourcefile, __LINE__))
     endif
-    if (masterproc) write(iulog,*) '   clm_ptrs_check: l index ranges - OK'
 
     error = .false.
     if (minval(col%gridcell(begc:endc)) < begg .or. maxval(col%gridcell(begc:endc)) > endg) error=.true.
@@ -214,20 +213,20 @@ contains
     if (minval(col%patchi(begc:endc)) < begp .or. maxval(col%patchi(begc:endc)) > endp) error=.true.
     if (minval(col%patchf(begc:endc)) < begp .or. maxval(col%patchf(begc:endc)) > endp) error=.true.
     if (error) then
-       write(iulog,*) '   clm_ptrs_check: c index ranges - ERROR'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       call endrun( &
+            msg = 'clm_ptrs_check: c index ranges - ERROR', &
+            additional_msg = errMsg(sourcefile, __LINE__))
     endif
-    if (masterproc) write(iulog,*) '   clm_ptrs_check: c index ranges - OK'
 
     error = .false.
     if (minval(patch%gridcell(begp:endp)) < begg .or. maxval(patch%gridcell(begp:endp)) > endg) error=.true.
     if (minval(patch%landunit(begp:endp)) < begl .or. maxval(patch%landunit(begp:endp)) > endl) error=.true.
     if (minval(patch%column(begp:endp)) < begc .or. maxval(patch%column(begp:endp)) > endc) error=.true.
     if (error) then
-       write(iulog,*) '   clm_ptrs_check: p index ranges - ERROR'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+       call endrun( &
+            msg = 'clm_ptrs_check: p index ranges - ERROR', &
+            additional_msg = errMsg(sourcefile, __LINE__))
     endif
-    if (masterproc) write(iulog,*) '   clm_ptrs_check: p index ranges - OK'
 
     !--- check that indices in arrays are monotonically increasing ---
     error = .false.
@@ -242,11 +241,11 @@ contains
       if (lun%patchi(l) < lun%patchi(l-1)) error = .true.
       if (lun%patchf(l) < lun%patchf(l-1)) error = .true.
       if (error) then
-         write(iulog,*) '   clm_ptrs_check: l mono increasing - ERROR'
-         call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
+         call endrun(decomp_index=l, clmlevel=namel, &
+              msg = 'clm_ptrs_check: l mono increasing - ERROR', &
+              additional_msg = errMsg(sourcefile, __LINE__))
       endif
     enddo
-    if (masterproc) write(iulog,*) '   clm_ptrs_check: l mono increasing - OK'
 
     error = .false.
     do c=begc+1,endc
@@ -261,11 +260,11 @@ contains
       if (col%patchi(c) < col%patchi(c-1)) error = .true.
       if (col%patchf(c) < col%patchf(c-1)) error = .true.
       if (error) then
-         write(iulog,*) '   clm_ptrs_check: c mono increasing - ERROR'
-         call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+         call endrun(decomp_index=c, clmlevel=namec, &
+              msg = 'clm_ptrs_check: c mono increasing - ERROR', &
+              additional_msg = errMsg(sourcefile, __LINE__))
       endif
     enddo
-    if (masterproc) write(iulog,*) '   clm_ptrs_check: c mono increasing - OK'
 
     error = .false.
     do p=begp+1,endp
@@ -279,11 +278,12 @@ contains
       if (patch%landunit(p) < patch%landunit(p-1)) error = .true.
       if (patch%column  (p) < patch%column  (p-1)) error = .true.
       if (error) then
-         write(iulog,*) '   clm_ptrs_check: p mono increasing - ERROR'
-         call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
+         call endrun(decomp_index=p, clmlevel=namep, &
+              msg = 'clm_ptrs_check: p mono increasing - ERROR', &
+              additional_msg = errMsg(sourcefile, __LINE__))
       endif
     enddo
-    if (masterproc) write(iulog,*) '   clm_ptrs_check: p mono increasing - OK'
+
     !--- check that the tree is internally consistent ---
     error = .false.
     do g = begg, endg
@@ -295,33 +295,34 @@ contains
              if (lun%itype(l) /= ltype) error = .true.
              if (lun%gridcell(l) /= g) error = .true.
              if (error) then
-                write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
-                call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
+                call endrun(decomp_index=l, clmlevel=namel, &
+                     msg = 'clm_ptrs_check: tree consistent - ERROR', &
+                     additional_msg = errMsg(sourcefile, __LINE__))
              endif
              do c = lun%coli(l),lun%colf(l)
                 if (col%gridcell(c) /= g) error = .true.
                 if (col%landunit(c) /= l) error = .true.
                 if (error) then
-                   write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
-                   call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+                   call endrun(decomp_index=c, clmlevel=namec, &
+                        msg = 'clm_ptrs_check: tree consistent - ERROR', &
+                        additional_msg = errMsg(sourcefile, __LINE__))
                 endif
                 do p = col%patchi(c),col%patchf(c)
                    if (patch%gridcell(p) /= g) error = .true.
                    if (patch%landunit(p) /= l) error = .true.
                    if (patch%column(p)   /= c) error = .true.
                    if (error) then
-                      write(iulog,*) '   clm_ptrs_check: tree consistent - ERROR'
-                      call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
+                      call endrun(decomp_index=p, clmlevel=namep, &
+                           msg = 'clm_ptrs_check: tree consistent - ERROR', &
+                           additional_msg = errMsg(sourcefile, __LINE__))
                    endif
                 enddo  ! p
              enddo  ! c
           end if  ! l /= ispval
        enddo  ! ltype
     enddo  ! g
-    if (masterproc) write(iulog,*) '   clm_ptrs_check: tree consistent - OK'
-    if (masterproc) write(iulog,*) ' '
+
     end associate
-!$OMP END CRITICAL
 
   end subroutine clm_ptrs_check
 
@@ -334,7 +335,7 @@ contains
     ! accordingly.
     !
     ! !USES:
-    use landunit_varcon , only : istice_mec, istdlak, isturb_MIN, isturb_MAX, landunit_is_special
+    use landunit_varcon , only : istice, istdlak, isturb_MIN, isturb_MAX, landunit_is_special
     !
     ! !ARGUMENTS:
     integer  , intent(inout) :: li      ! input value is index of last landunit added; output value is index of this newly-added landunit
@@ -343,10 +344,10 @@ contains
     real(r8) , intent(in)    :: wtgcell ! weight of the landunit relative to the grid cell
     !
     ! !LOCAL VARIABLES:
-
+    
     character(len=*), parameter :: subname = 'add_landunit'
     !-----------------------------------------------------------------------
-
+    
     li = li + 1
 
     lun%gridcell(li) = gi
@@ -355,10 +356,10 @@ contains
 
     lun%ifspecial(li) = landunit_is_special(ltype)
 
-    if (ltype == istice_mec) then
-       lun%glcmecpoi(li) = .true.
+    if (ltype == istice) then
+       lun%glcpoi(li) = .true.
     else
-       lun%glcmecpoi(li) = .false.
+       lun%glcpoi(li) = .false.
     end if
 
     if (ltype == istdlak) then
@@ -439,10 +440,10 @@ contains
     ! !LOCAL VARIABLES:
     integer :: li        ! landunit index
     integer :: lb_offset ! offset between natpft_lb and 1
-
+    
     character(len=*), parameter :: subname = 'add_patch'
     !-----------------------------------------------------------------------
-
+    
     pi = pi + 1
 
     patch%column(pi) = ci
@@ -453,7 +454,7 @@ contains
     patch%wtcol(pi) = wtcol
 
     ! TODO (MV, 10-17-14): The following must be commented out because
-    ! currently patch%itype is used in CanopyTemperatureMod to calculate
+    ! currently patch%itype is used in CanopyTemperatureMod to calculate 
     ! z0m(p) and displa(p) - and is still called even when fates is on
 
     !if (.not. use_fates) then
@@ -466,7 +467,7 @@ contains
     else
        patch%mxy(pi) = ispval
     end if
-
+    
 
   end subroutine add_patch
 

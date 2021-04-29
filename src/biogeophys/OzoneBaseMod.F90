@@ -31,6 +31,7 @@ module OzoneBaseMod
      ! The following routines need to be implemented by all type extensions
      procedure(Init_interface)            , public, deferred :: Init
      procedure(Restart_interface)         , public, deferred :: Restart
+     procedure(CalcOzoneUptake_interface) , public, deferred :: CalcOzoneUptake
      procedure(CalcOzoneStress_interface) , public, deferred :: CalcOzoneStress
 
      ! The following routines should only be called by extensions of the ozone_base_type
@@ -59,8 +60,8 @@ module OzoneBaseMod
        type(file_desc_t) , intent(inout) :: ncid ! netcdf id
        character(len=*)  , intent(in)    :: flag ! 'read', 'write' or 'define'
      end subroutine Restart_interface
-       
-     subroutine CalcOzoneStress_interface(this, bounds, num_exposedvegp, filter_exposedvegp, &
+
+     subroutine CalcOzoneUptake_interface(this, bounds, num_exposedvegp, filter_exposedvegp, &
           forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
        use decompMod    , only : bounds_type
        use shr_kind_mod , only : r8 => shr_kind_r8
@@ -77,8 +78,17 @@ module OzoneBaseMod
        real(r8) , intent(in) :: rb( bounds%begp: )        ! boundary layer resistance (s/m)
        real(r8) , intent(in) :: ram( bounds%begp: )       ! aerodynamical resistance (s/m)
        real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
-     end subroutine CalcOzoneStress_interface
+     end subroutine CalcOzoneUptake_interface
 
+     subroutine CalcOzoneStress_interface(this, bounds, num_exposedvegp, filter_exposedvegp)
+       use decompMod, only : bounds_type
+       import :: ozone_base_type
+
+       class(ozone_base_type) , intent(inout) :: this
+       type(bounds_type)      , intent(in)    :: bounds
+       integer                , intent(in)    :: num_exposedvegp       ! number of points in filter_exposedvegp
+       integer                , intent(in)    :: filter_exposedvegp(:) ! patch filter for non-snow-covered veg
+     end subroutine CalcOzoneStress_interface
   end interface
      
 contains

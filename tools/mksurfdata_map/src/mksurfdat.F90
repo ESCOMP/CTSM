@@ -711,6 +711,18 @@ program mksurfdat
 
     do n = 1,ns_o
 
+       ! Truncate all percentage fields on output grid. This is needed to
+       ! insure that wt is zero (not a very small number such as
+       ! 1e-16) where it really should be zero
+       
+       do k = 1,nlevsoi
+          pctsand(n,k) = float(nint(pctsand(n,k)))
+          pctclay(n,k) = float(nint(pctclay(n,k)))
+       end do
+       pctlak(n) = float(nint(pctlak(n)))
+       pctwet(n) = float(nint(pctwet(n)))
+       pctgla(n) = float(nint(pctgla(n)))
+       
        ! Assume wetland, glacier and/or lake when dataset landmask implies ocean 
        ! (assume medium soil color (15) and loamy texture).
        ! Also set pftdata_mask here
@@ -734,18 +746,6 @@ program mksurfdat
           pftdata_mask(n) = 1
        end if
 
-       ! Truncate all percentage fields on output grid. This is needed to
-       ! insure that wt is zero (not a very small number such as
-       ! 1e-16) where it really should be zero
-       
-       do k = 1,nlevsoi
-          pctsand(n,k) = float(nint(pctsand(n,k)))
-          pctclay(n,k) = float(nint(pctclay(n,k)))
-       end do
-       pctlak(n) = float(nint(pctlak(n)))
-       pctwet(n) = float(nint(pctwet(n)))
-       pctgla(n) = float(nint(pctgla(n)))
-       
        ! Make sure sum of land cover types does not exceed 100. If it does,
        ! subtract excess from most dominant land cover.
        

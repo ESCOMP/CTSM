@@ -8,11 +8,11 @@ import logging
 from configparser import ConfigParser
 from configparser import NoSectionError, NoOptionError
 
+from CIME.buildnml import create_namelist_infile # pylint: disable=import-error
+
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.path_utils import path_to_ctsm_root
 from ctsm.utils import abort
-
-from CIME.buildnml import create_namelist_infile # pylint: disable=import-error
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ _CONFIG_CACHE_TEMPLATE = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0">Specifies clm physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies ctsm physics</entry>
 </config_definition>
 """
 
@@ -172,7 +172,7 @@ def buildnml(cime_path, rundir):
     finidat = get_config_value(config, 'buildnml_input', 'finidat', ctsm_cfg_path)
 
     ctsm_phys = get_config_value(config, 'buildnml_input', 'ctsm_phys', ctsm_cfg_path,
-                                 allowed_values=['clm4_5', 'clm5_0'])
+                                 allowed_values=['clm4_5', 'clm5_0', 'clm5_1'])
     configuration = get_config_value(config, 'buildnml_input', 'configuration', ctsm_cfg_path,
                                      allowed_values=['nwp', 'clm'])
     structure = get_config_value(config, 'buildnml_input', 'structure', ctsm_cfg_path,
@@ -217,7 +217,7 @@ def buildnml(cime_path, rundir):
         tempfile.write(env_lilac_text)
 
     # remove any existing clm.input_data_list file
-    inputdatalist_path = os.path.join(rundir, "clm.input_data_list")
+    inputdatalist_path = os.path.join(rundir, "ctsm.input_data_list")
     if os.path.exists(inputdatalist_path):
         os.remove(inputdatalist_path)
 

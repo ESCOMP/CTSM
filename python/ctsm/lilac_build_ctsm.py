@@ -22,8 +22,8 @@ _MACH_NAME = 'ctsm_build'
 
 # these are arbitrary, since we only use the case for its build, not any of the runtime
 # settings; they just need to be valid
-_COMPSET = 'I2000Ctsm50NwpSpAsRsGs'
-_RES = 'f10_f10_musgs'
+_COMPSET = 'I2000Ctsm50NwpSpAsRs'
+_RES = 'f10_f10_mg37'
 
 _PATH_TO_TEMPLATES = os.path.join(path_to_ctsm_root(),
                                   'lilac',
@@ -473,8 +473,8 @@ def _check_and_transform_os(os_type):
                   'cnl': 'CNL'}
     try:
         os_type_transformed = transforms[os_type]
-    except KeyError:
-        raise ValueError("Unknown OS: {}".format(os_type))
+    except KeyError as exc:
+        raise ValueError("Unknown OS: {}".format(os_type)) from exc
     return os_type_transformed
 
 def _get_case_dir(build_dir):
@@ -606,17 +606,15 @@ def _create_case(cime_path, build_dir, compiler,
                           '--res', _RES,
                           '--compiler', compiler,
                           '--driver', 'nuopc',
+                          # Project isn't used for anything in the LILAC workflow, but it
+                          # still needs to be specified on machines that expect it.
+                          '--project', 'UNSET',
                           '--run-unsupported']
     create_newcase_cmd.extend(machine_args)
     if inputdata_path:
         create_newcase_cmd.extend(['--input-dir', inputdata_path])
     run_cmd_output_on_error(create_newcase_cmd,
                             errmsg='Problem creating CTSM case directory')
-
-    # PIO2 sometimes causes errors: see
-    # https://github.com/ESCOMP/CTSM/issues/876#issuecomment-653189406 and following
-    # comments in that issue. So use PIO1 for now.
-    subprocess.check_call([xmlchange, 'PIO_VERSION=1'], cwd=case_dir)
 
     subprocess.check_call([xmlchange, 'LILAC_MODE=on'], cwd=case_dir)
     if build_debug:
@@ -660,12 +658,18 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
     pio_stride = _xmlquery('MAX_MPITASKS_PER_NODE', build_dir)
     if no_pnetcdf:
         pio_typename = 'netcdf'
+        # pio_rearranger = 1 is generally more efficient with netcdf (see
+        # https://github.com/ESMCI/cime/pull/3732#discussion_r508954806 and the following
+        # discussion)
+        pio_rearranger = 1
     else:
         pio_typename = 'pnetcdf'
+        pio_rearranger = 2
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lnd_modelio_template.nml'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lnd_modelio.nml'),
-        substitutions={'PIO_STRIDE':pio_stride,
+        substitutions={'PIO_REARRANGER':pio_rearranger,
+                       'PIO_STRIDE':pio_stride,
                        'PIO_TYPENAME':pio_typename})
 
     shutil.copyfile(

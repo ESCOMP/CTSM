@@ -94,7 +94,9 @@ module CNPhenologyMod
   integer, allocatable :: maxplantjday(:,:) ! maximum planting julian day
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
-  real(r8), private :: initial_seed_at_planting = 3._r8 ! Initial seed at planting
+  real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
+  logical,  private :: min_crtical_dayl_depends_on_lat = .false. ! If critical day-length for onset depends on latitude
+  logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -125,7 +127,8 @@ contains
     character(len=*), parameter :: subname = 'CNPhenologyReadNML'
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
-    namelist /cnphenology/ initial_seed_at_planting
+    namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
+                           min_crtical_dayl_depends_on_lat
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -146,7 +149,9 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (initial_seed_at_planting, mpicom)
+    call shr_mpi_bcast (initial_seed_at_planting,        mpicom)
+    call shr_mpi_bcast (onset_thresh_depends_on_veg,     mpicom)
+    call shr_mpi_bcast (min_crtical_dayl_depends_on_lat, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -252,7 +257,7 @@ contains
             cnveg_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNSeasonDecidPhenology(num_soilp, filter_soilp, &
-            temperature_inst, cnveg_state_inst, dgvs_inst, &
+            temperature_inst, waterdiagnosticbulk_inst, cnveg_state_inst, dgvs_inst, &
             cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
 
        call CNStressDecidPhenology(num_soilp, filter_soilp,   &
@@ -627,7 +632,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine CNSeasonDecidPhenology (num_soilp, filter_soilp       , &
-       temperature_inst, cnveg_state_inst, dgvs_inst , &
+       temperature_inst, waterdiagnosticbulk_inst, cnveg_state_inst, dgvs_inst , &
        cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
@@ -644,6 +649,7 @@ contains
     integer                        , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                        , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(temperature_type)         , intent(in)    :: temperature_inst
+    type(waterdiagnosticbulk_type)          , intent(in)    :: waterdiagnosticbulk_inst
     type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(dgvs_type)                , intent(inout) :: dgvs_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
@@ -656,6 +662,8 @@ contains
     integer :: fp             !lake filter patch index
     real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
+    real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal 
+    real(r8):: onset_thresh   !flag onset threshold
     real(r8):: soilt
     !-----------------------------------------------------------------------
 
@@ -666,9 +674,13 @@ contains
          
          woody                               =>    pftcon%woody                                                , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          season_decid                        =>    pftcon%season_decid                                         , & ! Input:  binary flag for seasonal-deciduous leaf habit (0 or 1)
+         season_decid_temperate              =>    pftcon%season_decid_temperate                               , & ! Input:  binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-         
+         soila10                             =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
+         t_a5min                            =>    temperature_inst%t_a5min_patch                             , & ! input:  [real(r8) (:)   ]
+         snow_5day                           =>    waterdiagnosticbulk_inst%snow_5day_col                      , & ! input:  [real(r8) (:)   ] 
+
          pftmayexist                         =>    dgvs_inst%pftmayexist_patch                                 , & ! Output: [logical   (:)   ]  exclude seasonal decid patches from tropics           
 
          annavg_t2m                          =>    cnveg_state_inst%annavg_t2m_patch                           , & ! Input:  [real(r8)  (:)   ]  annual average 2m air temperature (K)             
@@ -742,6 +754,8 @@ contains
          )
 
       ! start patch loop
+
+
       do fp = 1,num_soilp
          p = filter_soilp(fp)
          c = patch%column(p)
@@ -772,7 +786,7 @@ contains
 
                ! if this is the end of the offset_period, reset phenology
                ! flags and indices
-               if (offset_counter(p) == 0.0_r8) then
+               if (offset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_offset_cleanup(p)
                   ! inlined during vectorization
 
@@ -797,7 +811,7 @@ contains
 
                ! if this is the end of the onset period, reset phenology
                ! flags and indices
-               if (onset_counter(p) == 0.0_r8) then
+               if (onset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_onset_cleanup(p)
                   ! inlined during vectorization
 
@@ -838,7 +852,7 @@ contains
 
             ! test for switching from dormant period to growth period
             if (dormant_flag(p) == 1.0_r8) then
-
+               onset_thresh = 0.0_r8
                ! Test to turn on growing degree-day sum, if off.
                ! switch on the growing degree day sum on the winter solstice
 
@@ -865,13 +879,29 @@ contains
                if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
                end if
-
-               ! set onset_flag if critical growing degree-day sum is exceeded
-               if (onset_gdd(p) > crit_onset_gdd) then
+               if ( onset_thresh_depends_on_veg ) then
+                  ! separate into non-arctic seasonally deciduous pfts (temperate broadleaf deciduous
+                  ! tree) and arctic/boreal seasonally deciduous pfts (boreal needleleaf deciduous tree,
+                  ! boreal broadleaf deciduous tree, boreal broadleaf deciduous shrub, C3 arctic grass)
+                  if (onset_gdd(p) > crit_onset_gdd .and. season_decid_temperate(ivt(p)) == 1) then
+                     onset_thresh=1.0_r8
+                  else if (season_decid_temperate(ivt(p)) == 0 .and. onset_gddflag(p) == 1.0_r8 .and. &
+                          soila10(p) > SHR_CONST_TKFRZ .and. &
+                          t_a5min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
+                          dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
+                     onset_thresh=1.0_r8
+                  end if              
+               else
+                 ! set onset_flag if critical growing degree-day sum is exceeded
+                 if (onset_gdd(p) > crit_onset_gdd) onset_thresh = 1.0_r8
+               end if
+               ! If onset is being triggered
+               if (onset_thresh == 1.0_r8) then
                   onset_flag(p) = 1.0_r8
                   dormant_flag(p) = 0.0_r8
                   onset_gddflag(p) = 0.0_r8
                   onset_gdd(p) = 0.0_r8
+                  onset_thresh = 0.0_r8
                   onset_counter(p) = ndays_on * secspday
 
                   ! move all the storage pools into transfer pools,
@@ -913,8 +943,19 @@ contains
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
 
+               if ( min_crtical_dayl_depends_on_lat )then
+                  ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
+                  ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
+                  crit_daylat=54000-720*(65-abs(grc%latdeg(g)))
+                  if (crit_daylat < crit_dayl) then
+                     crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
+                  end if
+               else
+                  crit_daylat = crit_dayl
+               end if
+               
                ! only begin to test for offset daylength once past the summer sol
-               if (ws_flag == 0._r8 .and. dayl(g) < crit_dayl) then
+               if (ws_flag == 0._r8 .and. dayl(g) < crit_daylat) then
                   offset_flag(p) = 1._r8
                   offset_counter(p) = ndays_off * secspday
                   prev_leafc_to_litter(p) = 0._r8
@@ -1092,7 +1133,7 @@ contains
 
                ! if this is the end of the offset_period, reset phenology
                ! flags and indices
-               if (offset_counter(p) == 0._r8) then
+               if (offset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_offset_cleanup(p)
                   ! inlined during vectorization
                   offset_flag(p) = 0._r8
@@ -1113,7 +1154,7 @@ contains
 
                ! if this is the end of the onset period, reset phenology
                ! flags and indices
-               if (onset_counter(p) == 0.0_r8) then
+               if (onset_counter(p) < dt/2._r8) then
                   ! this code block was originally handled by call cn_onset_cleanup(p)
                   ! inlined during vectorization
                   onset_flag(p) = 0._r8
@@ -2282,7 +2323,7 @@ contains
             ! The transfer rate is a linearly decreasing function of time,
             ! going to zero on the last timestep of the onset period
 
-            if (onset_counter(p) == dt) then
+            if (abs(onset_counter(p) - dt) <= dt/2._r8) then
                t1 = 1.0_r8 / dt
             else
                t1 = 2.0_r8 / (onset_counter(p))
@@ -2427,7 +2468,7 @@ contains
          ! only calculate fluxes during offset period
          if (offset_flag(p) == 1._r8) then
 
-            if (offset_counter(p) == dt) then
+            if (abs(offset_counter(p) - dt) <= dt/2._r8) then
                t1 = 1.0_r8 / dt
                frootc_to_litter(p) = t1 * frootc(p) + cpool_to_frootc(p)
                
@@ -2751,11 +2792,12 @@ contains
             if (CNratio_floating .eqv. .true.) then    
                if (livestemc(p) == 0.0_r8) then    
                    ntovr = 0.0_r8    
+                   livestemn_to_deadstemn(p) = 0.0_r8 
                 else    
                    ntovr = ctovr * (livestemn(p) / livestemc(p))   
+                   livestemn_to_deadstemn(p) = ctovr / deadwdcn(ivt(p)) 
                 end if   
 
-                livestemn_to_deadstemn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
             end if    
             
             livestemn_to_retransn(p)  = ntovr - livestemn_to_deadstemn(p)
@@ -2770,19 +2812,15 @@ contains
             if (CNratio_floating .eqv. .true.) then    
               if (livecrootc(p) == 0.0_r8) then    
                   ntovr = 0.0_r8    
+                  livecrootn_to_deadcrootn(p) = 0.0_r8 
                else    
                   ntovr = ctovr * (livecrootn(p) / livecrootc(p))   
+                   livecrootn_to_deadcrootn(p) = ctovr / deadwdcn(ivt(p)) 
                end if   
 
-               livecrootn_to_deadcrootn(p) = 0.5_r8 * ntovr   ! assuming 50% goes to deadstemn 
             end if    
             
             livecrootn_to_retransn(p)  = ntovr - livecrootn_to_deadcrootn(p)
-            if(use_fun)then
-               !TURNED OFF FLUXES TO CORRECT N ACCUMULATION ISSUE. RF. Oct 2015. 
-               livecrootn_to_retransn(p) = 0.0_r8
-               livestemn_to_retransn(p)  = 0.0_r8
-            endif
 
          end if
 

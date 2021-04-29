@@ -45,7 +45,7 @@ contains
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlayer, nlayert
     use clm_varcon      , only : dzsoi, spval, nlvic, dzvic, pc, grlnd
     use clm_varcon      , only : aquifer_water_baseline
-    use landunit_varcon , only : istwet, istdlak, istice_mec
+    use landunit_varcon , only : istwet, istdlak, istice
     use column_varcon   , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
     use fileutils       , only : getfil
     use ncdio_pio       , only : file_desc_t, ncd_io, ncd_pio_openfile, ncd_pio_closefile
@@ -150,7 +150,7 @@ contains
           l = col%landunit(c)
 
           if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
-             if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec) then
+             if (lun%itype(l)==istwet .or. lun%itype(l)==istice) then
                 ! do nothing
              else if (lun%urbpoi(l) .and. (col%itype(c) /= icol_road_perv) .and. (col%itype(c) /= icol_road_imperv) )then
                 ! do nothing
@@ -167,22 +167,6 @@ contains
                    end if
 
                 end do
-             end if
-          end if ! end of if not lake
-
-          if (lun%itype(l) /= istdlak) then  ! soil columns of both urban and non-urban types
-             if (lun%urbpoi(l)) then
-                if (col%itype(c)==icol_sunwall .or. col%itype(c)==icol_shadewall .or. col%itype(c)==icol_roof) then
-                   ! do nothing
-                else
-                   soilhydrology_inst%depth_col(c, 1:nlayer)         = dzvic
-                   soilhydrology_inst%depth_col(c, nlayer+1:nlayert) = col%dz(c, nlevsoi+1:nlevgrnd)
-
-                   ! create weights to map soil moisture profiles (10 layer) to 3 layers for VIC hydrology, M.Huang
-                   call initCLMVICMap(c, soilhydrology_inst)
-                   call initSoilParVIC(c, claycol, sandcol, om_fraccol, soilhydrology_inst)
-                end if
-             else 
                 soilhydrology_inst%depth_col(c, 1:nlayer) = dzvic
                 soilhydrology_inst%depth_col(c, nlayer+1:nlayert) = col%dz(c, nlevsoi+1:nlevgrnd)
 
@@ -191,7 +175,6 @@ contains
                 call initSoilParVIC(c, claycol, sandcol, om_fraccol, soilhydrology_inst)
              end if
           end if ! end of if not lake
-
        end do ! end of loop over columns
 
       deallocate(b2d, ds2d, dsmax2d, ws2d)
