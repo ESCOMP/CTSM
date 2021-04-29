@@ -11,11 +11,11 @@ load the following into your local environment
     ncar_pylib
 
 -------------------------------------------------------------------
-To see the available options for a single point:
-    ./subset_data point --help
+To see the available options for single point cases:
+    ./subset_data.py point --help
 
-To see the available options for a region:
-    ./subset_data reg --help 
+To see the available options for regional cases:
+    ./subset_data.py reg --help 
 -------------------------------------------------------------------
 
 This script extracts domain files, surface dataset, and DATM files
@@ -57,16 +57,20 @@ models SROF and SGLC)
 
 -------------------------------------------------------------------
 To run the script for a single point:
-    ./subset_data point --help
+    ./subset_data.py point
  
 To run the script for a region:
-    ./subset_data reg --help 
+    ./subset_data.py reg 
 
 To remove NPL from your environment on Cheyenne/Casper:
     deactivate
 -------------------------------------------------------------------
 
 """
+# TODO
+# Automatic downloading of missing files if they are missing
+# default 78 pft vs 16 pft
+
 #  Import libraries
 from __future__ import print_function
 
@@ -139,17 +143,15 @@ def get_parser():
                     default = True)
         pt_parser.add_argument('--create_landuse',
                     help='Flag for creating landuse data file at single point. [default: %(default)s]', 
-                    action="store",
+                    action="store_true",
                     dest="create_landuse",
                     required = False,
-                    type = bool, 
                     default = False)
         pt_parser.add_argument('--create_datm',
                     help='Flag for creating DATM forcing data at single point. [default: %(default)s]', 
-                    action="store",
+                    action="store_true",
                     dest="create_datm",
                     required = False,
-                    type = bool, 
                     default = False)
         pt_parser.add_argument('--datm_syr',
                     help='Start year for creating DATM forcing at single point. [default: %(default)s]', 
@@ -176,14 +178,14 @@ def get_parser():
                     dest="dom_pft",
                     type =int,
                     default=7)
-        pt_parser.add_argument('--unisnow', 
+        pt_parser.add_argument('--no-unisnow', 
                     help='Create uniform snowpack. [default: %(default)s]', 
                     action="store", 
                     dest="uni_snow",
                     type =bool,
                     default=True)
-        pt_parser.add_argument('--overwrite_single_pft', 
-                    help='Make the whole grid 100% single PFT. [default: %(default)s]', 
+        pt_parser.add_argument('--no-overwrite_single_pft', 
+                    help='Make the whole grid 100%% single PFT. [default: %(default)s]', 
                     action="store", 
                     dest="overwrite_single_pft",
                     type =bool,
@@ -258,17 +260,15 @@ def get_parser():
                     default = True)   
         rg_parser.add_argument('--create_landuse',
                     help='Flag for creating landuse data file for a region. [default: %(default)s]', 
-                    action="store",   
+                    action="store_true",   
                     dest="create_landuse",     
                     required = False, 
-                    type = bool,      
-                    default = True)   
+                    default = False)   
         rg_parser.add_argument('--create_datm',
                     help='Flag for creating DATM forcing data for a region. [default: %(default)s]', 
-                    action="store",   
+                    action="store_true",   
                     dest="create_datm",        
                     required = False, 
-                    type = bool,      
                     default = False)  
         rg_parser.add_argument('--datm_syr',   
                     help='Start year for creating DATM forcing for a region. [default: %(default)s]', 
