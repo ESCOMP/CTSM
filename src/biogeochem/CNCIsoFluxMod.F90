@@ -1216,13 +1216,11 @@ contains
                   p = col%patchi(c) + pi - 1
                   if (patch%active(p)) then
                      do i = i_litr_min, i_litr_max
-                        ! leaf litter carbon fluxes
                         phenology_c_to_litr_c(c,j,i) = &
                            phenology_c_to_litr_c(c,j,i) + &
-                           leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
-                        ! fine root litter carbon fluxes
-                        phenology_c_to_litr_c(c,j,i) = &
-                           phenology_c_to_litr_c(c,j,i) + &
+                           ! leaf litter carbon fluxes
+                           leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j) + &
+                           ! fine root litter carbon fluxes
                            frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
                      end do
 

@@ -883,9 +883,7 @@ contains
          m_deadcrootn_xfer_to_litter_fire    => cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_fire_patch    , & ! Output: [real(r8) (:)     ]                                                    
          m_retransn_to_litter_fire           => cnveg_nitrogenflux_inst%m_retransn_to_litter_fire_patch           , & ! Output: [real(r8) (:)     ]                                                    
          m_decomp_npools_to_fire_vr          => cnveg_nitrogenflux_inst%m_decomp_npools_to_fire_vr_col            , & ! Output: [real(r8) (:,:,:) ]  VR decomp. N fire loss (gN/m3/s)
-         m_n_to_litr_met_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_met_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
-         m_n_to_litr_cel_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_cel_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
-         m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                    & ! Output: [real(r8) (:,:)   ]                                                  
+         m_n_to_litr_fire                    => cnveg_nitrogenflux_inst%m_n_to_litr_fire_col                        & ! Output: [real(r8) (:,:,:) ]
          )
 
      transient_landcover = run_has_transient_landcover()
@@ -1158,27 +1156,29 @@ contains
                  m_frootc_to_litter_fire(p) * fr_f(patch%itype(p),i) * froot_prof(p,j)) * patch%wtcol(p) 
            end do
 
-           m_n_to_litr_met_fire(c,j)=m_n_to_litr_met_fire(c,j) + &
-                ((m_leafn_to_litter_fire(p)*lf_flab(patch%itype(p)) &
-                +m_leafn_storage_to_litter_fire(p) + &
-                m_leafn_xfer_to_litter_fire(p)+m_retransn_to_litter_fire(p)) &
-                *leaf_prof(p,j) +(m_frootn_to_litter_fire(p)*fr_flab(patch%itype(p)) &
-                +m_frootn_storage_to_litter_fire(p) + &
-                m_frootn_xfer_to_litter_fire(p))*froot_prof(p,j) &
-                +(m_livestemn_storage_to_litter_fire(p) + &
-                m_livestemn_xfer_to_litter_fire(p) &
-                +m_deadstemn_storage_to_litter_fire(p) + &
-                m_deadstemn_xfer_to_litter_fire(p))* stem_prof(p,j)&
-                +(m_livecrootn_storage_to_litter_fire(p) + &
-                m_livecrootn_xfer_to_litter_fire(p) &
-                +m_deadcrootn_storage_to_litter_fire(p) + &
-                m_deadcrootn_xfer_to_litter_fire(p))* croot_prof(p,j))* patch%wtcol(p)    
-           m_n_to_litr_cel_fire(c,j)=m_n_to_litr_cel_fire(c,j) + &
-                (m_leafn_to_litter_fire(p)*lf_fcel(patch%itype(p))*leaf_prof(p,j) + &
-                m_frootn_to_litter_fire(p)*fr_fcel(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
-           m_n_to_litr_lig_fire(c,j)=m_n_to_litr_lig_fire(c,j) + &
-                (m_leafn_to_litter_fire(p)*lf_flig(patch%itype(p))*leaf_prof(p,j) + &
-                m_frootn_to_litter_fire(p)*fr_flig(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
+           m_n_to_litr_fire(c,j,i_litr_min) = &
+              m_n_to_litr_fire(c,j,i_litr_min) + &
+              ((m_leafn_to_litter_fire(p) * lf_f(patch%itype(p),i_litr_min) + &
+                m_leafn_storage_to_litter_fire(p) + &
+                m_leafn_xfer_to_litter_fire(p) + &
+                m_retransn_to_litter_fire(p)) * leaf_prof(p,j) + &
+               (m_frootn_to_litter_fire(p) * fr_f(patch%itype(p),i_litr_min) + &
+                m_frootn_storage_to_litter_fire(p) + &
+                m_frootn_xfer_to_litter_fire(p)) * froot_prof(p,j) + &
+               (m_livestemn_storage_to_litter_fire(p) + &
+                m_livestemn_xfer_to_litter_fire(p) + &
+                m_deadstemn_storage_to_litter_fire(p) + &
+                m_deadstemn_xfer_to_litter_fire(p)) * stem_prof(p,j) + &
+               (m_livecrootn_storage_to_litter_fire(p) + &
+                m_livecrootn_xfer_to_litter_fire(p) + &
+                m_deadcrootn_storage_to_litter_fire(p) + &
+                m_deadcrootn_xfer_to_litter_fire(p)) * croot_prof(p,j)) * patch%wtcol(p)
+           do i = i_litr_min + 1, i_litr_max
+              m_n_to_litr_fire(c,j,i) = &
+                 m_n_to_litr_fire(c,j,i) + &
+                 (m_leafn_to_litter_fire(p) * lf_f(patch%itype(p),i) * leaf_prof(p,j) + &
+                  m_frootn_to_litter_fire(p) * fr_f(patch%itype(p),i) * froot_prof(p,j)) * patch%wtcol(p)
+           end do
         end do
      end do
      !

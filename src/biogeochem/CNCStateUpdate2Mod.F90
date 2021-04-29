@@ -69,6 +69,8 @@ contains
                  cs_soil%decomp_cpools_vr_col(c,j,i) + &
                  cf_veg%gap_mortality_c_to_litr_c_col(c,j,i) * dt
             end do
+            ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
+            !           i_cwd = 0 if fates, so not including in the i-loop
             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%gap_mortality_c_to_cwdc_col(c,j) * dt
 
@@ -174,6 +176,8 @@ contains
                  cs_soil%decomp_cpools_vr_col(c,j,i) + &
                  cf_veg%harvest_c_to_litr_c_col(c,j,i) * dt
             end do
+            ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
+            !           i_cwd = 0 if fates, so not including in the i-loop
             cs_soil%decomp_cpools_vr_col(c,j,i_cwd) = &
                  cs_soil%decomp_cpools_vr_col(c,j,i_cwd) + cf_veg%harvest_c_to_cwdc_col(c,j)  * dt
 

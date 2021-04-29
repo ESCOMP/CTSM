@@ -232,14 +232,14 @@ contains
 
     ! We hardwire these parameters here because we use them
     ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
-    ! init_decompcascade_bgc or init_decompcascade_cn, where they could have
-    ! otherwise been derived on the fly. For reference,
-    ! - in init_decompcascade_bgc
+    ! init_decompcascade_bgc (or init_decompcascade_cn OBSOLETE), where they
+    ! might have otherwise been derived on the fly. For reference, if they were
+    ! determined in init_decompcascade_bgc:
     ! ndecomp_pools would get the value of i_soil3 or i_cwd
     ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
-    ! - in init_decompcascade_cn
-    ! ndecomp_pools would get the value of i_soil4 or i_cwd
-    ! ndecomp_cascade_transitions would get the value of i_s4atm or i_cwdl3
+    ! OBSOLETE - in init_decompcascade_cn
+    ! OBSOLETE ndecomp_pools would get the value of i_soil4 or i_cwd
+    ! OBSOLETE ndecomp_cascade_transitions would get the value of i_s4atm or i_cwdl3
     if ( use_fates ) then
        if (use_century_decomp) then
           ndecomp_pools = 6

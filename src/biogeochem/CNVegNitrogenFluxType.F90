@@ -63,12 +63,8 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: hrv_retransn_to_litter_patch              (:)     ! patch retranslocated N pool harvest mortality (gN/m2/s)
      real(r8), pointer :: grainn_to_cropprodn_patch                 (:)     ! patch grain N to crop product pool (gN/m2/s)
      real(r8), pointer :: grainn_to_cropprodn_col                   (:)     ! col grain N to crop product pool (gN/m2/s)
-     real(r8), pointer :: m_n_to_litr_met_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter labile N by fire (gN/m3/s)
-     real(r8), pointer :: m_n_to_litr_cel_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter cellulose N by fire (gN/m3/s) 
-     real(r8), pointer :: m_n_to_litr_lig_fire_col                  (:,:)   ! col N from leaf, froot, xfer and storage N to litter lignin N by fire (gN/m3/s) 
-     real(r8), pointer :: harvest_n_to_litr_met_n_col               (:,:)   ! col N fluxes associated with harvest to litter metabolic pool (gN/m3/s)
-     real(r8), pointer :: harvest_n_to_litr_cel_n_col               (:,:)   ! col N fluxes associated with harvest to litter cellulose pool (gN/m3/s)
-     real(r8), pointer :: harvest_n_to_litr_lig_n_col               (:,:)   ! col N fluxes associated with harvest to litter lignin pool (gN/m3/s)
+     real(r8), pointer :: m_n_to_litr_fire_col                      (:,:,:) ! col N from leaf, froot, xfer and storage N to litter N by fire (gN/m3/s)
+     real(r8), pointer :: harvest_n_to_litr_n_col                   (:,:,:) ! col N fluxes associated with harvest to litter pools (gN/m3/s)
      real(r8), pointer :: harvest_n_to_cwdn_col                     (:,:)   ! col N fluxes associated with harvest to CWD pool (gN/m3/s)
 
      ! fire N fluxes 
@@ -184,9 +180,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: phenology_n_to_litr_n_col                 (:,:,:) ! col N fluxes associated with phenology (litterfall and crop) to litter pools (gN/m3/s)
 
      ! gap mortality fluxes
-     real(r8), pointer :: gap_mortality_n_to_litr_met_n_col         (:,:)   ! col N fluxes associated with gap mortality to litter metabolic pool (gN/m3/s)
-     real(r8), pointer :: gap_mortality_n_to_litr_cel_n_col         (:,:)   ! col N fluxes associated with gap mortality to litter cellulose pool (gN/m3/s)
-     real(r8), pointer :: gap_mortality_n_to_litr_lig_n_col         (:,:)   ! col N fluxes associated with gap mortality to litter lignin pool (gN/m3/s)
+     real(r8), pointer :: gap_mortality_n_to_litr_n_col             (:,:,:) ! col N fluxes associated with gap mortality to litter pools (gN/m3/s)
      real(r8), pointer :: gap_mortality_n_to_cwdn_col               (:,:)   ! col N fluxes associated with gap mortality to CWD pool (gN/m3/s)
 
      ! dynamic landcover fluxes
@@ -426,9 +420,7 @@ contains
     allocate(this%fire_nloss_col                            (begc:endc)) ; this%fire_nloss_col                            (:) = nan
     allocate(this%fire_nloss_p2c_col                        (begc:endc)) ; this%fire_nloss_p2c_col                        (:) = nan
 
-    allocate(this%m_n_to_litr_met_fire_col     (begc:endc,1:nlevdecomp_full)) ; this%m_n_to_litr_met_fire_col     (:,:) = nan
-    allocate(this%m_n_to_litr_cel_fire_col     (begc:endc,1:nlevdecomp_full)) ; this%m_n_to_litr_cel_fire_col     (:,:) = nan
-    allocate(this%m_n_to_litr_lig_fire_col     (begc:endc,1:nlevdecomp_full)) ; this%m_n_to_litr_lig_fire_col     (:,:) = nan
+    allocate(this%m_n_to_litr_fire_col         (begc:endc,1:nlevdecomp_full,1:ndecomp_pools)) ; this%m_n_to_litr_fire_col     (:,:,:) = nan
 
     allocate(this%dwt_seedn_to_leaf_patch      (begp:endp))                   ; this%dwt_seedn_to_leaf_patch      (:)   = nan
     allocate(this%dwt_seedn_to_leaf_grc        (begg:endg))                   ; this%dwt_seedn_to_leaf_grc        (:)   = nan
@@ -453,25 +445,17 @@ contains
     this%m_decomp_npools_to_fire_col      (:,:)   = nan
 
     allocate(this%phenology_n_to_litr_n_col         (begc:endc, 1:nlevdecomp_full, 1:ndecomp_pools))
-    allocate(this%gap_mortality_n_to_litr_met_n_col (begc:endc, 1:nlevdecomp_full))
-    allocate(this%gap_mortality_n_to_litr_cel_n_col (begc:endc, 1:nlevdecomp_full))
-    allocate(this%gap_mortality_n_to_litr_lig_n_col (begc:endc, 1:nlevdecomp_full))
+    allocate(this%gap_mortality_n_to_litr_n_col     (begc:endc, 1:nlevdecomp_full, 1:ndecomp_pools))
     allocate(this%gap_mortality_n_to_cwdn_col       (begc:endc, 1:nlevdecomp_full))
     allocate(this%fire_mortality_n_to_cwdn_col      (begc:endc, 1:nlevdecomp_full))
-    allocate(this%harvest_n_to_litr_met_n_col       (begc:endc, 1:nlevdecomp_full))
-    allocate(this%harvest_n_to_litr_cel_n_col       (begc:endc, 1:nlevdecomp_full))
-    allocate(this%harvest_n_to_litr_lig_n_col       (begc:endc, 1:nlevdecomp_full))
+    allocate(this%harvest_n_to_litr_n_col           (begc:endc, 1:nlevdecomp_full, 1:ndecomp_pools))
     allocate(this%harvest_n_to_cwdn_col             (begc:endc, 1:nlevdecomp_full))
 
     this%phenology_n_to_litr_n_col       (:,:,:) = nan
-    this%gap_mortality_n_to_litr_met_n_col (:,:) = nan
-    this%gap_mortality_n_to_litr_cel_n_col (:,:) = nan
-    this%gap_mortality_n_to_litr_lig_n_col (:,:) = nan
+    this%gap_mortality_n_to_litr_n_col   (:,:,:) = nan
     this%gap_mortality_n_to_cwdn_col       (:,:) = nan
     this%fire_mortality_n_to_cwdn_col      (:,:) = nan
-    this%harvest_n_to_litr_met_n_col       (:,:) = nan
-    this%harvest_n_to_litr_cel_n_col       (:,:) = nan
-    this%harvest_n_to_litr_lig_n_col       (:,:) = nan
+    this%harvest_n_to_litr_n_col         (:,:,:) = nan
     this%harvest_n_to_cwdn_col             (:,:) = nan
 
     allocate(this%plant_ndemand_patch         (begp:endp)) ;    this%plant_ndemand_patch         (:) = nan
@@ -1686,27 +1670,15 @@ contains
        do fi = 1,num_column
           i = filter_column(fi)
 
-          ! phenology: litterfall and crop fluxes associated wit
           do k = i_litr_min, i_litr_max
              this%phenology_n_to_litr_n_col(i,j,k)       = value_column
+             this%gap_mortality_n_to_litr_n_col(i,j,k)   = value_column
+             this%harvest_n_to_litr_n_col(i,j,k)         = value_column
+             this%m_n_to_litr_fire_col(i,j,k)            = value_column
           end do
 
-          ! gap mortality
-          this%gap_mortality_n_to_litr_met_n_col(i,j)    = value_column
-          this%gap_mortality_n_to_litr_cel_n_col(i,j)    = value_column
-          this%gap_mortality_n_to_litr_lig_n_col(i,j)    = value_column
           this%gap_mortality_n_to_cwdn_col(i,j)          = value_column
-
-          ! fire
           this%fire_mortality_n_to_cwdn_col(i,j)         = value_column
-          this%m_n_to_litr_met_fire_col(i,j)             = value_column
-          this%m_n_to_litr_cel_fire_col(i,j)             = value_column  
-          this%m_n_to_litr_lig_fire_col(i,j)             = value_column
-
-          ! harvest
-          this%harvest_n_to_litr_met_n_col(i,j)          = value_column             
-          this%harvest_n_to_litr_cel_n_col(i,j)          = value_column             
-          this%harvest_n_to_litr_lig_n_col(i,j)          = value_column             
           this%harvest_n_to_cwdn_col(i,j)                = value_column  
        end do
     end do
