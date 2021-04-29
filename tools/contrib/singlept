@@ -17,7 +17,7 @@ datasets.
 -------------------------------------------------------------------
 To see the available options for a single point:
     ./subset_data point --help
- 
+
 To see the available options for a region:
     ./subset_data reg --help 
 -------------------------------------------------------------------
@@ -85,6 +85,12 @@ from datetime import date
 from getpass import getuser
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
+myname = getuser()
+pwd = os.getcwd()
+
+today = date.today()
+today_string = today.strftime("%Y%m%d")
+
 def get_parser():                                                                                                                                                                   
         """Get parser object for this script."""
         #parser = ArgumentParser(description=__doc__,
@@ -92,6 +98,7 @@ def get_parser():
         parser = ArgumentParser(description=__doc__,
                                formatter_class=argparse.RawDescriptionHelpFormatter)
 
+        parser.print_usage = parser.print_help
         subparsers = parser.add_subparsers(
                     help='Two possible ways to run this sript, either:',
                     dest ='run_type')
@@ -186,6 +193,12 @@ def get_parser():
                     dest="overwrite_single_pft",
                     type =bool,
                     default=True)
+        pt_parser.add_argument('--outdir', 
+                    help='Output directory. [default: %(default)s]', 
+                    action="store", 
+                    dest="out_dir",
+                    type =str,
+                    default="/glade/scratch/"+myname+"/single_point/")
 
         rg_parser.add_argument('--lat1',
                     help='Region start latitude. [default: %(default)s]', 
@@ -275,6 +288,12 @@ def get_parser():
                     dest="dom_pft",
                     type =int,
                     default=7)
+        rg_parser.add_argument('--outdir', 
+                    help='Output directory. [default: %(default)s]', 
+                    action="store", 
+                    dest="out_dir",
+                    type =str,
+                    default="/glade/scratch/"+myname+"/regional/")
 
         return parser
 
@@ -355,14 +374,32 @@ class BaseCase :
         lon = xr.DataArray(lon0,name='lon',dims=x_dim,coords={x_dim:lon0})
         lat = xr.DataArray(lat0,name='lat',dims=y_dim,coords={y_dim:lat0})
 
-        # assign() not working on cheyenne
-        #f2=f1.assign({'lon':lon,'lat':lat})
-        f2=f1.assign()
-        #f2 = f1.copy()
-        f2['lon'] = lon 
-        f2['lat'] = lat 
+        f2=f1.assign({'lon':lon,'lat':lat})
+
         f2.reset_coords([lon_varname,lat_varname])
+        f1.close()
         return f2
+
+    @staticmethod
+    def add_tag_to_filename(filename, tag):
+        "Add a tag to a filename"
+        # Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
+        # Add the tag to just before that ending part
+        print (filename)
+        print (tag)
+        basename = os.path.basename(filename)
+        print ("basename : " ,basename)
+        cend = -10
+        print ("the end: ", basename[cend:])
+        if ( basename[cend] == "c" ):
+           cend = cend - 1
+        if ( (basename[cend] != ".") and (basename[cend] != "_") ):
+           print ( "Trouble figuring out where to add tag to filename:"+filename )
+           os.abort()
+        today = date.today()
+        today_string = today.strftime("%y%m%d")
+        return( basename[:cend]+"_"+tag+"_c"+today_string +'.nc')
+
 
 
 class SinglePointCase (BaseCase):
@@ -377,12 +414,15 @@ class SinglePointCase (BaseCase):
         latitude
     plon : float
         longitude
+    site_name: str -- default = None
+        Site name
 
     Methods
     -------
     create_tag
         create a tag for single point which is the site name
         or the "lon-lat" format if the site name does not exist.
+
     create_domain_at_point
         Create domain file at a single point.
     create_landuse_at_point:
@@ -393,16 +433,39 @@ class SinglePointCase (BaseCase):
         Create DATM domain file at a single point.
     """
 
-    def __init__(self, plat, plon, create_domain, create_surfdata, create_landuse, create_datm):
+    def __init__(self, plat, plon,site_name,
+                 create_domain, create_surfdata, create_landuse, create_datm,
+                 overwrite_single_pft, dominant_pft, zero_nonveg_landunits,
+                 uniform_snowpack, no_saturation_excess):
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
         self.plat = plat
         self.plon = plon
+        self.site_name = site_name
+        self.overwrite_single_pft = overwrite_single_pft
+        self.dominant_pft = dominant_pft
+        self.zero_nonveg_landunits = zero_nonveg_landunits
+        self.uniform_snowpack = uniform_snowpack
+        self.no_saturation_excess = no_saturation_excess
 
     def create_tag(self):
         if self.site_name:
             self.tag = self.site_name
         else:
              self.tag=str(self.plon)+'_'+str(self.plat)
+
+    @staticmethod
+    def create_fileout_name( filename,tag):
+
+        basename = os.path.basename(filename)
+        print ("basename : " ,basename)
+        items = basename.split('_')
+
+        today = date.today()
+        today_string = today.strftime("%y%m%d")
+        new_string = items[0]+"_"+items[2]+"_"+items[3]+"_"+ items[4] \
+                    +"_"+items[5]+"_"+items[6]+"_"+tag+"_c"+today_string+".nc"
+        print (new_string)
+        return new_string
 
     def create_domain_at_point (self):
         print ("Creating domain file at ", self.plon, self.plat)
@@ -496,8 +559,8 @@ class SinglePointCase (BaseCase):
         print('created file (fsurf_out)'+self.fsurf_out)
         f2.close(); f3.close()
 
-    def create_datmdomain_at_point (self):
-        print ("Creating DATM domain file at ", self.plon, self.plat, ".")
+    def create_datmdomain_at_point(self):
+        print("Creating DATM domain file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
         filename = self.fdatmdomain
         f2 = self.create_1d_coord(filename, 'xc','yc','ni','nj')
@@ -571,7 +634,8 @@ class RegionalCase (BaseCase):
     A case to encapsulate regional cases.
     """
 
-    def __init__(self, lat1, lat2, lon1, lon2, reg_name, create_domain, create_surfdata, create_landuse, create_datm):
+    def __init__(self, lat1, lat2, lon1, lon2, reg_name,
+                 create_domain, create_surfdata, create_landuse, create_datm):
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
         self.lat1 = lat1
         self.lat2 = lat2
@@ -643,29 +707,6 @@ class RegionalCase (BaseCase):
         f2.close(); f3.close()
 
 
-
-def error( desc ):
-     "error function"
-     print( "ERROR:: "+desc )
-     os.abort()
-
-
-def AddTagToFilename(filename, tag):
-    "Add a tag to a filename"
-    # Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
-    # Add the tag to just before that ending part
-    print (filename)
-    print (tag)
-    basename = os.path.basename(filename)
-    print ("basename : " ,basename)
-    cend = -10
-    print ("the end: ", basename[cend:])
-    if ( basename[cend] == "c" ):
-       cend = cend - 1
-    if ( (basename[cend] != ".") and (basename[cend] != "_") ):
-       error( "Trouble figuring out where to add tag to filename:"+filename )
-    return( basename[:cend]+"_"+tag+basename[cend:] )
-        
 
 def add_tag_to_surf_filename(filename, tag, site):
     "Add a tag to a filename"
@@ -744,8 +785,7 @@ class StreamToLogger(object):
         """
         stdout_logger = logging.getLogger('STDOUT')
         sl = StreamToLogger(
-            sys.stdout, stdout_logger, logging.INFO, also_log_to_stream
-        )
+            sys.stdout, stdout_logger, logging.INFO, also_log_to_stream)
         sys.stdout = sl
 
     @classmethod
@@ -755,8 +795,7 @@ class StreamToLogger(object):
         """
         stderr_logger = logging.getLogger('STDERR')
         sl = StreamToLogger(
-            sys.stderr, stderr_logger, logging.ERROR, also_log_to_stream
-        )
+            sys.stderr, stderr_logger, logging.ERROR, also_log_to_stream)
         sys.stderr = sl
 
     def write(self, buf):
@@ -778,37 +817,30 @@ class StreamToLogger(object):
             self.logger.log(self.log_level, self.linebuf.rstrip())                                                
         self.linebuf = ''
 
+
+
+
 def main ():
 
-
     args = get_parser().parse_args()
-    print (args)
 
-    log_file = "/glade/scratch/negins/ctsm_singlept/tools/contrib/log.file"
-    # create dir if it does not exist
-    log_dir = os.path.dirname(log_file)
-    if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
+    # --------------------------------- #
+
+    log_file = os.path.join(pwd, today_string+'.log')
 
     log_level =  logging.DEBUG
     setup_logging(log_file, log_level)
 
-
-    myname=getuser()
-    pwd=os.getcwd()
     print("User = "+myname)
     print("Current directory = "+pwd)
 
-    if (args.run_type == "point"):
-        print ("Running the script for Single Point.")
-    elif (args.run_type == "reg"):
-        print ("Running the script for Regional.")
-
+    # --------------------------------- #
 
     if (args.run_type == "point"):
+        print( "This script extracts a single point from the global CTSM inputdata datasets." )
 
         #--  Specify point to extract
-        plon = args.plon 
+        plon = args.plon
         plat = args.plat
 
         #--  Create regional CLM domain file
@@ -834,31 +866,26 @@ def main ():
         no_saturation_excess = True
 
 
-        single_point = SinglePointCase(plat, plon, create_domain, create_surfdata, create_landuse, create_datm)
-        single_point.overwrite_single_pft = overwrite_single_pft
-        single_point.dominant_pft = dominant_pft
-        single_point.zero_nonveg_landunits = zero_nonveg_landunits
-        single_point.uniform_snowpack = uniform_snowpack
-        single_point.no_saturation_excess = no_saturation_excess
-        single_point.site_name = site_name
+        #--  Create SinglePoint Object
+        single_point = SinglePointCase(plat, plon,site_name, 
+                            create_domain, create_surfdata, create_landuse, create_datm,
+                            overwrite_single_pft, dominant_pft, zero_nonveg_landunits, uniform_snowpack,
+                            no_saturation_excess)
         single_point.create_tag()
-        print (single_point)
 
-        print( "singlept script to extract out a single point from the global CTSM inputdata datasets." )
 
         if crop_flag:
             num_pft      = "78"
-        else: 
+        else:
             num_pft      = "16"
 
+        print('crop_flag = '+ crop_flag.__str__()+ ' => num_pft ='+ num_pft)
 
-        print(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
-
-
+        print (single_point)
 
         #--  Set input and output filenames
         #--  Specify input and output directories
-        dir_output='/glade/scratch/'+myname+'/singlept_out/'
+        dir_output = args.out_dir
         if ( not os.path.isdir( dir_output ) ):
             os.mkdir( dir_output )
 
@@ -871,35 +898,51 @@ def main ():
 
 
         #--  Set time stamp
-        command='date "+%y%m%d"'
-        x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
-        x=x2.communicate()
-        timetag = x[0].strip()
-        print (timetag)
+        #command='date "+%y%m%d"'
+        #x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
+        #x=x2.communicate()
+        #timetag = x[0].strip()
+        #print ("timetag:",timetag)
+        today = date.today()
+        timetag = today.strftime("%y%m%d")
+        print ("today_string:", timetag)
+        exit()
 
         #--  Specify land domain file  ---------------------------------
         fdomain_in  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
-        fdomain_out = dir_output + AddTagToFilename( fdomain_in, single_point.tag )
+        fdomain_out = dir_output + single_point.add_tag_to_filename( fdomain_in, single_point.tag )
+        print ("fdomain_out:",fdomain_out)
         #SinglePointCase.set_fdomain (fdomain)
         single_point.fdomain_in = fdomain_in
         single_point.fdomain_out = fdomain_out
 
         #--  Specify surface data file  --------------------------------
         fsurf_in    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
-        fsurf_out   = dir_output + add_tag_to_surf_filename( fsurf_in, single_point.tag ,site_name)
+        single_point.fsurf_in = fsurf_in
+        print ('~~~~')
+        fsurf_out   = dir_output + single_point.create_fileout_name(fsurf_in, single_point.tag)
+        fsurf_out2   = dir_output + single_point.add_tag_to_filename( fsurf_in, single_point.tag )
+        print ('>>>'+fsurf_out)
+        print (fsurf_out2)
+
+        print ('-----')
         single_point.fsurf_in = fsurf_in
         single_point.fsurf_out = fsurf_out
 
         #--  Specify landuse file  -------------------------------------
         fluse_in    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc'
-        fluse_out   = dir_output + AddTagToFilename( fluse_in, single_point.tag )
+        fluse_out   = dir_output + single_point.add_tag_to_filename( fluse_in, single_point.tag )
+        print ("fluse_out:", fluse_out)
+        fluse_out   = dir_output + single_point.create_fileout_name(fluse_in, single_point.tag)
+        print ("fluse_out:", fluse_out)
         single_point.fluse_in = fluse_in
         single_point.fluse_out = fluse_out
         #--  Specify datm domain file  ---------------------------------
         fdatmdomain_in = dir_clm_forcedata+'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc'
-        fdatmdomain_out  = dir_output_datm+AddTagToFilename( fdatmdomain_in, single_point.tag )
+        fdatmdomain_out  = dir_output_datm+single_point.add_tag_to_filename( fdatmdomain_in, single_point.tag )
         single_point.fdatmdomain = fdatmdomain_in
         single_point.fdatmdomain2 = fdatmdomain_out
+        print (single_point.fdatmdomain2)
 
         #--  Create CTSM domain file
         if create_domain:
@@ -916,7 +959,6 @@ def main ():
         #--  Create single point atmospheric forcing data
         if create_datm:
             single_point.create_datmdomain_at_point()
-            #create_datmdomain_at_point(plat, plon, fdatmdomain, fdatmdomain2)
             single_point.datm_syr =datm_syr
             single_point.datm_eyr =datm_eyr
             single_point.dir_input_datm = dir_input_datm
@@ -1009,6 +1051,10 @@ def main ():
         if create_landuse:
             region.create_landuse_at_reg()
         print( "Successfully ran script for a regional case." )
+
+    else :
+        # print help when no option is chosen
+        get_parser().print_help()
 
 if __name__ == "__main__":
     main()
