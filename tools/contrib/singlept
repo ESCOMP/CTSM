@@ -610,7 +610,7 @@ class SinglePointCase (BaseCase):
 
     def extract_datm_at(self, file_in, file_out):
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(file_in, 'xc','yc','ni','nj')
+        f2 = self.create_1d_coord(file_in, 'LONGXY','LATIXY','lon','lat')
         # extract gridcell closest to plon/plat
         f3  = f2.sel(lon=self.plon,lat=self.plat,method='nearest')
         # expand dimensions
