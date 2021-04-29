@@ -22,6 +22,9 @@ To see the available options for a region:
     ./subset_data reg --help 
 -------------------------------------------------------------------
 
+This script extracts domain files, surface dataset, and DATM files
+at either a single point or a region using the global dataset.
+
 After creating a case using a global compset, run preview_namelist.  
 From the resulting lnd_in file in the run directory, find the name 
 of the domain file, and the surface data file.  
@@ -929,7 +932,6 @@ def main ():
         #--  Set time stamp
         today = date.today()
         timetag = today.strftime("%y%m%d")
-        print ("today_string:", timetag)
 
         #--  Specify land domain file  ---------------------------------
         fdomain_in  = os.path.join(dir_inputdata,'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc')
@@ -997,7 +999,7 @@ def main ():
         exit()
 
     elif (args.run_type == "reg"):
-        print ("running the script for the region")
+        print ("Running the script for the region")
         #--  Specify region to extract
         lat1 = args.lat1 
         lat2 = args.lat2
