@@ -702,6 +702,10 @@ class RegionalCase (BaseCase):
         yind=np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
         f3=f2.isel(nj=yind,ni=xind)
 
+        #update attributes
+        self.update_metadata(f3)
+        f3.attrs['Created_from'] = self.fdomain_in
+
         wfile=self.fdomain_out
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode='w')
@@ -722,6 +726,10 @@ class RegionalCase (BaseCase):
         yind=np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
         f3=f2.isel(lsmlat=yind,lsmlon=xind)
 
+        #update attributes
+        self.update_metadata(f3)
+        f3.attrs['Created_from'] = self.fsurf_in
+
         # mode 'w' overwrites file
         f3.to_netcdf(path=self.fsurf_out, mode='w')
         print('created file (fsurf_out)'+self.fsurf_out)
@@ -740,6 +748,10 @@ class RegionalCase (BaseCase):
         xind=np.where((lon >= self.lon1) & (lon <= self.lon2))[0]
         yind=np.where((lat >= self.lat1) & (lat <= self.lat2))[0]
         f3=f2.isel(lsmlat=yind,lsmlon=xind)
+
+        #update attributes
+        self.update_metadata(f3)
+        f3.attrs['Created_from'] = self.fluse_in
 
         wfile=self.fluse_out
         # mode 'w' overwrites file
