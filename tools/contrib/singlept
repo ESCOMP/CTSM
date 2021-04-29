@@ -190,6 +190,18 @@ def get_parser():
                     dest="overwrite_single_pft",
                     type =bool,
                     default=True)
+        pt_parser.add_argument('--zero_nonveg', 
+                    help='Zero Non Vegetation Landunits. [default: %(default)s]', 
+                    action="store", 
+                    dest="zero_nonveg",
+                    type =bool,
+                    default=True)
+        pt_parser.add_argument('--no_saturation_excess', 
+                    help='No Saturation Excess. [default: %(default)s]', 
+                    action="store", 
+                    dest="no_saturation_excess",
+                    type =bool,
+                    default=True)
         pt_parser.add_argument('--outdir', 
                     help='Output directory. [default: %(default)s]', 
                     action="store", 
@@ -704,25 +716,6 @@ class RegionalCase (BaseCase):
         f2.close(); f3.close()
 
 
-
-def add_tag_to_surf_filename(filename, tag, site):
-    "Add a tag to a filename"
-    # Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
-    # Add the tag to just before that ending part
-    print (filename)
-    print (tag)
-    basename = os.path.basename(filename)
-    print ("basename : " ,basename)
-    items = basename.split('_')
-
-    today = date.today()
-    today_string = today.strftime("%y%m%d")
-    new_string = items[0]+"_"+items[2]+"_"+items[3]+"_"+items[4]+"_"+items[5]+"_"+items[6]+"_"+site+"_c"+today_string+".nc"
-    print (new_string)
-    return( new_string)
-
-
-
 def setup_logging(log_path, log_level):
     """
     Setup logging to log to console and log file.
@@ -837,6 +830,7 @@ def main ():
     # --------------------------------- #
 
     if (args.run_type == "point"):
+        print( "============================================================================")
         print( "----------------------------------------------------------------------------")
         print( "This script extracts a single point from the global CTSM inputdata datasets." )
 
@@ -862,9 +856,9 @@ def main ():
         #--  Modify landunit structure
         overwrite_single_pft = args.overwrite_single_pft
         dominant_pft         = args.dom_pft
-        zero_nonveg_landunits= True
+        zero_nonveg_landunits= args.zero_nonveg
         uniform_snowpack     = args.uni_snow
-        no_saturation_excess = True
+        no_saturation_excess = args.no_saturation_excess
 
 
         #--  Create SinglePoint Object
