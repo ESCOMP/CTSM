@@ -88,9 +88,6 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 myname = getuser()
 pwd = os.getcwd()
 
-today = date.today()
-today_string = today.strftime("%Y%m%d")
-
 def get_parser():                                                                                                                                                                   
         """Get parser object for this script."""
         #parser = ArgumentParser(description=__doc__,
@@ -174,7 +171,7 @@ def get_parser():
                     help='Create datasets using the extensive list of prognostic crop types. [default: %(default)s]', 
                     action="store_true", 
                     dest="crop_flag", 
-                    default=False)
+                    default=True)
         pt_parser.add_argument('--dompft', 
                     help='Dominant PFT type . [default: %(default)s] ', 
                     action="store", 
@@ -562,7 +559,7 @@ class SinglePointCase (BaseCase):
     def create_datmdomain_at_point(self):
         print("Creating DATM domain file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
-        filename = self.fdatmdomain
+        filename = self.fdatmdomain_in
         f2 = self.create_1d_coord(filename, 'xc','yc','ni','nj')
         # extract gridcell closest to plon/plat
         f3 = f2.sel(ni=self.plon,nj=self.plat,method='nearest')
@@ -826,6 +823,9 @@ def main ():
 
     # --------------------------------- #
 
+    today = date.today()
+    today_string = today.strftime("%Y%m%d")
+
     log_file = os.path.join(pwd, today_string+'.log')
 
     log_level =  logging.DEBUG
@@ -837,6 +837,7 @@ def main ():
     # --------------------------------- #
 
     if (args.run_type == "point"):
+        print( "----------------------------------------------------------------------------")
         print( "This script extracts a single point from the global CTSM inputdata datasets." )
 
         #--  Specify point to extract
@@ -874,14 +875,14 @@ def main ():
         single_point.create_tag()
 
 
+        print (single_point)
+
         if crop_flag:
             num_pft      = "78"
         else:
             num_pft      = "16"
 
         print('crop_flag = '+ crop_flag.__str__()+ ' => num_pft ='+ num_pft)
-
-        print (single_point)
 
         #--  Set input and output filenames
         #--  Specify input and output directories
@@ -891,58 +892,57 @@ def main ():
 
         dir_inputdata='/glade/p/cesmdata/cseg/inputdata/'
         dir_clm_forcedata='/glade/p/cgd/tss/CTSM_datm_forcing_data/'
-        dir_input_datm=dir_clm_forcedata+'/atm_forcing.datm7.GSWP3.0.5d.v1.c170516/'
-        dir_output_datm=dir_output + 'datmdata/'
+        dir_input_datm=os.path.join(dir_clm_forcedata,'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/')
+        dir_output_datm=os.path.join(dir_output , 'datmdata/')
         if ( not os.path.isdir( dir_output_datm ) ):
             os.mkdir( dir_output_datm )
 
+        print ("dir_input_datm  : ", dir_input_datm)  # 
+        print ("dir_output_datm : ", dir_output_datm) #
+
 
         #--  Set time stamp
-        #command='date "+%y%m%d"'
-        #x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
-        #x=x2.communicate()
-        #timetag = x[0].strip()
-        #print ("timetag:",timetag)
         today = date.today()
         timetag = today.strftime("%y%m%d")
         print ("today_string:", timetag)
-        exit()
 
         #--  Specify land domain file  ---------------------------------
-        fdomain_in  = dir_inputdata+'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc'
+        fdomain_in  = os.path.join(dir_inputdata,'share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc')
         fdomain_out = dir_output + single_point.add_tag_to_filename( fdomain_in, single_point.tag )
-        print ("fdomain_out:",fdomain_out)
-        #SinglePointCase.set_fdomain (fdomain)
         single_point.fdomain_in = fdomain_in
         single_point.fdomain_out = fdomain_out
+        print ("fdomain_in  :",fdomain_in)  #
+        print ("fdomain_out :",fdomain_out) #
 
         #--  Specify surface data file  --------------------------------
-        fsurf_in    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
-        single_point.fsurf_in = fsurf_in
-        print ('~~~~')
-        fsurf_out   = dir_output + single_point.create_fileout_name(fsurf_in, single_point.tag)
-        fsurf_out2   = dir_output + single_point.add_tag_to_filename( fsurf_in, single_point.tag )
-        print ('>>>'+fsurf_out)
-        print (fsurf_out2)
+        if crop_flag:
+            fsurf_in    = os.path.join (dir_inputdata, 'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc')
+        else:
+            fsurf_in    = os.path.join (dir_inputdata, 'lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc')
 
-        print ('-----')
+        #fsurf_out  = dir_output + single_point.add_tag_to_filename(fsurf_in, single_point.tag) # remove res from filename for singlept
+        fsurf_out   = dir_output + single_point.create_fileout_name(fsurf_in, single_point.tag)
         single_point.fsurf_in = fsurf_in
         single_point.fsurf_out = fsurf_out
+        print ("fsurf_in   :",fsurf_in)  #
+        print ("fsurf_out  :",fsurf_out) #
 
         #--  Specify landuse file  -------------------------------------
-        fluse_in    = dir_inputdata+'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc'
-        fluse_out   = dir_output + single_point.add_tag_to_filename( fluse_in, single_point.tag )
-        print ("fluse_out:", fluse_out)
+        fluse_in    = os.path.join (dir_inputdata,'lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr1850-2015_c190214.nc')
+        #fluse_out   = dir_output + single_point.add_tag_to_filename( fluse_in, single_point.tag ) # remove resolution from filename for singlept cases
         fluse_out   = dir_output + single_point.create_fileout_name(fluse_in, single_point.tag)
-        print ("fluse_out:", fluse_out)
         single_point.fluse_in = fluse_in
         single_point.fluse_out = fluse_out
+        print ("fluse_in   :", fluse_in) #
+        print ("fluse_out  :", fluse_out) #
+
         #--  Specify datm domain file  ---------------------------------
-        fdatmdomain_in = dir_clm_forcedata+'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc'
-        fdatmdomain_out  = dir_output_datm+single_point.add_tag_to_filename( fdatmdomain_in, single_point.tag )
-        single_point.fdatmdomain = fdatmdomain_in
-        single_point.fdatmdomain2 = fdatmdomain_out
-        print (single_point.fdatmdomain2)
+        fdatmdomain_in  = os.path.join (dir_clm_forcedata,'atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc')
+        fdatmdomain_out = dir_output_datm+single_point.add_tag_to_filename( fdatmdomain_in, single_point.tag )
+        single_point.fdatmdomain_in  = fdatmdomain_in
+        single_point.fdatmdomain_out = fdatmdomain_out
+        print ("fdatmdomain_in   : ", fdatmdomain_in)  #
+        print ("fdatmdomain out  : ", fdatmdomain_out) #
 
         #--  Create CTSM domain file
         if create_domain:
@@ -966,6 +966,7 @@ def main ():
             single_point.create_datm_at_point()
 
         print( "Successfully ran script for single point." )
+        exit()
 
     elif (args.run_type == "reg"):
         print ("running the script for the region")
