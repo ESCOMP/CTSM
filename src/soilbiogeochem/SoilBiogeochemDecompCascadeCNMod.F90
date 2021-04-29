@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeCNMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : i_met_lit, i_litr2, i_litr3, i_cwd
+  use clm_varpar                         , only : i_litr1, i_litr2, i_litr3, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -38,7 +38,6 @@ module SoilBiogeochemDecompCascadeCNMod
   integer, private            :: i_soil2   = -9         ! SOM second pool
   integer, private            :: i_soil3   = -9         ! SOM third pool
   integer, private            :: i_soil4   = -9         ! SOM fourth pool
-  integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metabolic
 
   type, private :: params_type
      real(r8):: cn_s1_cn        !C:N for SOM 1

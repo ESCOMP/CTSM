@@ -8,7 +8,7 @@ module CNNStateUpdate2Mod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevsoi, nlevdecomp
-  use clm_varpar                      , only : i_litr_min, i_litr_max, i_met_lit, i_litr2, i_litr3, i_cwd
+  use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
   use clm_varctl                      , only : iulog
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type

@@ -11,7 +11,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools, ndecomp_pools_max
-  use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit, i_litr2, i_litr3, i_cwd
+  use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -46,7 +46,9 @@ module SoilBiogeochemDecompCascadeBGCMod
   integer, private            :: i_soil1   = -9         ! Soil Organic Matter (SOM) first pool
   integer, private            :: i_soil2   = -9         ! SOM second pool
   integer, private            :: i_soil3   = -9         ! SOM third pool
-  integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metabolic
+  integer, private :: i_met_lit  ! index of metabolic litter pool
+  integer, private :: i_cel_lit  ! index of cellulose litter pool
+  integer, private :: i_lig_lit  ! index of lignin litter pool
 
   type, private :: params_type
      real(r8):: cn_s1_bgc     !C:N for SOM 1
@@ -350,57 +352,58 @@ contains
 
       !-------------------  list of pools and their attributes  ------------
       i_litr_min = 1
-      floating_cn_ratio_decomp_pools(i_litr1) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_litr1) = 'litr1'
-      decomp_cascade_con%decomp_pool_name_history(i_litr1) = 'LITR1'
-      decomp_cascade_con%decomp_pool_name_long(i_litr1) = 'litter 1'
-      decomp_cascade_con%decomp_pool_name_short(i_litr1) = 'L1'
-      is_litter(i_litr1) = .true.
-      is_soil(i_litr1) = .false.
-      is_cwd(i_litr1) = .false.
-      initial_cn_ratio(i_litr1) = 90._r8
-      initial_stock(i_litr1) = params_inst%initial_Cstocks(i_litr1)
-      is_metabolic(i_litr1) = .true.
-      is_cellulose(i_litr1) = .false.
-      is_lignin(i_litr1) = .false.
+      i_met_lit = i_litr_min
+      floating_cn_ratio_decomp_pools(i_met_lit) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_met_lit) = 'litr1'
+      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'LITR1'
+      decomp_cascade_con%decomp_pool_name_long(i_met_lit) = 'litter 1'
+      decomp_cascade_con%decomp_pool_name_short(i_met_lit) = 'L1'
+      is_litter(i_met_lit) = .true.
+      is_soil(i_met_lit) = .false.
+      is_cwd(i_met_lit) = .false.
+      initial_cn_ratio(i_met_lit) = 90._r8
+      initial_stock(i_met_lit) = params_inst%initial_Cstocks(i_met_lit)
+      is_metabolic(i_met_lit) = .true.
+      is_cellulose(i_met_lit) = .false.
+      is_lignin(i_met_lit) = .false.
 
-      i_litr2 = i_litr1 + 1
-      floating_cn_ratio_decomp_pools(i_litr2) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_litr2) = 'litr2'
-      decomp_cascade_con%decomp_pool_name_history(i_litr2) = 'LITR2'
-      decomp_cascade_con%decomp_pool_name_long(i_litr2) = 'litter 2'
-      decomp_cascade_con%decomp_pool_name_short(i_litr2) = 'L2'
-      is_litter(i_litr2) = .true.
-      is_soil(i_litr2) = .false.
-      is_cwd(i_litr2) = .false.
-      initial_cn_ratio(i_litr2) = 90._r8
-      initial_stock(i_litr2) = params_inst%initial_Cstocks(i_litr2)
-      is_metabolic(i_litr2) = .false.
-      is_cellulose(i_litr2) = .true.
-      is_lignin(i_litr2) = .false.
+      i_cel_lit = i_met_lit + 1
+      floating_cn_ratio_decomp_pools(i_cel_lit) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_cel_lit) = 'litr2'
+      decomp_cascade_con%decomp_pool_name_history(i_cel_lit) = 'LITR2'
+      decomp_cascade_con%decomp_pool_name_long(i_cel_lit) = 'litter 2'
+      decomp_cascade_con%decomp_pool_name_short(i_cel_lit) = 'L2'
+      is_litter(i_cel_lit) = .true.
+      is_soil(i_cel_lit) = .false.
+      is_cwd(i_cel_lit) = .false.
+      initial_cn_ratio(i_cel_lit) = 90._r8
+      initial_stock(i_cel_lit) = params_inst%initial_Cstocks(i_cel_lit)
+      is_metabolic(i_cel_lit) = .false.
+      is_cellulose(i_cel_lit) = .true.
+      is_lignin(i_cel_lit) = .false.
 
-      i_litr3 = i_litr2 + 1
-      floating_cn_ratio_decomp_pools(i_litr3) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_litr3) = 'litr3'
-      decomp_cascade_con%decomp_pool_name_history(i_litr3) = 'LITR3'
-      decomp_cascade_con%decomp_pool_name_long(i_litr3) = 'litter 3'
-      decomp_cascade_con%decomp_pool_name_short(i_litr3) = 'L3'
-      is_litter(i_litr3) = .true.
-      is_soil(i_litr3) = .false.
-      is_cwd(i_litr3) = .false.
-      initial_cn_ratio(i_litr3) = 90._r8
-      initial_stock(i_litr3) = params_inst%initial_Cstocks(i_litr3)
-      is_metabolic(i_litr3) = .false.
-      is_cellulose(i_litr3) = .false.
-      is_lignin(i_litr3) = .true.
+      i_lig_lit = i_cel_lit + 1
+      floating_cn_ratio_decomp_pools(i_lig_lit) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_lig_lit) = 'litr3'
+      decomp_cascade_con%decomp_pool_name_history(i_lig_lit) = 'LITR3'
+      decomp_cascade_con%decomp_pool_name_long(i_lig_lit) = 'litter 3'
+      decomp_cascade_con%decomp_pool_name_short(i_lig_lit) = 'L3'
+      is_litter(i_lig_lit) = .true.
+      is_soil(i_lig_lit) = .false.
+      is_cwd(i_lig_lit) = .false.
+      initial_cn_ratio(i_lig_lit) = 90._r8
+      initial_stock(i_lig_lit) = params_inst%initial_Cstocks(i_lig_lit)
+      is_metabolic(i_lig_lit) = .false.
+      is_cellulose(i_lig_lit) = .false.
+      is_lignin(i_lig_lit) = .true.
 
-      i_litr_max = i_litr3
+      i_litr_max = i_lig_lit
       if (i_litr_max > 3) then
          call endrun(msg='ERROR: expecting i_litr_max <= 3; see pftconMod '//&
               errMsg(sourcefile, __LINE__))
       end if
 
-      i_soil1 = i_litr3 + 1
+      i_soil1 = i_lig_lit + 1
       floating_cn_ratio_decomp_pools(i_soil1) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
       decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
@@ -466,10 +469,10 @@ contains
       speedup_fac = 1._r8
 
       !lit1
-      spinup_factor(i_litr1) = 1._r8
+      spinup_factor(i_met_lit) = 1._r8
       !lit2,3
-      spinup_factor(i_litr2) = 1._r8
-      spinup_factor(i_litr3) = 1._r8
+      spinup_factor(i_cel_lit) = 1._r8
+      spinup_factor(i_lig_lit) = 1._r8
       !CWD
       if (.not. use_fates) then
          spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
@@ -489,21 +492,21 @@ contains
       i_l1s1 = 1
       decomp_cascade_con%cascade_step_name(i_l1s1) = 'L1S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
-      cascade_donor_pool(i_l1s1) = i_litr1
+      cascade_donor_pool(i_l1s1) = i_met_lit
       cascade_receiver_pool(i_l1s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
 
       i_l2s1 = 2
       decomp_cascade_con%cascade_step_name(i_l2s1) = 'L2S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = rf_l2s1
-      cascade_donor_pool(i_l2s1) = i_litr2
+      cascade_donor_pool(i_l2s1) = i_cel_lit
       cascade_receiver_pool(i_l2s1) = i_soil1
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)= 1.0_r8
 
       i_l3s2 = 3
       decomp_cascade_con%cascade_step_name(i_l3s2) = 'L3S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = rf_l3s2
-      cascade_donor_pool(i_l3s2) = i_litr3
+      cascade_donor_pool(i_l3s2) = i_lig_lit
       cascade_receiver_pool(i_l3s2) = i_soil2
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 1.0_r8
 
@@ -547,14 +550,14 @@ contains
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
-         cascade_receiver_pool(i_cwdl2) = i_litr2
+         cascade_receiver_pool(i_cwdl2) = i_cel_lit
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
          
          i_cwdl3 = 10
          decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
          cascade_donor_pool(i_cwdl3) = i_cwd
-         cascade_receiver_pool(i_cwdl3) = i_litr3
+         cascade_receiver_pool(i_cwdl3) = i_lig_lit
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
       end if
 
@@ -677,14 +680,14 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             !
-            if ( abs(spinup_factor(i_litr1) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_l1(c) = spinup_factor(i_litr1) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_l1(c) = spinup_factor(i_met_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_l1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_litr2) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_l23(c) = spinup_factor(i_litr2) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_cel_lit) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_l23(c) = spinup_factor(i_cel_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_l23(c) = 1._r8
             endif
@@ -936,11 +939,11 @@ contains
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-            decomp_k(c,j,i_litr1) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * &
+            decomp_k(c,j,i_met_lit) = k_l1    * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c)
-            decomp_k(c,j,i_litr2) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
+            decomp_k(c,j,i_cel_lit) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
-            decomp_k(c,j,i_litr3) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
+            decomp_k(c,j,i_lig_lit) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
             decomp_k(c,j,i_soil1) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)

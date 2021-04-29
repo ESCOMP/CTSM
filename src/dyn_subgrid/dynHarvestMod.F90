@@ -577,24 +577,24 @@ contains
                          hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j) 
 
                     ! storage harvest mortality carbon fluxes
-                    harvest_c_to_litr_c(c,j,i) = &
-                       harvest_c_to_litr_c(c,j,i) + &
-                       hrv_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j) + &
-                       hrv_frootc_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j) + &
-                       hrv_livestemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j) + &
-                       hrv_deadstemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j) + &
+                    harvest_c_to_litr_c(c,j,i_litr_min) = &
+                       harvest_c_to_litr_c(c,j,i_litr_min) + &
+                       hrv_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                       hrv_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                       hrv_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                       hrv_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
                        hrv_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
                        hrv_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       hrv_gresp_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j) + &
+                       hrv_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
 
                     ! transfer harvest mortality carbon fluxes
-                       hrv_leafc_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j) + &
-                       hrv_frootc_xfer_to_litter(p)     * wtcol(p) * froot_prof(p,j) + &
-                       hrv_livestemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j) + &
-                       hrv_deadstemc_xfer_to_litter(p)  * wtcol(p) * stem_prof(p,j) + &
+                       hrv_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                       hrv_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                       hrv_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                       hrv_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
                        hrv_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
                        hrv_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                       hrv_gresp_xfer_to_litter(p)      * wtcol(p) * leaf_prof(p,j)
+                       hrv_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
 
                     do i = i_litr_min, i_litr_max
                        harvest_n_to_litr_n(c,j,i) = &

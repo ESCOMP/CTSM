@@ -10,7 +10,7 @@ module CNNStateUpdate3Mod
   use clm_varpar                      , only: nlevdecomp, ndecomp_pools
   use clm_time_manager                , only : get_step_size_real
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
-  use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd, i_met_lit, i_litr2, i_litr3
+  use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
