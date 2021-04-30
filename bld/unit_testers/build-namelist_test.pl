@@ -354,6 +354,7 @@ print "=========================================================================
 my $phys = "clm5_1";
 $mode = "-phys $phys";
 &make_config_cache($phys);
+my $neondir      = "../../cime_config/usermods_dirs/NEON";
 foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO", "NIWO", 
                    "ONAQ", "PUUM", "SERC", "SRER", "TALL", "TREE", "WOOD", "BARR", "BONA", 
                    "DCFS", "DELA", "GUAN", "JERC", "KONZ", "MLBS", "NOGP", "ORNL", "RMNP", 
@@ -365,7 +366,6 @@ foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO
    #
    # Concatonate  default usermods and specific sitetogether expanding env variables while doing that
    # 
-   my $neondir      = "../../cime_config/usermods_dirs/NEON";
    if ( ! -d "$neondir/$site" ) {
       print "NEON directory is not there: $neondir/$site\n";
       die "ERROR:: NEON site does not exist: $site\n";
