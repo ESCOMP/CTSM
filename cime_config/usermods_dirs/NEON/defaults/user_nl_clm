@@ -18,4 +18,11 @@
 ! Set glc_do_dynglacier  with GLC_TWO_WAY_COUPLING               env variable
 !----------------------------------------------------------------------------------
 
+flanduse_timeseries = ' '
 fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_${NEONSITE}_c210415.nc"
+stream_year_first_urbantv = 2018
+stream_year_lastt_urbantv = 2019
+stream_year_first_ndep = 2018
+stream_year_lastt_ndep = 2019
+stream_year_first_popdens = 2018
+stream_year_lastt_popdens = 2019
