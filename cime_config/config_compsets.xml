@@ -36,10 +36,10 @@
 
 <!-- I single point forcing -->
 
-  <compset>                                                                                                
-    <alias>I1PtClm50Bgc</alias>                                                                            
-    <lname>2000_DATM%1PT_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>                                        
-  </compset>             
+  <compset>
+    <alias>I1PtClm51Bgc</alias>
+    <lname>2000_DATM%1PT_CLM51%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
     <alias>I1PtClm51SpRs</alias>
