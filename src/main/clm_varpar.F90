@@ -66,6 +66,7 @@ module clm_varpar
   integer, public, parameter :: i_litr1 = 1   ! TEMPORARY FOR CascadeCN TO BUILD
   integer, public            :: i_litr2 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
   integer, public            :: i_litr3 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
+  ! The code currently expects i_litr_min = 1 and i_litr_max = 2 or 3
   integer, public :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_cwd      = -9  ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
@@ -232,19 +233,16 @@ contains
 
     ! We hardwire these parameters here because we use them
     ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
-    ! init_decompcascade_bgc (or init_decompcascade_cn OBSOLETE), where they
-    ! might have otherwise been derived on the fly. For reference, if they were
-    ! determined in init_decompcascade_bgc:
-    ! ndecomp_pools would get the value of i_soil3 or i_cwd
+    ! init_decompcascade_bgc where they might have otherwise been derived on the
+    ! fly. For reference, if they were determined in init_decompcascade_bgc:
+    ! ndecomp_pools would get the value of i_avl_som or i_cwd and
     ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
-    ! OBSOLETE - in init_decompcascade_cn
-    ! OBSOLETE ndecomp_pools would get the value of i_soil4 or i_cwd
-    ! OBSOLETE ndecomp_cascade_transitions would get the value of i_s4atm or i_cwdl3
+    ! depending on how use_fates is set.
     if ( use_fates ) then
        if (use_century_decomp) then
           ndecomp_pools = 6
           ndecomp_cascade_transitions = 8
-       else
+       else  ! TODO slevis: Looks like CN to me, so plan on removing?
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 7
        end if
@@ -252,11 +250,13 @@ contains
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
-       else
+       else  ! TODO slevis: Looks like CN to me, so plan on removing?
           ndecomp_pools = 8
           ndecomp_cascade_transitions = 9
        end if
     endif
+    ! The next param also appears as a dimension in the params files dated
+    ! c210418.nc and later
     ndecomp_pools_max = 8  ! largest ndecomp_pools value above
 
   end subroutine clm_varpar_init
