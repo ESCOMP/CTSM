@@ -320,12 +320,6 @@ contains
          
          lf_f                                => pftcon%lf_f                                                  , & ! Input:  [real(r8) (:,:) ]  leaf litter fractions
          fr_f                                => pftcon%fr_f                                                  , & ! Input:  [real(r8) (:,:) ]  fine root litter fractions
-         lf_flab                             => pftcon%lf_flab                                               , & ! Input:  [real(r8) (:)   ]  leaf litter labile fraction                       
-         lf_fcel                             => pftcon%lf_fcel                                               , & ! Input:  [real(r8) (:)   ]  leaf litter cellulose fraction                    
-         lf_flig                             => pftcon%lf_flig                                               , & ! Input:  [real(r8) (:)   ]  leaf litter lignin fraction                       
-         fr_flab                             => pftcon%fr_flab                                               , & ! Input:  [real(r8) (:)   ]  fine root litter labile fraction                  
-         fr_fcel                             => pftcon%fr_fcel                                               , & ! Input:  [real(r8) (:)   ]  fine root litter cellulose fraction               
-         fr_flig                             => pftcon%fr_flig                                               , & ! Input:  [real(r8) (:)   ]  fine root litter lignin fraction                  
          
          m_leafc_to_litter                   => cnveg_carbonflux_inst%m_leafc_to_litter_patch                , & ! Input:  [real(r8) (:)   ]                                                    
          m_frootc_to_litter                  => cnveg_carbonflux_inst%m_frootc_to_litter_patch               , & ! Input:  [real(r8) (:)   ]                                                    

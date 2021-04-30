@@ -1345,21 +1345,21 @@ contains
                       gap_mortality_c_to_litr_c(c,j,i_litr_min) = &
                          gap_mortality_c_to_litr_c(c,j,i_litr_min) + &
                          ! storage gap mortality carbon fluxes
-                         m_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j) + &
-                         m_frootc_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j) + &
-                         m_livestemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j) + &
-                         m_deadstemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j) + &
+                         m_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         m_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                         m_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         m_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
                          m_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
                          m_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                         m_gresp_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j) + &
+                         m_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
                          ! transfer gap mortality carbon fluxes
-                         m_leafc_xfer_to_litter(p)         * wtcol(p) * leaf_prof(p,j) + &
-                         m_frootc_xfer_to_litter(p)        * wtcol(p) * froot_prof(p,j) + &
-                         m_livestemc_xfer_to_litter(p)     * wtcol(p) * stem_prof(p,j) + &
-                         m_deadstemc_xfer_to_litter(p)     * wtcol(p) * stem_prof(p,j) + &
-                         m_livecrootc_xfer_to_litter(p)    * wtcol(p) * croot_prof(p,j) + &
-                         m_deadcrootc_xfer_to_litter(p)    * wtcol(p) * croot_prof(p,j) + &
-                         m_gresp_xfer_to_litter(p)         * wtcol(p) * leaf_prof(p,j)
+                         m_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         m_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                         m_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         m_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         m_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         m_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         m_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
 
                    end if
                 end if
@@ -1461,21 +1461,21 @@ contains
                       harvest_c_to_litr_c(c,j,i_litr_min) = &
                          harvest_c_to_litr_c(c,j,i_litr_min) + &
                          ! storage harvest mortality carbon fluxes
-                         hrv_leafc_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j) + &
-                         hrv_frootc_storage_to_litter(p)     * wtcol(p) * froot_prof(p,j) + &
-                         hrv_livestemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j) + &
-                         hrv_deadstemc_storage_to_litter(p)  * wtcol(p) * stem_prof(p,j) + &
+                         hrv_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         hrv_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                         hrv_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         hrv_deadstemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
                          hrv_livecrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
                          hrv_deadcrootc_storage_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
-                         hrv_gresp_storage_to_litter(p)      * wtcol(p) * leaf_prof(p,j) + &
+                         hrv_gresp_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
                          ! transfer harvest mortality carbon fluxes
-                         hrv_leafc_xfer_to_litter(p)         * wtcol(p) * leaf_prof(p,j) + &
-                         hrv_frootc_xfer_to_litter(p)        * wtcol(p) * froot_prof(p,j) + &
-                         hrv_livestemc_xfer_to_litter(p)     * wtcol(p) * stem_prof(p,j) + &
-                         hrv_deadstemc_xfer_to_litter(p)     * wtcol(p) * stem_prof(p,j) + &
-                         hrv_livecrootc_xfer_to_litter(p)    * wtcol(p) * croot_prof(p,j) + &
-                         hrv_deadcrootc_xfer_to_litter(p)    * wtcol(p) * croot_prof(p,j) + &
-                         hrv_gresp_xfer_to_litter(p)         * wtcol(p) * leaf_prof(p,j)
+                         hrv_leafc_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
+                         hrv_frootc_xfer_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
+                         hrv_livestemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         hrv_deadstemc_xfer_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
+                         hrv_livecrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         hrv_deadcrootc_xfer_to_litter(p) * wtcol(p) * croot_prof(p,j) + &
+                         hrv_gresp_xfer_to_litter(p) * wtcol(p) * leaf_prof(p,j)
                    end if
                 end if
 

@@ -486,12 +486,6 @@ contains
         
         lf_f                             =>    pftcon%lf_f                                                    , & ! Input:  leaf litter fraction
         fr_f                             =>    pftcon%fr_f                                                    , & ! Input:  fine root litter fraction
-        lf_flab                          =>    pftcon%lf_flab                                                 , & ! Input:  leaf litter labile fraction                       
-        lf_fcel                          =>    pftcon%lf_fcel                                                 , & ! Input:  leaf litter cellulose fraction                    
-        lf_flig                          =>    pftcon%lf_flig                                                 , & ! Input:  leaf litter lignin fraction                       
-        fr_flab                          =>    pftcon%fr_flab                                                 , & ! Input:  fine root litter labile fraction                  
-        fr_fcel                          =>    pftcon%fr_fcel                                                 , & ! Input:  fine root litter cellulose fraction               
-        fr_flig                          =>    pftcon%fr_flig                                                 , & ! Input:  fine root litter lignin fraction                  
         
         leaf_prof                        =>    soilbiogeochem_state_inst%leaf_prof_patch                      , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of leaves                         
         froot_prof                       =>    soilbiogeochem_state_inst%froot_prof_patch                     , & ! Input:  [real(r8) (:,:) ]  (1/m) profile of fine roots                     

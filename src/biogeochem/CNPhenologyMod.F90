@@ -2888,13 +2888,7 @@ contains
          wtcol                     => patch%wtcol                                             , & ! Input:  [real(r8) (:)   ]  weight (relative to column) for this patch (0-1)    
 
          lf_f                      => pftcon%lf_f                                           , & ! Input:  leaf litter fractions
-         lf_flab                   => pftcon%lf_flab                                        , & ! Input:  leaf litter labile fraction                       
-         lf_fcel                   => pftcon%lf_fcel                                        , & ! Input:  leaf litter cellulose fraction                    
-         lf_flig                   => pftcon%lf_flig                                        , & ! Input:  leaf litter lignin fraction                       
          fr_f                      => pftcon%fr_f                                           , & ! Input:  fine root litter fractions
-         fr_flab                   => pftcon%fr_flab                                        , & ! Input:  fine root litter labile fraction                  
-         fr_fcel                   => pftcon%fr_fcel                                        , & ! Input:  fine root litter cellulose fraction               
-         fr_flig                   => pftcon%fr_flig                                        , & ! Input:  fine root litter lignin fraction                  
 
          leafc_to_litter           => cnveg_carbonflux_inst%leafc_to_litter_patch           , & ! Input:  [real(r8) (:)   ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter          => cnveg_carbonflux_inst%frootc_to_litter_patch          , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  

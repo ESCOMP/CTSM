@@ -732,12 +732,6 @@ contains
          fm_droot                            => pftcon%fm_droot                                                   , & ! Input: 
          lf_f                                => pftcon%lf_f                                                       , & ! Input:
          fr_f                                => pftcon%fr_f                                                       , & ! Input:
-         lf_flab                             => pftcon%lf_flab                                                    , & ! Input: 
-         lf_fcel                             => pftcon%lf_fcel                                                    , & ! Input: 
-         lf_flig                             => pftcon%lf_flig                                                    , & ! Input: 
-         fr_flab                             => pftcon%fr_flab                                                    , & ! Input: 
-         fr_fcel                             => pftcon%fr_fcel                                                    , & ! Input: 
-         fr_flig                             => pftcon%fr_flig                                                    , & ! Input: 
          
          nind                                => dgvs_inst%nind_patch                                              , & ! Input:  [real(r8) (:)     ]  number of individuals (#/m2)                      
          
