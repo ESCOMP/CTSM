@@ -1111,8 +1111,8 @@ Initial seed Carbon to use at planting
 
 <entry id="ozone_method" type="char*32" category="physics"
        group="clm_inparm" valid_values="unset,
-                                        stress_method_lombardozzi2015,
-                                        stress_method_falk" value="unset">
+                                        stress_lombardozzi2015,
+                                        stress_falk" value="unset">
 Toggle to turn on ozone stress
 </entry>
 

@@ -149,9 +149,9 @@ contains
     character(len=*), intent(in)            :: ozone_method 
     !-----------------------------------------------------------------------
 
-    if (ozone_method=='lombardozzi2015') then 
+    if (ozone_method=='stress_lombardozzi2015') then 
        this%stress_method = stress_method_lombardozzi2015
-    else if (ozone_method=='falk') then 
+    else if (ozone_method=='stress_falk') then 
        this%stress_method = stress_method_falk
     else 
        call endrun('unknown ozone stress method')
