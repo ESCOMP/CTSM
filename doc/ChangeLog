@@ -1,4 +1,221 @@
 ===============================================================
+Tag name:  ctsm5.1.dev038
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue Apr 27 23:51:04 MDT 2021
+One-line Summary: Bring in minor changes from the cesm2.2.0 release tag
+
+Purpose and description of changes
+----------------------------------
+
+Bring in the changes that went in the cesm2.2.0 release tag.
+Get the CLM offline tools working as well as the tools testing.
+Remove the finidat file for FATES as it was shown to be problematic
+in the release testing.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1134 mkmapdata.sh is not working
+  Fixes #1128 missing compset
+
+Known bugs found since the previous tag (include issue #):
+    #1358 -- C isotope fields can have garbage values starting in ctsm5.1.dev008
+    #1357 -- No output values in large lake gridcells in 0.5° resolution (hcru_hcru)
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   Add a new compset alias: I2000Clm50FatesCruRsGs
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   Remove finidat file setting for FATES becaues it sometimes caused problems.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   A couple of the tools tests were changed
+
+
+Testing summary:  regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - PASS
+
+  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
+  (PTCLM is being deprecated, so we only expect this to be done on occasion)
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+   cheyenne -- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below):
+
+      Ran mkmapdata.sh for 1-deg maps
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): PTCLM
+   PTCLM to PTCLM2_20200902
+
+Pull Requests that document the changes (include PR ids): #1179
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1179 -- Bring in changes from release-cesm2.2.01 to main-development
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev037
+Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date:  Fri Apr 23 10:06:32 MDT 2021
+One-line Summary: Correct vertical interpolation in init_interp when soil thicknesses change
+
+Purpose and description of changes
+----------------------------------
+
+ To correct how init_interp handles soil variables with units of kg/m2 or mm
+ or mm/s (generally speaking so-called extensive properties), we now add DZSOI
+ and a scale_by_thickness flag to restart files. In init_interp we use these to
+ scale the vertical interpolation by soil layer thickness.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm5_1
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+[X] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #): #1298
+
+Notes of particular relevance for users
+---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ For H2OSOI_LIQ, H2OSOI_ICE, SMP, and HK, from now on init_interp interpolates
+ from the soil profile in finidat to the soil profile in the model by
+ scaling these variables by dzsoi (layer thickness). This makes the vertical
+ interpolation of these variables more accurate. Users need not do anything.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ From now on newly generated finidat files will contain the scale_by_thickness
+ flag and DZSOI for use by the new code. For backwards compatibility, the code
+ handles preexisting finidat files by deriving dzsoi from the node depths for
+ the four variables listed above.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Changes to tests or testing:
+ Added two unit tests to confirm that the modified vertical interpolation
+ behaves as expected.
+
+
+Testing summary:
+----------------
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below):
+  Unit tests PASS
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change: larger than roundoff/same climate
+
+ scale_by_thickness=.true. for the four variables that require it (listed
+ above). This causes answers to change for all tests in the test suite that
+ interpolate from the soil profile found in finidat to a differing soil profile
+ used by the model.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1301
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev036
 Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Wed Apr 21 14:50:19 MDT 2021

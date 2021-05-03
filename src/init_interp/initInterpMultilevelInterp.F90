@@ -85,6 +85,8 @@ module initInterpMultilevelInterp
      ! maps to destination point i.
      real(r8), allocatable :: coordinates_source(:,:)   ! coordinate values on source grid [lev, pt]
      real(r8), allocatable :: coordinates_dest(:,:)     ! coordinate values on dest grid [lev, pt]
+     real(r8), allocatable :: dzsoi_source(:,:)         ! soil thicknesses on source grid [lev, pt]
+     real(r8), allocatable :: dzsoi_dest(:,:)           ! soil thicknesses on dest grid [lev, pt]
      integer , allocatable :: level_classes_source(:,:) ! class indices on source grid [lev, pt]
      integer , allocatable :: level_classes_dest(:,:)   ! class indices on dest grid [lev, pt]
 
@@ -123,7 +125,9 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  function constructor_no_levclasses(coordinates_source, coordinates_dest, coord_varname) &
+  function constructor_no_levclasses(coordinates_source, coordinates_dest, &
+                                     dzsoi_source, dzsoi_dest, &
+                                     coord_varname) &
        result(this)
     !
     ! !DESCRIPTION:
@@ -142,6 +146,8 @@ contains
     type(interp_multilevel_interp_type) :: this  ! function result
     real(r8), intent(in) :: coordinates_source(:,:) ! coordinate values on source grid [lev, pt]
     real(r8), intent(in) :: coordinates_dest(:,:)   ! coordinate values on dest grid [lev, pt]
+    real(r8), intent(in) :: dzsoi_source(:,:)       ! dzsoi values on source grid [lev, pt]
+    real(r8), intent(in) :: dzsoi_dest(:,:)         ! dzsoi values on dest grid [lev, pt]
     character(len=*), intent(in) :: coord_varname   ! name of coordinate variable (just used for identification purposes)
     !
     ! !LOCAL VARIABLES:
@@ -155,6 +161,8 @@ contains
 
     npts = size(coordinates_source, 2)
     SHR_ASSERT_FL((size(coordinates_dest, 2) == npts), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(dzsoi_source, 2) == npts), sourcefile, __LINE__)
+    SHR_ASSERT_FL((size(dzsoi_dest, 2) == npts), sourcefile, __LINE__)
 
     nlev_source = size(coordinates_source, 1)
     nlev_dest = size(coordinates_dest, 1)
@@ -165,6 +173,8 @@ contains
     this = interp_multilevel_interp_type( &
          coordinates_source = coordinates_source, &
          coordinates_dest = coordinates_dest, &
+         dzsoi_source = dzsoi_source, &
+         dzsoi_dest = dzsoi_dest, &
          level_classes_source = level_classes_source, &
          level_classes_dest = level_classes_dest, &
          coord_varname = coord_varname)
@@ -174,6 +184,7 @@ contains
 
   !-----------------------------------------------------------------------
   function constructor_with_levclasses(coordinates_source, coordinates_dest, &
+       dzsoi_source, dzsoi_dest, &
        level_classes_source, level_classes_dest, &
        coord_varname) &
        result(this)
@@ -204,6 +215,8 @@ contains
     type(interp_multilevel_interp_type) :: this  ! function result
     real(r8), intent(in) :: coordinates_source(:,:)   ! coordinate values on source grid [lev, pt]
     real(r8), intent(in) :: coordinates_dest(:,:)     ! coordinate values on dest grid [lev, pt]
+    real(r8), intent(in) :: dzsoi_source(:,:)         ! dzsoi values on source grid [lev, pt]
+    real(r8), intent(in) :: dzsoi_dest(:,:)           ! dzsoi values on dest grid [lev, pt]
     integer , intent(in) :: level_classes_source(:,:) ! class indices on source grid [lev, pt]
     integer , intent(in) :: level_classes_dest(:,:)   ! class indices on dest grid [lev, pt]
     character(len=*), intent(in) :: coord_varname     ! name of coordinate variable (just used for identification purposes)
@@ -224,6 +237,8 @@ contains
 
     SHR_ASSERT_ALL_FL((shape(level_classes_source) == [this%nlev_source, this%npts]), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((shape(level_classes_dest) == [this%nlev_dest, this%npts]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((shape(dzsoi_source) == [this%nlev_source, this%npts]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((shape(dzsoi_dest) == [this%nlev_dest, this%npts]), sourcefile, __LINE__)
 
     do i = 1, this%npts
        call this%check_coordinate_array(coordinates_source(:,i), level_classes_source(:,i))
@@ -234,6 +249,8 @@ contains
 
     this%coordinates_source = coordinates_source
     this%coordinates_dest = coordinates_dest
+    this%dzsoi_source = dzsoi_source
+    this%dzsoi_dest = dzsoi_dest
     this%level_classes_source = level_classes_source
     this%level_classes_dest = level_classes_dest
 
@@ -275,7 +292,7 @@ contains
   end subroutine check_npts
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest, scale_by_thickness)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -304,6 +321,7 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
+    logical  , intent(in)    :: scale_by_thickness
     !
     ! !LOCAL VARIABLES:
     integer :: lev_dest
@@ -313,6 +331,7 @@ contains
     ! source information for this index_dest
     real(r8) :: my_level_classes_source(this%nlev_source)
     real(r8) :: my_coordinates_source(this%nlev_source)
+    real(r8) :: my_dzsoi_source(this%nlev_source)
 
     ! whether each source level is in the destination level_class
     logical :: source_levels_in_class(this%nlev_source)
@@ -320,6 +339,7 @@ contains
     ! data and coordinates packed to just contain levels in the destination level_class:
     real(r8), allocatable :: data_source_in_class(:)
     real(r8), allocatable :: coordinates_source_in_class(:)
+    real(r8), allocatable :: dzsoi_source_in_class(:)
 
     character(len=*), parameter :: subname = 'interp_multilevel'
     !-----------------------------------------------------------------------
@@ -330,6 +350,7 @@ contains
 
     my_level_classes_source(:) = this%level_classes_source(:, index_dest)
     my_coordinates_source(:)   = this%coordinates_source(:, index_dest)
+    my_dzsoi_source(:)         = this%dzsoi_source(:, index_dest)
 
     do lev_dest = 1, this%nlev_dest
        level_class_dest = this%level_classes_dest(lev_dest, index_dest)
@@ -346,11 +367,15 @@ contains
              end do
              call pack_wrapper(data_source_in_class, data_source, source_levels_in_class)
              call pack_wrapper(coordinates_source_in_class, my_coordinates_source, source_levels_in_class)
+             call pack_wrapper(dzsoi_source_in_class, my_dzsoi_source, source_levels_in_class)
              call this%interp_onelevel( &
                   data_dest = data_dest(lev_dest), &
+                  dzsoi_dest = this%dzsoi_dest(lev_dest, index_dest), &
                   coordinate_dest = this%coordinates_dest(lev_dest, index_dest), &
                   data_source = data_source_in_class, &
-                  coordinates_source = coordinates_source_in_class)
+                  dzsoi_source = dzsoi_source_in_class, &
+                  coordinates_source = coordinates_source_in_class, &
+                  scale_by_thickness = scale_by_thickness)
           end if
        end if
     end do
@@ -469,16 +494,21 @@ contains
   end subroutine confirm_monotonically_increasing
 
   !-----------------------------------------------------------------------
-  subroutine interp_onelevel(data_dest, coordinate_dest, data_source, coordinates_source)
+  subroutine interp_onelevel(data_dest, dzsoi_dest, coordinate_dest, &
+                             data_source, dzsoi_source, coordinates_source, &
+                             scale_by_thickness)
     !
     ! !DESCRIPTION:
     ! Do the interpolation for a single destination level
     !
     ! !ARGUMENTS:
     real(r8), intent(inout) :: data_dest
+    real(r8), intent(in)    :: dzsoi_dest
     real(r8), intent(in)    :: coordinate_dest
     real(r8), intent(in)    :: data_source(:)
+    real(r8), intent(in)    :: dzsoi_source(:)
     real(r8), intent(in)    :: coordinates_source(:)
+    logical , intent(in)    :: scale_by_thickness
     !
     ! !LOCAL VARIABLES:
     logical :: copylevel
@@ -486,6 +516,8 @@ contains
     integer :: nlev_source
     integer :: lev
     integer :: index_lower
+    real(r8) :: wt_lower  ! Weight factor for interpolation of extensive properties
+    real(r8) :: wt_lower_plus_1  ! Weight factor for interpolation of extensive properties
 
     real(r8), parameter :: eps = 1.e-13_r8
     character(len=*), parameter :: subname = 'interp_onelevel'
@@ -546,18 +578,46 @@ contains
             errMsg(sourcefile, __LINE__))
     end if
 
+    ! Assemble the weights for scaling certain variables by soil thicknesses.
+    ! Such variables represent so-called "extensive" properties and have units
+    ! such as kg/m2 or mm or mm/s. The weights by which we scale these variables
+    ! are unit converters in reality. The denominators dzsoi_source(index_lower)
+    ! and dzsoi_source(index_lower+1) convert data_source from a surface density
+    ! to a volume density. The numerator dzsoi_dest converts data_dest back to
+    ! a surface density.
+    if (scale_by_thickness) then
+       ! Set wt_lower
+       if (dzsoi_source(index_lower) <= 0._r8) then
+          call endrun(msg=subname//' ERROR1: about to divide by zero or negative dzsoi '// &
+               errMsg(sourcefile, __LINE__))
+       end if
+       wt_lower = dzsoi_dest / dzsoi_source(index_lower)
+
+       ! Set wt_lower_plus_1 only if (.not. copylevel)
+       if (.not. copylevel) then ! not using wt_lower_plus_1
+          if (dzsoi_source(index_lower+1) <= 0._r8) then
+             call endrun(msg=subname//' ERROR2: about to divide by zero or negative dzsoi '// &
+                  errMsg(sourcefile, __LINE__))
+          end if
+          wt_lower_plus_1 = dzsoi_dest / dzsoi_source(index_lower+1)
+       end if
+    else  ! the no scaling option for both copylevel and .not. copylevel
+       wt_lower = 1.0_r8
+       wt_lower_plus_1 = 1.0_r8
+    end if
+
     ! ------------------------------------------------------------------------
     ! Do the interpolation
     ! ------------------------------------------------------------------------
 
     if ( copylevel) then
-       data_dest = data_source(index_lower)
+       data_dest = data_source(index_lower) * wt_lower
     else
        data_dest = &
-            data_source(index_lower+1) &
+            data_source(index_lower+1) * wt_lower_plus_1 &
             * (coordinate_dest - coordinates_source(index_lower)) &
             / (coordinates_source(index_lower+1) - coordinates_source(index_lower)) + &
-            data_source(index_lower) &
+            data_source(index_lower) * wt_lower &
             * (coordinates_source(index_lower+1) - coordinate_dest ) &
             / (coordinates_source(index_lower+1) - coordinates_source(index_lower))
     end if
