@@ -1060,7 +1060,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   Jmaxb0act = params_inst%jmaxb0 * FNCa * Fj
 
   ! Default value of o3coefjmax is 1 -->
-  !  o3coefjmax is only different from 1 if ozone_inst%stress_method == 'falk'
+  !  o3coefjmax is only different from 1 if ozone_inst%stress_method == 'stress_falk'
   Jmax = Jmaxb0act + JmaxCoef * ELTRNabsorb * o3coefjmax 
 
 
