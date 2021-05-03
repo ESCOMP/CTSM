@@ -180,15 +180,13 @@ def get_parser():
                     default=7)
         pt_parser.add_argument('--no-unisnow', 
                     help='Create uniform snowpack. [default: %(default)s]', 
-                    action="store", 
+                    action="store_false", 
                     dest="uni_snow",
-                    type =bool,
                     default=True)
         pt_parser.add_argument('--no-overwrite_single_pft', 
                     help='Make the whole grid 100%% single PFT. [default: %(default)s]', 
-                    action="store", 
+                    action="store_false", 
                     dest="overwrite_single_pft",
-                    type =bool,
                     default=True)
         pt_parser.add_argument('--zero_nonveg', 
                     help='Set all non-vegetation landunits to zero. [default: %(default)s]', 
@@ -324,8 +322,9 @@ def plon_type(x):
     """
     x = float(x)
     if (-180 < x) and (x < 0):
+        print ("lon is :", lon)
         x= x%360
-        print ("khar")
+        print ("after modulo lon is :", lon)
     if (x < 0) or (x > 360):
         raise argparse.ArgumentTypeError("ERROR: Latitude of single point should be between 0 and 360 or -180 and 180.")
     return x
