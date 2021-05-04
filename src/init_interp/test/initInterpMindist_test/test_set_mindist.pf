@@ -126,14 +126,14 @@ contains
   end subroutine wrap_set_mindist
 
   !-----------------------------------------------------------------------
-  subroutine setup_and_run_glcmec(ptype_o, ctype_o, topoglc_o, &
+  subroutine setup_and_run_glc(ptype_o, ctype_o, topoglc_o, &
        ptype_i, ctype_i, topoglc_i, &
        collapse_to_atm_topo, glc_elevclasses_same, &
        mindist_index_p, mindist_index_c, &
        ltype_diff_i)
     !
     ! !DESCRIPTION:
-    ! Does all the work needed to setup and run wrap_set_mindist for a single glcmec
+    ! Does all the work needed to setup and run wrap_set_mindist for a single glc
     ! output point.
     !
     ! Gives both the mindist patch and column for that output point.
@@ -155,15 +155,15 @@ contains
     integer, intent(out) :: mindist_index_p
     integer, intent(out) :: mindist_index_c
 
-    ! If present, this gives the difference in ltype from ltype_glcmec for each input
+    ! If present, this gives the difference in ltype from ltype_glc for each input
     ! point. So, for example, if this is an array [-1, 0, 1] then the input ltypes will
-    ! be [ltype_glcmec-1, ltype_glcmec, ltype_glcmec+1]. If absent, all input points have
-    ! type ltype_glcmec.
+    ! be [ltype_glc-1, ltype_glc, ltype_glc+1]. If absent, all input points have
+    ! type ltype_glc.
     integer, intent(in), optional :: ltype_diff_i(:)
 
     !
     ! !LOCAL VARIABLES:
-    integer, parameter :: ltype_glcmec = subgrid_special_indices%ilun_landice_multiple_elevation_classes
+    integer, parameter :: ltype_glc = subgrid_special_indices%ilun_landice
     real(r8), parameter :: my_lat = 31._r8
     real(r8), parameter :: my_lon = 41._r8
     integer :: num_i
@@ -175,7 +175,7 @@ contains
     integer :: mindist_index_p_arr(1)
     integer :: mindist_index_c_arr(1)
 
-    character(len=*), parameter :: subname = 'setup_and_run_glcmec'
+    character(len=*), parameter :: subname = 'setup_and_run_glc'
     !-----------------------------------------------------------------------
 
     ! Note that we assume the same number of patches as columns (i.e., one patch per
@@ -187,27 +187,29 @@ contains
        @assertEqual(num_i, size(ltype_diff_i))
     end if
 
-    call setup_landunit_ncols(ltype=ltype_glcmec, &
+    call setup_landunit_ncols(ltype=ltype_glc, &
          ctypes=[ctype_o], &
          cweights=[1._r8], &
          ptype=ptype_o)
 
-    subgrido_c = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido_c, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
          ctype = [ctype_o], &
-         ltype = [ltype_glcmec], &
+         ltype = [ltype_glc], &
          lat = [my_lat], &
          lon = [my_lon], &
          topoglc = [topoglc_o])
-    subgrido_p = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido_p, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
          ptype = [ptype_o], &
          ctype = [ctype_o], &
-         ltype = [ltype_glcmec], &
+         ltype = [ltype_glc], &
          lat = [my_lat], &
          lon = [my_lon], &
          topoglc = [topoglc_o])
@@ -216,14 +218,15 @@ contains
     allocate(lat_i(num_i))
     allocate(lon_i(num_i))
     if (present(ltype_diff_i)) then
-       ltype_i(:) = ltype_glcmec + ltype_diff_i(:)
+       ltype_i(:) = ltype_glc + ltype_diff_i(:)
     else
-       ltype_i(:) = ltype_glcmec
+       ltype_i(:) = ltype_glc
     end if
     lat_i(:) = my_lat
     lon_i(:) = my_lon
 
-    subgridi_c = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi_c, &
          npts = num_i, &
          name = 'column', &
          ctype = ctype_i, &
@@ -231,7 +234,8 @@ contains
          lat = lat_i, &
          lon = lon_i, &
          topoglc = topoglc_i)
-    subgridi_p = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi_p, &
          npts = num_i, &
          name = 'pft', &
          ptype = ptype_i, &
@@ -251,7 +255,7 @@ contains
     mindist_index_c = mindist_index_c_arr(1)
     mindist_index_p = mindist_index_p_arr(1)
 
-  end subroutine setup_and_run_glcmec
+  end subroutine setup_and_run_glc
 
 
   ! ========================================================================
@@ -278,7 +282,8 @@ contains
          ctypes=[my_ctype], &
          cweights=[1._r8])
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -288,7 +293,8 @@ contains
          lon = [my_lon])
 
     ! Input points differ in either column type or landunit type
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 5, &
          name = 'column', &
          ctype = [my_ctype-1, my_ctype,   my_ctype, my_ctype,   my_ctype + 1], &
@@ -303,7 +309,7 @@ contains
   end subroutine multipleTypes_findsSameType
 
   @Test
-  subroutine glcmec_elevclassesSame_findsSameColType(this)
+  subroutine glc_elevclassesSame_findsSameColType(this)
     ! When glc elevation classes are the same between input and output: Choose
     ! column/patch from the same column type, even if it isn't the one with the closest
     ! topographic height.
@@ -320,7 +326,7 @@ contains
     ! - all input ptypes are the same as output ptype
     ! - all input ctypes are different, with one of them matching the output ctype
     ! - the matching input ctype has the most different topographic height
-    call setup_and_run_glcmec( &
+    call setup_and_run_glc( &
          ptype_o = my_ptype, &
          ctype_o = my_ctype, &
          topoglc_o = my_topo, &
@@ -334,10 +340,10 @@ contains
 
     @assertEqual(3, mindist_index_c)
     @assertEqual(3, mindist_index_p)
-  end subroutine glcmec_elevclassesSame_findsSameColType
+  end subroutine glc_elevclassesSame_findsSameColType
 
   @Test
-  subroutine glcmec_elevclassesSame_findsSamePatchType(this)
+  subroutine glc_elevclassesSame_findsSamePatchType(this)
     ! When glc elevation classes are the same between input and output: Choose patch from
     ! the same patch type, even if it isn't the one with the closest topographic height.
     !
@@ -354,7 +360,7 @@ contains
     ! - all input ctypes are the same as output ctype (this probably shouldn't happen in
     !   practice, but is useful for testing the code logic)
     ! - the matching input ptype has the most different topographic height
-    call setup_and_run_glcmec( &
+    call setup_and_run_glc( &
          ptype_o = my_ptype, &
          ctype_o = my_ctype, &
          topoglc_o = my_topo, &
@@ -372,12 +378,12 @@ contains
     ! the same type to arise in practice, so we haven't defined the behavior of this
     ! case.)
     @assertEqual(3, mindist_index_p)
-  end subroutine glcmec_elevclassesSame_findsSamePatchType
+  end subroutine glc_elevclassesSame_findsSamePatchType
 
   @Test
-  subroutine glcmec_elevclassesDiffer_findsClosestHeight(this)
+  subroutine glc_elevclassesDiffer_findsClosestHeight(this)
     ! When glc elevation classes differ between input and output: Ignore column and pft
-    ! types; if there are multiple glc_mec points that are equidistant in space, pick the
+    ! types; if there are multiple glacier points that are equidistant in space, pick the
     ! one with the closest height
     !
     ! This tests both column-level and patch-level
@@ -391,7 +397,7 @@ contains
     ! Note that we use different ptype and ctype values for the target point: these should
     ! be ignored in this case. However, ltype should *not* be ignored (and thus we should
     ! *not* pick the third point).
-    call setup_and_run_glcmec( &
+    call setup_and_run_glc( &
          ptype_o = my_ptype, &
          ctype_o = my_ctype, &
          topoglc_o = my_topo, &
@@ -406,12 +412,12 @@ contains
 
     @assertEqual(2, mindist_index_c)
     @assertEqual(2, mindist_index_p)
-  end subroutine glcmec_elevclassesDiffer_findsClosestHeight
+  end subroutine glc_elevclassesDiffer_findsClosestHeight
 
   @Test
-  subroutine glcmec_collapseToAtmTopo_findsClosestHeight(this)
-    ! For an output glcmec point with the collapse_to_atm_topo behavior: Ignore column and
-    ! pft types; if there are multiple glc_mec points that are equidistant in space, pick
+  subroutine glc_collapseToAtmTopo_findsClosestHeight(this)
+    ! For an output glc point with the collapse_to_atm_topo behavior: Ignore column and
+    ! pft types; if there are multiple glacier points that are equidistant in space, pick
     ! the one with the closest height
     !
     ! This tests both column-level and patch-level
@@ -425,7 +431,7 @@ contains
     ! Note that we use different ptype and ctype values for the target point: these should
     ! be ignored in this case. However, ltype should *not* be ignored (and thus we should
     ! *not* pick the third point).
-    call setup_and_run_glcmec( &
+    call setup_and_run_glc( &
          ptype_o = my_ptype, &
          ctype_o = my_ctype, &
          topoglc_o = my_topo, &
@@ -440,18 +446,18 @@ contains
 
     @assertEqual(2, mindist_index_c)
     @assertEqual(2, mindist_index_p)
-  end subroutine glcmec_collapseToAtmTopo_findsClosestHeight
+  end subroutine glc_collapseToAtmTopo_findsClosestHeight
 
   @Test
-  subroutine glcmec_elevclassesDiffer_findsClosestLatlon(this)
-    ! For glc_mec, if we have some points closer in topographic height, but others closer
+  subroutine glc_elevclassesDiffer_findsClosestLatlon(this)
+    ! For glacier, if we have some points closer in topographic height, but others closer
     ! in x-y space, pick the closer point in x-y space
 
     class(TestSetMindist), intent(inout) :: this
     type(subgrid_type) :: subgridi, subgrido
     type(glc_behavior_type) :: glc_behavior
     integer, parameter :: my_ctype = 15
-    integer, parameter :: my_ltype = subgrid_special_indices%ilun_landice_multiple_elevation_classes
+    integer, parameter :: my_ltype = subgrid_special_indices%ilun_landice
     real(r8), parameter :: my_lat = 31._r8
     real(r8), parameter :: my_lon = 41._r8
     real(r8), parameter :: my_topo = 1000._r8
@@ -462,7 +468,8 @@ contains
          ctypes=[my_ctype], &
          cweights=[1._r8])
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -472,7 +479,8 @@ contains
          lon = [my_lon], &
          topoglc = [my_topo])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'column', &
          ctype = [my_ctype, my_ctype, my_ctype], &
@@ -487,7 +495,7 @@ contains
          glc_behavior = glc_behavior, glc_elevclasses_same = .false.)
 
     @assertEqual(2, mindist_index(1))
-  end subroutine glcmec_elevclassesDiffer_findsClosestLatlon
+  end subroutine glc_elevclassesDiffer_findsClosestLatlon
 
   @Test
   subroutine noncropToCrop_patchVariable_usesCorrectPft(this)
@@ -516,7 +524,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -528,7 +537,8 @@ contains
 
     ! Input point #2 has the same ptype, but a different ctype and ltype. This one should
     ! be chosen. Other input points differ in ptype.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [my_ptype - 1, my_ptype, my_ptype + 1], &
@@ -569,7 +579,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -583,7 +594,8 @@ contains
 
     ! Input point #2 has the same ptype, but a different ctype and ltype. This one should
     ! be chosen. Other input points differ in ptype.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [my_ptype - 1, my_ptype, my_ptype + 1], &
@@ -623,7 +635,8 @@ contains
          ctypes=[my_ctype], &
          cweights=[1._r8])
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begc, &
          name = 'column', &
@@ -632,7 +645,8 @@ contains
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'column', &
          ctype = [icol_natveg - 2, icol_natveg, icol_natveg - 1], &
@@ -678,7 +692,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -688,7 +703,8 @@ contains
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [ipft_bare + 1, ipft_bare, ipft_bare + 2], &
@@ -731,7 +747,8 @@ contains
          cweights=[1._r8], &
          ptype=ipft_bare)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -744,7 +761,8 @@ contains
     ! In the inputs, we use icol_veg even for special landunits, to make sure that even a
     ! patch whose pft and column type indicate natural veg is ignored if its landunit
     ! type is wrong.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [ipft_bare, ipft_bare, ipft_bare], &
@@ -787,7 +805,8 @@ contains
          cweights=[1._r8], &
          ptype=my_ptype)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begp, &
          name = 'pft', &
@@ -800,7 +819,8 @@ contains
     ! None of the input points match the output (in ptype, ctype or ltype). The 2nd point
     ! is a bare ground point, though, and so should be used as the template if we specify
     ! fill_missing_with_natveg.
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'pft', &
          ptype = [ipft_bare, ipft_bare, ipft_bare], &
@@ -828,14 +848,16 @@ contains
 
     call setup_single_veg_patch(pft_type=1)
 
-    subgrido = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgrido, &
          npts = 1, &
          beg = bounds%begg, &
          name = 'gridcell', &
          lat = [my_lat], &
          lon = [my_lon])
 
-    subgridi = create_subgrid_info( &
+    call create_subgrid_info( &
+         subgrid_info = subgridi, &
          npts = 3, &
          name = 'gridcell', &
          lat = [my_lat - 10._r8, my_lat - 1._r8, my_lat + 10._r8], &

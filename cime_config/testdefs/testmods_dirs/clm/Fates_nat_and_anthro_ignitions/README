@@ -1,0 +1,26 @@
+Testing capability to read/use lightning frequency & population density
+datasets. Calculates lightning ignitions using the SPITFIRE
+formulation and anthropogenic ignitions using the Li et al. 2012 formulation 
+based on human population density implemented in CTSM-CN's fire model.
+
+Testing does not include a separate test for reading/using a successful
+ignitions dataset which uses the same format and units so handling
+is the same until you're in subroutine area_burnt_intensity where for
+"successful ignitions" the model selects
+currentSite%FDI = 1.0_r8
+cloud_to_ground_strikes = 1.0_r8
+while for lightning the model can use values < 1 for both.
+
+Lara Kueppers (UC-Berkeley) has access to a "successful ignitions"
+dataset for California that has not been placed in the repository of
+CTSM datasets as of 2020/6/6. That dataset can be used with the
+following settings:
+
+fire_method = 'spitfire'
+fates_spitfire_mode = 3
+stream_fldfilename_lightng = '.../data_UCB/observed/CA_monthly_ignition_number_1980-2016/ignition_1980_to_2016_monthly_20190801.nc'
+stream_year_first_lightng = 1980
+stream_year_last_lightng = 2016
+model_year_align_lightng = 1980
+
+where {...} = /fs/cgd/data0/slevis on izumi and /glade/work/slevis on cheyenne.

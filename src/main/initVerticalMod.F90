@@ -14,7 +14,7 @@ module initVerticalMod
   use spmdMod           , only : masterproc
   use clm_varpar        , only : nlevsno, nlevgrnd, nlevlak
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
-  use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb 
+  use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb, nlevmaxurbgrnd
   use clm_varctl        , only : fsurdat, iulog
   use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
   use clm_varctl        , only : use_bedrock, rundef
@@ -22,13 +22,12 @@ module initVerticalMod
   use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
-  use landunit_varcon   , only : istdlak, istice_mec
+  use landunit_varcon   , only : istdlak, istice
   use fileutils         , only : getfil
   use LandunitType      , only : lun                
   use GridcellType      , only : grc                
   use ColumnType        , only : col                
   use glcBehaviorMod    , only : glc_behavior_type
-  use SnowHydrologyMod  , only : InitSnowLayers             
   use abortUtils        , only : endrun    
   use ncdio_pio
   !
@@ -39,9 +38,9 @@ module initVerticalMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
+  public :: find_soil_layer_containing_depth
 
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: ReadNL
   private :: hasBedrock  ! true if the given column type includes bedrock layers
   !
 
@@ -54,67 +53,12 @@ module initVerticalMod
 contains
 
   !------------------------------------------------------------------------
-  subroutine ReadNL( )
-    !
-    ! !DESCRIPTION:
-    ! Read namelist for SoilStateType
-    !
-    ! !USES:
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    use fileutils      , only : getavu, relavu, opnfil
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use clm_varctl     , only : iulog
-    use spmdMod        , only : mpicom, masterproc
-    use controlMod     , only : NLFilename
-    !
-    ! !ARGUMENTS:
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-    character(len=32) :: subname = 'InitVertical_readnl'  ! subroutine name
-    !-----------------------------------------------------------------------
-
-    character(len=*), parameter :: nl_name  = 'clm_inparm'  ! Namelist name
-                                                                      
-    ! MUST agree with name in namelist and read
-    namelist /clm_inparm/ use_bedrock
-
-    ! preset values
-
-    use_bedrock = .false.
-
-    if ( masterproc )then
-
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nl_name//' namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call find_nlgroup_name(unitn, nl_name, status=ierr)
-       if (ierr == 0) then
-          read(unit=unitn, nml=clm_inparm, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR finding '//nl_name//' namelist"//errmsg(sourcefile, __LINE__))
-       end if
-       call relavu( unitn )
-
-    end if
-
-    call shr_mpi_bcast(use_bedrock, mpicom)
-
-  end subroutine ReadNL
-
-  !------------------------------------------------------------------------
-  subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
+  subroutine initVertical(bounds, glc_behavior, thick_wall, thick_roof)
     use clm_varcon, only : zmin_bedrock
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
     type(glc_behavior_type), intent(in) :: glc_behavior
-    real(r8)            , intent(in)    :: snow_depth(bounds%begc:)
     real(r8)            , intent(in)    :: thick_wall(bounds%begl:)
     real(r8)            , intent(in)    :: thick_roof(bounds%begl:)
     !
@@ -172,7 +116,6 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begl = bounds%begl; endl= bounds%endl
 
-    SHR_ASSERT_ALL_FL((ubound(snow_depth)  == (/endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(thick_wall)  == (/endl/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(thick_roof)  == (/endl/)), sourcefile, __LINE__)
 
@@ -483,11 +426,21 @@ contains
              col%z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
              col%zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
              col%dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+             if (nlevgrnd < nlevurb) then
+                col%z(c,nlevgrnd+1:nlevurb)  = spval
+                col%zi(c,nlevgrnd+1:nlevurb) = spval
+                col%dz(c,nlevgrnd+1:nlevurb) = spval
+             end if
           end if
        else if (lun%itype(l) /= istdlak) then
           col%z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
           col%zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
           col%dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+          if (nlevgrnd < nlevurb) then
+             col%z(c,nlevgrnd+1:nlevurb)  = spval
+             col%zi(c,nlevgrnd+1:nlevurb) = spval
+             col%dz(c,nlevgrnd+1:nlevurb) = spval
+          end if
        end if
     end do
 
@@ -656,6 +609,11 @@ contains
           col%z(c,1:nlevgrnd)  = zsoi(1:nlevgrnd)
           col%zi(c,0:nlevgrnd) = zisoi(0:nlevgrnd)
           col%dz(c,1:nlevgrnd) = dzsoi(1:nlevgrnd)
+          if (nlevgrnd < nlevurb) then
+             col%z(c,nlevgrnd+1:nlevurb)  = spval
+             col%zi(c,nlevgrnd+1:nlevurb) = spval
+             col%dz(c,nlevgrnd+1:nlevurb) = spval
+          end if
        end if
     end do
 
@@ -676,25 +634,19 @@ contains
           if (col%nbedrock(c) < nlevsoi) then
              col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = LEVGRND_CLASS_SHALLOW_BEDROCK
           end if
-          col%levgrnd_class(c, (nlevsoi + 1) : nlevgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
+          col%levgrnd_class(c, (nlevsoi + 1) : nlevmaxurbgrnd) = LEVGRND_CLASS_DEEP_BEDROCK
        else
-          col%levgrnd_class(c, 1:nlevgrnd) = LEVGRND_CLASS_STANDARD
+          col%levgrnd_class(c, 1:nlevmaxurbgrnd) = LEVGRND_CLASS_STANDARD
        end if
     end do
 
-    do j = 1, nlevgrnd
+    do j = 1, nlevmaxurbgrnd
        do c = bounds%begc, bounds%endc
           if (col%z(c,j) == spval) then
              col%levgrnd_class(c,j) = ispval
           end if
        end do
     end do
-
-    !-----------------------------------------------
-    ! Set cold-start values for snow levels, snow layers and snow interfaces 
-    !-----------------------------------------------
-
-    call InitSnowLayers(bounds, snow_depth(bounds%begc:bounds%endc))
 
     !-----------------------------------------------
     ! Read in topographic index and slope
@@ -743,6 +695,54 @@ contains
   end subroutine initVertical
 
   !-----------------------------------------------------------------------
+  subroutine find_soil_layer_containing_depth(depth, layer)
+    !
+    ! !DESCRIPTION:
+    ! Find the soil layer that contains the given depth
+    !
+    ! Aborts if the given depth doesn't exist in the soil profile
+    !
+    ! We consider the interface between two layers to belong to the layer *above* that
+    ! interface. This implies that the top interface (at exactly 0 m) is not considered
+    ! to be part of the soil profile.
+    !
+    ! !ARGUMENTS:
+    real(r8), intent(in)  :: depth  ! target depth, m
+    integer , intent(out) :: layer  ! layer containing target depth
+    !
+    ! !LOCAL VARIABLES:
+    logical :: found
+    integer :: i
+
+    character(len=*), parameter :: subname = 'find_soil_layer_containing_depth'
+    !-----------------------------------------------------------------------
+
+    if (depth <= zisoi(0)) then
+       write(iulog,*) subname, ': ERROR: depth above top of soil'
+       write(iulog,*) 'depth = ', depth
+       write(iulog,*) 'zisoi = ', zisoi
+       call endrun(msg=subname//': depth above top of soil')
+    end if
+
+    found = .false.
+    do i = 1, nlevgrnd
+       if (depth <= zisoi(i)) then
+          layer = i
+          found = .true.
+          exit
+       end if
+    end do
+
+    if (.not. found) then
+       write(iulog,*) subname, ': ERROR: depth below bottom of soil'
+       write(iulog,*) 'depth = ', depth
+       write(iulog,*) 'zisoi = ', zisoi
+       call endrun(msg=subname//': depth below bottom of soil')
+    end if
+
+  end subroutine find_soil_layer_containing_depth
+
+  !-----------------------------------------------------------------------
   logical function hasBedrock(col_itype, lun_itype)
     !
     ! !DESCRIPTION:
@@ -751,7 +751,7 @@ contains
     ! from the upper layers.
     !
     ! !USES:
-    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istice, isturb_MIN, isturb_MAX
     use column_varcon  , only : icol_road_perv
     !
     ! !ARGUMENTS:
@@ -775,7 +775,7 @@ contains
     ! == istdlak - that way, hasBedrock(lake) would be more likely to get updated
     ! correctly if the lake logic changes.
 
-    if (lun_itype == istice_mec) then
+    if (lun_itype == istice) then
        hasBedrock = .false.
     else if (lun_itype >= isturb_MIN .and. lun_itype <= isturb_MAX) then
        if (col_itype == icol_road_perv) then

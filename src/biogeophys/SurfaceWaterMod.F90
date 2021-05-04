@@ -9,8 +9,8 @@ module SurfaceWaterMod
   use shr_kind_mod                , only : r8 => shr_kind_r8
   use shr_const_mod               , only : shr_const_pi
   use shr_spfn_mod                , only : erf => shr_spfn_erf
-  use clm_varcon                  , only : denh2o, denice, roverg, wimp, tfrz, pc, mu, rpi
-  use clm_varpar                  , only : nlevsno, nlevgrnd
+  use clm_varcon                  , only : denh2o, denice, roverg, tfrz, pc, mu, rpi
+  use clm_varpar                  , only : nlevsno, nlevmaxurbgrnd
   use clm_time_manager            , only : get_step_size_real
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
   use decompMod                   , only : bounds_type
@@ -293,7 +293,7 @@ contains
 
     SHR_ASSERT_FL((ubound(qflx_too_small_h2osfc_to_soil, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osfc, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(h2osoi_liq) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
 
     do fc = 1, num_soilc
        c = filter_soilc(fc)

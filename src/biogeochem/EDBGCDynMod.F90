@@ -71,7 +71,6 @@ contains
     use CNNStateUpdate1Mod                , only: NStateUpdate1
     use CNNStateUpdate2Mod                , only: NStateUpdate2, NStateUpdate2h
     use CNGapMortalityMod                 , only: CNGapMortality
-    use dynHarvestMod                     , only: CNHarvest
     use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
     use SoilBiogeochemDecompCascadeCNMod  , only: decomp_rate_constants_cn
     use SoilBiogeochemCompetitionMod      , only: SoilBiogeochemCompetition
@@ -232,7 +231,7 @@ contains
     ! Update all prognostic carbon state variables (except for gap-phase mortality and fire fluxes)
     call CStateUpdate1( num_soilc, filter_soilc, num_soilp, filter_soilp, &
          crop_inst, cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-         soilbiogeochem_carbonflux_inst)
+         soilbiogeochem_carbonflux_inst, dribble_crophrv_xsmrpool_2atm=.False.)
 
     call t_stopf('BNGCUpdate1')
 
@@ -336,19 +335,6 @@ contains
     end if
     ! call soilbiogeochem_nitrogenflux_inst%Summary(bounds, num_soilc, filter_soilc)
 
-
-    ! -----------------------------------------------------------------------------------
-    ! fates veg carbon state and flux summary, Nitrogen (TBD) and Balance Checks
-    ! -----------------------------------------------------------------------------------
-    ! ----------------------------------------------
-    ! fates veg nitrogen flux summary
-    ! ----------------------------------------------
-    ! ----------------------------------------------
-    ! calculate balance checks on entire carbon cycle (FATES + BGC)
-    ! ----------------------------------------------
-
-    call clm_fates%wrap_bgc_summary(nc, soilbiogeochem_carbonflux_inst, &
-                                        soilbiogeochem_carbonstate_inst)
 
     call t_stopf('BGCsum')
 

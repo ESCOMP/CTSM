@@ -1,7 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Driver for running CTSM system tests"""
-
-from __future__ import print_function
 
 import os
 import sys

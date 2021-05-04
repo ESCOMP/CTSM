@@ -41,7 +41,7 @@
  outnc_double   = .true.
  all_urban      = .false.
  no_inlandwet   = .true.
- mksrf_furban   = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc'
+ mksrf_furban   = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c170724.nc'
  mksrf_fvegtyp  = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_landuse_histclm50_LUH2_2000.c170412.nc'
  mksrf_fhrvtyp  = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_landuse_histclm50_LUH2_2000.c170412.nc'
  mksrf_fsoicol  = '/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_simyr2005.c170413.nc'

@@ -9,7 +9,7 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod	     , only : noveg, npcropmin, pftcon
+  use pftconMod	     , only : noveg, npcropmin, pftcon, nc3crop, nc3irrig
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop
   use decompMod      , only : bounds_type
@@ -58,6 +58,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: gresp_xfer_patch         (:) ! (gC/m2) growth respiration transfer
      real(r8), pointer :: cpool_patch              (:) ! (gC/m2) temporary photosynthate C pool
      real(r8), pointer :: xsmrpool_patch           (:) ! (gC/m2) abstract C pool to meet excess MR demand
+     real(r8), pointer :: xsmrpool_loss_patch      (:) ! (gC/m2) abstract C pool to meet excess MR demand loss
      real(r8), pointer :: ctrunc_patch             (:) ! (gC/m2) patch-level sink for C truncation
      real(r8), pointer :: woodc_patch              (:) ! (gC/m2) wood C
      real(r8), pointer :: leafcmax_patch           (:) ! (gC/m2) ann max leaf C
@@ -82,7 +83,9 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_p2c_col             (:) ! (gC/m2) totc_patch averaged to col
      real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
+     real(r8), pointer :: totc_grc                 (:) ! (gC/m2) total gridcell carbon
 
+     logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
 
      procedure , public  :: Init   
@@ -98,6 +101,9 @@ module CNVegCarbonStateType
      procedure , private :: InitCold        ! Initialize arrays for a cold-start
 
   end type cnveg_carbonstate_type
+
+  real(r8), public  :: spinup_factor_deadwood = 1.0_r8        ! Spinup factor used for this simulation
+  real(r8), public  :: spinup_factor_AD       = 10.0_r8       ! Spinup factor used when in Accelerated Decomposition mode
 
   ! !PRIVATE DATA:
 
@@ -115,17 +121,20 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds, carbon_type, ratio, NLFilename, &
-                  c12_cnveg_carbonstate_inst)
+                  dribble_crophrv_xsmrpool_2atm, c12_cnveg_carbonstate_inst)
 
     class(cnveg_carbonstate_type)                       :: this
     type(bounds_type)            , intent(in)           :: bounds  
     real(r8)                     , intent(in)           :: ratio
     character(len=*)             , intent(in)           :: carbon_type                ! Carbon isotope type C12, C13 or C1
     character(len=*)             , intent(in)           :: NLFilename                 ! Namelist filename
+    logical                      , intent(in)           :: dribble_crophrv_xsmrpool_2atm
     type(cnveg_carbonstate_type) , intent(in), optional :: c12_cnveg_carbonstate_inst ! cnveg_carbonstate for C12 (if C13 or C14)
     !-----------------------------------------------------------------------
 
     this%species = species_from_string(carbon_type)
+
+    this%dribble_crophrv_xsmrpool_2atm = dribble_crophrv_xsmrpool_2atm
 
     call this%InitAllocate ( bounds)
     call this%InitReadNML  ( NLFilename )
@@ -239,6 +248,7 @@ contains
     allocate(this%gresp_xfer_patch         (begp:endp)) ; this%gresp_xfer_patch         (:) = nan
     allocate(this%cpool_patch              (begp:endp)) ; this%cpool_patch              (:) = nan
     allocate(this%xsmrpool_patch           (begp:endp)) ; this%xsmrpool_patch           (:) = nan
+    allocate(this%xsmrpool_loss_patch      (begp:endp)) ; this%xsmrpool_loss_patch      (:) = nan
     allocate(this%ctrunc_patch             (begp:endp)) ; this%ctrunc_patch             (:) = nan
     allocate(this%dispvegc_patch           (begp:endp)) ; this%dispvegc_patch           (:) = nan
     allocate(this%storvegc_patch           (begp:endp)) ; this%storvegc_patch           (:) = nan
@@ -263,6 +273,7 @@ contains
     allocate(this%totc_p2c_col             (begc:endc)) ; this%totc_p2c_col             (:) = nan
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
+    allocate(this%totc_grc                 (begg:endg)) ; this%totc_grc                 (:) = nan
 
   end subroutine InitAllocate
 
@@ -312,6 +323,11 @@ contains
           call hist_addfld1d (fname='CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch)
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='XSMRPOOL_LOSS', units='gC/m^2', &
+               avgflag='A', long_name='temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
        
        this%woodc_patch(begp:endp) = spval
@@ -656,6 +672,11 @@ contains
           call hist_addfld1d (fname='C13_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C13 C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch, default='inactive')
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C13_XSMRPOOL_LOSS', units='gC13/m^2', &
+               avgflag='A', long_name='C13 temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
 
@@ -831,6 +852,11 @@ contains
           call hist_addfld1d (fname='C14_CROPSEEDC_DEFICIT', units='gC/m^2', &
                avgflag='A', long_name='C14 C used for crop seed that needs to be repaid', &
                ptr_patch=this%cropseedc_deficit_patch, default='inactive')
+
+          this%xsmrpool_loss_patch(begp:endp) = spval
+          call hist_addfld1d (fname='C14_XSMRPOOL_LOSS', units='gC14/m^2', &
+               avgflag='A', long_name='C14 temporary photosynthate C pool loss', &
+               ptr_patch=this%xsmrpool_loss_patch, default='inactive')
        end if
 
 
@@ -846,7 +872,7 @@ contains
     !
     ! !USES:
     use landunit_varcon	 , only : istsoil, istcrop 
-    use clm_varctl, only : MM_Nuptake_opt    
+    use clm_varctl, only : MM_Nuptake_opt, spinup_state
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this 
@@ -869,6 +895,8 @@ contains
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
                errMsg(sourcefile, __LINE__))
        end if
+    else
+       if ( spinup_state == 2 ) spinup_factor_deadwood = spinup_factor_AD
     end if
 
     ! Set column filters
@@ -973,6 +1001,7 @@ contains
              this%grainc_storage_patch(p) = 0._r8 
              this%grainc_xfer_patch(p)    = 0._r8 
              this%cropseedc_deficit_patch(p)  = 0._r8
+             this%xsmrpool_loss_patch(p)  = 0._r8 
           end if
 
        endif
@@ -998,6 +1027,7 @@ contains
 
     do g = bounds%begg, bounds%endg
        this%seedc_grc(g) = 0._r8
+       this%totc_grc(g)  = 0._r8
     end do
 
     ! initialize fields for special filters
@@ -1011,7 +1041,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine Restart ( this,  bounds, ncid, flag, carbon_type, reseed_dead_plants, &
                        c12_cnveg_carbonstate_inst, filter_reseed_patch, &
-                       num_reseed_patch)
+                       num_reseed_patch, spinup_factor4deadwood )
     !
     ! !DESCRIPTION: 
     ! Read/write CN restart data for carbon state
@@ -1037,6 +1067,7 @@ contains
     type (cnveg_carbonstate_type)         , intent(in), optional :: c12_cnveg_carbonstate_inst 
     integer                               , intent(out), optional :: filter_reseed_patch(:)
     integer                               , intent(out), optional :: num_reseed_patch
+    real(r8)                              , intent(out), optional :: spinup_factor4deadwood
     !
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c,p
@@ -1051,6 +1082,7 @@ contains
     ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
     integer            :: restart_file_spinup_state
     integer            :: total_num_reseed_patch      ! Total number of patches to reseed across all processors
+    real(r8), parameter:: totvegcthresh = 1.0_r8      ! Total vegetation carbon threshold to reseed dead vegetation
 
     !------------------------------------------------------------------------
 
@@ -1179,6 +1211,15 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
 
+       if (use_crop) then
+          call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+          if (flag == 'read' .and. (.not. readvar) ) then
+              this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+          end if
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -1211,19 +1252,19 @@ contains
           if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
              exit_spinup = .true.
-             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
+             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by ', spinup_factor_AD, ' for exit spinup'
              do i = bounds%begp,bounds%endp
-                this%deadstemc_patch(i) = this%deadstemc_patch(i) * 10._r8
-                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * 10._r8
+                this%deadstemc_patch(i) = this%deadstemc_patch(i) * spinup_factor_AD
+                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * spinup_factor_AD
              end do
           else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
              if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
                 if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools into AD spinup mode'
                 enter_spinup = .true.
-                if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
+                if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by ', spinup_factor_AD, 'for enter spinup '
                 do i = bounds%begp,bounds%endp
-                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / 10._r8
-                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / 10._r8
+                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / spinup_factor_AD
+                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / spinup_factor_AD
                 end do
              end if
           end if
@@ -1312,12 +1353,12 @@ contains
 
        if (  flag == 'read' .and. (enter_spinup .or. (reseed_dead_plants .and. .not. is_restart())) .and. .not. use_cndv) then
              if ( masterproc ) write(iulog, *) 'Reseeding dead plants for CNVegCarbonState'
-             ! If a pft is dead (indicated by totvegc = 0) then we reseed that
+             ! If a pft is dead or near-dead (indicated by totvegc <= totvegcthresh) then we reseed that
              ! pft according to the cold start protocol in the InitCold subroutine.
              ! Thus, the variable totvegc is required to be read before here
              ! so that if it is zero for a given pft, the pft can be reseeded.
              do i = bounds%begp,bounds%endp
-                if (this%totvegc_patch(i) .le. 0.0_r8) then
+                if (this%totvegc_patch(i) .le. totvegcthresh) then
                    !-----------------------------------------------
                    ! initialize patch-level carbon state variables
                    !-----------------------------------------------
@@ -1325,7 +1366,7 @@ contains
                    this%leafcmax_patch(i) = 0._r8
 
                    l = patch%landunit(i)
-                   if (lun%itype(l) == istsoil )then
+                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig)then
                       if ( present(num_reseed_patch) ) then
                          num_reseed_patch = num_reseed_patch + 1
                          filter_reseed_patch(num_reseed_patch) = i
@@ -1395,6 +1436,7 @@ contains
                          this%grainc_storage_patch(i) = 0._r8 
                          this%grainc_xfer_patch(i)    = 0._r8 
                          this%cropseedc_deficit_patch(i)  = 0._r8
+                         this%xsmrpool_loss_patch(i)  = 0._r8 
                       end if
 
                       ! calculate totvegc explicitly so that it is available for the isotope 
@@ -1758,6 +1800,21 @@ contains
           end do
        end if
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss_13', xtype=ncd_double,  &
+            dim1name='pft', &
+            long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_loss with atmospheric c13 value'
+          do i = bounds%begp,bounds%endp
+             if (pftcon%c3psn(patch%itype(i)) == 1._r8) then
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c3_r2
+             else
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c4_r2
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc_13', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -2048,6 +2105,18 @@ contains
           end do
        end if
 
+       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss_14', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+       if (flag=='read' .and. .not. readvar) then
+          if ( masterproc ) write(iulog,*) 'initializing this%xsmrpool_loss_patch with atmospheric c14 value'
+          do i = bounds%begp,bounds%endp
+             if (this%xsmrpool_loss_patch(i) /= spval .and. .not. isnan(this%xsmrpool_loss_patch(i)) ) then
+                this%xsmrpool_loss_patch(i) = c12_cnveg_carbonstate_inst%xsmrpool_loss_patch(i) * c14ratio
+             endif
+          end do
+       end if
+
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc_14', xtype=ncd_double,  &
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%ctrunc_patch) 
@@ -2218,6 +2287,9 @@ contains
        end if
     end if
 
+    ! Output spinup factor for deadwood (dead stem and dead course root)
+    if ( present(spinup_factor4deadwood) ) spinup_factor4deadwood = spinup_factor_AD
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------
@@ -2278,6 +2350,7 @@ contains
           this%grainc_storage_patch(i)  = value_patch
           this%grainc_xfer_patch(i)     = value_patch
           this%cropseedc_deficit_patch(i)  = value_patch
+          this%xsmrpool_loss_patch(i)   = value_patch
        end if
     end do
 
@@ -2411,7 +2484,8 @@ contains
             this%ctrunc_patch(p)
 
        if (use_crop) then 
-          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p)
+          this%totc_patch(p) = this%totc_patch(p) + this%cropseedc_deficit_patch(p) + &
+               this%xsmrpool_loss_patch(p)
        end if
 
        ! (WOODC) - wood C
@@ -2658,13 +2732,15 @@ contains
             var = this%grainc_xfer_patch(begp:endp), &
             flux_out_grc_area = conv_cflux(begp:endp))
 
-       if (use_crop) then
-          ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
-          ! of the atmosphere.
-          call update_patch_state( &
-               var = this%cropseedc_deficit_patch(begp:endp), &
-               flux_out_grc_area = conv_cflux(begp:endp))
-       end if
+       ! This is a negative pool. So any deficit that we haven't repaid gets sucked out
+       ! of the atmosphere.
+       call update_patch_state( &
+            var = this%cropseedc_deficit_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
+
+       call update_patch_state( &
+            var = this%xsmrpool_loss_patch(begp:endp), &
+            flux_out_grc_area = conv_cflux(begp:endp))
     end if
 
   contains

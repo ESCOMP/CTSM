@@ -14,6 +14,7 @@ module mkurbanparMod
 ! !USES:
    use shr_kind_mod, only : r8 => shr_kind_r8
    use shr_sys_mod , only : shr_sys_flush
+   use mkvarctl,     only : ispval
    implicit none
 
    private
@@ -29,8 +30,10 @@ module mkurbanparMod
 
 ! !PUBLIC DATA MEMBERS:
    integer :: numurbl           ! number of urban classes
+   integer :: nlevurb = ispval  ! number of urban layers
 
    public :: numurbl
+   public :: nlevurb
 
 ! !PRIVATE DATA MEMBERS:
    ! flag to indicate nodata for index variables in output file:
@@ -80,6 +83,8 @@ subroutine mkurbanInit(datfname)
    call check_ret(nf_open(datfname, 0, ncid), subname)
    call check_ret(nf_inq_dimid (ncid, 'density_class', dimid), subname)
    call check_ret(nf_inq_dimlen (ncid, dimid, numurbl), subname)
+   call check_ret(nf_inq_dimid (ncid, 'nlevurb', dimid), subname)
+   call check_ret(nf_inq_dimlen (ncid, dimid, nlevurb), subname)
    call check_ret(nf_close(ncid), subname)
 
 end subroutine mkurbanInit

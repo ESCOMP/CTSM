@@ -22,7 +22,7 @@ module initInterpMod
   use clm_varctl     , only: iulog
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
-  use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
+  use restUtilMod    , only: iflag_copy, iflag_skip, iflag_area
   use IssueFixedMetadataHandler, only : copy_issue_fixed_metadata
   use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
@@ -210,15 +210,16 @@ contains
     integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
     integer            :: npftso, ncolso, nlunso, ngrcso 
     logical            :: glc_elevclasses_same
-    integer , pointer  :: pftindx(:)
-    integer , pointer  :: colindx(:)     
-    integer , pointer  :: lunindx(:)     
-    integer , pointer  :: grcindx(:) 
-    logical , pointer  :: pft_activei(:), pft_activeo(:) 
-    logical , pointer  :: col_activei(:), col_activeo(:) 
-    logical , pointer  :: lun_activei(:), lun_activeo(:)
-    logical , pointer  :: grc_activei(:), grc_activeo(:)
-    integer , pointer  :: sgridindex(:)
+    logical            :: att_found
+    integer , allocatable, target  :: pftindx(:)
+    integer , allocatable, target  :: colindx(:)
+    integer , allocatable, target  :: lunindx(:)
+    integer , allocatable, target  :: grcindx(:)
+    logical , allocatable  :: pft_activei(:), pft_activeo(:)
+    logical , allocatable  :: col_activei(:), col_activeo(:)
+    logical , allocatable  :: lun_activei(:), lun_activeo(:)
+    logical , allocatable  :: grc_activei(:), grc_activeo(:)
+    integer , pointer      :: sgridindex(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
     type(interp_multilevel_container_type) :: interp_multilevel_container
     type(interp_2dvar_type) :: var2d_i, var2d_o  ! holds metadata for 2-d variables
@@ -292,9 +293,25 @@ contains
     status = pio_get_att(ncidi, pio_global, &
          'ilun_crop', &
          subgrid_special_indices%ilun_crop)
-    status = pio_get_att(ncidi, pio_global, &
-         'ilun_landice_multiple_elevation_classes', &
-         subgrid_special_indices%ilun_landice_multiple_elevation_classes)
+
+    ! BACKWARDS_COMPATIBILITY(wjs, 2021-04-16) ilun_landice_multiple_elevation_classes has
+    ! been renamed to ilun_landice. For now we need to handle both possibilities for the
+    ! sake of old initial conditions files. There is a chance that we had ilun_landice
+    ! alongside ilun_landice_multiple_elevation_classes on really old initial conditions
+    ! files; in that case, we want to use ilun_landice_multiple_elevation_classes. Once we
+    ! can rely on all initial conditions files having the new behavior, we can remove this
+    ! check_att call and just assume there is an ilun_landice attribute.
+    call check_att(ncidi, pio_global, 'ilun_landice_multiple_elevation_classes', att_found)
+    if (att_found) then
+       status = pio_get_att(ncidi, pio_global, &
+            'ilun_landice_multiple_elevation_classes', &
+            subgrid_special_indices%ilun_landice)
+    else
+       status = pio_get_att(ncidi, pio_global, &
+            'ilun_landice', &
+            subgrid_special_indices%ilun_landice)
+    end if
+
     status = pio_get_att(ncidi, pio_global, &
          'created_glacier_mec_landunits', &
          created_glacier_mec_landunits)
@@ -308,8 +325,8 @@ contains
             subgrid_special_indices%ilun_vegetated_or_bare_soil
        write(iulog,*)'ilun_crop                               = ' , &
             subgrid_special_indices%ilun_crop
-       write(iulog,*)'ilun_landice_multiple_elevation_classes = ' , &
-            subgrid_special_indices%ilun_landice_multiple_elevation_classes
+       write(iulog,*)'ilun_landice = ' , &
+            subgrid_special_indices%ilun_landice
        write(iulog,*)'create_glacier_mec_landunits            = ', &
             trim(created_glacier_mec_landunits)
     end if
@@ -400,7 +417,7 @@ contains
     if (masterproc) then
        write(iulog,*)'setting up interpolators for multi-level variables'
     end if
-    interp_multilevel_container = interp_multilevel_container_type( &
+    call interp_multilevel_container%init( &
          ncid_source = ncidi, ncid_dest = ncido, &
          bounds_source = bounds_i, bounds_dest = bounds_o, &
          pftindex = pftindx, colindex = colindx)
@@ -485,7 +502,7 @@ contains
        end if
 
        ! Find which of the list of possible variables actually exists on the input file.
-       call find_var_on_file(ncidi, varname_i_options, varname_i)
+       call find_var_on_file(ncidi, varname_i_options, is_dim=.false., varname_on_file=varname_i)
 
        ! Note that, if none of the options are found, varname_i will be set to the first
        ! variable in the list, in which case the following code will determine that we
@@ -648,7 +665,7 @@ contains
           call interp_2d_double(var2d_i, var2d_o, &
                begi, endi, bego, endo, &
                sgridindex, &
-               interp_multilevel_container)
+               interp_multilevel_container, ncido)
 
        else
 
@@ -697,6 +714,20 @@ contains
     if (masterproc) then
        write (iulog,*) ' Successfully created initial condition file mapped from input IC file'
     end if
+
+    sgridindex => null()
+    deallocate(pftindx)
+    deallocate(colindx)
+    deallocate(lunindx)
+    deallocate(grcindx)
+    deallocate(pft_activei)
+    deallocate(col_activei)
+    deallocate(lun_activei)
+    deallocate(grc_activei)
+    deallocate(pft_activeo)
+    deallocate(col_activeo)
+    deallocate(lun_activeo)
+    deallocate(grc_activeo)
 
   end subroutine initInterp
 
@@ -823,9 +854,6 @@ contains
        call endrun('Unhandled interp_method'//errMsg(sourcefile, __LINE__))
     end select
 
-    deallocate(subgridi%lat, subgridi%lon, subgridi%coslat)
-    deallocate(subgrido%lat, subgrido%lon, subgrido%coslat)
-    
   end subroutine findMinDist
 
  !=======================================================================
@@ -1071,12 +1099,13 @@ contains
 
   subroutine interp_2d_double (var2di, var2do, &
        begi, endi, bego, endo, sgridindex, &
-       interp_multilevel_container)
+       interp_multilevel_container, ncido)
 
     ! --------------------------------------------------------------------
     ! arguments
     class(interp_2dvar_type), intent(inout) :: var2di  ! variable on input file
     class(interp_2dvar_type), intent(inout) :: var2do  ! variable on output file
+    type(file_desc_t)       , intent(inout) :: ncido
     integer           , intent(in)    :: begi, endi
     integer           , intent(in)    :: bego, endo
     integer           , intent(in)    :: sgridindex(bego:)
@@ -1084,12 +1113,16 @@ contains
     !
     ! local variables
     class(interp_multilevel_type), pointer :: multilevel_interpolator
+    type(Var_desc_t)    :: vardesc              ! pio variable descriptor
     integer             :: no                   ! index
     integer             :: level                ! level index
     integer             :: nlevi                ! number of input levels
     real(r8), pointer   :: rbuf2do(:,:)         ! output array
     real(r8), pointer   :: rbuf1di(:)           ! one level of input array
     real(r8), pointer   :: rbuf2do_levelsi(:,:) ! array on output horiz grid, but input levels
+    logical             :: scale_by_thickness   ! true/false flag to scale vertically interpolated variable by soil thickness or not
+    integer             :: iflag_scale_by_thickness  ! 1=true/0=false flag
+    integer             :: status               ! return code
     ! --------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(sgridindex) == (/endo/)), sourcefile, __LINE__)
@@ -1135,6 +1168,16 @@ contains
 
     ! Now do the vertical interpolation
 
+    ! For vertical interpolation, first get scale_by_thickness flag
+    ! from the output file
+    scale_by_thickness = .false.  ! default value
+    status = pio_inq_varid (ncido, trim(var2do%get_varname()), vardesc)
+    status = pio_get_att(ncido, vardesc, 'scale_by_thickness_flag', &
+                         iflag_scale_by_thickness)
+    if (iflag_scale_by_thickness == 1) then
+       scale_by_thickness = .true.
+    end if
+
     ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
     ! resolving the generic reference here, giving the message: 'No specific
     ! match can be found for the generic subprogram call "READVAR"'. So we
@@ -1147,7 +1190,8 @@ contains
           call multilevel_interpolator%interp_multilevel( &
                data_dest    = rbuf2do(no,:), &
                data_source  = rbuf2do_levelsi(no,:), &
-               index_dest   = no - bego + 1)
+               index_dest   = no - bego + 1, &
+               scale_by_thickness = scale_by_thickness)
        end if
     end do
 
@@ -1158,6 +1202,7 @@ contains
     call var2do%writevar_double(rbuf2do)
        
     deallocate(rbuf2do, rbuf2do_levelsi)
+    multilevel_interpolator => null()
 
   end subroutine interp_2d_double
 

@@ -7,12 +7,11 @@
 !
 ! EXCEPTIONS: 
 ! Set co2_ppmv           with CCSM_CO2_PPMV                      option
-! Set dtime              with L_NCPL                             option
 ! Set fatmlndfrc         with LND_DOMAIN_PATH/LND_DOMAIN_FILE    options
 ! Set finidat            with RUN_REFCASE/RUN_REFDATE/RUN_REFTOD options for hybrid or branch cases
 !                        (includes $inst_string for multi-ensemble cases)
 ! Set glc_grid           with CISM_GRID                          option
-! Set maxpatch_glcmec    with GLC_NEC                            option
+! Set maxpatch_glc       with GLC_NEC                            option
 !----------------------------------------------------------------------------------
 
  hist_mfilt = 1,30

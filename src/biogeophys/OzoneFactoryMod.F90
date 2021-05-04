@@ -41,9 +41,9 @@ contains
     !-----------------------------------------------------------------------
 
     if (use_ozone) then
-       allocate(ozone, source = ozone_type())
+       allocate(ozone_type :: ozone)
     else
-       allocate(ozone, source = ozone_off_type())
+       allocate(ozone_off_type :: ozone)
     end if
 
     call ozone%Init(bounds)

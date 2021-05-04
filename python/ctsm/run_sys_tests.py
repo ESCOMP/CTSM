@@ -4,18 +4,20 @@ from __future__ import print_function
 import argparse
 import logging
 import os
+import sys
 import subprocess
 from datetime import datetime
 
-from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-from ctsm.machine_utils import get_machine_name, make_link
-from ctsm.machine import create_machine, get_possibly_overridden_baseline_dir
-from ctsm.machine_defaults import MACHINE_DEFAULTS
-from ctsm.path_utils import path_to_ctsm_root
-from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_NOBATCH
-
 from CIME.test_utils import get_tests_from_xml  # pylint: disable=import-error
 from CIME.cs_status_creator import create_cs_status  # pylint: disable=import-error
+
+from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
+from ctsm.machine_utils import get_machine_name
+from ctsm.machine import create_machine, get_possibly_overridden_mach_value
+from ctsm.machine_defaults import MACHINE_DEFAULTS
+from ctsm.os_utils import make_link
+from ctsm.path_utils import path_to_ctsm_root
+from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_NOBATCH
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,7 @@ def main(cime_path):
                   compare_name=args.compare, generate_name=args.generate,
                   baseline_root=args.baseline_root,
                   walltime=args.walltime, queue=args.queue,
+                  retry=args.retry,
                   extra_create_test_args=args.extra_create_test_args)
 
 def run_sys_tests(machine, cime_path,
@@ -83,6 +86,7 @@ def run_sys_tests(machine, cime_path,
                   compare_name=None, generate_name=None,
                   baseline_root=None,
                   walltime=None, queue=None,
+                  retry=None,
                   extra_create_test_args=''):
     """Implementation of run_sys_tests command
 
@@ -117,6 +121,8 @@ def run_sys_tests(machine, cime_path,
         determine it automatically)
     queue (str): queue to use for each test (if not provided, the test suite will
         determine it automatically)
+    retry (int): retry value to pass to create_test (if not provided, will use the default
+        for this machine)
     extra_create_test_args (str): any extra arguments to create_test, as a single,
         space-delimited string
     testlist: list of strings giving test names to run
@@ -135,17 +141,22 @@ def run_sys_tests(machine, cime_path,
     if not (skip_testroot_creation or rerun_existing_failures):
         _make_testroot(testroot, testid_base, dry_run)
     print("Testroot: {}\n".format(testroot))
+    retry_final = get_possibly_overridden_mach_value(machine,
+                                                     varname='create_test_retry',
+                                                     value=retry)
     if not skip_git_status:
-        _record_git_status(testroot, dry_run)
+        _record_git_status(testroot, retry_final, dry_run)
 
-    baseline_root_final = get_possibly_overridden_baseline_dir(machine,
-                                                               baseline_dir=baseline_root)
+    baseline_root_final = get_possibly_overridden_mach_value(machine,
+                                                             varname='baseline_dir',
+                                                             value=baseline_root)
     create_test_args = _get_create_test_args(compare_name=compare_name,
                                              generate_name=generate_name,
                                              baseline_root=baseline_root_final,
                                              account=machine.account,
                                              walltime=walltime,
                                              queue=queue,
+                                             retry=retry_final,
                                              rerun_existing_failures=rerun_existing_failures,
                                              extra_create_test_args=extra_create_test_args)
     if suite_name:
@@ -162,7 +173,7 @@ def run_sys_tests(machine, cime_path,
         if not dry_run:
             _make_cs_status_non_suite(testroot, testid_base)
         if testfile:
-            test_args = ['--testfile', testfile]
+            test_args = ['--testfile', os.path.abspath(testfile)]
         elif testlist:
             test_args = testlist
         else:
@@ -296,6 +307,11 @@ or tests listed individually on the command line (via the -t/--testname argument
                         help='Queue to which tests are submitted.\n'
                         'If not provided, uses machine default.')
 
+    parser.add_argument('--retry', type=int,
+                        help='Argument to create_test: Number of times to retry failed tests.\n'
+                        'Default for this machine: {}'.format(
+                            default_machine.create_test_retry))
+
     parser.add_argument('--extra-create-test-args', default='',
                         help='String giving extra arguments to pass to create_test\n'
                         '(To allow the argument parsing to accept this, enclose the string\n'
@@ -394,12 +410,15 @@ def _make_testroot(testroot, testid_base, dry_run):
         os.makedirs(testroot)
         make_link(testroot, _get_testdir_name(testid_base))
 
-def _record_git_status(testroot, dry_run):
+def _record_git_status(testroot, retry, dry_run):
     """Record git status and related information to stdout and a file"""
     output = ''
     ctsm_root = path_to_ctsm_root()
 
-    current_hash = subprocess.check_output(['git', 'show', '--no-patch', '--oneline', 'HEAD'],
+    output += "create_test --retry: {}\n\n".format(retry)
+
+    current_hash = subprocess.check_output(['git', 'show', '--no-patch',
+                                            '--format=format:%h (%an, %ad) %s\n', 'HEAD'],
                                            cwd=ctsm_root,
                                            universal_newlines=True)
     output += "Current hash: {}".format(current_hash)
@@ -432,11 +451,12 @@ def _record_git_status(testroot, dry_run):
             now_str = now.strftime("%m%d-%H%M%S")
             git_status_filepath = git_status_filepath + '_' + now_str
         with open(git_status_filepath, 'w') as git_status_file:
+            git_status_file.write(' '.join(sys.argv) + '\n\n')
             git_status_file.write("SRCROOT: {}\n".format(ctsm_root))
             git_status_file.write(output)
 
 def _get_create_test_args(compare_name, generate_name, baseline_root,
-                          account, walltime, queue,
+                          account, walltime, queue, retry,
                           rerun_existing_failures,
                           extra_create_test_args):
     args = []
@@ -452,6 +472,7 @@ def _get_create_test_args(compare_name, generate_name, baseline_root,
         args.extend(['--walltime', walltime])
     if queue:
         args.extend(['--queue', queue])
+    args.extend(['--retry', str(retry)])
     if rerun_existing_failures:
         # In addition to --use-existing, we also need --allow-baseline-overwrite in this
         # case; otherwise, create_test throws an error saying that the baseline

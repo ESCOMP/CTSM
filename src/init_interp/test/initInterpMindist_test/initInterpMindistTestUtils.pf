@@ -21,7 +21,7 @@ module initInterpMindistTestUtils
        icol_vegetated_or_bare_soil = 10, &
        ilun_vegetated_or_bare_soil = 3, &
        ilun_crop = 4, &
-       ilun_landice_multiple_elevation_classes = 5)
+       ilun_landice = 5)
 
   ! value we can use for a special landunit; note that this just needs to differ from
   ! ilun_vegetated_or_bare_soil and from ilun_crop
@@ -30,12 +30,12 @@ module initInterpMindistTestUtils
 contains
 
   !-----------------------------------------------------------------------
-  function create_subgrid_info(npts, name, lat, lon, &
-       beg, ptype, ctype, ltype, topoglc) &
-       result(subgrid_info)
+  subroutine create_subgrid_info(subgrid_info, &
+       npts, name, lat, lon, &
+       beg, ptype, ctype, ltype, topoglc)
     !
     ! !ARGUMENTS:
-    type(subgrid_type) :: subgrid_info  ! function result
+    type(subgrid_type), intent(inout) :: subgrid_info  ! subroutine result
     integer, intent(in) :: npts
     character(len=*), intent(in) :: name
     real(r8), intent(in) :: lat(:)
@@ -104,7 +104,7 @@ contains
        subgrid_info%topoglc = topoglc
     end if
 
-  end function create_subgrid_info
+  end subroutine create_subgrid_info
 
   !-----------------------------------------------------------------------
   function create_glc_behavior(collapse_to_atm_topo) result(glc_behavior)

@@ -9,10 +9,10 @@ module UrbanTimeVarType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type
-  use clm_varctl      , only : iulog
+  use clm_varctl      , only : iulog, inst_name
   use landunit_varcon , only : isturb_MIN, isturb_MAX
   use clm_varcon      , only : spval
-  use LandunitType    , only : lun                
+  use LandunitType    , only : lun
   use GridcellType    , only : grc
   use mct_mod
   use shr_strdata_mod , only : shr_strdata_type
@@ -34,10 +34,10 @@ module UrbanTimeVarType
      procedure, public :: Init              ! Allocate and initialize urbantv
      procedure, public :: urbantv_init      ! Initialize urban time varying stream
      procedure, public :: urbantv_interp    ! Interpolate urban time varying stream
-     
+
   end type urbantv_type
 
-  !----------------------------------------------------------------------- 
+  !-----------------------------------------------------------------------
   character(15), private :: stream_var_name(isturb_MIN:isturb_MAX)
 
   character(len=*), parameter, private :: sourcefile = &
@@ -56,7 +56,7 @@ contains
     !
     ! !ARGUMENTS:
     class(urbantv_type) :: this
-    type(bounds_type) , intent(in) :: bounds  
+    type(bounds_type) , intent(in) :: bounds
     character(len=*)  , intent(in) :: NLFilename   ! Namelist filename
     !
     ! !LOCAL VARIABLES:
@@ -90,7 +90,6 @@ contains
    ! Initialize data stream information for urban time varying data
    !
    ! !USES:
-   use clm_varctl       , only : inst_name
    use clm_time_manager , only : get_calendar
    use ncdio_pio        , only : pio_subsystem
    use shr_pio_mod      , only : shr_pio_getiotype
@@ -117,13 +116,14 @@ contains
    integer            :: ifield                               ! field index
    integer            :: stream_year_first_urbantv            ! first year in urban tv stream to use
    integer            :: stream_year_last_urbantv             ! last year in urban tv stream to use
-   integer            :: model_year_align_urbantv             ! align stream_year_first_urbantv 
+   integer            :: model_year_align_urbantv             ! align stream_year_first_urbantv
                                                               !  with this model year
    integer            :: nu_nml                               ! unit for namelist file
    integer            :: nml_error                            ! namelist i/o error flag
-   type(mct_ggrid)    :: dom_clm                              ! domain information 
+   type(mct_ggrid)    :: dom_clm                              ! domain information
    character(len=CL)  :: stream_fldFileName_urbantv           ! urban tv streams filename
    character(len=CL)  :: urbantvmapalgo = 'nn'                ! mapping alogrithm for urban ac
+   character(len=CL)  :: urbantv_tintalgo = 'linear'          ! time interpolation alogrithm
    character(len=CL)  :: fldList                              ! field string
    character(*), parameter :: urbantvString = "tbuildmax_"    ! base string for field string
    character(*), parameter :: subName = "('urbantv_init')"
@@ -134,7 +134,8 @@ contains
         stream_year_last_urbantv,   &
         model_year_align_urbantv,   &
         urbantvmapalgo,             &
-        stream_fldFileName_urbantv
+        stream_fldFileName_urbantv, &
+        urbantv_tintalgo
    !-----------------------------------------------------------------------
 
    begl = bounds%begl; endl = bounds%endl
@@ -164,6 +165,7 @@ contains
    call shr_mpi_bcast(stream_year_last_urbantv, mpicom)
    call shr_mpi_bcast(model_year_align_urbantv, mpicom)
    call shr_mpi_bcast(stream_fldFileName_urbantv, mpicom)
+   call shr_mpi_bcast(urbantv_tintalgo, mpicom)
 
    if (masterproc) then
       write(iulog,*) ' '
@@ -172,6 +174,7 @@ contains
       write(iulog,*) '  stream_year_last_urbantv   = ',stream_year_last_urbantv
       write(iulog,*) '  model_year_align_urbantv   = ',model_year_align_urbantv
       write(iulog,*) '  stream_fldFileName_urbantv = ',stream_fldFileName_urbantv
+      write(iulog,*) '  urbantv_tintalgo           = ',urbantv_tintalgo
       write(iulog,*) ' '
    endif
 
@@ -189,7 +192,7 @@ contains
 
    call shr_strdata_create(this%sdat_urbantv,name="clmurbantv",     &
         pio_subsystem=pio_subsystem,                   &
-        pio_iotype=shr_pio_getiotype(inst_name),       &
+        pio_iotype=shr_pio_getiotype(inst_name),           &
         mpicom=mpicom, compid=comp_id,                 &
         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,        &
         nxg=ldomain%ni, nyg=ldomain%nj,                &
@@ -211,7 +214,7 @@ contains
         fillalgo='none',                               &
         mapalgo=urbantvmapalgo,                        &
         calendar=get_calendar(),                       &
-        tintalgo='linear',                             &
+        tintalgo=urbantv_tintalgo,                     &
         taxmode='extend'                                 )
 
    if (masterproc) then
