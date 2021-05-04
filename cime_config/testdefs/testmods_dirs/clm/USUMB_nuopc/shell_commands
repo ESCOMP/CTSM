@@ -5,10 +5,6 @@
 ./xmlchange DATM_YR_END=2006
 # Comment this out if NINST_LND is greater than 1 (see: http://bugs.cgd.ucar.edu/show_bug.cgi?id=2521)
 ./xmlchange MPILIB=mpi-serial
-./xmlchange ATM_DOMAIN_PATH=/glade/p/cesm/cseg/inputdata/lnd/clm2/PTCLMmydatafiles.c171024/1x1pt_US-UMB
-./xmlchange LND_DOMAIN_PATH=/glade/p/cesm/cseg/inputdata/lnd/clm2/PTCLMmydatafiles.c171024/1x1pt_US-UMB
-./xmlchange ATM_DOMAIN_FILE=domain.lnd.1x1pt_US-UMB_navy.171024.nc
-./xmlchange LND_DOMAIN_FILE=domain.lnd.1x1pt_US-UMB_navy.171024.nc
 ./xmlchange --append CLM_BLDNML_OPTS='-mask navy -no-crop'
 ./xmlchange CALENDAR=GREGORIAN
 ./xmlchange DOUT_S=FALSE
@@ -17,3 +13,5 @@
 ./xmlchange DATM_YR_ALIGN=1999
 ./xmlchange DIN_LOC_ROOT=/glade/p/cesm/cseg/inputdata
 ./xmlchange DIN_LOC_ROOT_CLMFORC=/glade/p/cesm/cseg/inputdata/lnd/clm2/PTCLMmydatafiles.c171024
+./xmlchange PTS_LON=275.2862
+./xmlchange PTS_LAT=45.5598
