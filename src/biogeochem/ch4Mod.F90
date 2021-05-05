@@ -17,7 +17,7 @@ module ch4Mod
   use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
   use landunit_varcon                , only : istsoil, istcrop, istdlak
   use clm_time_manager               , only : get_step_size_real, get_nstep
-  use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4, use_cn
+  use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4, use_cn, use_fates
   use abortutils                     , only : endrun
   use decompMod                      , only : bounds_type
   use atm2lndType                    , only : atm2lnd_type
@@ -1665,8 +1665,8 @@ contains
        atm2lnd_inst, lakestate_inst, canopystate_inst, soilstate_inst, soilhydrology_inst, &
        temperature_inst, energyflux_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
        soilbiogeochem_carbonflux_inst, &
-       soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst, &
-       agnpp, bgnpp, annsum_npp, rr, clm_fates)
+       soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst, clm_fates, &
+       agnpp, bgnpp, annsum_npp, rr)
     !
     ! !DESCRIPTION:
     ! Driver for the methane emissions model
@@ -1738,6 +1738,7 @@ contains
     real(r8) :: qflxlagd                               ! days to lag qflx_surf_lag in the tropics (days)
     real(r8) :: highlatfact                            ! multiple of qflxlagd for high latitudes
     integer  :: dummyfilter(1)                         ! empty filter
+    integer  :: nc                                     ! clump index
     character(len=32) :: subname='ch4'                 ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -1970,9 +1971,9 @@ contains
                   end if
                end do
             else
-               pf = p-col%pfti(c)
-               s = elm_fates%f2hmap(nc)%hsites(c)
-               do j=1, elm_fates%fates(nc)%bc_in(s)%nlevsoil
+               pf = p-col%patchi(c)
+               s = clm_fates%f2hmap(nc)%hsites(c)
+               do j=1, clm_fates%fates(nc)%bc_in(s)%nlevsoil
                   rootfraction(p,j) = clm_fates%fates(nc)%bc_out(s)%rootfr_pa(pf,j)
                end do
             end if
@@ -2866,7 +2867,7 @@ contains
     integer                     , intent(in)    :: filter_methc(:)     ! column filter for soil points
     integer                     , intent(in)    :: num_methp           ! number of soil points in patch filter
     integer                     , intent(in)    :: filter_methp(:)     ! patch filter for soil points
-    real(r8)                    , intent(in)    :: annsum_npp( bounds%begp: ) ! annual sum NPP (gC/m2/yr)
+    real(r8)             , intent(in),target    :: annsum_npp( bounds%begp: ) ! annual sum NPP (gC/m2/yr)
     integer                     , intent(in)    :: jwt( bounds%begc: ) ! index of the soil layer right above the water table (-) [col]
     integer                     , intent(in)    :: sat                 ! 0 = unsaturated; 1 = saturated
     logical                     , intent(in)    :: lake             ! function called with lake filter
@@ -2887,7 +2888,7 @@ contains
     integer  :: itype                  ! temporary 
     ! ch4 aerenchyma parameters
     integer  :: pf                     ! fates patch index
-    integer  :: nlevsoilf              ! number of fates soil layers
+    integer  :: nlevsoil_f             ! number of fates soil layers
     real(r8) :: aereoxid               ! fraction of methane flux entering aerenchyma rhizosphere 
     real(r8) :: scale_factor_aere      ! scale factor on the aerenchyma area for sensitivity tests
     real(r8) :: nongrassporosratio     ! Ratio of root porosity in non-grass to grass, used for aerenchyma transport
@@ -2962,14 +2963,6 @@ contains
 
       dtime = get_step_size_real()
 
-      ! Set aerenchyma parameters
-      aereoxid           = params_inst%aereoxid
-      scale_factor_aere  = params_inst%scale_factor_aere
-      nongrassporosratio = params_inst%nongrassporosratio
-      unsat_aere_ratio   = params_inst%unsat_aere_ratio
-      porosmin           = params_inst%porosmin	
-      rob                = params_inst%rob
-
       ! Initialize ch4_aere_depth
       do j=1,nlevsoi
          do fc = 1, num_methc
@@ -2985,12 +2978,7 @@ contains
       allocate(aere(nlevsoi))
       allocate(oxaere(nlevsoi))
 
-      dtime = get_step_size()
-
       nc = bounds%clump_index
-      
-      diffus_aere = d_con_g(1,1)*1.e-4_r8  ! for CH4: m^2/s
-      ! This parameter is poorly constrained and should be done on a patch-specific basis...
 
       ! point loop to partition aerenchyma flux into each soil layer
       if (.not. lake) then
@@ -3016,17 +3004,17 @@ contains
                end if
 
                annsum_npp_ptr   => annsum_npp(p)
-               annavg_agnpp_ptr => annavg_agnpp(p)
-               annavg_bgnpp_ptr => annavg_bgnpp(p)
+               annavg_agnpp_ptr => ch4_inst%annavg_agnpp_patch(p)
+               annavg_bgnpp_ptr => ch4_inst%annavg_bgnpp_patch(p)
                rootfr_vr(1:nlevsoi) = rootfr(p,1:nlevsoi)
                
             else
                
-               pf = p-col%pfti(c)
-               s  = elm_fates%f2hmap(nc)%hsites(c)
+               pf = p-col%patchi(c)
+               s  = clm_fates%f2hmap(nc)%hsites(c)
                
                wfrac = clm_fates%fates(nc)%bc_out(s)%woody_frac_aere_pa(pf)
-               poros_tiller = wfrac*0.3_r8 + (1._r8-wfrac)*0.3_r8*CH4ParamsInst%nongrassporosratio
+               poros_tiller = wfrac*0.3_r8 + (1._r8-wfrac)*0.3_r8*params_inst%nongrassporosratio
                is_vegetated = .true.
                annsum_npp_ptr   => clm_fates%fates(nc)%bc_out(s)%annsum_npp_pa(pf)
                annavg_agnpp_ptr => clm_fates%fates(nc)%bc_out(s)%annavg_agnpp_pa(pf)
@@ -3190,16 +3178,16 @@ contains
           n_tiller = m_tiller / 0.22_r8
 
           if (sat == 0) then
-             poros_tiller = poros_tiller * CH4ParamsInst%unsat_aere_ratio
+             poros_tiller = poros_tiller * params_inst%unsat_aere_ratio
           end if
 
-          poros_tiller = max(poros_tiller, CH4ParamsInst%porosmin)
+          poros_tiller = max(poros_tiller, params_inst%porosmin)
 
-          area_tiller = CH4ParamsInst%scale_factor_aere * n_tiller * poros_tiller * rpi * 2.9e-3_r8**2._r8 ! (m2/m2)
+          area_tiller = params_inst%scale_factor_aere * n_tiller * poros_tiller * rpi * 2.9e-3_r8**2._r8 ! (m2/m2)
 
           k_h_inv = exp(-c_h_inv(1) * (1._r8 / t_soisno(j) - 1._r8 / kh_tbase) + log (kh_theta(1))) ! (4.12) Wania (L atm/mol)
           k_h_cc = t_soisno(j) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
-          aerecond = area_tiller * rootfr(j) * diffus_aere / (z(j)*CH4ParamsInst%rob)
+          aerecond = area_tiller * rootfr(j) * diffus_aere / (z(j)*params_inst%rob)
           ! Add in boundary layer resistance
           aerecond = 1._r8 / (1._r8/(aerecond+smallnumber) + 1._r8/(grnd_ch4_cond+smallnumber))
 
@@ -3211,7 +3199,7 @@ contains
           k_h_inv = exp(-c_h_inv(2) * (1._r8 / t_soisno(j) - 1._r8 / kh_tbase) + log (kh_theta(2)))
           k_h_cc = t_soisno(j) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
           oxdiffus = diffus_aere * d_con_g(2,1) / d_con_g(1,1) ! adjust for O2:CH4 molecular diffusion
-          aerecond = area_tiller * rootfr(j) * oxdiffus / (z(j)*CH4ParamsInst%rob)
+          aerecond = area_tiller * rootfr(j) * oxdiffus / (z(j)*params_inst%rob)
           aerecond = 1._r8 / (1._r8/(aerecond+smallnumber) + 1._r8/(grnd_ch4_cond+smallnumber))
           oxaere(j) = -aerecond *(conc_o2(j)/watsat(j)/k_h_cc - c_atm(2)) / dz(j) ![mol/m3-total/s]
           oxaere(j) = max(oxaere(j), 0._r8)
