@@ -37,7 +37,7 @@ module initGridCellsMod
   ! !PRIVATE MEMBER FUNCTIONS:
   private set_landunit_veg_compete
   private set_landunit_wet_lake
-  private set_landunit_ice_mec
+  private set_landunit_ice
   private set_landunit_crop_noncompete
   private set_landunit_urban
 
@@ -58,7 +58,7 @@ contains
     use domainMod         , only : ldomain
     use decompMod         , only : get_proc_bounds, get_clump_bounds, get_proc_clumps
     use subgridWeightsMod , only : compute_higher_order_weights
-    use landunit_varcon   , only : istsoil, istwet, istdlak, istice_mec
+    use landunit_varcon   , only : istsoil, istwet, istdlak, istice
     use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md, istcrop
     use clm_varctl        , only : use_fates
     use shr_const_mod     , only : SHR_CONST_PI
@@ -174,9 +174,9 @@ contains
        end do
 
        do gdc = bounds_clump%begg,bounds_clump%endg
-          call set_landunit_ice_mec( &
+          call set_landunit_ice( &
                glc_behavior = glc_behavior, &
-               ltype=istice_mec, gi=gdc, li=li, ci=ci, pi=pi)
+               ltype=istice, gi=gdc, li=li, ci=ci, pi=pi)
        end do
 
        ! Ensure that we have set the expected number of patchs, cols and landunits for this clump
@@ -337,16 +337,16 @@ contains
   end subroutine set_landunit_wet_lake
 
   !-----------------------------------------------------------------------
-  subroutine set_landunit_ice_mec(glc_behavior, ltype, gi, li, ci, pi)
+  subroutine set_landunit_ice(glc_behavior, ltype, gi, li, ci, pi)
     !
     ! !DESCRIPTION:
-    ! Initialize glacier_mec landunits
+    ! Initialize glacier landunits
     !
     ! !USES:
-    use clm_varpar      , only : maxpatch_glcmec
+    use clm_varpar      , only : maxpatch_glc
     use clm_instur      , only : wt_lunit, wt_glc_mec
-    use landunit_varcon , only : istice_mec
-    use column_varcon   , only : icemec_class_to_col_itype
+    use landunit_varcon , only : istice
+    use column_varcon   , only : ice_class_to_col_itype
     use subgridMod      , only : subgrid_get_info_glacier_mec
     use pftconMod       , only : noveg
     !
@@ -369,15 +369,15 @@ contains
     logical  :: type_is_dynamic
 
     ! We don't have a true atm_topo value at the point of this call, so arbitrarily use
-    ! 0. This will put glc_mec in elevation class 1 in some places where it should
+    ! 0. This will put glc in elevation class 1 in some places where it should
     ! actually be in a higher elevation class, but that will be adjusted in the run loop
     ! (or upon reading the restart file).
     real(r8), parameter :: atm_topo = 0._r8
 
-    character(len=*), parameter :: subname = 'set_landunit_ice_mec'
+    character(len=*), parameter :: subname = 'set_landunit_ice'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(ltype == istice_mec, sourcefile, __LINE__)
+    SHR_ASSERT_FL(ltype == istice, sourcefile, __LINE__)
 
     call subgrid_get_info_glacier_mec(gi, atm_topo, glc_behavior, &
          npatches=npatches, ncols=ncols, nlunits=nlunits)
@@ -396,11 +396,11 @@ contains
        ! balance in each elevation class wherever the SMB is needed.
        
        type_is_dynamic = glc_behavior%cols_have_dynamic_type(gi)
-       do m = 1, maxpatch_glcmec
-          call glc_behavior%glc_mec_col_exists(gi = gi, elev_class = m, atm_topo = atm_topo, &
+       do m = 1, maxpatch_glc
+          call glc_behavior%glc_col_exists(gi = gi, elev_class = m, atm_topo = atm_topo, &
                exists = col_exists, col_wt_lunit = wtcol2lunit)
           if (col_exists) then
-             call add_column(ci=ci, li=li, ctype=icemec_class_to_col_itype(m), &
+             call add_column(ci=ci, li=li, ctype=ice_class_to_col_itype(m), &
                   wtlunit=wtcol2lunit, type_is_dynamic=type_is_dynamic)
              call add_patch(pi=pi, ci=ci, ptype=noveg, wtcol=1.0_r8)
           endif
@@ -410,7 +410,7 @@ contains
        call endrun(msg=subname//' ERROR: expect 0 or 1 landunits')
     end if
 
-  end subroutine set_landunit_ice_mec
+  end subroutine set_landunit_ice
 
   !------------------------------------------------------------------------
 

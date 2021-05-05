@@ -344,20 +344,25 @@ echo "Hostname = $hostname"
 case $hostname in
   ##cheyenne
   cheyenne* | r* )
-  . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  . /glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/bash
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=36
   fi
-  esmfvers=7.1.0r
-  intelvers=18.0.5    # Could also use intel/19.0.2 EBK 10/4/2019
+  if [ interactive = "YES" ]; then
+     REGRID_PROC=1
+  fi
+  esmfvers=8.0.0
+  intelvers=19.0.5
   module purge
   module load intel/$intelvers
+  module load esmf_libs
   module load esmf_libs/$esmfvers
   module load ncl
   module load nco
 
   if [[ $REGRID_PROC > 1 ]]; then
      mpi=mpi
+     module load mpt/2.22
   else
      mpi=uni
   fi
@@ -375,6 +380,9 @@ case $hostname in
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=8
+  fi
+  if [ interactive = "YES" ]; then
+     REGRID_PROC=1
   fi
   echo "REGRID_PROC=$REGRID_PROC"
   esmfvers=7.1.0r
@@ -554,6 +562,6 @@ until ((nfile>${#INGRID[*]})); do
    nfile=nfile+1
 done
 
-echo "Successffully created needed mapping files for $res"
+echo "Successfully created needed mapping files for $res"
 
 exit 0

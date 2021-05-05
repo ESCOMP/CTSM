@@ -209,7 +209,11 @@
       <option name="comment">Run a transient case with standalone settings similar to the FXHIST waccm test</option>
     </options>
   </test>
-  <test name="SMS_D_Ln9_P480x3_Vnuopc" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
+  <test name="SMS_D_Ln9_P480x1_Vnuopc" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
+    <!-- BUG(wjs, 2021-04-10, ESCOMP/CTSM#1331) I'm changing the processor layout for this
+         test from 480x3 to 480x1 because it is sometimes hanging with a 480x3 layout.
+         Once we have resolved these threading-related hangs with nuopc, we can change
+         this back to use threading. -->
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -2317,7 +2321,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro.</option>
+      <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro. Bypasses grid level mass checks.</option>
     </options>
   </test>
   <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
@@ -2328,7 +2332,7 @@
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Short exact restart debug test for single site grid with coverage for FATES Hydro.</option>
+      <option name="comment">Short exact restart debug test for single site grid with coverage for FATES Hydro. Bypasses grid level mass checks.</option>
     </options>
   </test>
   <test name="ERS_Ld5" grid="f19_g17" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
