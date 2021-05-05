@@ -60,6 +60,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
+   use clm_varctl        , only : use_lch4
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
    use clm_varcon        , only : denice
@@ -253,6 +254,7 @@ module CLMFatesInterfaceMod
      logical                                        :: verbose_output
      integer                                        :: pass_masterproc
      integer                                        :: pass_vertsoilc
+     integer                                        :: pass_ch4
      integer                                        :: pass_spitfire     
      integer                                        :: pass_ed_st3
      integer                                        :: pass_num_lu_harvest_cats
@@ -323,6 +325,13 @@ module CLMFatesInterfaceMod
            pass_is_restart = 0
         end if
         call set_fates_ctrlparms('is_restart',ival=pass_is_restart)
+
+        if(use_lch4) then
+           pass_ch4 = 1
+        else
+           pass_ch4 = 0
+        end if
+        call set_fates_ctrlparms('use_ch4',ival=pass_ch4)
         
         if(use_vertsoilc) then
            pass_vertsoilc = 1
@@ -531,6 +540,7 @@ module CLMFatesInterfaceMod
                s = s + 1
                collist(s) = c
                this%f2hmap(nc)%hsites(c) = s
+               col%is_fates(c) = .true.
                if(debug)then
                   write(iulog,*) 'clm_fates%init(): thread',nc,': found column',c,'with lu',l
                   write(iulog,*) 'LU type:', lun%itype(l)
