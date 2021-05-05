@@ -1542,7 +1542,7 @@ module CLMFatesInterfaceMod
               ! from last year, it won't until the beginning of the
               ! time-step loop. Therefor, we just initialize fluxes
               ! into the litter pool in a trivial way prior to timestepping
-              this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = 1
+              this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = nlevsoil
               
               call ed_update_site(this%fates(nc)%sites(s), &
                     this%fates(nc)%bc_in(s), & 
