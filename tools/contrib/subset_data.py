@@ -102,9 +102,9 @@ def get_parser():
                     help='Two possible ways to run this sript, either:',
                     dest ='run_type')
         pt_parser = subparsers.add_parser('point',
-                    help = 'Run script for a single point')
+                    help = 'Run script for a single point.')
         rg_parser = subparsers.add_parser('reg',
-                    help = 'Run script for a region')
+                    help = 'Run script for a region.')
 
 
         pt_parser.add_argument('--lat',
@@ -130,27 +130,38 @@ def get_parser():
                     default = '')
         pt_parser.add_argument('--create_domain',
                     help='Flag for creating CLM domain file at single point. [default: %(default)s]', 
-                    action="store_true",
+                    action="store",
                     dest="create_domain",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
                     required = False,
                     default = False)
         pt_parser.add_argument('--create_surface',
                     help='Flag for creating surface data file at single point. [default: %(default)s]', 
                     action="store",
                     dest="create_surfdata",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
                     required = False,
-                    type = bool, 
                     default = True)
         pt_parser.add_argument('--create_landuse',
                     help='Flag for creating landuse data file at single point. [default: %(default)s]', 
-                    action="store_true",
+                    action="store",
                     dest="create_landuse",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
                     required = False,
                     default = False)
         pt_parser.add_argument('--create_datm',
                     help='Flag for creating DATM forcing data at single point. [default: %(default)s]', 
-                    action="store_true",
+                    action="store",
                     dest="create_datm",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
                     required = False,
                     default = False)
         pt_parser.add_argument('--datm_syr',
@@ -179,12 +190,12 @@ def get_parser():
                     type =int,
                     default=7)
         pt_parser.add_argument('--no-unisnow', 
-                    help='Create uniform snowpack. [default: %(default)s]', 
+                    help='Turn off the flag for create uniform snowpack. [default: %(default)s]', 
                     action="store_false", 
                     dest="uni_snow",
                     default=True)
         pt_parser.add_argument('--no-overwrite_single_pft', 
-                    help='Make the whole grid 100%% single PFT. [default: %(default)s]', 
+                    help='Turn off the flag for making the whole grid 100%% single PFT. [default: %(default)s]', 
                     action="store_false", 
                     dest="overwrite_single_pft",
                     default=True)
@@ -195,7 +206,7 @@ def get_parser():
                     type =bool,
                     default=True)
         pt_parser.add_argument('--no_saturation_excess', 
-                    help='No Saturation Excess. [default: %(default)s]', 
+                    help='Turn off the flag for saturation excess. [default: %(default)s]', 
                     action="store", 
                     dest="no_saturation_excess",
                     type =bool,
@@ -241,33 +252,43 @@ def get_parser():
                     dest="reg_name", 
                     required = False, 
                     type = str,       
-                    default = '')     
+                    default = '')    
         rg_parser.add_argument('--create_domain',
                     help='Flag for creating CLM domain file for a region. [default: %(default)s]', 
-                    action="store",   
-                    dest="create_domain",      
-                    required = False, 
-                    type = bool,      
-                    default = True)   
+                    action="store",
+                    dest="create_domain",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
+                    required = False,
+                    default = False)
         rg_parser.add_argument('--create_surface',
                     help='Flag for creating surface data file for a region. [default: %(default)s]', 
-                    action="store",   
-                    dest="create_surfdata",    
-                    required = False, 
-                    type = bool,      
-                    default = True)   
+                    action="store",
+                    dest="create_surfdata",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
+                    required = False,
+                    default = True)
         rg_parser.add_argument('--create_landuse',
                     help='Flag for creating landuse data file for a region. [default: %(default)s]', 
-                    action="store_true",   
-                    dest="create_landuse",     
-                    required = False, 
-                    default = False)   
+                    action="store",
+                    dest="create_landuse",
+                    type = str2bool,
+                    nargs = '?',
+                    const = True,
+                    required = False,
+                    default = False)
         rg_parser.add_argument('--create_datm',
                     help='Flag for creating DATM forcing data for a region. [default: %(default)s]', 
-                    action="store_true",   
-                    dest="create_datm",        
-                    required = False, 
-                    default = False)  
+                    action="store",
+                    dest="create_datm",
+                    type = str2bool,                                                                                                                                    
+                    nargs = '?',
+                    const = True,
+                    required = False,
+                    default = False)
         rg_parser.add_argument('--datm_syr',   
                     help='Start year for creating DATM forcing for a region. [default: %(default)s]', 
                     action="store",   
@@ -301,6 +322,32 @@ def get_parser():
                     default="/glade/scratch/"+myname+"/regional/")
 
         return parser
+
+def str2bool(v):
+    """
+    Function for converting different forms of
+    command line boolean strings to boolean value.
+
+    Args:
+        v (str): String bool input
+
+    Raises:
+        if the argument is not an acceptable boolean string
+        (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
+        argparse.ArgumentTypeError: The string should be one of the mentioned values.
+
+    Returns:
+        bool: Boolean value corresponding to the input.
+    """
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected. [true or false] or [y or n]')
+
 
 def plat_type(x):
     """
