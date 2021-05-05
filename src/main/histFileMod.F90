@@ -2785,7 +2785,7 @@ contains
              call ncd_defvar(varname='fates_scmap_levscpf',xtype=ncd_int, dim1name='fates_levscpf', &
                   long_name='FATES size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_levcacls', xtype=tape(t)%ncprec, dim1name='fates_levcacls', &
-                  long_name='FATES cohort age class lower bound', units='years', ncid=nfid(t))
+                  long_name='FATES cohort age class lower bound', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_pftmap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
                   long_name='FATES pft index of the combined pft-cohort age class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_camap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
