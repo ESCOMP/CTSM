@@ -39,9 +39,24 @@ default_res="10x15"
 #----------------------------------------------------------------------
 # SET SOME DEFAULTS -- if not set via env variables outside
 
-if [ -z "$CSMDATA" ]; then
-   CSMDATA=/glade/p/cesm/cseg/inputdata
-fi
+case $hostname in
+
+  ##cheyenne
+  cheyenne* | r* )
+  if [ -z "$CSMDATA" ]; then
+     CSMDATA=/glade/p/cesm/cseg/inputdata
+  fi
+  ;;
+
+  ##hobart/izumi/thorodin
+  hobart* | izumi* | thorodin* )
+  if [ -z "$CSMDATA" ]; then
+     CSMDATA=/fs/cgd/csm/inputdata
+  fi
+  ;;
+
+esac
+
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -271,6 +286,7 @@ if [ "$phys" = "clm4_5" ]; then
     grids=(                    \
            "0.5x0.5_nomask"     \
            "0.25x0.25_nomask"   \
+           "0.125x0.125_nomask"   \
            "3x3min_nomask" \
            "5x5min_nomask"     \
            "10x10min_nomask"   \
