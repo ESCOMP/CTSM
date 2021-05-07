@@ -44,8 +44,6 @@ module clm_varcon
   ! Initialize physical constants
   !------------------------------------------------------------------
 
-  real(r8), public, parameter :: pc = 0.4                           ! threshold probability
-  real(r8), public, parameter :: mu = 0.13889                       ! connectivity exponent 
   real(r8), public, parameter :: secsphr = 3600._r8                 ! Seconds in an hour
   integer,  public, parameter :: isecsphr = int(secsphr)            ! Integer seconds in an hour
   integer,  public, parameter :: isecspmin= 60                      ! Integer seconds in a minute
