@@ -71,7 +71,7 @@ contains
     use clm_varctl      , only : fsurdat, iulog, use_vichydro
     use clm_varpar      , only : toplev_equalspace
     use clm_varpar      , only : nlevsoi, nlevgrnd, nlayer, nlayert
-    use clm_varcon      , only : dzsoi, spval, nlvic, dzvic, pc, grlnd
+    use clm_varcon      , only : dzsoi, spval, nlvic, dzvic, grlnd
     use clm_varcon      , only : aquifer_water_baseline
     use landunit_varcon , only : istwet, istdlak, istice_mec
     use column_varcon   , only : icol_shadewall, icol_road_perv, icol_road_imperv, icol_roof, icol_sunwall
@@ -220,7 +220,7 @@ contains
          if (micro_sigma(c) > 1.e-6_r8 .and. (soilhydrology_inst%h2osfcflag /= 0)) then
             d = 0.0
             do p = 1,4
-               fd   = 0.5*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0)))) - pc
+               fd   = 0.5*(1.0_r8+shr_spfn_erf(d/(micro_sigma(c)*sqrt(2.0)))) - params_inst%pc
                dfdd = exp(-d**2/(2.0*micro_sigma(c)**2))/(micro_sigma(c)*sqrt(2.0*shr_const_pi))
                d    = d - fd/dfdd
             enddo

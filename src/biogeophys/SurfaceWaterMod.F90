@@ -9,7 +9,7 @@ module SurfaceWaterMod
   use shr_kind_mod                , only : r8 => shr_kind_r8
   use shr_const_mod               , only : shr_const_pi
   use shr_spfn_mod                , only : erf => shr_spfn_erf
-  use clm_varcon                  , only : denh2o, denice, roverg, tfrz, pc, mu, rpi
+  use clm_varcon                  , only : denh2o, denice, roverg, tfrz, rpi
   use clm_varpar                  , only : nlevsno, nlevmaxurbgrnd
   use clm_time_manager            , only : get_step_size_real
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
@@ -471,10 +471,10 @@ contains
        c = filter_hydrologyc(fc)
 
        if (h2osfcflag==1) then
-          if (frac_h2osfc_nosnow(c) <= pc) then
+          if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
              frac_infclust=0.0_r8
           else
-             frac_infclust=(frac_h2osfc_nosnow(c)-pc)**mu
+             frac_infclust=(frac_h2osfc_nosnow(c)-params_inst%pc)**params_inst%mu
           endif
        endif
 
