@@ -20,17 +20,45 @@ module SoilHydrologyInitTimeConstMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: SoilHydrologyInitTimeConst
+  public :: readParams
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: initSoilParVIC    ! Convert default CLM soil properties to VIC parameters
   private :: initCLMVICMap     ! Initialize map from VIC to CLM layers
   private :: linear_interp     ! function for linear interperation 
+  type, private :: params_type
+     real(r8) :: pc            ! Threshold probability for surface water (unitless)
+     real(r8) :: om_frac_sf    ! Scale factor for organic matter fraction (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
   !
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SoilHydrologyInitTimeConst'
+    !--------------------------------------------------------------------
+
+    ! Threshold probability for surface water (unitless)
+    call readNcdioScalar(ncid, 'pc', subname, params_inst%pc)
+    ! Scale factor for om_frac (unitless)
+    call readNcdioScalar(ncid, 'om_frac_sf', subname, params_inst%om_frac_sf)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine SoilHydrologyInitTimeConst(bounds, soilhydrology_inst, soilstate_inst)
@@ -159,7 +187,7 @@ contains
                    if ( lev <= nlevsoi )then
                       claycol(c,lev)    = soilstate_inst%cellclay_col(c,lev)
                       sandcol(c,lev)    = soilstate_inst%cellsand_col(c,lev)
-                      om_fraccol(c,lev) = soilstate_inst%cellorg_col(c,lev) / organic_max
+                      om_fraccol(c,lev) = min(params_inst%om_frac_sf*soilstate_inst%cellorg_col(c,lev) / organic_max, 1._r8)
                    else
                       claycol(c,lev)    = soilstate_inst%cellclay_col(c,nlevsoi)
                       sandcol(c,lev)    = soilstate_inst%cellsand_col(c,nlevsoi)

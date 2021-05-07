@@ -42,6 +42,7 @@ module SoilBiogeochemNitrifDenitrifMod
      real(r8) :: denitrif_respiration_exponent    ! Exponents for heterotrophic respiration for max denitrif rates
      real(r8) :: denitrif_nitrateconc_coefficient ! Multiplier for nitrate concentration for max denitrif rates
      real(r8) :: denitrif_nitrateconc_exponent    ! Exponent for nitrate concentration for max denitrif rates
+     real(r8) :: om_frac_sf            ! Scale factor for organic matter fraction (unitless)
   end type params_type
 
   type(params_type), private :: params_inst
@@ -127,6 +128,11 @@ contains
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%denitrif_respiration_exponent=tempr
+
+    tString='om_frac_sf'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%om_frac_sf=tempr
 
   end subroutine readParams
 
@@ -267,7 +273,7 @@ contains
             if (use_lch4) then
 
                if (organic_max > 0._r8) then
-                  om_frac = min(cellorg(c,j)/organic_max, 1._r8)
+                  om_frac = min(params_inst%om_frac_sf*cellorg(c,j)/organic_max, 1._r8)
                   ! Use first power, not square as in iniTimeConst
                else
                   om_frac = 1._r8

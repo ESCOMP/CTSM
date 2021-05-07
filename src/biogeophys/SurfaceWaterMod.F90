@@ -32,16 +32,44 @@ module SurfaceWaterMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: UpdateFracH2oSfc     ! Determine fraction of land surfaces which are submerged
   public :: UpdateH2osfc         ! Calculate fluxes out of h2osfc and update the h2osfc state
+  public :: readParams
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_FracH2oSfc          ! Determine fraction of land surfaces which are submerged
   private :: QflxH2osfcSurf      ! Compute qflx_h2osfc_surf
   private :: QflxH2osfcDrain     ! Compute qflx_h2osfc_drain
+  type, private :: params_type
+     real(r8) :: pc              ! Threshold probability for surface water (unitless)
+     real(r8) :: mu              ! Connectivity exponent for surface water (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SurfaceWater'
+    !--------------------------------------------------------------------
+
+    ! Threshold probability for surface water (unitless)
+    call readNcdioScalar(ncid, 'pc', subname, params_inst%pc)
+    ! Connectivity exponent for surface water (unitless)
+    call readNcdioScalar(ncid, 'mu', subname, params_inst%mu)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine UpdateFracH2oSfc(bounds, num_soilc, filter_soilc, &
