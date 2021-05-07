@@ -37,6 +37,7 @@ module LakeFluxesMod
       real(r8) :: a_coef   ! Drag coefficient under less dense canopy (unitless)
       real(r8) :: a_exp    ! Drag exponent under less dense canopy (unitless)
       real(r8) :: zsno     ! Momentum roughness length for snow (m)
+      real(r8) :: zglc     ! Momentum roughness length for ice (m)
       real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
   end type params_type
   type(params_type), private ::  params_inst
@@ -49,6 +50,7 @@ contains
     ! !USES:
     use ncdio_pio, only: file_desc_t
     use paramUtilMod, only: readNcdioScalar
+    use clm_varctl, only: z0param_method
     !
     ! !ARGUMENTS:
     implicit none
@@ -64,6 +66,11 @@ contains
     call readNcdioScalar(ncid, 'a_exp', subname, params_inst%a_exp)
     ! Momentum roughness length for snow (m)
     call readNcdioScalar(ncid, 'zsno', subname, params_inst%zsno)
+    
+    if (z0param_method == 'MeierXXXX') then
+       ! Momentum roughness length for ice (m)
+       call readNcdioScalar(ncid, 'zglc', subname, params_inst%zglc)
+    end if
     ! Minimum wind speed at the atmospheric forcing height (m/s)
     call readNcdioScalar(ncid, 'wind_min', subname, params_inst%wind_min)
 
@@ -86,7 +93,7 @@ contains
     use clm_varpar          , only : nlevlak
     use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
     use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval
-    use clm_varctl          , only : use_lch4
+    use clm_varctl          , only : use_lch4, z0param_method
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
     use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
@@ -324,7 +331,11 @@ contains
             z0qg(p) = max(z0qg(p), minz0lake)
             z0hg(p) = max(z0hg(p), minz0lake)
          else if (snl(c) == 0) then    ! frozen lake with ice
-            z0mg(p) = z0frzlake
+            if (z0param_method == 'MeierXXXX') then
+               z0mg(p) = params_inst%zglc
+            else
+               z0mg(p) = z0frzlake
+            end if
             z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
             z0qg(p) = z0hg(p)
          else                          ! use roughness over snow as in Biogeophysics1

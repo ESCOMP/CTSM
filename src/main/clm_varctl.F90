@@ -218,6 +218,12 @@ module clm_varctl
   logical, public :: for_testing_allow_interp_non_ciso_to_ciso = .false.
 
   !----------------------------------------------------------
+  !  Surface roughness parameterization
+  !----------------------------------------------------------
+
+  character(len=64), public :: z0param_method 
+
+  !----------------------------------------------------------
   !  FATES switches
   !----------------------------------------------------------
 

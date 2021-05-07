@@ -488,6 +488,12 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <fates_paramfile>lnd/clm2/paramdata/fates_params_api.14.0.0_12pft_c200921.nc</fates_paramfile>
 
+<!-- ================================================================== -->
+<!-- Default surface roughness parameterization                         -->
+<!-- ================================================================== -->
+
+<z0param_method>ZengWang2007</z0param_method>
+
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
 <!-- ========================================================================================  -->
@@ -1080,6 +1086,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_C24_hist_78pfts_CMIP6_simyr2000
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc</fsurdat>
 <fsurdat hgrid="1.9x2.5"   sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1.9x2.5_hist_78pfts_CMIP6_simyr2000_c190304.nc</fsurdat>
+<fsurdat hgrid="hcru_hcru"   sim_year="2000">
+lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_360x720cru_78pfts_CMIP6_simyr2000_c170824.nc</fsurdat>
 <fsurdat hgrid="0.125x0.125"  sim_year="2000" use_crop=".true." >
 lnd/clm2/surfdata_map/release-clm5.0.24/surfdata_0.125x0.125_hist_78pfts_CMIP6_simyr2005_c190624.nc</fsurdat>
 <fsurdat hgrid="10x15"     sim_year="2000" use_crop=".true." >

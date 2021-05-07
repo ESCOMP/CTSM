@@ -123,6 +123,12 @@ module pftconMod
      real(r8), allocatable :: z0mr          (:)   ! ratio of momentum roughness length to canopy top height (-)
      real(r8), allocatable :: z0v_h         (:)   ! ratio of vegetation surface roughness length to canopy height for forests (-)
      real(r8), allocatable :: z0v_alpha     (:)   ! alpha parameter for decrease of vegetation surface roughness with LAI for forests (-)
+     real(r8), allocatable :: z0v_Cr        (:)   ! roughness-element drag coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_Cs        (:)   ! substrate-element drag coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_c         (:)   ! c parameter for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_cw        (:)   ! roughness sublayer depth coefficient for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_LAIoff    (:)   ! leaf area index offset for Raupach92 parameterization (-)
+     real(r8), allocatable :: z0v_LAImax    (:)   ! onset of over-sheltering for Raupach92 parameterization (-)
      real(r8), allocatable :: displar       (:)   ! ratio of displacement height to canopy top height (-)
      real(r8), allocatable :: roota_par     (:)   ! CLM rooting distribution parameter [1/m]
      real(r8), allocatable :: rootb_par     (:)   ! CLM rooting distribution parameter [1/m]
@@ -359,7 +365,13 @@ contains
     allocate( this%taul          (0:mxpft,numrad) ) 
     allocate( this%taus          (0:mxpft,numrad) ) 
     allocate( this%z0mr          (0:mxpft) )
-    allocate( this%z0v_h         (0:mxpft) )        
+    allocate( this%z0v_h         (0:mxpft) )       
+    allocate( this%z0v_Cr        (0:mxpft) )        
+    allocate( this%z0v_Cs        (0:mxpft) )        
+    allocate( this%z0v_c         (0:mxpft) )        
+    allocate( this%z0v_cw        (0:mxpft) )        
+    allocate( this%z0v_LAIoff    (0:mxpft) )        
+    allocate( this%z0v_LAImax    (0:mxpft) )        
     allocate( this%z0v_alpha     (0:mxpft) )                
     allocate( this%displar       (0:mxpft) )     
     allocate( this%roota_par     (0:mxpft) )   
@@ -501,7 +513,7 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage, use_z0v_forest
+    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage, use_z0v_forest, z0param_method
     use spmdMod     , only : masterproc
     use CLMFatesParamInterfaceMod, only : FatesReadPFTs
     !
@@ -631,9 +643,6 @@ contains
     call ncd_io('pftname',pftname, 'read', ncid, readvar=readv, posNOTonfile=.true.) 
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
-    call ncd_io('z0mr', this%z0mr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
-    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
-
     !
     ! Use new vegetation surface roughness parameterization for forests
     !
@@ -648,6 +657,46 @@ contains
        this%z0v_h = 0._r8
        this%z0v_alpha = 0._r8
     end if
+
+    select case (z0param_method)
+    case ('ZengWang2007')
+       call ncd_io('z0mr', this%z0mr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       this%z0v_Cr = 0._r8
+       this%z0v_Cs = 0._r8
+       this%z0v_c = 0._r8
+       this%z0v_cw = 0._r8
+       this%z0v_LAImax = 0._r8
+       this%z0v_LAIoff = 0._r8
+    
+    case ('MeierXXXX')
+       call ncd_io('z0v_Cr', this%z0v_Cr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_Cs', this%z0v_Cs, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_c', this%z0v_c, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_cw', this%z0v_cw, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_LAImax', this%z0v_LAImax, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       call ncd_io('z0v_LAIoff', this%z0v_LAIoff, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+       this%z0mr = 0._r8
+
+    case default
+       write(iulog,*) subname//' ERROR: unknown z0param_method: ', &
+            z0param_method
+       call endrun(msg = 'unknown z0param_method', &
+            additional_msg = errMsg(sourcefile, __LINE__))
+    end select
+
 
     call ncd_io('displar', this%displar, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
@@ -1369,6 +1418,12 @@ contains
     deallocate( this%taus)
     deallocate( this%z0mr)
     deallocate( this%z0v_h)
+    deallocate( this%z0v_Cr)
+    deallocate( this%z0v_Cs)
+    deallocate( this%z0v_c)
+    deallocate( this%z0v_cw)
+    deallocate( this%z0v_LAImax)
+    deallocate( this%z0v_LAIoff)
     deallocate( this%z0v_alpha)
     deallocate( this%displar)
     deallocate( this%roota_par)

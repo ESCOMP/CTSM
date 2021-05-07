@@ -16,8 +16,8 @@ module BiogeophysPreFluxCalcsMod
   use LandunitType            , only : lun
   use clm_varcon              , only : spval
   use clm_varpar              , only : nlevgrnd, nlevsno, nlevurb, nlevmaxurbgrnd
-  use clm_varctl              , only : use_fates
-  use pftconMod               , only : pftcon
+  use clm_varctl              , only : use_fates, z0param_method
+  use pftconMod               , only : pftcon, noveg
   use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
   use landunit_varcon         , only : istsoil, istcrop, istice_mec
   use clm_varcon              , only : hvap, hsub
@@ -131,6 +131,8 @@ contains
     integer :: fp, p
 
     character(len=*), parameter :: subname = 'SetZ0mDisp'
+    real(r8) :: U_ustar                                                 ! wind at canopy height divided by friction velocity (unitless)
+
     !-----------------------------------------------------------------------
 
     associate( &
@@ -154,8 +156,37 @@ contains
        p = filter_nolakep(fp)
 
        if( .not.(patch%is_fates(p))) then
-          z0m(p)    = pftcon%z0mr(patch%itype(p)) * htop(p)
-          displa(p) = pftcon%displar(patch%itype(p)) * htop(p)
+         select case (z0param_method)
+         case ('ZengWang2007')
+
+            z0m(p)    = pftcon%z0mr(patch%itype(p)) * htop(p)
+            displa(p) = pftcon%displar(patch%itype(p)) * htop(p)
+
+         case ('MeierXXXX') 
+            
+            if (patch%itype(p) == noveg) then
+               z0m(p)    = 0._r8
+               displa(p) = 0._r8 
+
+            else
+               ! Compute as if elai+esai = LAImax - LAIoff in CanopyFluxes
+               displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * (pftcon%z0v_LAImax(patch%itype(p)) - pftcon%z0v_LAIoff(patch%itype(p))))**0.5_r8)) &
+                           / (7.5_r8*(pftcon%z0v_LAImax(patch%itype(p)) - pftcon%z0v_LAIoff(patch%itype(p))))**0.5_r8)
+
+               U_ustar = 4._r8 * (pftcon%z0v_Cs(patch%itype(p)) + pftcon%z0v_Cr(patch%itype(p)) *  (pftcon%z0v_LAImax(patch%itype(p)) - pftcon%z0v_LAIoff(patch%itype(p))) & 
+                         / 2._r8)**(-0.5_r8) /  (pftcon%z0v_LAImax(patch%itype(p)) - pftcon%z0v_LAIoff(patch%itype(p))) / pftcon%z0v_c(patch%itype(p))
+
+               if( htop(p) > -1._r8) then ! Avoid devididing by 0
+                  z0m(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
+                           log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
+               else
+                  z0m(p) = htop(p) * exp(-0.4_r8 * U_ustar + log(pftcon%z0v_cw(patch%itype(p))) - 1._r8 + pftcon%z0v_cw(patch%itype(p))**(-1._r8))
+               end if
+
+            end if
+
+         end select
+          
        end if
     end do
 

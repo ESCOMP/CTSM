@@ -1503,6 +1503,7 @@ sub process_namelist_inline_logic {
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_fates($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_z0param($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_misc($opts, $nl_flags, $definition, $defaults, $nl);
 
   #########################################
@@ -3889,6 +3890,17 @@ sub setup_logic_fates {
            }
         }
     }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_z0param {
+   #
+   # Set default z0 paramterization
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'z0param_method');
 }
 
 #-------------------------------------------------------------------------------

@@ -14,7 +14,7 @@ module CanopyFluxesMod
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
-                                     use_luna, use_hydrstress, use_biomass_heat_storage, use_z0v_forest
+                                     use_luna, use_hydrstress, use_biomass_heat_storage, use_z0v_forest, z0param_method
   use clm_varpar            , only : nlevgrnd, nlevsno, mxpft
   use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
@@ -380,6 +380,9 @@ contains
     integer  :: index                                ! patch index for error
     real(r8) :: egvf                                 ! effective green vegetation fraction
     real(r8) :: lt                                   ! elai+esai
+    real(r8) :: U_ustar                              ! wind at canopy height divided by friction velocity (unitless)
+    real(r8) :: U_ustar_ini                          ! initial guess of wind at canopy height divided by friction velocity (unitless)
+    real(r8) :: U_ustar_prev                         ! wind at canopy height divided by friction velocity from the previous iteration (unitless)
     real(r8) :: ri                                   ! stability parameter for under canopy air (unitless)
     real(r8) :: csoilb                               ! turbulent transfer coefficient over bare soil (unitless)
     real(r8) :: ricsoilc                             ! modified transfer coefficient under dense canopy (unitless)
@@ -457,6 +460,12 @@ contains
          wood_density           => pftcon%wood_density                          , & ! Input:  dry wood density (kg/m3)
          z0v_h                  => pftcon%z0v_h                                 , & ! Input:  ratio of vegetation surface roughness length to canopy height for forests (-)
          z0v_alpha              => pftcon%z0v_alpha                             , & ! Input:  alpha parameter for decrease of vegetation surface roughness with LAI for forests (-)
+         z0v_Cr                 => pftcon%z0v_Cr                                , & ! Input:  roughness-element drag coefficient for Raupach92 parameterization (-)
+         z0v_Cs                 => pftcon%z0v_Cs                                , & ! Input:  substrate-element drag coefficient for Raupach92 parameterization (-)
+         z0v_c                  => pftcon%z0v_c                                 , & ! Input:  c parameter for Raupach92 parameterization (-)
+         z0v_cw                 => pftcon%z0v_cw                                , & ! Input:  roughness sublayer depth coefficient for Raupach92 parameterization (-)
+         z0v_LAIoff             => pftcon%z0v_LAIoff                            , & ! Input:  leaf area index offset for Raupach92 parameterization (-)
+         z0v_LAImax             => pftcon%z0v_LAImax                            , & ! Input:  onset of over-sheltering for Raupach92 parameterization (-)
 
          forc_lwrad             => atm2lnd_inst%forc_lwrad_downscaled_col       , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)                       
          forc_q                 => wateratm2lndbulk_inst%forc_q_downscaled_col  , & ! Input:  [real(r8) (:)   ]  atmospheric specific humidity (kg/kg)
@@ -868,36 +877,58 @@ bioms:   do f = 1, fn
 
          ! Keep old parametrization for grasses/crops and for forests if switch is off
 
-         if(woody(patch%itype(p))==0 .or. use_z0v_forest==.false.) then 
+!         if(woody(patch%itype(p))==0 .or. use_z0v_forest==.false.) then 
+!            lt = min(elai(p)+esai(p), tlsai_crit)
+!            egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
+!            displa(p) = egvf * displa(p)
+!            z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
+!
+!         else ! use new parameterization for forests
+!            egvf = z0v_alpha(patch%itype(p))*elai(p)
+!            if(egvf == 0._r8) then
+!               z0mv(p) = htop(p) * z0v_h(patch%itype(p)) 
+!            else
+!            z0mv(p) = htop(p) * z0v_h(patch%itype(p)) * (1.0_r8 - exp(-egvf)) / egvf
+!            end if
+!            displa(p) = htop(p) - z0mv(p) / 0.264_r8
+!         end if
+         select case (z0param_method)
+         case ('ZengWang2007')
             lt = min(elai(p)+esai(p), tlsai_crit)
             egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
             displa(p) = egvf * displa(p)
             z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
 
-         else ! use new parameterization for forests
-            egvf = z0v_alpha(patch%itype(p))*elai(p)
-            if(egvf == 0._r8) then
-               z0mv(p) = htop(p) * z0v_h(patch%itype(p)) 
-            else
-            z0mv(p) = htop(p) * z0v_h(patch%itype(p)) * (1.0_r8 - exp(-egvf)) / egvf
-            end if
-            displa(p) = htop(p) - z0mv(p) / 0.264_r8
-         end if
-!            if(elai(p)==0) then
-!                 displa(p) = htop(p) * (1.0_r8 - (1.0_r8 - exp(-2.25_r8 * 7.24_r8 * nstem(patch%itype(p)))) & 
-!                     / (2.25_r8 * 7.24_r8 * nstem(patch%itype(p))))
-!             else
-!                 displa(p) = htop(p) * (1.0_r8 - (1.0_r8 - exp(-2.25_r8 * 7.24_r8 * nstem(patch%itype(p)))) & 
-!                     / (2.25_r8 * 7.24_r8 * nstem(patch%itype(p))) * (1.0_r8 - exp(-0.273_r8 * elai(p))) & 
-!                     / (0.273_r8 * elai(p)))
-!             end if
-!             z0mv(p)   = htop(p) * 0.264_r8 * (1._r8 - displa(p) / htop(p))
-!         end if
-             !lt = min(elai(p)+esai(p), tlsai_crit)
-             !egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
-             !displa(p) = egvf * displa(p)
-             z0hv(p)   = z0mv(p)
-             z0qv(p)   = z0mv(p)
+         case ('MeierXXXX')
+            lt = max(0.00001_r8,elai(p)+esai(p)-z0v_LAIoff(patch%itype(p)))
+            if(elai(p)+esai(p) == 0._r8) then
+              write(iulog,*) 'VAI = 0 ', lt, (1._r8 - (1._r8 - exp(-(7.5_r8 * lt)**0.5_r8)) / (7.5_r8*lt)**0.5_r8),(1._r8 - exp(-(7.5_r8 * lt)**0.5_r8))
+            end if 
+            displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * lt)**0.5_r8)) / (7.5_r8*lt)**0.5_r8)
+
+            lt = min(lt,z0v_LAImax(patch%itype(p)))
+            delt = 2._r8
+            U_ustar_ini = (z0v_Cs(patch%itype(p)) + z0v_Cr(patch%itype(p)) * lt / 2._r8)**(-0.5_r8) &
+                      *z0v_c(patch%itype(p)) * lt / 4._r8
+            U_ustar = U_ustar_ini
+
+            do while (delt > 0.0001_r8)
+               U_ustar_prev = U_ustar
+               U_ustar = U_ustar_ini * exp(U_ustar_prev)
+               delt = abs(U_ustar - U_ustar_prev)
+            end do
+
+            U_ustar = 4._r8 * U_ustar / lt / z0v_c(patch%itype(p))
+            z0mv(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
+                      log(z0v_cw(patch%itype(p))) - 1._r8 + z0v_cw(patch%itype(p))**(-1._r8))
+
+          case default
+            write(iulog,*) 'ERROR: unknown z0para_method: ', z0param_method
+            call endrun(msg = 'unknown z0param_method', additional_msg = errMsg(sourcefile, __LINE__))
+          end select
+
+          z0hv(p)   = z0mv(p)
+          z0qv(p)   = z0mv(p)
 
       end do
 

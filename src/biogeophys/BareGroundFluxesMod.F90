@@ -329,7 +329,9 @@ contains
 
             tstar = temp1(p)*dth(p)
             qstar = temp2(p)*dqh(p)
-            z0hg_patch(p) = z0mg_patch(p) / exp(params_inst%a_coef * (ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp)
+            !z0hg_patch(p) =  z0mg_patch(p) / exp(0.4_r8*0.52_r8 * (8._r8*z0mg_patch(p)*ustar(p) / 1.5e-5_r8)**0.45_r8 * 0.71_r8**0.8_r8) ! OT63
+            z0hg_patch(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Yang07
+!z0mg_patch(p) / exp(params_inst%a_coef * (ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp)
             z0qg_patch(p) = z0hg_patch(p)
             thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
             zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
