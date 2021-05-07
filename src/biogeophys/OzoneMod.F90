@@ -72,11 +72,11 @@ module OzoneMod
      procedure, private, nopass :: CalcOzoneUptakeOnePoint
 
      ! Original ozone stress functions from Danica Lombardozzi 2015
-     procedure, private                  :: CalcOzoneStressLombardozzi2015                      ! Stress parameterization 
+     procedure, private         :: CalcOzoneStressLombardozzi2015           ! Stress parameterization 
      procedure, private, nopass :: CalcOzoneStressLombardozzi2015OnePoint   ! Ozone stress calculation for single point 
 
      ! Ozone stress functions from Stefanie Falk 
-     procedure, private                  :: CalcOzoneStressFalk                      ! Stress parameterization 
+     procedure, private         :: CalcOzoneStressFalk          ! Stress parameterization 
      procedure, private, nopass :: CalcOzoneStressFalkOnePoint  ! Ozone stress calculation for single point
 
   end type ozone_type
@@ -120,12 +120,12 @@ module OzoneMod
   
   ! Data is currently only available for broadleaf species (Dec 2020)
   ! o3 intercepts and slopes for JmaxO3/Jmax0
-  real(r8), parameter :: needleleafJmaxInt   = 1._r8                     ! units = unitless 
+  real(r8), parameter :: needleleafJmaxInt   = 1._r8                ! units = unitless 
   real(r8), parameter :: needleleafJmaxSlope = 0._r8                ! units = per mmol m^-2
-  real(r8), parameter :: broadleafJmaxInt    = 1._r8                    ! units = unitless
-  real(r8), parameter :: broadleafJmaxSlope  = -0.0037_r8    ! units = per mmol m^-2
-  real(r8), parameter :: nonwoodyJmaxInt     = 1._r8               ! units = unitless
-  real(r8), parameter :: nonwoodyJmaxSlope   = 0._r8           ! units = per mmol m^-2
+  real(r8), parameter :: broadleafJmaxInt    = 1._r8                ! units = unitless
+  real(r8), parameter :: broadleafJmaxSlope  = -0.0037_r8           ! units = per mmol m^-2
+  real(r8), parameter :: nonwoodyJmaxInt     = 1._r8                ! units = unitless
+  real(r8), parameter :: nonwoodyJmaxSlope   = 0._r8                ! units = per mmol m^-2
 
 
   character(len=*), parameter, private :: sourcefile = &
@@ -145,8 +145,8 @@ contains
     !
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
-    type(bounds_type), intent(in)      :: bounds
-    character(len=*), intent(in)            :: ozone_method 
+    type(bounds_type), intent(in)    :: bounds
+    character(len=*),  intent(in)    :: ozone_method 
     !-----------------------------------------------------------------------
 
     if (ozone_method=='stress_lombardozzi2015') then 
@@ -651,9 +651,9 @@ contains
     !
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
-    type(bounds_type), intent(in) :: bounds
-    integer  , intent(in) :: num_exposedvegp           ! number of points in filter_exposedvegp
-    integer  , intent(in) :: filter_exposedvegp(:)     ! patch filter for non-snow-covered veg
+    type(bounds_type), intent(in)    :: bounds
+    integer  , intent(in)            :: num_exposedvegp         ! number of points in filter_exposedvegp
+    integer  , intent(in)            :: filter_exposedvegp(:)   ! patch filter for non-snow-covered veg
     !
     ! !LOCAL VARIABLES:
     integer  :: fp             ! filter index
@@ -663,10 +663,10 @@ contains
     !-----------------------------------------------------------------------
     
     associate( &
-         o3uptakesha => this%o3uptakesha_patch                     , & ! Input:  [real(r8) (:)] ozone dose
-         o3uptakesun => this%o3uptakesun_patch                     , & ! Input:  [real(r8) (:)] ozone dose
+         o3uptakesha => this%o3uptakesha_patch                 , & ! Input:  [real(r8) (:)] ozone dose
+         o3uptakesun => this%o3uptakesun_patch                 , & ! Input:  [real(r8) (:)] ozone dose
          o3coefjmaxsha => this%o3coefjmaxsha_patch             , & ! Output: [real(r8) (:)] ozone coef jmax sha
-         o3coefjmaxsun => this%o3coefjmaxsun_patch              & ! Output: [real(r8) (:)] ozone coef jmax sun
+         o3coefjmaxsun => this%o3coefjmaxsun_patch               & ! Output: [real(r8) (:)] ozone coef jmax sun
          )
       
     do fp = 1, num_exposedvegp
@@ -697,23 +697,15 @@ contains
     !
     ! !ARGUMENTS:
     integer  , intent(in)        :: pft_type   ! vegetation type, for indexing into pftvarcon arrays
-    real(r8) , intent(in)         :: o3uptake   ! ozone entering the leaf
-    real(r8) , intent(inout) :: o3coefjmax  ! ozone coefficient for max. electron transport rate
-    !real(r8) , intent(out)   :: o3coefv    ! ozone coefficient for photosynthesis (0 - 1)
-   ! real(r8) , intent(out)   :: o3coefg    ! ozone coefficient for conductance (0 - 1)
-    !
-    ! !LOCAL VARIABLES:
+    real(r8) , intent(in)        :: o3uptake   ! ozone entering the leaf
+    real(r8) , intent(inout)     :: o3coefjmax ! ozone coefficient for max. electron transport rate
+    !    
     ! !LOCAL VARIABLES:
     real(r8) :: jmaxInt        ! intercept for max. electron transport rate
     real(r8) :: jmaxSlope      ! slope for max. electron transport rate
-    !real(r8) :: photoInt       ! intercept for photosynthesis
-    !real(r8) :: photoSlope     ! slope for photosynthesis
-    !real(r8) :: condInt        ! intercept for conductance
-    !real(r8) :: condSlope      ! slope for conductance
-
     character(len=*), parameter :: subname = 'CalcOzoneStressFalkOnePoint'
     !-----------------------------------------------------------------------
-    ! TODO Should it really be a comparision with a real which is zero? 
+    ! TODO(si, 2021-05-07) Should it really be a comparision with a real which is zero? 
     if (o3uptake == 0._r8) then
        o3coefjmax = 1._r8
     else
