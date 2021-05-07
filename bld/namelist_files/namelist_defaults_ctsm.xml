@@ -2289,7 +2289,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="ne16np4"   to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne16np4/map_5x5min_nomask_to_ne16np4_nomask_aave_da_c200309.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="nomask"  to_hgrid="ne16np4"    to_lmask="nomask"
->lnd/clm2/mappingdata/maps/ne16np4/map_3x3min_nomask_to_ne16np4_nomask_aave_da_c200309.nc</map>
+>lnd/clm2/mappingdata/maps/ne16np4/map_3x3min_nomask_to_ne16np4_nomask_aave_da_c210506.nc</map>
 <map frm_hgrid="0.9x1.25"    frm_lmask="nomask"  to_hgrid="ne16np4"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/ne16np4/map_0.9x1.25_nomask_to_ne16np4_nomask_aave_da_c200206.nc</map>
 <map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="ne16np4"   to_lmask="nomask" 
@@ -2342,7 +2342,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <map frm_hgrid="5x5min"   frm_lmask="nomask" to_hgrid="ne120np4" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/ne120np4/map_5x5min_nomask_to_ne120np4_nomask_aave_da_c200309.nc</map>
 <map frm_hgrid="3x3min"   frm_lmask="nomask"  to_hgrid="ne120np4" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_nomask_to_ne120np4_nomask_aave_da_c200309.nc</map>
+>lnd/clm2/mappingdata/maps/ne120np4/map_3x3min_nomask_to_ne120np4_nomask_aave_da_c210506.nc</map>
 <map frm_hgrid="0.9x1.25"    frm_lmask="nomask"  to_hgrid="ne120np4"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/ne120np4/map_0.9x1.25_nomask_to_ne120np4_nomask_aave_da_c200206.nc</map>
 <map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="ne120np4"   to_lmask="nomask" 
