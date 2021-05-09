@@ -36,7 +36,7 @@ module lnd2atmMod
   use ColumnType           , only : col
   use LandunitType         , only : lun
   use GridcellType         , only : grc                
-  use landunit_varcon      , only : istice_mec
+  use landunit_varcon      , only : istice
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -487,9 +487,9 @@ contains
              l = col%landunit(c)
              g = col%gridcell(c)
              do_conversion = .false.
-             if (lun%itype(l) /= istice_mec) then
+             if (lun%itype(l) /= istice) then
                 do_conversion = .true.
-             else  ! istice_mec
+             else  ! istice
                 if (glc_behavior%ice_runoff_melted_grc(g)) then
                    do_conversion = .true.
                 else

@@ -34,7 +34,7 @@ module initInterpMindist
      integer :: icol_vegetated_or_bare_soil
      integer :: ilun_vegetated_or_bare_soil
      integer :: ilun_crop
-     integer :: ilun_landice_multiple_elevation_classes
+     integer :: ilun_landice
    contains
      procedure :: is_vegetated_landunit  ! returns true if the given landunit type is natural veg or crop
   end type subgrid_special_indices_type
@@ -55,8 +55,8 @@ module initInterpMindist
 
   ! Private methods
 
-  private :: set_glcmec_must_be_same_type
-  private :: set_icemec_adjustable_type
+  private :: set_glc_must_be_same_type
+  private :: set_ice_adjustable_type
   private :: do_fill_missing_with_natveg
   private :: is_sametype
   private :: is_baresoil
@@ -183,10 +183,10 @@ contains
     logical  :: topoglc_present
     logical  :: closest
 
-    ! Whether two glcmec columns/patches must be the same column/patch type to be
-    ! considered the same type. This is only valid for glcmec points, and is only valid
+    ! Whether two glc columns/patches must be the same column/patch type to be
+    ! considered the same type. This is only valid for glc points, and is only valid
     ! for subgrid name = 'pft' or 'column'.
-    logical  :: glcmec_must_be_same_type_o(bego:endo)
+    logical  :: glc_must_be_same_type_o(bego:endo)
     ! --------------------------------------------------------------------
 
     if (associated(subgridi%topoglc) .and. associated(subgrido%topoglc)) then
@@ -198,9 +198,9 @@ contains
     mindist_index(bego:endo) = 0
     distmin = spval
 
-    call set_glcmec_must_be_same_type(bego=bego, endo=endo, dimname=subgrido%name, &
+    call set_glc_must_be_same_type(bego=bego, endo=endo, dimname=subgrido%name, &
          glc_elevclasses_same = glc_elevclasses_same, glc_behavior=glc_behavior, &
-         glcmec_must_be_same_type_o=glcmec_must_be_same_type_o)
+         glc_must_be_same_type_o=glc_must_be_same_type_o)
 
 !$OMP PARALLEL DO PRIVATE (ni,no,n,nmin,distmin,dx,dy,dist,closest,hgtdiffmin,hgtdiff)
     do no = bego,endo
@@ -220,7 +220,7 @@ contains
                 if (is_sametype(ni = ni, no = no, &
                      subgridi = subgridi, subgrido = subgrido, &
                      subgrid_special_indices = subgrid_special_indices, &
-                     glcmec_must_be_same_type = glcmec_must_be_same_type_o(no), &
+                     glc_must_be_same_type = glc_must_be_same_type_o(no), &
                      veg_patch_just_considers_ptype = .true.)) then
                    dy = abs(subgrido%lat(no)-subgridi%lat(ni))*re
                    dx = abs(subgrido%lon(no)-subgridi%lon(ni))*re * &
@@ -239,7 +239,7 @@ contains
                       end if
                    end if
                    if (.not. closest) then
-                      ! In *some* cases: For glc_mec points, we first find the closest
+                      ! In *some* cases: For glacier points, we first find the closest
                       ! point in lat-lon space, without consideration for column or patch
                       ! type (above). Then, within that closest point, we find the closest
                       ! column in topographic space; this second piece is done here. Note
@@ -344,10 +344,10 @@ contains
     real(r8) :: dx, dy
     logical  :: ni_sametype
 
-    ! Whether two glcmec columns/patches must be the same column/patch type to be
-    ! considered the same type. This is only valid for glcmec points, and is only valid
+    ! Whether two glc columns/patches must be the same column/patch type to be
+    ! considered the same type. This is only valid for glc points, and is only valid
     ! for subgrid name = 'pft' or 'column'.
-    logical  :: glcmec_must_be_same_type_o(bego:endo)
+    logical  :: glc_must_be_same_type_o(bego:endo)
 
     ! Tolerance in lat/lon for considering a point to be at the same location
     real(r8) :: same_point_tol = 1.e-14_r8
@@ -362,9 +362,9 @@ contains
        call endrun(msg=subname//' ERROR: glc_elevclasses_same must be true for this method')
     end if
 
-    call set_glcmec_must_be_same_type(bego=bego, endo=endo, dimname=subgrido%name, &
+    call set_glc_must_be_same_type(bego=bego, endo=endo, dimname=subgrido%name, &
          glc_elevclasses_same = glc_elevclasses_same, glc_behavior=glc_behavior, &
-         glcmec_must_be_same_type_o=glcmec_must_be_same_type_o)
+         glc_must_be_same_type_o=glc_must_be_same_type_o)
 
 !$OMP PARALLEL DO PRIVATE (ni,no,ni_match,found,dx,dy,ni_sametype)
     do no = bego, endo
@@ -377,7 +377,7 @@ contains
              ni_sametype = is_sametype(ni = ni, no = no, &
                   subgridi = subgridi, subgrido = subgrido, &
                   subgrid_special_indices = subgrid_special_indices, &
-                  glcmec_must_be_same_type = glcmec_must_be_same_type_o(no), &
+                  glc_must_be_same_type = glc_must_be_same_type_o(no), &
                   veg_patch_just_considers_ptype = .false.)
              if (ni_sametype) then
                 if (found) then
@@ -426,16 +426,16 @@ contains
   end subroutine set_single_match
 
   !-----------------------------------------------------------------------
-  subroutine set_glcmec_must_be_same_type(bego, endo, dimname, &
+  subroutine set_glc_must_be_same_type(bego, endo, dimname, &
        glc_elevclasses_same, glc_behavior, &
-       glcmec_must_be_same_type_o)
+       glc_must_be_same_type_o)
     !
     ! !DESCRIPTION:
-    ! Sets the glcmec_must_be_same_type_o array for each output icemec point
+    ! Sets the glc_must_be_same_type_o array for each output ice point
     !
-    ! This array will be set to true for icemec output columns/patches for which the
+    ! This array will be set to true for ice output columns/patches for which the
     ! column/patch type must match the input column/patch type to be considered the same
-    ! type. This is only valid for icemec points, and is only valid for dimname = 'pft' or
+    ! type. This is only valid for ice points, and is only valid for dimname = 'pft' or
     ! 'column' - for others, the value is undefined.
     !
     ! This assumes that bego and endo match the bounds that are used elsewhere in the
@@ -453,62 +453,62 @@ contains
 
     type(glc_behavior_type), intent(in)  :: glc_behavior
 
-    logical, intent(out)  :: glcmec_must_be_same_type_o( bego: ) ! see description above
+    logical, intent(out)  :: glc_must_be_same_type_o( bego: ) ! see description above
 
     !
     ! !LOCAL VARIABLES:
     integer :: no
 
-    ! Whether each output icemec point has adjustable column type; only valid for icemec
+    ! Whether each output ice point has adjustable column type; only valid for ice
     ! points, and only valid for subgrid name = pft or column
-    logical  :: icemec_adjustable_type_o(bego:endo)
+    logical  :: ice_adjustable_type_o(bego:endo)
 
-    character(len=*), parameter :: subname = 'set_glcmec_must_be_same_type'
+    character(len=*), parameter :: subname = 'set_glc_must_be_same_type'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(glcmec_must_be_same_type_o) == (/endo/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(glc_must_be_same_type_o) == (/endo/)), sourcefile, __LINE__)
 
     if (.not. glc_elevclasses_same) then
        ! If the number or bounds of the elevation classes differ between input and
-       ! output, then we ignore the column and patch types of glcmec points when
+       ! output, then we ignore the column and patch types of glc points when
        ! looking for the same type - instead using closest topographic height as a
        ! tie-breaker between equidistant columns/patches.
-       glcmec_must_be_same_type_o(bego:endo) = .false.
+       glc_must_be_same_type_o(bego:endo) = .false.
     else
-       call set_icemec_adjustable_type(bego=bego, endo=endo, dimname=dimname, &
-            glc_behavior=glc_behavior, icemec_adjustable_type_o=icemec_adjustable_type_o)
+       call set_ice_adjustable_type(bego=bego, endo=endo, dimname=dimname, &
+            glc_behavior=glc_behavior, ice_adjustable_type_o=ice_adjustable_type_o)
        do no = bego, endo
-          if (icemec_adjustable_type_o(no)) then
-             ! If glcmec points in this output cell have adjustable type, then we ignore
-             ! the column and patch types of glcmec points when looking for the same
-             ! type: we want to find the closest glcmec point in lat-lon space without
+          if (ice_adjustable_type_o(no)) then
+             ! If glc points in this output cell have adjustable type, then we ignore
+             ! the column and patch types of glc points when looking for the same
+             ! type: we want to find the closest glc point in lat-lon space without
              ! regards for column/patch type, because the column/patch types may change
              ! at runtime.
-             glcmec_must_be_same_type_o(no) = .false.
+             glc_must_be_same_type_o(no) = .false.
           else
              ! Otherwise, we require the column and patch types to be the same between
-             ! input and output for this glcmec output point, as is the case for most
+             ! input and output for this glc output point, as is the case for most
              ! other landunits. This is important for a case with interpolation to give
-             ! bit-for-bit answers with a case without interpolation (since glcmec
+             ! bit-for-bit answers with a case without interpolation (since glc
              ! topographic heights can change after initialization, so we can't always
              ! rely on the point with closest topographic height to be the "right" one to
              ! pick as the source for interpolation).
-             glcmec_must_be_same_type_o(no) = .true.
+             glc_must_be_same_type_o(no) = .true.
           end if
        end do
     end if
 
-  end subroutine set_glcmec_must_be_same_type
+  end subroutine set_glc_must_be_same_type
 
   !-----------------------------------------------------------------------
-  subroutine set_icemec_adjustable_type(bego, endo, dimname, glc_behavior, &
-       icemec_adjustable_type_o)
+  subroutine set_ice_adjustable_type(bego, endo, dimname, glc_behavior, &
+       ice_adjustable_type_o)
     !
     ! !DESCRIPTION:
-    ! Sets the icemec_adjustable_type_o array for each output icemec point
+    ! Sets the ice_adjustable_type_o array for each output ice point
     !
-    ! This array will be set to true for icemec points that have adjustable column type
-    ! and false for icemec points that do not. The value will be undefined for non-icemec
+    ! This array will be set to true for ice points that have adjustable column type
+    ! and false for ice points that do not. The value will be undefined for non-ice
     ! points.
     !
     ! This can only be called for the output, not the input!
@@ -525,30 +525,30 @@ contains
     integer                 , intent(in)  :: endo    ! ending index for output points
     character(len=*)        , intent(in)  :: dimname ! 'pft', 'column', etc.
     type(glc_behavior_type) , intent(in)  :: glc_behavior
-    logical                 , intent(out) :: icemec_adjustable_type_o( bego: ) ! see documentation above
+    logical                 , intent(out) :: ice_adjustable_type_o( bego: ) ! see documentation above
     !
     ! !LOCAL VARIABLES:
 
-    character(len=*), parameter :: subname = 'set_icemec_adjustable_type'
+    character(len=*), parameter :: subname = 'set_ice_adjustable_type'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL_FL((ubound(icemec_adjustable_type_o) == (/endo/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_adjustable_type_o) == (/endo/)), sourcefile, __LINE__)
 
     select case (dimname)
     case ('pft')
        call glc_behavior%patches_have_dynamic_type_array(bego, endo, &
-            icemec_adjustable_type_o(bego:endo))
+            ice_adjustable_type_o(bego:endo))
     case ('column')
        call glc_behavior%cols_have_dynamic_type_array(bego, endo, &
-            icemec_adjustable_type_o(bego:endo))
+            ice_adjustable_type_o(bego:endo))
     case ('landunit', 'gridcell')
-       ! Do nothing: icemec_adjustable_type_o will be left undefined
+       ! Do nothing: ice_adjustable_type_o will be left undefined
     case default
        call endrun(subname//' ERROR: unexpected dimname: '//trim(dimname)//&
             errMsg(sourcefile, __LINE__))
     end select
 
-  end subroutine set_icemec_adjustable_type
+  end subroutine set_ice_adjustable_type
 
   !-----------------------------------------------------------------------
   function do_fill_missing_with_natveg(fill_missing_with_natveg, &
@@ -595,7 +595,7 @@ contains
   !=======================================================================
 
   logical function is_sametype (ni, no, subgridi, subgrido, subgrid_special_indices, &
-       glcmec_must_be_same_type, veg_patch_just_considers_ptype)
+       glc_must_be_same_type, veg_patch_just_considers_ptype)
 
     ! --------------------------------------------------------------------
     ! arguments
@@ -605,10 +605,10 @@ contains
     type(subgrid_type), intent(in)  :: subgrido
     type(subgrid_special_indices_type), intent(in) :: subgrid_special_indices
 
-    ! Whether two glcmec columns/patches must be the same column/patch type to be
-    ! considered the same type. This is only valid for glcmec points, and is only valid
+    ! Whether two glc columns/patches must be the same column/patch type to be
+    ! considered the same type. This is only valid for glc points, and is only valid
     ! for subgrid name = 'pft' or 'column'.
-    logical, intent(in) :: glcmec_must_be_same_type
+    logical, intent(in) :: glc_must_be_same_type
 
     ! For vegetated patches (natural veg or crop): if veg_patch_just_considers_ptype is
     ! true, then we consider two vegetated patches to be the same type if they have the
@@ -625,9 +625,9 @@ contains
     is_sametype = .false.
 
     if (trim(subgridi%name) == 'pft' .and. trim(subgrido%name) == 'pft') then
-       if ( .not. glcmec_must_be_same_type .and. &
-            subgridi%ltype(ni) == subgrid_special_indices%ilun_landice_multiple_elevation_classes .and. &
-            subgrido%ltype(no) == subgrid_special_indices%ilun_landice_multiple_elevation_classes) then
+       if ( .not. glc_must_be_same_type .and. &
+            subgridi%ltype(ni) == subgrid_special_indices%ilun_landice .and. &
+            subgrido%ltype(no) == subgrid_special_indices%ilun_landice) then
           is_sametype = .true.
        else if (veg_patch_just_considers_ptype .and. &
             subgrid_special_indices%is_vegetated_landunit(subgrido%ltype(no))) then
@@ -650,9 +650,9 @@ contains
           is_sametype = .true.
        end if
     else if (trim(subgridi%name) == 'column' .and. trim(subgrido%name) == 'column') then
-       if ( .not. glcmec_must_be_same_type .and. &
-            subgridi%ltype(ni) == subgrid_special_indices%ilun_landice_multiple_elevation_classes  .and. &
-            subgrido%ltype(no) == subgrid_special_indices%ilun_landice_multiple_elevation_classes ) then
+       if ( .not. glc_must_be_same_type .and. &
+            subgridi%ltype(ni) == subgrid_special_indices%ilun_landice  .and. &
+            subgrido%ltype(no) == subgrid_special_indices%ilun_landice ) then
           is_sametype = .true.
        else if (subgridi%ctype(ni) == subgrido%ctype(no) .and. &
                 subgridi%ltype(ni) == subgrido%ltype(no)) then

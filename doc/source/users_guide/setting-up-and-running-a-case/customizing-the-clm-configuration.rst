@@ -405,7 +405,7 @@ Example: user_nl_clm namelist file
    !                        (includes $inst_string for multi-ensemble cases)
    ! Set glc_grid           with GLC_GRID                           option
    ! Set glc_smb            with GLC_SMB                            option
-   ! Set maxpatch_glcmec    with GLC_NEC                            option
+   ! Set maxpatch_glc    with GLC_NEC                            option
    !----------------------------------------------------------------------------------
    hist_fincl2    = 'TG','TBOT','FIRE','FIRA','FLDS','FSDS',
                     'FSR','FSA','FGEV','FSH','FGR','TSOI',

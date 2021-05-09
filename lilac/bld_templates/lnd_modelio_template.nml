@@ -1,7 +1,7 @@
 &pio_inparm
   pio_netcdf_format = "64bit_offset"
   pio_numiotasks = -99
-  pio_rearranger = 1
+  pio_rearranger = $PIO_REARRANGER
   pio_root = 1
   pio_stride = $PIO_STRIDE
   pio_typename = "$PIO_TYPENAME"

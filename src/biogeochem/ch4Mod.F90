@@ -1049,7 +1049,8 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_SAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='oxygen soil concentration', units='mol/m^3', &
-         readvar=readvar, interpinic_flag='interp', data=this%conc_o2_sat_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%conc_o2_sat_col)
     ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-17) The following is needed for backwards
     ! compatibility with restart files generated from older versions of the code, where
     ! this variable was initialized to spval rather than 0 for special landunits.
@@ -1060,7 +1061,8 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='CONC_O2_UNSAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='oxygen soil concentration', units='mol/m^3', &
-         readvar=readvar, interpinic_flag='interp', data=this%conc_o2_unsat_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%conc_o2_unsat_col)
     ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-17) The following is needed for backwards
     ! compatibility with restart files generated from older versions of the code, where
     ! this variable was initialized to spval rather than 0 for special landunits.
@@ -1071,27 +1073,32 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='O2STRESS_SAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='oxygen stress fraction', units='', &
-         readvar=readvar, interpinic_flag='interp', data=this%o2stress_sat_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%o2stress_sat_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='O2STRESS_UNSAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='oxygen stress fraction', units='', &
-         readvar=readvar, interpinic_flag='interp', data=this%o2stress_unsat_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%o2stress_unsat_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='O2_DECOMP_DEPTH_SAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='O2 consumption during decomposition', units='mol/m3/s', &
-         readvar=readvar, interpinic_flag='interp', data=this%o2_decomp_depth_sat_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%o2_decomp_depth_sat_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='O2_DECOMP_DEPTH_UNSAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='O2 consumption during decomposition', units='mol/m3/s', &
-         readvar=readvar, interpinic_flag='interp', data=this%o2_decomp_depth_unsat_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%o2_decomp_depth_unsat_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='CONC_CH4_SAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='methane soil concentration', units='mol/m^3', &
-         readvar=readvar, interpinic_flag='interp', data=this%conc_ch4_sat_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%conc_ch4_sat_col)
     ! BACKWARDS_COMPATIBILITY(wjs, 2016-02-11) The following is needed for backwards
     ! compatibility with restart files generated from older versions of the code, where
     ! this variable was initialized to spval rather than 0 for special landunits.
@@ -1102,7 +1109,8 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='CONC_CH4_UNSAT', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='methane soil concentration', units='mol/m^3', &
-         readvar=readvar, interpinic_flag='interp', data=this%conc_ch4_unsat_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%conc_ch4_unsat_col)
     ! BACKWARDS_COMPATIBILITY(wjs, 2016-02-11) The following is needed for backwards
     ! compatibility with restart files generated from older versions of the code, where
     ! this variable was initialized to spval rather than 0 for special landunits.
@@ -1113,7 +1121,8 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='LAYER_SAT_LAG', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true., &
          long_name='lagged saturation status of layer in unsat. zone', units='', &
-         readvar=readvar, interpinic_flag='interp', data=this%layer_sat_lag_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%layer_sat_lag_col)
     ! BACKWARDS_COMPATIBILITY(wjs, 2016-05-18) The following is needed for backwards
     ! compatibility with restart files generated from older versions of the code, where
     ! this variable was initialized to spval rather than 1 for special landunits.
@@ -1217,7 +1226,8 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='LAKE_SOILC', xtype=ncd_double, &
          dim1name='column', dim2name='levgrnd', switchdim=.true.,&
          long_name='lake soil carbon concentration', units='g/m^3', &
-         readvar=readvar, interpinic_flag='interp', data=this%lake_soilc_col)
+         readvar=readvar, scale_by_thickness=.false., &
+         interpinic_flag='interp', data=this%lake_soilc_col)
 
   end subroutine Restart
 
