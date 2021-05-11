@@ -144,4 +144,11 @@
     </phase>
   </test>
 
+  <test name="ERS_D_Ld3.f19_g17.I2000Clm50FatesCru.cheyenne_gnu.clm-FatesColdDef">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>NGEET/fates#728</issue>
+    </phase>
+  </test>
+
 </expectedFails> 
