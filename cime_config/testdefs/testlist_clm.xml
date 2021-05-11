@@ -2295,7 +2295,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">13 month single site FATES smoke test.</option>
     </options>
   </test>
-  <test name="ERS_D_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesFireLightningPopDens">
+  <test name="ERS_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesFireLightningPopDens">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
