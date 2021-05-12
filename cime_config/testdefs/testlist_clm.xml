@@ -1675,6 +1675,7 @@
   <test name="SMS_D_Vnuopc" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON_NIWO">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
