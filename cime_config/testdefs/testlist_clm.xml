@@ -2314,17 +2314,16 @@
       <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesCH4">
+  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefCH4">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
-      <option name="comment">30 day exact restart test activating FATES and CH4 f45 grid.</option>
+      <option name="wallclock">00:10:00</option>
+      <option name="comment">30 day exact restart test activating FATES and CH4 f10 grid.</option>
     </options>
   </test>
   <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
