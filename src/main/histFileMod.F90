@@ -3221,6 +3221,8 @@ contains
           endif
 
        else if (mode == 'write') then
+       
+          write(iulog,*) ' hfields_write: t, f: ', t,f
 
           ! Determine output buffer
 
