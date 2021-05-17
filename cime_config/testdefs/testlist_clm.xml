@@ -948,7 +948,7 @@
       <option name="comment"  >include a debug test with flooding on</option>
     </options>
   </test>
-  <test name="ERP_P180x2_D_Ld5" grid="f19_g17_gl4" compset="I1850Clm50BgcCropG" testmods="clm/default">
+  <test name="ERP_P180x2_D_Ld5" grid="f19_g17_gris4" compset="I1850Clm50BgcCropG" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prealpha"/>
@@ -957,7 +957,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_P180x2_D_Ld5" grid="f19_g17_gl4" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_increase">
+  <test name="ERP_P180x2_D_Ld5" grid="f19_g17_gris4" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_increase">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
