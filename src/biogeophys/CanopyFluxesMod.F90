@@ -901,9 +901,6 @@ bioms:   do f = 1, fn
 
          case ('MeierXXXX')
             lt = max(0.00001_r8,elai(p)+esai(p)-z0v_LAIoff(patch%itype(p)))
-            if(elai(p)+esai(p) == 0._r8) then
-              write(iulog,*) 'VAI = 0 ', lt, (1._r8 - (1._r8 - exp(-(7.5_r8 * lt)**0.5_r8)) / (7.5_r8*lt)**0.5_r8),(1._r8 - exp(-(7.5_r8 * lt)**0.5_r8))
-            end if 
             displa(p) = htop(p) * (1._r8 - (1._r8 - exp(-(7.5_r8 * lt)**0.5_r8)) / (7.5_r8*lt)**0.5_r8)
 
             lt = min(lt,z0v_LAImax(patch%itype(p)))
@@ -919,7 +916,7 @@ bioms:   do f = 1, fn
             end do
 
             U_ustar = 4._r8 * U_ustar / lt / z0v_c(patch%itype(p))
-            z0mv(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-0.4_r8 * U_ustar + &
+            z0mv(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-vkc * U_ustar + &
                       log(z0v_cw(patch%itype(p))) - 1._r8 + z0v_cw(patch%itype(p))**(-1._r8))
 
           case default
@@ -1065,7 +1062,9 @@ bioms:   do f = 1, fn
             ! changed by K.Sakaguchi from here
             ! transfer coefficient over bare soil is changed to a local variable
             ! just for readability of the code (from line 680)
+            ! not sure if this needs to be changed with MeierXXXX too.
             csoilb = vkc / (params_inst%a_coef * (z0mg(c) * uaf(p) / 1.5e-5_r8)**params_inst%a_exp)
+            
 
             !compute the stability parameter for ricsoilc  ("S" in Sakaguchi&Zeng,2008)
 
@@ -1463,9 +1462,10 @@ bioms:   do f = 1, fn
                dt_stem(p) = 0._r8
             endif
 
-            dhsdt_canopy(p) = dt_stem(p)*cp_stem(p)/dtime &
-                 +(t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime
 
+            dhsdt_canopy(p) = dt_stem(p)*cp_stem(p)/dtime &
+                 + (t_veg(p)-tl_ini(p))*cp_leaf(p)/dtime
+            
             t_stem(p) =  t_stem(p) + dt_stem(p)
          else
             dt_stem(p) = 0._r8

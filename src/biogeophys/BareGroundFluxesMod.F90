@@ -81,7 +81,7 @@ contains
     use shr_const_mod        , only : SHR_CONST_RGAS
     use clm_varpar           , only : nlevgrnd
     use clm_varcon           , only : cpair, vkc, grav, denice, denh2o
-    use clm_varctl           , only : use_lch4
+    use clm_varctl           , only : use_lch4, z0param_method
     use landunit_varcon      , only : istsoil, istcrop
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
@@ -137,9 +137,6 @@ contains
     real(r8) :: raih                             ! temporary variable [kg/m2/s]
     real(r8) :: raiw                             ! temporary variable [kg/m2/s]
     real(r8) :: fm(bounds%begp:bounds%endp)      ! needed for BGC only to diagnose 10m wind speed
-    real(r8) :: z0mg_patch(bounds%begp:bounds%endp)
-    real(r8) :: z0hg_patch(bounds%begp:bounds%endp)
-    real(r8) :: z0qg_patch(bounds%begp:bounds%endp)
     real(r8) :: e_ref2m                          ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: qsat_ref2m                       ! 2 m height surface saturated specific humidity [kg/kg]
     real(r8) :: www                              ! surface soil wetness [-]
@@ -240,6 +237,10 @@ contains
          z0mg_col               => frictionvel_inst%z0mg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, momentum [m]
          z0hg_col               => frictionvel_inst%z0hg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, sensible heat [m]
          z0qg_col               => frictionvel_inst%z0qg_col                    , & ! Output: [real(r8) (:)   ]  roughness length, latent heat [m]
+         z0mg_patch             => frictionvel_inst%z0mg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, momentum [m]
+         z0hg_patch             => frictionvel_inst%z0hg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, sensible heat [m]
+         z0qg_patch             => frictionvel_inst%z0qg_patch                  , & ! Output: [real(r8) (:)   ]  patch roughness length, latent heat [m]
+         kbm1                   => frictionvel_inst%kbm1_patch                  , & ! Output: [real(r8) (:)   ]  natural logarithm of z0mg_p/z0hg_p [-]
          ram1                   => frictionvel_inst%ram1_patch                  , & ! Output: [real(r8) (:)   ]  aerodynamical resistance (s/m)
          num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
          htvp                   => energyflux_inst%htvp_col                     , & ! Input:  [real(r8) (:)   ]  latent heat of evaporation (/sublimation) [J/kg]                      
@@ -329,9 +330,15 @@ contains
 
             tstar = temp1(p)*dth(p)
             qstar = temp2(p)*dqh(p)
-            !z0hg_patch(p) =  z0mg_patch(p) / exp(0.4_r8*0.52_r8 * (8._r8*z0mg_patch(p)*ustar(p) / 1.5e-5_r8)**0.45_r8 * 0.71_r8**0.8_r8) ! OT63
-            z0hg_patch(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Yang07
-!z0mg_patch(p) / exp(params_inst%a_coef * (ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp)
+
+            select case (z0param_method)
+            case ('ZengWang2007')
+               z0mg_patch(p) = z0mg_patch(p) / exp(params_inst%a_coef * (ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp)
+            case ('MeierXXXX')
+               ! After Yang et al. (2007)
+               z0hg_patch(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) 
+            end select
+
             z0qg_patch(p) = z0hg_patch(p)
             thvstar = tstar*(1._r8+0.61_r8*forc_q(c)) + 0.61_r8*forc_th(c)*qstar
             zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
@@ -434,6 +441,8 @@ contains
             rh_ref2m_r(p) = rh_ref2m(p)
             t_ref2m_r(p) = t_ref2m(p)
          end if
+
+         kbm1(p) = log(z0mg_patch(p) / z0hg_patch(p))
 
          ! Human Heat Stress
          if ( all_human_stress_indices .or. fast_human_stress_indices ) then

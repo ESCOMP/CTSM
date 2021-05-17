@@ -53,6 +53,10 @@ module FrictionVelocityMod
      real(r8), pointer, public :: z0mv_patch       (:)   ! patch roughness length over vegetation, momentum [m]
      real(r8), pointer, public :: z0hv_patch       (:)   ! patch roughness length over vegetation, sensible heat [m]
      real(r8), pointer, public :: z0qv_patch       (:)   ! patch roughness length over vegetation, latent heat [m]
+     real(r8), pointer, public :: z0mg_patch       (:)   ! patch roughness length over ground, momentum [m]
+     real(r8), pointer, public :: z0hg_patch       (:)   ! patch roughness length over ground, sensible heat [m]
+     real(r8), pointer, public :: z0qg_patch       (:)   ! patch roughness length over ground, latent heat [m]
+     real(r8), pointer, public :: kbm1_patch       (:)   ! natural logarithm of z0mg_p/z0hg_p [-]
      real(r8), pointer, public :: z0mg_col         (:)   ! col roughness length over ground, momentum  [m] 
      real(r8), pointer, public :: z0hg_col         (:)   ! col roughness length over ground, sensible heat [m]
      real(r8), pointer, public :: z0qg_col         (:)   ! col roughness length over ground, latent heat [m]
@@ -150,6 +154,10 @@ contains
     allocate(this%z0mv_patch       (begp:endp)) ; this%z0mv_patch       (:)   = nan
     allocate(this%z0hv_patch       (begp:endp)) ; this%z0hv_patch       (:)   = nan
     allocate(this%z0qv_patch       (begp:endp)) ; this%z0qv_patch       (:)   = nan
+    allocate(this%z0mg_patch       (begp:endp)) ; this%z0mg_patch       (:)   = nan
+    allocate(this%z0hg_patch       (begp:endp)) ; this%z0hg_patch       (:)   = nan
+    allocate(this%z0qg_patch       (begp:endp)) ; this%z0qg_patch       (:)   = nan
+    allocate(this%kbm1_patch       (begp:endp)) ; this%kbm1_patch       (:)   = nan
     allocate(this%z0mg_col         (begc:endc)) ; this%z0mg_col         (:)   = nan
     allocate(this%z0qg_col         (begc:endc)) ; this%z0qg_col         (:)   = nan
     allocate(this%z0hg_col         (begc:endc)) ; this%z0hg_col         (:)   = nan
@@ -309,6 +317,26 @@ contains
        call hist_addfld1d (fname='Z0QV', units='m', &
             avgflag='A', long_name='roughness length over vegetation, latent heat', &
             ptr_patch=this%z0qv_patch, default='inactive')
+
+       this%z0hg_patch(begp:endp) = spval
+       call hist_addfld1d (fname='Z0HG_P', units='m', &
+            avgflag='A', long_name='patch roughness length over ground, sensible heat', &
+            ptr_patch=this%z0hg_patch, default='inactive')
+
+       this%z0mg_patch(begp:endp) = spval
+       call hist_addfld1d (fname='Z0MG_P', units='m', &
+            avgflag='A', long_name='patch roughness length over ground, momentum', &
+            ptr_patch=this%z0mg_patch, default='inactive')
+
+       this%z0qg_patch(begp:endp) = spval
+       call hist_addfld1d (fname='Z0QG_P', units='m', &
+            avgflag='A', long_name='patch roughness length over ground, latent heat', &
+            ptr_patch=this%z0qg_patch, default='inactive')
+
+       this%kbm1_patch(begp:endp) = spval
+       call hist_addfld1d (fname='KBM1', units='unitless', &
+            avgflag='A', long_name='natural logarithm of Z0MG_P/Z0HG_P', &
+            ptr_patch=this%kbm1_patch, default='inactive')
 
     if (use_luna) then
        call hist_addfld1d (fname='RB10', units='s/m', &
@@ -506,6 +534,10 @@ contains
          z0mv             =>    this%z0mv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, momentum [m]
          z0hv             =>    this%z0hv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, sensible heat [m]
          z0qv             =>    this%z0qv_patch                       , & ! Output: [real(r8) (:)   ] roughness length over vegetation, latent heat [m]
+         z0mg_p           =>    this%z0mg_patch                       , & ! Output: [real(r8) (:)   ] patch roughness length over ground, momentum [m]
+         z0hg_p           =>    this%z0hg_patch                       , & ! Output: [real(r8) (:)   ] patch roughness length over ground, sensible heat [m]
+         z0qg_p           =>    this%z0qg_patch                       , & ! Output: [real(r8) (:)   ] patch roughness length over ground, latent heat [m]
+         kbm1             =>    this%kbm1_patch                       , & ! Output: [real(r8) (:)   ] natural logarithm of z0mg_p/z0hg_p [-]
          z0hg             =>    this%z0hg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, sensible heat [m]
          z0mg             =>    this%z0mg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, momentum [m]
          z0qg             =>    this%z0qg_col                         , & ! Output: [real(r8) (:)   ] roughness length over ground, latent heat [m]
@@ -540,10 +572,10 @@ contains
           end if
        case ('MeierXXXX')           ! Bare ground and ice have a different value
           l = col%landunit(c)
-          if (lun%itype(l) == istice_mec) then
-             z0mg(c) = this%zglc
-          else if (frac_sno(c) > 0._r8) then
+          if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
              z0mg(c) = this%zsno
+          else if (lun%itype(l) == istice_mec) then
+             z0mg(c) = this%zglc
           else
              z0mg(c) = this%zlnd
           end if
@@ -560,6 +592,13 @@ contains
        z0mv(p)   = z0m(p)
        z0hv(p)   = z0mv(p)
        z0qv(p)   = z0mv(p)
+
+       ! Set to arbitrary value (will be overwritten by respective modules
+       z0mg_p(p)   = spval
+       z0hg_p(p)   = spval
+       z0qg_p(p)   = spval
+       kbm1(p)     = spval
+
     end do
 
     ! Make forcing height a patch-level quantity that is the atmospheric forcing 
