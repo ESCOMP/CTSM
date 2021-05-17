@@ -112,11 +112,11 @@ contains
     !
     ! !USES:
     use clm_varcon                    , only : spval
-    use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glcmec
+    use clm_varpar                    , only : natpft_lb, natpft_ub, cft_lb, cft_ub, maxpatch_glc
     use clm_varpar                    , only : nlevsno
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl                    , only : use_century_decomp, single_column, scmlat, scmlon, use_cn, use_fates
+    use clm_varctl                    , only : use_century_decomp, use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use landunit_varcon               , only : landunit_varcon_init, max_lunit
@@ -153,6 +153,7 @@ contains
     use controlMod                    , only : NLFilename
     use clm_instMod                   , only : clm_fates
     use BalanceCheckMod               , only : BalanceCheckInit
+    use CNSharedParamsMod             , only : CNParamsSetSoilDepth
     use NutrientCompetitionFactoryMod , only : create_nutrient_competition_method
     use FATESFireFactoryMod           , only : scalar_lightning
     !
@@ -211,8 +212,8 @@ contains
     allocate (wt_cft       (begg:endg, cft_lb:cft_ub       ))
     allocate (fert_cft     (begg:endg, cft_lb:cft_ub       ))
     allocate (irrig_method (begg:endg, cft_lb:cft_ub       ))
-    allocate (wt_glc_mec   (begg:endg, maxpatch_glcmec     ))
-    allocate (topo_glc_mec (begg:endg, maxpatch_glcmec     ))
+    allocate (wt_glc_mec   (begg:endg, maxpatch_glc     ))
+    allocate (topo_glc_mec (begg:endg, maxpatch_glc     ))
     allocate (haslake      (begg:endg                      ))
 
     ! Read list of Patches and their corresponding parameter values
@@ -355,6 +356,7 @@ contains
     ! Initialize instances of all derived types as well as time constant variables
     call clm_instInit(bounds_proc)
 
+    call CNParamsSetSoilDepth()
     ! Initialize SNICAR optical and aging parameters
     call SnowOptics_init( ) ! SNICAR optical parameters:
     call SnowAge_init( )    ! SNICAR aging   parameters:
@@ -383,8 +385,8 @@ contains
        call get_clump_bounds(nc, bounds_clump)
 
        call dyn_hwcontent_set_baselines(bounds_clump, &
-            filter_inactive_and_active(nc)%num_icemecc, &
-            filter_inactive_and_active(nc)%icemecc, &
+            filter_inactive_and_active(nc)%num_icec, &
+            filter_inactive_and_active(nc)%icec, &
             filter_inactive_and_active(nc)%num_lakec, &
             filter_inactive_and_active(nc)%lakec, &
             urbanparams_inst, soilstate_inst, lakestate_inst, water_inst, temperature_inst, &
@@ -527,8 +529,8 @@ contains
        call get_clump_bounds(nc, bounds_clump)
 
        call dyn_hwcontent_set_baselines(bounds_clump, &
-            filter_inactive_and_active(nc)%num_icemecc, &
-            filter_inactive_and_active(nc)%icemecc, &
+            filter_inactive_and_active(nc)%num_icec, &
+            filter_inactive_and_active(nc)%icec, &
             filter_inactive_and_active(nc)%num_lakec, &
             filter_inactive_and_active(nc)%lakec, &
             urbanparams_inst, soilstate_inst, lakestate_inst, &

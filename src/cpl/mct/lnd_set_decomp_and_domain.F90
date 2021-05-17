@@ -188,8 +188,6 @@ contains
     use shr_log_mod  , only : errMsg => shr_log_errMsg
     use ncdio_pio    , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
     use ncdio_pio    , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
-    use clm_varctl   , only : single_column, scmlat, scmlon
-    use shr_scam_mod , only : shr_scam_getCloseLatLon
     use pio
 
     ! input/output variables
@@ -213,10 +211,6 @@ contains
     character(len=16)     :: vname              ! temporary
     character(len=256)    :: locfn              ! local file name
     integer               :: n                  ! indices
-    integer               :: closelatidx
-    integer               :: closelonidx
-    real(r8)              :: closelat
-    real(r8)              :: closelon
     character(len=32) :: subname = 'surfrd_get_grid'     ! subroutine name
 !-----------------------------------------------------------------------
 
@@ -291,11 +285,6 @@ contains
          dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
        call endrun( msg=' ERROR: LANDFRAC NOT on fracdata file'//errMsg(sourcefile, __LINE__))
-    end if
-
-    if (single_column) then
-       call shr_scam_getCloseLatLon(locfn, scmlat, scmlon, &
-            closelat, closelon, closelatidx, closelonidx)
     end if
 
     call ncd_pio_closefile(ncid)

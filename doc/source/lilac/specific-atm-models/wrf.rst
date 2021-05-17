@@ -37,9 +37,9 @@ Clone WRF and CTSM Repositories
 
 Clone the WRF repository and checkout  ``develop`` branch::
 
-    git clone https://github.com/negin513/WRF-1.git WRF-CTSM
+    git clone https://github.com/wrf-model/WRF.git WRF-CTSM
     cd WRF-CTSM
-    git checkout wrf_ctsm_pr2
+    git checkout develop
 
 
 Clone the CTSM repository::

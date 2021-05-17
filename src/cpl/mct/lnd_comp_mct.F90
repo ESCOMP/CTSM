@@ -9,6 +9,7 @@ module lnd_comp_mct
   ! !uses:
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use shr_sys_mod      , only : shr_sys_flush
+  use shr_log_mod      , only : errMsg => shr_log_errMsg
   use mct_mod          , only : mct_avect, mct_gsmap, mct_gGrid
   use decompmod        , only : bounds_type, ldecomp
   use lnd_import_export, only : lnd_import, lnd_export
@@ -28,6 +29,9 @@ module lnd_comp_mct
   private :: lnd_domain_mct    ! set the land model domain information
   private :: lnd_handle_resume ! handle pause/resume signals from the coupler
 
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
+
 !====================================================================================
 contains
 !====================================================================================
@@ -41,10 +45,10 @@ contains
     ! !USES:
     use shr_kind_mod     , only : shr_kind_cl
     use abortutils       , only : endrun
-    use clm_time_manager , only : get_nstep, set_timemgr_init, set_nextsw_cday
+    use clm_time_manager , only : get_nstep, set_timemgr_init
     use clm_initializeMod, only : initialize1, initialize2
     use clm_instMod      , only : water_inst, lnd2atm_inst, lnd2glc_inst
-    use clm_varctl       , only : finidat,single_column, clm_varctl_set, iulog
+    use clm_varctl       , only : finidat, single_column, clm_varctl_set, iulog
     use clm_varctl       , only : inst_index, inst_suffix, inst_name
     use clm_varorb       , only : eccen, obliqr, lambm0, mvelpp
     use controlMod       , only : control_setNL
@@ -64,7 +68,7 @@ contains
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set
     use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
-    use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd         
+    use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd
     use ESMF
     !
     ! !ARGUMENTS:
@@ -86,7 +90,6 @@ contains
     logical  :: atm_aero                             ! Flag if aerosol data sent from atm model
     real(r8) :: scmlat                               ! single-column latitude
     real(r8) :: scmlon                               ! single-column longitude
-    real(r8) :: nextsw_cday                          ! calday from clock of next radiation computation
     character(len=SHR_KIND_CL) :: caseid             ! case identifier name
     character(len=SHR_KIND_CL) :: ctitle             ! case description title
     character(len=SHR_KIND_CL) :: starttype          ! start-type (startup, continue, branch, hybrid)
@@ -105,6 +108,7 @@ contains
     type(bounds_type) :: bounds                      ! bounds
     logical :: noland
     integer :: ni,nj
+    real(r8)         , parameter :: rundef = -9999999._r8
     character(len=32), parameter :: sub = 'lnd_init_mct'
     character(len=*),  parameter :: format = "('("//trim(sub)//") :',A)"
     !-----------------------------------------------------------------------
@@ -173,6 +177,12 @@ contains
                               start_type=starttype, model_version=version,      &
                               hostname=hostname, username=username )
 
+    ! Single Column
+    if ( single_column .and. (scmlat == rundef  .or. scmlon == rundef ) ) then
+       call endrun(msg=' ERROR:: single column mode on -- but scmlat and scmlon are NOT set'//&
+            errMsg(sourcefile, __LINE__))
+    end if
+
     ! Note that we assume that CTSM's internal dtime matches the coupling time step.
     ! i.e., we currently do NOT allow sub-cycling within a coupling time step.
     call set_timemgr_init( calendar_in=calendar, start_ymd_in=start_ymd, start_tod_in=start_tod, &
@@ -234,10 +244,6 @@ contains
        ! Fill in infodata settings
        call seq_infodata_PutData(infodata, lnd_prognostic=.true.)
        call seq_infodata_PutData(infodata, lnd_nx=ldomain%ni, lnd_ny=ldomain%nj)
-
-       ! Get infodata info
-       call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
-       call set_nextsw_cday(nextsw_cday)
        call lnd_handle_resume( cdata_l )
 
        ! Reset shr logging to original values
@@ -267,7 +273,7 @@ contains
     use clm_instMod     ,  only : water_inst, lnd2atm_inst, atm2lnd_inst, lnd2glc_inst, glc2lnd_inst
     use clm_driver      ,  only : clm_drv
     use clm_time_manager,  only : get_curr_date, get_nstep, get_curr_calday, get_step_size
-    use clm_time_manager,  only : advance_timestep, set_nextsw_cday,update_rad_dtime
+    use clm_time_manager,  only : advance_timestep, update_rad_dtime
     use decompMod       ,  only : get_proc_bounds
     use abortutils      ,  only : endrun
     use clm_varctl      ,  only : iulog
@@ -351,7 +357,6 @@ contains
          curr_yr=yr_sync, curr_mon=mon_sync, curr_day=day_sync)
     call seq_infodata_GetData(infodata, nextsw_cday=nextsw_cday )
 
-    call set_nextsw_cday( nextsw_cday )
     dtime = get_step_size()
 
     ! Handle pause/resume signals from coupler

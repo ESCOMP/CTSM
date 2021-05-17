@@ -50,7 +50,7 @@ contains
      ! The same test subsequently calls collapse_individual_lunits.
      use pftconMod, only: pftcon
      use clm_instur, only: wt_lunit
-     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice, &
                                 istdlak, istwet, isturb_tbd, isturb_hd, &
                                 isturb_md
 
@@ -83,7 +83,7 @@ contains
      ! these assignments have no other significance.
      wt_lunit(begg:,istsoil) = (/ input_val(4), input_val(6), input_val(5)/)
      wt_lunit(begg:,istcrop) = (/ input_val(7), input_val(9), input_val(9)/)
-     wt_lunit(begg:,istice_mec) = (/ input_val(6), input_val(9), input_val(6)/)
+     wt_lunit(begg:,istice) = (/ input_val(6), input_val(9), input_val(6)/)
      wt_lunit(begg:,istdlak) = (/ input_val(1), input_val(9), input_val(9)/)
      wt_lunit(begg:,istwet) = (/ input_val(3), input_val(9),  input_val(9)/)
      wt_lunit(begg:,isturb_tbd) = (/ input_val(9),  input_val(2), input_val(2)/)
@@ -153,7 +153,7 @@ contains
      ! - toosmall_* = 100._r8 . Keep only the dominant landunit per gridcell
      use pftconMod, only: pftcon
      use clm_instur, only: wt_lunit
-     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice, &
                                 istdlak, istwet, isturb_tbd, isturb_hd, &
                                 isturb_md
 
@@ -193,7 +193,7 @@ contains
      ! column still summed to 100.
      wt_lunit(begg:,istsoil) = (/ input_value(1), input_value(8), input_value(4)/)
      wt_lunit(begg:,istcrop) = (/ input_value(2), input_value(7), input_value(5)/)
-     wt_lunit(begg:,istice_mec) = (/ input_value(3), input_value(6), input_value(6)/)
+     wt_lunit(begg:,istice) = (/ input_value(3), input_value(6), input_value(6)/)
      wt_lunit(begg:,istdlak) = (/ input_value(4), input_value(5), input_value(7)/)
      wt_lunit(begg:,istwet) = (/ input_value(5), input_value(4),  input_value(8)/)
      wt_lunit(begg:,isturb_tbd) = (/ input_value(6),  input_value(3), input_value(1)/)
@@ -344,7 +344,7 @@ contains
      ! need to be collapsed.
      use pftconMod, only: pftcon
      use clm_instur, only: wt_lunit
-     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice_mec, &
+     use landunit_varcon, only: max_lunit, istsoil, istcrop, istice, &
                                 istdlak, istwet, isturb_tbd, isturb_hd, &
                                 isturb_md
 
@@ -375,7 +375,7 @@ contains
      ! these assignments have no other significance.
      wt_lunit(begg:,istsoil) = (/ input_value(4), input_value(5), input_value(4)/)
      wt_lunit(begg:,istcrop) = (/ input_value(7), input_value(7), input_value(7)/)
-     wt_lunit(begg:,istice_mec) = (/ input_value(6), input_value(6), input_value(2)/)
+     wt_lunit(begg:,istice) = (/ input_value(6), input_value(6), input_value(2)/)
      wt_lunit(begg:,istdlak) = (/ input_value(1), input_value(3), input_value(6)/)
      wt_lunit(begg:,istwet) = (/ input_value(3), input_value(1),  input_value(9)/)
      wt_lunit(begg:,isturb_tbd) = (/ input_value(9),  input_value(8), input_value(2)/)
@@ -392,7 +392,7 @@ contains
            expctd(1) = input_value(1) / input_value(1)
            expctd(2) = input_value(2) / input_value(2)
            wt_expected(begg:,:) = 0._r8  ! initialize
-           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(2) /)
+           wt_expected(begg:,istice) = (/ 0._r8, 0._r8, expctd(2) /)
            wt_expected(begg:,istdlak) = (/ expctd(1), 0._r8, 0._r8 /)
            wt_expected(begg:,istwet) = (/ 0._r8, expctd(1), 0._r8 /)
         else if (test == test_n_dom_is_2) then
@@ -400,7 +400,7 @@ contains
            expctd(2) = input_value(3) / (input_value(1) + input_value(3))
            expctd(3) = input_value(2) / (input_value(2) + input_value(2))
            wt_expected(begg:,:) = 0._r8  ! initialize
-           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(3) /)
+           wt_expected(begg:,istice) = (/ 0._r8, 0._r8, expctd(3) /)
            wt_expected(begg:,istdlak) = (/ expctd(1), expctd(2), 0._r8 /)
            wt_expected(begg:,istwet) = (/ expctd(2), expctd(1), 0._r8 /)
            wt_expected(begg:,isturb_tbd) = (/ 0._r8, 0._r8, expctd(3) /)
@@ -425,7 +425,7 @@ contains
                       (input_value(2) + input_value(2) + input_value(4))
            wt_expected(begg:,:) = 0._r8  ! initialize
            wt_expected(begg:,istsoil) = (/ expctd(3), expctd(6), expctd(9) /)
-           wt_expected(begg:,istice_mec) = (/ 0._r8, 0._r8, expctd(8) /)
+           wt_expected(begg:,istice) = (/ 0._r8, 0._r8, expctd(8) /)
            wt_expected(begg:,istdlak) = (/ expctd(1), expctd(5), 0._r8 /)
            wt_expected(begg:,istwet) = (/ expctd(2), expctd(4), 0._r8 /)
            wt_expected(begg:,isturb_tbd) = (/ 0._r8, 0._r8, expctd(7) /)
