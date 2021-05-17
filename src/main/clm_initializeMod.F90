@@ -10,7 +10,7 @@ module clm_initializeMod
   use spmdMod               , only : masterproc
   use decompMod             , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils            , only : endrun
-  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
   use clm_varctl            , only : is_cold_start, is_interpolated_start
   use clm_varctl            , only : iulog
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
@@ -147,7 +147,7 @@ contains
     use restFileMod                   , only : restFile_read, restFile_write
     use ndepStreamMod                 , only : ndep_init, ndep_interp
     use LakeCon                       , only : LakeConInit
-    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
+    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
     use controlMod                    , only : NLFilename
@@ -403,6 +403,7 @@ contains
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
+          write(iulog,*)'initialize2: SatellitePhenologyInit() with use_cn'
           call SatellitePhenologyInit(bounds_proc)
        end if
        if ( use_c14 .and. use_c14_bombspike ) then
@@ -412,11 +413,13 @@ contains
           call C13_init_TimeSeries()
        end if
     else
+       write(iulog,*)'initialize2: SatellitePhenInit() no use_cn'
        call SatellitePhenologyInit(bounds_proc)
 
        ! fates_spitfire_mode is assigned an integer value in the namelist
        ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
        if (fates_spitfire_mode > scalar_lightning) then
+          write(iulog,*)'initialize2: clm_fates%Init2()'
           call clm_fates%Init2(bounds_proc, NLFilename)
        end if
     end if
@@ -560,6 +563,7 @@ contains
     ! Initialize variables that are associated with accumulated fields.
     ! The following is called for both initial and restart runs and must
     ! must be called after the restart file is read
+    write(iulog,*)'initialize2: initAccVars'
     call atm2lnd_inst%initAccVars(bounds_proc)
     call temperature_inst%initAccVars(bounds_proc)
     call water_inst%initAccVars(bounds_proc)
@@ -584,6 +588,11 @@ contains
           ! This needs to be done even if CN or CNDV is on!
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
        end if
+    ! If fates has satellite phenology enabled, get the monthly veg values
+    ! prior to the first call to SatellitePhenology()
+    elseif ( use_fates_sp ) then 
+          write(iulog,*)'initialize2: interpMonthlyVeg'
+          call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
 
     ! Determine gridcell averaged properties to send to atm
@@ -614,7 +623,20 @@ contains
     deallocate(wt_nat_patch)
 
     ! Initialise the fates model state structure
+    write(iulog,*)'initialize2: init_coldstart()'
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
+       ! If fates is using satellite phenology mode, make sure to call the SatellitePhenology
+       ! procedure prior to init_coldstart which will eventually call leaf_area_profile
+       if ( use_fates_sp ) then
+          write(iulog,*)'initialize2: pre-init_coldstart SatellitePhenology()'
+          !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+          do nc = 1,nclumps
+             call get_clump_bounds(nc, bounds_clump)
+             call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+                  water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+          end do
+          !$OMP END PARALLEL DO
+       end if
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst)

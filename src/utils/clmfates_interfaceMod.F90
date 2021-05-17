@@ -103,6 +103,7 @@ module CLMFatesInterfaceMod
    use shr_log_mod       , only : errMsg => shr_log_errMsg    
    use clm_varcon        , only : dzsoi_decomp
    use FuncPedotransferMod, only: get_ipedof
+   !use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
 !   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
@@ -1513,6 +1514,7 @@ module CLMFatesInterfaceMod
               call zero_site(this%fates(nc)%sites(s))
            end do
            
+           write(iulog,*) 'init_coldstart: set_site_properties'
            call set_site_properties(this%fates(nc)%nsites, &
                                     this%fates(nc)%sites,  &
                                     this%fates(nc)%bc_in)
@@ -1557,10 +1559,12 @@ module CLMFatesInterfaceMod
               call HydrSiteColdStart(this%fates(nc)%sites,this%fates(nc)%bc_in)
            end if
 
+           write(iulog,*) 'init_coldstar: init_patches()'
            call init_patches(this%fates(nc)%nsites, this%fates(nc)%sites, &
                              this%fates(nc)%bc_in)
 
            do s = 1,this%fates(nc)%nsites
+              write(iulog,*) 'init_coldstart: ed_update_site()'
               call ed_update_site(this%fates(nc)%sites(s), &
                     this%fates(nc)%bc_in(s), & 
                     this%fates(nc)%bc_out(s))
@@ -1568,6 +1572,7 @@ module CLMFatesInterfaceMod
               ! This call sends internal fates variables into the
               ! output boundary condition structures. Note: this is called
               ! internally in fates dynamics as well.
+              write(iulog,*) 'init_coldstart: FluxIntoLitterPools'
               call FluxIntoLitterPools(this%fates(nc)%sites(s), &
                    this%fates(nc)%bc_in(s), & 
                    this%fates(nc)%bc_out(s))
@@ -1577,12 +1582,14 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
            ! Update diagnostics of FATES ecosystem structure used in HLM.
            ! ------------------------------------------------------------------------
+           write(iulog,*) 'init_coldstart: wrap_update_hlmfates_dyn'
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
                 waterdiagnosticbulk_inst,canopystate_inst)
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
            ! ------------------------------------------------------------------------
+           write(iulog,*) 'init_coldstart: update_histroy_dyn'
            call this%fates_hist%update_history_dyn( nc, &
                 this%fates(nc)%nsites,                 &
                 this%fates(nc)%sites) 
@@ -2177,7 +2184,7 @@ module CLMFatesInterfaceMod
     real(r8) :: dtime
     integer  :: s, c, nc
 
-    call t_startf('fates_update_hifrq_hist')
+    call t_startf('fates_wrap_hifrq_hist')
 
     associate(& 
         hr            => soilbiogeochem_carbonflux_inst%hr_col,       & ! (gC/m2/s) total heterotrophic respiration

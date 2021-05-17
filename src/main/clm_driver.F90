@@ -225,6 +225,8 @@ contains
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
        if ( (n_drydep > 0 .and. drydep_method == DD_XLND).or.use_fates_sp ) then
+       !if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
+          write(iulog,*)  'clm_drv(): use_cn interpMonthlyVeg'
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -238,6 +240,8 @@ contains
        ! weights obtained here are used in subroutine SatellitePhenology to obtain time
        ! interpolated values.
        if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND )) then
+       !if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) .or. use_fates_sp) then
+          write(iulog,*)  'clm_drv(): not use_cn interpMonthlyVeg'
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -1004,12 +1008,20 @@ contains
 
                 ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
+       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_hist_patch: ', canopystate_inst%tsai_hist_patch
+       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_patch: ', canopystate_inst%tsai_patch
+       write(iulog,*)  'clm_drv(): use_cn, use_fates, doalb, use_fates_sp: ', use_cn, use_fates, doalb, use_fates_sp
        if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb)).or.(use_fates_sp.and.(doalb))) then
+       !if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb))) then
+          write(iulog,*)  'clm_drv(): pre-SatellitePhenology()'
           call t_startf('SatellitePhenology')
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
        end if
+       write(iulog,*)  'clm_drv(): post-SatellitePhenology()'
+       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_hist_patch: ', canopystate_inst%tsai_hist_patch
+       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_patch: ', canopystate_inst%tsai_patch
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
 
@@ -1128,6 +1140,7 @@ contains
 
        if (use_cn) then
           call t_startf('cnbalchk')
+          write(iulog,*) 'clm_drv: pre-bgc_veg balance check'
           call bgc_vegetation_inst%BalanceCheck( &
                bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                soilbiogeochem_carbonflux_inst, &
@@ -1288,6 +1301,7 @@ contains
             filter(nc)%num_lakec, filter(nc)%lakec, &
             water_inst, lakestate_inst, &
             use_aquifer_layer = use_aquifer_layer(), flag = 'endwb')
+       write(iulog,*) 'clm_drv: post water grid cell balance check'
        call BalanceCheck(bounds_clump, &
             filter(nc)%num_allc, filter(nc)%allc, &
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
@@ -1390,6 +1404,7 @@ contains
        ! Create history and write history tapes if appropriate
        call t_startf('clm_drv_io_htapes')
 
+       write(iulog,*) 'clm_drv: calling hist_htapes_wrapup'
        call hist_htapes_wrapup( rstwr, nlend, bounds_proc,                    &
             soilstate_inst%watsat_col(bounds_proc%begc:bounds_proc%endc, 1:), &
             soilstate_inst%sucsat_col(bounds_proc%begc:bounds_proc%endc, 1:), &
