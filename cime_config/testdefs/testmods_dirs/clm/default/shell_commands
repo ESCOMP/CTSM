@@ -2,18 +2,3 @@
 
 ./xmlchange CLM_BLDNML_OPTS="-fire_emis" --append
 ./xmlchange BFBFLAG="TRUE"
-
-# Set default start date for Tower sites
-if   [ "`./xmlquery ATM_GRID --value`" == "1x1_vancouverCAN"  ]; then
-  # Go one day in, so don't have to set the TOD as well
-  ./xmlchange RUN_STARTDATE="1992-08-13"
-elif [ "`./xmlquery ATM_GRID --value`" == "1x1_mexicocityMEX" ]; then
-  # Go one day in, so don't have to set the TOD as well
-  ./xmlchange RUN_STARTDATE="1993-12-02"
-elif [ "`./xmlquery ATM_GRID --value`" == "1x1_urbanc_alpha"  ]; then
-  # Go one day in, so don't have to set the TOD as well
-  ./xmlchange RUN_STARTDATE="0001-08-13"
-else
-  ./xmlchange RUN_STARTDATE="2018-01-01"
-fi
-
