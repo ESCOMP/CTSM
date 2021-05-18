@@ -1,395 +1,432 @@
 #! /usr/bin/env python
-'''
-#------------------------------------------------------------------#
-#---------------------  Instructions  -----------------------------#
-#------------------------------------------------------------------#
+"""
+|------------------------------------------------------------------|
+|---------------------  Instructions  -----------------------------|
+|------------------------------------------------------------------|
+This script is for modifying surface dataset at neon sites
+using data available from the neon server.
+
 After creating a single point surface data file from a global 
-surface data file, use this script to overwrite some fields with 
-site-specific data.  
-'''
+surface data file using subset_data.py, use this script to 
+overwrite some fields with site-specific data for neon sites.
+
+This script will do the following:
+- Download neon data for the specified site if it does not exist 
+    in the specified directory.
+- Modify surface dataset with downloaded data (neon-specific).
+
+-------------------------------------------------------------------
+Instructions for running on Cheyenne/Casper:
+
+load the following into your local environment
+    module load python
+    ncar_pylib
+
+To remove NPL from your environment on Cheyenne/Casper:
+    deactivate
+-------------------------------------------------------------------
+To see the available options:
+    ./modify_singlept_site_neon.py --help
+-------------------------------------------------------------------
+"""
 # TODO
 # if file not found run subset_data.py
+# Clean up imports for both codes...
+# Check against a list of valid names.
 
 #  Import libraries
 from __future__ import print_function
 
 import sys
-import string
-import subprocess
-from getpass import getuser
+import os
+import glob
+import argparse
+import requests
+
 import numpy as np
-import netCDF4 as netcdf4
+import pandas as pd
 import xarray as xr
 
-def mprint(mstr):
-    vnum=sys.version_info[0]
-    if vnum == 3:
-        print(mstr)
-    if vnum == 2:
-        print mstr
-
-#--  Create single point CLM surface data file
-create_surfdata = True
-
-#--  specify site from which to extract data  ----------
-sitename='US-Ha1'
-
-#--  Site level data directory  ------------------------
-site_dir='../PTCLM/PTCLM_sitedata/'
-
-#--  Specify original file
-fsurf = '/glade/scratch/'+myname+'/single_point/surfdata_0.9x1.25_16pfts_CMIP6_simyr1850_287.8_42.5_c170706.nc'
-
-#--  Output directory  ---------------------------------
-dir_output='/glade/scratch/'+myname+'/single_point/'
-
-#-- Specify new file name  -----------------------------
-command='date "+%y%m%d"'
-x2=subprocess.Popen(command,stdout=subprocess.PIPE,shell='True')
-x=x2.communicate()
-timetag = x[0].strip()
-fsurf2   = dir_output + 'surfdata_0.9x1.25_16pfts_CMIP6_simyr2000_'+sitename+'_site.c'+timetag+'.nc'
-
-#== End User Mods  =====================================
-
-#site_code,pft_f1,pft_c1,pft_f2,pft_c2,pft_f3,pft_c3,pft_f4,pft_c4,pft_f5,pft_c5
-pftfile =site_dir+'PTCLMDATA_pftdata.txt'
-#site_code,name,state,lon,lat,elev,startyear,endyear,alignyear,timestep,campaign
-sitefile=site_dir+'PTCLMDATA_sitedata.txt'
-#site_code,soil_depth,n_layers,layer_depth,layer_sand%,layer_clay%
-soilfile=site_dir+'PTCLMDATA_soildata.txt'
-
-#--  Raw datafiles  ------------------------
-rawdatafile = '../mksurfdata_map/mksurfdata_map.namelist'
-
-mstr='Checking for data for site: '+sitename
-mprint(mstr)
-
-#--  Read raw datafiles  ------------------------
-with open(rawdatafile, 'r') as t1:
-    for tmp in t1:
-       x=tmp.split('=')
-       if x[0].strip() == 'mksrf_fsoitex':
-          fsoitex = x[1].strip()
-          fsoitex = fsoitex.strip("'")
-       if x[0].strip() == 'mksrf_forganic':
-          forganic = x[1].strip()
-          forganic = forganic.strip("'")
-       if x[0].strip() == 'mksrf_flakwat':
-          flakwat= x[1].strip()
-          flakwat= flakwat.strip("'")
-       if x[0].strip() == 'mksrf_fwetlnd':
-          fwetlnd = x[1].strip()
-          fwetlnd = fwetlnd.strip("'")
-       if x[0].strip() == 'mksrf_fmax':
-          fmax = x[1].strip()
-          fmax = fmax.strip("'")
-       if x[0].strip() == 'mksrf_fglacier':
-          fglacier= x[1].strip()
-          fglacier= fglacier.strip("'")
-       if x[0].strip() == 'mksrf_fglacierregion':
-          fglacierregion= x[1].strip()
-          fglacierregion= fglacierregion.strip("'")
-       if x[0].strip() == 'mksrf_fvocef':
-          fvocef= x[1].strip()
-          fvocef= fvocef.strip("'")
-       if x[0].strip() == 'mksrf_furbtopo':
-          furbtopo = x[1].strip()
-          furbtopo = furbtopo.strip("'")
-       if x[0].strip() == 'mksrf_fgdp':
-          fgdp = x[1].strip()
-          fgdp = fgdp.strip("'")
-       if x[0].strip() == 'mksrf_fpeat':
-          fpeat = x[1].strip()
-          fpeat = fpeat.strip("'")
-       if x[0].strip() == 'mksrf_fsoildepth':
-          fsoildepth= x[1].strip()
-          fsoildepth= fsoildepth.strip("'")
-       if x[0].strip() == 'mksrf_fabm':
-          fabm = x[1].strip()
-          fabm = fabm.strip("'")
-       if x[0].strip() == 'mksrf_ftopostats':
-          ftopostats = x[1].strip()
-          ftopostats = ftopostats.strip("'")
-       if x[0].strip() == 'mksrf_fvic':
-          fvic = x[1].strip()
-          fvic = fvic.strip("'")
-       if x[0].strip() == 'mksrf_fch4':
-          fch4 = x[1].strip()
-          fch4 = fch4.strip("'")
-       if x[0].strip() == 'mksrf_furban':
-          furban = x[1].strip()
-          furban = furban.strip("'")
-       if x[0].strip() == 'mksrf_fvegtyp':
-          fvegtyp= x[1].strip()
-          fvegtyp= fvegtyp.strip("'")
-       if x[0].strip() == 'mksrf_fhrvtyp':
-          fhrvtyp= x[1].strip()
-          fhrvtyp= fhrvtyp.strip("'")
-       if x[0].strip() == 'mksrf_fsoicol':
-          fsoicol = x[1].strip()
-          fsoicol = fsoicol.strip("'")
-       if x[0].strip() == 'mksrf_flai':
-          flai = x[1].strip()
-          flai = flai.strip("'")
-       
-#Open site file and extract data
-site_found = False
-with open(sitefile, 'r') as t1:
-    for tmp in t1:
-       x=tmp.split(',')
-       if x[0] == sitename:
-          site_found = True
-          site_header = tmp
-          name     = x[1]
-          state    = x[2]
-          plon     = np.float32(x[3])
-          plat     = np.float32(x[4])
-          elev     = np.float32(x[5])
-          startyear= np.int32(x[6])
-          endyear  = np.int32(x[7])
-          alignyear= np.int32(x[8])
-          timestep = np.float32(x[9])
-          campaign = x[10]
-          exit
-
-if not site_found:
-   mprint('No site matching '+sitename+' was found')
-   stop
-else:
-   mprint(site_header)
-
-# convert longitude to east if needed
-if plon < 0:
-   plon+=360.0
-
-#--  Open pft file and extract data  ---------------------------------
-site_found = False
-with open(pftfile, 'r') as t1:
-    for tmp in t1:
-       x=tmp.split(',')
-       if x[0] == sitename:
-          site_found = True
-          pft_f1= np.int32(x[1])
-          pft_c1= np.int32(x[2])
-          pft_f2= np.int32(x[3])
-          pft_c2= np.int32(x[4])
-          pft_f3= np.int32(x[5])
-          pft_c3= np.int32(x[6])
-          pft_f4= np.int32(x[7])
-          pft_c4= np.int32(x[8])
-          pft_f5= np.int32(x[9])
-          pft_c5= np.int32(x[10])
-          exit
+from datetime import date
+from getpass import getuser
 
 
-#--  Open soil file and extract data  ---------------------------------
-site_found = False
-with open(soilfile, 'r') as t1:
-    for tmp in t1:
-       x=tmp.split(',')
-       if x[0] == sitename:
-          site_found = True
-          soil_depth     = np.float32(x[1])
-          n_layers       = np.int32(x[2])
-          layer_depth    = np.float32(x[3])
-          layer_sand_pct = np.float32(x[4])
-          layer_clay_pct = np.float32(x[5])
-          exit
+myname = getuser()  
 
-#--  create surface data file  --------------------------------------
-##2
-if create_surfdata:
-   f1  = xr.open_dataset(fsurf)
-   # expand dimensions
-   #f1 = f1.expand_dims(['lsmlat','lsmlon'])
+def get_parser():                                                                                                                                                                   
+    """
+    Get parser object for this script.
+    """
+    parser = argparse.ArgumentParser(description=__doc__,
+                           formatter_class=argparse.RawDescriptionHelpFormatter)
 
-   # create 1d variables
-   lon0=np.asarray(f1['LONGXY'][0,:])
-   lon=xr.DataArray(lon0,name='lon',dims='lsmlon',coords={'lsmlon':lon0})
-   lat0=np.asarray(f1['LATIXY'][:,0])
-   lat=xr.DataArray(lat0,name='lat',dims='lsmlat',coords={'lsmlat':lat0})
-   #f2=f1.assign({'lon':lon,'lat':lat})
-   # the above doesn't work now
-   f2=f1.assign()
-   f2['lon'] = lon
-   f2['lat'] = lat
+    parser.print_usage = parser.print_help
 
-   # make gridcell entirely natural vegetation *or* entirely crop
-   new_pct_natveg = 0.
-   new_pct_crop    = 0.
-   if np.logical_and(
-      np.any([pft_f1,pft_f2,pft_f3,pft_f4,pft_f5]),
-      np.any([(pft_c1 < 15),(pft_c2 < 15),(pft_c3 < 15),(pft_c4 < 15),(pft_c5 < 15)])):
-      new_pct_natveg = 100.
-   if np.logical_and(
-      np.any([pft_f1,pft_f2,pft_f3,pft_f4,pft_f5]),
-      np.any([(pft_c1 >= 15),(pft_c2 >= 15),(pft_c3 >= 15),(pft_c4 >= 15),(pft_c5 >= 15)])):
-      new_pct_crop = 100.
+    parser.add_argument('--neon_site',
+                help='4-letter neon site code.', 
+                action="store",
+                dest="site_name",
+                required=True) 
+    parser.add_argument('--surf_dir',
+                help='Directory of single point surface dataset. [default: %(default)s]', 
+                action="store", 
+                dest="surf_dir",
+                type =str,
+                required=False,
+                default="/glade/scratch/"+myname+"/single_point/")
+    parser.add_argument('--out_dir',
+                help='Directory to write updated single point surface dataset. [default: %(default)s]', 
+                action="store", 
+                dest="out_dir",
+                type =str,
+                required=False,
+                default="/glade/scratch/"+myname+"/single_point_neon_updated/")
 
-   if new_pct_natveg == new_pct_crop:
-      print 'both natveg and crop set to 100, exiting'
-      stop
+    return parser
 
-   #--  Remove non-vegetated landunits  ---------------------------------
-   f2['PCT_NATVEG']  = new_pct_natveg
-   f2['PCT_CROP']    = new_pct_crop
-   f2['PCT_LAKE']    = 0.
-   f2['PCT_WETLAND'] = 0.
-   f2['PCT_URBAN']   = 0.
-   f2['PCT_GLACIER'] = 0.
 
-   #--  Overwrite global data with raw data  ----------------------------
-   f2['LONGXY'] = plon
-   f2['LATIXY'] = plat
+def get_neon(neon_dir, site_name):
+    """
+    Function for finding neon data file 
+    and download from neon server if the
+    file does not exits.
 
-   #--  Soil texture
-   r1  = xr.open_dataset(fsoitex)
-   plonc = plon 
-   if plonc > 180.0:
-      plonc -= 360.0
+    Args:
+        neon_dir (str): local directory for downloading neon data.
+        site_name (str): 4 letter neon site name
 
-   # set coordinates (seems to require 'lon' and 'lat' to recognize...
-   r1=r1.rename({'LON':'lon','LAT':'lat'})
-   r1.set_coords(['lon','lat'],inplace=True)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   # extract sand/clay profiles for given mapunit
-   mapunit = np.int32(r2['MAPUNITS'])
+    Raises:
+        error if the download was not successful (exit code:404).
+        In case the data does not exist in the neon server or if
+        neon server is down. 
 
-   f2['PCT_SAND'][:,0,0] = np.asarray(r2['PCT_SAND'][:,mapunit])
-   f2['PCT_CLAY'][:,0,0] = np.asarray(r2['PCT_CLAY'][:,mapunit])
+    Returns:
+        pandas df that includes neon downloaded csv file
+    """
 
-   r1.close() ; r2.close()
+    #-- create directory if not exists
+    if not os.path.exists(neon_dir):
+        os.makedirs(neon_dir)
 
-   #--  Organic
-   r1  = xr.open_dataset(forganic)
-   r1=r1.rename({'LON':'lon','LAT':'lat'})
-   r1.set_coords(['lon','lat'],inplace=True)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['ORGANIC'][:,0,0] =  np.asarray(r2['ORGANIC'])
-   r1.close() ; r2.close()
+    neon_file = os.path.join(neon_dir, site_name + "_surfaceData.csv")
 
-   #--  Fmax
-   r1  = xr.open_dataset(fmax)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['FMAX'] =  np.asarray(r2['FMAX'])
-   r1.close() ; r2.close()
+    #-- Download the file if it does not exits
+    if os.path.isfile(neon_file):
+        print('neon file for', site_name, 'already exists! ')
+        print('Skipping download from neon for', site_name,'...')
+    else:
+        print('------------------------------------------------')
+        print('Beginning download from neon server for', site_name,'...')
 
-   #--  VOC
-   r1  = xr.open_dataset(fvocef)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['EF1_BTR'] =  np.asarray(r2['ef_btr'])
-   f2['EF1_CRP'] =  np.asarray(r2['ef_crp'])
-   f2['EF1_FDT'] =  np.asarray(r2['ef_fdt'])
-   f2['EF1_FET'] =  np.asarray(r2['ef_fet'])
-   f2['EF1_GRS'] =  np.asarray(r2['ef_grs'])
-   f2['EF1_SHR'] =  np.asarray(r2['ef_shr'])
-   r1.close() ; r2.close()
+        url = ('https://s3.data.neonscience.org/neon-ncar/NEON/surf_files/v1/'
+                +site_name+'_surfaceData.csv')
+        response = requests.get(url)
 
-   #--  GDP
-   r1  = xr.open_dataset(fgdp)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['gdp'] =  np.asarray(r2['gdp'])
-   r1.close() ; r2.close()
+        with open(neon_file, 'wb') as f:
+            f.write(response.content)
 
-   #--  Peat
-   r1  = xr.open_dataset(fpeat)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['peatf'] =  np.asarray(r2['peatf'])
-   r1.close() ; r2.close()
+        #-- Check if download status_code
+        if response.status_code == 200:
+            print('Download finished successfully for', site_name)
+        elif response.status_code == 404:
+            sys.exit('Data for this site '+site_name+
+                    ' was not available on the neon server:'+ url)
 
-   #--  Soil Depth
-   r1  = xr.open_dataset(fsoildepth)
-   # create 1d variables
-   lon0=np.asarray(r1['LONGXY'][0,:])
-   lon=xr.DataArray(lon0,name='lon',dims='lon',coords={'lon':lon0})
-   lat0=np.asarray(r1['LATIXY'][:,0])
-   lat=xr.DataArray(lat0,name='lat',dims='lat',coords={'lat':lat0})
-   r1['lon'] = lon
-   r1['lat'] = lat
-   r1=r1.rename({'lsmlon':'lon','lsmlat':'lat'})
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['zbedrock'] =  np.asarray(r2['Avg_Depth_Median'])
-   #f2['zbedrock'] =  np.asarray(r2['Avg_Depth_Mean'])
-   r1.close() ; r2.close()
+        print('Download exit status code:  ',response.status_code)
+        print('Downloaded file type     :  ',response.headers['content-type'])
+        print('Downloaded file encoding :  ',response.encoding)   
+        print('------------------------------------------------')
 
-   #--  ABM
-   r1  = xr.open_dataset(fabm)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['abm'] =  np.asarray(r2['abm'])
-   r1.close() ; r2.close()
+        response.close()
 
-   #--  SLOPE
-   r1  = xr.open_dataset(ftopostats)
-   rlon=np.asarray(r1['LONGITUDE'])
-   rlat=np.asarray(r1['LATITUDE'])
-   # extract gridcell closest to plon/plat (data are 1-d) (lon [0,360])
-   k1 = np.argmin(np.power(rlon - plon,2)+np.power(rlat - plat,2))
-   f2['SLOPE'] = np.asarray(r1['SLOPE'][k1])
-   r1.close() ; r2.close()
+    return neon_file
 
-   #--  VIC
-   r1  = xr.open_dataset(fvic)
-   r1=r1.rename({'lsmlon':'lon','lsmlat':'lat'})
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['Ws']    =  np.asarray(r2['Ws'])
-   f2['Dsmax'] =  np.asarray(r2['Dsmax'])
-   f2['Ds']    =  np.asarray(r2['Ds'])
-   r1.close() ; r2.close()
+def find_surffile (surf_dir, site_name):
+    """
+    Function for finding and choosing surface file for
+    a neon site.
+    In case multiple files exist for the neon site, it
+    will choose the file created the latest.
 
-  #--  Methane
-   r1  = xr.open_dataset(fch4)
-   # create 1d variables
-   lon0=np.asarray(r1['LONGXY'][0,:])
-   lon=xr.DataArray(lon0,name='lon',dims='lon',coords={'lon':lon0})
-   lat0=np.asarray(r1['LATIXY'][:,0])
-   lat=xr.DataArray(lat0,name='lat',dims='lat',coords={'lat':lat0})
-   r1['lon'] = lon
-   r1['lat'] = lat
-   r1=r1.rename({'lsmlon':'lon','lsmlat':'lat'})
-   # extract gridcell closest to plon/plat (this file is [0,360]
-   r2  = r1.sel(lon=plon,lat=plat,method='nearest')
-   f2['P3']   =  np.asarray(r2['P3'])
-   f2['ZWT0'] =  np.asarray(r2['ZWT0'])
-   f2['F0']   =  np.asarray(r2['F0'])
-   r1.close() ; r2.close()
+    Args:
+        surf_dir (str): directory of single point surface data
+        site_name (str): 4 letter neon site name
 
-   #--  Soil Color
-   r1  = xr.open_dataset(fsoicol)
-   r1=r1.rename({'LON':'lon','LAT':'lat'})
-   r1.set_coords(['lon','lat'],inplace=True)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
-   f2['SOIL_COLOR'] =  np.asarray(r2['SOIL_COLOR'])
-   r1.close() ; r2.close()
+    Raises:
+        error if the surface data for the site is not created 
 
-   #--  LAI / Height 
-   r1  = xr.open_dataset(flai)
-   r1=r1.rename({'LON':'lon','LAT':'lat'})
-   r1.set_coords(['lon','lat'],inplace=True)
-   # extract gridcell closest to plonc/plat
-   r2  = r1.sel(lon=plonc,lat=plat,method='nearest')
+    Returns:
+        surf_file (str): name of the surface dataset file
+    """
 
-   # ignoring crop, i.e. excluding index 15
-   f2['MONTHLY_HEIGHT_BOT'][:,0:15,0,0] =  np.asarray(r2['MONTHLY_HEIGHT_BOT'][:,0:15])
-   f2['MONTHLY_HEIGHT_TOP'][:,0:15,0,0] =  np.asarray(r2['MONTHLY_HEIGHT_TOP'][:,0:15])
-   f2['MONTHLY_LAI'][:,0:15,0,0] =  np.asarray(r2['MONTHLY_LAI'][:,0:15])
-   f2['MONTHLY_SAI'][:,0:15,0,0] =  np.asarray(r2['MONTHLY_SAI'][:,0:15])
-   r1.close() ; r2.close()
+    sf_name = "surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_"+site_name+"*.nc"
+    surf_file = glob.glob(surf_dir+sf_name)
 
-   #--  Close output file
-   # mode 'w' overwrites file
-   f2.to_netcdf(path=fsurf2, mode='w')
-   mprint('created file '+fsurf2)
-   f1.close(); f2.close(); f2.close()
-   mprint('successfully created surface data file: '+fsurf2)
+    if len(surf_file)>1:
+        print ("The following files found :", *surf_file, sep='\n- ')
+        print ("The latest file is chosen :", surf_file[-1])
+        surf_file = surf_file[-1]
+    elif len(surf_file)==1:
+        print ("File found : ")
+        print (surf_file)
+    else:
+        sys.exit('Surface data for this site '+site_name+
+                 'was not found:'+ surf_file,'.',
+                 '\n','Please run ./subset_data.py for this site.')
+    return surf_file
+
+def find_soil_structure (surf_file):
+    """
+    Function for finding surface dataset soil
+    strucutre using surface data metadata.
+
+    In CLM surface data, soil layer information
+    is in a file from surface data metadata
+    under "Soil_texture_raw_data_file_name".
+    This function finds this file for the surface
+    dataset, read it, and find soil layers.
+
+    Args:
+        surf_file (str): single point surface data filename
+
+    Raises:
+        error if the soil layer strucutre file does not exist 
+
+    Returns:
+        soil_bot : array of soil layers top depths
+        soil_top : array of soil layers bottom depths
+    """
+    #TODO: What if not cheyenne? Self-contained depth info.
+
+    f1 = xr.open_dataset(surf_file)
+    print (f1.attrs["Soil_texture_raw_data_file_name"])
+
+    clm_input_dir = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rawdata/"
+    surf_soildepth_file = os.path.join(clm_input_dir,
+                             f1.attrs["Soil_texture_raw_data_file_name"])
+
+    if os.path.exists (surf_soildepth_file):
+        print ("Reading", surf_soildepth_file, 
+                "for surface data soil structure information:")
+        f1_soildepth = xr.open_dataset(surf_soildepth_file)
+        print (f1_soildepth['DZSOI'])
+        soil_bot = f1_soildepth['DZSOI'].values
+
+        #-- soil layer top
+        soil_top = soil_bot[:-1]
+        soil_top = np.insert(soil_top,0, 0)
+
+    else:
+        sys.exit('Cannot find soil structure file : '+surf_soildepth_file+
+                 'for the surface dataset.')
+
+    return soil_bot, soil_top
+
+def update_metadata(nc, surf_file, neon_file):
+    """
+    Function for updating modified surface dataset
+    metadat for neon sites.
+
+    Args:
+        nc (xr Dataset): netcdf file including updated neon surface data
+        surf_file (str): single point surface data filename
+        neon_file (str): filename of neon downloaded surface dataset
+
+    Returns:
+        nc (xr Dataset): netcdf file including updated neon surface data
+    """
+    today = date.today()
+    today_string = today.strftime("%Y-%m-%d")
+
+    nc.attrs['Updated_on'] = today_string
+    nc.attrs['Updated_by'] = myname
+    nc.attrs['Updated_with'] = os.path.abspath(__file__)
+    nc.attrs['Updated_from'] = surf_file
+    nc.attrs['Updated_using'] = neon_file
+    nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC']
+    return nc
+
+def update_time_tag (fname_in):
+    """
+    Function for updating time tag on surface dataset
+    files.
+    Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
+    Add the tag to just before that ending part.
+
+    Args:
+        fname_in (str) : file name with the old time tag
+
+    Raises:
+        error if the file does not end with with
+         [._]cYYMMDD.nc or [._]YYMMDD.nc
+
+    Returns:
+        fname_out (str) : file name with the updated time tag
+    """
+    today = date.today()
+    today_string = today.strftime("%y%m%d")
+
+    basename = os.path.basename(fname_in)
+    cend = -10
+    if ( basename[cend] == "c" ):
+       cend = cend - 1
+    if ( (basename[cend] != ".") and (basename[cend] != "_") ):
+       sys.exit( "Trouble figuring out where to add tag to filename:"+fname_in )
+
+    fname_out = basename[:cend]+"_"+"c"+today_string+".nc"
+    return(fname_out)
+
+def sort_print_soil_layers(obs_bot, soil_bot):
+    """
+    Function for pretty printing soil structure of
+    original surface dataset and neon dataset.
+
+    Args:
+        obs_bot  : array of neon soil layers bottom depths 
+        soil_bot : array of soil layers bottom depths
+    """
+
+    obs_bot_df = pd.DataFrame({'depth':obs_bot,'type':"obs"})
+    soil_bot_df = pd.DataFrame({'depth':soil_bot,'type':"sfc"})
+    depth_df = pd.concat([obs_bot_df,soil_bot_df])
+
+    depth_df = depth_df.sort_values('depth')
+
+    space = ' '
+    print ("================================",
+           "================================")
+
+    print ("  Neon data soil structure:    " ,
+           " Surface data soil structure:  ")
+
+    print ("================================",
+           "================================")
+
+    for index, row in depth_df.iterrows():
+        if row['type']=="obs":
+            print ("-------------",
+                    "{0:.3f}".format(row['depth']),
+                    "------------")
+        else:
+            print (33*space+
+                    "-------------",
+                    "{0:.3f}".format(row['depth']),
+                    "-----------")
+
+    print ("--------------------------------"+
+           "--------------------------------")
+
+
+def main():
+
+    args = get_parser().parse_args()
+
+    #--  specify site from which to extract data 
+    site_name=args.site_name
+
+    #--  Look for surface data 
+    surf_dir = args.surf_dir
+    surf_file = find_surffile (surf_dir, site_name) 
+
+    #--  directory structure
+    current_dir = os.getcwd()
+    parent_dir = os.path.dirname(current_dir) 
+    clone_dir = os.path.abspath(os.path.join(__file__ ,"../../.."))
+    neon_dir = os.path.join(clone_dir,"neon_surffiles")
+    print("Present Directory", current_dir) 
+
+    #--  download neon data if needed
+    neon_file = get_neon(neon_dir, site_name)
+
+    #-- Read neon data
+    df = pd.read_csv (neon_file)
+
+    # -- Read surface dataset files
+    f1 = xr.open_dataset(surf_file)
+
+    # -- Find surface dataset soil depth information
+    soil_bot, soil_top = find_soil_structure (surf_file)
+
+    # -- Find surface dataset soil levels
+    # TODO: how? NS uses metadata on file to find 
+    # soil strucure
+    # better suggestion by WW to write dzsoi to neon surface dataset
+
+    print (soil_top)
+    print ("Sum of soil top depths    :", sum(soil_top))
+    print (soil_bot)
+    print ("Sum of soil bottom depths :",sum(soil_bot))
+
+    soil_top = np.cumsum(soil_top)
+    soil_bot = np.cumsum(soil_bot)
+    soil_mid = 0.5*(soil_bot - soil_top)+soil_top
+    print ("Cumulative sum of soil bottom depths :", sum(soil_bot))
+    # TODO Will: if I sum them up , are they 3.5? (m)
+
+    obs_top = df['biogeoTopDepth']/100
+    obs_bot = df['biogeoBottomDepth']/100
+
+    # -- Mapping surface dataset and neon soil levels
+    bins = df['biogeoTopDepth']/100
+    bin_index = np.digitize(soil_mid, bins)-1
+
+
+    '''
+    print ("================================")
+    print ("  Neon data soil structure:     ")
+    print ("================================")
+
+    print ("------------","ground","------------")
+    for i in range(len(obs_bot)):
+        print ("layer",i)
+        print ("-------------",
+                "{0:.2f}".format(obs_bot[i]),
+                "-------------")
+
+    print ("================================")
+    print ("Surface data soil structure:    ")
+    print ("================================")
+
+    print ("------------","ground","------------")
+    for b in range(len(bin_index)):
+        print ("layer",b)
+        print ("-------------",
+                "{0:.2f}".format(soil_bot[b]),
+                "-------------")
+    '''
+    #-- update fields with neon
+    f2= f1
+    soil_levels = f2['PCT_CLAY'].size
+    for soil_lev in range(soil_levels):
+        print (soil_lev)
+        f2['PCT_CLAY'][soil_lev] = df['clayTotal'][bin_index[soil_lev]]
+        f2['PCT_SAND'][soil_lev] = df['sandTotal'][bin_index[soil_lev]]
+        bulk_den = df['bulkDensExclCoarseFrag'][bin_index[soil_lev]]
+        carbon_tot = df['carbonTot'][bin_index[soil_lev]]
+        print ("carbon_tot:", carbon_tot)
+        layer_depth = df['biogeoBottomDepth'][bin_index[soil_lev]] - df['biogeoTopDepth'][bin_index[soil_lev]]
+        f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58 
+
+    #TODO : max depth for neon sites from WW
+
+    sort_print_soil_layers(obs_bot, soil_bot)
+
+    out_dir = args.out_dir
+
+    #-- make out_dir if it does not exist
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    #-- update time tag for the output file
+    wfile= out_dir+ update_time_tag(surf_file)
+
+    #-- update netcdf metadata
+    f2 = update_metadata(f2, surf_file, neon_file)
+
+    f2.to_netcdf(path=wfile, mode='w')
+
+    print('Successfully updated surface data file for neon site('+site_name+'):\n - '+wfile)
+
+if __name__ == "__main__": 
+    main()
 
