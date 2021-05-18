@@ -75,7 +75,10 @@ def get_parser():
                 required=False,
                 default="/glade/scratch/"+myname+"/single_point/")
     parser.add_argument('--out_dir',
-                help='Directory to write updated single point surface dataset. [default: %(default)s]', 
+                help='''
+                Directory to write updated single point surface dataset.
+                [default: %(default)s] 
+                ''',
                 action="store", 
                 dest="out_dir",
                 type =str,
@@ -96,12 +99,12 @@ def get_neon(neon_dir, site_name):
         site_name (str): 4 letter neon site name
 
     Raises:
-        error if the download was not successful (exit code:404).
+        Error if the download was not successful (exit code:404).
         In case the data does not exist in the neon server or if
         neon server is down. 
 
     Returns:
-        pandas df that includes neon downloaded csv file
+        neon_file (str) : complete file name of the downloaded data
     """
 
     #-- create directory if not exists
@@ -153,7 +156,7 @@ def find_surffile (surf_dir, site_name):
         site_name (str): 4 letter neon site name
 
     Raises:
-        error if the surface data for the site is not created 
+        Error if the surface data for the site is not created 
 
     Returns:
         surf_file (str): name of the surface dataset file
@@ -199,14 +202,14 @@ def find_soil_structure (surf_file):
     #TODO: What if not cheyenne? Self-contained depth info.
 
     f1 = xr.open_dataset(surf_file)
-    print (f1.attrs["Soil_texture_raw_data_file_name"])
+    #print (f1.attrs["Soil_texture_raw_data_file_name"])
 
     clm_input_dir = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rawdata/"
     surf_soildepth_file = os.path.join(clm_input_dir,
                              f1.attrs["Soil_texture_raw_data_file_name"])
 
     if os.path.exists (surf_soildepth_file):
-        print ("Reading", surf_soildepth_file, 
+        print ("\n\n Reading", surf_soildepth_file, 
                 "for surface data soil structure information:")
         f1_soildepth = xr.open_dataset(surf_soildepth_file)
         print (f1_soildepth['DZSOI'])
@@ -398,12 +401,12 @@ def main():
     f2= f1
     soil_levels = f2['PCT_CLAY'].size
     for soil_lev in range(soil_levels):
-        print (soil_lev)
+        #print (soil_lev)
         f2['PCT_CLAY'][soil_lev] = df['clayTotal'][bin_index[soil_lev]]
         f2['PCT_SAND'][soil_lev] = df['sandTotal'][bin_index[soil_lev]]
         bulk_den = df['bulkDensExclCoarseFrag'][bin_index[soil_lev]]
         carbon_tot = df['carbonTot'][bin_index[soil_lev]]
-        print ("carbon_tot:", carbon_tot)
+        #print ("carbon_tot:", carbon_tot)
         layer_depth = df['biogeoBottomDepth'][bin_index[soil_lev]] - df['biogeoTopDepth'][bin_index[soil_lev]]
         f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58 
 
