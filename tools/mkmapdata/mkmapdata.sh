@@ -363,12 +363,12 @@ case $hostname in
   if [ interactive = "YES" ]; then
      REGRID_PROC=1
   fi
-  esmfvers=8.0.0
-  intelvers=19.0.5
+  esmfvers=8.2.0.b06
+  intelvers=19.1.1
   module purge
   module load intel/$intelvers
-  module load esmf_libs
-  module load esmf_libs/$esmfvers
+# module load esmf_libs
+# module load esmf_libs/$esmfvers
   module load nco
 
   if [[ $REGRID_PROC > 1 ]]; then
@@ -377,7 +377,9 @@ case $hostname in
   else
      mpi=uni
   fi
-  module load esmf-${esmfvers}-ncdfio-${mpi}-O
+# module load esmf-${esmfvers}-ncdfio-${mpi}-O
+  module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/$intelvers
+  module load esmf-${esmfvers}-ncdfio-mpt-g
   if [ -z "$ESMFBIN_PATH" ]; then
      ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
