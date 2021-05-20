@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=SOAP
+./xmlchange PTS_LON=240.7379
+./xmlchange PTS_LAT=37.03269
