@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev039 jedwards 05/18/2021 Add NEON sites
     ctsm5.1.dev038     erik 04/27/2021 Bring in minor changes from the cesm2.2.0 release tag
 release-cesm2.2.01     erik 09/02/2020 Fix clm4_5 initial conditions
   ctsm5.1.dev037     slevis 04/23/2021 Correct vertical interpolation in init_interp when soil thicknesses change
