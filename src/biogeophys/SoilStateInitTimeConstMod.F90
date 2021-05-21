@@ -636,8 +636,9 @@ contains
 
              bd = (1._r8-soilstate_inst%watsat_col(c,lev))*params_inst%pd
 
-             soilstate_inst%watsat_col(c,lev) = params_inst%watsat_sf * ( (1._r8 - om_frac) * &
-                   soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac )
+             ! do not allow watsat_sf to push watsat above 0.93
+             soilstate_inst%watsat_col(c,lev) = min(params_inst%watsat_sf * ( (1._r8 - om_frac) * &
+                   soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac ), 0.93_r8)
 
              tkm = (1._r8-om_frac)*(params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/(sand+clay) + &
                    params_inst%tkm_om * om_frac ! W/(m K)
