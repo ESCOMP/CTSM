@@ -1201,6 +1201,8 @@ module CLMFatesInterfaceMod
       integer                 :: c   ! HLM column index
       integer                 :: s   ! Fates site index
       integer                 :: g   ! grid-cell index
+      integer                 :: p   ! HLM patch index
+      integer                 :: ft  ! plant functional type
       integer                 :: dk_index
       integer                 :: nlevsoil
       character(len=fates_long_string_length) :: ioname
@@ -1506,6 +1508,9 @@ module CLMFatesInterfaceMod
      integer :: j
      integer :: s
      integer :: c
+     integer :: p   ! HLM patch index
+     integer :: ft  ! plant functional type
+
 
      call t_startf('fates_initcoldstart')
 
