@@ -430,20 +430,20 @@ contains
              if (lev .eq. 1) then
                 clay = clay3d(g,1)
                 sand = sand3d(g,1)
-                om_frac = organic3d(g,1)/organic_max
+                om_frac = min(organic3d(g,1)/organic_max, 1._r8)
              else if (lev <= nlevsoi) then
                 found = 0  ! reset value
                 if (zsoi(lev) <= zisoifl(1)) then
                    ! Search above the dataset's range of zisoifl depths
                    clay = clay3d(g,1)
                    sand = sand3d(g,1)
-                   om_frac = organic3d(g,1)/organic_max
+                   om_frac = min(organic3d(g,1)/organic_max, 1._r8)
                    found = 1
                 else if (zsoi(lev) > zisoifl(nlevsoifl)) then
                    ! Search below the dataset's range of zisoifl depths
                    clay = clay3d(g,nlevsoifl)
                    sand = sand3d(g,nlevsoifl)
-                   om_frac = organic3d(g,nlevsoifl)/organic_max
+                   om_frac = min(organic3d(g,nlevsoifl)/organic_max, 1._r8)
                    found = 1
                 else
                    ! For remaining model soil levels, search within dataset's
@@ -453,7 +453,7 @@ contains
                       if (zsoi(lev) > zisoifl(j) .AND. zsoi(lev) <= zisoifl(j+1)) then
                          clay = clay3d(g,j+1)
                          sand = sand3d(g,j+1)
-                         om_frac = organic3d(g,j+1)/organic_max
+                         om_frac = min(organic3d(g,j+1)/organic_max, 1._r8)
                          found = 1
                       endif
                       if (found == 1) exit  ! no need to stay in the loop
@@ -503,8 +503,9 @@ contains
                 om_hksat          = max(0.28_r8 - 0.2799_r8*(zsoi(lev)/zsapric), xksat)
 
                 soilstate_inst%bd_col(c,lev)        = (1._r8 - soilstate_inst%watsat_col(c,lev))*params_inst%pd
-                soilstate_inst%watsat_col(c,lev)    = params_inst%watsat_adjustfactor * ( (1._r8 - om_frac) * &
-                                                      soilstate_inst%watsat_col(c,lev) + om_watsat*om_frac )
+                ! do not allow watsat_sf to push watsat above 0.93
+                soilstate_inst%watsat_col(c,lev)    = min(params_inst%watsat_adjustfactor * ( (1._r8 - om_frac) * &
+                                                      soilstate_inst%watsat_col(c,lev) + om_watsat*om_frac ), 0.93_r8)
                 tkm                                 = (1._r8-om_frac) * (params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/ &
                                                       (sand+clay)+params_inst%tkm_om*om_frac ! W/(m K)
                 soilstate_inst%bsw_col(c,lev)       = params_inst%bsw_adjustfactor * ( (1._r8-om_frac) * &
@@ -586,9 +587,9 @@ contains
                 clay    =  soilstate_inst%cellclay_col(c,lev)
                 sand    =  soilstate_inst%cellsand_col(c,lev)
                 if ( organic_frac_squared )then
-                   om_frac = (soilstate_inst%cellorg_col(c,lev)/organic_max)**2._r8
+                   om_frac = min( (soilstate_inst%cellorg_col(c,lev)/organic_max)**2._r8, 1._r8)
                 else
-                   om_frac = soilstate_inst%cellorg_col(c,lev)/organic_max
+                   om_frac = min(soilstate_inst%cellorg_col(c,lev)/organic_max, 1._r8)
                 end if
              else
                 clay    = soilstate_inst%cellclay_col(c,nlevsoi)
@@ -604,8 +605,9 @@ contains
 
              bd = (1._r8-soilstate_inst%watsat_col(c,lev))*params_inst%pd
 
-             soilstate_inst%watsat_col(c,lev) = params_inst%watsat_adjustfactor * ( (1._r8 - om_frac) * &
-                   soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac )
+             ! do not allow watsat_sf to push watsat above 0.93
+             soilstate_inst%watsat_col(c,lev) = min(params_inst%watsat_adjustfactor * ( (1._r8 - om_frac) * &
+                    soilstate_inst%watsat_col(c,lev) + om_watsat_lake * om_frac), 0.93_r8)
 
              tkm = (1._r8-om_frac)*(params_inst%tkd_sand*sand+params_inst%tkd_clay*clay)/(sand+clay) + &
                    params_inst%tkm_om * om_frac ! W/(m K)
