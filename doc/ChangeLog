@@ -1,4 +1,142 @@
 ===============================================================
+Tag name:  ctsm5.1.dev039
+Originator(s):  jedwards4b/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Tue May 18 14:36:25 MDT 2021
+One-line Summary: Add NEON sites
+
+Purpose and description of changes
+----------------------------------
+
+Add NEON sites. Add cime/cdeps support and capability to run NEON tower sites.
+
+This also brings in Negin's first version of the subset_data.py script to create
+datasets for single-point and regional cases. And a version of it was run to
+create the NEON surface datasets.
+
+To setup a NEON site do the following 
+
+cd cime/scripts
+./create_newcase --case myNEONtest --res CLM_USRDAT --compset IHist1PtClm51Bgc \
+--user-mods-dir NEON/NIWO --driver nuopc --run-unsupported
+
+(There's also a I1PtClm51Bgc compset that can be used for fixed conditions)
+
+Note, also that several externals were updated to the version in cesm2_3_alpha03a. This means that
+answers change when CISM is turned on. Some of the grids for compsets tested were updated to
+use the new grid name "gris" in place of the older "gland".
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   #1368 -- Longitude isn't correct for NEON singlept fsurdat files.
+   #1353 -- Modify NEON surface data 
+
+Known bugs introduced in this tag (include issue #):
+  #1364 -- Change NEON surface datasets to 79PFT files to facilitate the crop sites
+  #1368 -- Additional modifications to subset_data.py
+  #1363 -- 2018 and 2018-PD compsets for NEON single point ty
+  #1354 -- Batch run single point sites, including NEON
+  #1355 -- Python scripts for NEON analyses 
+  cime/#3970 -- cdeps library fails to build on izumi: nag, intel, and gnu compilers
+
+Known bugs found since the previous tag (include issue #):
+  #1351 -- HR fluxes don't include CWD
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+   Data coming from NEON -- may be updated after it's uploaded. As such you may need to delete
+   previous downloaded data in order to download the latest.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Yes add NEONSITE, two new compsets
+   Add new compset aliases: I1PtClm51Bgc, and IHist1PtClm51Bgc
+   NEONSITE added to the env_run.xml for a case. Only used for a NEON site with the CLM_USRDAT resolution
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+   Surface datasets for NEON added to the NEON user-mod-directory
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  The two USUMB test-mods duplicate some settings and could have a parent version to inherit from
+
+Changes to tests or testing:
+   Change _gl4 tests to _gris4
+   Single point tower site tests use the CLM1PTStartDate test-mod
+   Add a NEON test for the NIWO site
+   USUMB testmod needs a MCT and NUOPC version
+
+
+Testing summary:   regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (141 new tests for NEON sites)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+   cheyenne -- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:    Yes (but only when CISM is on)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only with CISM on (compsets that end with G)
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cime, cism, cmeps, cdeps
+   cime   to cime5.8.47
+   cism   to cismwrap_2_1_83
+   cmeps  to cmeps0.13.2
+   cdeps  to cdeps0.12.4
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1278 -- Neon compsets 
+   #1360 -- Singlept and regional subsetting script (initial version)
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev038
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue Apr 27 23:51:04 MDT 2021

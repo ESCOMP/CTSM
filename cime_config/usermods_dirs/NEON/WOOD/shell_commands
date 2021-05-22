@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=WOOD
+./xmlchange PTS_LON=260.76093000000003
+./xmlchange PTS_LAT=47.12833
