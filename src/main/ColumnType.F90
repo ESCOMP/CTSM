@@ -49,7 +49,8 @@ module ColumnType
      logical , pointer :: active               (:)   ! true=>do computations on this column
      logical , pointer :: type_is_dynamic      (:)   ! true=>itype can change throughout the run
      
-     logical , pointer :: is_fates             (:)   ! Is this column associated with FATES
+     logical , pointer :: is_fates             (:)   ! .true. -> this is a fates column
+                                                     ! .false. -> this is NOT a fates column
      
      ! topography
      ! TODO(wjs, 2016-04-05) Probably move these things into topoMod

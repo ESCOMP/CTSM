@@ -2894,10 +2894,10 @@ contains
     real(r8) :: nongrassporosratio     ! Ratio of root porosity in non-grass to grass, used for aerenchyma transport
     real(r8) :: unsat_aere_ratio       ! Ratio to multiply upland vegetation aerenchyma porosity by compared to inundated systems (= 0.05_r8 / 0.3_r8)
     real(r8) :: porosmin               ! minimum aerenchyma porosity (unitless)(= 0.05_r8)
-    real(r8), allocatable :: tranloss(:)     ! loss due to transpiration (mol / m3 /s)
-    real(r8), allocatable :: aere(:) 
-    real(r8), allocatable :: oxaere(:)     ! (mol / m3 /s)
-    real(r8), allocatable :: rootfr_vr(:) ! Root fraction over depth
+    real(r8) :: tranloss(1:nlevsoi)     ! loss due to transpiration (mol / m3 /s)
+    real(r8) :: aere(1:nlevsoi) 
+    real(r8) :: oxaere(1:nlevsoi)     ! (mol / m3 /s)
+    real(r8) :: rootfr_vr(1:nlevsoi) ! Root fraction over depth
     real(r8) :: aeretran
     real(r8) :: dtime
     logical  :: is_vegetated
@@ -2973,11 +2973,6 @@ contains
          end do
       end do
 
-      allocate(rootfr_vr(nlevsoi))
-      allocate(tranloss(nlevsoi))
-      allocate(aere(nlevsoi))
-      allocate(oxaere(nlevsoi))
-
       nc = bounds%clump_index
 
       ! point loop to partition aerenchyma flux into each soil layer
@@ -3015,7 +3010,11 @@ contains
                
                wfrac = clm_fates%fates(nc)%bc_out(s)%woody_frac_aere_pa(pf)
                poros_tiller = wfrac*0.3_r8 + (1._r8-wfrac)*0.3_r8*params_inst%nongrassporosratio
-               is_vegetated = .true.
+               if(patch%is_bareground(p)) then
+                  is_vegetated = .false.
+               else
+                  is_vegetated = .true.
+               end if
                annsum_npp_ptr   => clm_fates%fates(nc)%bc_out(s)%annsum_npp_pa(pf)
                annavg_agnpp_ptr => clm_fates%fates(nc)%bc_out(s)%annavg_agnpp_pa(pf)
                annavg_bgnpp_ptr => clm_fates%fates(nc)%bc_out(s)%annavg_bgnpp_pa(pf)
@@ -3047,11 +3046,6 @@ contains
          end do
       end if ! not lake
 
-      deallocate(tranloss)
-      deallocate(aere)
-      deallocate(oxaere)
-      deallocate(rootfr_vr)
-        
     end associate
 
   end subroutine ch4_aere
@@ -3085,29 +3079,34 @@ contains
 
     use clm_varcon       , only : rpi
     use ch4varcon        , only : transpirationloss, use_aereoxid_prog
+
+    !
+    ! !DESCRIPTION:
+    ! Site(column) level fluxes for O2 gain rate via
+    ! aerenchyma and ch4 losss rates from transpiration
     
     ! Arguments (in)
     
     logical, intent(in)  :: is_vegetated
-    real(r8), intent(in) :: watsat(:)
-    real(r8), intent(in) :: h2osoi_vol(:)
-    real(r8), intent(in) :: t_soisno(:) 
-    real(r8), intent(in) :: conc_ch4(:)
-    real(r8), intent(in) :: rootr(:)
-    real(r8), intent(in) :: qflx_tran_veg
-    integer, intent(in)  :: jwt
-    real(r8), intent(in) :: annsum_npp
-    real(r8), intent(in) :: annavg_agnpp
-    real(r8), intent(in) :: annavg_bgnpp
-    real(r8), intent(in) :: elai
+    real(r8), intent(in) :: watsat(:)     ! volumetric soil water at saturation (porosity)
+    real(r8), intent(in) :: h2osoi_vol(:) ! volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]
+    real(r8), intent(in) :: t_soisno(:)   ! soil temperature (Kelvin) 
+    real(r8), intent(in) :: conc_ch4(:)   ! CH4 conc in each soil layer (mol/m3)
+    real(r8), intent(in) :: rootr(:)      ! effective fraction of roots in each soil layer
+    real(r8), intent(in) :: qflx_tran_veg ! vegetation transpiration (mm H2O/s) (+ = to atm)  
+    integer, intent(in)  :: jwt           ! index of the soil layer right above the water table (-) [col]
+    real(r8), intent(in) :: annsum_npp    ! annual sum NPP (gC/m2/yr)
+    real(r8), intent(in) :: annavg_agnpp  ! (gC/m2/s) annual average aboveground NPP   
+    real(r8), intent(in) :: annavg_bgnpp  ! (gC/m2/s) annual average belowground NPP   
+    real(r8), intent(in) :: elai          ! one-sided leaf area index with burying by snow 
     real(r8)             :: poros_tiller
-    real(r8), intent(in) :: rootfr(:)
-    real(r8), intent(in) :: grnd_ch4_cond
-    real(r8), intent(in) :: conc_o2(:)
-    real(r8), intent(in) :: c_atm(:)
-    real(r8), intent(in) :: z(:)
-    real(r8), intent(in) :: dz(:)
-    integer,  intent(in) :: sat
+    real(r8), intent(in) :: rootfr(:)     ! fraction of roots in each soil layer
+    real(r8), intent(in) :: grnd_ch4_cond ! tracer conductance for boundary layer [m/s] 
+    real(r8), intent(in) :: conc_o2(:)    ! O2 conc in each soil layer (mol/m3)
+    real(r8), intent(in) :: c_atm(:)      ! CH4 atmospheric conc  (mol/m3)  
+    real(r8), intent(in) :: z(:)          ! Soil layer depth [m]
+    real(r8), intent(in) :: dz(:)         ! Soil layer thickness [m]
+    integer,  intent(in) :: sat           ! 0 == unsaturated; 1 = saturated
 
     ! Arguments (out)
     real(r8), intent(out) :: tranloss(:)
@@ -3126,10 +3125,9 @@ contains
     real(r8) :: conc_ch4_wat
     real(r8) :: aerecond    ! aerenchyma conductance (m/s)
     real(r8), parameter :: smallnumber = 1.e-12_r8
-    
-    diffus_aere = d_con_g(1,1)*1.e-4_r8  ! for CH4: m^2/s
-    ! This parameter is poorly constrained and should be done on a PFT-specific basis...
 
+    ! This parameter is poorly constrained and should be done on a patch-specific basis...
+    diffus_aere = d_con_g(1,1)*1.e-4_r8  ! for CH4: m^2/s
 
     do j=1,nlevsoi
 
