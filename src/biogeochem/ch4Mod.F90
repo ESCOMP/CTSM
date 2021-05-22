@@ -2890,10 +2890,6 @@ contains
     integer  :: pf                     ! fates patch index
     integer  :: nlevsoil_f             ! number of fates soil layers
     real(r8) :: aereoxid               ! fraction of methane flux entering aerenchyma rhizosphere 
-    real(r8) :: scale_factor_aere      ! scale factor on the aerenchyma area for sensitivity tests
-    real(r8) :: nongrassporosratio     ! Ratio of root porosity in non-grass to grass, used for aerenchyma transport
-    real(r8) :: unsat_aere_ratio       ! Ratio to multiply upland vegetation aerenchyma porosity by compared to inundated systems (= 0.05_r8 / 0.3_r8)
-    real(r8) :: porosmin               ! minimum aerenchyma porosity (unitless)(= 0.05_r8)
     real(r8) :: tranloss(1:nlevsoi)     ! loss due to transpiration (mol / m3 /s)
     real(r8) :: aere(1:nlevsoi) 
     real(r8) :: oxaere(1:nlevsoi)     ! (mol / m3 /s)
@@ -2995,7 +2991,7 @@ contains
                     itype == nc3_nonarctic_grass .or. itype == nc4_grass) then
                   poros_tiller = 0.3_r8  ! Colmer 2003
                else
-                  poros_tiller = 0.3_r8 * nongrassporosratio
+                  poros_tiller = 0.3_r8 * params_inst%nongrassporosratio
                end if
 
                annsum_npp_ptr   => annsum_npp(p)

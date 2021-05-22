@@ -817,7 +817,8 @@ module CLMFatesInterfaceMod
                waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
-               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
+              min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
+
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
             p = ifp+col%patchi(c)
@@ -1552,7 +1553,7 @@ module CLMFatesInterfaceMod
               ! from last year, it won't until the beginning of the
               ! time-step loop. Therefore, we just initialize fluxes
               ! into the litter pool in a trivial way prior to timestepping
-              this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = nlevsoil
+              this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = this%fates(nc)%bc_in(s)%nlevsoil
               
               call ed_update_site(this%fates(nc)%sites(s), &
                     this%fates(nc)%bc_in(s), & 
