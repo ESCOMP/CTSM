@@ -680,31 +680,31 @@ contains
                   ! Eddington
                   if (APRX_TYP==1) then
                      do i=snl_top,snl_btm,1
-                        gamma1(i) = (7-(omega_star(i)*(4+(3*g_star(i)))))/4
-                        gamma2(i) = -(1-(omega_star(i)*(4-(3*g_star(i)))))/4
-                        gamma3(i) = (2-(3*g_star(i)*mu_not))/4
-                        gamma4(i) = 1-gamma3(i)
-                        mu_one    = 0.5
+                        gamma1(i) = (7._r8-(omega_star(i)*(4._r8+(3._r8*g_star(i)))))/4._r8
+                        gamma2(i) = -(1._r8-(omega_star(i)*(4._r8-(3._r8*g_star(i)))))/4._r8
+                        gamma3(i) = (2._r8-(3._r8*g_star(i)*mu_not))/4._r8
+                        gamma4(i) = 1._r8-gamma3(i)
+                        mu_one    = 0.5_r8
                      enddo
 
                      ! Quadrature
                   elseif (APRX_TYP==2) then
                      do i=snl_top,snl_btm,1
-                        gamma1(i) = (3**0.5)*(2-(omega_star(i)*(1+g_star(i))))/2
-                        gamma2(i) = omega_star(i)*(3**0.5)*(1-g_star(i))/2
-                        gamma3(i) = (1-((3**0.5)*g_star(i)*mu_not))/2
-                        gamma4(i) = 1-gamma3(i)
-                        mu_one    = 1/(3**0.5)
+                        gamma1(i) = (3._r8**0.5)*(2._r8-(omega_star(i)*(1._r8+g_star(i))))/2._r8
+                        gamma2(i) = omega_star(i)*(3._r8**0.5)*(1._r8-g_star(i))/2._r8
+                        gamma3(i) = (1._r8-((3._r8**0.5)*g_star(i)*mu_not))/2._r8
+                        gamma4(i) = 1._r8-gamma3(i)
+                        mu_one    = 1._r8/(3._r8**0.5_r8)
                      enddo
 
                      ! Hemispheric Mean
                   elseif (APRX_TYP==3) then
                      do i=snl_top,snl_btm,1
-                        gamma1(i) = 2 - (omega_star(i)*(1+g_star(i)))
+                        gamma1(i) = 2._r8 - (omega_star(i)*(1._r8+g_star(i)))
                         gamma2(i) = omega_star(i)*(1-g_star(i))
-                        gamma3(i) = (1-((3**0.5)*g_star(i)*mu_not))/2
-                        gamma4(i) = 1-gamma3(i)
-                        mu_one    = 0.5
+                        gamma3(i) = (1._r8-((3._r8**0.5._r8)*g_star(i)*mu_not))/2._r8
+                        gamma4(i) = 1._r8-gamma3(i)
+                        mu_one    = 0.5_r8
                      enddo
                   endif
 
@@ -755,7 +755,7 @@ contains
 
                      !Boundary values for i=1 and i=2*snl_lcl, specifics for i=odd and i=even    
                      if (i==(2*snl_lcl+1)) then
-                        A(i) = 0
+                        A(i) = 0._r8
                         B(i) = e1(snl_top)
                         D(i) = -e2(snl_top)
                         E(i) = flx_slri_lcl(bnd_idx)-C_mns_top(snl_top)
@@ -763,7 +763,7 @@ contains
                      elseif(i==0) then
                         A(i) = e1(snl_btm)-(albsfc_lcl(bnd_idx)*e3(snl_btm))
                         B(i) = e2(snl_btm)-(albsfc_lcl(bnd_idx)*e4(snl_btm))
-                        D(i) = 0
+                        D(i) = 0._r8
                         E(i) = F_direct_btm-C_pls_btm(snl_btm)+(albsfc_lcl(bnd_idx)*C_mns_btm(snl_btm))
 
                      elseif(mod(i,2)==-1) then   ! If odd and i>=3 (n=1 for i=3)
@@ -828,7 +828,7 @@ contains
 
 
                      ! ERROR check: negative absorption
-                     if (flx_abs_lcl(i,bnd_idx) < -0.00001) then
+                     if (flx_abs_lcl(i,bnd_idx) < -0.00001_r8) then
                         trip = 1
                      endif
                   enddo
