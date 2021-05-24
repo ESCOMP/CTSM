@@ -702,7 +702,7 @@ contains
                      do i=snl_top,snl_btm,1
                         gamma1(i) = 2._r8 - (omega_star(i)*(1._r8+g_star(i)))
                         gamma2(i) = omega_star(i)*(1-g_star(i))
-                        gamma3(i) = (1._r8-((3._r8**0.5._r8)*g_star(i)*mu_not))/2._r8
+                        gamma3(i) = (1._r8-((3._r8**0.5_r8)*g_star(i)*mu_not))/2._r8
                         gamma4(i) = 1._r8-gamma3(i)
                         mu_one    = 0.5_r8
                      enddo
