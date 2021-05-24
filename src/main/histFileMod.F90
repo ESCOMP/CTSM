@@ -3147,9 +3147,6 @@ contains
 
        ! Set history field variables
 
-       !write(iulog,*) ' hfields_write: t, f: ', t,f
-       !write(iulog,*) ' hfields_write: varname: ', tape(t)%hlist(f)%field%name
-
        varname    = tape(t)%hlist(f)%field%name
        long_name  = tape(t)%hlist(f)%field%long_name
        units      = tape(t)%hlist(f)%field%units
@@ -3222,8 +3219,6 @@ contains
 
        else if (mode == 'write') then
        
-          write(iulog,*) ' hfields_write: t, f: ', t,f
-
           ! Determine output buffer
 
           histo => tape(t)%hlist(f)%hbuf
@@ -3241,8 +3236,6 @@ contains
 
           ! Write history output.  Always output land and ocean runoff on xy grid.
 
-
-          !write(iulog,*) ' hfields_write: varname: ', varname
           if (numdims == 1) then
              call ncd_io(flag='write', varname=varname, &
                   dim1name=type1d_out, data=hist1do, ncid=nfid(t), nt=nt)
