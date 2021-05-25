@@ -20,20 +20,26 @@ Purpose and description of changes
  variables with raw data in new resolutions, the corresponding new SRC
  files need mask equal to 1 everywhere.
 
+ NOTE: Answer-changing modifications have been made in mksurfdata_map,
+ but we have NOT recreated the out-of-the-box surface datasets. This
+ means that, if you create new surface datasets, you should expect small
+ answer changes relative to the current out-of-the-box surface datasets.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
 
-Does this tag change answers significantly for any of the following physics configurations? YES
+Does this tag change answers significantly for any of the following physics configurations?
 (Details of any changes will be given in the "Answer changes" section below.)
 
     [Put an [X] in the box for any configuration with significant answer changes.]
 
-[X] clm5_0
+[ ] clm5_1
 
-[X] ctsm5_0-nwp
+[ ] clm5_0
 
-[X] clm4_5
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
 
 
 Bugs fixed or introduced
@@ -51,6 +57,11 @@ Caveats for users (e.g., need to interpolate initial conditions):
  users introducing new surface variables with raw data in non-default
  SRC resolutions, will create new SRC file(s) with mask always set to 1
  everywhere.
+
+ Note, though, that the out-of-the-box surface datasets now differ
+ slightly from what you would produce by running mksurfdata_map. So
+ answer changes should be expected relative to the out-of-the-box
+ surface datasets if you create a new surface dataset.
 
 Changes made to namelist defaults (e.g., changed parameter values):
  Changed the names of most default SRC files and default map_ files to
@@ -112,6 +123,15 @@ mksurfdata_map 0.9x1.25 NOMASK SCRIP: 74.439u 18.502s 1:57.48 79.1%
 Notes of particular relevance for developers:
 ---------------------------------------------
 
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- The out-of-the-box surface datasets now differ slightly from what you
+  would produce by running mksurfdata_map. So answer changes should be
+  expected relative to the out-of-the-box surface datasets if you create
+  a new surface dataset.
+- We were not able to run the check_maps tool on the new mapping files:
+  this generated a seg fault (see
+  https://github.com/ESCOMP/CTSM/pull/823#issuecomment-846248591)
+
 Testing summary:  tools
 ----------------
 
@@ -167,12 +187,19 @@ If the tag used for baseline comparisons was NOT the previous tag, note that her
 Answer changes
 --------------
 
-Changes answers relative to baseline: YES
+Changes answers relative to baseline: YES, but for now the model results
+are the same: there will be changes to surface datasets when they are
+remade, but so far we are still pointing to unchanged out-of-the-box
+surface datasets.
 
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
     - what platforms/compilers: ALL
     - nature of change: larger than roundoff/same climate
+
+ For now, model results are unchanged because we are still using the old
+ surface datasets. However, this tag changes answers in any new surface
+ datasets that are created.
 
  I performed testing at the 0.9x1.25 degree resolution.
 
