@@ -1,4 +1,266 @@
 ===============================================================
+Tag name:  ctsm5.1.dev040
+Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date:  Thu May 20 08:28:20 MDT 2021
+One-line Summary: Replace masked with "nomask" SRC files for use with mkmapdata and mksurfdata_map
+
+Purpose and description of changes
+----------------------------------
+
+ 1) Collapse multiple source (SRC) files of a given resolution to a
+ single "nomask" SRC file per SRC resolution. The mask variable is now
+ set to 1 everywhere in all SRC files and mkmapdata.sh generates
+ a single map_ file (aka weight file) per destination (DST) resolution.
+ 2) The executable mksurfdata_map now applies the SRC mask found in the
+ raw datasets, since the map_ files do not contain this information.
+
+ These changes simplify the introduction of new surface variables with
+ raw data in one of our existing SRC resolutions because we need not
+ create new SRC files for such variables. To introduce new surface
+ variables with raw data in new resolutions, the corresponding new SRC
+ files need mask equal to 1 everywhere.
+
+ NOTE: Answer-changing modifications have been made in mksurfdata_map,
+ but we have NOT recreated the out-of-the-box surface datasets. This
+ means that, if you create new surface datasets, you should expect small
+ answer changes relative to the current out-of-the-box surface datasets.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #286
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ These changes are transparent to users making surface datasets using
+ default SRC resolutions. Users using non-default SRC resolutions or
+ users introducing new surface variables with raw data in non-default
+ SRC resolutions, will create new SRC file(s) with mask always set to 1
+ everywhere.
+
+ Note, though, that the out-of-the-box surface datasets now differ
+ slightly from what you would produce by running mksurfdata_map. So
+ answer changes should be expected relative to the out-of-the-box
+ surface datasets if you create a new surface dataset.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Changed the names of most default SRC files and default map_ files to
+ the names of the "nomask" versions of these files.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ Replaced SRC files and map_ files with "nomask" versions. Most SRC
+ resolutions already had nomask files available, so I created such files
+ for 0.25x0.25, 0.9x1.25, 3x3min, 5x5min, and 0.125x0.125. I changed all
+ of the map_ files except
+ map_1km-merge-10min_HYDRO1K-merge-nomask SRC resolution.
+ I ran the rimport command as follows:
+ ./rimport -list /glade/work/slevis/git/mksurfdata_maps_wo_src_masks/PR_823_new_file_list
+
+Substantial timing or memory changes:
+ - We end up with fewer SRC and map_ files by replacing multiple custom
+ grids per SRC resolution with one nomask grid. I list here resolutions
+ that had multiple custom grids per resolution before the switch to
+ nomask:
+ 0.5x0.5: AVHRR, MODIS, and 360x720cru_cruncep
+ 3x3min: GLOBE-Gardner-mergeGIS, GLOBE-Gardner, LandScan2004, MODIS-wCsp
+ 5x5min: IGBP-GSDP, ISRIC-WISE, ORNL
+ 10x10min_IGBPmergeICESatGIS
+
+ UNSTRUCT info shown for comparison. NOT switching to UNSTRUCT files at
+ this time.
+
+ - The nomask map_ files are larger now. E.g.:
+2754246572 map_3x3min_GLOBE-Gardner_to_0.9x1.25_nomask_aave_da_c191101.nc  MASKED SCRIP
+3051641404 map_3x3min_nomask_to_0.9x1.25_nomask_aave_da_c191109.nc         NOMASK SCRIP
+2974797264 map_3x3min_nomask_to_0.9x1.25_nomask_aave_da_c191115.nc         NOMASK UNSTRUCT
+
+ - Although the nomask SCRIP cases shown below are slower because each
+ individual mapping file takes longer to create, the total time to
+ generate mapping files is reduced, possibly significantly, due to the
+ need for fewer mapping files in total. Note the increase in time
+ savings from the 0.5x0.5 to the 10x10min resolution, which suggests
+ even greater time savings for the 3x3min and 5x5min that went from a
+ total of 7 to 2 map_ files. Sample timing data:
+mkmapdata 0.5x0.5 to 0.9x1.25 MASKED (2 grids) 78.0u 1.30s 1:20.08 99.1%
+mkmapdata 0.5x0.5 to 0.9x1.25 NOMASK SCRIP   51.199u 0.85s 0:52.61 98.8%
+mkmapdata 0.5x0.5 to 0.9x1.25 NOMASK UNSTRUC 38.316u 0.69s 0:39.51 98.7%
+
+mkmapdata 0.25x0.25 to 0.9x1.25 MASKED SCRI 129.288u 1.46s 2:11.38 99.5%
+mkmapdata 0.25x0.25 to 0.9x1.25 NOMASK SCRI 168.443u 1.69s 2:50.77 99.6%
+mkmapdata 0.25x0.25 to 0.9x1.25 NOMASK UNST 110.875u 1.46s 1:52.80 99.5%
+
+mkmapdata 0.125x0.125 to 0.9x1.25 MASKED SC 489.651u 3.67s 8:14.58 99.7%
+mkmapdata 0.125x0.125 to 0.9x1.25 NOMASK SC 646.372u 5.07s 10:54   99.5%
+mkmapdata 0.125x0.125 to 0.9x1.25 NOMASK UN 388.842u 4.20s  6:33   99.7%
+
+mkmapdata 10x10min to 0.9x1.25 MASKED (2 grids) 639.7u 4.8s 10:46  99.7%
+mkmapdata 10x10min to 0.9x1.25 NOMASK SCRIP     380.3u 3.1s  6:24  99.7%
+mkmapdata 10x10min to 0.9x1.25 NOMASK UNSTRUCT  264.2u 2.6s  4:27  99.6%
+
+mksurfdata_map 0.9x1.25 MASKED SCRIP: 65.846u 18.204s 1:42.64 81.8%
+mksurfdata_map 0.9x1.25 NOMASK SCRIP: 74.439u 18.502s 1:57.48 79.1%
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- The out-of-the-box surface datasets now differ slightly from what you
+  would produce by running mksurfdata_map. So answer changes should be
+  expected relative to the out-of-the-box surface datasets if you create
+  a new surface dataset.
+- We were not able to run the check_maps tool on the new mapping files:
+  this generated a seg fault (see
+  https://github.com/ESCOMP/CTSM/pull/823#issuecomment-846248591)
+
+Testing summary:  tools
+----------------
+
+[... Remove before making master tag.  Available test levels:
+
+    a) regular (must be run before handing off a tag to SEs and must be run
+     before committing a tag)
+    b) build_namelist (if namelists and/or build_system changed))
+    c) tools (only if tools are modified and no CTSM source is modified)
+    d) short (for use during development and in rare cases where only a small
+          change with known behavior is added ... eg. a minor bug fix)
+    e) doc (no source testing required)
+
+... ]
+
+ [PASS means all tests PASS and OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+    izumi    - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----
+    izumi -------
+
+
+ any other testing:
+
+ 1) Ran in /glade/scratch/slevis/temp_work/surfdata
+ make -f /glade/work/slevis/git/mksurfdata_maps_wo_src_masks/tools/mksurfdata_map/Makefile.data_slevis all
+ to generate all surface datasets. In early 2020 this triggered an error:
+
+ gridmap_check ERROR from mklakwat: mapping areas not conserved
+ global sum output field = 0.1513392154E+09
+ global sum input field = 0.1513334049E+09
+
+ which goes away with Bob Oehmke's new ESMF build.
+
+ 2) qcmd -- ./create_test ERP_D_Ld3_P36x2.f10_f10_mg37.I2000Clm50BgcCru.cheyenne_intel.clm-default -c /glade/p/cgd/tss/ctsm_baselines/ctsm5.1.dev038
+ PASSES w default fsurdat = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_10x15_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc'
+ gives differences from baseline as expected w new fsurdat that differs
+ more than roundoff from the default one = ‘/glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_10x15_hist_16pfts_Irrig_CMIP6_simyr2000_c210503.nc’
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but for now the model results
+are the same: there will be changes to surface datasets when they are
+remade, but so far we are still pointing to unchanged out-of-the-box
+surface datasets.
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: ALL
+    - what platforms/compilers: ALL
+    - nature of change: larger than roundoff/same climate
+
+ For now, model results are unchanged because we are still using the old
+ surface datasets. However, this tag changes answers in any new surface
+ datasets that are created.
+
+ I performed testing at the 0.9x1.25 degree resolution.
+
+ Code changes were tested by comparing baseline files (a)
+ surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c191101.nc
+ surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c191101.log
+ generated by running baseline code pointing to masked map_ files
+ to (b)
+ surfdata_0.9x1.25_new_hist_78pfts_CMIP6_simyr2000_c191101.nc
+ surfdata_0.9x1.25_new_hist_78pfts_CMIP6_simyr2000_c191101.log
+ generated by running the new code still pointing to masked map_ files
+ and then comparing to (c)
+ surfdata_0.9x1.25_nomask_78pfts_CMIP6_simyr2000_c191101.nc
+ surfdata_0.9x1.25_nomask_78pfts_CMIP6_simyr2000_c191101.log
+ generated by running the new code pointing to nomask map_ files.
+
+ We set an expectation of max abs relative differences of less than
+ roughly 1e-13. I got an actual max abs relative difference of 7e-12 in
+ PCT_NAT_PFT for (a) vs (b) and (a) vs (c). I refer to these here as
+ small diffs.
+
+ All other variables gave smaller diffs except the four VIC variables
+ binfil, Ws, Ds, Dsmax between (b) and (c). These diffs appear in 5 grid
+ cells (along two meridians that got shifted in longitude by less than
+ 1e-13 degrees) that vic considers land in the baseline and
+ ocean in the nomask case. Vic provides valid generic data for ocean
+ grid cells and, therefore, also where the discrepancies occur. This
+ means that if the land model treats these grid cells as land, the
+ model will work.
+
+ I had to generate new masked map_ files for (a) and (b) because
+ changes in ESMF codes over the years were leading to large differences
+ between all three (a) vs (b) vs (c). Generating new masked map_ files
+ brought the diffs back to small.
+
+ For the 3x3min and 5x5min SRC resolutions, I made six temporary
+ nomask SRC files, one per surface variable pointing to 3x3min
+ map_ files and one per surface variable pointing to 5x5min map_ files.
+ I did this to get small differences relative to the baseline. I created
+ the temporary files by making copies of the correspoding masked SRC
+ files and changing mask to 1 everywhere. The temporary files had diffs
+ less than roughly 1e-5 from generic nomask files generated by running
+ mkscripgrid.ncl for 3x3min and 5x5min. Ultimately we are replacing the
+ temporary files with the generic nomask files, which leads to larger
+ diffs in the surface datasets.
+
+ This testing occurred in late 2019 or early 2020. To confirm the
+ results I generated a new set of map_ files for 0.9x1.25 and then
+ created new fsurdat files with the baseline code and with the branch.
+ Only PCT_NAT_PFT triggers the error check for max abs relative
+ diff > 1e-13 with a max abs relative diff = 9e-12.
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/823
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev039
 Originator(s):  jedwards4b/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Tue May 18 14:36:25 MDT 2021
