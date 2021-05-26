@@ -14,7 +14,7 @@ module CanopyFluxesMod
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
-                                     use_luna, use_hydrstress, use_biomass_heat_storage, use_z0v_forest, z0param_method
+                                     use_luna, use_hydrstress, use_biomass_heat_storage, z0param_method
   use clm_varpar            , only : nlevgrnd, nlevsno, mxpft
   use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
@@ -114,7 +114,7 @@ contains
     namelist /canopyfluxes_inparm/ use_undercanopy_stability
     namelist /canopyfluxes_inparm/ use_biomass_heat_storage
     namelist /canopyfluxes_inparm/ itmax_canopy_fluxes
-    namelist /canopyfluxes_inparm/ use_z0v_forest
+  
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -144,7 +144,6 @@ contains
     call shr_mpi_bcast (use_undercanopy_stability, mpicom)
     call shr_mpi_bcast (use_biomass_heat_storage, mpicom)
     call shr_mpi_bcast (itmax_canopy_fluxes, mpicom)
-    call shr_mpi_bcast (use_z0v_forest, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -458,8 +457,7 @@ contains
          woody                  => pftcon%woody                                 , & ! Input:  woody flag
          rstem_per_dbh          => pftcon%rstem_per_dbh                         , & ! Input:  stem resistance per stem diameter (s/m**2)
          wood_density           => pftcon%wood_density                          , & ! Input:  dry wood density (kg/m3)
-         z0v_h                  => pftcon%z0v_h                                 , & ! Input:  ratio of vegetation surface roughness length to canopy height for forests (-)
-         z0v_alpha              => pftcon%z0v_alpha                             , & ! Input:  alpha parameter for decrease of vegetation surface roughness with LAI for forests (-)
+
          z0v_Cr                 => pftcon%z0v_Cr                                , & ! Input:  roughness-element drag coefficient for Raupach92 parameterization (-)
          z0v_Cs                 => pftcon%z0v_Cs                                , & ! Input:  substrate-element drag coefficient for Raupach92 parameterization (-)
          z0v_c                  => pftcon%z0v_c                                 , & ! Input:  c parameter for Raupach92 parameterization (-)
@@ -875,23 +873,7 @@ bioms:   do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
 
-         ! Keep old parametrization for grasses/crops and for forests if switch is off
 
-!         if(woody(patch%itype(p))==0 .or. use_z0v_forest==.false.) then 
-!            lt = min(elai(p)+esai(p), tlsai_crit)
-!            egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
-!            displa(p) = egvf * displa(p)
-!            z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
-!
-!         else ! use new parameterization for forests
-!            egvf = z0v_alpha(patch%itype(p))*elai(p)
-!            if(egvf == 0._r8) then
-!               z0mv(p) = htop(p) * z0v_h(patch%itype(p)) 
-!            else
-!            z0mv(p) = htop(p) * z0v_h(patch%itype(p)) * (1.0_r8 - exp(-egvf)) / egvf
-!            end if
-!            displa(p) = htop(p) - z0mv(p) / 0.264_r8
-!         end if
          select case (z0param_method)
          case ('ZengWang2007')
             lt = min(elai(p)+esai(p), tlsai_crit)

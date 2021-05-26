@@ -3685,7 +3685,6 @@ sub setup_logic_canopyfluxes {
   if ( &value_is_true($nl->get_value('use_biomass_heat_storage') ) && &value_is_true( $nl_flags->{'use_fates'}) ) {
      $log->fatal_error('use_biomass_heat_storage can NOT be set to true when fates is on');
   }
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_z0v_forest' );
 }
 
 #-------------------------------------------------------------------------------

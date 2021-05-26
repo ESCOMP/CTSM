@@ -291,12 +291,6 @@ module clm_varctl
   logical, public :: use_biomass_heat_storage = .false. ! true => include biomass heat storage in canopy energy budget
 
   !----------------------------------------------------------
-  ! forest surface roughness length switch
-  !----------------------------------------------------------
-
-  logical, public :: use_z0v_forest = .false. ! true => use new surface roughness length parameterization for forests
-
-  !----------------------------------------------------------
   ! each pft has individual soil column switch 
   !----------------------------------------------------------
 
