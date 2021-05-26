@@ -636,7 +636,7 @@ contains
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (ozone_method, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (ozone_method, 1, MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)
