@@ -1480,18 +1480,14 @@ contains
           read(avgflag(2:6), *) tod
           do k = beg1d_out, end1d_out
              if (field_gcell(k) /= spval) then
-
                 local_secpl = secs + grc%londeg(k)/degpsec
                 local_secpl = mod(local_secpl,isecspday)
-
                 weight = calc_weight_local_time(local_secpl, tod)
-
                 if (weight > 0) then
                    if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
                    hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(weight)
                    nacs(k,1) = nacs(k,1) + weight
                 end if
-
               else
                  if (nacs(k,1) == 0) hbuf(k,1) = spval
               end if
@@ -1605,9 +1601,7 @@ contains
              nacs(k,1) = 1
           end do
        case ('L') ! Local solar time
-
           read(avgflag(2:6), *) tod
-
           if ( end1d .eq. ubound(field,1) ) then
              k_offset = 0
           else
@@ -1623,10 +1617,8 @@ contains
                    end if
                 else
                    local_secpl = secs + grc%londeg(k)/degpsec
-
                 end if
                 local_secpl = mod(local_secpl,isecspday)
-
                 if (valid) then
                    weight = calc_weight_local_time(local_secpl, tod)
                    if (weight > 0 .and. field(k+k_offset) /= spval) then
@@ -1886,21 +1878,16 @@ contains
           do j = 1,num2d
              do k = beg1d_out, end1d_out
                 if (field_gcell(k,j) /= spval) then
-
                    local_secpl = secs + grc%londeg(k)/degpsec
                    local_secpl = mod(local_secpl,isecspday)
-
                    weight = calc_weight_local_time(local_secpl, tod)
-
                    if (weight > 0) then
                       if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
                       hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(weight)
                       nacs(k,j) = nacs(k,j) + weight
                    end if
-
                 else
                    if (nacs(k,j) == 0) hbuf(k,j) = spval
-
                 end if
              end do
           end do
@@ -2020,7 +2007,6 @@ contains
        case ('L') ! Local solar time
           read(avgflag(2:6), *) tod
           do j = 1,num2d
-
              do k = beg1d, end1d
                 valid = .true.
                 if (check_active) then
@@ -2033,7 +2019,6 @@ contains
                    local_secpl = secs + grc%londeg(k)/degpsec
                 end if
                 local_secpl = mod(local_secpl,isecspday)
-
                 if (valid) then
                    weight = calc_weight_local_time(local_secpl, tod)
 
@@ -2071,15 +2056,15 @@ contains
     use clm_time_manager, only : get_step_size
     !
     ! !ARGUMENTS:
-    integer             :: weight  ! function result
+    integer                :: weight       ! function result
     integer, intent(inout) :: local_secpl  ! seconds into current date in local time
-    integer, intent(in) :: tod                       ! Desired local solar time of output in seconds
+    integer, intent(in)    :: tod          ! Desired local solar time of output in seconds
  
     !
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'calc_weight_local_time'
-    integer :: dtime                     ! timestep size [seconds]
+    integer :: dtime                       ! timestep size [seconds]
     !-----------------------------------------------------------------------
 
     weight = 0
@@ -2088,13 +2073,11 @@ contains
     if (tod < dtime .and. local_secpl > isecspday-dtime ) then
        local_secpl = local_secpl - isecspday
     end if
-
     if (local_secpl >= tod - dtime .and. local_secpl < tod ) then
        weight = dtime-tod+local_secpl
     else if (local_secpl >= tod .and. local_secpl < tod + dtime ) then
        weight = dtime+tod-local_secpl
     end if
-
 
   end function calc_weight_local_time
 
@@ -5772,7 +5755,6 @@ contains
        else
           valid = .false.
        end if      
-         
     else
        valid = .false.
     end if
