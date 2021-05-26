@@ -1097,6 +1097,9 @@ Initial seed Carbon to use at planting
 
 <entry id="ozone_method" type="char*32" category="physics"
        group="clm_inparm" valid_values="unset,stress_lombardozzi2015,stress_falk" value="unset">
+Toggle to turn on ozone vegetation stress method
+</entry>       
+       
 <entry id="onset_thresh_depends_on_veg" type="logical" category="physics"
        group="cnphenology">
 Phenology onset depends on the vegetation type
