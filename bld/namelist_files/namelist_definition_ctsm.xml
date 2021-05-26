@@ -86,14 +86,6 @@ Type of CO2 feedback.
     diagnostic = use the diagnostic value sent from the atmosphere
 </entry>
 
-
-<entry id="o3_type" type="char*16" category="clm_physics"
-       group="clm_inparm" valid_values="constant,diagnostic" >
-Type of O3 feedback.
-    constant   = use the input o3_ppbv value
-    disgnostic = use diagnostic values from the atmosphere
-</entry>
-
 <entry id="suplnitro" type="char*15" category="clm_physics"
        group="clm_inparm" valid_values="NONE,ALL" >
 Supplemental Nitrogen mode and for what type of vegetation it's turned on for. 
