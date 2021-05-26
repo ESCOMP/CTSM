@@ -690,7 +690,7 @@ contains
     real(r8) :: jmaxSlope      ! slope for max. electron transport rate
     character(len=*), parameter :: subname = 'CalcOzoneStressFalkOnePoint'
     !-----------------------------------------------------------------------
-    ! TODO(si, 2021-05-07) Should it really be a comparision with a real which is zero? 
+   
     if (o3uptake == 0._r8) then
        o3coefjmax = 1._r8
     else
