@@ -85,7 +85,8 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest, &
+                               scale_by_thickness)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -98,6 +99,7 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
+    logical  , intent(in)    :: scale_by_thickness
     !
     ! !LOCAL VARIABLES:
 
@@ -105,6 +107,7 @@ contains
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((size(data_source) == size(data_dest)), sourcefile, __LINE__)
+    SHR_ASSERT_FL((.not. scale_by_thickness), sourcefile, __LINE__)
 
     ! Note that it's safe to do whole-array assignment here because we never decompose
     ! along the level dimension (in contrast to the spatial dimension, where you need to

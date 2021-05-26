@@ -613,35 +613,35 @@ contains
           ptr2d => this%FATES_c_to_litr_lab_c_col
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
+               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
           
           ptr2d => this%FATES_c_to_litr_cel_c_col
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
+               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
           
           ptr2d => this%FATES_c_to_litr_lig_c_col
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
+               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
           
        else
           ptr1d => this%FATES_c_to_litr_lab_c_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
+               dim1name='column', long_name='', units='gC/m3/s', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d) 
           
           ptr1d => this%FATES_c_to_litr_cel_c_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
+               dim1name='column', long_name='', units='gC/m3/s', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d) 
           
           ptr1d => this%FATES_c_to_litr_lig_c_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
+               dim1name='column', long_name='', units='gC/m3/s', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d) 
           
        end if

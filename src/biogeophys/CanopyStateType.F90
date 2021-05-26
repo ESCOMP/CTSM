@@ -581,16 +581,19 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='vegwp', xtype=ncd_double,  &
             dim1name='pft', dim2name='vegwcs', switchdim=.true., &
             long_name='vegetation water matric potential', units='mm', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%vegwp_patch) 
 
        call restartvar(ncid=ncid, flag=flag, varname='VEGWPLN', xtype=ncd_double,  &
-            dim1name='pft', dim2name='vegwcs', &                                                                                                                                        
+            dim1name='pft', dim2name='vegwcs', switchdim=.false., &
             long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', units='mm', &
+            scale_by_thickness=.false., &
             interpinic_flag='skip', readvar=readvar, data=this%vegwp_ln_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='VEGWPPD', xtype=ncd_double,  &
-            dim1name='pft', dim2name='vegwcs', &
+            dim1name='pft', dim2name='vegwcs', switchdim=.false., &
             long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', units='mm', &
+            scale_by_thickness=.false., &
             interpinic_flag='skip', readvar=readvar, data=this%vegwp_pd_patch)
 
     end if
