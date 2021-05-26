@@ -164,6 +164,7 @@ module histFileMod
   private :: hfields_1dinfo            ! Define/output 1d subgrid info if appropriate
   private :: hist_update_hbuf_field_1d ! Updates history buffer for specific field and tape
   private :: hist_update_hbuf_field_2d ! Updates history buffer for specific field and tape
+  private :: calc_weight_local_time    ! Calculate weight for time interpolation for local time flag
   private :: hist_set_snow_field_2d    ! Set values in history field dimensioned by levsno
   private :: list_index                ! Find index of field in exclude list
   private :: set_hist_filename         ! Determine history dataset filenames
@@ -1288,7 +1289,7 @@ contains
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
     use decompMod       , only : BOUNDS_LEVEL_PROC
     use clm_varcon      , only : degpsec, isecspday
-    use clm_time_manager, only : get_step_size, get_curr_date
+    use clm_time_manager, only : get_curr_date
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1322,8 +1323,8 @@ contains
     integer :: day                       ! day of month (1, ..., 31) for nstep
     integer :: secs                      ! seconds into current date for nstep
     integer :: local_secpl               ! seconds into current date in local time
-    integer :: dtime                     ! timestep size [seconds]
     integer :: tod                       ! Desired local solar time of output in seconds
+    integer :: weight                    ! Weight for linear interpolation in time for local time avgflag
     integer, allocatable :: grid_index(:)             ! Grid cell index for longitude
     integer, allocatable :: tods(:)
     character(len=1) :: avgflag_trim     ! first character of avgflag
@@ -1347,7 +1348,6 @@ contains
     hpindex        =  tape(t)%hlist(f)%field%hpindex
     field          => clmptr_rs(hpindex)%ptr
 
-    dtime = get_step_size()
     call get_curr_date (year, month, day, secs)
 
     ! set variables to check weights when allocate all pfts
@@ -1484,30 +1484,18 @@ contains
                 local_secpl = secs + grc%londeg(k)/degpsec
                 local_secpl = mod(local_secpl,isecspday)
 
-                if (local_secpl >= tod - dtime .and. local_secpl < tod) then
-                   if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
-                   hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(dtime-tod+local_secpl)
-                   nacs(k,1) = nacs(k,1) + dtime-tod+local_secpl
-                else if (local_secpl >= tod .and. local_secpl < tod + dtime) then
-                   if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
-                   hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(dtime+tod-local_secpl)
-                   nacs(k,1) = nacs(k,1) + dtime+tod-local_secpl
-                end if
+                weight = calc_weight_local_time(local_secpl, tod)
 
-                if (tod < dtime .and. local_secpl > isecspday-dtime) then
-                   local_secpl = local_secpl - isecspday
-                   if (local_secpl >= tod - dtime .and. local_secpl < tod) then
-                      if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
-                      hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(dtime-tod+local_secpl)
-                      nacs(k,1) = nacs(k,1) + dtime-tod+local_secpl
-                   end if
+                if (weight > 0) then
+                   if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
+                   hbuf(k,1) = hbuf(k,1) + field_gcell(k)*real(weight)
+                   nacs(k,1) = nacs(k,1) + weight
                 end if
 
               else
                  if (nacs(k,1) == 0) hbuf(k,1) = spval
               end if
-           end do
-
+          end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1640,30 +1628,16 @@ contains
                 local_secpl = mod(local_secpl,isecspday)
 
                 if (valid) then
-                   if (local_secpl >= tod - dtime .and. local_secpl < tod .and. field(k+k_offset) /= spval) then
+                   weight = calc_weight_local_time(local_secpl, tod)
+                   if (weight > 0 .and. field(k+k_offset) /= spval) then
                       if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
-                      hbuf(k,1) = hbuf(k,1) + field(k+k_offset)*real(dtime-tod+local_secpl)
-                      nacs(k,1) = nacs(k,1) + dtime-tod+local_secpl
-                   else if (local_secpl >= tod .and. local_secpl < tod + dtime .and. field(k+k_offset) /= spval) then
-                      if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
-                      hbuf(k,1) = hbuf(k,1) + field(k+k_offset)*real(dtime+tod-local_secpl)
-                      nacs(k,1) = nacs(k,1) + dtime+tod-local_secpl
+                      hbuf(k,1) = hbuf(k,1) + field(k+k_offset)*real(weight)
+                      nacs(k,1) = nacs(k,1) + weight
                    end if
-
-                   if (tod < dtime .and. local_secpl > isecspday-dtime .and. field(k+k_offset) /= spval) then
-                      local_secpl = local_secpl - isecspday
-                      if (local_secpl >= tod - dtime .and. local_secpl < tod) then
-                         if (nacs(k,1) == 0) hbuf(k,1) = 0._r8
-                         hbuf(k,1) = hbuf(k,1) + field(k+k_offset)*real(dtime-tod+local_secpl)
-                         nacs(k,1) = nacs(k,1) + dtime-tod+local_secpl
-                      end if
-                   end if
-
-                 else
-                    if (nacs(k,1) == 0) hbuf(k,1) = spval
-                 end if
-               end do
-
+                else
+                   if (nacs(k,1) == 0) hbuf(k,1) = spval
+                end if
+             end do
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -1687,7 +1661,7 @@ contains
     use decompMod       , only : BOUNDS_LEVEL_PROC
     use clm_varctl      , only : iulog
     use clm_varcon      , only : degpsec, isecspday
-    use clm_time_manager, only : get_step_size, get_curr_date
+    use clm_time_manager, only : get_curr_date
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1724,8 +1698,8 @@ contains
     integer :: day                       ! day of month (1, ..., 31) for nstep
     integer :: secs                      ! seconds into current date for nstep
     integer :: local_secpl               ! seconds into current date in local time
-    integer :: dtime                     ! timestep size [seconds]
     integer :: tod                       ! Desired local solar time of output in seconds
+    integer :: weight                    ! Weight for linear interpolation in time for local time avgflag
     integer, allocatable :: grid_index(:)             ! Grid cell index for longitude
     integer, allocatable :: tods(:)
     character(len=1) :: avgflag_trim     ! first character of avgflag
@@ -1749,7 +1723,6 @@ contains
     no_snow_behavior    =  tape(t)%hlist(f)%field%no_snow_behavior
     hpindex             =  tape(t)%hlist(f)%field%hpindex
 
-    dtime = get_step_size()
     call get_curr_date (year, month, day, secs)
 
     if (no_snow_behavior /= no_snow_unset) then
@@ -1917,23 +1890,12 @@ contains
                    local_secpl = secs + grc%londeg(k)/degpsec
                    local_secpl = mod(local_secpl,isecspday)
 
-                   if (local_secpl >= tod - dtime .and. local_secpl < tod) then
-                      if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
-                      hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(dtime-tod+local_secpl)
-                      nacs(k,j) = nacs(k,j) + dtime-tod+local_secpl
-                   else if (local_secpl >= tod .and. local_secpl < tod + dtime) then
-                      if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
-                      hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(dtime+tod-local_secpl)
-                      nacs(k,j) = nacs(k,j) + dtime+tod-local_secpl
-                   end if
+                   weight = calc_weight_local_time(local_secpl, tod)
 
-                   if (tod < dtime .and. local_secpl > isecspday-dtime) then
-                      local_secpl = local_secpl - isecspday
-                      if (local_secpl >= tod - dtime .and. local_secpl < tod) then
-                         if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
-                         hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(dtime-tod+local_secpl)
-                         nacs(k,j) = nacs(k,j) + dtime-tod+local_secpl
-                      end if
+                   if (weight > 0) then
+                      if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                      hbuf(k,j) = hbuf(k,j) + field_gcell(k,j)*real(weight)
+                      nacs(k,j) = nacs(k,j) + weight
                    end if
 
                 else
@@ -1942,8 +1904,6 @@ contains
                 end if
              end do
           end do
-
-
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -2075,31 +2035,18 @@ contains
                 local_secpl = mod(local_secpl,isecspday)
 
                 if (valid) then
-                   if (local_secpl >= tod - dtime .and. local_secpl < tod .and. field(k-beg1d+1,j) /= spval) then
-                      if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
-                      hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(dtime-tod+local_secpl)
-                      nacs(k,j) = nacs(k,j) + dtime-tod+local_secpl
-                   else if (local_secpl >= tod .and. local_secpl < tod + dtime .and. field(k-beg1d+1,j) /= spval) then
-                      if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
-                      hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(dtime+tod-local_secpl)
-                      nacs(k,j) = nacs(k,j) + dtime+tod-local_secpl
-                   end if
+                   weight = calc_weight_local_time(local_secpl, tod)
 
-                   if (tod < dtime .and. local_secpl > isecspday-dtime .and. field(k-beg1d+1,j) /= spval) then
-                      local_secpl = local_secpl - isecspday
-                      if (local_secpl >= tod - dtime .and. local_secpl < tod) then
-                         if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
-                         hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(dtime-tod+local_secpl)
-                         nacs(k,j) = nacs(k,j) + dtime-tod+local_secpl
-                      end if
+                   if (weight > 0 .and. field(k-beg1d+1,j) /= spval) then
+                      if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
+                      hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(weight)
+                      nacs(k,j) = nacs(k,j) + weight
                    end if
-
                 else
                    if (nacs(k,j) == 0) hbuf(k,j) = spval
                 end if
              end do
           end do
-
        case default
           write(iulog,*) trim(subname),' ERROR: invalid time averaging flag ', avgflag
           call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -2111,6 +2058,45 @@ contains
     end if
 
   end subroutine hist_update_hbuf_field_2d
+
+  !-----------------------------------------------------------------------
+  function calc_weight_local_time(local_secpl, tod) result(weight)
+    !
+    ! !DESCRIPTION:
+    ! Calculates weight for linear intepolation in time for local time
+    ! average flag
+    !
+    ! !USES:
+    use clm_varcon      , only : isecspday
+    use clm_time_manager, only : get_step_size
+    !
+    ! !ARGUMENTS:
+    integer             :: weight  ! function result
+    integer, intent(inout) :: local_secpl  ! seconds into current date in local time
+    integer, intent(in) :: tod                       ! Desired local solar time of output in seconds
+ 
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'calc_weight_local_time'
+    integer :: dtime                     ! timestep size [seconds]
+    !-----------------------------------------------------------------------
+
+    weight = 0
+    dtime = get_step_size()
+
+    if (tod < dtime .and. local_secpl > isecspday-dtime ) then
+       local_secpl = local_secpl - isecspday
+    end if
+
+    if (local_secpl >= tod - dtime .and. local_secpl < tod ) then
+       weight = dtime-tod+local_secpl
+    else if (local_secpl >= tod .and. local_secpl < tod + dtime ) then
+       weight = dtime+tod-local_secpl
+    end if
+
+
+  end function calc_weight_local_time
 
   !-----------------------------------------------------------------------
   subroutine hist_set_snow_field_2d (field_out, field_in, no_snow_behavior, type1d, beg1d, end1d)
