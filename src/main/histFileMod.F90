@@ -2021,7 +2021,6 @@ contains
                 local_secpl = mod(local_secpl,isecspday)
                 if (valid) then
                    weight = calc_weight_local_time(local_secpl, tod)
-
                    if (weight > 0 .and. field(k-beg1d+1,j) /= spval) then
                       if (nacs(k,j) == 0) hbuf(k,j) = 0._r8
                       hbuf(k,j) = hbuf(k,j) + field(k-beg1d+1,j)*real(weight)
@@ -5752,6 +5751,10 @@ contains
        read(avgflag(2:6), *) tod
        if (tod >= 0 .and. tod <= isecspday) then
           valid = .true.
+          if(tod < dtime .or. isecspday - tod <= dtime) then
+             write(iulog,*) 'Warning: Local time history output ', avgflag, ' is closer than ', &
+                'dtime to midnight! This problematic particularly for daily output.'
+          end if
        else
           valid = .false.
        end if      
