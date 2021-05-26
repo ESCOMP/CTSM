@@ -323,7 +323,7 @@ module LunaMod
     enzs_z        => photosyns_inst%enzs_z_patch                      , & ! Output: [real(r8) (:,:) ] enzyme decay status 1.0-fully active; 0-all decayed during stress
     vcmx25_z_last_valid_patch   => photosyns_inst%vcmx25_z_last_valid_patch , & ! Output: [real(r8) (:,:) ] patch leaf Vc,max25 from end of the growing season for the previous year
     jmx25_z_last_valid_patch    => photosyns_inst%jmx25_z_last_valid_patch                         , & ! Output: [real(r8) (:,:) ] patch leaf Jmax25 from the end of the growing season for the previous year
-    o3coefjmax => ozone_inst%o3coefjmaxsun_patch          &         ! Input: [real(r8) (:)] ozone coef jmax sun
+    o3coefjmax => ozone_inst%o3coefjmaxsun_patch                        & ! Input: [real(r8) (:)] ozone coef jmax sun
   )  
     !----------------------------------------------------------------------------------------------------------------------------------------------------------
     !set timestep
@@ -830,7 +830,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   real(r8), intent (in) :: PNrespold                  !old value of the proportion of nitrogen allocated to respiration (unitless)
   real(r8), intent (in) :: PNcbold                    !old value of the proportion of nitrogen allocated to carboxylation (unitless)  
   real(r8), intent (in) :: dayl_factor                !daylight scale factor
-  real(r8), intent (in) :: o3coefjmax              !ozone coef jmax 
+  real(r8), intent (in) :: o3coefjmax                 !ozone coef jmax 
 
   real(r8), intent (out):: PNstoreopt                 !optimal proportion of nitrogen for storage 
   real(r8), intent (out):: PNlcopt                    !optimal proportion of nitrogen for light capture 
@@ -1026,7 +1026,7 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   real(r8), intent (in) :: NUEcref                    !nitrogen use efficiency for carboxylation under reference climates
   real(r8), intent (in) :: NUEjref                    !nitrogen use efficiency for electron transport under reference climates
   real(r8), intent (in) :: NUEr                       !nitrogen use efficiency for respiration
-  real(r8), intent (in) :: o3coefjmax             !ozone coef jmax 
+  real(r8), intent (in) :: o3coefjmax                 !ozone coef jmax 
 
   real(r8), intent (inout) :: Kc                      !conversion factors from Vc,max to Wc 
   real(r8), intent (inout) :: Kj                      !conversion factor from electron transport rate to Wj 
@@ -1059,7 +1059,8 @@ subroutine Nitrogen_investments (KcKjFlag, FNCa, Nlc, forc_pbot10, relh10, &
   Jmaxb0act = params_inst%jmaxb0 * FNCa * Fj
 
   ! Default value of o3coefjmax is 1 -->
-  !  o3coefjmax is only different from 1 if ozone_inst%stress_method == 'stress_falk'
+  ! o3coefjmax is only different from 1 if ozone_inst%stress_method == 'stress_falk'
+  ! BUG(si, 2021-05-26, ESCOMP/CTSM#1381)
   Jmax = Jmaxb0act + JmaxCoef * ELTRNabsorb * o3coefjmax 
 
 
