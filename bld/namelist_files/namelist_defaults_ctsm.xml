@@ -481,7 +481,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.14.0.0_12pft_c200921.nc</fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.15.2.0_12pft_c210510.nc</fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
