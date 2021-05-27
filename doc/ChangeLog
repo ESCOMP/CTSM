@@ -1,4 +1,93 @@
 ===============================================================
+Tag name:  ctsm5.1.dev041
+Originator(s): Ryan Knox
+Date: Thu May 27 01:10:40 MDT 2021
+One-line Summary: Updates to coupling interface to enable FATES-CH4, and to be compatible with FATES-CNP.
+
+Purpose and description of changes
+----------------------------------
+
+These changes are only relegated to the API with FATES. Boundary conditions were prepared within 
+FATES to enable proper use of the methane model. Further, some minor changes were made to the FATES 
+interface code (clmfates_interfaceMod.F90) allowing compatibility with FATES tag sci.1.46.0_api.16.0.0 
+(https://github.com/NGEET/fates/releases/tag/sci.1.46.0_api.16.0.0). Most of these changes have to do 
+with how the FATES history interface is instantiated.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+No bugs fixed or introduced.
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+This tag brings compatibility with FATES tag: sci.1.46.0_api.16.0.0
+
+CTSM-FATES users should also be aware that the FATES parameter file has been
+updated. An example is found here:
+
+https://github.com/NGEET/fates/blob/sci.1.46.0_api.16.0.0/parameter_files/fates_params_default.cdl
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+A new test was added to check FATES-CH4 coupling:
+
+ERS_Ld9.f10_f10_mg37.I2000Clm50FatesCru.cheyenne_intel.clm-FatesColdDefCH4
+
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+      cheyenne - PASS (60 test different because of fates paramfile)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+      cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests:
+    cheyenne ---- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+All FATES tests will have different answers with tag: sci.1.46.0_api.16.0.0
+
+This is mostly due to the passing of thaw-depth into more of the rooting depth algorithm.
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
+   fates to sci.1.46.0_api.16.0.0
+
+Pull Requests that document the changes (include PR ids): #1371
+(https://github.com/ESCOMP/ctsm/pull)
+   #1371 -- FATES parteh scale fixes api (ie nutrient + methane coupling)
+
+===============================================================
+
+===============================================================
 Tag name:  ctsm5.1.dev040
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date:  Thu May 20 08:28:20 MDT 2021
