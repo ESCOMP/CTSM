@@ -223,20 +223,7 @@ contains
     ! Read surface dataset and set up subgrid weight arrays
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
-    ! Ask Fates to evaluate its own dimensioning needs.
-    ! This determines the total amount of space it requires in its largest
-    ! dimension.  We are currently calling that the "cohort" dimension, but
-    ! it is really a utility dimension that captures the models largest
-    ! size need.
-    ! Sets:
-    !   fates_maxElementsPerPatch
-    !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
-    ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
-    ! to allocate space)
-    ! This also sets up various global constants in FATES
-    ! ------------------------------------------------------------------------
-
-    call CLMFatesGlobals(dtime)
+ 
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call decompInit_clumps(ni, nj, glc_behavior)
@@ -317,6 +304,22 @@ contains
     call t_stopf('init_orbd')
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
 
+    ! Ask Fates to evaluate its own dimensioning needs.
+    ! This determines the total amount of space it requires in its largest
+    ! dimension.  We are currently calling that the "cohort" dimension, but
+    ! it is really a utility dimension that captures the models largest
+    ! size need.
+    ! Sets:
+    !   fates_maxElementsPerPatch
+    !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
+    ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
+    ! to allocate space)
+    ! This also sets up various global constants in FATES
+    ! ------------------------------------------------------------------------
+
+    call CLMFatesGlobals(dtime)
+
+    
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
