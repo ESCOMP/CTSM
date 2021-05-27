@@ -60,6 +60,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : fates_inventory_ctrl_filename
    use clm_varctl        , only : use_nitrif_denitrif
+   use clm_varctl        , only : use_lch4
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
    use clm_varcon        , only : denice
@@ -104,7 +105,7 @@ module CLMFatesInterfaceMod
 !   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
-   use FatesInterfaceTypesMod , only : fates_interface_type
+   use FatesInterfaceMod , only : fates_interface_type
    use FatesInterfaceMod, only : FatesInterfaceInit, FatesReportParameters
    use FatesInterfaceMod, only : SetFatesGlobalElements
    use FatesInterfaceMod     , only : allocate_bcin
@@ -115,8 +116,7 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
-   
-   use FatesHistoryInterfaceMod, only : fates_history_interface_type
+   use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
@@ -133,6 +133,7 @@ module CLMFatesInterfaceMod
    use EDBtranMod            , only : btran_ed, &
                                       get_active_suction_layers
    use EDCanopyStructureMod  , only : canopy_summarization, update_hlm_dynamics
+   use EDCanopyStructureMod  , only : UpdateFatesAvgSnowDepth
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
    use FatesSoilBGCFluxMod    , only : FluxIntoLitterPools
@@ -176,16 +177,12 @@ module CLMFatesInterfaceMod
       ! own list of sites, and boundary conditions for those sites
 
       type(fates_interface_type), allocatable :: fates (:)
-      
 
       ! This memory structure is used to map fates sites
       ! into the host model.  Currently, the FATES site
       ! and its column number matching are its only members
 
       type(f2hmap_type), allocatable  :: f2hmap(:)
-
-      ! fates_hist is the interface class for the history output
-      type(fates_history_interface_type) :: fates_hist
 
       ! fates_restart is the inteface calss for restarting the model
       type(fates_restart_interface_type) :: fates_restart
@@ -259,6 +256,7 @@ module CLMFatesInterfaceMod
      logical                                        :: verbose_output
      integer                                        :: pass_masterproc
      integer                                        :: pass_vertsoilc
+     integer                                        :: pass_ch4
      integer                                        :: pass_spitfire     
      integer                                        :: pass_ed_st3
      integer                                        :: pass_num_lu_harvest_cats
@@ -330,6 +328,13 @@ module CLMFatesInterfaceMod
            pass_is_restart = 0
         end if
         call set_fates_ctrlparms('is_restart',ival=pass_is_restart)
+
+        if(use_lch4) then
+           pass_ch4 = 1
+        else
+           pass_ch4 = 0
+        end if
+        call set_fates_ctrlparms('use_ch4',ival=pass_ch4)
         
         if(use_vertsoilc) then
            pass_vertsoilc = 1
@@ -538,6 +543,7 @@ module CLMFatesInterfaceMod
                s = s + 1
                collist(s) = c
                this%f2hmap(nc)%hsites(c) = s
+               col%is_fates(c) = .true.
                if(debug)then
                   write(iulog,*) 'clm_fates%init(): thread',nc,': found column',c,'with lu',l
                   write(iulog,*) 'LU type:', lun%itype(l)
@@ -592,6 +598,8 @@ module CLMFatesInterfaceMod
          do s = 1, this%fates(nc)%nsites
             
             c = this%f2hmap(nc)%fcolumn(s)
+
+            this%fates(nc)%sites(s)%h_gid = c
             
             if (use_vertsoilc) then
                ndecomp = col%nbedrock(c)
@@ -812,7 +820,8 @@ module CLMFatesInterfaceMod
                waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
-               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
+              min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
+
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
             p = ifp+col%patchi(c)
@@ -870,6 +879,13 @@ module CLMFatesInterfaceMod
       ! structures into the cohort structures.
       call UnPackNutrientAquisitionBCs(this%fates(nc)%sites, this%fates(nc)%bc_in)
 
+
+      ! ---------------------------------------------------------------------------------
+      ! Flush arrays to values defined by %flushval (see registry entry in
+      ! subroutine define_history_vars()
+      ! ---------------------------------------------------------------------------------
+      call fates_hist%flush_hvars(nc,upfreq_in=1)
+
       
       ! ---------------------------------------------------------------------------------
       ! Part II: Call the FATES model now that input boundary conditions have been
@@ -921,15 +937,15 @@ module CLMFatesInterfaceMod
       call this%wrap_update_hlmfates_dyn(nc,               &
                                          bounds_clump,     &
                                          waterdiagnosticbulk_inst,  &
-                                         canopystate_inst)
+                                         canopystate_inst, .false.)
       
       ! ---------------------------------------------------------------------------------
       ! Part IV: 
       ! Update history IO fields that depend on ecosystem dynamics
       ! ---------------------------------------------------------------------------------
-      call this%fates_hist%update_history_dyn( nc,                    &
-                                              this%fates(nc)%nsites, &
-                                              this%fates(nc)%sites) 
+      call fates_hist%update_history_dyn( nc,                    &
+                                          this%fates(nc)%nsites, &
+                                          this%fates(nc)%sites) 
 
       if (masterproc) then
          write(iulog, *) 'clm: leaving fates model', bounds_clump%begg, &
@@ -944,7 +960,7 @@ module CLMFatesInterfaceMod
    ! ------------------------------------------------------------------------------------
 
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
-        waterdiagnosticbulk_inst, canopystate_inst)
+        waterdiagnosticbulk_inst, canopystate_inst, is_initing_from_restart)
 
       ! ---------------------------------------------------------------------------------
       ! This routine handles the updating of vegetation canopy diagnostics, (such as lai)
@@ -958,7 +974,11 @@ module CLMFatesInterfaceMod
      integer                 , intent(in)           :: nc
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
-     
+
+     ! is this being called during a read from restart sequence (if so then use the restarted fates
+     ! snow depth variable rather than the CLM variable).
+     logical                 , intent(in)           :: is_initing_from_restart
+
      integer :: npatch  ! number of patches in each site
      integer :: ifp     ! index FATES patch 
      integer :: p       ! HLM patch index
@@ -989,6 +1009,11 @@ module CLMFatesInterfaceMod
           this%fates(nc)%bc_in(s)%snow_depth_si   = snow_depth(c)
           this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_eff(c)
        end do
+       
+       ! Only update the fates internal snow burial if this is not a restart
+       if (.not. is_initing_from_restart) then
+          call UpdateFatesAvgSnowDepth(this%fates(nc)%sites,this%fates(nc)%bc_in)
+       end if
        
        ! Canopy diagnostics for FATES
        call canopy_summarization(this%fates(nc)%nsites, &
@@ -1106,7 +1131,8 @@ module CLMFatesInterfaceMod
    ! ====================================================================================
 
    subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
-                             waterstatebulk_inst, canopystate_inst, soilstate_inst )
+        waterstatebulk_inst, canopystate_inst, soilstate_inst, &
+        active_layer_inst)
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -1142,6 +1168,7 @@ module CLMFatesInterfaceMod
       type(waterstatebulk_type)      , intent(inout) :: waterstatebulk_inst
       type(canopystate_type)         , intent(inout) :: canopystate_inst
       type(soilstate_type)           , intent(inout) :: soilstate_inst
+      type(active_layer_type)        , intent(in)    :: active_layer_inst
       
       ! Locals
       type(bounds_type) :: bounds_clump
@@ -1331,7 +1358,8 @@ module CLMFatesInterfaceMod
                ! Convert newly read-in vectors into the FATES namelist state variables
                ! ------------------------------------------------------------------------
                call this%fates_restart%create_patchcohort_structure(nc, &
-                    this%fates(nc)%nsites, this%fates(nc)%sites, this%fates(nc)%bc_in)
+                    this%fates(nc)%nsites, this%fates(nc)%sites, this%fates(nc)%bc_in, &
+                    this%fates(nc)%bc_out)
                
                call this%fates_restart%get_restart_vectors(nc, this%fates(nc)%nsites, &
                     this%fates(nc)%sites )
@@ -1339,17 +1367,22 @@ module CLMFatesInterfaceMod
                ! I think ed_update_site and update_hlmfates_dyn are doing some similar
                ! update type stuff, should consolidate (rgk 11-2016)
                do s = 1,this%fates(nc)%nsites
+                  
+                  c = this%f2hmap(nc)%fcolumn(s)
+
+                  this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
+                       min(this%fates(nc)%bc_in(s)%nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
+                  
                   call ed_update_site( this%fates(nc)%sites(s), &
                         this%fates(nc)%bc_in(s), & 
                         this%fates(nc)%bc_out(s) )
 
-
-               ! This call sends internal fates variables into the
-               ! output boundary condition structures. Note: this is called
-               ! internally in fates dynamics as well.
-               call FluxIntoLitterPools(this%fates(nc)%sites(s), &
-                    this%fates(nc)%bc_in(s), & 
-                    this%fates(nc)%bc_out(s))
+                  ! This call sends internal fates variables into the
+                  ! output boundary condition structures. Note: this is called
+                  ! internally in fates dynamics as well.
+                  call FluxIntoLitterPools(this%fates(nc)%sites(s), &
+                       this%fates(nc)%bc_in(s), & 
+                       this%fates(nc)%bc_out(s))
                   
                end do
                
@@ -1393,7 +1426,7 @@ module CLMFatesInterfaceMod
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterdiagnosticbulk_inst,canopystate_inst)
+                     waterdiagnosticbulk_inst,canopystate_inst, .true.)
 
                ! ------------------------------------------------------------------------
                ! Update the 3D patch level radiation absorption fractions
@@ -1405,9 +1438,9 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
-               call this%fates_hist%update_history_dyn( nc, &
-                     this%fates(nc)%nsites,                 &
-                     this%fates(nc)%sites) 
+               call fates_hist%update_history_dyn( nc, &
+                                                   this%fates(nc)%nsites,                 &
+                                                   this%fates(nc)%sites) 
 
                
             end if
@@ -1461,7 +1494,9 @@ module CLMFatesInterfaceMod
            call get_clump_bounds(nc, bounds_clump)
 
            do s = 1,this%fates(nc)%nsites
-              call init_site_vars(this%fates(nc)%sites(s),this%fates(nc)%bc_in(s) )
+              call init_site_vars(this%fates(nc)%sites(s), &
+                                  this%fates(nc)%bc_in(s), &
+                                  this%fates(nc)%bc_out(s) )
               call zero_site(this%fates(nc)%sites(s))
            end do
            
@@ -1514,6 +1549,15 @@ module CLMFatesInterfaceMod
                              this%fates(nc)%bc_in)
 
            do s = 1,this%fates(nc)%nsites
+
+              c = this%f2hmap(nc)%fcolumn(s)
+
+              ! CLM has not calculated the maximum rooting depth
+              ! from last year, it won't until the beginning of the
+              ! time-step loop. Therefore, we just initialize fluxes
+              ! into the litter pool in a trivial way prior to timestepping
+              this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = this%fates(nc)%bc_in(s)%nlevsoil
+              
               call ed_update_site(this%fates(nc)%sites(s), &
                     this%fates(nc)%bc_in(s), & 
                     this%fates(nc)%bc_out(s))
@@ -1531,12 +1575,12 @@ module CLMFatesInterfaceMod
            ! Update diagnostics of FATES ecosystem structure used in HLM.
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                waterdiagnosticbulk_inst,canopystate_inst)
+                waterdiagnosticbulk_inst,canopystate_inst, .false.)
 
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
            ! ------------------------------------------------------------------------
-           call this%fates_hist%update_history_dyn( nc, &
+           call fates_hist%update_history_dyn( nc, &
                 this%fates(nc)%nsites,                 &
                 this%fates(nc)%sites) 
 
@@ -1613,6 +1657,7 @@ module CLMFatesInterfaceMod
 
            end do
         end do
+
 
         ! -------------------------------------------------------------------------------
         ! Call FATES public function to calculate internal sun/shade structures
@@ -2151,7 +2196,7 @@ module CLMFatesInterfaceMod
       dtime = get_step_size_real()
       
       ! Update history variables that track these variables
-      call this%fates_hist%update_history_hifrq(nc, &
+      call fates_hist%update_history_hifrq(nc, &
             this%fates(nc)%nsites,  &
             this%fates(nc)%sites,   &
             this%fates(nc)%bc_in,   &
@@ -2439,7 +2484,7 @@ module CLMFatesInterfaceMod
    
    call hlm_bounds_to_fates_bounds(bounds_proc, fates_bounds)
 
-   call this%fates_hist%Init(nclumps, fates_bounds)
+   call fates_hist%Init(nclumps, fates_bounds)
 
    ! Define the bounds on the first dimension for each thread
    !$OMP PARALLEL DO PRIVATE (nc,bounds_clump,fates_clump)
@@ -2449,76 +2494,57 @@ module CLMFatesInterfaceMod
       
       ! thread bounds for patch
       call hlm_bounds_to_fates_bounds(bounds_clump, fates_clump)
-      call this%fates_hist%SetThreadBoundsEach(nc, fates_clump)
+      call fates_hist%SetThreadBoundsEach(nc, fates_clump)
    end do
    !$OMP END PARALLEL DO
 
    ! ------------------------------------------------------------------------------------
-   ! PART I.5: SET SOME INDEX MAPPINGS SPECIFICALLY FOR SITE<->COLUMN AND PATCH 
-   ! ------------------------------------------------------------------------------------
-   
-   !$OMP PARALLEL DO PRIVATE (nc,s,c)
-   do nc = 1,nclumps
-      
-      allocate(this%fates_hist%iovar_map(nc)%site_index(this%fates(nc)%nsites))
-      allocate(this%fates_hist%iovar_map(nc)%patch1_index(this%fates(nc)%nsites))
-      
-      do s=1,this%fates(nc)%nsites
-         c = this%f2hmap(nc)%fcolumn(s)
-         this%fates_hist%iovar_map(nc)%site_index(s)   = c
-         this%fates_hist%iovar_map(nc)%patch1_index(s) = col%patchi(c)+1
-      end do
-      
-   end do
-   !$OMP END PARALLEL DO
-   
-   ! ------------------------------------------------------------------------------------
    ! PART II: USE THE JUST DEFINED DIMENSIONS TO ASSEMBLE THE VALID IO TYPES
    ! INTERF-TODO: THESE CAN ALL BE EMBEDDED INTO A SUBROUTINE IN HISTORYIOMOD
    ! ------------------------------------------------------------------------------------
-   call this%fates_hist%assemble_history_output_types()
+   call fates_hist%assemble_history_output_types()
    
    ! ------------------------------------------------------------------------------------
    ! PART III: DEFINE THE LIST OF OUTPUT VARIABLE OBJECTS, AND REGISTER THEM WITH THE
    ! HLM ACCORDING TO THEIR TYPES
    ! ------------------------------------------------------------------------------------
-   call this%fates_hist%initialize_history_vars()
-   nvar = this%fates_hist%num_history_vars()
+   call fates_hist%initialize_history_vars()
+   nvar = fates_hist%num_history_vars()
    
    do ivar = 1, nvar
       
-      associate( vname    => this%fates_hist%hvars(ivar)%vname, &
-                 vunits   => this%fates_hist%hvars(ivar)%units,   &
-                 vlong    => this%fates_hist%hvars(ivar)%long, &
-                 vdefault => this%fates_hist%hvars(ivar)%use_default, &
-                 vavgflag => this%fates_hist%hvars(ivar)%avgflag)
+      associate( vname    => fates_hist%hvars(ivar)%vname, &
+                 vunits   => fates_hist%hvars(ivar)%units,   &
+                 vlong    => fates_hist%hvars(ivar)%long, &
+                 vdefault => fates_hist%hvars(ivar)%use_default, &
+                 vavgflag => fates_hist%hvars(ivar)%avgflag)
 
-        dk_index = this%fates_hist%hvars(ivar)%dim_kinds_index
-        ioname = trim(this%fates_hist%dim_kinds(dk_index)%name)
+        dk_index = fates_hist%hvars(ivar)%dim_kinds_index
+        ioname = trim(fates_hist%dim_kinds(dk_index)%name)
         
         select case(trim(ioname))
         case(patch_r8)
            call hist_addfld1d(fname=trim(vname),units=trim(vunits),         &
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_patch=this%fates_hist%hvars(ivar)%r81d,    &
+                              ptr_patch=fates_hist%hvars(ivar)%r81d,    &
                               default=trim(vdefault),                       &
                               set_lake=0._r8,set_urb=0._r8)
            
         case(site_r8)
            call hist_addfld1d(fname=trim(vname),units=trim(vunits),         &
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r81d,      & 
+                              ptr_col=fates_hist%hvars(ivar)%r81d,      & 
                               default=trim(vdefault),                       &
                               set_lake=0._r8,set_urb=0._r8)
 
         case(patch_ground_r8, patch_size_pft_r8)
 
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
+           d_index = fates_hist%dim_kinds(dk_index)%dim2_index
+           dim2name = fates_hist%dim_bounds(d_index)%name
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         & ! <--- addfld2d
                               type2d=trim(dim2name),                        & ! <--- type2d
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_patch=this%fates_hist%hvars(ivar)%r82d,    & 
+                              ptr_patch=fates_hist%hvars(ivar)%r82d,    & 
                               default=trim(vdefault))
            
         
@@ -2530,12 +2556,12 @@ module CLMFatesInterfaceMod
              site_elcwd_r8, site_elage_r8, site_agefuel_r8)
 
 
-           d_index = this%fates_hist%dim_kinds(dk_index)%dim2_index
-           dim2name = this%fates_hist%dim_bounds(d_index)%name
+           d_index = fates_hist%dim_kinds(dk_index)%dim2_index
+           dim2name = fates_hist%dim_bounds(d_index)%name
            call hist_addfld2d(fname=trim(vname),units=trim(vunits),         &
                               type2d=trim(dim2name),                        &
                               avgflag=trim(vavgflag),long_name=trim(vlong), &
-                              ptr_col=this%fates_hist%hvars(ivar)%r82d,    & 
+                              ptr_col=fates_hist%hvars(ivar)%r82d,    & 
                               default=trim(vdefault))
 
 
@@ -2801,7 +2827,7 @@ module CLMFatesInterfaceMod
 
    ! Update History Buffers that need to be updated after hydraulics calls
 
-   call this%fates_hist%update_history_hydraulics(nc, &
+   call fates_hist%update_history_hydraulics(nc, &
          this%fates(nc)%nsites, &
          this%fates(nc)%sites, &
          this%fates(nc)%bc_in, & 

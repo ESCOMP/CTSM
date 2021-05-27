@@ -36,7 +36,7 @@ module SnowHydrologyMod
   use LandunitType    , only : landunit_type, lun
   use TopoMod, only : topo_type
   use ColumnType      , only : column_type, col
-  use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice_mec, istcrop
+  use landunit_varcon , only : istsoil, istdlak, istsoil, istwet, istice, istcrop
   use clm_time_manager, only : get_step_size_real, get_nstep
   use filterColMod    , only : filter_col_type, col_filter_from_filter_and_logical_array
   use LakeCon         , only : lsadz
@@ -3406,12 +3406,12 @@ contains
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           l = col%landunit(c)
-          if ((lun%itype(l) /= istice_mec) .and. &
+          if ((lun%itype(l) /= istice) .and. &
                reset_snow .and. &
                (h2osno(c) > reset_snow_h2osno)) then
              h2osno_excess(c) = h2osno(c) - reset_snow_h2osno
              apply_runoff(c) = .false.
-          else if ((lun%itype(l) == istice_mec) .and. &
+          else if ((lun%itype(l) == istice) .and. &
                reset_snow_glc .and. &
                (h2osno(c) > reset_snow_h2osno) .and. &
                (topo(c) <= reset_snow_glc_ela)) then
@@ -3970,8 +3970,8 @@ contains
     ! !ARGUMENTS:
     logical, intent(in), optional :: set_winddep_snowdensity  ! Set wind dependent snow density
     integer, intent(in), optional :: set_new_snow_density     ! snow density method
-    logical, intent(in), optional :: set_reset_snow           ! whether to reset the snow pack, non-glc_mec points
-    logical, intent(in), optional :: set_reset_snow_glc       ! whether to reset the snow pack, glc_mec points
+    logical, intent(in), optional :: set_reset_snow           ! whether to reset the snow pack, non-glacier points
+    logical, intent(in), optional :: set_reset_snow_glc       ! whether to reset the snow pack, glacier points
     real(r8), intent(in), optional :: set_reset_snow_glc_ela  ! elevation below which to reset the snow pack if set_reset_snow_glc is true (m)
     !-----------------------------------------------------------------------
     if (present(set_winddep_snowdensity)) then
