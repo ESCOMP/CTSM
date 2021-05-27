@@ -16,6 +16,7 @@
   <description modifier_mode="1">
     <desc lnd="CLM45[%SP][%SP-VIC][%CN][%CNDV][%CN-CROP][%CNDV-CROP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
     <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%CN][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
+    <desc lnd="CLM51[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%NWP-SP][%NWP-BGC-CROP]">clm5.1:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
     <desc option="CN"              >CN: Carbon Nitrogen model</desc>
     <desc option="CNDV"            >CNDV: CN with Dynamic Vegetation (deprecated)</desc>
@@ -36,24 +37,36 @@
     <desc option="NWP-SP"          >NWP configuration with satellite phenology:</desc>
     <desc option="NWP-BGC-CROP"    >NWP configuration with BGC and CROP:</desc>
   </description>
-
   <entry id="COMP_LND">
     <type>char</type>
-    <valid_values>clm</valid_values>
-    <default_value>clm</default_value>
+    <valid_values>clm,ctsm</valid_values>
+    <default_value>UNSET</default_value>
+    <values>
+      <value compset="CLM" >clm</value>
+      <value compset="CTSM">ctsm</value>
+    </values>
     <group>case_comp</group>
     <file>env_case.xml</file>
     <desc>Name of land component</desc>
   </entry>
 
+  <entry id="LILAC_MODE">
+    <type>char</type>
+    <valid_values>on,off</valid_values>
+    <default_value>off</default_value>
+    <group>build_component_ctsm</group>
+    <file>env_build.xml</file>
+    <desc>Flag to enable building the LILAC cap and coupling code</desc>
+  </entry>
+
   <entry id="LND_TUNING_MODE">
     <type>char</type>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Tuning parameters and initial conditions should be optimized for what CLM model version and what meteorlogical forcing combination?
     </desc>
     <default_value>UNSET</default_value>
-    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0</valid_values>
+    <valid_values>clm5_0_cam6.0,clm5_0_GSWP3v1,clm5_0_CRUv7,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_cam6.0,clm5_1_GSWP3v1</valid_values>
     <values>
       <value compset=             "CLM45" >clm4_5_CRUv7</value>
       <value compset="DATM%CRUv7.+_CLM45" >clm4_5_CRUv7</value>
@@ -63,22 +76,24 @@
       <value compset="DATM%CRUv7.+_CLM50" >clm5_0_CRUv7</value>
       <value compset="DATM%GSWP3.+_CLM50" >clm5_0_GSWP3v1</value>
       <value compset="CAM.+_CLM50"        >clm5_0_cam6.0</value>
+      <value compset=            "_CLM51" >clm5_1_GSWP3v1</value>
     </values>
   </entry>
 
   <entry id="CLM_PHYSICS_VERSION" >
     <type>char</type>
-    <valid_values>clm4_5,clm5_0</valid_values>
+    <valid_values>clm4_5,clm5_0,clm5_1</valid_values>
     <!-- By setting the default_value to UNSET (or some other non-empty
          string that doesn't appear in the list of valid_values), the
          scripts will ensure that one of the below values is picked up
          by the compset match. -->
     <default_value>UNSET</default_value>
     <values>
-      <value compset="_CLM45">clm4_5</value>
-      <value compset="_CLM50">clm5_0</value>
+      <value compset="_CLM45" >clm4_5</value>
+      <value compset="_CLM50" >clm5_0</value>
+      <value compset="_CLM51" >clm5_1</value>
     </values>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Overall physics version to use.
     This sets the default values for many different namelist options.
@@ -92,7 +107,7 @@
     <values>
       <value compset="_CLM[^_]*%NWP">nwp</value>
     </values>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Sets CLM default namelist options related to model configuration.
     clm: Configuration used for climate applications (CLM)
@@ -107,7 +122,7 @@
     <values>
       <value compset="_CLM[^_]*%NWP">fast</value>
     </values>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Sets CLM default namelist options related to model structure.
     standard: Standard model structure, allowing for more subgrid heterogeneity,
@@ -139,7 +154,7 @@
       <value compset="^AMIP_"	                    >20thC_transient</value>
       <value compset="^PIPD_"                       >1850-2100_SSP5-8.5_transient</value>
     </values>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>CLM namelist use_case.
       Determines the use-case that will be sent to the CLM build-namelist utility.
@@ -176,8 +191,13 @@
       <value compset="_CLM50%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
       <value compset="_CLM50%[^_]*SP-VIC"	 >-bgc sp -vichydro </value>
       <value compset="_CLM50%[^_]*FATES"         >-bgc fates -no-megan</value>
+
+      <value compset="_CLM51%[^_]*SP"		 >-bgc sp</value>
+      <value compset="_CLM51%[^_]*BGC"		 >-bgc bgc</value>
+      <value compset="_CLM51%[^_]*BGC-CROP"	 >-bgc bgc -crop</value>
+      <value compset="_CLM51%[^_]*FATES"         >-bgc fates -no-megan</value>
     </values>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>CLM build-namelist options</desc>
   </entry>
@@ -193,7 +213,7 @@
       <value compset="HIST.*_DATM" >diagnostic</value>
       <value compset="SSP.*_DATM"  >diagnostic</value>
     </values>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Determines how CLM will determine where CO2 is set.
       If value is constant, it will be set to CCSM_CO2_PPMV,
@@ -208,7 +228,7 @@
   <entry id="CLM_NAMELIST_OPTS">
     <type>char</type>
     <default_value></default_value>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>CLM-specific namelist settings for -namelist option in the CLM
       build-namelist. CLM_NAMELIST_OPTS is normally set as a compset variable
@@ -223,7 +243,7 @@
     <type>char</type>
     <valid_values>on,off</valid_values>
     <default_value>off</default_value>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Turn on any settings for accellerating the model spinup.
     </desc>
@@ -232,7 +252,7 @@
   <entry id="CLM_USRDAT_NAME">
     <type>char</type>
     <default_value>UNSET</default_value>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Dataset name for user-created datasets. This is used as the argument
       in Buildconf/clm.buildnml to build-namelist -clm_usr_name. An example of
@@ -244,13 +264,13 @@
     <type>char</type>
     <valid_values>on,off</valid_values>
     <default_value>off</default_value>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_run.xml</file>
     <desc>Flag to the CLM build-namelist command to force CLM to do a
       cold start (finidat will be set to blanks).
       A value of on forces the model to spin up from a cold-start
       (arbitrary initial conditions). Setting this value in the xml file will take
-      precedence over any settings for finidat in the $CASEROOT/user_clm_clm file.</desc>
+      precedence over any settings for finidat in the $CASEROOT/user_nl_ctsm file.</desc>
   </entry>
 
   <entry id="CLM_USER_MODS">
@@ -263,7 +283,7 @@
       <value                  compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_deck</value>
       <value grid="l%1.9x2.5" compset="_CLM50%[^_]*CMIP6WACCMDECK[%_]">$COMP_ROOT_DIR_LND/cime_config/usermods_dirs/cmip6_waccm_nociso_deck</value>
     </values>
-    <group>run_component_clm</group>
+    <group>run_component_ctsm</group>
     <file>env_case.xml</file>
     <desc>User mods to apply to specific compset matches. </desc>
   </entry>

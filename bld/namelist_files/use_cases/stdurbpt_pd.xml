@@ -10,7 +10,7 @@
 
 <hist_fincl1>'TBUILD','BUILDHEAT','TRAFFICFLUX','WASTEHEAT','SWup','LWup','Rnet','Qh','Qle','Qstor','Qtau','Qanth','Wind','Qair','Tair','PSurf','Rainf','SWdown','LWdown','COSZEN'</hist_fincl1>
 
-<hist_fincl2>'TG','TBOT','FIRE','FIRA','FLDS','FSDS','FSR','FSA','FGEV','FSH','FGR','TSOI','ERRSOI','BUILDHEAT','SABV','SABG','FSDSVD','FSDSND','FSDSVI','FSDSNI','FSRVD','FSRND','FSRVI','FSRNI','TSA','FCTR','FCEV','QBOT','Q2M','H2OSOI','H2OSNO','SOILLIQ','SOILICE','SWup','LWup','Rnet','Qh','Qle','Qstor','Qtau','Qanth','Wind','Qair','Tair','PSurf','Rainf','SWdown','LWdown','SoilAlpha_U','ZWT','WA'
+<hist_fincl2>'TG','TBOT','FIRE','FIRA','FLDS','FSDS','FSR','FSA','FGEV','FSH','FGR','TSOI','ERRSOI','BUILDHEAT','SABV','SABG','FSDSVD','FSDSND','FSDSVI','FSDSNI','FSRVD','FSRND','FSRVI','FSRNI','TSA','FCTR','FCEV','QBOT','Q2M','H2OSOI','H2OSNO','SOILLIQ','SOILICE','SWup','LWup','Rnet','Qh','Qle','Qstor','Qtau','Qanth','Wind','Qair','Tair','PSurf','Rainf','SWdown','LWdown','SoilAlpha_U','ZWT'
 </hist_fincl2>
 
 <hist_fincl3>'SWup','LWup','Rnet','Qh','Qle','Qstor','Qtau','Qanth','Wind','Qair','Tair','PSurf','Rainf','SWdown','LWdown','FSA','FIRA','TG','COSZEN','SoilAlpha_U','TBUILD','BUILDHEAT'
@@ -18,8 +18,10 @@
 
 <urban_hac>'OFF'</urban_hac>
 
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".false.">.true.</irrigate>
-<irrigate use_crop=".true." phys="clm5_0" use_cndv=".true." >.false.</irrigate>
-<irrigate use_crop=".true." phys="clm4_5"                   >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".false.">.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_1"  use_cndv=".true." >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0"  use_cndv=".false.">.true.</irrigate>
+<irrigate use_crop=".true." phys="clm5_0"  use_cndv=".true." >.false.</irrigate>
+<irrigate use_crop=".true." phys="clm4_5"                    >.false.</irrigate>
 
 </namelist_defaults>

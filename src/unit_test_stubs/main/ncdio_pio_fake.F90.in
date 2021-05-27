@@ -46,6 +46,7 @@ module ncdio_pio
   ! !PUBLIC MEMBER FUNCTIONS:
 
   public :: check_var             ! determine if variable is on netcdf file
+  public :: check_var_or_dim      ! determine if variable or dimension is on netcdf file
   public :: ncd_io                ! do fake i/o (currently only set up to read)
   public :: ncd_inqvid            ! inquire on a variable id
   public :: ncd_set_var           ! set data on "file" for one variable
@@ -270,27 +271,56 @@ contains
   end subroutine ncd_inqvid
 
   !-----------------------------------------------------------------------
-  subroutine check_var(ncid, varname, vardesc, readvar, print_err)
+  subroutine check_var(ncid, varname, readvar, vardesc, print_err)
     !
     ! !DESCRIPTION:
     ! Fake to check if variable is on netcdf file
     !
     ! !ARGUMENTS:
-    class(file_desc_t) , intent(inout)  :: ncid      ! PIO file descriptor
-    character(len=*)   , intent(in)     :: varname   ! Varible name to check
-    type(Var_desc_t)   , intent(out)    :: vardesc   ! Output variable descriptor (not set in this implementation)
-    logical            , intent(out)    :: readvar   ! If variable exists or not
-    logical, optional  , intent(in)     :: print_err ! If should print about error (ignored in this implementation)
+    class(file_desc_t) , intent(inout)          :: ncid      ! PIO file descriptor
+    character(len=*)   , intent(in)             :: varname   ! Varible name to check
+    logical            , intent(out)            :: readvar   ! If variable exists or not
+    type(Var_desc_t)   , optional, intent(out)  :: vardesc   ! Output variable descriptor (not set in this implementation)
+    logical            , optional, intent(in)   :: print_err ! If should print about error (ignored in this implementation)
     !
     ! !LOCAL VARIABLES:
     integer :: varid
+    type(Var_desc_t) :: vardesc_local
 
     character(len=*), parameter :: subname = 'check_var'
     !-----------------------------------------------------------------------
 
-    call ncd_inqvid(ncid, varname, varid, vardesc, readvar)
+    call ncd_inqvid(ncid, varname, varid, vardesc_local, readvar)
 
   end subroutine check_var
+
+  !-----------------------------------------------------------------------
+  subroutine check_var_or_dim(ncid, name, is_dim, exists)
+    !
+    ! !DESCRIPTION:
+    ! Fake to check if variable or dimension is on netcdf file
+    !
+    ! NOTE: dimension check currently not implemented!
+    !
+    ! !ARGUMENTS:
+    class(file_desc_t) , intent(inout) :: ncid   ! PIO file descriptor
+    character(len=*)   , intent(in)    :: name   ! variable or dimension name to check
+    logical            , intent(in)    :: is_dim ! if true, check for dimension; if false, check for variable
+    logical            , intent(out)   :: exists ! whether the given variable or dimension exists on file
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'check_var_or_dim'
+    !-----------------------------------------------------------------------
+
+    if (is_dim) then
+       call endrun(subname//': is_dim=.true. not yet implemented')
+    else
+       call check_var(ncid, name, exists, print_err=.false.)
+    end if
+
+  end subroutine check_var_or_dim
+
 
   !-----------------------------------------------------------------------
   subroutine ncd_inqdid(ncid, name, dimid, dimexist)

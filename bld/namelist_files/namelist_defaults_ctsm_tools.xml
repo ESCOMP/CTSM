@@ -38,16 +38,29 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <scripgriddata hgrid="32x64"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_32x64_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="8x16"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_8x16_nomask_c110308.nc</scripgriddata>
 
+<!-- FV3 grids -->
+<scripgriddata hgrid="C384" lmask="nomask" >atm/cam/coords/C384_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C192" lmask="nomask" >atm/cam/coords/C192_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C96"  lmask="nomask" >atm/cam/coords/C96_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C48"  lmask="nomask" >atm/cam/coords/C48_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C24"  lmask="nomask" >atm/cam/coords/C24_SCRIP_desc.181018.nc</scripgriddata>
+
 <!-- HOMME grids -->
-<scripgriddata hgrid="ne240np4" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne240np4_nomask_c091227.nc</scripgriddata>
-<scripgriddata hgrid="ne120np4" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne120np4_nomask_c101123.nc</scripgriddata>
-<scripgriddata hgrid="ne60np4"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne60np4_nomask_c100408.nc</scripgriddata>
-<scripgriddata hgrid="ne30np4"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne30np4_nomask_c101123.nc</scripgriddata>
-<scripgriddata hgrid="ne16np4"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne16np4_nomask_c110512.nc</scripgriddata>
-<scripgriddata hgrid="ne4np4"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne4np4_nomask_c110808.nc</scripgriddata>
+<scripgriddata hgrid="ne240np4"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne240np4_nomask_c091227.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne120np4_nomask_c101123.nc</scripgriddata>
+<scripgriddata hgrid="ne60np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne60np4_nomask_c100408.nc</scripgriddata>
+<scripgriddata hgrid="ne30np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne30np4_nomask_c101123.nc</scripgriddata>
+<scripgriddata hgrid="ne16np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne16np4_nomask_c110512.nc</scripgriddata>
+<!-- HOMME SE dycore Physics grids -->
+<scripgriddata hgrid="ne30np4.pg2"  lmask="nomask" >atm/cam/coords/ne30pg2_scrip_c170608.nc</scripgriddata>
+<scripgriddata hgrid="ne30np4.pg3"  lmask="nomask" >atm/cam/coords/ne30pg3_scrip_170604.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4.pg2" lmask="nomask" >atm/cam/coords/ne120pg2_scrip_c170629.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4.pg3" lmask="nomask" >atm/cam/coords/ne120pg3_scrip_c170628.nc</scripgriddata>
 
 <!-- Refined mesh grids -->
-<scripgriddata hgrid="conus_30_x8" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_conus_30_x8_nomask_c170111.nc</scripgriddata>
+<scripgriddata hgrid="ne0np4CONUS.ne30x8"      lmask="nomask" >atm/cam/coords/ne0CONUSne30x8_scrip_c200107.nc</scripgriddata>
+<scripgriddata hgrid="ne0np4ARCTICGRIS.ne30x8" lmask="nomask" >atm/cam/coords/ne0ARCTICGRISne30x8_scrip_c191209.nc</scripgriddata>
+<scripgriddata hgrid="ne0np4ARCTIC.ne30x4"     lmask="nomask" >atm/cam/coords/ne0ARCTICne30x4_scrip_c191212.nc</scripgriddata>
 
 <!-- Regular lat/lon grids -->
 <scripgriddata hgrid="0.125x0.125" lmask="nomask"    
@@ -258,6 +271,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_furban   hgrid="3x3min"   lmask="LandScan2004"
 >lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc</mksrf_furban>
 
+<mksrf_furban   hgrid="3x3min"   lmask="LandScan2004" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.c181014.nc</mksrf_furban>
+
 <!-- mksrf_fglacier % glacier land-unit -->
 <!-- WJS (9-26-12): 
      There are two versions of this dataset: the "standard" version uses
@@ -287,6 +303,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- fire-related datasets -->
 <mksrf_fgdp hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fgdp>
+<mksrf_fgdp hgrid="0.5x0.5" lmask="AVHRR" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_gdp_0.5x0_zerogdp.c200413.nc</mksrf_fgdp>
 
 <mksrf_fpeat hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fpeat>
@@ -296,6 +314,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <mksrf_fabm hgrid="0.5x0.5" lmask="AVHRR"
 >lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc</mksrf_fabm>
+<mksrf_fabm hgrid="0.5x0.5" lmask="AVHRR" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_missingabm.c200413.nc</mksrf_fabm>
+
 
 <mksrf_ftopostats hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
 >lnd/clm2/rawdata/mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc</mksrf_ftopostats>
@@ -4659,7 +4680,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 <!-- 
-      Future scenarios 
+      Future scenarios  (up to 2100)
 -->
 
 <!-- SSP1-RCP 2.6 -->

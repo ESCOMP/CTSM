@@ -1,0 +1,5 @@
+The purpose of this testmod directory is to trigger the runtime
+self-tests. This runs a suite of unit/integration tests.
+
+We use cold start so that we can get through initialization faster,
+since how we initialize the model is unimportant for these self-tests.

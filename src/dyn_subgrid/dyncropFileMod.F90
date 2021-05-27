@@ -53,7 +53,7 @@ contains
     !
     ! !USES:
     use clm_varpar     , only : cft_size
-    use ncdio_pio      , only : check_dim
+    use ncdio_pio      , only : check_dim_size
     use dynTimeInfoMod , only : YEAR_POSITION_START_OF_TIMESTEP
     !
     ! !ARGUMENTS:
@@ -80,7 +80,7 @@ contains
     ! prognostically, if crop areas are ever determined prognostically rather than
     ! prescribed ahead of time.
     dyncrop_file = dyn_file_type(dyncrop_filename, YEAR_POSITION_START_OF_TIMESTEP)
-    call check_dim(dyncrop_file, 'cft', cft_size)
+    call check_dim_size(dyncrop_file, 'cft', cft_size)
 
     ! read data PCT_CROP and PCT_CFT corresponding to correct year
     !

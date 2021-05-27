@@ -50,8 +50,8 @@ module clm_varctl
   ! by default this is not allowed
   logical, public :: brnch_retain_casename = .false.                     
 
-  !true => no valid land points -- do NOT run
-  logical, public :: noland = .false.                                    
+  ! true => run tests of ncdio_pio
+  logical, public :: for_testing_run_ncdiopio_tests = .false.
 
   ! Hostname of machine running on
   character(len=256), public :: hostname = ' '                           
@@ -67,6 +67,9 @@ module clm_varctl
 
   ! dataset conventions
   character(len=256), public :: conventions = "CF-1.0"                   
+
+  ! component name for filenames (history or restart files)
+  character(len=8), public :: compname = 'clm2'
 
   !----------------------------------------------------------
   ! Unit Numbers
@@ -86,12 +89,13 @@ module clm_varctl
 
   character(len=fname_len), public :: finidat    = ' '        ! initial conditions file name
   character(len=fname_len), public :: fsurdat    = ' '        ! surface data file name
-  character(len=fname_len), public :: fatmgrid   = ' '        ! atm grid file name
-  character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
   character(len=fname_len), public :: paramfile  = ' '        ! ASCII data file with PFT physiological constants
   character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
   character(len=fname_len), public :: fsnowaging   = ' '      ! snow aging parameters file name
+
+  character(len=fname_len), public :: fatmlndfrc = ' '        ! lnd frac file on atm grid
+                                                              ! only needed for LILAC and MCT drivers
 
   !----------------------------------------------------------
   ! Flag to read ndep rather than obtain it from coupler
@@ -278,6 +282,12 @@ module clm_varctl
   logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
 
   !----------------------------------------------------------
+  ! biomass heat storage switch
+  !----------------------------------------------------------
+
+  logical, public :: use_biomass_heat_storage = .false. ! true => include biomass heat storage in canopy energy budget
+
+  !----------------------------------------------------------
   ! bedrock / soil depth switch
   !----------------------------------------------------------
 
@@ -345,6 +355,9 @@ module clm_varctl
   ! moved hist_wrtch4diag from histFileMod.F90 to here - caused compiler error with intel
   ! namelist: write CH4 extra diagnostic output
   logical, public :: hist_wrtch4diag = .false.         
+
+  ! namelist: write history master list to a file for use in documentation
+  logical, public :: hist_master_list_file = .false.
 
   !----------------------------------------------------------
   ! FATES

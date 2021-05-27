@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class LCISO(SystemTestsCompareTwo):
 
     def __init__(self, case):
+        self.comp = case.get_value("COMP_LND")
         SystemTestsCompareTwo.__init__(self, case,
                                        separate_builds = False,
                                        run_two_suffix = 'cisoallon',
@@ -26,11 +27,11 @@ class LCISO(SystemTestsCompareTwo):
 
     def _case_one_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
+                                component = self.comp,
                                 contents = "use_c13=F, use_c14=F")
 
     def _case_two_setup(self):
         append_to_user_nl_files(caseroot = self._get_caseroot(),
-                                component = "clm",
+                                component = self.comp,
                                 contents = "use_c13=.true.,use_c14=.true.,use_c13_timeseries=.true.,use_c14_bombspike=.true." )
 

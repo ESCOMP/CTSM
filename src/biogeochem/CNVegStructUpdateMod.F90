@@ -13,9 +13,10 @@ module CNVegStructUpdateMod
   use CNDVType             , only : dgvs_type
   use CNVegStateType       , only : cnveg_state_type
   use CropType             , only : crop_type
-  use CNVegCarbonStateType , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType , only : cnveg_carbonstate_type, spinup_factor_deadwood
   use CanopyStateType      , only : canopystate_type
   use PatchType            , only : patch                
+  use decompMod            , only : bounds_type
   !
   implicit none
   private
@@ -27,7 +28,7 @@ module CNVegStructUpdateMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CNVegStructUpdate(num_soilp, filter_soilp, &
+  subroutine CNVegStructUpdate(bounds,num_soilp, filter_soilp, &
        waterdiagnosticbulk_inst, frictionvel_inst, dgvs_inst, cnveg_state_inst, crop_inst, &
        cnveg_carbonstate_inst, canopystate_inst)
     !
@@ -41,11 +42,15 @@ contains
     use pftconMod        , only : ntmp_corn, nirrig_tmp_corn
     use pftconMod        , only : ntrp_corn, nirrig_trp_corn
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
+    use pftconMod        , only : nmiscanthus, nirrig_miscanthus, nswitchgrass, nirrig_switchgrass
+    
     use pftconMod        , only : pftcon
-    use clm_varctl       , only : spinup_state
+    use clm_varctl       , only : spinup_state, use_biomass_heat_storage
+    use clm_varcon       , only : c_to_b
     use clm_time_manager , only : get_rad_step_size
     !
     ! !ARGUMENTS:
+    type(bounds_type)            , intent(in)    :: bounds  
     integer                      , intent(in)    :: num_soilp       ! number of column soil points in patch filter
     integer                      , intent(in)    :: filter_soilp(:) ! patch filter for soil points
     type(waterdiagnosticbulk_type)        , intent(in)    :: waterdiagnosticbulk_inst
@@ -63,8 +68,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: p,c,g      ! indices
     integer  :: fp         ! lake filter indices
-    real(r8) :: taper      ! ratio of height:radius_breast_height (tree allometry)
-    real(r8) :: stocking   ! #stems / ha (stocking density)
+    real(r8) :: stocking                            ! #stems / ha (stocking density)
     real(r8) :: ol         ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb         ! fraction of canopy layer covered by snow
     real(r8) :: tlai_old   ! for use in Zeng tsai formula
@@ -72,8 +76,10 @@ contains
     real(r8) :: tsai_min   ! PATCH derived minimum tsai
     real(r8) :: tsai_alpha ! monthly decay rate of tsai
     real(r8) :: dt         ! radiation time step (sec)
+    real(r8) :: frac_sno_adjusted ! frac_sno adjusted per frac_sno_threshold
 
     real(r8), parameter :: dtsmonth = 2592000._r8 ! number of seconds in a 30 day month (60x60x24x30)
+    real(r8), parameter :: frac_sno_threshold = 0.999_r8  ! frac_sno values greater than this are treated as 1
     !-----------------------------------------------------------------------
     ! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835
     !
@@ -97,19 +103,24 @@ contains
          dwood              =>  pftcon%dwood                            , & ! Input:  density of wood (gC/m^3)                          
          ztopmx             =>  pftcon%ztopmx                           , & ! Input:
          laimx              =>  pftcon%laimx                            , & ! Input:
-         
+         nstem              =>  pftcon%nstem                            , & ! Input:  Tree number density (#ind/m2)
+         taper              =>  pftcon%taper                            , & ! Input:  ratio of height:radius_breast_height (tree allometry)
+         fbw                =>  pftcon%fbw                              , & ! Input:  Fraction of fresh biomass that is water        
+       
          allom2             =>  dgv_ecophyscon%allom2                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
          allom3             =>  dgv_ecophyscon%allom3                   , & ! Input:  [real(r8) (:) ] ecophys const                                     
 
          nind               =>  dgvs_inst%nind_patch                    , & ! Input:  [real(r8) (:) ] number of individuals (#/m**2)                    
          fpcgrid            =>  dgvs_inst%fpcgrid_patch                 , & ! Input:  [real(r8) (:) ] fractional area of patch (pft area/nat veg area)    
 
-         snow_depth         =>  waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:) ] snow height (m)                                   
+         frac_sno           =>  waterdiagnosticbulk_inst%frac_sno_col   , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
+         snow_depth         =>  waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)                                   
 
          forc_hgt_u_patch   =>  frictionvel_inst%forc_hgt_u_patch       , & ! Input:  [real(r8) (:) ] observational height of wind at patch-level [m]     
 
          leafc              =>  cnveg_carbonstate_inst%leafc_patch      , & ! Input:  [real(r8) (:) ] (gC/m2) leaf C                                    
          deadstemc          =>  cnveg_carbonstate_inst%deadstemc_patch  , & ! Input:  [real(r8) (:) ] (gC/m2) dead stem C                               
+         livestemc          =>  cnveg_carbonstate_inst%livestemc_patch  , & ! Input:  [real(r8) (:) ] (gC/m2) live stem C
 
          farea_burned       =>  cnveg_state_inst%farea_burned_col       , & ! Input:  [real(r8) (:) ] F. Li and S. Levis                                 
          htmx               =>  cnveg_state_inst%htmx_patch             , & ! Output: [real(r8) (:) ] max hgt attained by a crop during yr (m)          
@@ -120,6 +131,8 @@ contains
          ! *** Key Output from CN***
          tlai               =>  canopystate_inst%tlai_patch             , & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow      
          tsai               =>  canopystate_inst%tsai_patch             , & ! Output: [real(r8) (:) ] one-sided stem area index, no burying by snow      
+         stem_biomass       => canopystate_inst%stem_biomass_patch      , & ! Output: [real(r8) (:) ] Aboveground stem biomass  (kg/m**2)
+         leaf_biomass       => canopystate_inst%leaf_biomass_patch      , & ! Output: [real(r8) (:) ] Aboveground leave biomass (kg/m**2)   
          htop               =>  canopystate_inst%htop_patch             , & ! Output: [real(r8) (:) ] canopy top (m)                                     
          hbot               =>  canopystate_inst%hbot_patch             , & ! Output: [real(r8) (:) ] canopy bottom (m)                                  
          elai               =>  canopystate_inst%elai_patch             , & ! Output: [real(r8) (:) ] one-sided leaf area index with burying by snow    
@@ -128,13 +141,6 @@ contains
          )
 
       dt = real( get_rad_step_size(), r8 )
-
-      ! constant allometric parameters
-      taper = 200._r8
-      stocking = 1000._r8
-
-      ! convert from stems/ha -> stems/m^2
-      stocking = stocking / 10000._r8
 
       ! patch loop
       do fp = 1,num_soilp
@@ -175,27 +181,28 @@ contains
             tsai_min = tsai_min * 0.5_r8
             tsai(p) = max(tsai_alpha*tsai_old+max(tlai_old-tlai(p),0._r8),tsai_min)
 
+            ! calculate vegetation physiological parameters used in biomass heat storage
+            !
+            if (use_biomass_heat_storage) then
+               ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
+               leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
+                    * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
+
+            else
+               leaf_biomass(p) = 0_r8
+            end if
+
             if (woody(ivt(p)) == 1._r8) then
 
-               ! trees and shrubs
-
-               ! if shrubs have a squat taper 
-               if (ivt(p) >= nbrdlf_evr_shrub .and. ivt(p) <= nbrdlf_dcd_brl_shrub) then
-                  taper = 10._r8
-                  ! otherwise have a tall taper
-               else
-                  taper = 200._r8
-               end if
-
                ! trees and shrubs for now have a very simple allometry, with hard-wired
-               ! stem taper (height:radius) and hard-wired stocking density (#individuals/area)
+               ! stem taper (height:radius) and nstem from PFT parameter file
                if (use_cndv) then
 
                   if (fpcgrid(p) > 0._r8 .and. nind(p) > 0._r8) then
 
                      stocking = nind(p)/fpcgrid(p) !#ind/m2 nat veg area -> #ind/m2 patch area
                      htop(p) = allom2(ivt(p)) * ( (24._r8 * deadstemc(p) / &
-                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
+                          (SHR_CONST_PI * stocking * dwood(ivt(p)) * taper(ivt(p))))**(1._r8/3._r8) )**allom3(ivt(p)) ! lpj's htop w/ cn's stemdiam
 
                   else
                      htop(p) = 0._r8
@@ -203,16 +210,20 @@ contains
 
                else
                   !correct height calculation if doing accelerated spinup
-                  if (spinup_state == 2) then
-                    htop(p) = ((3._r8 * deadstemc(p) * 10._r8 * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
-                  else
-                    htop(p) = ((3._r8 * deadstemc(p) * taper * taper)/ &
-                         (SHR_CONST_PI * stocking * dwood(ivt(p))))**(1._r8/3._r8)
-                  end if
+                  htop(p) = ((3._r8 * deadstemc(p) * spinup_factor_deadwood * taper(ivt(p)) * taper(ivt(p)))/ &
+                         (SHR_CONST_PI * nstem(ivt(p)) * dwood(ivt(p))))**(1._r8/3._r8)
 
                endif
 
+               if (use_biomass_heat_storage) then
+                  ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
+                  stem_biomass(p) = (spinup_factor_deadwood*deadstemc(p) + livestemc(p)) &
+                       * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
+               else
+                  stem_biomass(p) = 0_r8
+               end if
+
+               !
                ! Peter Thornton, 5/3/2004
                ! Adding test to keep htop from getting too close to forcing height for windspeed
                ! Also added for grass, below, although it is not likely to ever be an issue.
@@ -232,7 +243,9 @@ contains
 
                if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
                    ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                   ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane) then
+                   ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
+                   ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
+                   ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                   tsai(p) = 0.1_r8 * tlai(p)
                else
                   tsai(p) = 0.2_r8 * tlai(p)
@@ -278,18 +291,29 @@ contains
          end if
 
          ! adjust lai and sai for burying by snow. 
-         ! snow burial fraction for short vegetation (e.g. grasses) as in
-         ! Wang and Zeng, 2007.
+         ! snow burial fraction for short vegetation (e.g. grasses, crops) changes with vegetation height 
+         ! accounts for a 20% bending factor, as used in Lombardozzi et al. (2018) GRL 45(18), 9889-9897
+
+         ! NOTE: The following snow burial code is duplicated in SatellitePhenologyMod.
+         ! Changes in one place should be accompanied by similar changes in the other.
+
          if (ivt(p) > noveg .and. ivt(p) <= nbrdlf_dcd_brl_shrub ) then
             ol = min( max(snow_depth(c)-hbot(p), 0._r8), htop(p)-hbot(p))
             fb = 1._r8 - ol / max(1.e-06_r8, htop(p)-hbot(p))
          else
-            fb = 1._r8 - max(min(snow_depth(c),0.2_r8),0._r8)/0.2_r8   ! 0.2m is assumed
+            fb = 1._r8 - (max(min(snow_depth(c),max(0.05,htop(p)*0.8_r8)),0._r8)/(max(0.05,htop(p)*0.8_r8)))
             !depth of snow required for complete burial of grasses
          endif
 
-         elai(p) = max(tlai(p)*fb, 0.0_r8)
-         esai(p) = max(tsai(p)*fb, 0.0_r8)
+         if (frac_sno(c) <= frac_sno_threshold) then
+            frac_sno_adjusted = frac_sno(c)
+         else
+            ! avoid tiny but non-zero elai and esai that can cause radiation and/or photosynthesis code to blow up
+            frac_sno_adjusted = 1._r8
+         end if
+
+         elai(p) = max(tlai(p)*(1.0_r8 - frac_sno_adjusted) + tlai(p)*fb*frac_sno_adjusted, 0.0_r8)
+         esai(p) = max(tsai(p)*(1.0_r8 - frac_sno_adjusted) + tsai(p)*fb*frac_sno_adjusted, 0.0_r8)
 
          ! Fraction of vegetation free of snow
          if ((elai(p) + esai(p)) > 0._r8) then

@@ -26,7 +26,6 @@ module pftconMod
   integer, public :: nbrdlf_dcd_trp_tree    ! value for Broadleaf deciduous tropical tree
   integer, public :: nbrdlf_dcd_tmp_tree    ! value for Broadleaf deciduous temperate tree
   integer, public :: nbrdlf_dcd_brl_tree    ! value for Broadleaf deciduous boreal tree
-  integer, public :: ntree                  ! value for last type of tree
   integer, public :: nbrdlf_evr_shrub       ! value for Broadleaf evergreen shrub
   integer, public :: nbrdlf_dcd_tmp_shrub   ! value for Broadleaf deciduous temperate shrub
   integer, public :: nbrdlf_dcd_brl_shrub   ! value for Broadleaf deciduous boreal shrub
@@ -110,7 +109,9 @@ module pftconMod
   type, public :: pftcon_type
 
      integer , allocatable :: noveg         (:)   ! value for not vegetated
-     integer , allocatable :: tree          (:)   ! tree or not?
+     logical , allocatable :: is_tree       (:)   ! tree or not?
+     logical , allocatable :: is_shrub      (:)   ! shrub or not?
+     logical , allocatable :: is_grass      (:)   ! grass or not?
 
      real(r8), allocatable :: dleaf         (:)   ! characteristic leaf dimension (m)
      real(r8), allocatable :: c3psn         (:)   ! photosynthetic pathway: 0. = c4, 1. = c3
@@ -134,6 +135,7 @@ module pftconMod
      real(r8), allocatable :: slatop        (:)   ! SLA at top of canopy [m^2/gC]
      real(r8), allocatable :: dsladlai      (:)   ! dSLA/dLAI [m^2/gC]
      real(r8), allocatable :: leafcn        (:)   ! leaf C:N [gC/gN]
+     real(r8), allocatable :: biofuel_harvfrac (:) ! fraction of stem and leaf cut for harvest, sent to biofuels [unitless]
      real(r8), allocatable :: flnr          (:)   ! fraction of leaf N in Rubisco [no units]
      real(r8), allocatable :: woody         (:)   ! woody lifeform flag (0 or 1)
      real(r8), allocatable :: lflitcn       (:)   ! leaf litter C:N (gC/gN)
@@ -145,6 +147,13 @@ module pftconMod
      real(r8), allocatable :: rootprof_beta (:,:) ! CLM rooting distribution parameter for C and N inputs [unitless]
      real(r8), allocatable :: root_radius   (:)   ! root radius (m)
      real(r8), allocatable :: root_density  (:)   ! root density (gC/m3)
+
+     real(r8), allocatable :: dbh  (:)            ! diameter at breast height (m)
+     real(r8), allocatable :: fbw  (:)            ! fraction of biomass that is water
+     real(r8), allocatable :: nstem  (:)          ! stem density (#/m2)
+     real(r8), allocatable :: taper  (:)          ! tapering ratio of height:radius_breast_height
+     real(r8), allocatable :: rstem_per_dbh  (:)  ! stem resistance per dbh (s/m/m)
+     real(r8), allocatable :: wood_density  (:)   ! wood density (kg/m3)
 
      !  crop
 
@@ -220,6 +229,8 @@ module pftconMod
      real(r8), allocatable :: fm_droot      (:)
      real(r8), allocatable :: fsr_pft       (:)
      real(r8), allocatable :: fd_pft        (:)
+     real(r8), allocatable :: rswf_min      (:)
+     real(r8), allocatable :: rswf_max      (:)
 
      ! pft parameters for crop code
      real(r8), allocatable :: manunitro     (:)   ! manure
@@ -333,8 +344,10 @@ contains
     class(pftcon_type) :: this
     !-----------------------------------------------------------------------
 
-    allocate( this%noveg         (0:mxpft)); this%noveg (:)   =huge(1)
-    allocate( this%tree          (0:mxpft)); this%tree  (:)   =huge(1)
+    allocate( this%noveg         (0:mxpft)); this%noveg    (:) = huge(1)
+    allocate( this%is_tree       (0:mxpft)); this%is_tree  (:) = .false.
+    allocate( this%is_shrub      (0:mxpft)); this%is_shrub (:) = .false.
+    allocate( this%is_grass      (0:mxpft)); this%is_grass (:) = .false.
 
     allocate( this%dleaf         (0:mxpft) )       
     allocate( this%c3psn         (0:mxpft) )       
@@ -356,7 +369,8 @@ contains
     allocate( this%fnitr         (0:mxpft) )       
     allocate( this%slatop        (0:mxpft) )      
     allocate( this%dsladlai      (0:mxpft) )    
-    allocate( this%leafcn        (0:mxpft) )      
+    allocate( this%leafcn        (0:mxpft) )  
+    allocate( this%biofuel_harvfrac (0:mxpft) )  
     allocate( this%flnr          (0:mxpft) )        
     allocate( this%woody         (0:mxpft) )       
     allocate( this%lflitcn       (0:mxpft) )      
@@ -430,6 +444,8 @@ contains
     allocate( this%fm_droot      (0:mxpft) )
     allocate( this%fsr_pft       (0:mxpft) )
     allocate( this%fd_pft        (0:mxpft) )
+    allocate( this%rswf_max      (0:mxpft) )
+    allocate( this%rswf_min      (0:mxpft) )
     allocate( this%manunitro     (0:mxpft) )
     allocate( this%fleafcn       (0:mxpft) )  
     allocate( this%ffrootcn      (0:mxpft) ) 
@@ -461,6 +477,12 @@ contains
     allocate( this%fun_cn_flex_c (0:mxpft) )
     allocate( this%FUN_fracfixers(0:mxpft) )
     
+    allocate( this%dbh           (0:mxpft) )
+    allocate( this%fbw           (0:mxpft) )
+    allocate( this%nstem         (0:mxpft) )
+    allocate( this%taper         (0:mxpft) )
+    allocate( this%rstem_per_dbh (0:mxpft) )
+    allocate( this%wood_density  (0:mxpft) )
  
   end subroutine InitAllocate
 
@@ -475,7 +497,7 @@ contains
     use fileutils   , only : getfil
     use ncdio_pio   , only : ncd_io, ncd_pio_closefile, ncd_pio_openfile, file_desc_t
     use ncdio_pio   , only : ncd_inqdid, ncd_inqdlen
-    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot
+    use clm_varctl  , only : paramfile, use_fates, use_flexibleCN, use_dynroot, use_biomass_heat_storage
     use spmdMod     , only : masterproc
     use CLMFatesParamInterfaceMod, only : FatesReadPFTs
     !
@@ -657,6 +679,9 @@ contains
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('leafcn', this%leafcn, 'read', ncid, readvar=readv, posNOTonfile=.true.)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    
+    call ncd_io('biofuel_harvfrac', this%biofuel_harvfrac, 'read', ncid, readvar=readv, posNOTonfile=.true.)
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
     call ncd_io('flnr', this%flnr, 'read', ncid, readvar=readv, posNOTonfile=.true.)
@@ -946,6 +971,11 @@ contains
     call ncd_io('fd_pft', this%  fd_pft, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
+    call ncd_io('rswf_min', this% rswf_min, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+
+    call ncd_io('rswf_max', this% rswf_max, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__)) 
     call ncd_io('planting_temp', this%planttemp, 'read', ncid, readvar=readv)  
     if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
 
@@ -972,13 +1002,8 @@ contains
        this%dwood(m) = dwood
        this%root_radius(m)  = root_radius
        this%root_density(m) = root_density
-
-       if (m <= ntree) then
-          this%tree(m) = 1
-       else
-          this%tree(m) = 0
-       end if
     end do
+
     !
     ! clm 5 nitrogen variables
     !
@@ -1004,6 +1029,33 @@ contains
        if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
     end if
    
+    call ncd_io('nstem',this%nstem, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    call ncd_io('taper',this%taper, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    !
+    ! Biomass heat storage variables
+    !
+    if (use_biomass_heat_storage ) then
+       !
+       ! These variables are used for stem biomass and only for tree and shrub
+       ! (They are effectively unused for other veg types)
+       !
+       call ncd_io('dbh',this%dbh, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       call ncd_io('fbw',this%fbw, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       call ncd_io('rstem',this%rstem_per_dbh, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+       call ncd_io('wood_density',this%wood_density, 'read', ncid, readvar=readv)
+       if ( .not. readv ) call endrun(msg=' ERROR: error in reading in pft data'//errMsg(sourcefile, __LINE__))
+    else
+       this%dbh = 0.0_r8
+       this%fbw = 0.0_r8
+       this%rstem_per_dbh = 0.0_r8
+       this%wood_density = 0.0_r8
+    end if
+
     call ncd_pio_closefile(ncid)
 
     call FatesReadPFTs()
@@ -1098,12 +1150,34 @@ contains
        if ( trim(pftname(i)) == 'irrigated_tropical_soybean'          ) nirrig_trp_soybean   = i
     end do
 
-    ntree                = nbrdlf_dcd_brl_tree  ! value for last type of tree
     npcropmin            = ntmp_corn            ! first prognostic crop
     npcropmax            = mxpft                ! last prognostic crop in list
 
     call this%set_is_pft_known_to_model()
     call this%set_num_cfts_known_to_model()
+
+    ! Set vegetation family identifier (tree/shrub/grass)
+    do m = 0,mxpft 
+       if (m == ndllf_evr_tmp_tree .or. m == ndllf_evr_brl_tree &
+            .or. m == ndllf_dcd_brl_tree .or. m == nbrdlf_evr_trp_tree &
+            .or. m == nbrdlf_evr_tmp_tree .or. m == nbrdlf_dcd_trp_tree &
+            .or. m == nbrdlf_dcd_tmp_tree .or. m == nbrdlf_dcd_brl_tree) then
+          this%is_tree(m) = .true.
+       else
+          this%is_tree(m) = .false.
+       endif
+       if(m == nbrdlf_evr_shrub .or. m == nbrdlf_dcd_tmp_shrub .or. m == nbrdlf_dcd_brl_shrub) then
+          this%is_shrub(m) = .true.
+       else
+          this%is_shrub(m) = .false.
+       endif
+       if(m == nc3_arctic_grass .or. m == nc3_nonarctic_grass .or. m == nc4_grass) then
+          this%is_grass(m) = .true.
+       else
+          this%is_grass(m) = .false.
+       endif
+
+    end do
 
     if (use_cndv) then
        this%fcur(:) = this%fcurdv(:)
@@ -1171,6 +1245,10 @@ contains
           end if
           if ( this%pprodharv10(i) > 1.0_r8 .or. this%pprodharv10(i) < 0.0_r8 )then
              call endrun(msg=' ERROR: pprodharv10 outside of range.'//errMsg(sourcefile, __LINE__))
+          end if
+          if (i < npcropmin .and. this%biofuel_harvfrac(i) /= 0._r8) then
+             call endrun(msg=' ERROR: biofuel_harvfrac non-zero for a non-prognostic crop PFT.'//&
+                  errMsg(sourcefile, __LINE__))
           end if
        end do
     end if
@@ -1259,7 +1337,9 @@ contains
     !-----------------------------------------------------------------------
 
     deallocate( this%noveg)
-    deallocate( this%tree)
+    deallocate( this%is_tree)
+    deallocate( this%is_shrub)
+    deallocate( this%is_grass)
 
     deallocate( this%dleaf)
     deallocate( this%c3psn)
@@ -1282,6 +1362,7 @@ contains
     deallocate( this%slatop)
     deallocate( this%dsladlai)
     deallocate( this%leafcn)
+    deallocate( this%biofuel_harvfrac)
     deallocate( this%flnr)
     deallocate( this%woody)
     deallocate( this%lflitcn)
@@ -1355,6 +1436,8 @@ contains
     deallocate( this%fm_droot)
     deallocate( this%fsr_pft)
     deallocate( this%fd_pft)
+    deallocate( this%rswf_min)
+    deallocate( this%rswf_max)
     deallocate( this%manunitro)
     deallocate( this%fleafcn)
     deallocate( this%ffrootcn)
@@ -1386,6 +1469,12 @@ contains
     deallocate( this%fun_cn_flex_c)
     deallocate( this%FUN_fracfixers)
     
+    deallocate( this%dbh)
+    deallocate( this%fbw)
+    deallocate( this%nstem)
+    deallocate( this%rstem_per_dbh)
+    deallocate( this%wood_density)
+    deallocate( this%taper)
   end subroutine Clean
 
 end module pftconMod

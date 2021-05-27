@@ -83,6 +83,7 @@ module CNVegCarbonStateType
      real(r8), pointer :: totc_p2c_col             (:) ! (gC/m2) totc_patch averaged to col
      real(r8), pointer :: totc_col                 (:) ! (gC/m2) total column carbon, incl veg and cpool
      real(r8), pointer :: totecosysc_col           (:) ! (gC/m2) total ecosystem carbon, incl veg but excl cpool 
+     real(r8), pointer :: totc_grc                 (:) ! (gC/m2) total gridcell carbon
 
      logical, private  :: dribble_crophrv_xsmrpool_2atm
    contains
@@ -100,6 +101,9 @@ module CNVegCarbonStateType
      procedure , private :: InitCold        ! Initialize arrays for a cold-start
 
   end type cnveg_carbonstate_type
+
+  real(r8), public  :: spinup_factor_deadwood = 1.0_r8        ! Spinup factor used for this simulation
+  real(r8), public  :: spinup_factor_AD       = 10.0_r8       ! Spinup factor used when in Accelerated Decomposition mode
 
   ! !PRIVATE DATA:
 
@@ -269,6 +273,7 @@ contains
     allocate(this%totc_p2c_col             (begc:endc)) ; this%totc_p2c_col             (:) = nan
     allocate(this%totc_col                 (begc:endc)) ; this%totc_col                 (:) = nan
     allocate(this%totecosysc_col           (begc:endc)) ; this%totecosysc_col           (:) = nan
+    allocate(this%totc_grc                 (begg:endg)) ; this%totc_grc                 (:) = nan
 
   end subroutine InitAllocate
 
@@ -867,7 +872,7 @@ contains
     !
     ! !USES:
     use landunit_varcon	 , only : istsoil, istcrop 
-    use clm_varctl, only : MM_Nuptake_opt    
+    use clm_varctl, only : MM_Nuptake_opt, spinup_state
     !
     ! !ARGUMENTS:
     class(cnveg_carbonstate_type)                       :: this 
@@ -890,6 +895,8 @@ contains
           call endrun(msg=' ERROR: for C13 or C14 must pass in c12_cnveg_carbonstate_inst as argument' //&
                errMsg(sourcefile, __LINE__))
        end if
+    else
+       if ( spinup_state == 2 ) spinup_factor_deadwood = spinup_factor_AD
     end if
 
     ! Set column filters
@@ -1020,6 +1027,7 @@ contains
 
     do g = bounds%begg, bounds%endg
        this%seedc_grc(g) = 0._r8
+       this%totc_grc(g)  = 0._r8
     end do
 
     ! initialize fields for special filters
@@ -1033,7 +1041,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine Restart ( this,  bounds, ncid, flag, carbon_type, reseed_dead_plants, &
                        c12_cnveg_carbonstate_inst, filter_reseed_patch, &
-                       num_reseed_patch)
+                       num_reseed_patch, spinup_factor4deadwood )
     !
     ! !DESCRIPTION: 
     ! Read/write CN restart data for carbon state
@@ -1059,6 +1067,7 @@ contains
     type (cnveg_carbonstate_type)         , intent(in), optional :: c12_cnveg_carbonstate_inst 
     integer                               , intent(out), optional :: filter_reseed_patch(:)
     integer                               , intent(out), optional :: num_reseed_patch
+    real(r8)                              , intent(out), optional :: spinup_factor4deadwood
     !
     ! !LOCAL VARIABLES:
     integer            :: i,j,k,l,c,p
@@ -1202,11 +1211,13 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_patch) 
 
-       call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
-            dim1name='pft', long_name='', units='', &
-            interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
-       if (flag == 'read' .and. (.not. readvar) ) then
-           this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+       if (use_crop) then
+          call restartvar(ncid=ncid, flag=flag, varname='xsmrpool_loss', xtype=ncd_double,  &
+               dim1name='pft', long_name='', units='', &
+               interpinic_flag='interp', readvar=readvar, data=this%xsmrpool_loss_patch) 
+          if (flag == 'read' .and. (.not. readvar) ) then
+              this%xsmrpool_loss_patch(bounds%begp:bounds%endp) = 0._r8
+          end if
        end if
 
        call restartvar(ncid=ncid, flag=flag, varname='pft_ctrunc', xtype=ncd_double,  &
@@ -1241,19 +1252,19 @@ contains
           if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
              if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools out of AD spinup mode'
              exit_spinup = .true.
-             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by 10 for exit spinup'
+             if ( masterproc ) write(iulog, *) 'Multiplying stemc and crootc by ', spinup_factor_AD, ' for exit spinup'
              do i = bounds%begp,bounds%endp
-                this%deadstemc_patch(i) = this%deadstemc_patch(i) * 10._r8
-                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * 10._r8
+                this%deadstemc_patch(i) = this%deadstemc_patch(i) * spinup_factor_AD
+                this%deadcrootc_patch(i) = this%deadcrootc_patch(i) * spinup_factor_AD
              end do
           else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
              if (spinup_state == 2 .and. restart_file_spinup_state <= 1 )then
                 if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood C pools into AD spinup mode'
                 enter_spinup = .true.
-                if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by 10 for enter spinup '
+                if ( masterproc ) write(iulog, *) 'Dividing stemc and crootc by ', spinup_factor_AD, 'for enter spinup '
                 do i = bounds%begp,bounds%endp
-                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / 10._r8
-                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / 10._r8
+                   this%deadstemc_patch(i) = this%deadstemc_patch(i) / spinup_factor_AD
+                   this%deadcrootc_patch(i) = this%deadcrootc_patch(i) / spinup_factor_AD
                 end do
              end if
           end if
@@ -2275,6 +2286,9 @@ contains
                multiplier = c14ratio)
        end if
     end if
+
+    ! Output spinup factor for deadwood (dead stem and dead course root)
+    if ( present(spinup_factor4deadwood) ) spinup_factor4deadwood = spinup_factor_AD
 
   end subroutine Restart
 

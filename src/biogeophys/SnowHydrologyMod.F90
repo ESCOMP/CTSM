@@ -21,9 +21,9 @@ module SnowHydrologyMod
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
-  use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd
+  use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd, nlevmaxurbgrnd
   use clm_varctl      , only : iulog, use_subgrid_fluxes
-  use clm_varcon      , only : namec, h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz, wimp, ssi
+  use clm_varcon      , only : namec, h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz
   use clm_varcon      , only : cpice, cpliq
   use atm2lndType     , only : atm2lnd_type
   use AerosolMod      , only : aerosol_type, AerosolFluxes
@@ -63,10 +63,21 @@ module SnowHydrologyMod
   public :: BuildSnowFilter            ! Construct snow/no-snow filters
   public :: SnowCapping                ! Remove snow mass for capped columns
   public :: NewSnowBulkDensity         ! Compute bulk density of any newly-fallen snow
+  public :: readParams                 ! Read in parameters on parameter file
 
   ! The following are public just for the sake of unit testing:
   public :: SnowCappingExcess          ! Determine the excess snow that needs to be capped
   public :: SnowHydrologySetControlForTesting ! Set some of the control settings
+
+  type, private :: params_type
+      real(r8) :: wimp          ! Water impremeable if porosity less than wimp (unitless)
+      real(r8) :: ssi           ! Irreducible water saturation of snow (unitless)
+      real(r8) :: drift_gs      ! Wind drift compaction / grain size (fixed value for now) (unitless)
+      real(r8) :: eta0_anderson ! Viscosity coefficent from Anderson1976 (kg*s/m2)
+      real(r8) :: eta0_vionnet  ! Viscosity coefficent from Vionnet2012 (kg*s/m2)
+  end type params_type
+  type(params_type), private ::  params_inst
+
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: BulkDiag_NewSnowDiagnostics ! Update various snow-related diagnostic quantities to account for new snow
@@ -268,6 +279,34 @@ contains
     end if
 
   end subroutine SnowHydrology_readnl
+
+  !----------------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_SnowHydrology'
+    !--------------------------------------------------------------------
+
+    ! Water impremeable if porosity less than wimp (unitless)
+    call readNcdioScalar(ncid, 'wimp', subname, params_inst%wimp)
+    ! Irreducible water saturation of snow (unitless)
+    call readNcdioScalar(ncid, 'ssi', subname, params_inst%ssi)
+    ! Wind drift compaction / grain size (fixed value for now) (unitless)
+    call readNcdioScalar(ncid, 'drift_gs', subname, params_inst%drift_gs)
+    ! Viscosity coefficent from Anderson1976 (kg*s/m2)
+    call readNcdioScalar(ncid, 'eta0_anderson', subname, params_inst%eta0_anderson)
+    ! Viscosity coefficent from Vionnet2012 (kg*s/m2)
+    call readNcdioScalar(ncid, 'eta0_vionnet', subname, params_inst%eta0_vionnet)
+
+  end subroutine readParams
 
   !-----------------------------------------------------------------------
   subroutine UpdateQuantitiesForNewSnow(bounds, num_c, filter_c, &
@@ -910,10 +949,10 @@ contains
     SHR_ASSERT_FL((ubound(forc_t, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snl, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(zi) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(dz) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(z) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(t_soisno) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(zi) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(dz) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(z) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(t_soisno) == [bounds%endc, nlevmaxurbgrnd]), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(frac_iceold) == [bounds%endc, nlevgrnd]), sourcefile, __LINE__)
 
     do fc = 1, snowpack_initialized_filterc%num
@@ -1282,18 +1321,18 @@ contains
           if (j >= snl(c)+1) then
              if (j <= -1) then
                 ! No runoff over snow surface, just ponding on surface
-                if (eff_porosity(c,j) < wimp .OR. eff_porosity(c,j+1) < wimp) then
+                if (eff_porosity(c,j) < params_inst%wimp .OR. eff_porosity(c,j+1) < params_inst%wimp) then
                    qflx_snow_percolation(c,j) = 0._r8
                 else
                    ! dz must be scaled by frac_sno to obtain gridcell average value
                    qflx_snow_percolation(c,j) = max(0._r8,(vol_liq(c,j) &
-                        - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
+                        - params_inst%ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
                    qflx_snow_percolation(c,j) = min(qflx_snow_percolation(c,j),(1._r8-vol_ice(c,j+1) &
                         - vol_liq(c,j+1))*dz(c,j+1)*frac_sno_eff(c))
                 end if
              else
                 qflx_snow_percolation(c,j) = max(0._r8,(vol_liq(c,j) &
-                     - ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
+                     - params_inst%ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
              end if
              qflx_snow_percolation(c,j) = (qflx_snow_percolation(c,j)*1000._r8)/dtime
           end if
@@ -2883,9 +2922,9 @@ contains
 
     associate( &
          snl => col%snl,   & ! Output: [integer (:)    ]  number of snow layers
-         dz  => col%dz,    & ! Output: [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevgrnd)
-         z   => col%z,     & ! Output: [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevgrnd)
-         zi  => col%zi     & ! Output: [real(r8) (:,:) ]  interface level below a "z" level (m) (-nlevsno+0:nlevgrnd)
+         dz  => col%dz,    & ! Output: [real(r8) (:,:) ]  layer thickness (m)  (-nlevsno+1:nlevmaxurbgrnd)
+         z   => col%z,     & ! Output: [real(r8) (:,:) ]  layer depth (m) (-nlevsno+1:nlevmaxurbgrnd)
+         zi  => col%zi     & ! Output: [real(r8) (:,:) ]  interface level below a "z" level (m) (-nlevsno+0:nlevmaxurbgrnd)
     )
 
     allocate(dzmin(1:nlevsno))
@@ -3688,12 +3727,11 @@ contains
     !
     ! !LOCAL VARIABLES:
     real(r8), parameter :: c2 = 23.e-3_r8       ! [m3/kg]
-    real(r8), parameter :: eta0 = 9.e+5_r8      ! The Viscosity Coefficient Eta0 [kg-s/m2]
 
     character(len=*), parameter :: subname = 'OverburdenCompactionAnderson1976'
     !-----------------------------------------------------------------------
 
-    compaction_rate = -(burden+wx/2._r8)*exp(-overburden_compress_Tfactor*td - c2*bi)/eta0
+    compaction_rate = -(burden+wx/2._r8)*exp(-overburden_compress_Tfactor*td - c2*bi)/params_inst%eta0_anderson
 
   end function OverburdenCompactionAnderson1976
 
@@ -3728,14 +3766,13 @@ contains
     real(r8), parameter :: ceta = 450._r8       ! overburden compaction constant [kg/m3]
     real(r8), parameter :: aeta = 0.1_r8        ! overburden compaction constant [1/K]
     real(r8), parameter :: beta = 0.023_r8      ! overburden compaction constant [m3/kg]
-    real(r8), parameter :: eta0 = 7.62237e6_r8  ! The Viscosity Coefficient Eta0 [kg-s/m2]
 
     character(len=*), parameter :: subname = 'OverburdenCompactionVionnet2012'
     !-----------------------------------------------------------------------
 
     f1 = 1._r8 / (1._r8 + 60._r8 * h2osoi_liq / (denh2o * dz))
     f2 = 4.0_r8 ! currently fixed to maximum value, holds in absence of angular grains
-    eta = f1*f2*(bi/ceta)*exp(aeta*td + beta*bi)*eta0
+    eta = f1*f2*(bi/ceta)*exp(aeta*td + beta*bi)*params_inst%eta0_vionnet
     compaction_rate = -(burden+wx/2._r8) / eta
 
   end function OverburdenCompactionVionnet2012
@@ -3775,7 +3812,6 @@ contains
 
     real(r8), parameter :: rho_min = 50._r8      ! wind drift compaction / minimum density [kg/m3]
     real(r8), parameter :: rho_max = 350._r8     ! wind drift compaction / maximum density [kg/m3]
-    real(r8), parameter :: drift_gs = 0.35e-3_r8 ! wind drift compaction / grain size (fixed value for now)
     real(r8), parameter :: drift_sph = 1.0_r8    ! wind drift compaction / sphericity
     real(r8), parameter :: tau_ref = 48._r8 * 3600._r8  ! wind drift compaction / reference time [s]
 
@@ -3785,7 +3821,7 @@ contains
     if (mobile) then
        Frho = 1.25_r8 - 0.0042_r8*(max(rho_min, bi)-rho_min)
        ! assuming dendricity = 0, sphericity = 1, grain size = 0.35 mm Non-dendritic snow
-       MO = 0.34_r8 * (-0.583_r8*drift_gs - 0.833_r8*drift_sph + 0.833_r8) + 0.66_r8*Frho
+       MO = 0.34_r8 * (-0.583_r8*params_inst%drift_gs - 0.833_r8*drift_sph + 0.833_r8) + 0.66_r8*Frho
        SI = -2.868_r8 * exp(-0.085_r8*forc_wind) + 1._r8 + MO
 
        if (SI > 0.0_r8) then

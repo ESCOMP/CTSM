@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-CLM namelist creator
+CTSM namelist creator
 """
 import sys, os, shutil
 
@@ -23,17 +23,17 @@ _config_cache_template = """
 <?xml version="1.0"?>
 <config_definition>
 <commandline></commandline>
-<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0">Specifies clm physics</entry>
+<entry id="phys" value="{clm_phys}" list="" valid_values="clm4_5,clm5_0,clm5_1">Specifies CTSM physics</entry>
 </config_definition>
 """
 
 ###############################################################################
 def buildnml(case, caseroot, compname):
 ###############################################################################
-    """Build the clm namelist """
+    """Build the CTSM namelist """
 
     # Build the component namelist 
-    if compname != "clm":
+    if compname != "ctsm" and compname != "clm":
         raise AttributeError
 
     lnd_root = case.get_value("COMP_ROOT_DIR_LND")
@@ -50,7 +50,6 @@ def buildnml(case, caseroot, compname):
     clm_accelerated_spinup = case.get_value("CLM_ACCELERATED_SPINUP")
     comp_atm = case.get_value("COMP_ATM")
     lnd_grid = case.get_value("LND_GRID")
-    lnd_ncpl = case.get_value("LND_NCPL")
     lnd_domain_path = case.get_value("LND_DOMAIN_PATH")
     lnd_domain_file = case.get_value("LND_DOMAIN_FILE")
     ninst_lnd = case.get_value("NINST_LND")
@@ -64,12 +63,12 @@ def buildnml(case, caseroot, compname):
     mask = case.get_value("MASK_GRID")
 
     # -----------------------------------------------------
-    # Set clmconf
+    # Set ctsmconf
     # -----------------------------------------------------
 
-    clmconf = os.path.join(caseroot, "Buildconf", "clmconf")
-    if not os.path.isdir(clmconf):
-        os.makedirs(clmconf)
+    ctsmconf = os.path.join(caseroot, "Buildconf", compname+"conf")
+    if not os.path.isdir(ctsmconf):
+        os.makedirs(ctsmconf)
 
     # -----------------------------------------------------
     # Create config_cache.xml file 
@@ -81,7 +80,7 @@ def buildnml(case, caseroot, compname):
     clm_phys = case.get_value("CLM_PHYSICS_VERSION")
 
     config_cache_text = _config_cache_template.format(clm_phys=clm_phys)
-    config_cache_path = os.path.join(caseroot, "Buildconf", "clmconf", "config_cache.xml")
+    config_cache_path = os.path.join(caseroot, "Buildconf", compname+"conf", "config_cache.xml")
     with open(config_cache_path, 'w') as config_cache_file:
         config_cache_file.write(config_cache_text)
 
@@ -149,13 +148,13 @@ def buildnml(case, caseroot, compname):
     
     spinup = "-clm_accelerated_spinup %s "%clm_accelerated_spinup
     
-    infile = os.path.join(clmconf, "namelist")
+    infile = os.path.join(ctsmconf, "namelist")
     
-    inputdata_file = os.path.join(caseroot,"Buildconf","clm.input_data_list")
+    inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")
     
     lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
     
-    config_cache_file = os.path.join(caseroot,"Buildconf","clmconf","config_cache.xml")
+    config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
 
     # -----------------------------------------------------
     # Clear out old data
@@ -189,11 +188,19 @@ def buildnml(case, caseroot, compname):
         # -----------------------------------------------------
 
         if run_type == "hybrid" or run_type == "branch":
-            clm_startfile = "%s.clm2%s.r.%s-%s.nc"%(run_refcase,inst_string,run_refdate,run_reftod)
-            if not os.path.exists(os.path.join(rundir, clm_startfile)):
-                clm_startfile = "%s.clm2.r.%s-%s.nc"%(run_refcase,run_refdate,run_reftod)
-                logger.warning( "WARNING: the start file being used for a multi-instance case is a single instance: "+clm_startfile )
+            compnames = [ "clm4", "clm5", "clm2" ]
+            for comp in compnames:
+               clm_startfile = "%s.%s%s.r.%s-%s.nc"%(run_refcase,comp,inst_string,run_refdate,run_reftod)
+               if os.path.exists(os.path.join(rundir, clm_startfile)):
+                 break
+               else:
+                 clm_startfile = "%s.%s.r.%s-%s.nc"%(run_refcase,comp,run_refdate,run_reftod)
+                 if os.path.exists(os.path.join(rundir, clm_startfile)):
+                    logger.warning( "WARNING: the start file being used for a multi-instance case is a single instance: "+clm_startfile )
+                    break
 
+            if not os.path.exists(os.path.join(rundir, clm_startfile)):
+               logger.warning( "WARNING: Could NOT find a start file to use using"+clm_startfile )
             clm_icfile = "%s = \'%s\'"%(startfile_type, clm_startfile)
         else:
             clm_icfile = ""
@@ -202,24 +209,24 @@ def buildnml(case, caseroot, compname):
         infile_lines.append(clm_icfile)
 
         user_nl_file = os.path.join(caseroot, "user_nl_clm" + inst_string)
-        namelist_infile = os.path.join(clmconf, "namelist")
+        namelist_infile = os.path.join(ctsmconf, "namelist")
 
         create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
 
         cmd = os.path.join(lnd_root,"bld","build-namelist")
 
         command = ("%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
-                   "%s %s -res %s %s -clm_start_type %s -envxml_dir %s -l_ncpl %s "
+                   "%s %s -res %s %s -clm_start_type %s -envxml_dir %s "
                    "-configuration %s -structure %s "
                    "-lnd_frac %s -glc_nec %s -co2_ppmv %s -co2_type %s -config %s "
                    "%s %s %s %s"
                    %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
-                     nomeg, usecase, lnd_grid, clmusr, start_type, caseroot, lnd_ncpl, 
+                     nomeg, usecase, lnd_grid, clmusr, start_type, caseroot,
                      configuration, structure,
                      lndfrac_file, glc_nec, ccsm_co2_ppmv, clm_co2_type, config_cache_file,
                      clm_bldnml_opts, spinup, tuning, gridmask))
 
-        rc, out, err = run_cmd(command, from_dir=clmconf)
+        rc, out, err = run_cmd(command, from_dir=ctsmconf)
         expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
         if out is not None:
             logger.debug("     %s"%out)
@@ -231,11 +238,11 @@ def buildnml(case, caseroot, compname):
         # -----------------------------------------------------
 
         if os.path.isdir(rundir):
-            file1 = os.path.join(clmconf, "lnd_in")
+            file1 = os.path.join(ctsmconf, "lnd_in")
             file2 = os.path.join(rundir, "lnd_in")
             if ninst > 1:
                 file2 += inst_string
-            logger.debug("CLM namelist copy: file1 %s file2 %s " %(file1, file2))
+            logger.debug("CTSM namelist copy: file1 %s file2 %s " %(file1, file2))
             shutil.copy(file1,file2)
 
 ###############################################################################
@@ -243,7 +250,8 @@ def _main_func():
 
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
-        buildnml(case, caseroot, "clm")
+        compname = case.get_value("COMP_LND")
+        buildnml(case, caseroot, compname)
 
 if __name__ == "__main__":
     _main_func()

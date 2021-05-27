@@ -1,0 +1,12 @@
+do_transient_lakes = .true.
+
+! This file was created with the following command:
+! ncap2 -s 'PCT_LAKE=array(0.0,0.0,PCT_CROP); PCT_LAKE={0.,50.,25.,25.,25.,25.}; HASLAKE=array(1.,1.,AREA); PCT_CROP=array(0.0,0.0,PCT_LAKE); PCT_CROP={0.,25.,12.,12.,12.,12.}' landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_c160127.nc landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynLakes_c200928.nc
+! Key points are that lake area starts as 0, increases after the first year, then decreases after the second year.
+! PCT_CROP is also changed so that PCT_LAKE + PCT_CROP <= 100. (Here, PCT_CROP increases and decreases at the same time as PCT_LAKE in order to exercise the simultaneous increase or decrease of two landunits, but that isn't a critical part of this test.)
+! Note that the use of this file means that this testmod can only be used with the 1x1_smallvilleIA grid.
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynLakes_c200928.nc'
+
+! BUG(wjs, 2020-09-25, ESCOMP/CTSM#43) Dynamic lakes don't work when methane is active,
+! so for now disable methane for this test.
+use_lch4 = .false.

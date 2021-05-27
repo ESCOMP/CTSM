@@ -207,7 +207,7 @@ And here are some things to check for when making new landuse.timeseries
 datasets (which often happens at the same time, and most of the above applies
 as well):
 
-- Compare one of the productive resolution datasets to a previous version.
+- Compare one of the production resolution datasets to a previous version.
 
   - If part of it should be identical (for example the historical period) make
     sure it is identical as expected (using cprnc make sure the historical period
