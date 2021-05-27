@@ -251,7 +251,7 @@ module CLMFatesInterfaceMod
      ! over the NL variables to FATES global settings.
      ! --------------------------------------------------------------------------------  
 
-     integer, intent(in)                            :: dtime  ! main model timestep (s)
+     real(r8), intent(in)                           :: dtime  ! main model timestep (s)
      
      logical                                        :: verbose_output
      integer                                        :: pass_masterproc
@@ -320,7 +320,7 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
         call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
         call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
-        call set_fates_ctrlparms('stepsize', rval = real(dtime,r8))  !get_step_size_real())
+        call set_fates_ctrlparms('stepsize', rval = dtime)
         
         if(is_restart()) then
            pass_is_restart = 1
