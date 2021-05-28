@@ -55,6 +55,9 @@ contains
     use WaterDiagnosticBulkType           , only : readParams_WaterDiagnosticBulk         => readParams
     use SnowHydrologyMod                  , only : readParams_SnowHydrology               => readParams
     use SnowSnicarMod                     , only : readParams_SnowSnicar                  => readParams
+    use initVerticalMod                   , only : readParams_initVertical                => readParams
+    use SurfaceWaterMod                   , only : readParams_SurfaceWater                => readParams
+    use SoilHydrologyInitTimeConstMod     , only : readParams_SoilHydrologyInitTimeConst  => readParams
     use NutrientCompetitionMethodMod      , only : nutrient_competition_method_type
     use clm_varctl,                         only : NLFilename_in
     use PhotosynthesisMod                 , only : photosyns_type
@@ -125,9 +128,11 @@ contains
     call readParams_InfiltrationExcessRunoff ( ncid )
     call readParams_SurfaceResistance ( ncid )
     call readParams_WaterDiagnosticBulk ( ncid )
-    call readParams_SnowHydrology (ncid)
-    call readParams_SnowSnicar (ncid)
-
+    call readParams_SnowHydrology ( ncid )
+    call readParams_SnowSnicar ( ncid )
+    call readParams_initVertical ( ncid )
+    call readParams_SurfaceWater ( ncid )
+    call readParams_SoilHydrologyInitTimeConst ( ncid )
     !
     call ncd_pio_closefile(ncid)
 

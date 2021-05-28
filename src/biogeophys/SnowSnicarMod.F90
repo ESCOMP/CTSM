@@ -38,6 +38,8 @@ module SnowSnicarMod
   type, private :: params_type
       real(r8) :: xdrdt         ! Arbitrary factor applied to snow aging rate (-)
       real(r8) :: snw_rds_refrz ! Effective radius of re-frozen snow (microns)
+      real(r8) :: C2_liq_Brun89 ! Constant for liquid water grain growth [m3 s-1],
+                                ! from Brun89: corrected for LWC in units of percent
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -72,8 +74,6 @@ module SnowSnicarMod
                                                          ! from Brun89
   real(r8), parameter :: C1_liq_Brun89 = 0._r8           ! constant for liquid water grain growth [m3 s-1],
                                                          ! from Brun89: zeroed to accomodate dry snow aging
-  real(r8), parameter :: C2_liq_Brun89 = 4.22E-13_r8     ! constant for liquid water grain growth [m3 s-1],
-                                                         ! from Brun89: corrected for LWC in units of percent
 
   real(r8), parameter :: tim_cns_bc_rmv  = 2.2E-8_r8     ! time constant for removal of BC in snow on sea-ice
                                                          ! [s-1] (50% mass removal/year)
@@ -176,6 +176,8 @@ contains
     call readNcdioScalar(ncid, 'xdrdt', subname, params_inst%xdrdt)
     ! Effective radius of re-frozen snow (microns)
     call readNcdioScalar(ncid, 'snw_rds_refrz', subname, params_inst%snw_rds_refrz)
+    ! constant for liquid water grain growth [m3 s-1], from Brun89: corrected for LWC in units of percent
+    call readNcdioScalar(ncid,  'C2_liq_Brun89', subname, params_inst%C2_liq_Brun89)
 
   end subroutine readParams
 
@@ -1217,7 +1219,8 @@ contains
 
             !dr_wet = 1E6_r8*(dtime*(C1_liq_Brun89 + C2_liq_Brun89*(frc_liq**(3))) / (4*SHR_CONST_PI*(snw_rds(c_idx,i)/1E6)**(2)))
             !simplified, units of microns:
-            dr_wet = 1E18_r8*(dtime*(C2_liq_Brun89*(frc_liq**(3))) / (4*SHR_CONST_PI*snw_rds(c_idx,i)**(2)))
+            dr_wet = 1E18_r8*(dtime*(params_inst%C2_liq_Brun89*(frc_liq**(3))) / &
+                     (4*SHR_CONST_PI*snw_rds(c_idx,i)**(2)))
 
             dr = dr + dr_wet
 
