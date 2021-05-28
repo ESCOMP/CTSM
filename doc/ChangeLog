@@ -1,4 +1,134 @@
 ===============================================================
+Tag name:  ctsm5.1.dev043
+Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date:  Fri May 28 16:14:39 MDT 2021
+One-line Summary: Refactor in preparation for MIMICS
+
+Purpose and description of changes
+----------------------------------
+
+ Refactor aspects of the CTSM in preparation for our introduction of
+ MIMICS, which has started in #1318 .
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? NO
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Known bugs introduced in this tag (include issue #):
+ This tag breaks CN tests. I did not open an issue because the CN
+ model has been deprecated and will eventually be removed.
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Moved initial_Cstocks_depth_bgc and initial_Cstocks_bgc from the
+ namelist to the params file. Also renamed tau_cwd to tau_cwd_bgc and
+ k_frag to k_frag_cn in the params file according to the models that use
+ these parameters.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ initial_Cstocks_depth_bgc and initial_Cstocks_bgc are not namelist
+ variables anymore.
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ There are new params files for clm45, clm50, and ctsm51.
+
+Substantial timing or memory changes:
+[For timing changes, you should at least check the PFS test in the test
+ suite, whether or not you expect timing changes: ensure that its run
+ time has not increased significantly relative to the baseline.]
+
+
+Testing summary:
+----------------
+[... Remove before making master tag.
+
+Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
+However, it occasionally makes sense to do more or less system testing;
+here is guidance on different available levels of system testing:
+    a) no system testing (for use when the only changes are ones that
+                          have absolutely no impact on system runs; this
+                          includes documentation-only tags, tags that
+                          just change the tools or some python code that
+                          does not impact system runs, etc.)
+    b) minimal (for use in rare cases where only a small change with 
+                known behavior is added ... eg. a minor bug fix. This
+		might be to just run the "short" test list, or to run
+		a single test. Whatever makes sense for the particular case.)
+    c) regular (regular tests on normal machines if CTSM source is modified)
+    d) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.) 
+		would be run as well)
+
+In addition, various other tests of the tools, python and perl
+infrastructure should be run when appropriate, as described below.
+
+...]
+
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - 
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
+  (PTCLM is being deprecated, so we only expect this to be done on occasion)
+
+    cheyenne - 
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- 
+    izumi ------- 
+  
+  fates tests:
+    cheyenne ---- 
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1340
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev042
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri May 28 14:07:45 MDT 2021
