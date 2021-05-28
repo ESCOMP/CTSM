@@ -501,7 +501,7 @@ If TRUE, irrigation will be active.
 If TRUE, fsat will be set to zero for crop columns.
 </entry> 
 
-<entry id="maxpatch_glcmec" type="integer"  category="clm_physics"
+<entry id="maxpatch_glc" type="integer"  category="clm_physics"
        group="clm_inparm" valid_values="1,3,5,10,36" >
 Number of  multiple elevation classes over glacier points.
 </entry>
@@ -1549,7 +1549,7 @@ If TRUE, repartition rain/snow from atmosphere based on temperature.
 
 <entry id="glcmec_downscale_longwave" type="logical" category="clm_physics"
        group="atm2lnd_inparm" valid_values="" >
-If TRUE, downscale longwave radiation over glc_mec landunits.
+If TRUE, downscale longwave radiation over glacier landunits.
 This downscaling is conservative.
 <default>Default: .true.</default>
 </entry>

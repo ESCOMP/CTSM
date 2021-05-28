@@ -43,7 +43,6 @@ module clm_time_manager
         get_rest_date,            &! return the date from the restart file
         get_local_timestep_time,  &! return the local time for the input longitude to the nearest time-step
         get_local_time,           &! return the local time for the input longitude
-        set_nextsw_cday,          &! set the next radiation calendar day
         is_first_step,            &! return true on first step of initial run
         is_first_restart_step,    &! return true on first step of restart or branch run
         is_first_step_of_this_run_segment, &! return true on first step of any run segment (initial, restart or branch run)
@@ -108,10 +107,6 @@ module clm_time_manager
    logical, save :: tm_first_restart_step = .false.    ! true for first step of a restart or branch run
    logical, save :: tm_perp_calendar      = .false.    ! true when using perpetual calendar
    logical, save :: timemgr_set           = .false.    ! true when timemgr initialized
-   !
-   ! Next short-wave radiation calendar day
-   ! 
-   real(r8) :: nextsw_cday = uninit_r8 ! calday from clock of next radiation computation
 
    !
    ! The time-step number of startup or last Data Assimulation (DA) restart or pause
@@ -1418,21 +1413,6 @@ contains
   end function is_near_local_noon
 
   !=========================================================================================
-
-  subroutine set_nextsw_cday( nextsw_cday_in )
-
-    ! Set the next radiation calendar day, so that radiation step can be calculated
-    !
-    ! Arguments
-    real(r8), intent(IN) :: nextsw_cday_in ! input calday of next radiation computation
-
-    character(len=*), parameter :: sub = 'clm::set_nextsw_cday'
-
-    nextsw_cday = nextsw_cday_in
-
-  end subroutine set_nextsw_cday
-
-  !=========================================================================================
  
   function is_beg_curr_day()
  
@@ -1800,8 +1780,6 @@ contains
     tm_perp_calendar      = .false.
     timemgr_set           = .false.
 
-    nextsw_cday = uninit_r8
-    
     ! ------------------------------------------------------------------------
     ! Reset other module-level variables to some reasonable default, to ensure that they
     ! don't carry over any state from one unit test to the next.

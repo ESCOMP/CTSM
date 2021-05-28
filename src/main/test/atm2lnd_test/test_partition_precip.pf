@@ -9,7 +9,7 @@ module test_partition_precip
   use unittestSubgridMod
   use unittestSimpleSubgridSetupsMod
   use unittestArrayMod
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice
   use clm_varcon, only : hfus   ! latent heat of fusion for ice [J/kg]
   use clm_varcon, only : denh2o ! density of liquid water [kg/m3]
   use shr_const_mod, only : SHR_CONST_TKFRZ
@@ -178,7 +178,7 @@ contains
 
     call unittest_subgrid_setup_start()
     call unittest_add_gridcell()
-    call create_landunit_ncols(ltype = istice_mec, lweight = 1._r8, &
+    call create_landunit_ncols(ltype = istice, lweight = 1._r8, &
          ctypes = [1], cweights = [1._r8])
     call unittest_subgrid_setup_end()
 
