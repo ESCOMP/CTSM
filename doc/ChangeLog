@@ -1,12 +1,14 @@
 ===============================================================
 Tag name:  ctsm5.1.dev042
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Thu May 27 17:17:57 MDT 2021
-One-line Summary: Small answer changes for double precision constants and soil limits
+Date: Fri May 28 14:07:45 MDT 2021
+One-line Summary: Small answer changes for double precision constants and limit on organic soil
 
 Purpose and description of changes
 ----------------------------------
 
+Change more constants to double precision. Add in limits on organic matter in
+soil that @olyson added to the PPE branch (Perturbed Parameter Ensemble).
 
 
 Significant changes to scientifically-supported configurations
@@ -28,44 +30,18 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Issues fixed (include CTSM Issue #):
-
-CIME Issues fixed (include issue #):
-
-Known bugs introduced in this tag (include issue #):
-
-Known bugs found since the previous tag (include issue #):
-
-
-Notes of particular relevance for users
----------------------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for users (e.g., need to interpolate initial conditions):
-
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-
-Changes made to namelist defaults (e.g., changed parameter values):
-
-Changes to the datasets (e.g., parameter, surface or initial files):
-
-Substantial timing or memory changes:
-[For timing changes, you should at least check the PFS test in the test
- suite, whether or not you expect timing changes: ensure that its run
- time has not increased significantly relative to the baseline.]
-
+   #1380 -- Missing NCL script
+   #142 --- hard coded constants aren't all double precision (some work was done on this)
 
 Notes of particular relevance for developers:
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
-Changes to tests or testing:
-
+   There are still more constants that should be converted to double precision.
 
 Testing summary:   regular
 ----------------
@@ -97,13 +73,14 @@ Changes answers relative to baseline: Yes!
     - what platforms/compilers: All
     - nature of change: mostly single-precision roundoff
        many constants that were single precision are now double
-       some limits put on soil that weren't there previously
+       some limits put on soil organic that weren't there previously
 
 Other details
 -------------
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
+   #1384 -- Change some constants to double precision, and add some soil limits
 
 ===============================================================
 ===============================================================
