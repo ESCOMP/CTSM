@@ -467,7 +467,7 @@ contains
    ! to the column level and assign them to the three litter pools
    !
    ! !USES:
-   use clm_varpar , only : nlevdecomp, maxsoil_patches, i_litr_min, i_litr_max
+   use clm_varpar , only : nlevdecomp, maxsoil_patches, i_litr_min, i_litr_max, i_met_lit
    !
    ! !ARGUMENTS:
    integer                         , intent(in)    :: num_soilc       ! number of soil columns in filter
@@ -571,8 +571,11 @@ contains
                          hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j) 
 
                     ! storage harvest mortality carbon fluxes
-                    harvest_c_to_litr_c(c,j,i_litr_min) = &
-                       harvest_c_to_litr_c(c,j,i_litr_min) + &
+                    ! Metabolic litter is treated differently than other types
+                    ! of litter, so it gets this additional line after the
+                    ! most recent loop over all litter types
+                    harvest_c_to_litr_c(c,j,i_met_lit) = &
+                       harvest_c_to_litr_c(c,j,i_met_lit) + &
                        hrv_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
                        hrv_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
                        hrv_livestemc_storage_to_litter(p) * wtcol(p) * stem_prof(p,j) + &
@@ -607,8 +610,11 @@ contains
                     harvest_n_to_cwdn(c,j) = harvest_n_to_cwdn(c,j) + &
                          hrv_deadcrootn_to_litter(p) * wtcol(p) * croot_prof(p,j)
 
-                    harvest_n_to_litr_n(c,j,i_litr_min) = &
-                       harvest_n_to_litr_n(c,j,i_litr_min) + &
+                    ! Metabolic litter is treated differently than other types
+                    ! of litter, so it gets this additional line after the
+                    ! most recent loop over all litter types
+                    harvest_n_to_litr_n(c,j,i_met_lit) = &
+                       harvest_n_to_litr_n(c,j,i_met_lit) + &
                        ! retranslocated N pool harvest mortality fluxes
                        hrv_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
                        ! storage harvest mortality nitrogen fluxes

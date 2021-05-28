@@ -445,7 +445,7 @@ contains
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: run_has_transient_landcover
-   use clm_varpar           , only: nlevdecomp_full, ndecomp_pools, nlevdecomp, i_litr_min, i_litr_max
+   use clm_varpar           , only: nlevdecomp_full, ndecomp_pools, nlevdecomp, i_litr_max, i_met_lit
    !
    ! !ARGUMENTS:
    class(cnfire_base_type)                        :: this
@@ -939,14 +939,14 @@ contains
                 m_livecrootn_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
 
 
-           m_c_to_litr_fire(c,j,i_litr_min) = &
-                m_c_to_litr_fire(c,j,i_litr_min) + &
-                ((m_leafc_to_litter_fire(p) * lf_f(patch%itype(p),i_litr_min) &
+           m_c_to_litr_fire(c,j,i_met_lit) = &
+                m_c_to_litr_fire(c,j,i_met_lit) + &
+                ((m_leafc_to_litter_fire(p) * lf_f(patch%itype(p),i_met_lit) &
                 +m_leafc_storage_to_litter_fire(p) + &
                 m_leafc_xfer_to_litter_fire(p) + &
                 m_gresp_storage_to_litter_fire(p) &
                 +m_gresp_xfer_to_litter_fire(p))*leaf_prof(p,j) + &
-                (m_frootc_to_litter_fire(p) * fr_f(patch%itype(p),i_litr_min) &
+                (m_frootc_to_litter_fire(p) * fr_f(patch%itype(p),i_met_lit) &
                 +m_frootc_storage_to_litter_fire(p) + &
                 m_frootc_xfer_to_litter_fire(p))*froot_prof(p,j) &
                 +(m_livestemc_storage_to_litter_fire(p) + &
@@ -957,19 +957,22 @@ contains
                 m_livecrootc_xfer_to_litter_fire(p) &
                 +m_deadcrootc_storage_to_litter_fire(p) + &
                 m_deadcrootc_xfer_to_litter_fire(p))* croot_prof(p,j))* patch%wtcol(p)    
-           do i = i_litr_min+1, i_litr_max
+           ! Here metabolic litter is treated differently than other
+           ! types of litter, so it remains outside this litter loop,
+           ! in the line above
+           do i = i_met_lit+1, i_litr_max
               m_c_to_litr_fire(c,j,i) = m_c_to_litr_fire(c,j,i) + &
                  (m_leafc_to_litter_fire(p) * lf_f(patch%itype(p),i) * leaf_prof(p,j) + &
                  m_frootc_to_litter_fire(p) * fr_f(patch%itype(p),i) * froot_prof(p,j)) * patch%wtcol(p) 
            end do
 
-           m_n_to_litr_fire(c,j,i_litr_min) = &
-              m_n_to_litr_fire(c,j,i_litr_min) + &
-              ((m_leafn_to_litter_fire(p) * lf_f(patch%itype(p),i_litr_min) + &
+           m_n_to_litr_fire(c,j,i_met_lit) = &
+              m_n_to_litr_fire(c,j,i_met_lit) + &
+              ((m_leafn_to_litter_fire(p) * lf_f(patch%itype(p),i_met_lit) + &
                 m_leafn_storage_to_litter_fire(p) + &
                 m_leafn_xfer_to_litter_fire(p) + &
                 m_retransn_to_litter_fire(p)) * leaf_prof(p,j) + &
-               (m_frootn_to_litter_fire(p) * fr_f(patch%itype(p),i_litr_min) + &
+               (m_frootn_to_litter_fire(p) * fr_f(patch%itype(p),i_met_lit) + &
                 m_frootn_storage_to_litter_fire(p) + &
                 m_frootn_xfer_to_litter_fire(p)) * froot_prof(p,j) + &
                (m_livestemn_storage_to_litter_fire(p) + &
@@ -980,7 +983,10 @@ contains
                 m_livecrootn_xfer_to_litter_fire(p) + &
                 m_deadcrootn_storage_to_litter_fire(p) + &
                 m_deadcrootn_xfer_to_litter_fire(p)) * croot_prof(p,j)) * patch%wtcol(p)
-           do i = i_litr_min + 1, i_litr_max
+           ! Here metabolic litter is treated differently than other
+           ! types of litter, so it remains outside this litter loop,
+           ! in the line above
+           do i = i_met_lit+1, i_litr_max
               m_n_to_litr_fire(c,j,i) = &
                  m_n_to_litr_fire(c,j,i) + &
                  (m_leafn_to_litter_fire(p) * lf_f(patch%itype(p),i) * leaf_prof(p,j) + &

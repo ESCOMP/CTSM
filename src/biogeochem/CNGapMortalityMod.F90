@@ -287,7 +287,7 @@ contains
     ! assigns them to the three litter pools
     !
     ! !USES:
-    use clm_varpar , only : maxsoil_patches, nlevdecomp, nlevdecomp_full, i_litr_min, i_litr_max
+    use clm_varpar , only : maxsoil_patches, nlevdecomp, nlevdecomp_full, i_litr_min, i_litr_max, i_met_lit
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds
@@ -393,8 +393,11 @@ contains
                           (m_livecrootc_to_litter(p) + m_deadcrootc_to_litter(p)) * wtcol(p) * croot_prof(p,j)
 
                      ! storage gap mortality carbon fluxes
-                     gap_mortality_c_to_litr_c(c,j,i_litr_min) = &
-                        gap_mortality_c_to_litr_c(c,j,i_litr_min) + &
+                     ! Metabolic litter is treated differently than other types
+                     ! of litter, so it gets this additional line after the
+                     ! most recent loop over all litter types
+                     gap_mortality_c_to_litr_c(c,j,i_met_lit) = &
+                        gap_mortality_c_to_litr_c(c,j,i_met_lit) + &
                         (m_leafc_storage_to_litter(p) + m_gresp_storage_to_litter(p)) * wtcol(p) * leaf_prof(p,j) + &
                         m_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
                         (m_livestemc_storage_to_litter(p) + m_deadstemc_storage_to_litter(p)) * wtcol(p) * stem_prof(p,j) + &
@@ -421,8 +424,11 @@ contains
                      gap_mortality_n_to_cwdn(c,j) = gap_mortality_n_to_cwdn(c,j) + &
                           (m_livecrootn_to_litter(p) + m_deadcrootn_to_litter(p)) * wtcol(p) * croot_prof(p,j)
 
-                     gap_mortality_n_to_litr_n(c,j,i_litr_min) = &
-                        gap_mortality_n_to_litr_n(c,j,i_litr_min) + &
+                     ! Metabolic litter is treated differently than other types
+                     ! of litter, so it gets this additional line after the
+                     ! most recent loop over all litter types
+                     gap_mortality_n_to_litr_n(c,j,i_met_lit) = &
+                        gap_mortality_n_to_litr_n(c,j,i_met_lit) + &
                         ! retranslocated N pool gap mortality fluxes
                         m_retransn_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
                         ! storage gap mortality nitrogen fluxes

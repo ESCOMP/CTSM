@@ -87,14 +87,6 @@ contains
 
     end if
 
-    ! TODO(wjs, 2017-01-02) Do we need to move some of the FATES fluxes into here (from
-    ! CStateUpdate1) if use_fates is true? Specifically, some portion or all of the fluxes
-    ! from these updates in CStateUpdate1:
-    ! do i = i_litr_min, i_litr_max
-    !    cf_soil%decomp_cpools_sourcesink_col(c,j,i) = &
-    !       cf_soil%FATES_c_to_litr_c_col(c,j,i) * dt
-    ! end do
-
     end associate
 
   end subroutine CStateUpdateDynPatch

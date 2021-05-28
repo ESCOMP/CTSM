@@ -1149,7 +1149,7 @@ contains
                           iso_cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch(pp))* croot_prof(pp,j)) * patch%wtcol(pp)    
                      
                      ! Here metabolic litter is treated differently than other
-                     ! types of litter, so it remains outside this litter loop
+                     ! types of litter, so it remains outside this litter loop,
                      ! in the line above
                      do i = i_met_lit+1, i_litr_max
                         iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i) = &

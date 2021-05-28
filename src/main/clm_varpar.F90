@@ -66,7 +66,8 @@ module clm_varpar
   integer, public, parameter :: i_litr1 = 1   ! TEMPORARY FOR CascadeCN TO BUILD
   integer, public            :: i_litr2 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
   integer, public            :: i_litr3 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
-  ! The code currently expects i_litr_min = 1 and i_litr_max = 2 or 3
+  ! The code currently expects i_litr_min = i_met_lit = 1 and
+  !                            i_litr_max = 2 or 3
   integer, public :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_met_lit = -9  ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
@@ -243,7 +244,7 @@ contains
        if (use_century_decomp) then
           ndecomp_pools = 6
           ndecomp_cascade_transitions = 8
-       else  ! TODO slevis: Looks like CN to me, so plan on removing?
+       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 7
        end if
@@ -251,7 +252,7 @@ contains
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
-       else  ! TODO slevis: Looks like CN to me, so plan on removing?
+       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
           ndecomp_pools = 8
           ndecomp_cascade_transitions = 9
        end if
