@@ -11,7 +11,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevsoi, nlevgrnd
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools, ndecomp_pools_max
-  use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwd
+  use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -46,7 +46,6 @@ module SoilBiogeochemDecompCascadeBGCMod
   integer, private :: i_pro_som  ! index of protected Soil Organic Matter (SOM)
   integer, private :: i_rec_som  ! index of recalcitrant SOM
   integer, private :: i_avl_som  ! index of available SOM
-  integer, private :: i_met_lit  ! index of metabolic litter pool
   integer, private :: i_cel_lit  ! index of cellulose litter pool
   integer, private :: i_lig_lit  ! index of lignin litter pool
 
@@ -398,7 +397,7 @@ contains
       is_lignin(i_lig_lit) = .true.
 
       i_litr_max = i_lig_lit
-      if (i_litr_min \= 1 .or. i_litr_max < 2 .or. i_litr_max > 3) then
+      if (i_litr_min /= 1 .or. i_litr_max < 2 .or. i_litr_max > 3) then
          write(iulog,*) 'Expecting i_litr_min = 1 and i_litr_max = 2 or 3.'
          write(iulog,*) 'See pftconMod, SoilBiogeochemCarbonFluxType, and'
          write(iulog,*) 'clmfates_interfaceMod for ramifications of changing'

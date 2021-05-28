@@ -8,7 +8,7 @@ module CNCIsoFluxMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : ndecomp_cascade_transitions, nlevdecomp, ndecomp_pools
   use clm_varpar                         , only : max_patch_per_col, maxsoil_patches
-  use clm_varpar                         , only : i_litr_min, i_litr_max
+  use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit
   use abortutils                         , only : endrun
   use pftconMod                          , only : pftcon
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
@@ -1129,14 +1129,14 @@ contains
                pp = col%patchi(cc) + pi - 1
                if (patch%active(pp)) then
                   do j = 1, nlevdecomp
-                     iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_litr_min) = &
-                        iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_litr_min) + &
-                          ((iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp) * lf_f(ivt(pp),i_litr_min) &
+                     iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_met_lit) = &
+                        iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i_met_lit) + &
+                          ((iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp) * lf_f(ivt(pp),i_met_lit) &
                           +iso_cnveg_cf%m_leafc_storage_to_litter_fire_patch(pp) + &
                           iso_cnveg_cf%m_leafc_xfer_to_litter_fire_patch(pp) + &
                           iso_cnveg_cf%m_gresp_storage_to_litter_fire_patch(pp) &
                           +iso_cnveg_cf%m_gresp_xfer_to_litter_fire_patch(pp))*leaf_prof(pp,j) + &
-                          (iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp) * fr_f(ivt(pp),i_litr_min) &
+                          (iso_cnveg_cf%m_frootc_to_litter_fire_patch(pp) * fr_f(ivt(pp),i_met_lit) &
                           +iso_cnveg_cf%m_frootc_storage_to_litter_fire_patch(pp) + &
                           iso_cnveg_cf%m_frootc_xfer_to_litter_fire_patch(pp))*froot_prof(pp,j) &
                           +(iso_cnveg_cf%m_livestemc_storage_to_litter_fire_patch(pp) + &
@@ -1148,7 +1148,10 @@ contains
                           +iso_cnveg_cf%m_deadcrootc_storage_to_litter_fire_patch(pp) + &
                           iso_cnveg_cf%m_deadcrootc_xfer_to_litter_fire_patch(pp))* croot_prof(pp,j)) * patch%wtcol(pp)    
                      
-                     do i = i_litr_min+1, i_litr_max
+                     ! Here metabolic litter is treated differently than other
+                     ! types of litter, so it remains outside this litter loop
+                     ! in the line above
+                     do i = i_met_lit+1, i_litr_max
                         iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i) = &
                            iso_cnveg_cf%m_c_to_litr_fire_col(cc,j,i) + &
                            (iso_cnveg_cf%m_leafc_to_litter_fire_patch(pp) * lf_f(ivt(pp),i) * leaf_prof(pp,j) + &
@@ -1342,8 +1345,11 @@ contains
                       gap_mortality_c_to_cwdc(c,j) = gap_mortality_c_to_cwdc(c,j) + &
                            m_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
 
-                      gap_mortality_c_to_litr_c(c,j,i_litr_min) = &
-                         gap_mortality_c_to_litr_c(c,j,i_litr_min) + &
+                      ! Metabolic litter is treated differently than other types
+                      ! of litter, so it gets this additional line after the
+                      ! most recent loop over all litter types
+                      gap_mortality_c_to_litr_c(c,j,i_met_lit) = &
+                         gap_mortality_c_to_litr_c(c,j,i_met_lit) + &
                          ! storage gap mortality carbon fluxes
                          m_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
                          m_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
@@ -1458,8 +1464,11 @@ contains
                       harvest_c_to_cwdc(c,j) = harvest_c_to_cwdc(c,j) + &
                            hrv_deadcrootc_to_litter(p) * wtcol(p) * croot_prof(p,j)
 
-                      harvest_c_to_litr_c(c,j,i_litr_min) = &
-                         harvest_c_to_litr_c(c,j,i_litr_min) + &
+                      ! Metabolic litter is treated differently than other types
+                      ! of litter, so it gets this additional line after the
+                      ! most recent loop over all litter types
+                      harvest_c_to_litr_c(c,j,i_met_lit) = &
+                         harvest_c_to_litr_c(c,j,i_met_lit) + &
                          ! storage harvest mortality carbon fluxes
                          hrv_leafc_storage_to_litter(p) * wtcol(p) * leaf_prof(p,j) + &
                          hrv_frootc_storage_to_litter(p) * wtcol(p) * froot_prof(p,j) + &
