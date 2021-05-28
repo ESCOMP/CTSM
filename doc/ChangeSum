@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev042     erik 05/28/2021 Small answer changes for double precision constants and soil limits
+    ctsm5.1.dev041   rgknox 05/27/2021 bring FATES API up to sci.1.46.0_api.16.0.0 (methane and cn hooks)
     ctsm5.1.dev040   slevis 05/20/2021 mksurfdata_map: replace SRC files of various masks with SRC files w no mask
     ctsm5.1.dev039 jedwards 05/18/2021 Add NEON sites
     ctsm5.1.dev038     erik 04/27/2021 Bring in minor changes from the cesm2.2.0 release tag
