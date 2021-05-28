@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=LENO
+./xmlchange PTS_LON=271.83897
+./xmlchange PTS_LAT=31.8531

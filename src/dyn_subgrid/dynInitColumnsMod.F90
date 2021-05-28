@@ -97,7 +97,7 @@ contains
     ! Returns TEMPLATE_NONE_FOUND if there is no column to use for initialization
     !
     ! !USES:
-    use landunit_varcon, only : istsoil, istcrop, istice_mec, istdlak, istwet, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istsoil, istcrop, istice, istdlak, istwet, isturb_MIN, isturb_MAX
     !
     ! !ARGUMENTS:
     integer :: c_template  ! function result
@@ -121,7 +121,7 @@ contains
        c_template = initial_template_col_soil(c_new)
     case(istcrop)
        c_template = initial_template_col_crop(bounds, c_new, cactive_prior(bounds%begc:bounds%endc))
-    case(istice_mec)
+    case(istice)
        write(iulog,*) subname// ' ERROR: Ability to initialize a newly-active glacier mec column not yet implemented'
        write(iulog,*) 'Expectation is that glacier mec columns should be active from the start of the run wherever they can grow'
        call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))

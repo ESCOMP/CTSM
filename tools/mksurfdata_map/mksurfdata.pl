@@ -316,7 +316,7 @@ sub write_transient_timeseries_file {
 
 sub write_namelist_file {
    my ($namelist_fname, $logfile_fname, $fsurdat_fname, $fdyndat_fname,
-      $glc_nec, $griddata, $map, $datfil, $double,
+      $glc_nec, $griddata, $gridtype, $map, $datfil, $double,
       $all_urb, $no_inlandwet, $vegtyp, $hrvtyp, 
       $landuse_timeseries_text_file, $setnumpft) = @_;
 
@@ -329,6 +329,7 @@ sub write_namelist_file {
 &clmexp
  nglcec           = $glc_nec
  mksrf_fgrid      = '$griddata'
+ mksrf_gridtype   = '$gridtype'
  map_fpft         = '$map->{'veg'}'
  map_fglacier     = '$map->{'glc'}'
  map_fglacierregion = '$map->{'glcregion'}'
@@ -824,9 +825,18 @@ EOF
             print "resolution: $res ssp_rcp=$ssp_rcp sim_year = $sim_year\n";
             print "namelist: $namelist_fname\n";
             
+            my $gridtype;
+            $gridtype = "global";
+            if (index($res, '1x1_') != -1) {
+               $gridtype = "regional";
+            }
+            if (index($res, '5x5_amazon') != -1) {
+               $gridtype = "regional";
+            }
+
             write_namelist_file(
                  $namelist_fname, $logfile_fname, $fsurdat_fname, $fdyndat_fname,
-                 $glc_nec, $griddata, \%map, \%datfil, $double,
+                 $glc_nec, $griddata, $gridtype, \%map, \%datfil, $double,
                  $all_urb, $no_inlandwet, $vegtyp, $hrvtyp, 
                  $landuse_timeseries_text_file, $setnumpft);
 

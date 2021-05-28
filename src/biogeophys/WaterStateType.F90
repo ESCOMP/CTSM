@@ -87,7 +87,7 @@ contains
 
     call this%InitAllocate(bounds, tracer_vars)
 
-    call this%InitHistory(bounds)
+    call this%InitHistory(bounds, use_aquifer_layer)
 
     call this%InitCold(bounds = bounds, &
          h2osno_input_col = h2osno_input_col, &
@@ -154,7 +154,7 @@ contains
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
-  subroutine InitHistory(this, bounds)
+  subroutine InitHistory(this, bounds, use_aquifer_layer)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
@@ -166,6 +166,7 @@ contains
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
+    logical          , intent(in) :: use_aquifer_layer ! whether an aquifer layer is used in this run
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
@@ -259,13 +260,13 @@ contains
          long_name=this%info%lname('surface water depth'), &
          ptr_col=this%h2osfc_col)
 
-    this%wa_col(begc:endc) = spval
-    call hist_addfld1d (fname=this%info%fname('WA'),  units='mm',  &
-         avgflag='A', &
-         long_name=this%info%lname('water in the unconfined aquifer (natural vegetated and crop landunits only)'), &
-         ptr_col=this%wa_col, l2g_scale_type='veg')
-
-
+    if (use_aquifer_layer) then
+       this%wa_col(begc:endc) = spval
+       call hist_addfld1d (fname=this%info%fname('WA'),  units='mm',  &
+            avgflag='A', &
+            long_name=this%info%lname('water in the unconfined aquifer (natural vegetated and crop landunits only)'), &
+            ptr_col=this%wa_col, l2g_scale_type='veg')
+    end if
 
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
     !                  I think that since the value is zero in all cases except
@@ -287,7 +288,7 @@ contains
     !
     ! !USES:
     use shr_const_mod   , only : SHR_CONST_TKFRZ
-    use landunit_varcon , only : istwet, istsoil, istcrop, istice_mec  
+    use landunit_varcon , only : istwet, istsoil, istcrop, istice
     use column_varcon   , only : icol_road_perv, icol_road_imperv
     use clm_varcon      , only : denice, denh2o, bdsno 
     use clm_varcon      , only : tfrz, aquifer_water_baseline
@@ -384,7 +385,7 @@ contains
                      this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
                   endif
                end do
-            else if (lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istice) then
                nlevs = nlevgrnd 
                do j = 1, nlevs
                   this%h2osoi_vol_col(c,j) = 1.0_r8 * ratio
@@ -577,6 +578,7 @@ contains
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name=this%info%lname('liquid water'), &
          units='kg/m2', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_liq_col)
 
     call restartvar(ncid=ncid, flag=flag, &
@@ -585,6 +587,7 @@ contains
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name=this%info%lname('ice lens'), &
          units='kg/m2', &
+         scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%h2osoi_ice_col)
          
     call restartvar(ncid=ncid, flag=flag, &

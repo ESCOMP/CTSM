@@ -13,7 +13,16 @@ To use...
 
 on cheyenne
 
-qcmd -l walltime=06:00:00 -- ./test_driver.sh -i >& run.out &
+qcmd -l select=mem=109GB -l walltime=06:00:00 -- ./test_driver.sh -i >& run.out &
+
+on izumi
+
+nohup ./test_driver.sh -i >& run.out &
+
+release tests
+
+qcmd -l walltime=08:00:00 -- env CLM_INPUT_TESTS=`pwd`/tests_posttag_nompi_regression \
+./test_driver.sh -i >& run.out &
 
 Intended for use on NCAR machines cheyenne, geyser (DAV) and hobart.
 

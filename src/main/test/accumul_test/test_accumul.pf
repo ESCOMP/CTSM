@@ -94,7 +94,8 @@ contains
          numlev = nlev, &
          subgrid_type = 'pft', &
          init_value = l_init_value, &
-         type2d = 'irrelevant')  ! type2d just needed for restart
+         type2d = 'irrelevant', &  ! type2d just needed for restart
+         scale_by_thickness = .false.)
   end subroutine init_ml_patch_field
 
   subroutine update_and_extract_sl_patch_field(this, fieldname, values, val_output, &

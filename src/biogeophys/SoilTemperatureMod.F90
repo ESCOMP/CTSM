@@ -570,7 +570,7 @@ contains
     ! !USES:
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi, nlevmaxurbgrnd
     use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
-    use landunit_varcon , only : istice_mec, istwet
+    use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use clm_varctl      , only : iulog
     !
@@ -649,7 +649,7 @@ contains
                l = col%landunit(c)
 
                ! This will include pervious road for all nlevgrnd layers and impervious road for j > nlev_improad
-               if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec &
+               if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice &
                   .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
                   col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                   (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
@@ -670,7 +670,7 @@ contains
                      thk(c,j) = tkdry(c,j)
                   endif
                   if (j > nbedrock(c)) thk(c,j) = thk_bedrock
-               else if (lun%itype(l) == istice_mec) then
+               else if (lun%itype(l) == istice) then
                   thk(c,j) = tkwat
                   if (t_soisno(c,j) < tfrz) thk(c,j) = tkice
                else if (lun%itype(l) == istwet) then                         
@@ -752,7 +752,7 @@ contains
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             l = col%landunit(c)
-            if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice_mec &
+            if ((lun%itype(l) /= istwet .and. lun%itype(l) /= istice &
                .and. col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall .and. &
                col%itype(c) /= icol_roof .and. col%itype(c) /= icol_road_imperv) .or. &
                (col%itype(c) == icol_road_imperv .and. j > nlev_improad(l))) then
@@ -761,7 +761,7 @@ contains
             else if (lun%itype(l) == istwet) then 
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
                if (j > nbedrock(c)) cv(c,j) = csol_bedrock*dz(c,j)
-            else if (lun%itype(l) == istice_mec) then
+            else if (lun%itype(l) == istice) then
                cv(c,j) = (h2osoi_ice(c,j)*cpice + h2osoi_liq(c,j)*cpliq)
             endif
          enddo
@@ -1059,7 +1059,7 @@ contains
     use clm_varctl       , only : iulog
     use clm_varcon       , only : tfrz, hfus, grav
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
-    use landunit_varcon  , only : istsoil, istcrop, istice_mec
+    use landunit_varcon  , only : istsoil, istcrop, istice
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                      

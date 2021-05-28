@@ -159,7 +159,7 @@ contains
   end function get_description
 
   !-----------------------------------------------------------------------
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest, scale_by_thickness)
     !
     ! !DESCRIPTION:
     ! Interpolates a multi-level field from source to dest, for a single point.
@@ -171,6 +171,7 @@ contains
     real(r8) , intent(inout) :: data_dest(:)
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
+    logical  , intent(in)    :: scale_by_thickness
     !
     ! !LOCAL VARIABLES:
     integer :: num_first_levels_dest
@@ -196,12 +197,14 @@ contains
     call this%interpolator_first_levels%interp_multilevel( &
          data_dest = data_dest(1:num_first_levels_dest), &
          data_source = data_source(1:num_first_levels_source), &
-         index_dest = index_dest)
+         index_dest = index_dest, &
+         scale_by_thickness = scale_by_thickness)
 
     call this%interpolator_second_levels%interp_multilevel( &
          data_dest = data_dest((num_first_levels_dest+1):size(data_dest)), &
          data_source = data_source((num_first_levels_source+1):size(data_source)), &
-         index_dest = index_dest)
+         index_dest = index_dest, &
+         scale_by_thickness = scale_by_thickness)
 
   end subroutine interp_multilevel
 

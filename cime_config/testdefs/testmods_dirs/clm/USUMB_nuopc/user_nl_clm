@@ -1,0 +1,5 @@
+! user_nl_clm namelist options written by PTCLMmkdata:
+! ./PTCLMmkdata --cesm_root ../../../.. -s US-UMB -d /glade/p/cesm/cseg/inputdata --mydatadir=/glade/p/cesm/cseg/inputdata/lnd/clm2/PTCLMmydatafiles.c171024 
+ fsurdat = '/glade/p/cesm/cseg/inputdata/lnd/clm2/PTCLMmydatafiles.c171024/1x1pt_US-UMB/surfdata_1x1pt_US-UMB_16pfts_Irrig_CMIP6_simyr2000_c171024.nc'
+ hist_nhtfrq = 0
+ hist_mfilt  = 1200
