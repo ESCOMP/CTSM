@@ -400,7 +400,7 @@ CONTAINS
             endif
 
             if (index_season<0) then 
-               if (elai(pi) < (minlai+0.05*(maxlai-minlai))) then  
+               if (elai(pi) < (minlai+0.05_r8*(maxlai-minlai))) then  
                   index_season = 3 
                endif
             endif

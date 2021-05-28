@@ -1,4 +1,89 @@
 ===============================================================
+Tag name:  ctsm5.1.dev042
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Fri May 28 14:07:45 MDT 2021
+One-line Summary: Small answer changes for double precision constants and limit on organic soil
+
+Purpose and description of changes
+----------------------------------
+
+Change more constants to double precision. Add in limits on organic matter in
+soil that @olyson added to the PPE branch (Perturbed Parameter Ensemble).
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   #1380 -- Missing NCL script
+   #142 --- hard coded constants aren't all double precision (some work was done on this)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+   There are still more constants that should be converted to double precision.
+
+Testing summary:   regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes!
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: mostly single-precision roundoff
+       many constants that were single precision are now double
+       some limits put on soil organic that weren't there previously
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1384 -- Change some constants to double precision, and add some soil limits
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev041
 Originator(s): Ryan Knox
 Date: Thu May 27 01:10:40 MDT 2021
