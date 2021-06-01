@@ -54,31 +54,6 @@ Substantial timing or memory changes:
 
 Testing summary:
 ----------------
-[... Remove before making master tag.
-
-Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
-However, it occasionally makes sense to do more or less system testing;
-here is guidance on different available levels of system testing:
-    a) no system testing (for use when the only changes are ones that
-                          have absolutely no impact on system runs; this
-                          includes documentation-only tags, tags that
-                          just change the tools or some python code that
-                          does not impact system runs, etc.)
-    b) minimal (for use in rare cases where only a small change with 
-                known behavior is added ... eg. a minor bug fix. This
-		might be to just run the "short" test list, or to run
-		a single test. Whatever makes sense for the particular case.)
-    c) regular (regular tests on normal machines if CTSM source is modified)
-    d) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
-                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.) 
-		would be run as well)
-
-In addition, various other tests of the tools, python and perl
-infrastructure should be run when appropriate, as described below.
-
-...]
-
-[Remove any lines that don't apply.]
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
@@ -101,13 +76,28 @@ infrastructure should be run when appropriate, as described below.
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- 
-    izumi ------- 
+    cheyenne ---- OK (read above in "bugs introduced" about CN failures)
+    izumi ------- OK (read below in "other testing" about pgi failures)
   
   fates tests:
     cheyenne ---- 
 
   any other testing (give details below):
+ Two unexpected tests fail on izumi, so I performed additional testing.
+ The tests that fail:
+ 1) SMS_D.f10_f10_mg37.I2000Clm51BgcCrop.izumi_pgi.clm-crop
+ BASELINE ctsm5.1.dev042: DIFF roundoff
+ 2) SMS.f10_f10_mg37.I2000Clm50BgcCrop.izumi_pgi.clm-crop
+ BASELINE ctsm5.1.dev042: DIFF greater than roundoff for CH4-related vars
+ I confirmed same result with my earlier commit against BASELINE dev033.
+
+ Same tests but with gnu/intel instead of pgi pass on izumi for both
+ comparisons to dev042 and to dev033. These tests are part of the izumi
+ test-suite already.
+
+ Additional testing:
+ Repeated these gnu/intel tests (had to run for baseline first) on cheyenne
+ and they passed.
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
