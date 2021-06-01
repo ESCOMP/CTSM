@@ -50,10 +50,7 @@ Changes to the datasets (e.g., parameter, surface or initial files):
  There are new params files for clm45, clm50, and ctsm51.
 
 Substantial timing or memory changes:
-[For timing changes, you should at least check the PFS test in the test
- suite, whether or not you expect timing changes: ensure that its run
- time has not increased significantly relative to the baseline.]
-
+ FAIL PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel MEMCOMP Error: Memory usage increase > 10% from baseline
 
 Testing summary:
 ----------------
