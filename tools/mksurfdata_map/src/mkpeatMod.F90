@@ -69,6 +69,8 @@ subroutine mkpeat(ldomain, mapfname, datfname, ndiag, peat_o)
   type(gridmap_type)    :: tgridmap
   type(domain_type)     :: tdomain            ! local domain
   real(r8), allocatable :: data_i(:)          ! data on input grid
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
+  real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
   integer  :: ncid,varid                      ! input netCDF id's
   integer  :: ier                             ! error status
  
@@ -87,7 +89,16 @@ subroutine mkpeat(ldomain, mapfname, datfname, ndiag, peat_o)
   call domain_read( tdomain, datfname )
 
   call gridmap_mapread( tgridmap, mapfname )
-  call gridmap_check( tgridmap, subname )
+
+  ! Obtain frac_dst
+  allocate(frac_dst(ldomain%ns), stat=ier)
+  if (ier/=0) call abort()
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
+  allocate(mask_r8(tdomain%ns), stat=ier)
+  if (ier/=0) call abort()
+  mask_r8 = tdomain%mask
+  call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
@@ -107,7 +118,7 @@ subroutine mkpeat(ldomain, mapfname, datfname, ndiag, peat_o)
 
   call check_ret(nf_inq_varid (ncid, 'peatf', varid), subname)
   call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-  call gridmap_areaave(tgridmap, data_i, peat_o, nodata=0._r8)
+  call gridmap_areaave_srcmask(tgridmap, data_i, peat_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
   ! Check validity of output data
   if (min_bad(peat_o, min_valid, 'peat') .or. &
@@ -115,7 +126,7 @@ subroutine mkpeat(ldomain, mapfname, datfname, ndiag, peat_o)
      stop
   end if
   
-  call output_diagnostics_area(data_i, peat_o, tgridmap, "Peat", percent=.false., ndiag=ndiag)
+  call output_diagnostics_area(data_i, peat_o, tgridmap, "Peat", percent=.false., ndiag=ndiag, mask_src=tdomain%mask, frac_dst=frac_dst)
   
   ! -----------------------------------------------------------------
   ! Close files and deallocate dynamic memory
@@ -125,6 +136,8 @@ subroutine mkpeat(ldomain, mapfname, datfname, ndiag, peat_o)
   call domain_clean(tdomain) 
   call gridmap_clean(tgridmap)
   deallocate (data_i)
+  deallocate (frac_dst)
+  deallocate (mask_r8)
 
   write (6,*) 'Successfully made peat'
   write (6,*)

@@ -506,7 +506,7 @@ contains
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
     use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevmaxurbgrnd, nlevcan
-    use clm_varpar           , only : maxpatch_glcmec, nvegwcs
+    use clm_varpar           , only : maxpatch_glc, nvegwcs
     use decompMod            , only : get_proc_global
     !
     ! !ARGUMENTS:
@@ -548,8 +548,8 @@ contains
     if ( use_hydrstress ) then
       call ncd_defdim(ncid , 'vegwcs'  , nvegwcs        ,  dimid)
     end if
-    call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
-    call ncd_defdim(ncid , 'glc_nec1', maxpatch_glcmec+1, dimid)
+    call ncd_defdim(ncid , 'glc_nec', maxpatch_glc, dimid)
+    call ncd_defdim(ncid , 'glc_nec1', maxpatch_glc+1, dimid)
 
     ! Define global attributes
 

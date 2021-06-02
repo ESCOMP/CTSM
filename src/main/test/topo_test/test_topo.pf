@@ -11,14 +11,14 @@ module test_topo
   use unittestArrayMod
   use filterColMod
   use clm_instur, only : topo_glc_mec
-  use clm_varpar, only : maxpatch_glcmec
+  use clm_varpar, only : maxpatch_glc
   use clm_varctl, only : glc_do_dynglacier
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice
   use glc2lndMod, only : glc2lnd_type
   use glcBehaviorMod, only : glc_behavior_type
   use unittestFilterBuilderMod
   use ColumnType, only : col
-  use column_varcon, only : col_itype_to_icemec_class
+  use column_varcon, only : col_itype_to_ice_class
   use domainMod, only : ldomain
 
   implicit none
@@ -137,13 +137,13 @@ contains
     real(r8), allocatable :: glc_topo_grc(:,:)  ! [gridcell, elevclass]
 
     real(r8), allocatable :: atm_topo(:)
-    type(filter_col_type) :: filter_icemecc
+    type(filter_col_type) :: filter_icec
 
     allocate(ldomain%frac(bounds%begg:bounds%endg))
     this%ldomain_frac_allocated = .true.
     ldomain%frac(bounds%begg:bounds%endg) = 1._r8
 
-    allocate(glc_topo_grc(bounds%begg:bounds%endg, 0:maxpatch_glcmec))
+    allocate(glc_topo_grc(bounds%begg:bounds%endg, 0:maxpatch_glc))
     if (present(glc_topo)) then
        glc_topo_grc(:,:) = glc_topo
     else
@@ -154,7 +154,7 @@ contains
          topo_grc = glc_topo_grc, &
          icemask_grc=icemask_grc)
 
-    filter_icemecc = col_filter_from_ltypes(bounds, [istice_mec], include_inactive = .false.)
+    filter_icec = col_filter_from_ltypes(bounds, [istice], include_inactive = .false.)
 
     if (present(atm_topo_grc)) then
        atm_topo = atm_topo_grc
@@ -162,7 +162,7 @@ contains
        atm_topo = grc_array(atm_topo_default)
     end if
 
-    call this%topo%UpdateTopo(bounds, filter_icemecc%num, filter_icemecc%indices, &
+    call this%topo%UpdateTopo(bounds, filter_icec%num, filter_icec%indices, &
          this%glc2lnd_inst, glc_behavior, atm_topo = atm_topo)
   end subroutine do_UpdateTopo
 
@@ -212,7 +212,7 @@ contains
     type(filter_col_type) :: filter
     type(filter_col_type) :: expected_filter
 
-    call setup_single_icemec_column(elev_class = 1)
+    call setup_single_ice_column(elev_class = 1)
     expected_filter = col_filter_from_index_array(bounds, [bounds%begc])
 
     call this%topo%Init(bounds)
@@ -228,7 +228,7 @@ contains
     type(filter_col_type) :: filter
     type(filter_col_type) :: expected_filter
 
-    call setup_single_icemec_column(elev_class = 1)
+    call setup_single_ice_column(elev_class = 1)
     glc_behavior = create_glc_behavior_all_multiple()
     expected_filter = col_filter_from_index_array(bounds, [bounds%begc])
 
@@ -246,7 +246,7 @@ contains
     type(filter_col_type) :: filter
     type(filter_col_type) :: expected_filter
 
-    call setup_single_icemec_column(elev_class = 1)
+    call setup_single_ice_column(elev_class = 1)
     glc_behavior = create_glc_behavior_all_collapse()
     expected_filter = col_filter_empty(bounds)
 
@@ -306,7 +306,7 @@ contains
     real(r8), parameter :: atm_topo = 23._r8
     real(r8), parameter :: glc_topo = 27._r8
 
-    call setup_single_icemec_column(elev_class = 1)
+    call setup_single_ice_column(elev_class = 1)
     glc_behavior = create_glc_behavior_all_virtual()
     topo_glc_mec(:,:) = topo_orig
 
@@ -328,7 +328,7 @@ contains
     ! our column should get set to this:
     real(r8), parameter :: glc_topo = 27._r8
 
-    call setup_single_icemec_column(elev_class = 1)
+    call setup_single_ice_column(elev_class = 1)
     glc_behavior = create_glc_behavior_all_virtual()
     topo_glc_mec(:,:) = topo_orig
 
@@ -350,7 +350,7 @@ contains
     ! our column should get set to this:
     real(r8), parameter :: atm_topo = 23._r8
 
-    call setup_single_icemec_column(elev_class = 1)
+    call setup_single_ice_column(elev_class = 1)
     glc_behavior = create_glc_behavior_all_collapse()
     topo_glc_mec(:,:) = topo_orig
 
@@ -373,7 +373,7 @@ contains
     ! our column should get set to this:
     real(r8), parameter :: atm_topo = 23._r8
 
-    call setup_single_icemec_column(elev_class = 1)
+    call setup_single_ice_column(elev_class = 1)
     glc_behavior = create_glc_behavior_all_collapse()
     topo_glc_mec(:,:) = topo_orig
 
@@ -382,7 +382,7 @@ contains
          atm_topo_grc = grc_array(atm_topo), &
          glc_topo = glc_topo)
 
-    new_elev_class = col_itype_to_icemec_class(col%itype(bounds%begc))
+    new_elev_class = col_itype_to_ice_class(col%itype(bounds%begc))
     @assertEqual(3, new_elev_class)
   end subroutine elevClass_changes_for_singleAtAtmTopo
 

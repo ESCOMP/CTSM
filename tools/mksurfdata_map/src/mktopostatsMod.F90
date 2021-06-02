@@ -100,7 +100,8 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
      call domain_read(tdomain,datfname)
   
      call gridmap_mapread(tgridmap, mapfname )
-     call gridmap_check( tgridmap, subname )
+
+     call gridmap_check( tgridmap, tgridmap%frac_src, tgridmap%frac_dst, subname )
 
      call domain_checksame( tdomain, ldomain, tgridmap )
 
@@ -141,9 +142,15 @@ subroutine mktopostats(ldomain, mapfname, datfname, ndiag, topo_stddev_o, slope_
   if ( .not. bypass_reading )then
      call check_ret(nf_inq_varid (ncid, 'SLOPE', varid), subname)
      call check_ret(nf_get_var_double (ncid, varid, data_i), subname)
-     call gridmap_areaave(tgridmap, data_i, slope_o, nodata=0._r8)
 
-     call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag)
+     ! Subr. gridmap_areaave_no_srcmask should NOT be used in general. We have
+     ! kept it to support the rare raw data files for which we have masking on
+     ! the mapping file and, therefore, we do not explicitly pass the src_mask
+     ! as an argument. In general, users are advised to use subroutine
+     ! gridmap_areaave_srcmask.
+     call gridmap_areaave_no_srcmask(tgridmap, data_i, slope_o, nodata=0._r8)
+
+     call output_diagnostics_continuous(data_i, slope_o, tgridmap, "Slope", "degrees", ndiag, tdomain%mask, tgridmap%frac_dst)
   else
      write (6,*) '    Set slope of topography to ', 0.0_r8
      slope_o = 0.0_r8
