@@ -1008,9 +1008,6 @@ contains
 
                 ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
-       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_hist_patch: ', canopystate_inst%tsai_hist_patch
-       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_patch: ', canopystate_inst%tsai_patch
-       write(iulog,*)  'clm_drv(): use_cn, use_fates, doalb, use_fates_sp: ', use_cn, use_fates, doalb, use_fates_sp
        if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb)).or.(use_fates_sp.and.(doalb))) then
        !if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb))) then
           write(iulog,*)  'clm_drv(): pre-SatellitePhenology()'
@@ -1019,9 +1016,9 @@ contains
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
        end if
-       write(iulog,*)  'clm_drv(): post-SatellitePhenology()'
-       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_hist_patch: ', canopystate_inst%tsai_hist_patch
-       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_patch: ', canopystate_inst%tsai_patch
+!       write(iulog,*)  'clm_drv(): post-SatellitePhenology()'
+!       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_hist_patch: ', canopystate_inst%tsai_hist_patch
+!       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_patch: ', canopystate_inst%tsai_patch
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
 

@@ -412,9 +412,6 @@ contains
          htop(p) = timwt(1)*mhvt2t(p,1) + timwt(2)*mhvt2t(p,2)
          hbot(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
 
-         write(iulog,*) 'SatellitePhenology: p: ', p
-         write(iulog,*) 'SatellitePhenology: tlai(p): ', tlai(p)
-         write(iulog,*) 'SatellitePhenology: tsai(p): ', tsai(p)
 
          ! adjust lai and sai for burying by snow. if exposed lai and sai
          ! are less than 0.05, set equal to zero to prevent numerical
