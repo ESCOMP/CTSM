@@ -412,10 +412,6 @@ contains
          htop(p) = timwt(1)*mhvt2t(p,1) + timwt(2)*mhvt2t(p,2)
          hbot(p) = timwt(1)*mhvb2t(p,1) + timwt(2)*mhvb2t(p,2)
 
-         write(iulog,*) 'SatellitePhenology: p: ', p
-         write(iulog,*) 'SatellitePhenology: tlai(p): ', tlai(p)
-         write(iulog,*) 'SatellitePhenology: tsai(p): ', tsai(p)
-
          ! adjust lai and sai for burying by snow. if exposed lai and sai
          ! are less than 0.05, set equal to zero to prevent numerical
          ! problems associated with very small lai and sai.
@@ -435,6 +431,7 @@ contains
 
          ! area weight by snow covered fraction
          if(.not.use_fates_sp)then
+     
          ! Do not set these in FATES_SP mode as they turn on the 'vegsol' filter and also
          ! are duplicated by the FATE variables (in the FATES IFP indexing space) 
            elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)

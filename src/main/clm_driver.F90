@@ -224,9 +224,7 @@ contains
 
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
-       if ( (n_drydep > 0 .and. drydep_method == DD_XLND).or.use_fates_sp ) then
-       !if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
-          write(iulog,*)  'clm_drv(): use_cn interpMonthlyVeg'
+       if ( n_drydep > 0 .and. drydep_method == DD_XLND ) then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -239,9 +237,7 @@ contains
        ! vegetation top [mhvt1,mhvt2] and vegetation bottom [mhvb1,mhvb2]. The
        ! weights obtained here are used in subroutine SatellitePhenology to obtain time
        ! interpolated values.
-       if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND )) then
-       !if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) .or. use_fates_sp) then
-          write(iulog,*)  'clm_drv(): not use_cn interpMonthlyVeg'
+       if (doalb .or. ( n_drydep > 0 .and. drydep_method == DD_XLND ) .or. use_fates_sp) then
           call t_startf('interpMonthlyVeg')
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
           call t_stopf('interpMonthlyVeg')
@@ -1006,22 +1002,14 @@ contains
 
        end if
 
-                ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
+       ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
-       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_hist_patch: ', canopystate_inst%tsai_hist_patch
-       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_patch: ', canopystate_inst%tsai_patch
-       write(iulog,*)  'clm_drv(): use_cn, use_fates, doalb, use_fates_sp: ', use_cn, use_fates, doalb, use_fates_sp
        if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb)).or.(use_fates_sp.and.(doalb))) then
-       !if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb))) then
-          write(iulog,*)  'clm_drv(): pre-SatellitePhenology()'
           call t_startf('SatellitePhenology')
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
        end if
-       write(iulog,*)  'clm_drv(): post-SatellitePhenology()'
-       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_hist_patch: ', canopystate_inst%tsai_hist_patch
-       write(iulog,*)  'clm_drv(): canopystate_inst%tsai_patch: ', canopystate_inst%tsai_patch
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
 
