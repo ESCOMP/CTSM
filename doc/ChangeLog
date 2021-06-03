@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev043
-Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Thu Jun  3 16:32:29 MDT 2021
+Originator(s):  slevis/ekluzek (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Thu Jun  3 16:45:16 MDT 2021
 One-line Summary: Refactor in preparation for MIMICS
 
 Purpose and description of changes
@@ -50,6 +50,8 @@ Changes to the datasets (e.g., parameter, surface or initial files):
 
 Substantial timing or memory changes:
  FAIL PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel MEMCOMP Error: Memory usage increase > 10% from baseline
+  Throughput doesn't seem to change. There might be an increase in memory as it's indicated for 20 tests.
+  And some arrays were changed to add an extra dimension.
 
 Testing summary:
 ----------------
