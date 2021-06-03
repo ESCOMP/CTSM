@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev043
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Fri May 28 16:14:39 MDT 2021
+Date: Thu Jun  3 16:32:29 MDT 2021
 One-line Summary: Refactor in preparation for MIMICS
 
 Purpose and description of changes
@@ -30,9 +30,8 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-Known bugs introduced in this tag (include issue #):
- This tag breaks CN tests. I did not open an issue because the CN
- model has been deprecated and will eventually be removed.
+Known bugs introduced in this tag (include issue #): #1356
+   #1356 -- CN is no longer just deprecated it breaks when you try to use it
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -59,29 +58,17 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne - 
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
-  (PTCLM is being deprecated, so we only expect this to be done on occasion)
-
-    cheyenne - 
+    cheyenne - PASS (785 tests are different because of new params files and removed namelist items)
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    (any machine) - 
+    cheyenne - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK (read above in "bugs introduced" about CN failures)
     izumi ------- OK (read below in "other testing" about pgi failures)
   
-  fates tests:
-    cheyenne ---- 
-
   any other testing (give details below):
  Two unexpected tests fail on izumi, so I performed additional testing.
  The tests that fail:
