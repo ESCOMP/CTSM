@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev043
 Originator(s):  slevis/ekluzek (Samuel Levis,SLevis Consulting,303-665-1310)
-Date: Thu Jun  3 16:45:16 MDT 2021
+Date: Thu Jun  3 17:14:30 MDT 2021
 One-line Summary: Refactor in preparation for MIMICS
 
 Purpose and description of changes
@@ -30,8 +30,9 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-Known bugs introduced in this tag (include issue #): #1356
+Known bugs introduced in this tag (include issue #): #1356, #1392
    #1356 -- CN is no longer just deprecated it breaks when you try to use it
+   #1392 -- Some soil decomposition history fields have the pool number rather than a descr.
 
 Notes of particular relevance for users
 ---------------------------------------
