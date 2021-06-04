@@ -112,7 +112,8 @@ module  PhotosynthesisMod
      real(r8), allocatable, private :: lmr_intercept_atkin(:)
      real(r8), allocatable, private :: theta_cj           (:) ! Empirical curvature parameter for ac, aj photosynthesis co-limitation (unitless)
   contains
-     procedure, private :: allocParams
+     procedure, private :: allocParams    ! Allocate the parameters
+     procedure, private :: cleanParams    ! Deallocate parameters from member
   end type photo_params_type
   !
   type(photo_params_type), public, protected :: params_inst  ! params_inst is populated in readParamsMod 
@@ -224,6 +225,7 @@ module  PhotosynthesisMod
      procedure, public  :: ReadParams
      procedure, public  :: TimeStepInit
      procedure, public  :: NewPatchInit
+     procedure, public  :: Clean
 
      ! Procedures for unit-testing
      procedure, public  :: SetParamsForTesting
@@ -360,6 +362,104 @@ contains
     endif
 
   end subroutine InitAllocate
+
+  !------------------------------------------------------------------------
+  subroutine Clean(this)
+    !
+    ! !ARGUMENTS:
+    class(photosyns_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    !------------------------------------------------------------------------
+
+    call params_inst%cleanParams()
+    deallocate(this%c3flag_patch      )
+    deallocate(this%ac_phs_patch      )
+    deallocate(this%aj_phs_patch      )
+    deallocate(this%ap_phs_patch      )
+    deallocate(this%ag_phs_patch      )
+    deallocate(this%an_sun_patch      )
+    deallocate(this%an_sha_patch      )
+    deallocate(this%vcmax_z_phs_patch )
+    deallocate(this%tpu_z_phs_patch   )
+    deallocate(this%kp_z_phs_patch    )
+    deallocate(this%gs_mol_sun_patch  )
+    deallocate(this%gs_mol_sha_patch  )
+    deallocate(this%gs_mol_sun_ln_patch )
+    deallocate(this%gs_mol_sha_ln_patch )
+    deallocate(this%ac_patch          )
+    deallocate(this%aj_patch          )
+    deallocate(this%ap_patch          )
+    deallocate(this%ag_patch          )
+    deallocate(this%an_patch          )
+    deallocate(this%vcmax_z_patch     )
+    deallocate(this%tpu_z_patch       )
+    deallocate(this%kp_z_patch        )
+    deallocate(this%gs_mol_patch      )
+    deallocate(this%cp_patch          )
+    deallocate(this%kc_patch          )
+    deallocate(this%ko_patch          )
+    deallocate(this%qe_patch          )
+    deallocate(this%bbb_patch         )
+    deallocate(this%mbb_patch         )
+    deallocate(this%gb_mol_patch      )
+    deallocate(this%rh_leaf_patch     )
+    deallocate(this%vpd_can_patch     )
+    deallocate(this%psnsun_patch      )
+    deallocate(this%psnsha_patch      )
+    deallocate(this%c13_psnsun_patch  )
+    deallocate(this%c13_psnsha_patch  )
+    deallocate(this%c14_psnsun_patch  )
+    deallocate(this%c14_psnsha_patch  )
+
+    deallocate(this%psnsun_z_patch    )
+    deallocate(this%psnsha_z_patch    )
+    deallocate(this%psnsun_wc_patch   )
+    deallocate(this%psnsha_wc_patch   )
+    deallocate(this%psnsun_wj_patch   )
+    deallocate(this%psnsha_wj_patch   )
+    deallocate(this%psnsun_wp_patch   )
+    deallocate(this%psnsha_wp_patch   )
+    deallocate(this%fpsn_patch        )
+    deallocate(this%fpsn_wc_patch     )
+    deallocate(this%fpsn_wj_patch     )
+    deallocate(this%fpsn_wp_patch     )
+    
+    deallocate(this%lnca_patch        )
+
+    deallocate(this%lmrsun_z_patch    )
+    deallocate(this%lmrsha_z_patch    )
+    deallocate(this%lmrsun_patch      )
+    deallocate(this%lmrsha_patch      )
+
+    deallocate(this%alphapsnsun_patch )
+    deallocate(this%alphapsnsha_patch )
+    deallocate(this%rc13_canair_patch )
+    deallocate(this%rc13_psnsun_patch )
+    deallocate(this%rc13_psnsha_patch )
+
+    deallocate(this%cisun_z_patch     )
+    deallocate(this%cisha_z_patch     )
+
+    deallocate(this%rssun_z_patch     )
+    deallocate(this%rssha_z_patch     )
+    deallocate(this%rssun_patch       )
+    deallocate(this%rssha_patch       )
+    deallocate(this%luvcmax25top_patch)
+    deallocate(this%lujmax25top_patch )
+    deallocate(this%lutpu25top_patch  )
+!!
+    if(use_luna)then
+      deallocate(this%vcmx25_z_patch  )
+      deallocate(this%jmx25_z_patch   )
+      deallocate(this%vcmx25_z_last_valid_patch   )
+      deallocate(this%jmx25_z_last_valid_patch    )
+      deallocate(this%pnlc_z_patch    )
+      deallocate(this%fpsn24_patch    )
+      deallocate(this%enzs_z_patch    )
+    endif
+
+  end subroutine Clean
 
   !-----------------------------------------------------------------------
   subroutine InitHistory(this, bounds)
@@ -660,6 +760,29 @@ contains
 
   end subroutine allocParams
 
+
+  !-----------------------------------------------------------------------
+  subroutine cleanParams ( this )
+    !
+    implicit none
+
+    ! !ARGUMENTS:
+    class(photo_params_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'cleanParams'
+    !-----------------------------------------------------------------------
+
+    ! deallocate parameters
+
+    deallocate( this%krmax       )
+    deallocate( this%theta_cj    )
+    deallocate( this%kmax        )
+    deallocate( this%psi50       )
+    deallocate( this%ck          )
+
+  end subroutine cleanParams
+
   !-----------------------------------------------------------------------
   subroutine readParams ( this, ncid )
     !
@@ -775,7 +898,10 @@ contains
 
     call params_inst%allocParams()
     params_inst%ck = 3.95_r8
-    params_inst%psi50 = -340000._r8
+    params_inst%psi50(1,:) = -150000._r8
+    params_inst%psi50(2,:) = -530000._r8
+    params_inst%psi50(3:12,:) = -400000._r8
+    params_inst%psi50(13:,:) = -340000._r8
 
   end subroutine setParamsForTesting
 
@@ -4993,7 +5119,8 @@ contains
        plc=2._r8**(-(x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level))
        if ( plc < 0.005_r8) plc = 0._r8
     case default
-       print *,'must choose plc method'
+       plc = nan
+       call endrun( 'ERROR:: Photosynthesis::PLC must choose plc method' )
     end select
 
     end associate
@@ -5028,7 +5155,8 @@ contains
               **params_inst%ck(ivt(p),level))) &
               * ((x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level)) / x
     case default
-       print *,'must choose plc method'
+       d1plc = nan
+       call endrun( 'ERROR:: Photosynthesis::D1PLC must choose plc method' )
     end select
 
     end associate
