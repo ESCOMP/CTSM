@@ -71,13 +71,14 @@ module  PhotosynthesisMod
   ! !PRIVATE DATA:
   integer, parameter, private :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
   integer, parameter, private :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
+  integer, parameter, private :: vegetation_weibull=0        ! PLC method type
   ! These are public for unit-tests
-  integer, parameter, public   :: sun=1     ! index for sunlit
-  integer, parameter, public   :: sha=2     ! index for shaded
-  integer, parameter, public  :: xyl=3     ! index for xylem
-  integer, parameter, public  :: root=4    ! index for root
-  integer, parameter, public  :: veg=0     ! index for vegetation
-  integer, parameter, public  :: soil=1    ! index for soil
+  integer, parameter, public   :: sun=1                 ! index for sunlit
+  integer, parameter, public   :: sha=2                 ! index for shaded
+  integer, parameter, public  :: xyl=3                  ! index for xylem
+  integer, parameter, public  :: root=4                 ! index for root
+  integer, parameter, public  :: veg=vegetation_weibull ! index for vegetation
+  integer, parameter, public  :: soil=1                 ! index for soil
   integer, parameter, private :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
   integer, parameter, private :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
   ! !PUBLIC VARIABLES:
@@ -3044,7 +3045,7 @@ contains
             soil_conductance = min(hksat(c,j),hk_l(c,j))/(1.e3_r8*r_soil)
             
 ! use vegetation plc function to adjust root conductance
-               fs(j)=  plc(smp(c,j),p,c,root,veg)
+               fs(j)=  plc(smp(c,j),p,root,veg)
             
 ! krmax is root conductance per area per length
             root_conductance = (fs(j)*rai(j)*params_inst%krmax(ivt(p)))/(croot_average_length + z(c,j))
@@ -4586,12 +4587,12 @@ contains
        ! solve algebraically
        call getvegwp(p, c, x, gb_mol, gs0sun, gs0sha, qsatl, qaf, soilflux, &
                atm2lnd_inst, canopystate_inst, waterdiagnosticbulk_inst, soilstate_inst, temperature_inst)
-       bsun = plc(x(sun),p,c,sun,veg)
-       bsha = plc(x(sha),p,c,sha,veg)
+       bsun = plc(x(sun),p,sun,veg)
+       bsha = plc(x(sha),p,sha,veg)
     else     
     ! compute attenuated flux
-    qsun=qflx_sun*plc(x(sun),p,c,sun,veg)
-    qsha=qflx_sha*plc(x(sha),p,c,sha,veg)
+    qsun=qflx_sun*plc(x(sun),p,sun,veg)
+    qsha=qflx_sha*plc(x(sha),p,sha,veg)
     
     ! retrieve stressed stomatal conductance
     havegs=.FALSE.
@@ -4604,12 +4605,12 @@ contains
     if (qflx_sun>0._r8) then
        bsun = gs0sun/gs_mol_sun
     else
-       bsun = plc(x(sun),p,c,sun,veg)
+       bsun = plc(x(sun),p,sun,veg)
     endif
     if (qflx_sha>0._r8) then
        bsha = gs0sha/gs_mol_sha
     else
-       bsha = plc(x(sha),p,c,sha,veg)
+       bsha = plc(x(sha),p,sha,veg)
     endif
     endif
     if ( bsun < 0.01_r8 ) bsun = 0._r8
@@ -4717,16 +4718,16 @@ contains
     grav1 = htop(p)*1000._r8
     
     !compute conductance attentuation for each segment
-    fsto1=  plc(x(sun),p,c,sun,veg)
-    fsto2=  plc(x(sha),p,c,sha,veg)
-    fx=     plc(x(xyl),p,c,xyl,veg)
-    fr=     plc(x(root),p,c,root,veg)
+    fsto1=  plc(x(sun),p,sun,veg)
+    fsto2=  plc(x(sha),p,sha,veg)
+    fx=     plc(x(xyl),p,xyl,veg)
+    fr=     plc(x(root),p,root,veg)
     
     !compute 1st deriv of conductance attenuation for each segment
-    dfsto1=  d1plc(x(sun),p,c,sun,veg)
-    dfsto2=  d1plc(x(sha),p,c,sha,veg)
-    dfx=     d1plc(x(xyl),p,c,xyl,veg)
-    dfr=     d1plc(x(root),p,c,root,veg)
+    dfsto1=  d1plc(x(sun),p,sun,veg)
+    dfsto2=  d1plc(x(sha),p,sha,veg)
+    dfx=     d1plc(x(xyl),p,xyl,veg)
+    dfr=     d1plc(x(root),p,root,veg)
     
     !A - f=A*d(vegwp)
     A(1,1)= - laisun(p) * params_inst%kmax(ivt(p),sun) * fx&
@@ -4878,10 +4879,10 @@ contains
     grav1 = htop(p) * 1000._r8
     grav2(1:nlevsoi) = z(c,1:nlevsoi) * 1000._r8
     
-    fsto1=  plc(x(sun),p,c,sun,veg)
-    fsto2=  plc(x(sha),p,c,sha,veg)
-    fx=     plc(x(xyl),p,c,xyl,veg)
-    fr=     plc(x(root),p,c,root,veg)
+    fsto1=  plc(x(sun),p,sun,veg)
+    fsto2=  plc(x(sha),p,sha,veg)
+    fx=     plc(x(xyl),p,xyl,veg)
+    fr=     plc(x(root),p,root,veg)
     
     !compute flux divergence across each plant segment
     f(sun)= qflx_sun * fsto1 - laisun(p) * params_inst%kmax(ivt(p),sun) * fx * (x(xyl)-x(sun))
@@ -4976,7 +4977,7 @@ contains
     endif
     
     !calculate xylem water potential
-    fr = plc(x(root),p,c,root,veg)
+    fr = plc(x(root),p,root,veg)
     if ( (tsai(p) > 0._r8) .and. (fr > 0._r8) ) then
        x(xyl) = x(root) - grav1 - (qflx_sun+qflx_sha)/(fr*params_inst%kmax(ivt(p),root)/htop(p)*tsai(p))!removed htop conversion
     else
@@ -4984,7 +4985,7 @@ contains
     endif
     
     !calculate sun/sha leaf water potential
-    fx = plc(x(xyl),p,c,xyl,veg)
+    fx = plc(x(xyl),p,xyl,veg)
     if ( (laisha(p) > 0._r8) .and. (fx > 0._r8) ) then
        x(sha) = x(xyl) - (qflx_sha/(fx*params_inst%kmax(ivt(p),xyl)*laisha(p)))
     else
@@ -5094,20 +5095,17 @@ contains
   end subroutine getqflx
 
   !--------------------------------------------------------------------------------
-  function plc(x,p,c,level,plc_method)
+  function plc(x,p,level,plc_method)
     ! !DESCRIPTION
     ! Return value of vulnerability curve at x
     !
     ! !ARGUMENTS
     real(r8) , intent(in)  :: x             ! water potential input
     integer  , intent(in)  :: p             ! index for pft
-    integer  , intent(in)  :: c             ! index for column
     integer  , intent(in)  :: level         ! veg segment lvl (1:nvegwcs) 
     integer  , intent(in)  :: plc_method    !
     real(r8)               :: plc           ! attenuated conductance [0:1] 0=no flow
     !
-    ! !PARAMETERS
-    integer , parameter :: vegetation_weibull=0  ! case number
     !------------------------------------------------------------------------------
     associate(                                                    &
          ivt  => patch%itype                             & ! Input: [integer  (:)   ]  patch vegetation type
@@ -5129,20 +5127,17 @@ contains
   !--------------------------------------------------------------------------------
   
   !--------------------------------------------------------------------------------
-  function d1plc(x,p,c,level,plc_method)
+  function d1plc(x,p,level,plc_method)
     ! !DESCRIPTION
     ! Return 1st derivative of vulnerability curve at x
     !
     ! !ARGUMENTS
     real(r8) , intent(in) :: x                ! water potential input
     integer  , intent(in) :: p                ! index for pft
-    integer  , intent(in) :: c                ! index for column
     integer  , intent(in) :: level            ! veg segment lvl (1:nvegwcs)
     integer  , intent(in) :: plc_method       ! 0 for vegetation, 1 for soil
     real(r8)              :: d1plc            ! first deriv of plc curve at x
     !
-    ! !PARAMETERS
-    integer , parameter :: vegetation_weibull=0  ! case number
     !------------------------------------------------------------------------------
     associate(                                                    &
          ivt           => patch%itype                             & ! Input: [integer  (:)   ]  patch vegetation type

@@ -41,6 +41,9 @@ contains
     call clm_varpar_init( actual_maxsoil_patches=17, actual_numcft=2 )
     call this%photo%Init( bounds )
     call this%photo%setParamsForTesting( )
+
+    this%x(root) = -1000._r8 * nlevgrnd
+
   end subroutine setUp
   
   subroutine tearDown(this)
@@ -55,17 +58,15 @@ contains
   subroutine check_default_veg( this )
      use PatchType, only: patch
      class(TestPhotosynthesis), intent(inout) :: this
-     integer :: p, c
+     integer :: p
      real(r8) :: fs, der
 
      p = bounds%begp
-     c = bounds%begc
-     this%x(root) = -1000._r8 * nlevgrnd
-     fs = plc(this%x(root), p, c, root, veg)
-     print *, fs
+     fs = plc(this%x(root), p, root, veg)
+     print *, 'plc = ', fs
      @assertEqual( fs, 0.999415208562283_r8, tolerance=tol)
-     der = d1plc(this%x(root), p, c, root, veg)
-     print *, der
+     der = d1plc(this%x(root), p, root, veg)
+     print *, 'd1plc = ', der
      @assertEqual( der, 9.237002539040872d-008, tolerance=tol)
   end subroutine check_default_veg
 
@@ -73,14 +74,12 @@ contains
   subroutine check_bad_veg_plc( this )
      use PatchType, only: patch
      class(TestPhotosynthesis), intent(inout) :: this
-     integer :: p, c
+     integer :: p
      real(r8) :: fs
      character(len=256) :: expected_msg
 
      p = bounds%begp
-     c = bounds%begc
-     this%x(root) = -1000._r8 * nlevgrnd
-     fs = plc(this%x(root), p, c, root, plc_method=1)
+     fs = plc(this%x(root), p, root, plc_method=1)
 
      expected_msg = endrun_msg( &
             "ERROR:: Photosynthesis::PLC must choose plc method" )
@@ -92,15 +91,13 @@ contains
   subroutine check_bad_veg_d1plc( this )
      use PatchType, only: patch
      class(TestPhotosynthesis), intent(inout) :: this
-     integer :: p, c
+     integer :: p
      real(r8) :: der
      character(len=256) :: expected_msg
 
      p = bounds%begp
-     c = bounds%begc
-     this%x(root) = -1000._r8 * nlevgrnd
 
-     der = d1plc(this%x(root), p, c, root, plc_method=1)
+     der = d1plc(this%x(root), p, root, plc_method=1)
 
      expected_msg = endrun_msg( &
             "ERROR:: Photosynthesis::D1PLC must choose plc method" )
