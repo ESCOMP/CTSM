@@ -4,11 +4,18 @@ module test_Photosynthesis
   
   use pfunit_mod
   use PhotosynthesisMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestSubgridMod, only : unittest_subgrid_teardown, bounds
+  use unittestSimpleSubgridSetupsMod, only : setup_ncells_single_veg_patch
+  use clm_varpar
+  use clm_varctl
 
   implicit none
   
   @TestCase
   type, extends(TestCase) :: TestPhotosynthesis
+     type(photosyns_type) :: photo
+     real(r8) :: x(nvegwcs)
    contains
      procedure :: setUp
      procedure :: tearDown
@@ -18,10 +25,40 @@ contains
   
   subroutine setUp(this)
     class(TestPhotosynthesis), intent(inout) :: this
+
+    use_luna = .false.
+    use_cn = .false.
+    use_hydrstress = .false.
+    use_c13 = .false.
+    use_c14 = .false.
+    use_fates = .false.
+    soil_layerstruct_predefined = '20SL_8.5m'
+    
+    call setup_ncells_single_veg_patch(ncells=1, pft_type=1)
+    call clm_varpar_init( actual_maxsoil_patches=17, actual_numcft=2 )
+    call this%photo%Init( bounds )
+    call this%photo%setParamsForTesting( )
   end subroutine setUp
   
   subroutine tearDown(this)
     class(TestPhotosynthesis), intent(inout) :: this
+
+    call unittest_subgrid_teardown
+
   end subroutine tearDown
+
+  @Test
+  subroutine check_default_veg( this )
+     use PatchType, only: patch
+     class(TestPhotosynthesis), intent(inout) :: this
+     integer :: p, c
+     real(r8) :: der
+
+     p = bounds%begp
+     c = bounds%begc
+     this%x(xyl) = -1000._r8 * nlevgrnd
+     this%x(sun) = this%x(xyl)
+     der = d1plc(this%x(sun), p, c, sun, veg)
+  end subroutine check_default_veg
 
 end module test_Photosynthesis

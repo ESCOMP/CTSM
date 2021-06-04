@@ -48,6 +48,9 @@ module  PhotosynthesisMod
                                           ! Gentine/Daniel Kennedy plant hydraulic stress method
   public :: plc                           ! Return value of vulnerability curve at x
 
+  ! PRIVATE FUNCTIONS MADE PUBLIC Juse for unit-testing:
+  public  :: d1plc          ! compute 1st deriv of conductance attenuation for each segment
+
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hybrid         ! hybrid solver for ci
   private :: ci_func        ! ci function
@@ -64,17 +67,17 @@ module  PhotosynthesisMod
   private :: getqflx        ! calculate sunlit and shaded transpiration
   private :: spacF          ! flux divergence across each vegetation segment
   private :: spacA          ! the inverse Jacobian matrix relating delta(vegwp) to f, d(vegwp)=A*f
-  private :: d1plc          ! compute 1st deriv of conductance attenuation for each segment
 
   ! !PRIVATE DATA:
   integer, parameter, private :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
   integer, parameter, private :: leafresp_mtd_atkin2015 = 2  ! Atkin 2015 method for lmr25top
-  integer, parameter, private :: sun=1     ! index for sunlit
-  integer, parameter, private :: sha=2     ! index for shaded
-  integer, parameter, private :: xyl=3     ! index for xylem
-  integer, parameter, private :: root=4    ! index for root
-  integer, parameter, private :: veg=0     ! index for vegetation
-  integer, parameter, private :: soil=1    ! index for soil
+  ! These are public for unit-tests
+  integer, parameter, public   :: sun=1     ! index for sunlit
+  integer, parameter, public   :: sha=2     ! index for shaded
+  integer, parameter, public  :: xyl=3     ! index for xylem
+  integer, parameter, public  :: root=4    ! index for root
+  integer, parameter, public  :: veg=0     ! index for vegetation
+  integer, parameter, public  :: soil=1    ! index for soil
   integer, parameter, private :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
   integer, parameter, private :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
   ! !PUBLIC VARIABLES:
@@ -221,6 +224,9 @@ module  PhotosynthesisMod
      procedure, public  :: ReadParams
      procedure, public  :: TimeStepInit
      procedure, public  :: NewPatchInit
+
+     ! Procedures for unit-testing
+     procedure, public  :: SetParamsForTesting
 
      ! Private procedures
      procedure, private :: InitAllocate
@@ -754,6 +760,24 @@ contains
 
   end subroutine readParams
 
+  !-----------------------------------------------------------------------
+  subroutine setParamsForTesting ( this )
+    !
+    ! !USES:
+    implicit none
+
+    ! !ARGUMENTS:
+    class(photosyns_type) :: this
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32)  :: subname = 'setParamsForTesting'
+    !-----------------------------------------------------------------------
+
+    call params_inst%allocParams()
+    params_inst%ck = 3.95_r8
+    params_inst%psi50 = -340000._r8
+
+  end subroutine setParamsForTesting
 
   !------------------------------------------------------------------------
   subroutine ReadNML(this, NLFilename)
