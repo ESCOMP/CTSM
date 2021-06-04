@@ -48,6 +48,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
 
      ! fluxes to receive carbon inputs from FATES
+     real(r8), pointer :: FATES_c_to_litr_c_col                     (:,:,:) ! total litter coming from ED. gC/m3/s
      real(r8), pointer :: FATES_c_to_litr_lab_c_col                 (:,:)   ! total labile    litter coming from ED. gC/m3/s
      real(r8), pointer :: FATES_c_to_litr_cel_c_col                 (:,:)   ! total cellulose    litter coming from ED. gC/m3/s
      real(r8), pointer :: FATES_c_to_litr_lig_c_col                 (:,:)   ! total lignin    litter coming from ED. gC/m3/s
@@ -135,6 +136,9 @@ contains
 
      if ( use_fates ) then
         ! initialize these variables to be zero rather than a bad number since they are not zeroed every timestep (due to a need for them to persist)
+
+        allocate(this%FATES_c_to_litr_c_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+        this%FATES_c_to_litr_c_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools) = 0._r8
 
         allocate(this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full))
         this%FATES_c_to_litr_lab_c_col(begc:endc,1:nlevdecomp_full) = 0._r8
@@ -609,38 +613,46 @@ contains
           ptr2d => this%FATES_c_to_litr_lab_c_col
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
+               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
           
           ptr2d => this%FATES_c_to_litr_cel_c_col
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
+               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
           
           ptr2d => this%FATES_c_to_litr_lig_c_col
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
+               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
           
        else
           ptr1d => this%FATES_c_to_litr_lab_c_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
+               dim1name='column', long_name='', units='gC/m3/s', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d) 
           
           ptr1d => this%FATES_c_to_litr_cel_c_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
+               dim1name='column', long_name='', units='gC/m3/s', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d) 
           
           ptr1d => this%FATES_c_to_litr_lig_c_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='', &
+               dim1name='column', long_name='', units='gC/m3/s', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d) 
           
        end if
+
+       ! Copy last 3 variables to an array of litter pools for use in do loops.
+       ! Repeat copy in src/utils/clmfates_interfaceMod.F90.
+       ! Keep the three originals to avoid backwards compatibility issues with
+       ! restart files.
+       this%FATES_c_to_litr_c_col(:,:,1) = this%FATES_c_to_litr_lab_c_col(:,:)
+       this%FATES_c_to_litr_c_col(:,:,2) = this%FATES_c_to_litr_cel_c_col(:,:)
+       this%FATES_c_to_litr_c_col(:,:,3) = this%FATES_c_to_litr_lig_c_col(:,:)
        
     end if
     

@@ -948,7 +948,7 @@
       <option name="comment"  >include a debug test with flooding on</option>
     </options>
   </test>
-  <test name="ERP_P180x2_D_Ld5" grid="f19_g17_gl4" compset="I1850Clm50BgcCropG" testmods="clm/default">
+  <test name="ERP_P180x2_D_Ld5" grid="f19_g17_gris4" compset="I1850Clm50BgcCropG" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prealpha"/>
@@ -957,7 +957,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_P180x2_D_Ld5" grid="f19_g17_gl4" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_increase">
+  <test name="ERP_P180x2_D_Ld5" grid="f19_g17_gris4" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_increase">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1157,7 +1157,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/default">
+  <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -1191,7 +1191,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpRs" testmods="clm/default">
+  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
@@ -1200,7 +1200,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/default">
+  <test name="ERS_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1521,7 +1521,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpRs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm45SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -1529,7 +1529,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1537,7 +1537,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/default">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
@@ -1662,7 +1662,7 @@
       <option name="comment"  >include a nag debug test of Clm45BgcCrop</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/default">
+  <test name="SMS_D_Ld5_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
@@ -1672,7 +1672,18 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB">
+  <test name="SMS_D_Vnuopc_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON_NIWO">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+      <machine name="izumi"    compiler="nag"   category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment"  >Add at least one test of a NEON site</option>
+    </options>
+  </test>
+  <test name="SMS_D_Lm1_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB_mct">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
@@ -1680,9 +1691,10 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="tput_tolerance">0.5</option>
+      <option name="comment"  >This is a test of a generic tower site under MCT</option>
     </options>
   </test>
-  <test name="SMS_D_Lm1_Mmpi-serial_Vnuopc" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB">
+  <test name="SMS_D_Lm1_Mmpi-serial_Vnuopc" grid="CLM_USRDAT" compset="I1PtClm50SpRs" testmods="clm/USUMB_nuopc">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1754,7 +1766,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/default">
+  <test name="SMS_Ld1_Mmpi-serial" grid="1x1_mexicocityMEX" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -2314,14 +2326,26 @@
       <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
     </options>
   </test>
-    <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
+  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefCH4">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="hobart" compiler="nag" category="fates"/>
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:10:00</option>
+      <option name="comment">30 day exact restart test activating FATES and CH4 f10 grid.</option>
+    </options>
+  </test>
+  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro.</option>
+      <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro. Bypasses grid level mass checks.</option>
     </options>
   </test>
   <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesHydro">
@@ -2332,7 +2356,7 @@
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Short exact restart debug test for single site grid with coverage for FATES Hydro.</option>
+      <option name="comment">Short exact restart debug test for single site grid with coverage for FATES Hydro. Bypasses grid level mass checks.</option>
     </options>
   </test>
   <test name="ERS_Ld5" grid="f19_g17" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">

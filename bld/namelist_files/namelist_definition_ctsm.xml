@@ -306,16 +306,6 @@ Critical threshold of negative Nitrogen to die (abort when Nitrogen states are b
 Critical threshold of negative Carbon to die (abort when Carbon states are below this value)
 </entry>
 
-<entry id="initial_Cstocks" type="real(3)" category="clm_physics"
-       group="century_soilbgcdecompcascade" >
-Initial stocks of Carbon to use in soil organic matter pools for CENTURY decomposition
-</entry>
-
-<entry id="initial_Cstocks_depth" type="real(3)" category="clm_physics"
-       group="century_soilbgcdecompcascade" >
-Soil depth to place initial stocks of Carbon in soil organic matter pools for CENTURY decomposition
-</entry>
-
 <entry id="freelivfix_slope_wET" type="real" category="clm_physics"
        group="mineral_nitrogen_dynamics" >
 Slope of free living Nitrogen fixation with annual ET
@@ -501,7 +491,7 @@ If TRUE, irrigation will be active.
 If TRUE, fsat will be set to zero for crop columns.
 </entry> 
 
-<entry id="maxpatch_glcmec" type="integer"  category="clm_physics"
+<entry id="maxpatch_glc" type="integer"  category="clm_physics"
        group="clm_inparm" valid_values="1,3,5,10,36" >
 Number of  multiple elevation classes over glacier points.
 </entry>
@@ -1096,6 +1086,18 @@ Initial seed Carbon to use at planting
 (only used when CN is on as well as crop)
 </entry>
 
+<entry id="onset_thresh_depends_on_veg" type="logical" category="physics"
+       group="cnphenology">
+Phenology onset depends on the vegetation type
+(only used when CN is on)
+</entry>
+
+<entry id="min_crtical_dayl_depends_on_lat" type="logical" category="physics"
+       group="cnphenology">
+The minimum critical day length for onset depends on latitude
+(only used when CN is on)
+</entry>
+
 <entry id="use_ozone" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on ozone stress
@@ -1537,7 +1539,7 @@ If TRUE, repartition rain/snow from atmosphere based on temperature.
 
 <entry id="glcmec_downscale_longwave" type="logical" category="clm_physics"
        group="atm2lnd_inparm" valid_values="" >
-If TRUE, downscale longwave radiation over glc_mec landunits.
+If TRUE, downscale longwave radiation over glacier landunits.
 This downscaling is conservative.
 <default>Default: .true.</default>
 </entry>
