@@ -81,6 +81,11 @@ module  PhotosynthesisMod
   integer, parameter, public  :: soil=1                 ! index for soil
   integer, parameter, private :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
   integer, parameter, private :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
+
+  real(r8), parameter, private :: bbbopt_c3 = 10000._r8
+  real(r8), parameter, private :: bbbopt_c4 = 40000._r8
+  real(r8), parameter, private :: medlyn_rh_can_max = 50._r8
+  real(r8), parameter, private :: medlyn_rh_can_fact = 0.001_r8
   ! !PUBLIC VARIABLES:
 
   type :: photo_params_type
@@ -1485,10 +1490,10 @@ contains
 
          if (c3flag(p)) then
             qe(p) = 0._r8
-            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = 10000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = bbbopt_c3
          else
             qe(p) = 0.05_r8
-            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = 40000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = bbbopt_c4
          end if
 
          ! Soil water stress applied to Ball-Berry parameters
@@ -1831,7 +1836,7 @@ contains
                   rh_can = ceair / esat_tv(p)
                else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   ! Put some constraints on RH in the canopy when Medlyn stomatal conductance is being used
-                  rh_can = max((esat_tv(p) - ceair), 50._r8) * 0.001_r8
+                  rh_can = max((esat_tv(p) - ceair), medlyn_rh_can_max) * medlyn_rh_can_fact
                   vpd_can(p) = rh_can
                end if
 
@@ -3088,10 +3093,10 @@ contains
 
          if (c3flag(p)) then
             qe(p) = 0._r8
-            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = 10000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = bbbopt_c3
          else
             qe(p) = 0.05_r8
-            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = 40000._r8
+            if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 ) bbbopt(p) = bbbopt_c4
          end if
  
          if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
@@ -3499,7 +3504,7 @@ contains
                   rh_can = ceair / esat_tv(p)
                else if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
                   ! Put some constraints on RH in the canopy when Medlyn stomatal conductance is being used
-                  rh_can = max((esat_tv(p) - ceair), 50._r8) * 0.001_r8
+                  rh_can = max((esat_tv(p) - ceair), medlyn_rh_can_max) * medlyn_rh_can_fact
                   vpd_can(p) = rh_can
                end if
 
