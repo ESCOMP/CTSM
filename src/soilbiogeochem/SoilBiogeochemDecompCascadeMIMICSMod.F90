@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
-  use clm_varpar                         , only : i_met_lit, i_litr2, i_litr3, i_cwd
+  use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -39,16 +39,14 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   ! !PUBLIC DATA MEMBERS 
   !
   ! !PRIVATE DATA MEMBERS 
-
-  integer, private :: i_micr1 = -9  ! First microbial pool, copiotrophic, as labeled in Wieder et al. 2015
-  integer, private :: i_micr2 = -9  ! Second microbial pool, oligotrophic, as labeled in Wieder et al. 2015
-  integer, private :: i_soil1 = -9  ! Soil Organic Matter (SOM) first pool, protected SOM (som_p in Wieder et al. 2015)
-  integer, private :: i_soil2 = -9  ! SOM second pool, recalcitrant SOM (som_c in Wieder et al. 2015)
-  integer, private :: i_soil3 = -9  ! SOM third pool, available SOM (som_a in Wieder et al. 2015)
-  integer, private, parameter :: i_litr1   = i_met_lit  ! First litter pool, metobolic
+  integer, private :: i_pro_som  ! index of protected Soil Organic Matter (SOM)
+  integer, private :: i_rec_som  ! index of recalcitrant SOM
+  integer, private :: i_avl_som  ! index of available SOM
+  integer, private :: i_str_lit  ! index of structural litter pool
+  integer, private :: i_cop_mic  ! index of copiotrophic microbial pool
+  integer, private :: i_oli_mic  ! index of oligotrophic microbial pool
 
   type, private :: params_type
-     ! TODO BFB refactor: First merge the refactor branch to CTSM main
      ! TODO slevis: New rf params in MIMICS. Update params file accordingly.
      !              I haven't identified what these correspond to in testbed.
      real(r8):: rf_l1m1_mimics  ! respiration fraction litter 1 -> microbe 1
@@ -71,7 +69,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
      !              values used for BGC, make separate _mimics params.
      !              Keeping the _depth param in case needed for spin-ups.
      real(r8), allocatable :: initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
-     real(r8) :: initial_Cstocks_depth    ! Soil depth for initial Carbon stocks for a cold-start
+     real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
      
   end type params_type
   !
@@ -105,9 +103,8 @@ contains
 
     ! Read off of netcdf file
     ! TODO slevis: Add new params here and in the params file.
-    !      Read MIMICS-specific params here and shared params like this:
+    !      Read MIMICS-specific params here & shared ones (eg *_bgc) like this:
     !      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
-    ! TODO BFB refactor: *_bgc are shared params so chg them accordingly
     tString='tau_cwd_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -259,7 +256,8 @@ contains
 
       rf_cwdl2 = params_inst%rf_cwdl2_mimics
 
-      ! set the lignin fractions for coarse woody debris
+      ! set the structural fractions for coarse woody debris
+      ! TODO slevis: If will use, rename to cwd_fstr? Or remove?
       cwd_flig = params_inst%cwd_flig
 
       ! set path fractions
@@ -280,121 +278,132 @@ contains
       initial_stock_soildepth = params_inst%initial_Cstocks_depth
 
       !-------------------  list of pools and their attributes  ------------
-      floating_cn_ratio_decomp_pools(i_litr1) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_litr1) = 'litr1'
-      decomp_cascade_con%decomp_pool_name_history(i_litr1) = 'LITR1'
-      decomp_cascade_con%decomp_pool_name_long(i_litr1) = 'litter 1'
-      decomp_cascade_con%decomp_pool_name_short(i_litr1) = 'L1'
-      is_microbe(i_litr1) = .false.
-      is_litter(i_litr1) = .true.
-      is_soil(i_litr1) = .false.
-      is_cwd(i_litr1) = .false.
-      initial_cn_ratio(i_litr1) = 10._r8  ! 90 in BGC; not used in MIMICS
-      initial_stock(i_litr1) = params_inst%initial_Cstocks(i_litr1)
-      is_metabolic(i_litr1) = .true.
-      is_cellulose(i_litr1) = .false.
-      is_lignin(i_litr1) = .false.
+      i_litr_min = 1
+      i_met_lit = i_litr_min
+      floating_cn_ratio_decomp_pools(i_met_lit) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_met_lit) = 'litr1'
+      decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'LITR1'
+      decomp_cascade_con%decomp_pool_name_long(i_met_lit) = 'litter 1'
+      decomp_cascade_con%decomp_pool_name_short(i_met_lit) = 'L1'
+      is_microbe(i_met_lit) = .false.
+      is_litter(i_met_lit) = .true.
+      is_soil(i_met_lit) = .false.
+      is_cwd(i_met_lit) = .false.
+      initial_cn_ratio(i_met_lit) = 10._r8  ! 90 in BGC; not used in MIMICS
+      initial_stock(i_met_lit) = params_inst%initial_Cstocks(i_met_lit)
+      is_metabolic(i_met_lit) = .true.
+      is_cellulose(i_met_lit) = .false.
+      is_lignin(i_met_lit) = .false.
 
-      i_litr2 = i_litr1 + 1
-      floating_cn_ratio_decomp_pools(i_litr2) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_litr2) = 'litr2'
-      decomp_cascade_con%decomp_pool_name_history(i_litr2) = 'LITR2'
-      decomp_cascade_con%decomp_pool_name_long(i_litr2) = 'litter 2'
-      decomp_cascade_con%decomp_pool_name_short(i_litr2) = 'L2'
-      is_microbe(i_litr2) = .false.
-      is_litter(i_litr2) = .true.
-      is_soil(i_litr2) = .false.
-      is_cwd(i_litr2) = .false.
-      initial_cn_ratio(i_litr2) = 10._r8  ! 90 in BGC; not used in MIMICS
-      initial_stock(i_litr2) = params_inst%initial_Cstocks(i_litr2)
-      is_metabolic(i_litr2) = .false.
-      is_cellulose(i_litr2) = .true.
-      is_lignin(i_litr2) = .true.
+      i_str_lit = i_met_lit + 1
+      floating_cn_ratio_decomp_pools(i_str_lit) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_str_lit) = 'litr2'
+      decomp_cascade_con%decomp_pool_name_history(i_str_lit) = 'LITR2'
+      decomp_cascade_con%decomp_pool_name_long(i_str_lit) = 'litter 2'
+      decomp_cascade_con%decomp_pool_name_short(i_str_lit) = 'L2'
+      is_microbe(i_str_lit) = .false.
+      is_litter(i_str_lit) = .true.
+      is_soil(i_str_lit) = .false.
+      is_cwd(i_str_lit) = .false.
+      initial_cn_ratio(i_str_lit) = 10._r8  ! 90 in BGC; not used in MIMICS
+      initial_stock(i_str_lit) = params_inst%initial_Cstocks(i_str_lit)
+      is_metabolic(i_str_lit) = .false.
+      is_cellulose(i_str_lit) = .true.
+      is_lignin(i_str_lit) = .true.
 
-      i_soil1 = i_litr2 + 1
-      floating_cn_ratio_decomp_pools(i_soil1) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_soil1) = 'soil1'
-      decomp_cascade_con%decomp_pool_name_history(i_soil1) = 'SOIL1'
-      decomp_cascade_con%decomp_pool_name_long(i_soil1) = 'soil 1'
-      decomp_cascade_con%decomp_pool_name_short(i_soil1) = 'S1'
-      is_microbe(i_soil1) = .false.
-      is_litter(i_soil1) = .false.
-      is_soil(i_soil1) = .true.
-      is_cwd(i_soil1) = .false.
-      initial_cn_ratio(i_soil1) = 10._r8  ! cn_s1 in BGC; not used in MIMICS
-      initial_stock(i_soil1) = params_inst%initial_Cstocks(i_soil1)
-      is_metabolic(i_soil1) = .false.
-      is_cellulose(i_soil1) = .false.
-      is_lignin(i_soil1) = .false.
+      i_litr_max = i_str_lit
+      if (i_litr_min /= 1 .or. i_litr_max < 2 .or. i_litr_max > 3) then
+         write(iulog,*) 'Expecting i_litr_min = 1 and i_litr_max = 2 or 3.'
+         write(iulog,*) 'See pftconMod, SoilBiogeochemCarbonFluxType, and'
+         write(iulog,*) 'clmfates_interfaceMod for ramifications of changing'
+         write(iulog,*) 'this assumption.'
+         call endrun(msg='ERROR: i_litr_min and/or i_litr_max out of range '// &
+              errMsg(sourcefile, __LINE__))
+      end if
 
-      i_soil2 = i_soil1 + 1
-      floating_cn_ratio_decomp_pools(i_soil2) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_soil2) = 'soil2'
-      decomp_cascade_con%decomp_pool_name_history(i_soil2) = 'SOIL2'
-      decomp_cascade_con%decomp_pool_name_long(i_soil2) = 'soil 2'
-      decomp_cascade_con%decomp_pool_name_short(i_soil2) = 'S2'
-      is_microbe(i_soil2) = .false.
-      is_litter(i_soil2) = .false.
-      is_soil(i_soil2) = .true.
-      is_cwd(i_soil2) = .false.
-      initial_cn_ratio(i_soil2) = 10._r8  ! cn_s2 in BGC; not used in MIMICS
-      initial_stock(i_soil2) = params_inst%initial_Cstocks(i_soil2)
-      is_metabolic(i_soil2) = .false.
-      is_cellulose(i_soil2) = .false.
-      is_lignin(i_soil2) = .false.
+      i_pro_som = i_str_lit + 1
+      floating_cn_ratio_decomp_pools(i_pro_som) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_pro_som) = 'soil1'
+      decomp_cascade_con%decomp_pool_name_history(i_pro_som) = 'SOIL1'
+      decomp_cascade_con%decomp_pool_name_long(i_pro_som) = 'soil 1'
+      decomp_cascade_con%decomp_pool_name_short(i_pro_som) = 'S1'
+      is_microbe(i_pro_som) = .false.
+      is_litter(i_pro_som) = .false.
+      is_soil(i_pro_som) = .true.
+      is_cwd(i_pro_som) = .false.
+      initial_cn_ratio(i_pro_som) = 10._r8  ! cn_s1 in BGC; not used in MIMICS
+      initial_stock(i_pro_som) = params_inst%initial_Cstocks(i_pro_som)
+      is_metabolic(i_pro_som) = .false.
+      is_cellulose(i_pro_som) = .false.
+      is_lignin(i_pro_som) = .false.
 
-      i_soil3 = i_soil2 + 1
-      floating_cn_ratio_decomp_pools(i_soil3) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_soil3) = 'soil3'
-      decomp_cascade_con%decomp_pool_name_history(i_soil3) = 'SOIL3'
-      decomp_cascade_con%decomp_pool_name_long(i_soil3) = 'soil 3'
-      decomp_cascade_con%decomp_pool_name_short(i_soil3) = 'S3'
-      is_microbe(i_soil3) = .false.
-      is_litter(i_soil3) = .false.
-      is_soil(i_soil3) = .true.
-      is_cwd(i_soil3) = .false.
-      initial_cn_ratio(i_soil3) = 10._r8  ! cn_s3 in BGC; not used in MIMICS
-      initial_stock(i_soil3) = params_inst%initial_Cstocks(i_soil3)
-      is_metabolic(i_soil3) = .false.
-      is_cellulose(i_soil3) = .false.
-      is_lignin(i_soil3) = .false.
+      i_rec_som = i_pro_som + 1
+      floating_cn_ratio_decomp_pools(i_rec_som) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_rec_som) = 'soil2'
+      decomp_cascade_con%decomp_pool_name_history(i_rec_som) = 'SOIL2'
+      decomp_cascade_con%decomp_pool_name_long(i_rec_som) = 'soil 2'
+      decomp_cascade_con%decomp_pool_name_short(i_rec_som) = 'S2'
+      is_microbe(i_rec_som) = .false.
+      is_litter(i_rec_som) = .false.
+      is_soil(i_rec_som) = .true.
+      is_cwd(i_rec_som) = .false.
+      initial_cn_ratio(i_rec_som) = 10._r8  ! cn_s2 in BGC; not used in MIMICS
+      initial_stock(i_rec_som) = params_inst%initial_Cstocks(i_rec_som)
+      is_metabolic(i_rec_som) = .false.
+      is_cellulose(i_rec_som) = .false.
+      is_lignin(i_rec_som) = .false.
 
-      i_micr1 = i_soil3 + 1
-      floating_cn_ratio_decomp_pools(i_micr1) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_micr1) = 'micr1'
-      decomp_cascade_con%decomp_pool_name_history(i_micr1) = 'MICR1'
-      decomp_cascade_con%decomp_pool_name_long(i_micr1) = 'microbial 1'
-      decomp_cascade_con%decomp_pool_name_short(i_micr1) = 'M1'
-      is_microbe(i_micr1) = .true.
-      is_litter(i_micr1) = .false.
-      is_soil(i_micr1) = .false.
-      is_cwd(i_micr1) = .false.
-      initial_cn_ratio(i_micr1) = 10._r8  ! MIMICS may use this
-      initial_stock(i_micr1) = params_inst%initial_Cstocks(i_micr1)
-      is_metabolic(i_micr1) = .false.
-      is_cellulose(i_micr1) = .false.
-      is_lignin(i_micr1) = .false.
+      i_avl_som = i_rec_som + 1
+      floating_cn_ratio_decomp_pools(i_avl_som) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_avl_som) = 'soil3'
+      decomp_cascade_con%decomp_pool_name_history(i_avl_som) = 'SOIL3'
+      decomp_cascade_con%decomp_pool_name_long(i_avl_som) = 'soil 3'
+      decomp_cascade_con%decomp_pool_name_short(i_avl_som) = 'S3'
+      is_microbe(i_avl_som) = .false.
+      is_litter(i_avl_som) = .false.
+      is_soil(i_avl_som) = .true.
+      is_cwd(i_avl_som) = .false.
+      initial_cn_ratio(i_avl_som) = 10._r8  ! cn_s3 in BGC; not used in MIMICS
+      initial_stock(i_avl_som) = params_inst%initial_Cstocks(i_avl_som)
+      is_metabolic(i_avl_som) = .false.
+      is_cellulose(i_avl_som) = .false.
+      is_lignin(i_avl_som) = .false.
 
-      i_micr2 = i_micr1 + 1
-      floating_cn_ratio_decomp_pools(i_micr2) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_micr2) = 'micr2'
-      decomp_cascade_con%decomp_pool_name_history(i_micr2) = 'MICR2'
-      decomp_cascade_con%decomp_pool_name_long(i_micr2) = 'microbial 2'
-      decomp_cascade_con%decomp_pool_name_short(i_micr2) = 'M2'
-      is_microbe(i_micr2) = .true.
-      is_litter(i_micr2) = .false.
-      is_soil(i_micr2) = .false.
-      is_cwd(i_micr2) = .false.
-      initial_cn_ratio(i_micr2) = 10._r8  ! MIMICS may use this
-      initial_stock(i_micr2) = params_inst%initial_Cstocks(i_micr2)
-      is_metabolic(i_micr2) = .false.
-      is_cellulose(i_micr2) = .false.
-      is_lignin(i_micr2) = .false.
+      i_cop_mic = i_avl_som + 1
+      floating_cn_ratio_decomp_pools(i_cop_mic) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_cop_mic) = 'micr1'
+      decomp_cascade_con%decomp_pool_name_history(i_cop_mic) = 'MICR1'
+      decomp_cascade_con%decomp_pool_name_long(i_cop_mic) = 'microbial 1'
+      decomp_cascade_con%decomp_pool_name_short(i_cop_mic) = 'M1'
+      is_microbe(i_cop_mic) = .true.
+      is_litter(i_cop_mic) = .false.
+      is_soil(i_cop_mic) = .false.
+      is_cwd(i_cop_mic) = .false.
+      initial_cn_ratio(i_cop_mic) = 10._r8  ! MIMICS may use this
+      initial_stock(i_cop_mic) = params_inst%initial_Cstocks(i_cop_mic)
+      is_metabolic(i_cop_mic) = .false.
+      is_cellulose(i_cop_mic) = .false.
+      is_lignin(i_cop_mic) = .false.
 
-      i_cwd = i_micr2
+      i_oli_mic = i_cop_mic + 1
+      floating_cn_ratio_decomp_pools(i_oli_mic) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_oli_mic) = 'micr2'
+      decomp_cascade_con%decomp_pool_name_history(i_oli_mic) = 'MICR2'
+      decomp_cascade_con%decomp_pool_name_long(i_oli_mic) = 'microbial 2'
+      decomp_cascade_con%decomp_pool_name_short(i_oli_mic) = 'M2'
+      is_microbe(i_oli_mic) = .true.
+      is_litter(i_oli_mic) = .false.
+      is_soil(i_oli_mic) = .false.
+      is_cwd(i_oli_mic) = .false.
+      initial_cn_ratio(i_oli_mic) = 10._r8  ! MIMICS may use this
+      initial_stock(i_oli_mic) = params_inst%initial_Cstocks(i_oli_mic)
+      is_metabolic(i_oli_mic) = .false.
+      is_cellulose(i_oli_mic) = .false.
+      is_lignin(i_oli_mic) = .false.
+
       if (.not. use_fates) then
          ! CWD
-         i_cwd = i_micr2 + 1
+         i_cwd = i_oli_mic + 1
          floating_cn_ratio_decomp_pools(i_cwd) = .true.
          decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
          decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
@@ -414,19 +423,19 @@ contains
       speedup_fac = 1._r8
 
       !lit1,2
-      spinup_factor(i_litr1) = 1._r8
-      spinup_factor(i_litr2) = 1._r8
+      spinup_factor(i_met_lit) = 1._r8
+      spinup_factor(i_str_lit) = 1._r8
       !CWD
       if (.not. use_fates) then
          spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
       end if
       !som1,2,3
-      spinup_factor(i_soil1) = 1._r8
-      spinup_factor(i_soil2) = 1._r8  ! BGC used same formula as for cwd but...
-      spinup_factor(i_soil3) = 1._r8  ! ...w the respective tau_s values
+      spinup_factor(i_pro_som) = 1._r8
+      spinup_factor(i_rec_som) = 1._r8  ! BGC used same formula as for cwd but...
+      spinup_factor(i_avl_som) = 1._r8  ! ...w the respective tau_s values
       ! micr1,2
-      spinup_factor(i_micr1) = 1._r8
-      spinup_factor(i_micr2) = 1._r8
+      spinup_factor(i_cop_mic) = 1._r8
+      spinup_factor(i_oli_mic) = 1._r8
 
       if ( masterproc ) then
          write(iulog,*) 'Spinup_state ',spinup_state
@@ -437,58 +446,59 @@ contains
       i_l1m1 = 1
       decomp_cascade_con%cascade_step_name(i_l1m1) = 'L1M1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = rf_l1m1
-      cascade_donor_pool(i_l1m1) = i_litr1
-      cascade_receiver_pool(i_l1m1) = i_micr1
+      cascade_donor_pool(i_l1m1) = i_met_lit
+      cascade_receiver_pool(i_l1m1) = i_cop_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = 1.0_r8
 
       i_l2m1 = 2
       decomp_cascade_con%cascade_step_name(i_l2m1) = 'L2M1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1) = rf_l2m1
-      cascade_donor_pool(i_l2m1) = i_litr2
-      cascade_receiver_pool(i_l2m1) = i_micr1
+      cascade_donor_pool(i_l2m1) = i_str_lit
+      cascade_receiver_pool(i_l2m1) = i_cop_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1)= 1.0_r8
 
       i_s3m1 = 3
       decomp_cascade_con%cascade_step_name(i_s3m1) = 'S3M1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m1) = rf_s3m1
-      cascade_donor_pool(i_s3m1) = i_soil3
-      cascade_receiver_pool(i_s3m1) = i_micr1
+      cascade_donor_pool(i_s3m1) = i_avl_som
+      cascade_receiver_pool(i_s3m1) = i_cop_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m1) = 1.0_r8
 
       i_l1m2 = 4
       decomp_cascade_con%cascade_step_name(i_l1m2) = 'L1M2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = rf_l1m2
-      cascade_donor_pool(i_l1m2) = i_litr1
-      cascade_receiver_pool(i_l1m2) = i_micr2
+      cascade_donor_pool(i_l1m2) = i_met_lit
+      cascade_receiver_pool(i_l1m2) = i_oli_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = 1.0_r8
 
       i_l2m2 = 5
       decomp_cascade_con%cascade_step_name(i_l2m2) = 'L2M2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2) = rf_l2m2
-      cascade_donor_pool(i_l2m2) = i_litr2
-      cascade_receiver_pool(i_l2m2) = i_micr2
+      cascade_donor_pool(i_l2m2) = i_str_lit
+      cascade_receiver_pool(i_l2m2) = i_oli_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2)= 1.0_r8
 
       i_s3m2 = 6
       decomp_cascade_con%cascade_step_name(i_s3m2) = 'S3M2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m2) = rf_s3m2
-      cascade_donor_pool(i_s3m2) = i_soil3
-      cascade_receiver_pool(i_s3m2) = i_micr2
+      cascade_donor_pool(i_s3m2) = i_avl_som
+      cascade_receiver_pool(i_s3m2) = i_oli_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m2) = 1.0_r8
 
-      ! TODO Should I have kept code corresponding to the s1_s3 s2_s3 transfers?
+      ! TODO Should I keep this code corresponding to the s1_s3 s2_s3 xfers?
+      !      If so, is pathfrac = 1 correct or should it be f_s1s3, f_s2s3?
       i_s1s3 = 7
       decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3
-      cascade_donor_pool(i_s1s3) = i_soil1
-      cascade_receiver_pool(i_s1s3) = i_soil3
+      cascade_donor_pool(i_s1s3) = i_pro_som
+      cascade_receiver_pool(i_s1s3) = i_avl_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = 1.0_r8
 
       i_s2s3 = 8
       decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
-      cascade_donor_pool(i_s2s3) = i_soil2
-      cascade_receiver_pool(i_s2s3) = i_soil3
+      cascade_donor_pool(i_s2s3) = i_rec_som
+      cascade_receiver_pool(i_s2s3) = i_avl_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = 1.0_r8
 
       if (.not. use_fates) then
@@ -496,7 +506,7 @@ contains
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
-         cascade_receiver_pool(i_cwdl2) = i_litr2
+         cascade_receiver_pool(i_cwdl2) = i_str_lit
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_flig
       end if
 
@@ -681,16 +691,16 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             !
-            if ( abs(spinup_factor(i_litr1) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_l1(c) = spinup_factor(i_litr1) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_l1(c) = spinup_factor(i_met_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_l1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_litr2) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_l23(c) = spinup_factor(i_litr2) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_str_lit) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_l2(c) = spinup_factor(i_str_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
-               spinup_geogterm_l23(c) = 1._r8
+               spinup_geogterm_l2(c) = 1._r8
             endif
             !
             if ( .not. use_fates ) then
@@ -701,32 +711,32 @@ contains
                endif
             endif
             !
-            if ( abs(spinup_factor(i_soil1) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_s1(c) = spinup_factor(i_soil1) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_pro_som) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s1(c) = spinup_factor(i_pro_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_soil2) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_s2(c) = spinup_factor(i_soil2) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_rec_som) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s2(c) = spinup_factor(i_rec_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s2(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_soil3) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_s3(c) = spinup_factor(i_soil3) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_avl_som) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s3(c) = spinup_factor(i_avl_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s3(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_micr1) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_m1(c) = spinup_factor(i_micr1) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_cop_mic) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_m1(c) = spinup_factor(i_cop_mic) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_m1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_micr2) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_m2(c) = spinup_factor(i_micr2) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_oli_mic) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_m2(c) = spinup_factor(i_oli_mic) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_m2(c) = 1._r8
             endif
@@ -736,7 +746,7 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             spinup_geogterm_l1(c) = 1._r8
-            spinup_geogterm_l23(c) = 1._r8
+            spinup_geogterm_l2(c) = 1._r8
             spinup_geogterm_cwd(c) = 1._r8
             spinup_geogterm_s1(c) = 1._r8
             spinup_geogterm_s2(c) = 1._r8
@@ -885,21 +895,21 @@ contains
       do j = 1,nlevdecomp
          do fc = 1,num_soilc
             c = filter_soilc(fc)
-            decomp_k(c,j,i_litr1) = k_l1 * w_scalar(c,j) * &
+            decomp_k(c,j,i_met_lit) = k_l1 * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l1(c)
-            decomp_k(c,j,i_litr2) = k_l2 * w_scalar(c,j) * &
+            decomp_k(c,j,i_str_lit) = k_l2 * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l2(c)
 
-            decomp_k(c,j,i_micr1) = k_m1 * w_scalar(c,j) * &
+            decomp_k(c,j,i_cop_mic) = k_m1 * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_m1(c)
-            decomp_k(c,j,i_micr2) = k_m2 * w_scalar(c,j) * &
+            decomp_k(c,j,i_oli_mic) = k_m2 * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_m2(c)
 
-            decomp_k(c,j,i_soil1) = k_s1 * w_scalar(c,j) * &
+            decomp_k(c,j,i_pro_som) = k_s1 * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
-            decomp_k(c,j,i_soil2) = k_s2 * w_scalar(c,j) * &
+            decomp_k(c,j,i_rec_som) = k_s2 * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c)
-            decomp_k(c,j,i_soil3) = k_s3 * w_scalar(c,j) * &
+            decomp_k(c,j,i_avl_som) = k_s3 * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
             ! Same for cwd but only if fates not enabled; fates handles cwd on
             ! its own structure
