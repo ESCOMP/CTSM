@@ -5,9 +5,9 @@ import logging
 import os
 import re
 
-from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
-
 from CIME.case import Case # pylint: disable=import-error
+
+from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 
 logger = logging.getLogger(__name__)
 
