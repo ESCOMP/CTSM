@@ -926,6 +926,17 @@ module CLMFatesInterfaceMod
          soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si) = &
               this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nld_si)
 
+         ! Copy last 3 variables to an array of litter pools for use in do loops
+         ! and repeat copy in soilbiogeochem/SoilBiogeochemCarbonFluxType.F90.
+         ! Keep the three originals to avoid backwards compatibility issues with
+         ! restart files.
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,1) = &
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si)
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,2) = &
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si)
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,3) = &
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si)
+
       end do
 
 
