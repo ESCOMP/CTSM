@@ -82,10 +82,11 @@ module  PhotosynthesisMod
   integer, parameter, private :: stomatalcond_mtd_bb1987     = 1   ! Ball-Berry 1987 method for photosynthesis
   integer, parameter, private :: stomatalcond_mtd_medlyn2011 = 2   ! Medlyn 2011 method for photosynthesis
 
-  real(r8), parameter, private :: bbbopt_c3 = 10000._r8
-  real(r8), parameter, private :: bbbopt_c4 = 40000._r8
-  real(r8), parameter, private :: medlyn_rh_can_max = 50._r8
-  real(r8), parameter, private :: medlyn_rh_can_fact = 0.001_r8
+  real(r8), parameter, private :: bbbopt_c3 = 10000._r8            ! Ball-Berry Photosynthesis intercept to use for C3 vegetation
+  real(r8), parameter, private :: bbbopt_c4 = 40000._r8            ! Ball-Berry Photosynthesis intercept to use for C4 vegetation
+  real(r8), parameter, private :: medlyn_rh_can_max = 50._r8       ! Maximum to put on RH in the canopy used for Medlyn Photosynthesis
+  real(r8), parameter, private :: medlyn_rh_can_fact = 0.001_r8    ! Multiplicitive factor to use for Canopy RH used for Medlyn photosynthesis
+  real(r8), parameter, private :: max_cs = 1.e-06_r8               ! Max CO2 partial pressure at leaf surface (Pa) for PHS
   ! !PUBLIC VARIABLES:
 
   type :: photo_params_type
@@ -1908,7 +1909,7 @@ contains
                ! Final estimates for cs and ci (needed for early exit of ci iteration when an < 0)
 
                cs = cair(p) - 1.4_r8/gb_mol(p) * an(p,iv) * forc_pbot(c)
-               cs = max(cs,1.e-06_r8)
+               cs = max(cs,max_cs)
                ci_z(p,iv) = cair(p) - an(p,iv) * forc_pbot(c) * (1.4_r8*gs_mol(p,iv)+1.6_r8*gb_mol(p)) / (gb_mol(p)*gs_mol(p,iv))
 
                ! Trap for values of ci_z less than 1.e-06.  This is needed for
@@ -2633,7 +2634,7 @@ contains
       ! Quadratic gs_mol calculation with an known. Valid for an >= 0.
       ! With an <= 0, then gs_mol = bbb or medlyn intercept
       cs = cair - 1.4_r8/gb_mol * an(p,iv) * forc_pbot(c)
-      cs = max(cs,1.e-06_r8)
+      cs = max(cs,max_cs)
       if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
           term = 1.6_r8 * an(p,iv) / (cs / forc_pbot(c) * 1.e06_r8)
           aquad = 1.0_r8
@@ -3571,7 +3572,7 @@ contains
                ! Final estimates for cs and ci (needed for early exit of ci iteration when an < 0)
 
                cs_sun = cair(p) - 1.4_r8/gb_mol(p) * an_sun(p,iv) * forc_pbot(c)
-               cs_sun = max(cs_sun,1.e-06_r8)
+               cs_sun = max(cs_sun,max_cs)
                ci_z_sun(p,iv) = cair(p) - an_sun(p,iv) * forc_pbot(c) * &
                                 (1.4_r8*gs_mol_sun(p,iv)+1.6_r8*gb_mol(p)) / &
                                 (gb_mol(p)*gs_mol_sun(p,iv))
@@ -3581,7 +3582,7 @@ contains
                ci_z_sun(p,iv) = max( ci_z_sun(p,iv), 1.e-06_r8 )
 
                cs_sha = cair(p) - 1.4_r8/gb_mol(p) * an_sha(p,iv) * forc_pbot(c)
-               cs_sha = max(cs_sha,1.e-06_r8)
+               cs_sha = max(cs_sha,max_cs)
                ci_z_sha(p,iv) = cair(p) - an_sha(p,iv) * forc_pbot(c) * &
                                 (1.4_r8*gs_mol_sha(p,iv)+1.6_r8*gb_mol(p)) / &
                                 (gb_mol(p)*gs_mol_sha(p,iv))
@@ -4221,6 +4222,7 @@ contains
     real(r8) :: aquad, bquad, cquad  ! terms for quadratic equations
     real(r8) :: r1, r2               ! roots of quadratic equation
     real(r8) :: term                 ! intermediate in Medlyn stomatal model
+    real(r8), parameter :: max_cs = 10.e-06_r8  ! Max CO2 partial pressure at leaf surface (Pa) for PHS
     !
     !------------------------------------------------------------------------------
     
@@ -4349,7 +4351,7 @@ contains
     ! Sunlit
     if (an_sun(p,iv) >= 0._r8) then
        cs_sun = cair - 1.4_r8/gb_mol * an_sun(p,iv) * forc_pbot(c)
-       cs_sun = max(cs_sun,10.e-06_r8)
+       cs_sun = max(cs_sun,max_cs)
     end if
 
     if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
@@ -4360,7 +4362,7 @@ contains
        if (an_sun(p,iv) >= 0._r8) then
           term = 1.6_r8 * an_sun(p,iv) / (cs_sun / forc_pbot(c) * 1.e06_r8)
           aquad = 1.0_r8
-          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+          bquad = -(2.0_r8 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
           cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
                (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
@@ -4373,14 +4375,14 @@ contains
        ! Shaded
        if (an_sha(p,iv) >= 0._r8) then
           cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
-          cs_sha = max(cs_sha,10.e-06_r8)
+          cs_sha = max(cs_sha,max_cs)
 
           term = 1.6_r8 * an_sha(p,iv) / (cs_sha / forc_pbot(c) * 1.e06_r8)
           aquad = 1.0_r8
-          bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
+          bquad = -(2.0_r8 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
           cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
-               (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * (1.0 - medlynslope(patch%itype(p))* &
+               (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * (1.0 - medlynslope(patch%itype(p))* &
                medlynslope(patch%itype(p)) / rh_can)) * term
 
           call quadratic (aquad, bquad, cquad, r1, r2)
@@ -4402,7 +4404,7 @@ contains
        ! Shaded
        if (an_sha(p,iv) >= 0._r8) then
           cs_sha = cair - 1.4_r8/gb_mol * an_sha(p,iv) * forc_pbot(c)
-          cs_sha = max(cs_sha,10.e-06_r8)
+          cs_sha = max(cs_sha,max_cs)
 
           aquad = cs_sha
           bquad = cs_sha*(gb_mol - max(bsha*bbb(p),1._r8)) - mbb(p)*an_sha(p,iv)*forc_pbot(c)
