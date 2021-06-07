@@ -4353,6 +4353,10 @@ contains
     end if
 
     if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
+       ! Note for Medlyn we are NOT modifying by water stress as we do for
+       ! Ball-Berry below.
+       ! Whether the intercept should be modified by water stress is an open
+       ! science quesiton.
        if (an_sun(p,iv) >= 0._r8) then
           term = 1.6_r8 * an_sun(p,iv) / (cs_sun / forc_pbot(c) * 1.e06_r8)
           aquad = 1.0_r8
@@ -4383,6 +4387,10 @@ contains
           gs_mol_sha = max(r1,r2)* 1.e06_r8
        end if
     else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
+       ! Note for Ball-Berry we modify the intercept (bbb) by water stress (see
+       ! the multipling factor of bsun and bsha to bbb below).
+       ! Whether the intercept should be modified by water stress is an open
+       ! science quesiton.
        if (an_sun(p,iv) >= 0._r8) then
           aquad = cs_sun
           bquad = cs_sun*(gb_mol - max(bsun*bbb(p),1._r8)) - mbb(p)*an_sun(p,iv)*forc_pbot(c)
