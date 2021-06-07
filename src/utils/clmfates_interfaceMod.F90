@@ -525,7 +525,7 @@ module CLMFatesInterfaceMod
       
       nclumps = get_proc_clumps()
 
-      !$OMP PARALLEL DO PRIVATE (nc,bounds_clump,nmaxcol,s,c,l,g,collist,pi,pf)
+      !$OMP PARALLEL DO PRIVATE (nc,bounds_clump,nmaxcol,s,c,l,g,collist,pi,pf,ft)
       do nc = 1,nclumps
          
          call get_clump_bounds(nc, bounds_clump)
@@ -631,7 +631,6 @@ module CLMFatesInterfaceMod
             do m = natpft_lb,natpft_ub
                ft = m-natpft_lb
                this%fates(nc)%bc_in(s)%pft_areafrac(ft)=wt_nat_patch(g,m)
-
             end do
 
             if(abs(sum(this%fates(nc)%bc_in(s)%pft_areafrac(natpft_lb:natpft_ub))-1.0_r8).gt.1.0e-9)then
@@ -671,7 +670,6 @@ module CLMFatesInterfaceMod
       end do
       !$OMP END PARALLEL DO
 
-      
       call this%init_history_io(bounds_proc)
 
       ! Report Fates Parameters (debug flag in lower level routines)
