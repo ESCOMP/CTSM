@@ -4353,7 +4353,7 @@ contains
     end if
 
     if ( stomatalcond_mtd == stomatalcond_mtd_medlyn2011 )then
-       ! Note for Medlyn we are NOT modifying by water stress as we do for
+       ! Note for Medlyn we are NOT modifying the intercept by water stress as we do for
        ! Ball-Berry below.
        ! Whether the intercept should be modified by water stress is an open
        ! science quesiton.
