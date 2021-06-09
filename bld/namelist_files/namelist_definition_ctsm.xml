@@ -951,11 +951,6 @@ Human heat stress indices:
     NONE = No indices will be calculated
 </entry>
 
-<entry id="wrtdia" type="logical" category="history"
-       group="clm_inparm" valid_values="" >
-If TRUE, write diagnostic of global radiative temperature written to CLM log file.
-</entry>
-
 <entry id="use_subgrid_fluxes" type="logical" category="clm_physics"
        group="clm_inparm" >
 Whether to use subgrid fluxes for snow

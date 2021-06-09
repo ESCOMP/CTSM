@@ -197,9 +197,6 @@ module clm_varctl
   ! which snow cover fraction parameterization to use
   character(len=64), public :: snow_cover_fraction_method
 
-  ! true => write global average diagnostics to std out
-  logical,  public :: wrtdia       = .false.            
-
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
 
