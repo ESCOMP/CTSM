@@ -234,8 +234,8 @@ contains
     if (use_cn) then
        this%fv_patch(begp:endp) = spval
        call hist_addfld1d (fname='FV', units='m/s', &
-            avgflag='A', long_name='friction velocity for dust model', &
-            ptr_patch=this%fv_patch, default='inactive')
+            avgflag='A', long_name='friction velocity', &
+            ptr_patch=this%fv_patch)
     end if
 
        call hist_addfld1d (fname='RAH1', units='s/m', &
