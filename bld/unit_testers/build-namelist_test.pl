@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1740;
+my $ntests = 1743;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1185;
 }
@@ -1137,6 +1137,11 @@ my %warntest = (
                                      namelst=>"megan_specifier='ZZTOP=zztop'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
+                                   },
+     "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_fun=.true.,use_flexiblecn=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
                );
 foreach my $key ( keys(%warntest) ) {
