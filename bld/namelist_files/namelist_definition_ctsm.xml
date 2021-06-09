@@ -324,6 +324,7 @@ If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng,
 <entry id="use_biomass_heat_storage" type="logical" category="clm_physics"
        group="canopyfluxes_inparm" valid_values="" >
 If TRUE, include biomass heat storage in canopy energy balance.
+</entry>
 
 <entry id="itmax_canopy_fluxes" type="integer" category="clm_physics"
        group="canopyfluxes_inparm">
