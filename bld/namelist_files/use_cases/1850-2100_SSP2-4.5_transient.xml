@@ -12,6 +12,8 @@
 
 <sim_year_range>1850-2100</sim_year_range>
 
+<ndep_taxmode use_cn=".true." >limit</ndep_taxmode>
+
 <ssp_rcp>SSP2-4.5</ssp_rcp>
 
 </namelist_defaults>
