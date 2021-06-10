@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 build ctsm library
@@ -167,4 +167,5 @@ def _main_func():
 ###############################################################################
 
 if __name__ == "__main__":
+    logger.warning( "WARNING: buildlib is being called a s program rather than a subroutine as it is expected to be in the CESM context" )
     _main_func()
