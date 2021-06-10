@@ -188,7 +188,6 @@ contains
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
-    use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
     
@@ -376,15 +375,13 @@ contains
        call soilbiogeochem_state_inst%Init(bounds)
 
        ! Initialize decompcascade constants
-       ! Note that init_decompcascade_bgc and init_decompcascade_cn need 
+       ! Note that init_decompcascade_bgc need 
        ! soilbiogeochem_state_inst to be initialized
 
        call init_decomp_cascade_constants( use_century_decomp )
        if (use_century_decomp) then
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
-       else 
-          call init_decompcascade_cn(bounds, soilbiogeochem_state_inst)
        end if
 
        ! Initalize soilbiogeochem carbon types

@@ -372,7 +372,7 @@ module clm_varctl
   logical, public :: use_vertsoilc       = .false.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
-  logical, public :: use_century_decomp  = .false.
+  logical, public :: use_century_decomp  = .true.
   logical, public :: use_cn              = .false.
   logical, public :: use_cndv            = .false.
   logical, public :: use_grainproduct    = .false.

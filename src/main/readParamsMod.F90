@@ -38,7 +38,6 @@ contains
     use SoilBiogeochemPotentialMod        , only : readSoilBiogeochemPotentialParams      => readParams
     use SoilBiogeochemDecompMod           , only : readSoilBiogeochemDecompParams         => readParams
     use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
-    use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
     use LunaMod                           , only : readParams_Luna                        => readParams
     use BareGroundFluxesMod               , only : readParams_BareGroundFluxes            => readParams
@@ -100,7 +99,6 @@ contains
     if (use_cn .or. use_fates) then
        call readSoilBiogeochemCompetitionParams(ncid)
        call readSoilBiogeochemDecompBgcParams(ncid)
-       call readSoilBiogeochemDecompCnParams(ncid)
        call readSoilBiogeochemDecompParams(ncid)
        call readSoilBiogeochemLittVertTranspParams(ncid)
        call readSoilBiogeochemNitrifDenitrifParams(ncid)

@@ -6,6 +6,7 @@ module SoilBiogeochemDecompCascadeConType
   !
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
+  use abortutils     , only : endrun
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar     , only : ndecomp_cascade_transitions, ndecomp_pools
   !
@@ -59,7 +60,7 @@ contains
     if ( use_century_decomp ) then
        ibeg = 1
     else
-       ibeg = i_atm
+       call endrun( 'ERROR:: use_century_decomp now can only be .true.' )
     end if
     !-- properties of each pathway along decomposition cascade 
     allocate(decomp_cascade_con%cascade_step_name(1:ndecomp_cascade_transitions))
