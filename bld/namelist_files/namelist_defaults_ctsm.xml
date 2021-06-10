@@ -2526,22 +2526,18 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- =========================================  -->
 
 <use_vertsoilc       bgc_mode="sp"  >.false.</use_vertsoilc>
-<use_century_decomp  bgc_mode="sp"  >.false.</use_century_decomp>
 <use_lch4            bgc_mode="sp"  >.false.</use_lch4>
 <use_nitrif_denitrif bgc_mode="sp"  >.false.</use_nitrif_denitrif>
 
 <use_vertsoilc       bgc_mode="cn"  >.false.</use_vertsoilc>
-<use_century_decomp  bgc_mode="cn"  >.false.</use_century_decomp>
 <use_lch4            bgc_mode="cn"  >.false.</use_lch4>
 <use_nitrif_denitrif bgc_mode="cn"  >.false.</use_nitrif_denitrif>
 
 <use_vertsoilc       bgc_mode="bgc" >.true.</use_vertsoilc>
-<use_century_decomp  bgc_mode="bgc" >.true.</use_century_decomp>
 <use_lch4            bgc_mode="bgc" >.true.</use_lch4>
 <use_nitrif_denitrif bgc_mode="bgc" >.true.</use_nitrif_denitrif>
 
 <use_vertsoilc       bgc_mode="fates"  >.true.</use_vertsoilc>
-<use_century_decomp  bgc_mode="fates"  >.true.</use_century_decomp>
 <use_lch4            bgc_mode="fates"  >.false.</use_lch4>
 <use_nitrif_denitrif bgc_mode="fates"  >.false.</use_nitrif_denitrif>
 

@@ -1025,7 +1025,7 @@ Requires the CN or FATES model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_century_decomp" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
+       group="clm_inparm" valid_values="" value=".true.">
 Use parameters for decomposition from the CENTURY Carbon model
 Requires the CN or FATES model to work (either CN or CNDV).
 </entry>
