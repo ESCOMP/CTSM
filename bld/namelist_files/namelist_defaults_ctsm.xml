@@ -1114,8 +1114,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.ARCTIC.ne30x4_hist_78pft
 lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts_CMIP6_simyr2000_c200426.nc</fsurdat>
 
 <!-- 100% Urban single-point datasets (only for sim-year=2000) -->
-<fsurdat hgrid="1x1_camdenNJ"        sim_year="2000" use_crop=".false." irrigate=".true.">
-lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_camdenNJ_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
 <fsurdat hgrid="1x1_vancouverCAN"    sim_year="2000" use_crop=".false." irrigate=".true.">
 lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_1x1_vancouverCAN_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc</fsurdat>
 <fsurdat hgrid="1x1_mexicocityMEX"   sim_year="2000" use_crop=".false." irrigate=".true.">
@@ -1516,7 +1514,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <ndepmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</ndepmapalgo>
-<ndepmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</ndepmapalgo>
 <ndepmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</ndepmapalgo>
 
@@ -1546,14 +1543,12 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <lai_mapalgo  hgrid="1x1_mexicocityMEX"   >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_vancouverCAN"    >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_camdenNJ"        >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_brazil"          >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_mexicocityMEX"   >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_vancouverCAN"    >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_urbanc_alpha"    >nn</lai_mapalgo>
-<lai_mapalgo  hgrid="1x1_camdenNJ"        >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
@@ -1583,7 +1578,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <lightngmapalgo hgrid="1x1_mexicocityMEX"   >nn</lightngmapalgo>
 <lightngmapalgo hgrid="1x1_vancouverCAN"    >nn</lightngmapalgo>
 <lightngmapalgo hgrid="1x1_urbanc_alpha"    >nn</lightngmapalgo>
-<lightngmapalgo hgrid="1x1_camdenNJ"        >nn</lightngmapalgo>
 <lightngmapalgo hgrid="1x1_asphaltjungleNJ" >nn</lightngmapalgo>
 <lightngmapalgo hgrid="5x5_amazon"          >nn</lightngmapalgo>
 
@@ -1678,7 +1672,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <popdensmapalgo use_cn=".true."   hgrid="1x1_mexicocityMEX"   >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_vancouverCAN"    >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_urbanc_alpha"    >nn</popdensmapalgo>
-<popdensmapalgo use_cn=".true."   hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
 <popdensmapalgo use_cn=".true."   hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
@@ -1688,7 +1681,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <popdensmapalgo use_fates=".true." hgrid="1x1_mexicocityMEX"   >nn</popdensmapalgo>
 <popdensmapalgo use_fates=".true." hgrid="1x1_vancouverCAN"    >nn</popdensmapalgo>
 <popdensmapalgo use_fates=".true." hgrid="1x1_urbanc_alpha"    >nn</popdensmapalgo>
-<popdensmapalgo use_fates=".true." hgrid="1x1_camdenNJ"        >nn</popdensmapalgo>
 <popdensmapalgo use_fates=".true." hgrid="1x1_asphaltjungleNJ" >nn</popdensmapalgo>
 <popdensmapalgo use_fates=".true." hgrid="5x5_amazon"          >nn</popdensmapalgo>
 
@@ -1738,7 +1730,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <urbantvmapalgo hgrid="1x1_mexicocityMEX"   >nn</urbantvmapalgo>
 <urbantvmapalgo hgrid="1x1_vancouverCAN"    >nn</urbantvmapalgo>
 <urbantvmapalgo hgrid="1x1_urbanc_alpha"    >nn</urbantvmapalgo>
-<urbantvmapalgo hgrid="1x1_camdenNJ"        >nn</urbantvmapalgo>
 <urbantvmapalgo hgrid="1x1_asphaltjungleNJ" >nn</urbantvmapalgo>
 <urbantvmapalgo hgrid="5x5_amazon"          >nn</urbantvmapalgo>
 
@@ -1832,25 +1823,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="1x1_brazil"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/1x1_brazil/map_1km-merge-10min_HYDRO1K-merge-nomask_to_1x1_brazil_nomask_aave_da_c130403.nc</map>
 <!-- mapping files for 1x1_brazil END --> 
-
-<!-- mapping files for 1x1_camdenNJ START added on Thu Jul 19 13:06:18 2012--> 
-<map frm_hgrid="0.125x0.125" frm_lmask="nomask" to_hgrid="1x1_camdenNJ" to_lmask="nomask"
->lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_0.125x0.125_nomask_to_1x1_camdenNJ_nomask_aave_da_c200206.nc</map>
-<map frm_hgrid="0.5x0.5"    frm_lmask="nomask"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_0.5x0.5_nomask_to_1x1_camdenNJ_nomask_aave_da_c200206.nc</map>
-<map frm_hgrid="0.25x0.25"  frm_lmask="nomask"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_0.25x0.25_nomask_to_1x1_camdenNJ_nomask_aave_da_c200309.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="nomask"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_3x3min_nomask_to_1x1_camdenNJ_nomask_aave_da_c200309.nc</map>
-<map frm_hgrid="10x10min"    frm_lmask="nomask"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_10x10min_nomask_to_1x1_camdenNJ_nomask_aave_da_c200206.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_5x5min_nomask_to_1x1_camdenNJ_nomask_aave_da_c200309.nc</map>
-<map frm_hgrid="0.9x1.25"    frm_lmask="nomask"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_0.9x1.25_nomask_to_1x1_camdenNJ_nomask_aave_da_c200206.nc</map>
-<map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="1x1_camdenNJ"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/1x1_camdenNJ/map_1km-merge-10min_HYDRO1K-merge-nomask_to_1x1_camdenNJ_nomask_aave_da_c130403.nc</map>
-<!-- mapping files for 1x1_camdenNJ END --> 
 
 <!-- mapping files for 1x1_mexicocityMEX START added on Thu Jul 19 13:06:18 2012--> 
 <map frm_hgrid="0.125x0.125" frm_lmask="nomask" to_hgrid="1x1_mexicocityMEX" to_lmask="nomask"
