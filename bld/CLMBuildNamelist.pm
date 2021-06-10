@@ -2986,6 +2986,9 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_flexibleCN',
                 'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'} );
     $nl_flags->{'use_flexibleCN'} = $nl->get_value('use_flexibleCN');
+    if ( &value_is_true($nl->get_value('use_fun') ) && not &value_is_true( $nl_flags->{'use_flexibleCN'}) ) {
+       $log->warning("FUN has NOT been extensively tested without use_flexibleCN on, so could result in failures or unexpected results" );
+    }
 
     if ( &value_is_true($nl_flags->{'use_flexibleCN'}) ) {
       # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
