@@ -1,0 +1,30 @@
+module test_CNPhenology
+
+  ! Tests of CNPhenologyMod
+
+  use pfunit_mod
+  use CNPhenologyMod
+  use shr_kind_mod , only : r8 => shr_kind_r8
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestCNPhenology
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestCNPhenology
+
+contains
+
+  subroutine setUp(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestCNPhenology), intent(inout) :: this
+
+  end subroutine tearDown
+
+end module test_CNPhenology
