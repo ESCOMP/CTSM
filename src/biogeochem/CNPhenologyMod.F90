@@ -665,6 +665,7 @@ contains
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
     real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal 
     real(r8):: onset_thresh   !flag onset threshold
+    logical :: do_onset       ! Flag if onset should happen
     real(r8):: soilt
     !-----------------------------------------------------------------------
 
