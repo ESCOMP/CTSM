@@ -9,8 +9,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : nlevsoi, nlevgrnd
-  use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools, ndecomp_pools_max
+  use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
   use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi

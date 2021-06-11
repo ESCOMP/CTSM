@@ -243,28 +243,26 @@ contains
         do l = 1, ndecomp_cascade_transitions
 
            ! output the vertically integrated fluxes only as  default
-           !-- HR fluxes (none from CWD)
-           if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
-              data1dptr => this%decomp_cascade_hr_col(:,l)
-              ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
-              ii = 0
-              do jj = 1, ndecomp_cascade_transitions
-                 if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
-              end do
-              if ( ii == 1 ) then
-                 fieldname = &
-                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_HR'
-              else
-                 fieldname = &
-                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_HR_'//&
-                      trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))
-              endif
-              longname =  'Het. Resp. from '//&
-                   trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
-              call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
-                   avgflag='A', long_name=longname, &
-                   ptr_col=data1dptr, default='inactive')
+           !-- HR fluxes
+           data1dptr => this%decomp_cascade_hr_col(:,l)
+           ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
+           ii = 0
+           do jj = 1, ndecomp_cascade_transitions
+              if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+           end do
+           if ( ii == 1 ) then
+              fieldname = &
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_HR'
+           else
+              fieldname = &
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_HR_'//&
+                   trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))
            endif
+           longname =  'Het. Resp. from '//&
+                trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+           call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+                avgflag='A', long_name=longname, &
+                ptr_col=data1dptr, default='inactive')
 
            !-- transfer fluxes (none from terminal pool, if present)
            if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
@@ -281,30 +279,28 @@ contains
 
            ! output the vertically resolved fluxes 
            if ( nlevdecomp_full > 1 ) then  
-              !-- HR fluxes (none from CWD)
-              if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
-                 data2dptr => this%decomp_cascade_hr_vr_col(:,:,l)
-                 ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
-                 ii = 0
-                 do jj = 1, ndecomp_cascade_transitions
-                    if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
-                 end do
-                 if ( ii == 1 ) then
-                    fieldname = &
-                         trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                         //'_HR'//trim(vr_suffix)
-                 else
-                    fieldname = &
-                         trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_HR_'//&
-                         trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
-                         //trim(vr_suffix)
-                 endif
-                 longname =  'Het. Resp. from '//&
-                      trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
-                 call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
-                      avgflag='A', long_name=longname, &
-                      ptr_col=data2dptr, default='inactive')
+              !-- HR fluxes
+              data2dptr => this%decomp_cascade_hr_vr_col(:,:,l)
+              ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
+              ii = 0
+              do jj = 1, ndecomp_cascade_transitions
+                 if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+              end do
+              if ( ii == 1 ) then
+                 fieldname = &
+                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                      //'_HR'//trim(vr_suffix)
+              else
+                 fieldname = &
+                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_HR_'//&
+                      trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
+                      //trim(vr_suffix)
               endif
+              longname =  'Het. Resp. from '//&
+                   trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+              call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
+                   avgflag='A', long_name=longname, &
+                   ptr_col=data2dptr, default='inactive')
 
               !-- transfer fluxes (none from terminal pool, if present)
               if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
@@ -349,7 +345,7 @@ contains
 
         this%decomp_cpools_leached_col(begc:endc,:) = spval
         this%decomp_cpools_transport_tendency_col(begc:endc,:,:) = spval
-        do k = 1, ndecomp_pools
+        do k = 1, ndecomp_pools  ! none from CWD
            if ( .not. decomp_cascade_con%is_cwd(k) ) then
               data1dptr => this%decomp_cpools_leached_col(:,k)
               fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'C_TO_LEACHING'
@@ -403,29 +399,28 @@ contains
         this%decomp_cascade_ctransfer_col(begc:endc,:)      = spval
         this%decomp_cascade_ctransfer_vr_col(begc:endc,:,:) = spval
         do l = 1, ndecomp_cascade_transitions
-           !-- HR fluxes (none from CWD)
-           if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
-              data2dptr => this%decomp_cascade_hr_vr_col(:,:,l)
-              ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
-              ii = 0
-              do jj = 1, ndecomp_cascade_transitions
-                 if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
-              end do
-              if ( ii == 1 ) then
-                 fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                      //'_HR'//trim(vr_suffix)
-              else
-                 fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                      //'_HR_'//&
-                      trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))//&
-                      trim(vr_suffix)
-              endif
-              longname =  'C13 Het. Resp. from '&
-                   //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
-              call hist_addfld_decomp (fname=fieldname, units='gC13/m^3',  type2d='levdcmp', &
-                   avgflag='A', long_name=longname, &
-                   ptr_col=data2dptr, default='inactive')
+           !-- HR fluxes
+           data2dptr => this%decomp_cascade_hr_vr_col(:,:,l)
+           ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
+           ii = 0
+           do jj = 1, ndecomp_cascade_transitions
+              if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+           end do
+           if ( ii == 1 ) then
+              fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                   //'_HR'//trim(vr_suffix)
+           else
+              fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                   //'_HR_'//&
+                   trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))//&
+                   trim(vr_suffix)
            endif
+           longname =  'C13 Het. Resp. from '&
+                //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+           call hist_addfld_decomp (fname=fieldname, units='gC13/m^3',  type2d='levdcmp', &
+                avgflag='A', long_name=longname, &
+                ptr_col=data2dptr, default='inactive')
+
            !-- transfer fluxes (none from terminal pool, if present)
            if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
               data2dptr => this%decomp_cascade_ctransfer_vr_col(:,:,l)
@@ -473,31 +468,29 @@ contains
         this%decomp_cascade_ctransfer_vr_col(begc:endc,:,:) = spval
 
         do l = 1, ndecomp_cascade_transitions
-           !-- HR fluxes (none from CWD)
-           if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
-              data2dptr => this%decomp_cascade_hr_vr_col(:,:,l)
+           !-- HR fluxes
+           data2dptr => this%decomp_cascade_hr_vr_col(:,:,l)
 
-              ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
-              ii = 0
-              do jj = 1, ndecomp_cascade_transitions
-                 if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
-              end do
-              if ( ii == 1 ) then
-                 fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                      //'_HR'//trim(vr_suffix)
-              else
-                 fieldname = 'C14_'//&
-                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                      //'_HR_'//&
-                      trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
-                      //trim(vr_suffix)
-              endif
-              longname =  'C14 Het. Resp. from '&
-                   //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
-              call hist_addfld_decomp (fname=fieldname, units='gC14/m^3',  type2d='levdcmp', &
-                   avgflag='A', long_name=longname, &
-                   ptr_col=data2dptr, default='inactive')
+           ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
+           ii = 0
+           do jj = 1, ndecomp_cascade_transitions
+              if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+           end do
+           if ( ii == 1 ) then
+              fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                   //'_HR'//trim(vr_suffix)
+           else
+              fieldname = 'C14_'//&
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                   //'_HR_'//&
+                   trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
+                   //trim(vr_suffix)
            endif
+           longname =  'C14 Het. Resp. from '&
+                //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+           call hist_addfld_decomp (fname=fieldname, units='gC14/m^3',  type2d='levdcmp', &
+                avgflag='A', long_name=longname, &
+                ptr_col=data2dptr, default='inactive')
 
            !-- transfer fluxes (none from terminal pool, if present)
            if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then

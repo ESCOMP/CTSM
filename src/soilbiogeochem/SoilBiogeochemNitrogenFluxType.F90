@@ -334,27 +334,25 @@ contains
 
     do l = 1, ndecomp_cascade_transitions
        ! vertically integrated fluxes
-       !-- mineralization/immobilization fluxes (none from CWD)
-       if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
-          this%decomp_cascade_sminn_flux_col(begc:endc,l) = spval
-          data1dptr => this%decomp_cascade_sminn_flux_col(:,l)
-          if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
-             fieldname = 'SMINN_TO_'//&
-                  trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
-                  trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))
-             longname =  'mineral N flux for decomp. of '&
-                  //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//&
-                  'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
-          else
-             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                  //'N_TO_SMINN'
-             longname =  'mineral N flux for decomp. of '&
-                  //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))
-          endif
-          call hist_addfld1d (fname=fieldname, units='gN/m^2', &
-               avgflag='A', long_name=longname, &
-               ptr_col=data1dptr, default='inactive')
-       end if
+       !-- mineralization/immobilization fluxes
+       this%decomp_cascade_sminn_flux_col(begc:endc,l) = spval
+       data1dptr => this%decomp_cascade_sminn_flux_col(:,l)
+       if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
+          fieldname = 'SMINN_TO_'//&
+               trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
+               trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))
+          longname =  'mineral N flux for decomp. of '&
+               //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//&
+               'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
+       else
+          fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+               //'N_TO_SMINN'
+          longname =  'mineral N flux for decomp. of '&
+               //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))
+       endif
+       call hist_addfld1d (fname=fieldname, units='gN/m^2', &
+            avgflag='A', long_name=longname, &
+            ptr_col=data1dptr, default='inactive')
 
        !-- transfer fluxes (none from terminal pool, if present)
        if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
@@ -371,27 +369,25 @@ contains
 
        ! vertically resolved fluxes
        if ( nlevdecomp_full > 1 ) then
-          !-- mineralization/immobilization fluxes (none from CWD)
-          if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
-             this%decomp_cascade_sminn_flux_vr_col(begc:endc,:,l) = spval
-             data2dptr => this%decomp_cascade_sminn_flux_vr_col(:,:,l)
-             if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
-                fieldname = 'SMINN_TO_'&
-                     //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
-                     trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))//trim(vr_suffix)
-                longname =  'mineral N flux for decomp. of '&
-                     //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//&
-                     'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
-             else
-                fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
-                     //'N_TO_SMINN'//trim(vr_suffix)
-                longname =  'mineral N flux for decomp. of '&
-                     //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))
-             endif
-             call hist_addfld_decomp (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
-                  avgflag='A', long_name=longname, &
-                  ptr_col=data2dptr, default='inactive')
+          !-- mineralization/immobilization fluxes
+          this%decomp_cascade_sminn_flux_vr_col(begc:endc,:,l) = spval
+          data2dptr => this%decomp_cascade_sminn_flux_vr_col(:,:,l)
+          if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
+             fieldname = 'SMINN_TO_'&
+                  //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
+                  trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))//trim(vr_suffix)
+             longname =  'mineral N flux for decomp. of '&
+                  //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//&
+                  'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
+          else
+             fieldname = trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                  //'N_TO_SMINN'//trim(vr_suffix)
+             longname =  'mineral N flux for decomp. of '&
+                  //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))
           endif
+          call hist_addfld_decomp (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
+               avgflag='A', long_name=longname, &
+               ptr_col=data2dptr, default='inactive')
 
           !-- transfer fluxes (none from terminal pool, if present)
           if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
@@ -422,7 +418,7 @@ contains
          ptr_col=this%som_n_leached_col, default='inactive')
 
     do k = 1, ndecomp_pools
-       if ( .not. decomp_cascade_con%is_cwd(k) ) then
+       if ( .not. decomp_cascade_con%is_cwd(k) ) then  ! none from CWD
           this%decomp_npools_leached_col(begc:endc,k) = spval
           data1dptr => this%decomp_npools_leached_col(:,k)
           fieldname = 'M_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'N_TO_LEACHING'
@@ -443,32 +439,28 @@ contains
 
     if (.not. use_nitrif_denitrif) then
        do l = 1, ndecomp_cascade_transitions
-          !-- denitrification fluxes (none from CWD)
-          if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
-             this%sminn_to_denit_decomp_cascade_col(begc:endc,l) = spval
-             data1dptr => this%sminn_to_denit_decomp_cascade_col(:,l)
-             fieldname = 'SMINN_TO_DENIT_'//trim(decomp_cascade_con%cascade_step_name(l))
+          !-- denitrification fluxes
+          this%sminn_to_denit_decomp_cascade_col(begc:endc,l) = spval
+          data1dptr => this%sminn_to_denit_decomp_cascade_col(:,l)
+          fieldname = 'SMINN_TO_DENIT_'//trim(decomp_cascade_con%cascade_step_name(l))
+          longname =  'denitrification for decomp. of '&
+               //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
+               'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
+          call hist_addfld1d (fname=fieldname, units='gN/m^2',  &
+               avgflag='A', long_name=longname, &
+               ptr_col=data1dptr, default='inactive')
+
+          if ( nlevdecomp_full > 1 ) then
+             !-- denitrification fluxes
+             this%sminn_to_denit_decomp_cascade_vr_col(begc:endc,:,l) = spval
+             data2dptr => this%sminn_to_denit_decomp_cascade_vr_col(:,:,l)
+             fieldname = 'SMINN_TO_DENIT_'//trim(decomp_cascade_con%cascade_step_name(l))//trim(vr_suffix)
              longname =  'denitrification for decomp. of '&
                   //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
                   'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
-             call hist_addfld1d (fname=fieldname, units='gN/m^2',  &
+             call hist_addfld_decomp (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
                   avgflag='A', long_name=longname, &
-                  ptr_col=data1dptr, default='inactive')
-          endif
-
-          if ( nlevdecomp_full > 1 ) then       
-             !-- denitrification fluxes (none from CWD)
-             if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then
-                this%sminn_to_denit_decomp_cascade_vr_col(begc:endc,:,l) = spval
-                data2dptr => this%sminn_to_denit_decomp_cascade_vr_col(:,:,l)
-                fieldname = 'SMINN_TO_DENIT_'//trim(decomp_cascade_con%cascade_step_name(l))//trim(vr_suffix)
-                longname =  'denitrification for decomp. of '&
-                     //trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))//&
-                     'to '//trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))
-                call hist_addfld_decomp (fname=fieldname, units='gN/m^3',  type2d='levdcmp', &
-                     avgflag='A', long_name=longname, &
-                     ptr_col=data2dptr, default='inactive')
-             endif
+                  ptr_col=data2dptr, default='inactive')
           endif
        end do
     end if
