@@ -71,6 +71,8 @@ module SPMMod
     procedure, public :: ReleaseDM        ! subroutine to deallocate the diagonal matrix
     procedure, public :: IsAllocDM        ! return true if the diagonal matrix is allocated (InitDM was called)
     procedure, public :: SetValueDM       ! subroutine to set values in diagonal matrix
+    procedure, public :: SetValueCopyDM ! subroutine to copy the input diagonal matrix to the output
+    procedure, public :: IsValuesSetDM  ! return true if the values are set in the matrix
 
   end type diag_matrix_type
 
@@ -444,6 +446,33 @@ end subroutine SetValueA
 
   ! ========================================================================
 
+  subroutine SetValueCopyDM(this, num_unit, filter_u, matrix)
+
+  ! Set the sparse matrix by copying from another sparse matrix
+
+     class(diag_matrix_type) :: this
+     type(diag_matrix_type), intent(in) :: matrix   ! Diagonal Matrix to copy
+     integer ,intent(in) :: num_unit
+     integer ,intent(in) :: filter_u(:)
+     character(len=*),parameter :: subname = 'SetValueCopyDM'
+
+     if ( .not. this%IsAllocDM() )then
+        call endrun( subname//" ERROR: Diagonal Matrix was NOT already allocated" )
+        return
+     end if
+     if ( .not. matrix%IsValuesSetDM() )then
+        call endrun( subname//" ERROR: Diagonal Matrix data sent in was NOT already set" )
+        return
+     end if
+     SHR_ASSERT_FL( (this%SM   == matrix%SM), sourcefile, __LINE__)
+     SHR_ASSERT_FL( (this%begu == matrix%begu), sourcefile, __LINE__)
+     SHR_ASSERT_FL( (this%endu == matrix%endu), sourcefile, __LINE__)
+     call this%SetValueDM( matrix%begu, matrix%endu, num_unit, filter_u, matrix%DM)
+
+  end subroutine SetValueCopyDM
+
+  ! ========================================================================
+
   subroutine CopyIdxSM(this, matrix)
 
   ! Copy the indices from the input matrix to this sparse matrix
@@ -509,6 +538,22 @@ end subroutine SetValueA
   end function IsValuesSetSM
 
   ! ========================================================================
+
+  logical function IsValuesSetDM(this)
+
+  ! Check if the Sparse Matrix has it's data been set (One of the SetValue* subroutines was called on it)
+
+     class(diag_matrix_type) :: this
+
+     if ( .not. this%IsAllocDM() )then
+        IsValuesSetDM = .false.
+     else if ( this%SM == empty_int )then
+        IsValuesSetDM = .false.
+     else
+        IsValuesSetDM = .true.
+     end if
+
+ end function IsValuesSetDM
 
 subroutine InitDM(this,SM_in,begu,endu)
 
