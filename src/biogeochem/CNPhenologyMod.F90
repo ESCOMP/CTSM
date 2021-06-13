@@ -48,19 +48,19 @@ module CNPhenologyMod
   public :: CNPhenology          ! Update
 
   ! !PRIVITE MEMBER FIUNCTIONS:
-  private :: CNPhenologyClimate
-  private :: CNEvergreenPhenology
-  private :: CNSeasonDecidPhenology
-  private :: CNStressDecidPhenology
-  private :: CropPhenology
-  private :: CropPhenologyInit
-  private :: vernalization
-  private :: CNOnsetGrowth
-  private :: CNOffsetLitterfall
-  private :: CNBackgroundLitterfall
-  private :: CNLivewoodTurnover
-  private :: CNCropHarvestToProductPools
-  private :: CNLitterToColumn
+  private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
+  private :: CNEvergreenPhenology           ! Phenology for evergreen plants
+  private :: CNSeasonDecidPhenology         ! Phenology for seasonal decidious platnts
+  private :: CNStressDecidPhenology         ! Phenology for stress deciidous plants
+  private :: CropPhenology                  ! Phenology for crops
+  private :: CropPhenologyInit              ! Initialize phenology for crops
+  private :: vernalization                  ! Vernalization (overwinterring) of crops
+  private :: CNOnsetGrowth                  ! Leaf Onset growth
+  private :: CNOffsetLitterfall             ! Leaf Offset litter fall
+  private :: CNBackgroundLitterfall         ! Background litter fall
+  private :: CNLivewoodTurnover             ! Liver wood turnover to deadwood
+  private :: CNCropHarvestToProductPools    ! Move crop harvest to product pools
+  private :: CNLitterToColumn               ! Move litter ofrom patch to column level
   !
   ! !PRIVATE DATA MEMBERS:
   type, private :: params_type
@@ -688,6 +688,7 @@ contains
     integer, parameter :: critical_onset_time_at_high_lat = 54000  ! critical onset at high latitudes (min)
     integer, parameter :: critical_onset_lat_slope        = 720    ! Slope of time for critical onset with latitude (min/deg)
     integer, parameter :: critical_onset_high_lat         = 65     ! Start of what's considered high latitude (degrees)
+    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8 ! 5-day snow depth threshold for onset
     !-----------------------------------------------------------------------
 
     associate(                                                                                                   & 
@@ -700,7 +701,7 @@ contains
          season_decid_temperate              =>    pftcon%season_decid_temperate                               , & ! Input:  binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-         soila10                             =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
+         soila10                             =>    temperature_inst%soila10_col                                , & ! Input:  [real(r8) (:)   ] 
          t_a5min                            =>    temperature_inst%t_a5min_patch                             , & ! input:  [real(r8) (:)   ]
          snow_5day                           =>    waterdiagnosticbulk_inst%snow_5day_col                      , & ! input:  [real(r8) (:)   ] 
 
@@ -908,10 +909,12 @@ contains
                   ! boreal broadleaf deciduous tree, boreal broadleaf deciduous shrub, C3 arctic grass)
                   if (onset_gdd(p) > crit_onset_gdd .and. season_decid_temperate(ivt(p)) == 1) then
                      do_onset = .true.
+                  ! Note: The divide by 2 of crit_dayl is just to make sure
+                  ! onset doesn't happen with less than 6 hours of daylight
                   else if (season_decid_temperate(ivt(p)) == 0 .and. onset_gddflag(p) == 1.0_r8 .and. &
-                          soila10(p) > SHR_CONST_TKFRZ .and. &
+                          soila10(c) > SHR_CONST_TKFRZ .and. &
                           t_a5min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
-                          dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
+                          dayl(g)>(crit_dayl/2.0_r8) .and.  snow_5day(c)<snow5d_thresh_for_onset) then
                      do_onset = .true.
                   end if              
                else
