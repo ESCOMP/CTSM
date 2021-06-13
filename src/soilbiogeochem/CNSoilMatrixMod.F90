@@ -204,7 +204,8 @@ contains
     all_i          => decomp_cascade_con%all_i                      ,&!Input:[integer(:)] Prescribed row index of all entries in AKallsoilc, AKallsoiln, AKXcacc, and AKXnacc
     all_j          => decomp_cascade_con%all_j                      ,&!Input:[integer(:)] Prescribed column index of all entries in AKallsoilc, AKallsoiln, AKXcacc, and AKXnacc
 
-    Ksoil          => soilbiogeochem_carbonflux_inst%Ksoil             ,&!Output:[DiagonalMatrix] CN turnover rate in different soil pools and layers
+    Ksoil          => soilbiogeochem_carbonflux_inst%Ksoil             ,&!Output:[DiagonalMatrix] C turnover rate in different soil pools and layers
+    Ksoiln         => soilbiogeochem_nitrogenflux_inst%Ksoiln          ,&!Output:[DiagonalMatrix] N turnover rate in different soil pools and layers
     Xdiagsoil      => soilbiogeochem_carbonflux_inst%Xdiagsoil         ,&!Output:[DiagonalMatrix] Temporary C and N state variable to calculate accumulation transfers
     matrix_Cinter  => soilbiogeochem_carbonstate_inst%matrix_Cinter    ,&!In/Output:[Vector] Soil C state variables (gC/m3) in different soil pools and layers
     matrix_Ninter  => soilbiogeochem_nitrogenstate_inst%matrix_Ninter  ,&!In/Output:[Vector] Soil N state variables (gN/m3) in different soil pools and layers
@@ -322,6 +323,19 @@ contains
       end if !c14
       call t_stopf('CN Soil matrix-assign matrix-inter')
 
+      call Ksoiln%SetValueCopyDM(num_soilc,filter_soilc,Ksoil )
+      do i = 1,ndecomp_pools
+         if ( .not. floating_cn_ratio_decomp_pools(i) ) then
+            do j = 1,nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
+                  if(ns_soil%decomp_npools_vr_col(c,j,i) > 0)then
+                     Ksoiln%DM(c,j+(i-1)*nlevdecomp) = Ksoil%DM(c,j+(i-1)*nlevdecomp) * cs_soil%decomp_cpools_vr_col(c,j,i) / ns_soil%decomp_npools_vr_col(c,j,i) / initial_cn_ratio(i)
+                  end if
+               end do
+            end do
+         end if
+      end do
       ! Save the C and N pool size at begin of each year, which are used to calculate C and N capacity at end of each year.
       call t_startf('CN Soil matrix-assign matrix-decomp0')
       if (is_beg_curr_year())then  
@@ -382,7 +396,7 @@ contains
 
       ! calculate matrix An*K for N
       call t_startf('CN Soil matrix-matrix mult1-lev3-SPMM_AK2')
-      call AKsoiln%SPMM_AK(num_soilc,filter_soilc,Ksoil)
+      call AKsoiln%SPMM_AK(num_soilc,filter_soilc,Ksoiln)
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SPMM_AK2')
 
       ! Set vertical transfer matrix V from tri_ma_vr
@@ -453,7 +467,6 @@ contains
                  list_B=list_fire_AKVfire, NE_AB=cf14_soil%NE_AKallsoilc,RI_AB=cf14_soil%RI_AKallsoilc,CI_AB=cf14_soil%CI_AKallsoilc)
          end if
       end if
-
 
       call t_stopf('CN Soil matrix-matrix mult1-lev3-SPMP_AB')
 

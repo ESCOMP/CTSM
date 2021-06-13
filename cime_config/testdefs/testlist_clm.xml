@@ -412,6 +412,15 @@
       <option name="comment"  >Run matrix solution fast spinup for restart beyond a year (to trigger next year logic) turning off extra options to make faster (so without crop or isotopes). This test would've caught a previous bug.</option>
     </options>
   </test>
+  <test name="SMS_Lm1" grid="f10_f10_mg37" compset="I1850Clm45Bgc" testmods="clm/clm45_monthly_matrixcn_soilCN30">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:20:00</option>
+      <option name="comment"  >Smoke test of soil CN-matrix on with soil CN ratio set to 30, since this crashes</option>
+    </options>
+  </test>
   <test name="ERS_D_Lm3" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/ciso_monthly_matrixcn">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
