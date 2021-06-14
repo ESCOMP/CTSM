@@ -46,7 +46,7 @@ contains
 ! !IROUTINE: mkurban_pct
 !
 ! !INTERFACE:
-subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
+subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o, frac_dst)
 !
 ! !DESCRIPTION:
 ! make percent urban on output grid, given percent urban on input grid
@@ -65,6 +65,7 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
    type(domain_type) , intent(in) :: tdomain    ! local domain
    type(gridmap_type), intent(in) :: tgridmap   ! local gridmap
    real(r8)          , intent(in) :: urbn_i(:)  ! input grid: percent urban
+   real(r8)          , intent(in) :: frac_dst(:)  ! output fractions
    real(r8)          , intent(out):: urbn_o(:)  ! output grid: percent urban
 !
 ! !REVISION HISTORY:
@@ -74,6 +75,8 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
 !
 ! !LOCAL VARIABLES:
 !EOP
+   integer  :: ier  ! error status
+   real(r8), allocatable :: mask_r8(:)  ! float of tdomain%mask
    real(r8) :: sum_fldi                        ! global sum of dummy input fld
    real(r8) :: sum_fldo                        ! global sum of dummy output fld
    integer  :: ni,no                           ! indices
@@ -92,6 +95,12 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
       write(6,*) 'ldomain%ns   = ', ldomain%ns
       stop
    end if
+   if (size(frac_dst) /= ldomain%ns) then
+      write(6,*) subname//' ERROR: array size inconsistencies'
+      write(6,*) 'size(frac_dst) = ', size(frac_dst)
+      write(6,*) 'ldomain%ns   = ', ldomain%ns
+      stop
+   end if
    
    ! Error checks for domain and map consistencies
    
@@ -102,7 +111,7 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
    ! and correct according to land landmask
    ! Note that percent cover is in terms of total grid area.   
 
-   call gridmap_areaave(tgridmap, urbn_i, urbn_o, nodata=0._r8)
+   call gridmap_areaave_srcmask(tgridmap, urbn_i, urbn_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
 
    ! Check for conservation
 
@@ -117,31 +126,14 @@ subroutine mkurban_pct(ldomain, tdomain, tgridmap, urbn_i, urbn_o)
    ! Global sum of output field -- must multiply by fraction of
    ! output grid that is land as determined by input grid
 
-   sum_fldi = 0.0_r8
-   do ni = 1,tdomain%ns
-      sum_fldi = sum_fldi + tgridmap%area_src(ni) * tgridmap%frac_src(ni)
-   enddo
-
-   sum_fldo = 0._r8
-   do no = 1, ldomain%ns
-      sum_fldo = sum_fldo + tgridmap%area_dst(no) * tgridmap%frac_dst(no)
-   end do
-
-   ! -----------------------------------------------------------------
-   ! Error check1
-   ! Compare global sum fld_o to global sum fld_i.
-   ! -----------------------------------------------------------------
-
-   if (trim(mksrf_gridtype) == 'global') then
-      if ( abs(sum_fldo/sum_fldi-1._r8) > relerr ) then
-         write (6,*) 'MKURBAN error: input field not conserved'
-         write (6,'(a30,e20.10)') 'global sum output field = ',sum_fldo
-         write (6,'(a30,e20.10)') 'global sum input  field = ',sum_fldi
-         stop
-      end if
-   end if
+   allocate(mask_r8(tdomain%ns), stat=ier)
+   if (ier/=0) call abort()
+   mask_r8 = tdomain%mask
+   call gridmap_check( tgridmap, mask_r8, frac_dst, subname )
 
    ! (Error check2 in mkurban_pct_diagnostics, which should be called separately)
+
+   deallocate (mask_r8)
 
 end subroutine mkurban_pct
 !-----------------------------------------------------------------------
@@ -152,7 +144,7 @@ end subroutine mkurban_pct
 ! !IROUTINE: mkurban_pct_diagnostics
 !
 ! !INTERFACE:
-subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, ndiag, dens_class)
+subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, ndiag, dens_class, frac_dst)
 !
 ! !DESCRIPTION:
 ! print diagnostics related to pct urban
@@ -174,6 +166,7 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
    type(gridmap_type), intent(in) :: tgridmap   ! local gridmap
    real(r8)          , intent(in) :: urbn_i(:)  ! input grid: percent urban
    real(r8)          , intent(in) :: urbn_o(:)  ! output grid: percent urban
+   real(r8)          , intent(in) :: frac_dst(:)  ! output fractions
    integer           , intent(in) :: ndiag      ! unit number for diag out
 
    integer , intent(in), optional :: dens_class ! density class
@@ -190,7 +183,16 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
    real(r8) :: gurbn_o                         ! output grid: global urbn
    real(r8) :: garea_o                         ! output grid: global area
    integer  :: ni,no,k                         ! indices
+   character(len=*), parameter :: subname = 'mkurban_pct_diagnostics'
 !-----------------------------------------------------------------------
+
+   ! Error check inputs
+   if (size(frac_dst) /= ldomain%ns) then
+      write(6,*) subname//' ERROR: array size inconsistencies'
+      write(6,*) 'size(frac_dst) = ', size(frac_dst)
+      write(6,*) 'ldomain%ns   = ', ldomain%ns
+      stop
+   end if
 
    ! -----------------------------------------------------------------
    ! Error check2
@@ -205,7 +207,7 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
    do ni = 1, tdomain%ns
       garea_i = garea_i + tgridmap%area_src(ni)*re**2
       gurbn_i = gurbn_i + urbn_i(ni)*(tgridmap%area_src(ni)/100._r8)*&
-           tgridmap%frac_src(ni)*re**2
+           tdomain%mask(ni)*re**2
    end do
 
    ! Output grid
@@ -216,7 +218,7 @@ subroutine mkurban_pct_diagnostics(ldomain, tdomain, tgridmap, urbn_i, urbn_o, n
    do no = 1, ldomain%ns
       garea_o = garea_o + tgridmap%area_dst(no)*re**2
       gurbn_o = gurbn_o + urbn_o(no)* (tgridmap%area_dst(no)/100._r8)*&
-           tgridmap%frac_dst(no)*re**2
+           frac_dst(no)*re**2
    end do
 
    ! Diagnostic output
@@ -263,6 +265,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
   use mkvarpar	
   use mkvarctl    
   use mkncdio
+  use mkdiagnosticsMod, only : output_diagnostics_continuous
 !
 ! !ARGUMENTS:
   implicit none
@@ -287,7 +290,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
   type(gridmap_type)    :: tgridmap           ! local gridmap
 
   real(r8), allocatable :: elev_i(:)          ! canyon_height to width ratio in
-  real(r8), allocatable :: mask_i(:)          ! input grid: mask (0, 1)
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   integer  :: ns_i,ns_o                       ! indices
   integer  :: k,l,n,m,ni                      ! indices
   integer  :: ncidi,dimid,varid               ! input netCDF id's
@@ -312,6 +315,7 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
 
   ns_i = tdomain%ns
   allocate(elev_i(ns_i), stat=ier)
+  allocate(frac_dst(ns_o), stat=ier)
   if (ier /= 0) then
      write(6,*)'mkelev allocation error'; call abort()
   end if
@@ -331,17 +335,24 @@ subroutine mkelev(ldomain, mapfname, datfname, varname, ndiag, elev_o)
 
   call domain_checksame( tdomain, ldomain, tgridmap )
 
+  ! Obtain frac_dst
+  call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
   ! Determine elev_o on output grid
 
   elev_o(:) = 0.
 
-  call gridmap_areaave(tgridmap, elev_i, elev_o, nodata=0._r8)
+  call gridmap_areaave_srcmask(tgridmap, elev_i, elev_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
+
+  call output_diagnostics_continuous(elev_i, elev_o, tgridmap, "Urban elev variable", "m", ndiag, tdomain%mask, frac_dst)
+
 
   ! Deallocate dynamic memory
 
   call domain_clean(tdomain)
   call gridmap_clean(tgridmap)
   deallocate (elev_i)
+  deallocate (frac_dst)
 
   write (6,*) 'Successfully made elevation' 
   write (6,*)

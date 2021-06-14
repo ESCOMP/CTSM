@@ -1648,11 +1648,6 @@ sub process_namelist_inline_logic {
   #############################################
   setup_logic_friction_vel($opts,  $nl_flags, $definition, $defaults, $nl);
 
-  ################################################
-  # namelist group: century_soilbgcdecompcascade #
-  ################################################
-  setup_logic_century_soilbgcdecompcascade($opts,  $nl_flags, $definition, $defaults, $nl);
-
   #############################
   # namelist group: cngeneral #
   #############################
@@ -3652,23 +3647,6 @@ sub setup_logic_soilwater_movement {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'inexpensive' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flux_calculation' );
 }
-#-------------------------------------------------------------------------------
-
-sub setup_logic_century_soilbgcdecompcascade {
-  #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-
-  if ( (&value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates'))) &&
-       &value_is_true($nl->get_value('use_century_decomp')) ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks',
-                'use_cn' => $nl->get_value('use_cn'), 'use_fates' => $nl->get_value('use_fates'),
-                'use_century_decomp' => $nl->get_value('use_century_decomp') );
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks_depth', 
-                'use_cn' => $nl->get_value('use_cn'), 'use_fates' => $nl->get_value('use_fates'),
-                'use_century_decomp' => $nl->get_value('use_century_decomp') ); 
-  }
-}
-
 #-------------------------------------------------------------------------------
 
 sub setup_logic_cnvegcarbonstate {
