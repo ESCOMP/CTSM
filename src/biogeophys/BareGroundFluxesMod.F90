@@ -338,7 +338,10 @@ contains
                ! After Yang et al. (2007)
                z0hg_patch(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8))
                ! After Owen and Thomson (1963)
-               z0hg_patch(p) = z0mg_patch(p) / exp(0.52_r8 * 0.4_r8 * (8._r8 * ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp * 0.71_r8**0.8_r8)
+               !z0hg_patch(p) = z0mg_patch(p) / exp(0.52_r8 * 0.4_r8 * (8._r8 * ustar(p) * z0mg_patch(p) / 1.5e-5_r8)**params_inst%a_exp * 0.71_r8**0.8_r8)
+               ! Zeng and Wang (2007)
+               !z0hg_patch(p) = z0hg_col(c) / exp(params_inst%a_coef * (ustar(p) * z0hg_col(c) / 1.5e-5_r8)**params_inst%a_exp)
+
             end select
 
             z0qg_patch(p) = z0hg_patch(p)

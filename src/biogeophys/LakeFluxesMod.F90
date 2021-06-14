@@ -337,7 +337,9 @@ contains
             select case (z0param_method)
             case ('MeierXXXX') 
                z0mg(p) = params_inst%zglc
-               z0hg(p) = 70._r8 * 1.5e-5_r8 / ust_lake(c) ! For initial guess assume tstar = 0 
+               z0hg(p) = 70._r8 * 1.5e-5_r8 / ust_lake(c) ! For initial guess assume tstar = 0
+               !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
+ 
             case ('ZengWang2007')
                z0mg(p) = z0frzlake
                z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
@@ -348,6 +350,8 @@ contains
             select case (z0param_method)
             case ('MeierXXXX') 
                z0hg(p) = 70._r8 * 1.5e-5_r8 / ust_lake(c) ! For initial guess assume tstar = 0 
+               !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
+
             case ('ZengWang2007')
                z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
             end select
@@ -570,7 +574,9 @@ contains
                select case (z0param_method)
                case ('MeierXXXX') 
                   z0mg(p) = params_inst%zglc
-                  z0hg(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes  
+                  z0hg(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes 
+                  !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
+ 
                case ('ZengWang2007')
                   z0mg(p) = z0frzlake
                   z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
@@ -580,7 +586,9 @@ contains
                ! z0mg won't have changed
                select case (z0param_method)
                case ('MeierXXXX') 
-                  z0hg(p) =  70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes  
+                  z0hg(p) =  70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes 
+                  !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
+ 
                case ('ZengWang2007')
                   z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
                end select

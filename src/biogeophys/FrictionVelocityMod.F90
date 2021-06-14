@@ -583,6 +583,8 @@ contains
             
        z0hg(c) = z0mg(c)            ! initial set only
        z0qg(c) = z0mg(c)            ! initial set only
+
+
     end do
 
     do fp = 1,num_nolakep
