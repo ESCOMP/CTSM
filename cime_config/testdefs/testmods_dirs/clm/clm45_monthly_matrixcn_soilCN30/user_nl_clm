@@ -1,2 +1,2 @@
  use_soil_matrixcn = .true.
- paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/clm45_params.soilCN30.c210611.nc'
+ paramfile = '$DIN_LOC_ROOT/lnd/clm2/paramdata/clm45_params.soilCN30.c210614.nc'
