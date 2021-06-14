@@ -83,6 +83,7 @@ REQUIRED OPTIONS
                               (default 2000)
      -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
+     -driver "value"          mct or nuopc
      -bgc "value"             Build CLM with BGC package [ sp | cn | bgc | fates ]
                               (default is sp).
                                 CLM Biogeochemistry mode
@@ -242,7 +243,7 @@ sub process_commandline {
   # Save the command line arguments to the script. NOTE: this must be
   # before GetOptions() is called because items are removed from from
   # the array!
-  $nl_flags->{'cmdline'} = "@ARGV";
+  $nl_flags->{'cmdline'} = "@ARGV\n";
 
   my %opts = ( cimeroot              => undef,
                config                => "config_cache.xml",
@@ -252,6 +253,7 @@ sub process_commandline {
                co2_type              => undef,
                co2_ppmv              => undef,
                clm_demand            => "null",
+               driver                => "mct",
                help                  => 0,
                glc_nec               => "default",
                glc_use_antarctica    => 0,
@@ -284,6 +286,7 @@ sub process_commandline {
 
   GetOptions(
              "cimeroot=s"                => \$opts{'cimeroot'},
+             "driver=s"                  => \$opts{'driver'},
              "clm_demand=s"              => \$opts{'clm_demand'},
              "co2_ppmv=f"                => \$opts{'co2_ppmv'},
              "co2_type=s"                => \$opts{'co2_type'},
@@ -2925,15 +2928,13 @@ sub setup_logic_methane {
   if ( &value_is_true($nl_flags->{'use_lch4'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'finundation_method',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
-    #
-    # Get resolution to read streams file for
-    #
     my $finundation_method = remove_leading_and_trailing_quotes($nl->get_value('finundation_method' ));
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'finundation_res', 
-             'finundation_method'=>$finundation_method );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ch4finundated', 
-             'finundation_method'=>$finundation_method,
-             'finundation_res'=>$nl->get_value('finundation_res') );
+             'finundation_method'=>$finundation_method);
+    if ($opts->{'driver'} eq "nuopc" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ch4finundated', 
+                    'finundation_method'=>$finundation_method);
+    }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_aereoxid_prog',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
     #
@@ -3216,6 +3217,8 @@ sub setup_logic_nitrogen_deposition {
   #
   # Nitrogen deposition for bgc=CN
   #
+  print "DEBUG: input driver is $opts->{'driver'}\n";
+  print "DEBUG: input mask is $opts->{'mask'}\n";
 
   if ( $nl_flags->{'bgc_mode'} =~/cn|bgc/ ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
@@ -3242,17 +3245,32 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
-       # Also check at f19 resolution
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                   'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
-       # If not found report an error
-       if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
-          $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
-                        "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
-                        "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
-                        "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
-       }
+        # Also check at f19 resolution
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
+                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                    'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+        # If not found report an error
+        if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+            $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
+                          "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
+                          "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
+                          "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
+        }
+    }
+    if ($opts->{'driver'} eq "nuopc" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep', 'phys'=>$nl_flags->{'phys'},
+                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                    'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+        if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+            # Also check at f19 resolution
+            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep', 'phys'=>$nl_flags->{'phys'},
+                        'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                        'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+            # If not found report an error
+            if ( ! defined($nl->get_value('stream_meshfile_ndep') ) ) {
+                $log->warning("Did NOT find the Nitrogen-deposition meshfile file (stream_meshfilee_ndep) for this ssp_rcp. \n")
+            }
+        }
     }
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
@@ -3363,6 +3381,9 @@ sub setup_logic_popd_streams {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'phys'=>$nl_flags->{'phys'},
                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+     if ($opts->{'driver'} eq "nuopc" ) {
+         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens', 'hgrid'=>"0.5x0.5");  
+     }
   } else {
      # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set
      if ( defined($nl->get_value('stream_year_first_popdens')) ||
@@ -3399,6 +3420,10 @@ sub setup_logic_urbantv_streams {
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'phys'=>$nl_flags->{'phys'},
               'hgrid'=>"0.9x1.25" );
+  if ($opts->{'driver'} eq "nuopc" ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'phys'=>$nl_flags->{'phys'},
+                  'hgrid'=>"0.9x1.25" );
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -3425,6 +3450,10 @@ sub setup_logic_lightning_streams {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 
                  'hgrid'=>$nl_flags->{'light_res'} );
+      if ($opts->{'driver'} eq "nuopc" ) {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lightng', 
+                      'hgrid'=>$nl_flags->{'light_res'} );
+      }
   } else {
      # If bgc is NOT CN/CNDV then make sure none of the Lightng settings are set
      if ( defined($nl->get_value('stream_year_first_lightng')) ||
@@ -3582,6 +3611,10 @@ sub setup_logic_lai_streams {
        }
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
                    'hgrid'=>"360x720cru" );
+       if ($opts->{'driver'} eq "nuopc" ) {
+           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lai',
+                       'hgrid'=>"360x720cru" );
+       }
      }
   } else {
      # If bgc is CN/CNDV then make sure none of the LAI settings are set

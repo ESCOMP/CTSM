@@ -110,7 +110,7 @@ contains
     ! !USES:
     use clm_time_manager     , only : get_curr_date
     use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
-    use SatellitePhenologyMod, only : lai_advance
+    use laiStreamMod         , only : lai_advance
     use FATESFireFactoryMod  , only : scalar_lightning
     !
     ! !ARGUMENTS:
