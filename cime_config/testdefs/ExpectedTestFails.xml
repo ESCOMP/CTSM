@@ -79,7 +79,7 @@
     </phase>
   </test>
 
-  <test name="ERP_D_Ld9.f19_g17.I2000Clm50Cn.cheyenne_intel.clm-drydepnomegan"
+  <test name="ERP_D_Ld9.f19_g17.I2000Clm50Cn.cheyenne_intel.clm-drydepnomegan">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#1356</issue>
@@ -100,7 +100,7 @@
     </phase>
   </test>
 
-  <test name="ERP_P36x2_D_Ld5.f10_f10_mg37.I2000Clm50Cn.cheyenne_intel.clm-default"
+  <test name="ERP_P36x2_D_Ld5.f10_f10_mg37.I2000Clm50Cn.cheyenne_intel.clm-default">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#1356</issue>
