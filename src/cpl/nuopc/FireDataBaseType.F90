@@ -181,7 +181,7 @@ contains
    stream_fldFileName_popdens = ' '
    stream_meshfile_popdens    = ' '
    popdens_tintalgo           = 'nearest'
-   popdensgmapalgo            = 'bilinear'
+   popdensmapalgo             = 'bilinear'
 
    ! Read popd_streams namelist
    if (masterproc) then
