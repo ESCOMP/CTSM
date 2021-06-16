@@ -22,6 +22,7 @@ module FrictionVelocityMod
   use atm2lndType             , only : atm2lnd_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use CanopyStateType         , only : canopystate_type
+  use WaterFluxBulkType       , only : waterfluxbulk_type  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -57,7 +58,8 @@ module FrictionVelocityMod
      real(r8), pointer, public :: z0hg_patch       (:)   ! patch roughness length over ground, sensible heat [m]
      real(r8), pointer, public :: z0qg_patch       (:)   ! patch roughness length over ground, latent heat [m]
      real(r8), pointer, public :: kbm1_patch       (:)   ! natural logarithm of z0mg_p/z0hg_p [-]
-     real(r8), pointer, public :: z0mg_col         (:)   ! col roughness length over ground, momentum  [m] 
+     real(r8), pointer, public :: z0mg_col         (:)   ! col roughness length over ground, momentum  [m]
+     real(r8), pointer, public :: z0mg_2D_col      (:)   ! 2-D field of input col roughness length over ground, momentum  [m]      
      real(r8), pointer, public :: z0hg_col         (:)   ! col roughness length over ground, sensible heat [m]
      real(r8), pointer, public :: z0qg_col         (:)   ! col roughness length over ground, latent heat [m]
      ! variables to add history output from CanopyFluxesMod
@@ -92,6 +94,7 @@ module FrictionVelocityMod
      procedure, private :: InitCold
      procedure, private :: ReadNamelist
      procedure, private :: ReadParams
+     procedure, private :: ReadZ0M
      procedure, private, nopass :: StabilityFunc1        ! Stability function for rib < 0.
      procedure, private, nopass :: StabilityFunc2        ! Stability function for rib < 0.
 
@@ -116,6 +119,10 @@ contains
     call this%InitCold(bounds)
     call this%ReadNamelist(NLFilename)
     call this%ReadParams(params_ncid)
+
+    if(z0param_method == "MeierXXXX") then            
+        call this%ReadZ0M(bounds)
+    end if
 
   end subroutine Init
 
@@ -159,6 +166,7 @@ contains
     allocate(this%z0qg_patch       (begp:endp)) ; this%z0qg_patch       (:)   = nan
     allocate(this%kbm1_patch       (begp:endp)) ; this%kbm1_patch       (:)   = nan
     allocate(this%z0mg_col         (begc:endc)) ; this%z0mg_col         (:)   = nan
+    allocate(this%z0mg_2D_col      (begc:endc)) ; this%z0mg_2D_col      (:)   = nan    
     allocate(this%z0qg_col         (begc:endc)) ; this%z0qg_col         (:)   = nan
     allocate(this%z0hg_col         (begc:endc)) ; this%z0hg_col         (:)   = nan
     allocate(this%rah1_patch       (begp:endp)) ; this%rah1_patch       (:)   = nan
@@ -405,6 +413,59 @@ contains
 
   end subroutine ReadParams
 
+  !-----------------------------------------------------------------------
+  subroutine ReadZ0M(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialize module time constant variables
+    !
+    ! !USES:
+    use shr_log_mod, only : errMsg => shr_log_errMsg
+    use fileutils  , only : getfil
+    use abortutils , only : endrun
+    use ncdio_pio  , only : file_desc_t, ncd_defvar, ncd_io, ncd_pio_openfile, ncd_pio_closefile
+    use spmdMod    , only : masterproc
+    use clm_varcon , only : grlnd    
+    use clm_varctl , only : fsurdat
+    use ncdio_pio  , only : ncd_io  
+    use clm_varctl     , only : iulog
+    
+    !
+    ! !ARGUMENTS:
+    class(frictionvel_type) :: this    
+    type(bounds_type), intent(in) :: bounds  
+    !
+    ! !LOCAL VARIABLES:
+    integer            :: c,g          ! indices
+    type(file_desc_t)  :: ncid         ! netcdf id
+    character(len=256) :: locfn        ! local filename
+    integer            :: ier          ! error status
+    logical            :: readvar 
+    real(r8), pointer  :: z0mg2d (:)   ! read in - ground z0m
+    !---------------------------------------------------------------------
+
+    ! Allocate module variable for ground z0m
+
+
+    call getfil (fsurdat, locfn, 0)
+    call ncd_pio_openfile (ncid, locfn, 0)
+
+
+    allocate(z0mg2d(bounds%begg:bounds%endg)) 
+    call ncd_io(ncid=ncid, varname='Z0MG_2D', flag='read', data=z0mg2d, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       call endrun(msg=' ERROR: Z0MG_presc NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
+    end if
+    write(iulog,*) 'Writing z0mg2d'
+    do c = bounds%begc, bounds%endc
+       g = col%gridcell(c)
+       this%z0mg_2D_col(c) = z0mg2d(g)
+       write(iulog,*) z0mg2d(g)
+    end do
+    deallocate(z0mg2d)
+
+  end subroutine ReadZ0M
+
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
     ! 
@@ -506,7 +567,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SetRoughnessLengthsAndForcHeightsNonLake(this, bounds, &
        num_nolakec, filter_nolakec, num_nolakep, filter_nolakep, &
-       atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst)
+       atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst, waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Set roughness lengths and forcing heights for non-lake points
@@ -521,6 +582,7 @@ contains
     type(atm2lnd_type)             , intent(in)    :: atm2lnd_inst
     type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     type(canopystate_type)         , intent(in)    :: canopystate_inst
+    type(waterfluxbulk_type)       , intent(in)    :: waterfluxbulk_inst    
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
@@ -549,12 +611,15 @@ contains
 
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)   ] fraction of vegetation not covered by snow (0 OR 1) [-]
          frac_sno         =>    waterdiagnosticbulk_inst%frac_sno_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         snomelt_accum    =>    waterfluxbulk_inst%qflx_snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)       
          urbpoi           =>    lun%urbpoi                            , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          z_0_town         =>    lun%z_0_town                          , & ! Input:  [real(r8) (:)   ] momentum roughness length of urban landunit (m)
          z_d_town         =>    lun%z_d_town                          , & ! Input:  [real(r8) (:)   ] displacement height of urban landunit (m)
          forc_hgt_t       =>    atm2lnd_inst%forc_hgt_t_grc           , & ! Input:  [real(r8) (:)   ] observational height of temperature [m]
          forc_hgt_u       =>    atm2lnd_inst%forc_hgt_u_grc           , & ! Input:  [real(r8) (:)   ] observational height of wind [m]
-         forc_hgt_q       =>    atm2lnd_inst%forc_hgt_q_grc             & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
+         forc_hgt_q       =>    atm2lnd_inst%forc_hgt_q_grc           , & ! Input:  [real(r8) (:)   ] observational height of specific humidity [m]
+         z0mg_2D          =>    this%z0mg_2D_col                        & ! Input:  [real(r8) (:)   ] 2-D field of input col roughness length over ground, momentum  [m] 
+         
          )
 
     do fc = 1, num_nolakec
@@ -573,11 +638,11 @@ contains
        case ('MeierXXXX')           ! Bare ground and ice have a different value
           l = col%landunit(c)
           if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
-             z0mg(c) = this%zsno
+             z0mg(c) = exp(1.4_r8 * (atan((log10(snomelt_accum(c)+0.23_r8)/0.08_r8))-0.31_r8)) / 1000._r8 !this%zsno
           else if (lun%itype(l) == istice_mec) then
              z0mg(c) = this%zglc
           else
-             z0mg(c) = this%zlnd
+             z0mg(c) = this%zlnd !z0mg_2D(c)
           end if
        end select
             

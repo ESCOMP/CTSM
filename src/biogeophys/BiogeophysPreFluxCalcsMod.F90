@@ -32,6 +32,8 @@ module BiogeophysPreFluxCalcsMod
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use WaterStateBulkType      , only : waterstatebulk_type
   use SurfaceResistanceMod    , only : calc_soilevap_resis
+  use WaterFluxBulkType     , only : waterfluxbulk_type
+  
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -57,7 +59,7 @@ contains
        num_urbanc, filter_urbanc, &
        clm_fates, atm2lnd_inst, canopystate_inst, energyflux_inst, frictionvel_inst, &
        soilstate_inst, temperature_inst, &
-       wateratm2lndbulk_inst, waterdiagnosticbulk_inst, waterstatebulk_inst)
+       wateratm2lndbulk_inst, waterdiagnosticbulk_inst, waterstatebulk_inst, waterfluxbulk_inst)
     !
     ! !DESCRIPTION:
     ! Do various calculations that need to happen before the main biogeophysics flux calculations
@@ -80,6 +82,7 @@ contains
     type(wateratm2lndbulk_type)    , intent(in)    :: wateratm2lndbulk_inst
     type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     type(waterstatebulk_type)      , intent(in)    :: waterstatebulk_inst
+    type(waterfluxbulk_type)       , intent(in)    :: waterfluxbulk_inst
     !
     ! !LOCAL VARIABLES:
     integer :: fp, p
@@ -93,7 +96,8 @@ contains
     call frictionvel_inst%SetRoughnessLengthsAndForcHeightsNonLake(bounds, &
          num_nolakec, filter_nolakec,                       &
          num_nolakep, filter_nolakep,                       &
-         atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst)
+         atm2lnd_inst, waterdiagnosticbulk_inst, canopystate_inst, &
+          waterfluxbulk_inst)
 
     call CalcInitialTemperatureAndEnergyVars(bounds, &
          num_nolakec, filter_nolakec,                       &

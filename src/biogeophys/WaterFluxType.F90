@@ -77,6 +77,7 @@ module WaterFluxType
      real(r8), pointer :: qflx_floodc_col          (:)   ! col flood water flux at column level
      real(r8), pointer :: qflx_sl_top_soil_col     (:)   ! col liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
      real(r8), pointer :: qflx_snomelt_col         (:)   ! col snow melt (mm H2O /s)
+     real(r8), pointer :: qflx_snomelt_accum_col   (:)   ! accumulated col snow melt for z0m calculation (m H2O)     
      real(r8), pointer :: qflx_qrgwl_col           (:)   ! col qflx_surf at glaciers, wetlands, lakes
      real(r8), pointer :: qflx_runoff_col          (:)   ! col total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
      real(r8), pointer :: qflx_runoff_r_col        (:)   ! col Rural total runoff (qflx_drain+qflx_surf+qflx_qrgwl) (mm H2O /s)
@@ -282,6 +283,9 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_snomelt_col, name = 'qflx_snomelt_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%qflx_snomelt_accum_col, name = 'qflx_snomelt_accum_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
     call AllocateVar1d(var = this%qflx_snofrz_col, name = 'qflx_snofrz_col', &
@@ -544,6 +548,14 @@ contains
          avgflag='A', &
          long_name=this%info%lname('snow melt rate'), &
          ptr_col=this%qflx_snomelt_col, c2l_scale_type='urbanf')
+
+    this%qflx_snomelt_accum_col(begc:endc) = 0._r8  
+    call hist_addfld1d ( &                         ! Have this as an output variable for now to check
+         fname=this%info%fname('QSNOMELT_ACCUM'),  &
+         units='m',  &
+         avgflag='A', &
+         long_name=this%info%lname('accumulated snow melt for z0'), &
+         ptr_col=this%qflx_snomelt_accum_col, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
          fname=this%info%fname('QSNOMELT_ICE'), &
@@ -894,6 +906,18 @@ contains
     if (flag == 'read' .and. .not. readvar) then
        ! initial run, not restart: initialize qflx_snow_drain to zero
        this%qflx_snow_drain_col(bounds%begc:bounds%endc) = 0._r8
+    endif
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('QSNOMELT_ACCUM'), &
+         xtype=ncd_double,  &
+         dim1name='column', &
+         long_name=this%info%lname('accumulated snow melt for z0'), &
+         units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%qflx_snomelt_accum_col)
+    if (flag == 'read' .and. .not. readvar) then
+       ! initial run, not restart: initialize qflx_snow_drain to zero
+       this%qflx_snomelt_accum_col(bounds%begc:bounds%endc) = 0._r8
     endif
 
     call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)
