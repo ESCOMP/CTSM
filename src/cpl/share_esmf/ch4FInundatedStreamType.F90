@@ -65,7 +65,7 @@ contains
    use spmdMod          , only : iam
    use ch4varcon        , only : finundation_mtd_h2osfc
    use ch4varcon        , only : finundation_mtd_ZWT_inversion, finundation_mtd_TWS_inversion
-   use lnd_comp_shr     , only : mesh, model_meshfile, model_clock
+   use lnd_comp_shr     , only : mesh, model_clock
    use dshr_strdata_mod , only : shr_strdata_init_from_inline, shr_strdata_print
    use dshr_strdata_mod , only : shr_strdata_advance
    use dshr_methods_mod , only : dshr_fldbun_getfldptr
@@ -135,10 +135,6 @@ contains
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
             call ESMF_Finalize(endflag=ESMF_END_ABORT)
          end if
-
-         if (masterproc) then
-            call shr_strdata_print(sdat_ch4, trim(stream_name)//' data')
-         endif
 
          ! Explicitly set current date to a hardcoded constant value. Otherwise
          ! using the real date can cause roundoff differences that are

@@ -46,7 +46,7 @@ contains
     ! !USES:
     use shr_mpi_mod      , only : shr_mpi_bcast
     use clm_nlUtilsMod   , only : find_nlgroup_name
-    use lnd_comp_shr     , only : mesh, model_meshfile, model_clock
+    use lnd_comp_shr     , only : mesh, model_clock
     use dshr_strdata_mod , only : shr_strdata_init_from_inline
     use controlMod       , only : NLFilename
     !
@@ -210,7 +210,7 @@ contains
     type(canopystate_type) , intent(inout) :: canopystate_inst
     !
     ! !LOCAL VARIABLES:
-    integer           :: ivt, p, ip, ig, n
+    integer           :: ivt, p, ip, ig, n, g
     integer           :: lsize
     integer           :: rc
     real(r8), pointer :: dataptr1d(:)
@@ -230,7 +230,11 @@ contains
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
        end if
-       dataptr2d(:,n) = dataptr1d(:)
+       ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
+       ! So an explicit loop is required here
+       do g = 1,lsize
+          dataptr2d(g,n) = dataptr1d(g)
+       end do
     end do
 
     do p = bounds%begp, bounds%endp

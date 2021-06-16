@@ -87,7 +87,7 @@ contains
     use shr_mpi_mod      , only : shr_mpi_bcast
     use landunit_varcon  , only : isturb_tbd, isturb_hd, isturb_md
     use dshr_strdata_mod , only : shr_strdata_init_from_inline
-    use lnd_comp_shr     , only : mesh, model_meshfile, model_clock
+    use lnd_comp_shr     , only : mesh, model_clock
     !
     ! !ARGUMENTS:
     implicit none
@@ -242,7 +242,11 @@ contains
        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
           call ESMF_Finalize(endflag=ESMF_END_ABORT)
        end if
-       dataptr2d(:,n) = dataptr1d(:)
+       ! Note that the size of dataptr1d includes ocean points so it will be around 3x larger than lsize
+       ! So an explicit loop is required here
+       do g = 1,lsize
+          dataptr2d(g,n) = dataptr1d(g)
+       end do
     end do
 
     ! Determine this%tbuilding_max for all landunits

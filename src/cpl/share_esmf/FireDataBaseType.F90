@@ -141,7 +141,7 @@ contains
    ! !USES:
    use clm_nlUtilsMod   , only : find_nlgroup_name
    use histFileMod      , only : hist_addfld1d
-   use lnd_comp_shr     , only : mesh, model_meshfile, model_clock
+   use lnd_comp_shr     , only : mesh, model_clock
    use dshr_strdata_mod , only : shr_strdata_init_from_inline
    use shr_mpi_mod      , only : shr_mpi_bcast
    !
@@ -307,7 +307,7 @@ contains
   !
   ! !USES:
   use clm_nlUtilsMod   , only : find_nlgroup_name
-  use lnd_comp_shr     , only : mesh, model_meshfile, model_clock
+  use lnd_comp_shr     , only : mesh, model_clock
   use dshr_strdata_mod , only : shr_strdata_init_from_inline
   use histFileMod      , only : hist_addfld1d
   use shr_mpi_mod      , only : shr_mpi_bcast

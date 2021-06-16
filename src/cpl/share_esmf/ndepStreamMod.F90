@@ -47,7 +47,7 @@ contains
     use shr_string_mod   , only : shr_string_listGetName, shr_string_listGetNum
     use shr_log_mod      , only : errMsg => shr_log_errMsg
     use shr_mpi_mod      , only : shr_mpi_bcast
-    use lnd_comp_shr     , only : mesh, model_meshfile, model_clock
+    use lnd_comp_shr     , only : mesh, model_clock
     use dshr_strdata_mod , only : shr_strdata_init_from_inline
     !
     ! arguments

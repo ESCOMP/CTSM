@@ -239,7 +239,6 @@ def buildnml(case, caseroot, compname):
                      configuration, structure,
                      lndfrac_file, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file, driver, 
                      clm_bldnml_opts, spinup, tuning, gridmask))
-        print "DEBUG: command is ",command
 
         rc, out, err = run_cmd(command, from_dir=ctsmconf)
         expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
