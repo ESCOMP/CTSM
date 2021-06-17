@@ -60,7 +60,7 @@ contains
     integer                 :: stream_year_first_ndep ! first year in stream to use
     integer                 :: stream_year_last_ndep  ! last year in stream to use
     integer                 :: model_year_align_ndep  ! align stream_year_firstndep with
-    real(r8)                :: ndep_dtlimit = 1.5_r8
+    real(r8)                :: ndep_dtlimit = 1.0e30_r8
     character(len=CL)       :: ndepmapalgo = 'bilinear'
     character(len=CL)       :: ndep_tintalgo = 'linear'
     character(len=CS)       :: ndep_taxmode = 'extend'

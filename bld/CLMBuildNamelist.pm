@@ -3212,9 +3212,6 @@ sub setup_logic_nitrogen_deposition {
   #
   # Nitrogen deposition for bgc=CN
   #
-  print "DEBUG: input driver is $opts->{'driver'}\n";
-  print "DEBUG: input mask is $opts->{'mask'}\n";
-
   if ( $nl_flags->{'bgc_mode'} =~/cn|bgc/ ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
@@ -3378,6 +3375,17 @@ sub setup_logic_popd_streams {
                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
      if ($opts->{'driver'} eq "nuopc" ) {
          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens', 'hgrid'=>"0.5x0.5");  
+         my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+         my $default_value = $nl->get_value('stream_meshfile_popdens');
+         my $none_filename = $inputdata_rootdir . '/none';
+         my $none_filename = &quote_string($none_filename);
+         if ($default_value eq $none_filename) {
+             my $var = 'stream_meshfile_popdens'; 
+             my $group = $definition->get_group_name($var);
+             my $val = "none";
+             $val = &quote_string( $val );
+             $nl->set_variable_value($group, $var, $val);
+         }
      }
   } else {
      # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set

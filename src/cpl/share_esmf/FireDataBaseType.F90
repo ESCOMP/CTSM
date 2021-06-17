@@ -235,7 +235,7 @@ contains
          stream_yearAlign    = model_year_align_popdens,             &
          stream_offset       = 0,                                    &
          stream_taxmode      = 'extend',                             &
-         stream_dtlimit      = 1.5_r8,                               &
+         stream_dtlimit      = 1.0e30_r8,                            &
          stream_tintalgo     = popdens_tintalgo,                     &
          stream_name         = 'Population density data',            &
          rc                  = rc)

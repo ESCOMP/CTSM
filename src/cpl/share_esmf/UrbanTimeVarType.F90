@@ -183,7 +183,7 @@ contains
          stream_yearAlign    = model_year_align_urbantv,             &
          stream_offset       = 0,                                    &
          stream_taxmode      = 'extend',                             &
-         stream_dtlimit      = 1.5_r8,                               &
+         stream_dtlimit      = 1.0e30_r8,                            &
          stream_tintalgo     = urbantv_tintalgo,                     &
          stream_name         = 'Urban time varying data',            &
          rc                  = rc)

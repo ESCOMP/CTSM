@@ -129,8 +129,9 @@ contains
               stream_yearAlign    = 1,                                                  &
               stream_offset       = 0,                                                  &
               stream_taxmode      = 'extend',                                           &
-              stream_dtlimit      = 1.5_r8,                                             &
+              stream_dtlimit      = 1.0e30_r8,                                          &
               stream_tintalgo     = 'linear',                                           &
+              stream_name         = 'ch4 finundation ',                                 &
               rc                  = rc)
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
             call ESMF_Finalize(endflag=ESMF_END_ABORT)

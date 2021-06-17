@@ -35,7 +35,7 @@ contains
   subroutine lnd_set_decomp_and_domain_from_readmesh(driver, vm, meshfile_lnd, meshfile_mask, mesh_ctsm, &
        ni, nj, rc)
 
-    use decompInitMod , only : decompInit_ocn, decompInit_lnd, decompInit_lnd3D
+    use decompInitMod , only : decompInit_lnd
     use domainMod     , only : ldomain, domain_init
     use decompMod     , only : ldecomp, bounds_type, get_proc_bounds
     use clm_varpar    , only : nlevsoi
@@ -116,9 +116,6 @@ contains
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
     call decompInit_lnd(lni=ni, lnj=nj, amask=lndmask_glob)
-    if (use_soil_moisture_streams) then
-       call decompInit_lnd3D(lni=ni, lnj=nj, lnk=nlevsoi)
-    end if
 
     ! Determine ocn decomposition that will be used to create the full mesh
     ! note that the memory for gindex_ocn will be allocated in the following call
@@ -227,7 +224,7 @@ contains
   !===============================================================================
   subroutine lnd_set_decomp_and_domain_for_single_column(scol_lon, scol_lat, scol_mask, scol_frac)
 
-    use decompInitMod , only : decompInit_lnd, decompInit_lnd3D
+    use decompInitMod , only : decompInit_lnd
     use decompMod     , only : bounds_type, get_proc_bounds
     use domainMod     , only : ldomain, domain_init
     use clm_varctl    , only : use_soil_moisture_streams
@@ -246,9 +243,6 @@ contains
 
     ! Determine ldecomp and ldomain
     call decompInit_lnd(lni=1, lnj=1, amask=(/1/))
-    if (use_soil_moisture_streams) then
-       call decompInit_lnd3D(lni=1, lnj=1, lnk=nlevsoi)
-    end if
 
     ! Initialize processor bounds
     call get_proc_bounds(bounds)
@@ -807,5 +801,58 @@ contains
 
   end subroutine lnd_set_read_write_landmask
 
+  !===============================================================================
+  subroutine decompInit_ocn(ni, nj, amask, gindex_ocn)
+
+    ! !DESCRIPTION:
+    ! calculate a decomposition of only ocn points (needed for the nuopc interface)
+
+    ! !USES:
+    use spmdMod  , only : npes, iam
+
+    ! !ARGUMENTS:
+    integer , intent(in) :: amask(:)
+    integer , intent(in) :: ni,nj   ! domain global size
+    integer , pointer, intent(out) :: gindex_ocn(:) ! this variable is allocated here, and is assumed to start unallocated
+
+    ! !LOCAL VARIABLES:
+    integer :: n,i,j,nocn
+    integer :: nlnd_global
+    integer :: nocn_global
+    integer :: nocn_local
+    integer :: my_ocn_start, my_ocn_end
+    !------------------------------------------------------------------------------
+
+    ! count total land and ocean gridcells
+    nlnd_global = 0
+    nocn_global = 0
+    do n = 1,ni*nj
+       if (amask(n) == 1) then
+          nlnd_global = nlnd_global + 1
+       else
+          nocn_global = nocn_global + 1
+       endif
+    enddo
+
+    ! create the a global index array for ocean points
+    nocn_local = nocn_global / npes
+
+    my_ocn_start = nocn_local*iam + min(iam, mod(nocn_global, npes)) + 1
+    if (iam < mod(nocn_global, npes)) then
+       nocn_local = nocn_local + 1
+    end if
+    my_ocn_end = my_ocn_start + nocn_local - 1
+
+    allocate(gindex_ocn(nocn_local))
+    nocn = 0
+    do n = 1,ni*nj
+       if (amask(n) == 0) then
+          nocn = nocn + 1
+          if (nocn >= my_ocn_start .and. nocn <= my_ocn_end) then
+             gindex_ocn(nocn - my_ocn_start + 1) = n
+          end if
+       end if
+    end do
+  end subroutine decompInit_ocn
 
 end module lnd_set_decomp_and_domain
