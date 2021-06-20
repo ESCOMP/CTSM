@@ -187,7 +187,6 @@ contains
        ! Set some other gridcell-level variables
 
        do gdc = bounds_clump%begg,bounds_clump%endg
-          grc%gindex(gdc) = ldecomp%gdc2glo(gdc)
           grc%area(gdc)   = ldomain%area(gdc)
           grc%latdeg(gdc) = ldomain%latc(gdc) 
           grc%londeg(gdc) = ldomain%lonc(gdc) 

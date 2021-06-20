@@ -27,11 +27,10 @@ contains
     !
     ! Uses:
     use shr_log_mod, only: errMsg => shr_log_errMsg
-    use decompMod  , only: bounds_type, get_clmlevel_gsmap, get_proc_bounds
+    use decompMod  , only: bounds_type, get_clmlevel_gindex, get_proc_bounds
     use spmdMod    , only: iam
     use clm_varcon , only: nameg, namel, namec, namep
     use clm_varctl , only: iulog
-    use mct_mod    , only: mct_gsMap, mct_gsMap_orderedPoints
     use shr_sys_mod, only: shr_sys_abort
     !
     ! Arguments 
@@ -39,10 +38,9 @@ contains
     character(len=*) , intent(in) :: clmlevel
     !
     ! Local Variables:
-    type(bounds_type)             :: bounds_proc   ! processor bounds
-    type(mct_gsMap),pointer       :: gsmap         ! global seg map
-    integer, pointer,dimension(:) :: gsmap_ordered ! gsmap ordered points
-    integer                       :: beg_index     ! beginning proc index for clmlevel
+    type(bounds_type) :: bounds_proc   ! processor bounds
+    integer           :: beg_index     ! beginning proc index for clmlevel
+    integer, pointer  :: gindex(:)
     !----------------------------------------------------------------
 
     call get_proc_bounds(bounds_proc)
@@ -60,10 +58,8 @@ contains
             errmsg(sourcefile, __LINE__))
     end if
 
-    call get_clmlevel_gsmap(clmlevel=trim(clmlevel), gsmap=gsmap)
-    call mct_gsMap_orderedPoints(gsmap, iam, gsmap_ordered)
-    GetGlobalIndex = gsmap_ordered(decomp_index - beg_index + 1)
-    deallocate(gsmap_ordered)
+    call get_clmlevel_gindex(clmlevel=trim(clmlevel), gindex=gindex)
+    GetGlobalIndex = gindex(decomp_index - beg_index + 1)
 
   end function GetGlobalIndex
 
@@ -82,25 +78,24 @@ contains
     ! Uses:
 #include "shr_assert.h"
     use shr_log_mod, only: errMsg => shr_log_errMsg
-    use decompMod  , only: bounds_type, get_clmlevel_gsmap, get_proc_bounds
+    use decompMod  , only: bounds_type, get_clmlevel_gindex, get_proc_bounds
     use spmdMod    , only: iam
     use clm_varcon , only: nameg, namel, namec, namep
     use clm_varctl , only: iulog
-    use mct_mod
+    use shr_sys_mod, only: shr_sys_abort
     !
     ! Arguments 
-    integer, intent(in) :: bounds1  ! lower bound of the input & returned arrays
-    integer, intent(in) :: bounds2  ! upper bound of the input & returned arrays
-    integer, intent(in) :: decomp_index(bounds1:)
-    character(len=*)        , intent(in) :: clmlevel
-    integer :: GetGlobalIndexArray(bounds1:bounds2)
+    integer          , intent(in) :: bounds1  ! lower bound of the input & returned arrays
+    integer          , intent(in) :: bounds2  ! upper bound of the input & returned arrays
+    integer          , intent(in) :: decomp_index(bounds1:)
+    character(len=*) , intent(in) :: clmlevel
+    integer                       :: GetGlobalIndexArray(bounds1:bounds2)
     !
     ! Local Variables:
-    type(bounds_type)             :: bounds_proc   ! processor bounds
-    type(mct_gsMap),pointer       :: gsmap         ! global seg map
-    integer, pointer,dimension(:) :: gsmap_ordered ! gsmap ordered points
-    integer                       :: beg_index     ! beginning proc index for clmlevel
-    integer                       :: i
+    type(bounds_type) :: bounds_proc   ! processor bounds
+    integer           :: beg_index     ! beginning proc index for clmlevel
+    integer           :: i
+    integer , pointer :: gindex(:)
     !----------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(decomp_index) == (/bounds2/)), sourcefile, __LINE__)
@@ -119,12 +114,10 @@ contains
             errmsg(__FILE__, __LINE__))
     end if
 
-    call get_clmlevel_gsmap(clmlevel=trim(clmlevel), gsmap=gsmap)
-    call mct_gsMap_orderedPoints(gsmap, iam, gsmap_ordered)
+    call get_clmlevel_gindex(clmlevel=trim(clmlevel), gindex=gindex)
     do i=bounds1,bounds2
-       GetGlobalIndexArray(i) = gsmap_ordered(decomp_index(i) - beg_index + 1)
+       GetGlobalIndexArray(i) = gindex(decomp_index(i) - beg_index + 1)
     enddo
-    deallocate(gsmap_ordered)
 
   end function GetGlobalIndexArray
 
