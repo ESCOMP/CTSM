@@ -26,7 +26,7 @@ contains
 
   subroutine lnd_set_decomp_and_domain_from_surfrd(noland, ni, nj)
 
-    ! Initialize ldecomp and ldomain data types
+    ! Initialize ldomain data types
 
     use clm_varpar    , only: nlevsoi
     use clm_varctl    , only: fatmlndfrc, use_soil_moisture_streams
@@ -63,7 +63,6 @@ contains
        noland = .false.
     end if
 
-    ! Initialize ldecomp data type
     ! Determine ctsm gridcell decomposition and processor bounds for gridcells
     call decompInit_lnd(ni, nj, amask)
     deallocate(amask)
@@ -296,7 +295,7 @@ contains
     !  as the 3rd dimesnion.
     !
     ! !USES:
-    use decompMod, only : ldecomp, get_proc_bounds, bounds_type
+    use decompMod, only : gindex_global, get_proc_bounds, bounds_type
     use spmdMod  , only : mpicom, comp_id
     use mct_mod  , only : mct_gsMap_init, mct_gsmap_ngseg
     !
@@ -322,7 +321,7 @@ contains
     do k = 1, lnk
        do n = begg,endg
           m = (begg-1)*lnk + (k-1)*(endg-begg+1) + (n-begg+1)
-          gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
+          gindex(m) = gindex_global(n-begg+1) + (k-1)*(lni*lnj)
        enddo
     enddo
     gsize = lni * lnj * lnk

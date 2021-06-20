@@ -37,7 +37,7 @@ contains
 
     use decompInitMod , only : decompInit_lnd
     use domainMod     , only : ldomain, domain_init
-    use decompMod     , only : ldecomp, bounds_type, get_proc_bounds
+    use decompMod     , only : gindex_global, bounds_type, get_proc_bounds
     use clm_varpar    , only : nlevsoi
     use clm_varctl    , only : use_soil_moisture_streams
 
@@ -134,7 +134,7 @@ contains
     allocate(gindex_lnd(nlnd))
     do g = begg, endg
        n = 1 + (g - begg)
-       gindex_lnd(n) = ldecomp%gdc2glo(g)
+       gindex_lnd(n) = gindex_global(g-begg+1)
     end do
 
     ! Initialize domain data structure
@@ -241,7 +241,7 @@ contains
     type(bounds_type) :: bounds                ! bounds
     !-------------------------------------------------------------------------------
 
-    ! Determine ldecomp and ldomain
+    ! Determine decomp and ldomain
     call decompInit_lnd(lni=1, lnj=1, amask=(/1/))
 
     ! Initialize processor bounds

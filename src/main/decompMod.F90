@@ -48,38 +48,37 @@ module decompMod
   ! !PRIVATE TYPES:
   private  ! (now mostly public for decompinitmod)
 
-  integer,public :: nclumps     ! total number of clumps across all processors
-  integer,public :: numg        ! total number of gridcells on all procs
-  integer,public :: numl        ! total number of landunits on all procs
-  integer,public :: numc        ! total number of columns on all procs
-  integer,public :: nump        ! total number of patchs on all procs
-  integer,public :: numCohort   ! total number of fates cohorts on all procs
+  integer,public :: nclumps          ! total number of clumps across all processors
+  integer,public :: numg             ! total number of gridcells on all procs
+  integer,public :: numl             ! total number of landunits on all procs
+  integer,public :: numc             ! total number of columns on all procs
+  integer,public :: nump             ! total number of patchs on all procs
+  integer,public :: numCohort        ! total number of fates cohorts on all procs
 
   type bounds_type
-     integer :: begg, endg       ! beginning and ending gridcell index
-     integer :: begl, endl       ! beginning and ending landunit index
-     integer :: begc, endc       ! beginning and ending column index
-     integer :: begp, endp       ! beginning and ending patch index
+     integer :: begg, endg           ! beginning and ending gridcell index
+     integer :: begl, endl           ! beginning and ending landunit index
+     integer :: begc, endc           ! beginning and ending column index
+     integer :: begp, endp           ! beginning and ending patch index
      integer :: begCohort, endCohort ! beginning and ending cohort indices
-
-     integer :: level            ! whether defined on the proc or clump level
-     integer :: clump_index      ! if defined on the clump level, this gives the clump index
+     integer :: level                ! whether defined on the proc or clump level
+     integer :: clump_index          ! if defined on the clump level, this gives the clump index
   end type bounds_type
-  public bounds_type
+  public :: bounds_type
 
   !---global information on each pe
   type processor_type
-     integer :: nclumps          ! number of clumps for processor_type iam
-     integer,pointer :: cid(:)   ! clump indices
-     integer :: ncells           ! number of gridcells in proc
-     integer :: nlunits          ! number of landunits in proc
-     integer :: ncols            ! number of columns in proc
-     integer :: npatches          ! number of patchs in proc
-     integer :: nCohorts         ! number of cohorts in proc
-     integer :: begg, endg       ! beginning and ending gridcell index
-     integer :: begl, endl       ! beginning and ending landunit index
-     integer :: begc, endc       ! beginning and ending column index
-     integer :: begp, endp       ! beginning and ending patch index
+     integer :: nclumps              ! number of clumps for processor_type iam
+     integer,pointer :: cid(:)       ! clump indices
+     integer :: ncells               ! number of gridcells in proc
+     integer :: nlunits              ! number of landunits in proc
+     integer :: ncols                ! number of columns in proc
+     integer :: npatches             ! number of patchs in proc
+     integer :: nCohorts             ! number of cohorts in proc
+     integer :: begg, endg           ! beginning and ending gridcell index
+     integer :: begl, endl           ! beginning and ending landunit index
+     integer :: begc, endc           ! beginning and ending column index
+     integer :: begp, endp           ! beginning and ending patch index
      integer :: begCohort, endCohort ! beginning and ending cohort indices
   end type processor_type
   public processor_type
@@ -102,25 +101,15 @@ module decompMod
   public clump_type
   type(clump_type),public, allocatable :: clumps(:)
 
-  !---global information on each pe
-  !--- glo = 1d global sn ordered including ocean points
-  !--- gdc = 1d global decomposition compressed, not including ocean points
-  type decomp_type
-     integer,pointer :: gdc2glo(:)    ! 1d gdc to 1d glo
-  end type decomp_type
-  public decomp_type
-  type(decomp_type),public,target :: ldecomp
-
-  integer, public  :: nglob_x, nglob_y  ! global sizes
-
   ! NOTE: the following are allocated with a lower bound of 1!
-  integer, public, pointer :: gindex_global(:)   => null()
-  integer, public, pointer :: gindex_grc(:)      => null()
+  integer, public, pointer :: gindex_global(:)   => null() ! includes ocean points
+  integer, public, pointer :: gindex_grc(:)      => null() ! does not include ocean points
   integer, public, pointer :: gindex_lun(:)      => null()
   integer, public, pointer :: gindex_col(:)      => null()
   integer, public, pointer :: gindex_patch(:)    => null()
   integer, public, pointer :: gindex_cohort(:)   => null()
   integer, public, pointer :: gindex_lnd2Dsoi(:) => null()
+  integer, public          :: nglob_x, nglob_y  ! global sizes
   !------------------------------------------------------------------------------
 
 contains

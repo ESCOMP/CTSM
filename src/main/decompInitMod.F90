@@ -34,7 +34,7 @@ module decompInitMod
   private :: set_gsmap_global
   !
   ! !PRIVATE TYPES:
-  integer, pointer :: lcid(:)       ! temporary for setting ldecomp
+  integer, pointer :: lcid(:)       ! temporary for setting decomposition
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------------
@@ -71,6 +71,7 @@ contains
     integer :: ier                    ! error code
     integer :: begg, endg             ! beg and end gridcells
     integer, pointer  :: clumpcnt(:)  ! clump index counter
+    integer, allocatable :: gdc2glo(:)! used to create gindex_global
     type(bounds_type) :: bounds       ! contains subgrid bounds data 
     !------------------------------------------------------------------------------
 
@@ -238,24 +239,23 @@ contains
        end if
     enddo
 
-    ! Set ldecomp
+    ! Set gindex_global
 
-    allocate(ldecomp%gdc2glo(numg), stat=ier)
+    allocate(gdc2glo(numg), stat=ier)  
     if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error1 for ldecomp, etc'
+       write(iulog,*) 'decompInit_lnd(): allocation error1 for gdc2glo , etc'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
+    gdc2glo(:) = 0
     allocate(clumpcnt(nclumps),stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error1 for clumpcnt'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-
-    ldecomp%gdc2glo(:) = 0
-    ag = 0
-
+    
     ! clumpcnt is the start gdc index of each clump
 
+    ag = 0
     clumpcnt = 0
     ag = 1
     do pid = 0,npes-1
@@ -276,13 +276,11 @@ contains
        cid = lcid(an)
        if (cid > 0) then
           ag = clumpcnt(cid)
-          ldecomp%gdc2glo(ag) = an
+          gdc2glo(ag) = an
           clumpcnt(cid) = clumpcnt(cid) + 1
        end if
     end do
     end do
-
-    deallocate(clumpcnt)
 
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg-begg_1)
@@ -292,8 +290,11 @@ contains
     begg = bounds%begg; endg = bounds%endg
     allocate(gindex_global(endg-begg+1))
     do n = begg,endg
-       gindex_global(n-begg+1) = ldecomp%gdc2glo(n)
+       gindex_global(n-begg+1) = gdc2glo(n)
     enddo
+
+    deallocate(clumpcnt)
+    deallocate(gdc2glo)
 
     ! Initialize gsmap_global
     call set_gsmap_global(gindex_global)
@@ -369,7 +370,7 @@ contains
     allvecg= 0
     allvecl= 0
     do anumg = begg,endg
-       an  = ldecomp%gdc2glo(anumg)
+       an  = gindex_global(anumg - begg + 1)
        cid = lcid(an)
        ln  = anumg
        call subgrid_get_gcellinfo (ln, nlunits=ilunits, ncols=icols, npatches=ipatches, &

@@ -14,7 +14,7 @@ module ndepStreamMod
   use spmdMod     , only: mpicom, masterproc, comp_id, iam
   use clm_varctl  , only: iulog, inst_name
   use abortutils  , only: endrun
-  use decompMod   , only: bounds_type, ldecomp
+  use decompMod   , only: bounds_type
   use domainMod   , only: ldomain
 
   ! !PUBLIC TYPES:

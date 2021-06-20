@@ -18,7 +18,7 @@ module initGridCellsMod
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
   use clm_varcon     , only : namep, namec, namel, nameg
-  use decompMod      , only : bounds_type, ldecomp
+  use decompMod      , only : bounds_type
   use GridcellType   , only : grc                
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -512,7 +512,6 @@ contains
     use subgridMod      , only : subgrid_get_info_urban_tbd, subgrid_get_info_urban_hd
     use subgridMod      , only : subgrid_get_info_urban_md
     use UrbanParamsType , only : urbinp
-    use decompMod       , only : ldecomp
     use pftconMod       , only : noveg
     !
     ! !ARGUMENTS:

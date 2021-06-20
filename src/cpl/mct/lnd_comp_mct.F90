@@ -11,12 +11,11 @@ module lnd_comp_mct
   use shr_sys_mod      , only : shr_sys_flush
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use mct_mod          , only : mct_avect, mct_gsmap, mct_gGrid
-  use decompmod        , only : bounds_type, ldecomp
+  use decompmod        , only : bounds_type
   use lnd_import_export, only : lnd_import, lnd_export
   !
   ! !public member functions:
   implicit none
-  save
   private                     ! by default make data private
   !
   ! !public member functions:
@@ -25,7 +24,6 @@ module lnd_comp_mct
   public :: lnd_final_mct     ! clm finalization/cleanup
   !
   ! !private member functions:
-  private :: lnd_setgsmap_mct  ! set the land model mct gs map
   private :: lnd_domain_mct    ! set the land model domain information
   private :: lnd_handle_resume ! handle pause/resume signals from the coupler
 
@@ -67,7 +65,8 @@ contains
     use spmdMod          , only : masterproc, spmd_init
     use clm_varctl       , only : nsrStartup, nsrContinue, nsrBranch
     use clm_cpl_indices  , only : clm_cpl_indices_set
-    use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap_lsize
+    use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap, mct_gsMap_init
+    use decompMod        , only : gindex_global
     use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd
     use ESMF
     !
@@ -84,6 +83,7 @@ contains
     type(mct_gGrid),         pointer :: dom_l        ! Land model domain
     type(seq_infodata_type), pointer :: infodata     ! CESM driver level info data
     integer  :: lsize                                ! size of attribute vector
+    integer  :: gsize                                ! global size 
     integer  :: g,i,j                                ! indices
     integer  :: dtime_sync                           ! coupling time-step from the input synchronization clock
     logical  :: exists                               ! true if file exists
@@ -208,7 +208,7 @@ contains
     ! Read namelists
     call initialize1(dtime=dtime_sync)
 
-    ! Initialize decomposition (ldecomp) and domain (ldomain) types
+    ! Initialize decomposition and domain (ldomain) type
     call lnd_set_decomp_and_domain_from_surfrd(noland, ni, nj)
 
     ! If no land then exit out of initialization
@@ -227,8 +227,9 @@ contains
 
        ! Initialize clm gsMap, clm domain and clm attribute vectors
        call get_proc_bounds( bounds )
-       call lnd_SetgsMap_mct( bounds, mpicom_lnd, LNDID, gsMap_lnd )
-       lsize = mct_gsMap_lsize(gsMap_lnd, mpicom_lnd)
+       lsize = bounds%endg - bounds%begg + 1
+       gsize = ldomain%ni * ldomain%nj
+       call mct_gsMap_init( gsMap_lnd, gindex_global, mpicom_lnd, LNDID, lsize, gsize )
        call lnd_domain_mct( bounds, lsize, gsMap_lnd, dom_l )
        call mct_aVect_init(x2l_l, rList=seq_flds_x2l_fields, lsize=lsize)
        call mct_aVect_zero(x2l_l)
@@ -512,49 +513,6 @@ contains
 
     ! fill this in
   end subroutine lnd_final_mct
-
-  !====================================================================================
-  subroutine lnd_setgsmap_mct( bounds, mpicom_lnd, LNDID, gsMap_lnd )
-    !
-    ! !DESCRIPTION:
-    ! Set the MCT GS map for the land model
-    !
-    ! !USES:
-    use shr_kind_mod , only : r8 => shr_kind_r8
-    use domainMod    , only : ldomain
-    use mct_mod      , only : mct_gsMap, mct_gsMap_init
-    implicit none
-    !
-    ! !ARGUMENTS:
-    type(bounds_type) , intent(in)  :: bounds     ! bounds
-    integer           , intent(in)  :: mpicom_lnd ! MPI communicator for the clm land model
-    integer           , intent(in)  :: LNDID      ! Land model identifyer number
-    type(mct_gsMap)   , intent(out) :: gsMap_lnd  ! Resulting MCT GS map for the land model
-    !
-    ! !LOCAL VARIABLES:
-    integer,allocatable :: gindex(:)  ! Number the local grid points
-    integer :: i, j, n, gi            ! Indices
-    integer :: lsize,gsize            ! GS Map size
-    integer :: ier                    ! Error code
-    !---------------------------------------------------------------------------
-
-    ! Build the land grid numbering for MCT
-    ! NOTE:  Numbering scheme is: West to East and South to North
-    ! starting at south pole.  Should be the same as what's used in SCRIP
-    allocate(gindex(bounds%begg:bounds%endg),stat=ier)
-
-    ! number the local grid
-    do n = bounds%begg, bounds%endg
-       gindex(n) = ldecomp%gdc2glo(n)
-    end do
-    lsize = bounds%endg - bounds%begg + 1
-    gsize = ldomain%ni * ldomain%nj
-
-    call mct_gsMap_init( gsMap_lnd, gindex, mpicom_lnd, LNDID, lsize, gsize )
-
-    deallocate(gindex)
-
-  end subroutine lnd_SetgsMap_mct
 
   !====================================================================================
   subroutine lnd_domain_mct( bounds, lsize, gsMap_l, dom_l )
