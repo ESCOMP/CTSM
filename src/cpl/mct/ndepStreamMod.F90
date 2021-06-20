@@ -56,7 +56,7 @@ contains
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
-   use spmdGathScatMod  , only : gsmap_global
+   use decompMod        , only : gsmap_global
    !
    ! arguments
    implicit none
@@ -270,7 +270,7 @@ contains
     use mct_mod                   , only : mct_gsMap_orderedPoints, mct_gGrid_importIAttr
     use mct_mod                   , only : mct_gGrid_importRAttr
     use mct_mod                   , only : mct_gsMap
-    use spmdGathScatMod           , only : gsmap_global
+    use decompMod                 , only : gsmap_global
     use lnd_set_decomp_and_domain , only : gsMap_lnd2Dsoi_gdc2glo
     implicit none
     !

@@ -6,36 +6,35 @@ module decompInitMod
   ! be mapped back to atmosphere physics chunks.
   !
   ! !USES:
-  use shr_kind_mod    , only : r8 => shr_kind_r8
-  use shr_sys_mod     , only : shr_sys_flush
-  use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use spmdMod         , only : masterproc, iam, npes, mpicom
-  use abortutils      , only : endrun
-  use clm_varctl      , only : iulog, use_fates
-  use LandunitType    , only : lun
-  use ColumnType      , only : col
-  use PatchType       , only : patch
-  use glcBehaviorMod  , only : glc_behavior_type
-  use FatesInterfaceTypesMod, only : fates_maxElementsPerSite
+  use shr_kind_mod           , only : r8 => shr_kind_r8
+  use shr_sys_mod            , only : shr_sys_flush
+  use shr_log_mod            , only : errMsg => shr_log_errMsg
+  use spmdMod                , only : masterproc, iam, npes, mpicom
+  use abortutils             , only : endrun
+  use clm_varctl             , only : iulog, use_fates
+  use LandunitType           , only : lun
+  use ColumnType             , only : col
+  use PatchType              , only : patch
+  use glcBehaviorMod         , only : glc_behavior_type
+  use FatesInterfaceTypesMod , only : fates_maxElementsPerSite
   use decompMod
-  ! use decompMod       , only : gindex_global, gindex_grc, gindex_lun, gindex_col
-  ! use decompMod       , only : gindex_patch, gindex_cohort, gindexlnd2Dsoi
-  ! use decompMod       , only : nglob_x, nglob_y
-  ! use decompMod       , only : clumps, ldecomp
-  ! use decompMod       , only : get_proc_clumps, get_proc_total, get_proc_global
   !
-  ! !PUBLIC TYPES:
   implicit none
   private
+  !
+  ! !PUBLIC TYPES:
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public decompInit_lnd    ! initializes lnd grid decomposition into clumps and processors
   public decompInit_clumps ! initializes atm grid decomposition into clumps
   public decompInit_glcp   ! initializes g,l,c,p decomp info
   !
+  ! !PRIVATE MEMBER FUNCTIONS:
+  private :: set_subgrid_start
+  private :: set_gsmap_global
+  !
   ! !PRIVATE TYPES:
   integer, pointer :: lcid(:)       ! temporary for setting ldecomp
-
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------------
@@ -53,7 +52,6 @@ contains
     ! !USES:
     use clm_varctl      , only : nsegspc
     use decompMod       , only : nglob_x, nglob_y, gindex_global
-    use spmdGathScatMod , only : gsmap_global_init
     !
     ! !ARGUMENTS:
     implicit none
@@ -297,8 +295,8 @@ contains
        gindex_global(n-begg+1) = ldecomp%gdc2glo(n)
     enddo
 
-    ! Initialize gsmap_global - module variable in spmdGathScatMod
-    call gsmap_global_init(gindex_global)
+    ! Initialize gsmap_global
+    call set_gsmap_global(gindex_global)
 
     ! Diagnostic output
     if (masterproc) then
@@ -310,7 +308,6 @@ contains
        write(iulog,*)'   clumps per process             = ',clump_pproc
        write(iulog,*)
     end if
-
     call shr_sys_flush(iulog)
 
   end subroutine decompInit_lnd
@@ -335,7 +332,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ln,an              ! indices
     integer :: i,g,l,k            ! indices
-    integer :: cid,pid            ! indices
+    integer :: cid                ! indices
     integer :: n,m,np             ! indices
     integer :: anumg              ! lnd num gridcells
     integer :: icells             ! temporary
@@ -487,46 +484,44 @@ contains
     !
     ! !USES:
     use spmdMod
-    use subgridMod      , only : subgrid_get_gcellinfo
-    use spmdGathScatMod , only : gather_data_to_master, scatter_data_from_master
+    use subgridMod, only : subgrid_get_gcellinfo
     !
     ! !ARGUMENTS:
-    integer , intent(in) :: lni,lnj ! land domain global size
-    type(glc_behavior_type), intent(in) :: glc_behavior
+    integer                 , intent(in) :: lni,lnj ! land domain global size
+    type(glc_behavior_type) , intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
-    integer :: gi,li,ci,pi,coi    ! indices
-    integer :: i,g,l,n,np         ! indices
-    integer :: cid,pid            ! indices
-    integer :: begg,endg          ! beg,end gridcells
-    integer :: begl,endl          ! beg,end landunits
-    integer :: begc,endc          ! beg,end columns
-    integer :: begp,endp          ! beg,end patches
-    integer :: begCohort,endCohort! beg,end cohorts
-    integer :: numg               ! total number of gridcells across all processors
-    integer :: numl               ! total number of landunits across all processors
-    integer :: numc               ! total number of columns across all processors
-    integer :: nump               ! total number of patches across all processors
-    integer :: numCohort          ! fates cohorts
-    integer :: ilunits            ! temporary
-    integer :: icols              ! temporary
-    integer :: ipatches           ! temporary
-    integer :: icohorts           ! temporary
-    integer :: ier                ! error code
-    integer :: npmin,npmax,npint  ! do loop values for printing
-    integer :: clmin,clmax        ! do loop values for printing
-    integer :: ng                 ! number of global gridcells
-    integer :: val1, val2         ! temporaries
+    integer :: gi,li,ci,pi,coi           ! indices
+    integer :: i,l,n,np                  ! indices
+    integer :: cid,pid                   ! indices
+    integer :: begg,endg                 ! beg,end gridcells
+    integer :: begl,endl                 ! beg,end landunits
+    integer :: begc,endc                 ! beg,end columns
+    integer :: begp,endp                 ! beg,end patches
+    integer :: begCohort,endCohort       ! beg,end cohorts
+    integer :: numg                      ! total number of land gridcells across all processors
+    integer :: numl                      ! total number of landunits across all processors
+    integer :: numc                      ! total number of columns across all processors
+    integer :: nump                      ! total number of patches across all processors
+    integer :: numCohort                 ! fates cohorts
+    integer :: ilunits                   ! temporary
+    integer :: icols                     ! temporary
+    integer :: ipatches                  ! temporary
+    integer :: icohorts                  ! temporary
+    integer :: ier                       ! error code
+    integer :: npmin,npmax,npint         ! do loop values for printing
+    integer :: clmin,clmax               ! do loop values for printing
+    integer :: ng                        ! number of global gridcells
     integer, pointer :: gindex_global(:) ! global index
-    integer, pointer :: arrayglob(:)     ! temporaroy
-    integer, pointer :: gstart(:),  gcount(:)
-    integer, pointer :: lstart(:),  lcount(:)
-    integer, pointer :: cstart(:),  ccount(:)
-    integer, pointer :: pstart(:),  pcount(:)
+    integer, pointer :: array_glob(:)    ! temporaroy
+    integer, pointer :: gstart(:), gcount(:)
+    integer, pointer :: lstart(:), lcount(:)
+    integer, pointer :: cstart(:), ccount(:)
+    integer, pointer :: pstart(:), pcount(:)
     integer, pointer :: coStart(:), coCount(:)
     integer, pointer :: ioff(:)
     type(bounds_type):: bounds
-    integer, parameter :: dbug=1      ! 0 = min, 1=normal, 2=much, 3=max
+    integer, parameter :: dbug=1         ! 0 = min, 1=normal, 2=much, 3=max
     character(len=32), parameter :: subname = 'decompInit_glcp'
     !------------------------------------------------------------------------------
 
@@ -547,7 +542,6 @@ contains
     allocate(ccount(begg:endg)) ; ccount(:) = 0
     allocate(pcount(begg:endg)) ; pcount(:) = 0
     allocate(coCount(begg:endg)); coCount(:) = 0
-    allocate(ioff(begg:endg))   ; ioff(:) = 0
 
     ! Determine gcount, lcount, ccount and pcount
     do gi = begg,endg
@@ -571,32 +565,20 @@ contains
     ! ---------------------------------------
 
     ng = nglob_x * nglob_y
-    allocate(arrayglob(ng))
-    call shr_sys_flush(6)
+    allocate(array_glob(ng))
+    allocate(ioff(begg:endg)); ioff(:) = 0
 
     ! ---------------------------------------
     ! Gridcell gindex (compressed, no ocean points)
     ! ---------------------------------------
 
-    call shr_sys_flush(6)
-    arrayglob(:) = 0
-    call gather_data_to_master(gcount, arrayglob)
-    if (masterproc) then
-       val1 = arrayglob(1)
-       arrayglob(1) = 1
-       do n = 2,ng
-          val2 = arrayglob(n)
-          arrayglob(n) = arrayglob(n-1) + val1
-          val1 = val2
-       enddo
-    endif
     allocate(gstart(begg:endg)) ; gstart(:) = 0
-    call scatter_data_from_master(arrayglob, gstart)
+    call set_subgrid_start(gsmap_global, array_glob, gcount, gstart)
     allocate(gindex_grc(endg-begg+1))
     i = 0
     do gi = begg,endg
        if (gcount(gi) <  1) then
-          write(iulog,*) 'decompInit_glcp warning count g ',iam,g,gcount(g)
+          write(iulog,*) 'decompInit_glcp warning count g ',iam,gi,gcount(gi)
        endif
        do l = 1,gcount(gi)
           i = i + 1
@@ -604,26 +586,15 @@ contains
        enddo
     enddo
     deallocate(gstart)
-    call shr_sys_flush(6)
+    deallocate(gcount)
 
     ! ---------------------------------------
     ! Landunit gindex
     ! ---------------------------------------
 
     ! lstart for gridcell (n) is the total number of the landunits over gridcells 1->n-1
-    arrayglob(:) = 0
-    call gather_data_to_master(lcount, arrayglob)
-    if (masterproc) then
-       val1 = arrayglob(1)
-       arrayglob(1) = 1
-       do n = 2,ng
-          val2 = arrayglob(n)
-          arrayglob(n) = arrayglob(n-1) + val1
-          val1 = val2
-       enddo
-    endif
     allocate(lstart(begg:endg)) ; lstart(:) = 0
-    call scatter_data_from_master(arrayglob, lstart)
+    call set_subgrid_start(gsmap_global, array_glob, lcount, lstart)
     allocate(gindex_lun(endl-begl+1))
     ioff(:) = 0
     do li = begl,endl
@@ -637,24 +608,14 @@ contains
        ! check that this is less than [lstart(gi) + lcount(gi)]
     enddo
     deallocate(lstart)
+    deallocate(lcount)
 
     ! ---------------------------------------
     ! Column gindex
     ! ---------------------------------------
 
-    arrayglob(:) = 0
-    call gather_data_to_master(ccount, arrayglob)
-    if (masterproc) then
-       val1 = arrayglob(1)
-       arrayglob(1) = 1
-       do n = 2,ng
-          val2 = arrayglob(n)
-          arrayglob(n) = arrayglob(n-1) + val1
-          val1 = val2
-       enddo
-    endif
     allocate(cstart(begg:endg)) ; cstart(:) = 0
-    call scatter_data_from_master(arrayglob, cstart)
+    call set_subgrid_start(gsmap_global, array_glob, ccount, cstart)
     allocate(gindex_col(endc-begc+1))
     ioff(:) = 0
     do ci = begc,endc
@@ -664,24 +625,14 @@ contains
        ! check that this is less than [cstart(gi) + ccount(gi)]
     enddo
     deallocate(cstart)
+    deallocate(ccount)
 
     ! ---------------------------------------
     ! PATCH gindex
     ! ---------------------------------------
 
-    arrayglob(:) = 0
-    call gather_data_to_master(pcount, arrayglob)
-    if (masterproc) then
-       val1 = arrayglob(1)
-       arrayglob(1) = 1
-       do n = 2,ng
-          val2 = arrayglob(n)
-          arrayglob(n) = arrayglob(n-1) + val1
-          val1 = val2
-       enddo
-    endif
     allocate(pstart(begg:endg)) ; pstart(:) = 0
-    call scatter_data_from_master(arrayglob, pstart)
+    call set_subgrid_start(gsmap_global, array_glob, pcount, pstart)
     allocate(gindex_patch(endp-begp+1))
     ioff(:) = 0
     do pi = begp,endp
@@ -690,6 +641,7 @@ contains
        ioff(gi) = ioff(gi) + 1
        ! check that this is less than [pstart(gi) + pcount(gi)]
     enddo
+    deallocate(pcount)
     deallocate(pstart)
 
     ! ---------------------------------------
@@ -697,19 +649,8 @@ contains
     ! ---------------------------------------
 
     if ( use_fates ) then
-       arrayglob(:) = 0
-       call gather_data_to_master(coCount, arrayglob)
-       if (masterproc) then
-          val1 = arrayglob(1)
-          arrayglob(1) = 1
-          do n = 2,ng
-             val2 = arrayglob(n)
-             arrayglob(n) = arrayglob(n-1) + val1
-             val1 = val2
-          enddo
-       endif
        allocate(coStart(begg:endg)); coStart(:) = 0
-       call scatter_data_from_master(arrayglob, coStart)
+       call set_subgrid_start(gsmap_global, array_glob, coCount, coStart)
        allocate(gindex_cohort(endCohort-begCohort+1))
        ioff(:) = 0
        gi = begg
@@ -719,6 +660,7 @@ contains
           if ( mod(coi, fates_maxElementsPerSite ) == 0 ) gi = gi + 1
        enddo
        deallocate(coStart)
+       deallocate(coCount)
     endif
 
     ! ---------------------------------------
@@ -726,14 +668,7 @@ contains
     ! ---------------------------------------
 
     ! Deallocate start/count arrays
-    deallocate(arrayglob)
-    deallocate(gcount)
-    deallocate(lcount)
-    deallocate(ccount)
-    deallocate(pcount)
-    if ( use_fates ) then
-       deallocate(coCount)
-    endif
+    deallocate(array_glob)
     deallocate(ioff)
 
     ! Diagnostic output
@@ -841,5 +776,103 @@ contains
     call shr_sys_flush(iulog)
 
   end subroutine decompInit_glcp
+
+  !------------------------------------------------------------------------------
+  subroutine set_subgrid_start(gsmap, array_glob, count, start)
+    ! !USES:
+    !
+    use mct_mod , only : mct_aVect, mct_gsMap
+    use mct_mod , only : mct_aVect_init, mct_aVect_importIattr, mct_aVect_scatter
+    use mct_mod , only : mct_aVect_gather, mct_aVect_exportIattr, mct_aVect_clean
+    use mct_mod , only : mct_aVect_exportRattr, mct_aVect_importRattr
+
+    ! !ARGUMENTS:
+    type(mct_gsmap)  :: gsmap         ! global gsmap
+    integer, pointer :: array_glob(:) ! input
+    integer, pointer :: count(:)      ! input
+    integer, pointer :: start(:)      ! output
+
+    ! !LOCAL VARIABLES:
+    integer            :: n,lb,ub    ! indices
+    integer            :: lsize      ! size of local array
+    type(mct_aVect)    :: AVi, AVo   ! attribute vectors
+    integer ,pointer   :: adata(:)   ! temporary data array
+    integer            :: val1, val2 ! temporaries
+    !-----------------------------------------------------------------------
+
+    ! Initialize array_glob
+    array_glob(:) = 0
+
+    ! Gather count to master and place the data in arrray_global
+    lsize = size(count, dim=1)
+    lb = lbound(count, dim=1); ub = ubound(count, dim=1)
+    call mct_aVect_init(AVi, rList="", iList='f1', lsize=lsize)
+    allocate(adata(lsize))
+    do n = lb,ub
+       adata(n-lb+1) = count(n)
+    enddo
+    call mct_aVect_importIattr(AVi, 'f1', adata, lsize)
+    deallocate(adata)
+    call mct_aVect_gather(AVi, AVo, gsmap, 0, mpicom)
+    if (masterproc) then
+       lsize = size(array_glob,dim=1)
+       call mct_aVect_exportIattr(AVo, 'f1', array_glob, lsize)
+       call mct_aVect_clean(AVo)
+    endif
+    call mct_aVect_clean(AVi)
+
+    ! Create global start array in array_glob
+    if (masterproc) then
+       val1 = array_glob(1)
+       array_glob(1) = 1
+       do n = 2,size(array_glob, dim=1)
+          val2 = array_glob(n)
+          array_glob(n) = array_glob(n-1) + val1
+          val1 = val2
+       enddo
+    endif
+
+    ! Now scatter start array (i.e. array_glob from master)
+    if (masterproc) then
+       call mct_aVect_init(AVi, rList="", iList="f1", lsize=lsize)
+       call mct_aVect_importIattr(AVi, 'f1', array_glob, size(array_glob,dim=1))
+    endif
+    call mct_aVect_scatter(AVi, AVo, gsmap, 0, mpicom)
+    lsize = size(start, dim=1)
+    allocate(adata(lsize))
+    call mct_aVect_exportIattr(AVo, 'f1', adata, lsize)
+    lb = lbound(start, dim=1); ub = ubound(start, dim=1)
+    do n = lb,ub
+       start(n) = adata(n-lb+1)
+    enddo
+    deallocate(adata)
+    if (masterproc) then
+       call mct_aVect_clean(AVi)
+    endif
+    call mct_aVect_clean(AVo)
+
+  end subroutine set_subgrid_start
+
+  !------------------------------------------------------------------------------
+  subroutine set_gsmap_global(gindex_global)
+    !
+    ! !USES:
+    use spmdMod   , only : mpicom, comp_id
+    use decompMod , only : nglob_x, nglob_y
+    use mct_mod   , only : mct_gsMap_init
+    !
+    ! !ARGUMENTS:
+    integer, intent(in) :: gindex_global(:)
+    !
+    ! !LOCAL VARIABLES:
+    integer :: lsize, gsize
+    !-----------------------------------------------------------------------
+
+    lsize = size(gindex_global)
+    gsize = nglob_x * nglob_y
+
+    call mct_gsMap_init(gsmap_global, gindex_global, mpicom, comp_id, lsize, gsize)
+
+  end subroutine set_gsmap_global
 
 end module decompInitMod

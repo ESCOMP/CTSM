@@ -7,19 +7,19 @@ module FireDataBaseType
   ! module for handling of fire data
   !
   ! !USES:
-  use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
-  use shr_strdata_mod                    , only : shr_strdata_type, shr_strdata_create, shr_strdata_print
-  use shr_strdata_mod                    , only : shr_strdata_advance
-  use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varctl                         , only : iulog, inst_name
-  use spmdMod                            , only : masterproc, mpicom, comp_id
-  use fileutils                          , only : getavu, relavu
-  use spmdGathScatMod                    , only : gsmap_global
-  use domainMod                          , only : ldomain
-  use abortutils                         , only : endrun
-  use decompMod                          , only : bounds_type
+  use shr_kind_mod    , only : r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_strdata_mod , only : shr_strdata_type, shr_strdata_create, shr_strdata_print
+  use shr_strdata_mod , only : shr_strdata_advance
+  use shr_log_mod     , only : errMsg => shr_log_errMsg
+  use clm_varctl      , only : iulog, inst_name
+  use spmdMod         , only : masterproc, mpicom, comp_id
+  use fileutils       , only : getavu, relavu
+  use decompMod       , only : gsmap_global
+  use domainMod       , only : ldomain
+  use abortutils      , only : endrun
+  use decompMod       , only : bounds_type
+  use FireMethodType  , only : fire_method_type
   use mct_mod
-  use FireMethodType                     , only : fire_method_type
   !
   implicit none
   private

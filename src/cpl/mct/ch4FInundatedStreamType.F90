@@ -71,7 +71,7 @@ contains
    use ndepStreamMod    , only : clm_domain_mct
    use domainMod        , only : ldomain
    use decompMod        , only : bounds_type
-   use spmdGathScatMod  , only : gsmap_global
+   use decompMod        , only : gsmap_global
    use mct_mod          , only : mct_ggrid, mct_avect_indexra
    use shr_strdata_mod  , only : shr_strdata_type, shr_strdata_create
    use shr_strdata_mod  , only : shr_strdata_print, shr_strdata_advance

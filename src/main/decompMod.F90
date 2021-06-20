@@ -11,9 +11,14 @@ module decompMod
   use shr_sys_mod , only : shr_sys_abort 
   use clm_varctl  , only : iulog
   use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
+  use mct_mod     , only : mct_gsMap
   !
   ! !PUBLIC TYPES:
   implicit none
+
+  ! mct data type still needed for determining subgrid gindex
+  type(mct_gsMap), target, public  :: gsmap_global  ! global seg map
+
   integer, public :: clump_pproc ! number of clumps per MPI process
 
   ! Define possible bounds subgrid levels
@@ -98,8 +103,8 @@ module decompMod
   type(clump_type),public, allocatable :: clumps(:)
 
   !---global information on each pe
-  !--- glo = 1d global sn ordered
-  !--- gdc = 1d global dc ordered compressed
+  !--- glo = 1d global sn ordered including ocean points
+  !--- gdc = 1d global decomposition compressed, not including ocean points
   type decomp_type
      integer,pointer :: gdc2glo(:)    ! 1d gdc to 1d glo
   end type decomp_type

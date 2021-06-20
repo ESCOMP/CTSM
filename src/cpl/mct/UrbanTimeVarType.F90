@@ -100,7 +100,7 @@ contains
    use shr_mpi_mod      , only : shr_mpi_bcast
    use shr_string_mod   , only : shr_string_listAppend
    use shr_strdata_mod  , only : shr_strdata_create, shr_strdata_print
-   use spmdGathScatMod  , only : gsmap_global
+   use decompMod        , only : gsmap_global
    use domainMod        , only : ldomain
    use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
    use landunit_varcon  , only : isturb_TBD, isturb_HD, isturb_MD
