@@ -19,8 +19,6 @@ module decompMod
   ! mct data type still needed for determining subgrid gindex
   type(mct_gsMap), target, public  :: gsmap_global  ! global seg map
 
-  integer, public :: clump_pproc ! number of clumps per MPI process
-
   ! Define possible bounds subgrid levels
   integer, parameter, public :: BOUNDS_SUBGRID_GRIDCELL = 1
   integer, parameter, public :: BOUNDS_SUBGRID_LANDUNIT = 2

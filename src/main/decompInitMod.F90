@@ -11,13 +11,7 @@ module decompInitMod
   use shr_log_mod            , only : errMsg => shr_log_errMsg
   use spmdMod                , only : masterproc, iam, npes, mpicom
   use abortutils             , only : endrun
-  use clm_varctl             , only : iulog, use_fates
-  use LandunitType           , only : lun
-  use ColumnType             , only : col
-  use PatchType              , only : patch
-  use glcBehaviorMod         , only : glc_behavior_type
-  use FatesInterfaceTypesMod , only : fates_maxElementsPerSite
-  use decompMod
+  use clm_varctl             , only : iulog
   !
   implicit none
   private
@@ -25,13 +19,16 @@ module decompInitMod
   ! !PUBLIC TYPES:
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public decompInit_lnd    ! initializes lnd grid decomposition into clumps and processors
-  public decompInit_clumps ! initializes atm grid decomposition into clumps
-  public decompInit_glcp   ! initializes g,l,c,p decomp info
+  public :: decompInit_lnd    ! initializes lnd grid decomposition into clumps and processors
+  public :: decompInit_clumps ! initializes atm grid decomposition into clumps
+  public :: decompInit_glcp   ! initializes g,l,c,p decomp info
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: set_subgrid_start
   private :: set_gsmap_global
+  !
+  ! PUBLIC TYPES:
+  integer, public :: clump_pproc ! number of clumps per MPI process
   !
   ! !PRIVATE TYPES:
   integer, pointer :: lcid(:)       ! temporary for setting decomposition
@@ -50,8 +47,10 @@ contains
     ! set by clump_pproc
     !
     ! !USES:
-    use clm_varctl      , only : nsegspc
-    use decompMod       , only : nglob_x, nglob_y, gindex_global
+    use clm_varctl , only : nsegspc
+    use decompMod  , only : nglob_x, nglob_y, gindex_global
+    use decompMod  , only : nclumps, clumps
+    use decompMod  , only : bounds_type, get_proc_bounds, procinfo
     !
     ! !ARGUMENTS:
     implicit none
@@ -72,7 +71,7 @@ contains
     integer :: begg, endg             ! beg and end gridcells
     integer, pointer  :: clumpcnt(:)  ! clump index counter
     integer, allocatable :: gdc2glo(:)! used to create gindex_global
-    type(bounds_type) :: bounds       ! contains subgrid bounds data 
+    type(bounds_type) :: bounds       ! contains subgrid bounds data
     !------------------------------------------------------------------------------
 
     lns = lni * lnj
@@ -241,7 +240,7 @@ contains
 
     ! Set gindex_global
 
-    allocate(gdc2glo(numg), stat=ier)  
+    allocate(gdc2glo(numg), stat=ier)
     if (ier /= 0) then
        write(iulog,*) 'decompInit_lnd(): allocation error1 for gdc2glo , etc'
        call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -252,7 +251,7 @@ contains
        write(iulog,*) 'decompInit_lnd(): allocation error1 for clumpcnt'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    
+
     ! clumpcnt is the start gdc index of each clump
 
     ag = 0
@@ -321,13 +320,17 @@ contains
     ! set by clump_pproc
     !
     ! !USES:
-    use subgridMod, only : subgrid_get_gcellinfo
-    use spmdMod
+    use subgridMod     , only : subgrid_get_gcellinfo
+    use decompMod      , only : bounds_type, get_proc_bounds, clumps, nclumps, procinfo
+    use decompMod      , only : numg, numl, numc, nump, numCohort
+    use decompMod      , only : gindex_global
+    use decompMod      , only : nglob_x, nglob_y
+    use glcBehaviorMod , only : glc_behavior_type
+    use spmdMod        , only : MPI_INTEGER, MPI_SUM
     !
     ! !ARGUMENTS:
-    implicit none
-    integer , intent(in) :: lni,lnj ! land domain global size
-    type(glc_behavior_type), intent(in) :: glc_behavior
+    integer                 , intent(in) :: lni,lnj ! land domain global size
+    type(glc_behavior_type) , intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
     integer :: ln,an              ! indices
@@ -342,16 +345,15 @@ contains
     integer :: ipatches           ! temporary
     integer :: icohorts           ! temporary
     integer :: ier                ! error code
+    type(bounds_type) :: bounds   ! bounds
     integer, allocatable :: allvecg(:,:)  ! temporary vector "global"
     integer, allocatable :: allvecl(:,:)  ! temporary vector "local"
-    integer :: ntest
-    type(bounds_type) :: bounds
     character(len=32), parameter :: subname = 'decompInit_clumps'
     !------------------------------------------------------------------------------
 
     !--- assign gridcells to clumps (and thus pes) ---
     call get_proc_bounds(bounds)
-    begg = bounds%begg; endg = bounds%endg    
+    begg = bounds%begg; endg = bounds%endg
 
     allocate(allvecl(nclumps,5))   ! local  clumps [gcells,lunit,cols,patches,coh]
     allocate(allvecg(nclumps,5))   ! global clumps [gcells,lunit,cols,patches,coh]
@@ -483,8 +485,19 @@ contains
     ! Determine gindex for landunits, columns, patches and cohorts
     !
     ! !USES:
-    use spmdMod
-    use subgridMod, only : subgrid_get_gcellinfo
+    use clm_varctl             , only : use_fates
+    use subgridMod             , only : subgrid_get_gcellinfo
+    use decompMod              , only : bounds_type, nclumps, get_proc_global, get_proc_bounds
+    use decompMod              , only : nglob_x, nglob_y
+    use decompMod              , only : gindex_global
+    use decompMod              , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, gindex_Cohort
+    use decompMod              , only : procinfo, nclumps, clump_type, clumps
+    use decompMod              , only : gsmap_global, get_proc_global
+    use LandunitType           , only : lun
+    use ColumnType             , only : col
+    use PatchType              , only : patch
+    use FatesInterfaceTypesMod , only : fates_maxElementsPerSite
+    use glcBehaviorMod         , only : glc_behavior_type
     !
     ! !ARGUMENTS:
     integer                 , intent(in) :: lni,lnj ! land domain global size
@@ -512,7 +525,6 @@ contains
     integer :: npmin,npmax,npint         ! do loop values for printing
     integer :: clmin,clmax               ! do loop values for printing
     integer :: ng                        ! number of global gridcells
-    integer, pointer :: gindex_global(:) ! global index
     integer, pointer :: array_glob(:)    ! temporaroy
     integer, pointer :: gstart(:), gcount(:)
     integer, pointer :: lstart(:), lcount(:)
@@ -526,7 +538,7 @@ contains
     !------------------------------------------------------------------------------
 
     ! Get processor bounds
-    
+
     call get_proc_bounds(bounds)
     begg = bounds%begg; endg = bounds%endg
     begl = bounds%begl; endl = bounds%endl
@@ -858,7 +870,7 @@ contains
     !
     ! !USES:
     use spmdMod   , only : mpicom, comp_id
-    use decompMod , only : nglob_x, nglob_y
+    use decompMod , only : nglob_x, nglob_y, gsmap_global
     use mct_mod   , only : mct_gsMap_init
     !
     ! !ARGUMENTS:
