@@ -2723,9 +2723,9 @@ contains
     if (debug > 1) then
        do m = 0,npes-1
           if (iam == m) then
-             write(iulog,*) trim(subname),' sizes1  = ',iam,gsize,lsize
-             write(iulog,*) trim(subname),' sizes2  = ',iam,fullsize,npes,vsize
-             write(iulog,*) trim(subname),' compDOF = ',iam,size(compDOF),minval(compDOF),maxval(compDOF)
+             write(iulog,'(a,3(i10,2x))') trim(subname)//' sizes1  = ',iam,gsize,lsize
+             write(iulog,'(a,4(i10,2x))') trim(subname)//' sizes2  = ',iam,fullsize,npes,vsize
+             write(iulog,'(a,5(i10,2x))') trim(subname)//' compDOF = ',iam,size(compDOF),minval(compDOF),maxval(compDOF)
              call shr_sys_flush(iulog)
           endif
           call mpi_barrier(mpicom,status)

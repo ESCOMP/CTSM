@@ -8,7 +8,7 @@ module decompMod
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   ! Must use shr_sys_abort rather than endrun here to avoid circular dependency
-  use shr_sys_mod , only : shr_sys_abort 
+  use shr_sys_mod , only : shr_sys_abort
   use clm_varctl  , only : iulog
   use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
   use mct_mod     , only : mct_gsMap
@@ -226,17 +226,17 @@ contains
 #endif
 
      cid  = procinfo%cid(n)
-     bounds%begp = clumps(cid)%begp
-     bounds%endp = clumps(cid)%endp
-     bounds%begc = clumps(cid)%begc
-     bounds%endc = clumps(cid)%endc
-     bounds%begl = clumps(cid)%begl
-     bounds%endl = clumps(cid)%endl
-     bounds%begg = clumps(cid)%begg
-     bounds%endg = clumps(cid)%endg
-     bounds%begCohort = clumps(cid)%begCohort
-     bounds%endCohort = clumps(cid)%endCohort
-     
+     bounds%begp = 1
+     bounds%endp = clumps(cid)%endp - clumps(cid)%begp + 1
+     bounds%begc = 1
+     bounds%endc = clumps(cid)%endc - clumps(cid)%begc + 1
+     bounds%begl = 1
+     bounds%endl = clumps(cid)%endl - clumps(cid)%begl + 1
+     bounds%begg = 1
+     bounds%endg = clumps(cid)%endg - clumps(cid)%begg + 1
+     bounds%begCohort = 1
+     bounds%endCohort = clumps(cid)%endCohort - clumps(cid)%begCohort + 1
+
      bounds%level = BOUNDS_LEVEL_CLUMP
      bounds%clump_index = n
 
@@ -269,16 +269,16 @@ contains
      end if
 #endif
 
-     bounds%begp = procinfo%begp
-     bounds%endp = procinfo%endp
-     bounds%begc = procinfo%begc
-     bounds%endc = procinfo%endc
-     bounds%begl = procinfo%begl
-     bounds%endl = procinfo%endl
-     bounds%begg = procinfo%begg
-     bounds%endg = procinfo%endg
-     bounds%begCohort = procinfo%begCohort
-     bounds%endCohort = procinfo%endCohort
+     bounds%begp = 1
+     bounds%endp = procinfo%endp - procinfo%begp + 1
+     bounds%begc = 1
+     bounds%endc = procinfo%endc - procinfo%begc + 1
+     bounds%begl = 1
+     bounds%endl = procinfo%endl - procinfo%begl + 1
+     bounds%begg = 1
+     bounds%endg = procinfo%endg - procinfo%begg + 1
+     bounds%begCohort = 1
+     bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
 
      bounds%level = BOUNDS_LEVEL_PROC
      bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value

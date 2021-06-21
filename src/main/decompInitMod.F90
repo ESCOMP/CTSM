@@ -287,10 +287,9 @@ contains
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
     call get_proc_bounds(bounds)
-    begg = bounds%begg; endg = bounds%endg
-    allocate(gindex_global(endg-begg+1))
-    do n = begg,endg
-       gindex_global(n-begg+1) = gdc2glo(n)
+    allocate(gindex_global(1:bounds%endg))
+    do n = procinfo%begg,procinfo%endg
+       gindex_global(n-procinfo%begg+1) = gdc2glo(n)
     enddo
 
     deallocate(clumpcnt)
