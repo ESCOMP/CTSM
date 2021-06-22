@@ -3373,20 +3373,29 @@ sub setup_logic_popd_streams {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'phys'=>$nl_flags->{'phys'},
                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
-     if ($opts->{'driver'} eq "nuopc" ) {
-         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens', 'hgrid'=>"0.5x0.5");  
-         my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
-         my $default_value = $nl->get_value('stream_meshfile_popdens');
-         my $none_filename = $inputdata_rootdir . '/none';
-         my $none_filename = &quote_string($none_filename);
-         if ($default_value eq $none_filename) {
-             my $var = 'stream_meshfile_popdens'; 
-             my $group = $definition->get_group_name($var);
-             my $val = "none";
-             $val = &quote_string( $val );
-             $nl->set_variable_value($group, $var, $val);
-         }
-     }
+     # 
+     # TODO (mvertens, 2021-06-22) the following is needed for MCT since a use case enforces this  - so for now stream_meshfile_popdens will be added to the mct 
+     # stream namelist but simply not used
+    if ($opts->{'driver'} eq "nuopc" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens', 'hgrid'=>"0.5x0.5");  
+        my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+        my $default_value = $nl->get_value('stream_meshfile_popdens');
+        my $none_filename = $inputdata_rootdir . '/none';
+        my $none_filename = &quote_string($none_filename);
+        if ($default_value eq $none_filename) {
+            my $var = 'stream_meshfile_popdens'; 
+            my $group = $definition->get_group_name($var);
+            my $val = "none";
+            $val = &quote_string( $val );
+            $nl->set_variable_value($group, $var, $val);
+        }
+    } else {
+        my $var = 'stream_meshfile_popdens'; 
+        my $group = $definition->get_group_name($var);
+        my $val = "none";
+        $val = &quote_string( $val );
+        $nl->set_variable_value($group, $var, $val);
+    }
   } else {
      # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set
      if ( defined($nl->get_value('stream_year_first_popdens')) ||
