@@ -7,10 +7,9 @@ module decompMod
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  ! Must use shr_sys_abort rather than endrun here to avoid circular dependency
-  use shr_sys_mod , only : shr_sys_abort
+  
+  use shr_sys_mod , only : shr_sys_abort ! use shr_sys_abort instead of endrun here to avoid circular dependency
   use clm_varctl  , only : iulog
-  use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -41,13 +40,6 @@ module decompMod
   !
   ! !PRIVATE TYPES:
   private  ! (now mostly public for decompinitmod)
-
-  integer,public :: nclumps          ! total number of clumps across all processors
-  integer,public :: numg             ! total number of gridcells on all procs
-  integer,public :: numl             ! total number of landunits on all procs
-  integer,public :: numc             ! total number of columns on all procs
-  integer,public :: nump             ! total number of patchs on all procs
-  integer,public :: numCohort        ! total number of fates cohorts on all procs
 
   type bounds_type
      integer :: begg, endg           ! beginning and ending gridcell index
@@ -84,7 +76,7 @@ module decompMod
      integer :: ncells           ! number of gridcells in clump
      integer :: nlunits          ! number of landunits in clump
      integer :: ncols            ! number of columns in clump
-     integer :: npatches          ! number of patchs in clump
+     integer :: npatches         ! number of patchs in clump
      integer :: nCohorts         ! number of cohorts in proc
      integer :: begg, endg       ! beginning and ending gridcell index
      integer :: begl, endl       ! beginning and ending landunit index
@@ -95,7 +87,15 @@ module decompMod
   public clump_type
   type(clump_type),public, allocatable :: clumps(:)
 
-  ! NOTE: the following are allocated with a lower bound of 1!
+  ! ---global sizes
+  integer,public :: nclumps          ! total number of clumps across all processors
+  integer,public :: numg             ! total number of gridcells on all procs
+  integer,public :: numl             ! total number of landunits on all procs
+  integer,public :: numc             ! total number of columns on all procs
+  integer,public :: nump             ! total number of patchs on all procs
+  integer,public :: numCohort        ! total number of fates cohorts on all procs
+
+  ! ---NOTE: the following are allocated with a lower bound of 1!
   integer, public, pointer :: gindex_global(:)   => null() ! includes ocean points
   integer, public, pointer :: gindex_grc(:)      => null() ! does not include ocean points
   integer, public, pointer :: gindex_lun(:)      => null()
@@ -352,6 +352,7 @@ contains
      !
      ! !USES:
      use domainMod , only : ldomain
+     use clm_varcon, only : grlnd, nameg, namel, namec, namep, nameCohort
      !
      ! !ARGUMENTS:
      character(len=*), intent(in) :: clmlevel    !type of clm 1d array
@@ -382,6 +383,9 @@ contains
      !
      ! !DESCRIPTION:
      ! Get subgrid global index space
+     !
+     ! !USES
+     use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
      !
      ! !ARGUMENTS:
      character(len=*), intent(in) :: clmlevel     ! type of input data
