@@ -217,23 +217,22 @@ contains
      ! FIX(SPM, 090314) - for debugging fates and openMP
      !write(iulog,*) 'SPM omp debug decompMod 1 ', &
           !OMP_GET_NUM_THREADS(),OMP_GET_MAX_THREADS(),OMP_GET_THREAD_NUM()
-
      if ( OMP_GET_NUM_THREADS() == 1 .and. OMP_GET_MAX_THREADS() > 1 )then
         call shr_sys_abort( trim(subname)//' ERROR: Calling from inside a non-threaded region)')
      end if
 #endif
 
      cid  = procinfo%cid(n)
-     bounds%begp = 1
-     bounds%endp = clumps(cid)%endp - clumps(cid)%begp + 1
-     bounds%begc = 1
-     bounds%endc = clumps(cid)%endc - clumps(cid)%begc + 1
-     bounds%begl = 1
-     bounds%endl = clumps(cid)%endl - clumps(cid)%begl + 1
-     bounds%begg = 1
-     bounds%endg = clumps(cid)%endg - clumps(cid)%begg + 1
-     bounds%begCohort = 1
-     bounds%endCohort = clumps(cid)%endCohort - clumps(cid)%begCohort + 1
+     bounds%begp      = clumps(cid)%begp - procinfo%begp + 1
+     bounds%endp      = clumps(cid)%endp - procinfo%begp + 1
+     bounds%begc      = clumps(cid)%begc - procinfo%begc + 1
+     bounds%endc      = clumps(cid)%endc - procinfo%begc + 1
+     bounds%begl      = clumps(cid)%begl - procinfo%begl + 1
+     bounds%endl      = clumps(cid)%endl - procinfo%begl + 1
+     bounds%begg      = clumps(cid)%begg - procinfo%begg + 1
+     bounds%endg      = clumps(cid)%endg - procinfo%begg + 1
+     bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
+     bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
 
      bounds%level = BOUNDS_LEVEL_CLUMP
      bounds%clump_index = n
