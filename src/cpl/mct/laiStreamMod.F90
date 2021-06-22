@@ -53,8 +53,8 @@ contains
     use ndepStreamMod    , only : clm_domain_mct
     use histFileMod      , only : hist_addfld1d
     use domainMod        , only : ldomain
-    use decompMod        , only : gsmap_global
     use controlMod       , only : NLFilename
+    use lnd_set_decomp_and_domain , only : gsmap_global
     !
     ! !ARGUMENTS:
     implicit none

@@ -15,7 +15,8 @@ module lnd_set_decomp_and_domain
   private :: surfrd_get_globmask  ! Reads global land mask (needed for setting domain decomp)
   private :: surfrd_get_grid      ! Read grid/ladnfrac data into domain (after domain decomp)
 
-  type(mct_gsmap), target, public :: gsMap_lnd2Dsoi_gdc2glo
+  type(mct_gsmap), pointer, public :: gsmap_global 
+  type(mct_gsmap), target , public :: gsMap_lnd2Dsoi_gdc2glo
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__

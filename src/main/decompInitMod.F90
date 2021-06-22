@@ -6,12 +6,12 @@ module decompInitMod
   ! be mapped back to atmosphere physics chunks.
   !
   ! !USES:
-  use shr_kind_mod           , only : r8 => shr_kind_r8
-  use shr_sys_mod            , only : shr_sys_flush
-  use shr_log_mod            , only : errMsg => shr_log_errMsg
-  use spmdMod                , only : masterproc, iam, npes, mpicom
-  use abortutils             , only : endrun
-  use clm_varctl             , only : iulog
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use shr_sys_mod  , only : shr_sys_flush
+  use shr_log_mod  , only : errMsg => shr_log_errMsg
+  use spmdMod      , only : masterproc, iam, npes, mpicom
+  use abortutils   , only : endrun
+  use clm_varctl   , only : iulog
   !
   implicit none
   private
@@ -25,13 +25,13 @@ module decompInitMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: set_subgrid_start
-  private :: set_gsmap_global
   !
   ! PUBLIC TYPES:
   integer, public :: clump_pproc ! number of clumps per MPI process
   !
   ! !PRIVATE TYPES:
-  integer, pointer :: lcid(:)       ! temporary for setting decomposition
+  integer, pointer :: lcid(:)          ! temporary for setting decomposition
+  integer          :: nglob_x, nglob_y ! global sizes
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ module decompInitMod
 contains
 
   !------------------------------------------------------------------------------
-  subroutine decompInit_lnd(lni,lnj,amask)
+  subroutine decompInit_lnd(lni, lnj, amask)
     !
     ! !DESCRIPTION:
     ! This subroutine initializes the land surface decomposition into a clump
@@ -48,8 +48,7 @@ contains
     !
     ! !USES:
     use clm_varctl , only : nsegspc
-    use decompMod  , only : nglob_x, nglob_y, gindex_global
-    use decompMod  , only : nclumps, clumps
+    use decompMod  , only : gindex_global, nclumps, clumps
     use decompMod  , only : bounds_type, get_proc_bounds, procinfo
     !
     ! !ARGUMENTS:
@@ -294,9 +293,6 @@ contains
     deallocate(clumpcnt)
     deallocate(gdc2glo)
 
-    ! Initialize gsmap_global
-    call set_gsmap_global(gindex_global)
-
     ! Diagnostic output
     if (masterproc) then
        write(iulog,*)' Surface Grid Characteristics'
@@ -324,7 +320,6 @@ contains
     use decompMod      , only : bounds_type, get_proc_bounds, clumps, nclumps, procinfo
     use decompMod      , only : numg, numl, numc, nump, numCohort
     use decompMod      , only : gindex_global
-    use decompMod      , only : nglob_x, nglob_y
     use glcBehaviorMod , only : glc_behavior_type
     use spmdMod        , only : MPI_INTEGER, MPI_SUM
     !
@@ -488,53 +483,55 @@ contains
     use clm_varctl             , only : use_fates
     use subgridMod             , only : subgrid_get_gcellinfo
     use decompMod              , only : bounds_type, nclumps, get_proc_global, get_proc_bounds
-    use decompMod              , only : nglob_x, nglob_y
     use decompMod              , only : gindex_global
     use decompMod              , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, gindex_Cohort
-    use decompMod              , only : procinfo, nclumps, clump_type, clumps
-    use decompMod              , only : gsmap_global, get_proc_global
+    use decompMod              , only : procinfo, nclumps, clump_type, clumps, get_proc_global
     use LandunitType           , only : lun
     use ColumnType             , only : col
     use PatchType              , only : patch
     use FatesInterfaceTypesMod , only : fates_maxElementsPerSite
     use glcBehaviorMod         , only : glc_behavior_type
+    use mct_mod                , only : mct_gsmap, mct_gsMap_init, mct_gsmap_clean
+    use spmdMod                , only : comp_id
     !
     ! !ARGUMENTS:
     integer                 , intent(in) :: lni,lnj ! land domain global size
     type(glc_behavior_type) , intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
-    integer :: gi,li,ci,pi,coi           ! indices
-    integer :: i,l,n,np                  ! indices
-    integer :: cid,pid                   ! indices
-    integer :: begg,endg                 ! beg,end gridcells
-    integer :: begl,endl                 ! beg,end landunits
-    integer :: begc,endc                 ! beg,end columns
-    integer :: begp,endp                 ! beg,end patches
-    integer :: begCohort,endCohort       ! beg,end cohorts
-    integer :: numg                      ! total number of land gridcells across all processors
-    integer :: numl                      ! total number of landunits across all processors
-    integer :: numc                      ! total number of columns across all processors
-    integer :: nump                      ! total number of patches across all processors
-    integer :: numCohort                 ! fates cohorts
-    integer :: ilunits                   ! temporary
-    integer :: icols                     ! temporary
-    integer :: ipatches                  ! temporary
-    integer :: icohorts                  ! temporary
-    integer :: ier                       ! error code
-    integer :: npmin,npmax,npint         ! do loop values for printing
-    integer :: clmin,clmax               ! do loop values for printing
-    integer :: ng                        ! number of global gridcells
-    integer, pointer :: array_glob(:)    ! temporaroy
-    integer, pointer :: gstart(:), gcount(:)
-    integer, pointer :: lstart(:), lcount(:)
-    integer, pointer :: cstart(:), ccount(:)
-    integer, pointer :: pstart(:), pcount(:)
-    integer, pointer :: coStart(:), coCount(:)
-    integer, pointer :: ioff(:)
-    type(bounds_type):: bounds
-    integer, parameter :: dbug=1         ! 0 = min, 1=normal, 2=much, 3=max
-    character(len=32), parameter :: subname = 'decompInit_glcp'
+    integer                 :: gi,li,ci,pi,coi     ! indices
+    integer                 :: i,l,n,np            ! indices
+    integer                 :: cid,pid             ! indices
+    integer                 :: begg,endg           ! beg,end gridcells
+    integer                 :: begl,endl           ! beg,end landunits
+    integer                 :: begc,endc           ! beg,end columns
+    integer                 :: begp,endp           ! beg,end patches
+    integer                 :: begCohort,endCohort ! beg,end cohorts
+    integer                 :: numg                ! total number of land gridcells across all processors
+    integer                 :: numl                ! total number of landunits across all processors
+    integer                 :: numc                ! total number of columns across all processors
+    integer                 :: nump                ! total number of patches across all processors
+    integer                 :: numCohort           ! fates cohorts
+    integer                 :: ilunits             ! temporary
+    integer                 :: icols               ! temporary
+    integer                 :: ipatches            ! temporary
+    integer                 :: icohorts            ! temporary
+    integer                 :: ier                 ! error code
+    integer                 :: npmin,npmax,npint   ! do loop values for printing
+    integer                 :: clmin,clmax         ! do loop values for printing
+    integer                 :: ng                  ! number of global gridcells
+    integer, pointer        :: array_glob(:)       ! temporaroy
+    integer, pointer        :: gstart(:), gcount(:)
+    integer, pointer        :: lstart(:), lcount(:)
+    integer, pointer        :: cstart(:), ccount(:)
+    integer, pointer        :: pstart(:), pcount(:)
+    integer, pointer        :: coStart(:), coCount(:)
+    integer, pointer        :: ioff(:)
+    type(bounds_type)       :: bounds
+    type(mct_gsMap), target :: gsmap_global        ! global seg map
+    integer                 :: lsize, gsize
+    integer, parameter      :: dbug=1              ! 0 = min, 1=normal, 2=much, 3=max
+    Character(len=32), parameter :: subname = 'decompInit_glcp'
     !------------------------------------------------------------------------------
 
     ! Get processor bounds
@@ -572,11 +569,15 @@ contains
     ! scatter the subgrid start indices back out to the gdc gridcells
     ! set the local gindex array for the subgrid from the subgrid start and count arrays
 
+    ! Initialize gsmap_global
+    lsize = size(gindex_global)
+    ng = nglob_x * nglob_y
+    call mct_gsmap_init(gsmap_global, gindex_global, mpicom, comp_id, lsize, ng)
+
     ! ---------------------------------------
     ! Determine total number of global gridcells (including ocean)
     ! ---------------------------------------
 
-    ng = nglob_x * nglob_y
     allocate(array_glob(ng))
     allocate(ioff(begg:endg)); ioff(:) = 0
 
@@ -787,12 +788,15 @@ contains
     end do
     call shr_sys_flush(iulog)
 
+    ! Destroy gsmap
+    call mct_gsmap_clean(gsmap_global)
+
   end subroutine decompInit_glcp
 
   !------------------------------------------------------------------------------
   subroutine set_subgrid_start(gsmap, array_glob, count, start)
+
     ! !USES:
-    !
     use mct_mod , only : mct_aVect, mct_gsMap
     use mct_mod , only : mct_aVect_init, mct_aVect_importIattr, mct_aVect_scatter
     use mct_mod , only : mct_aVect_gather, mct_aVect_exportIattr, mct_aVect_clean
@@ -864,27 +868,5 @@ contains
     call mct_aVect_clean(AVo)
 
   end subroutine set_subgrid_start
-
-  !------------------------------------------------------------------------------
-  subroutine set_gsmap_global(gindex_global)
-    !
-    ! !USES:
-    use spmdMod   , only : mpicom, comp_id
-    use decompMod , only : nglob_x, nglob_y, gsmap_global
-    use mct_mod   , only : mct_gsMap_init
-    !
-    ! !ARGUMENTS:
-    integer, intent(in) :: gindex_global(:)
-    !
-    ! !LOCAL VARIABLES:
-    integer :: lsize, gsize
-    !-----------------------------------------------------------------------
-
-    lsize = size(gindex_global)
-    gsize = nglob_x * nglob_y
-
-    call mct_gsMap_init(gsmap_global, gindex_global, mpicom, comp_id, lsize, gsize)
-
-  end subroutine set_gsmap_global
 
 end module decompInitMod

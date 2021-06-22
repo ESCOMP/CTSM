@@ -67,7 +67,7 @@ contains
     use clm_cpl_indices  , only : clm_cpl_indices_set
     use mct_mod          , only : mct_aVect_init, mct_aVect_zero, mct_gsMap, mct_gsMap_init
     use decompMod        , only : gindex_global
-    use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd
+    use lnd_set_decomp_and_domain, only : lnd_set_decomp_and_domain_from_surfrd, gsmap_global
     use ESMF
     !
     ! !ARGUMENTS:
@@ -230,6 +230,7 @@ contains
        lsize = bounds%endg - bounds%begg + 1
        gsize = ldomain%ni * ldomain%nj
        call mct_gsMap_init( gsMap_lnd, gindex_global, mpicom_lnd, LNDID, lsize, gsize )
+       gsmap_global => gsmap_lnd ! module variable in lnd_set_decomp_and_domain
        call lnd_domain_mct( bounds, lsize, gsMap_lnd, dom_l )
        call mct_aVect_init(x2l_l, rList=seq_flds_x2l_fields, lsize=lsize)
        call mct_aVect_zero(x2l_l)

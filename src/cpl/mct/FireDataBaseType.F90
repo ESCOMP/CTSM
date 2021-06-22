@@ -14,11 +14,11 @@ module FireDataBaseType
   use clm_varctl      , only : iulog, inst_name
   use spmdMod         , only : masterproc, mpicom, comp_id
   use fileutils       , only : getavu, relavu
-  use decompMod       , only : gsmap_global
   use domainMod       , only : ldomain
   use abortutils      , only : endrun
   use decompMod       , only : bounds_type
   use FireMethodType  , only : fire_method_type
+  use lnd_set_decomp_and_domain, only : gsmap_global
   use mct_mod
   !
   implicit none

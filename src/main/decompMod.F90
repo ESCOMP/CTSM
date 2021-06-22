@@ -11,13 +11,9 @@ module decompMod
   use shr_sys_mod , only : shr_sys_abort
   use clm_varctl  , only : iulog
   use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
-  use mct_mod     , only : mct_gsMap
   !
   ! !PUBLIC TYPES:
   implicit none
-
-  ! mct data type still needed for determining subgrid gindex
-  type(mct_gsMap), target, public  :: gsmap_global  ! global seg map
 
   ! Define possible bounds subgrid levels
   integer, parameter, public :: BOUNDS_SUBGRID_GRIDCELL = 1
@@ -107,7 +103,6 @@ module decompMod
   integer, public, pointer :: gindex_patch(:)    => null()
   integer, public, pointer :: gindex_cohort(:)   => null()
   integer, public, pointer :: gindex_lnd2Dsoi(:) => null()
-  integer, public          :: nglob_x, nglob_y  ! global sizes
   !------------------------------------------------------------------------------
 
 contains
@@ -386,11 +381,11 @@ contains
    subroutine get_clmlevel_gindex (clmlevel, gindex)
      !
      ! !DESCRIPTION:
-     ! Compute arguments for gatherv, scatterv for vectors
+     ! Get subgrid global index space
      !
      ! !ARGUMENTS:
      character(len=*), intent(in) :: clmlevel     ! type of input data
-     integer, pointer :: gindex(:)
+     integer         , pointer    :: gindex(:)
      !----------------------------------------------------------------------
 
     select case (clmlevel)

@@ -32,8 +32,7 @@ module SoilMoistureStreamMod
   use SoilStateType             , only : soilstate_type
   use WaterStateBulkType        , only : waterstatebulk_type
   use perf_mod                  , only : t_startf, t_stopf
-  use spmdMod                   , only : masterproc
-  use spmdMod                   , only : mpicom, comp_id
+  use spmdMod                   , only : masterproc, mpicom, comp_id
   use lnd_set_decomp_and_domain , only : gsMap_lnd2Dsoi_gdc2glo
   use mct_mod
   use ncdio_pio
