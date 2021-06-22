@@ -28,7 +28,7 @@ contains
 
     use clm_varpar    , only: nlevsoi
     use clm_varctl    , only: fatmlndfrc, use_soil_moisture_streams
-    use decompInitMod , only: decompInit_lnd, decompInit_lnd3D
+    use decompInitMod , only: decompInit_lnd
     use decompMod     , only: bounds_type, get_proc_bounds
     use domainMod     , only: ldomain, domain_init, domain_check
 
@@ -300,6 +300,9 @@ contains
     !   as the 3rd dimesnion.
     !
     ! !USES:
+    use decompMod, only : ldecomp, gsmap_lnd2dsoi_gdc2glo, get_proc_bounds
+    use spmdMod  , only : comp_id, mpicom
+    use mct_mod  , only : mct_gsmap_init 
     !
     ! !ARGUMENTS:
     integer , intent(in) :: lni,lnj,lnk   ! domain global size
@@ -336,14 +339,10 @@ contains
        write(iulog,*)'   gsize                          = ',gsize
        write(iulog,*)'   lsize                          = ',lsize
        write(iulog,*)'   bounds(gindex)                 = ',size(gindex)
-       write(iulog,*)' gsMap Characteristics'
-       write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd2Dsoi_gdc2glo)
        write(iulog,*)
     end if
 
     deallocate(gindex)
-
-    call shr_sys_flush(iulog)
 
   end subroutine decompInit_lnd3D
 
