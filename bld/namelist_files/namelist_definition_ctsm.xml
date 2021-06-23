@@ -1097,7 +1097,11 @@ Initial seed Carbon to use at planting
 
 <entry id="ozone_method" type="char*32" category="physics"
        group="clm_inparm" valid_values="unset,stress_lombardozzi2015,stress_falk" value="unset">
-Toggle to turn on ozone vegetation stress method
+       Parameter to set the type of ozone vegetation stress method 
+       unset                  = (default) ozone stress vegitation method is off 
+       stress_lombardozzi2015 = ozone stress vegitation functions from Danica Lombardozzi 2015
+       stress_falk            = ozone stress vegitation functions from Stefanie Falk (issue #1224)
+<default>Default: "unset"</default>
 </entry>       
        
 <entry id="onset_thresh_depends_on_veg" type="logical" category="physics"
