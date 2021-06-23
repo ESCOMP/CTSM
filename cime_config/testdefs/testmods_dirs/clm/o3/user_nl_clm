@@ -1,2 +1,3 @@
- use_ozone    = .true.
+ ozone_method    = 'stress_lombardozzi2015'
  hist_fincl2 += 'O3UPTAKESUN', 'O3UPTAKESHA'
+ 

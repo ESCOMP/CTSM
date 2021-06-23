@@ -23,7 +23,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Create and initialize an object of ozone_base_type, and return this object. The
-    ! particular type is determined based on the use_ozone namelist parameter.
+    ! particular type is determined based on the ozone_method namelist parameter.
     !
     ! !USES:
     use clm_varctl   , only : ozone_method

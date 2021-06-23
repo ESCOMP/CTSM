@@ -541,6 +541,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <jmaxb1 use_luna=".true." phys="clm5_1" >0.17</jmaxb1>
 <jmaxb1 use_luna=".true." phys="clm5_0" >0.17</jmaxb1>
 
+<!-- ozone_method-->
+<ozone_method phys="clm5_0">unset</ozone_method>
+
 <use_grainproduct>.false.</use_grainproduct>
 <use_grainproduct use_crop=".true." phys="clm4_5" >.false.</use_grainproduct> <!-- 1-year grain product pool default to off for clm45 if crop is turned on -->
 <use_grainproduct use_crop=".true." phys="clm5_0" >.true.</use_grainproduct> <!-- 1-year grain product pool default to on for clm50 if crop is turned on -->

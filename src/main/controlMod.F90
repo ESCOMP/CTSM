@@ -228,6 +228,8 @@ contains
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode
     
+   ! Ozone vegitation stress method 
+   namelist / clm_inparam / ozone_method
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -452,7 +454,7 @@ contains
           if ( n_drydep > 0 .and. drydep_method /= DD_XLND ) then
              call endrun(msg=' ERROR: dry deposition via ML Welsey is not compatible with FATES.'//&
                    errMsg(sourcefile, __LINE__))
-          end ifozone_method
+          end if
 
           if( use_luna ) then
              call endrun(msg=' ERROR: luna is not compatible with FATES.'//&
@@ -1054,6 +1056,7 @@ contains
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
     write(iulog, *) '  use_luna = ', use_luna
+    write(iulog, *) '  ozone vegitation stress method = ', ozone_method
 
     write(iulog, *) '  ED/FATES: '
     write(iulog, *) '    use_fates = ', use_fates
