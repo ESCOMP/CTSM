@@ -375,7 +375,7 @@ contains
       write(iulog,'(a)'   ) 'light_stream settings:'
       write(iulog,'(a,i8)') '  stream_year_first_lightng  = ',stream_year_first_lightng
       write(iulog,'(a,i8)') '  stream_year_last_lightng   = ',stream_year_last_lightng
-      write(iulog,'(a,a)' ) '  model_year_align_lightng   = ',model_year_align_lightng
+      write(iulog,'(a,i8)') '  model_year_align_lightng   = ',model_year_align_lightng
       write(iulog,'(a,a)' ) '  stream_fldFileName_lightng = ',trim(stream_fldFileName_lightng)
       write(iulog,'(a,a)' ) '  stream_meshfile            = ',trim(stream_meshfile_lightng)
       write(iulog,'(a,a)' ) '  stream_varnames            = ','lnfm' 
