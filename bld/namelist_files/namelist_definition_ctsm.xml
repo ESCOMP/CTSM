@@ -1095,7 +1095,7 @@ Initial seed Carbon to use at planting
 (only used when CN is on as well as crop)
 </entry>
 
-<entry id="ozone_method" type="char*32" category="physics"
+<entry id="o3_veg_stress_method" type="char*32" category="physics"
        group="clm_inparm" valid_values="unset,stress_lombardozzi2015,stress_falk" value="unset">
        Parameter to set the type of ozone vegetation stress method 
        unset                  = (default) ozone stress vegitation method is off 

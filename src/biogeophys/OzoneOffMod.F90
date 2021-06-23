@@ -60,7 +60,7 @@ contains
   end function constructor
 
 
-  subroutine Init(this,  bounds, ozone_method)
+  subroutine Init(this,  bounds, o3_veg_stress_method)
     !
     ! !DESCRIPTION:
     ! Initialize ozone data structure
@@ -71,10 +71,10 @@ contains
     ! !ARGUMENTS:
     class(ozone_off_type) , intent(inout) :: this
     type(bounds_type)     , intent(in)           :: bounds
-    character(len=*), intent(in)                      :: ozone_method 
+    character(len=*), intent(in)                      :: o3_veg_stress_method 
     !-----------------------------------------------------------------------
 
-    if (ozone_method /= 'unset' ) call endrun(' unconsistent choice of ozone_method in init OzoneOffMod.')
+    if (o3_veg_stress_method /= 'unset' ) call endrun(' unconsistent choice of o3_veg_stress_method in init OzoneOffMod.')
     
     call this%InitAllocateBase(bounds)
     call this%InitColdBase(bounds)

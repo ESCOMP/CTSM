@@ -47,13 +47,13 @@ module OzoneBaseMod
 
   abstract interface
 
-     subroutine Init_interface(this, bounds, ozone_method)
+     subroutine Init_interface(this, bounds, o3_veg_stress_method)
        use decompMod, only : bounds_type
        import :: ozone_base_type
 
        class(ozone_base_type), intent(inout) :: this
        type(bounds_type), intent(in) :: bounds
-       character(len=*),        intent(in) :: ozone_method
+       character(len=*),        intent(in) :: o3_veg_stress_method
 
      end subroutine Init_interface
   

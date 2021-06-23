@@ -23,10 +23,10 @@ contains
     !
     ! !DESCRIPTION:
     ! Create and initialize an object of ozone_base_type, and return this object. The
-    ! particular type is determined based on the ozone_method namelist parameter.
+    ! particular type is determined based on the o3_veg_stress_method namelist parameter.
     !
     ! !USES:
-    use clm_varctl   , only : ozone_method
+    use clm_varctl   , only : o3_veg_stress_method
     use OzoneBaseMod , only : ozone_base_type
     use OzoneOffMod  , only : ozone_off_type
     use OzoneMod     , only : ozone_type
@@ -40,13 +40,13 @@ contains
     character(len=*), parameter :: subname = 'create_and_init_ozone_type'
     !-----------------------------------------------------------------------
     
-    if (ozone_method=='unset') then 
+    if (o3_veg_stress_method=='unset') then 
        allocate(ozone_off_type :: ozone)
     else 
        allocate(ozone_type :: ozone)
     endif
 
-    call ozone%Init(bounds, ozone_method)
+    call ozone%Init(bounds, o3_veg_stress_method)
     
   end function create_and_init_ozone_type
 

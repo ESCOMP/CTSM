@@ -1494,7 +1494,7 @@ sub process_namelist_inline_logic {
   setup_logic_glacier($opts, $nl_flags, $definition, $defaults, $nl,  $envxml_ref);
   setup_logic_dynamic_plant_nitrogen_alloc($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_luna($opts, $nl_flags, $definition, $defaults, $nl, $physv);
-  setup_logic_ozone_method($opts, $nl_flags, $definition, $defaults, $nl,$physv);
+  setup_logic_o3_veg_stress_method($opts, $nl_flags, $definition, $defaults, $nl,$physv);
   setup_logic_hydrstress($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_dynamic_roots($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_params_file($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -3034,13 +3034,13 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
 
 #-------------------------------------------------------------------------------
 
-sub setup_logic_ozone_method {
+sub setup_logic_o3_veg_stress_method {
   #
   # Ozone vegitation stress method 
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
   
-  my $var = 'ozone_method';
+  my $var = 'o3_veg_stress_method';
  
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
 }

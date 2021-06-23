@@ -137,7 +137,7 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine Init(this, bounds, ozone_method)
+  subroutine Init(this, bounds, o3_veg_stress_method)
     !
     ! !DESCRIPTION:
     ! Initialize ozone data structure
@@ -145,12 +145,12 @@ contains
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
-    character(len=*),  intent(in)    :: ozone_method 
+    character(len=*),  intent(in)    :: o3_veg_stress_method 
     !-----------------------------------------------------------------------
 
-    if (ozone_method=='stress_lombardozzi2015') then 
+    if (o3_veg_stress_method=='stress_lombardozzi2015') then 
        this%stress_method = stress_method_lombardozzi2015
-    else if (ozone_method=='stress_falk') then 
+    else if (o3_veg_stress_method=='stress_falk') then 
        this%stress_method = stress_method_falk
     else 
        call endrun('unknown ozone stress method')

@@ -204,7 +204,7 @@ module clm_varctl
   real(r8), public :: co2_ppmv     = 355._r8            !
 
   ! ozone vegitation stress method, valid values: unset, stress_lombardozzi2015, stress_falk
-  character(len=64), public    :: ozone_method = 'unset'
+  character(len=64), public    :: o3_veg_stress_method = 'unset'
 
   real(r8), public  :: o3_ppbv = 100._r8
 
