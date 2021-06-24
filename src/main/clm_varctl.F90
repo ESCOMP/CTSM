@@ -221,7 +221,10 @@ module clm_varctl
   !  Surface roughness parameterization
   !----------------------------------------------------------
 
-  character(len=64), public :: z0param_method 
+  character(len=64), public :: z0param_method
+  logical, public :: use_z0m_snowmelt = .false.         ! true => use snow z0m parameterization of Brock2006
+  logical, public :: use_z0mg_2d      = .false.         ! true => use 2D ground z0m of Prigent2005
+  
 
   !----------------------------------------------------------
   !  FATES switches

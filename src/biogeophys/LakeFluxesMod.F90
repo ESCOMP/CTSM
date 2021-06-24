@@ -93,7 +93,7 @@ contains
     use clm_varpar          , only : nlevlak
     use clm_varcon          , only : hvap, hsub, hfus, cpair, cpliq, tkwat, tkice, tkair
     use clm_varcon          , only : sb, vkc, grav, denh2o, tfrz, spval
-    use clm_varctl          , only : use_lch4, z0param_method
+    use clm_varctl          , only : use_lch4, z0param_method, use_z0m_snowmelt
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
     use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
@@ -227,7 +227,9 @@ contains
          lakefetch        =>    lakestate_inst%lakefetch_col           , & ! Input:  [real(r8) (:)   ]  lake fetch from surface data (m)                  
          
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col         , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                            
-         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)                                
+         h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col         , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2)  
+         snomelt_accum    =>    waterfluxbulk_inst%qflx_snomelt_accum_col  , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)       
+         
          t_skin_patch     =>    temperature_inst%t_skin_patch           , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)
 
          t_lake           =>    temperature_inst%t_lake_col            , & ! Input:  [real(r8) (:,:) ]  lake temperature (Kelvin)                       
@@ -346,13 +348,22 @@ contains
             end select
             z0qg(p) = z0hg(p)
          else                          ! use roughness over snow as in Biogeophysics1
-            z0mg(p) = params_inst%zsno
             select case (z0param_method)
             case ('MeierXXXX') 
+               if(use_z0m_snowmelt) then
+                  z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c)+0.23_r8)/0.08_r8))-0.31_r8)) / 1000._r8 
+               else
+                  z0mg(p) = params_inst%zsno
+               end if                       
                z0hg(p) = 70._r8 * 1.5e-5_r8 / ust_lake(c) ! For initial guess assume tstar = 0 
                !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
 
             case ('ZengWang2007')
+               if(use_z0m_snowmelt) then
+                  z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c)+0.23_r8)/0.08_r8))-0.31_r8)) / 1000._r8 
+               else
+                  z0mg(p) = params_inst%zsno
+               end if                      
                z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
             end select
             z0qg(p) = z0hg(p)
@@ -583,15 +594,19 @@ contains
                end select
                   z0qg(p) = z0hg(p)
             else ! Snow layers
-               ! z0mg won't have changed
+               if(use_z0m_snowmelt) then
+                  z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c)+0.23_r8)/0.08_r8))-0.31_r8)) / 1000._r8      
+               end if
+
                select case (z0param_method)
-               case ('MeierXXXX') 
+               case ('MeierXXXX')
                   z0hg(p) =  70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes 
                   !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
  
                case ('ZengWang2007')
                   z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
                end select
+
                z0qg(p) = z0hg(p)
             end if
 

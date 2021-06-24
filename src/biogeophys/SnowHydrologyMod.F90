@@ -477,6 +477,7 @@ contains
        ! all snow falls on ground, no snow on h2osfc (note that qflx_snow_h2osfc is
        ! currently set to 0 always in CanopyHydrologyMod)
        newsnow(c) = qflx_snow_grnd(c) * dtime
+       qflx_snomelt_accum(c) = max(0._r8, qflx_snomelt_accum(c) - newsnow(c)/1000._r8) 
 
        ! update int_snow
        int_snow(c) = max(int_snow(c),h2osno_total(c)) !h2osno_total could be larger due to frost
@@ -523,7 +524,6 @@ contains
        if (snl(c) < 0) then
           dz_snowf = (snow_depth(c) - temp_snow_depth(c)) / dtime
           dz(c,snl(c)+1) = dz(c,snl(c)+1)+dz_snowf*dtime
-          qflx_snomelt_accum(c) = max(0._r8, qflx_snomelt_accum(c) - dz_snowf*dtime/1000._r8) 
        end if
 
     end do

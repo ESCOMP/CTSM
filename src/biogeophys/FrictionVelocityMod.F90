@@ -12,7 +12,7 @@ module FrictionVelocityMod
   use shr_const_mod           , only : SHR_CONST_PI
   use decompMod               , only : bounds_type
   use clm_varcon              , only : spval
-  use clm_varctl              , only : use_cn, use_luna, z0param_method
+  use clm_varctl              , only : use_cn, use_luna, z0param_method, use_z0mg_2d, use_z0m_snowmelt
   use LandunitType            , only : lun
   use ColumnType              , only : col
   use PatchType               , only : patch
@@ -119,8 +119,8 @@ contains
     call this%InitCold(bounds)
     call this%ReadNamelist(NLFilename)
     call this%ReadParams(params_ncid)
-
-    if(z0param_method == "MeierXXXX") then            
+ 
+    if(use_z0mg_2d) then            
         call this%ReadZ0M(bounds)
     end if
 
@@ -454,12 +454,12 @@ contains
     allocate(z0mg2d(bounds%begg:bounds%endg)) 
     call ncd_io(ncid=ncid, varname='Z0MG_2D', flag='read', data=z0mg2d, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: Z0MG_presc NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
+       call endrun(msg=' ERROR: Z0MG_2D NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
     end if
     write(iulog,*) 'Writing z0mg2d'
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
-       this%z0mg_2D_col(c) = z0mg2d(g)
+       this%z0mg_2D_col(c) = max(1.e-4_r8,z0mg2d(g))
        write(iulog,*) z0mg2d(g)
     end do
     deallocate(z0mg2d)
@@ -631,18 +631,35 @@ contains
        select case (z0param_method)
        case ('ZengWang2007')
           if (frac_sno(c) > 0._r8) then
-             z0mg(c) = this%zsno
+             if(use_z0m_snowmelt) then
+                z0mg(c) = exp(1.4_r8 * (atan((log10(snomelt_accum(c)+0.23_r8)/0.08_r8))-0.31_r8)) / 1000._r8 
+             else
+                z0mg(c) = this%zsno
+             end if                    
           else
-             z0mg(c) = this%zlnd
+             if(use_z0mg_2d) then
+                z0mg(c) = z0mg_2D(c)
+             else
+                z0mg(c) = this%zlnd
+             end if
+                  
           end if
        case ('MeierXXXX')           ! Bare ground and ice have a different value
           l = col%landunit(c)
           if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
-             z0mg(c) = exp(1.4_r8 * (atan((log10(snomelt_accum(c)+0.23_r8)/0.08_r8))-0.31_r8)) / 1000._r8 !this%zsno
+             if(use_z0m_snowmelt) then
+                z0mg(c) = exp(1.4_r8 * (atan((log10(snomelt_accum(c)+0.23_r8)/0.08_r8))-0.31_r8)) / 1000._r8 
+             else
+                z0mg(c) = this%zsno
+             end if                    
           else if (lun%itype(l) == istice_mec) then
              z0mg(c) = this%zglc
           else
-             z0mg(c) = this%zlnd !z0mg_2D(c)
+             if(use_z0mg_2d) then
+                z0mg(c) = z0mg_2D(c)
+             else
+                z0mg(c) = this%zlnd
+             end if                   
           end if
        end select
             

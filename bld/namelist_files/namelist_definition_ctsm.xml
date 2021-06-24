@@ -2733,6 +2733,18 @@ ZengWang2007: Zeng and Wang 2007
 MeierXXXX: Meier et al. in prep.
 </entry>
 
+<entry id="use_z0m_snowmelt" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If FALSE use constant snow z0m
+If TRUE use parameterization of snow z0m as a function of accumulated
+snow melt of Brock et al. (2006)
+</entry>
+
+<entry id="use_z0mg_2d" type="logical" category="clm_physics"
+	group="clm_inparm" valid_values="" >
+If FALSE use constant ground z0m
+If TRUE use spatially explicit ground z0m from Prigent et al. (2005)
+</entry>
 
 <!-- ========================================================================================  -->
 <!-- Namelist options related to initInterp                                                    -->
