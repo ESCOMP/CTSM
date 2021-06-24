@@ -606,8 +606,6 @@ contains
     real(r8):: k_s2                         ! decomposition rate constant SOM 2 (1/sec)
     real(r8):: k_s3                         ! decomposition rate constant SOM 3 (1/sec)
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
-    real(r8):: cwdc_loss                    ! fragmentation rate for CWD carbon (gC/m2/s)
-    real(r8):: cwdn_loss                    ! fragmentation rate for CWD nitrogen (gN/m2/s)
     real(r8):: Q10                          ! temperature dependence
     real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [

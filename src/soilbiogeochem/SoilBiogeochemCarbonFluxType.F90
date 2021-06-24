@@ -43,6 +43,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: fphr_col                                  (:,:)   ! fraction of potential heterotrophic respiration
 
      real(r8), pointer :: hr_col                                    (:)     ! (gC/m2/s) total heterotrophic respiration
+     real(r8), pointer :: cwdhr_col                                 (:)     ! (gC/m2/s) coarse woody debris heterotrophic respiration
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration 
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res   
      real(r8), pointer :: soilc_change_col                          (:)     ! (gC/m2/s) FUN used soil C
@@ -130,6 +131,7 @@ contains
      this%decomp_cpools_transport_tendency_col(:,:,:)= nan
 
      allocate(this%hr_col                  (begc:endc)) ; this%hr_col                  (:) = nan
+     allocate(this%cwdhr_col               (begc:endc)) ; this%cwdhr_col               (:) = nan
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
      allocate(this%soilc_change_col        (begc:endc)) ; this%soilc_change_col        (:) = nan
@@ -203,6 +205,11 @@ contains
         call hist_addfld1d (fname='HR', units='gC/m^2/s', &
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
+
+        this%cwdhr_col(begc:endc) = spval
+        call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
+             avgflag='A', long_name='cwd C heterotrophic respiration', &
+             ptr_col=this%cwdhr_col)
 
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
@@ -383,9 +390,14 @@ contains
              avgflag='A', long_name='C13 total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
+        this%cwdhr_col(begc:endc) = spval
+        call hist_addfld1d (fname='C13_CWDC_HR', units='gC/m^2/s', &
+             avgflag='A', long_name='C13 cwd C heterotrophic respiration', &
+             ptr_col=this%cwdhr_col, default='inactive')
+
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_LITTERC_HR', units='gC13/m^2/s', &
-             avgflag='A', long_name='C13 fine root C litterfall to litter 3 C', &
+             avgflag='A', long_name='C13 litter C heterotrophic respiration', &
              ptr_col=this%lithr_col, default='inactive')
 
         this%somhr_col(begc:endc) = spval
@@ -451,6 +463,11 @@ contains
         call hist_addfld1d (fname='C14_HR', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 total heterotrophic respiration', &
              ptr_col=this%hr_col)
+
+        this%cwdhr_col(begc:endc) = spval
+        call hist_addfld1d (fname='C14_CWDC_HR', units='gC/m^2/s', &
+             avgflag='A', long_name='C14 cwd C heterotrophic respiration', &
+             ptr_col=this%cwdhr_col, default='inactive')
 
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_LITTERC_HR', units='gC14/m^2/s', &
@@ -709,6 +726,7 @@ contains
        this%som_c_leached_col(i) = value_column
        this%somhr_col(i)         = value_column
        this%lithr_col(i)         = value_column
+       this%cwdhr_col(i)         = value_column
        this%soilc_change_col(i)  = value_column
     end do
 
@@ -816,11 +834,24 @@ contains
       end do
     end associate
 
+    ! coarse woody debris heterotrophic respiration (CWDHR)
+    associate(is_cwd => decomp_cascade_con%is_cwd)  ! TRUE => pool is a cwd pool
+      do k = 1, ndecomp_cascade_transitions
+         if ( is_cwd(decomp_cascade_con%cascade_donor_pool(k)) ) then
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               this%cwdhr_col(c) = this%cwdhr_col(c) + this%decomp_cascade_hr_col(c,k)
+            end do
+         end if
+      end do
+    end associate
+
     ! total heterotrophic respiration (HR)
     do fc = 1,num_soilc
        c = filter_soilc(fc)
        
           this%hr_col(c) = &
+               this%cwdhr_col(c) + &
                this%lithr_col(c) + &
                this%somhr_col(c)
        
