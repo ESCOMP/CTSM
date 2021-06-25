@@ -209,7 +209,7 @@ contains
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='cwd C heterotrophic respiration', &
-             ptr_col=this%cwdhr_col)
+             ptr_col=this%cwdhr_col, default='inactive')
 
         this%lithr_col(begc:endc) = spval
         call hist_addfld1d (fname='LITTERC_HR', units='gC/m^2/s', &
