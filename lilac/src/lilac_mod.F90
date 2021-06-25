@@ -151,7 +151,6 @@ contains
     integer, pointer  :: mycomms(:)                 ! for mct
     integer, pointer  :: myids(:)                   ! for mct
     integer           :: compids(1) = (/1/)         ! for pio_init2 - array with component ids
-    integer           :: comms(1)                   ! for both mct and pio_init2 - array with mpicoms
     character(len=32) :: compLabels(1) = (/'LND'/)  ! for pio_init2
     character(len=64) :: comp_name(1) = (/'LND'/)   ! for pio_init2
     logical           :: comp_iamin(1) = (/.true./) ! for pio init2
@@ -485,7 +484,7 @@ contains
     ! Initialize atmaero stream data (using share strearm capability from CIME)
     !-------------------------------------------------------------------------
 
-    call lilac_atmaero_init(atm2cpl_state, rc)
+    call lilac_atmaero_init(atm2cpl_state, lilac_clock, rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) call shr_sys_abort("lilac error in initializing lilac_atmaero_init")
 
     !-------------------------------------------------------------------------
