@@ -142,6 +142,9 @@ contains
     ! !DESCRIPTION:
     ! Initialize ozone data structure
     !
+    ! !USES:
+   use clm_varctl   , only : use_luna
+    ! 
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
@@ -152,6 +155,7 @@ contains
        this%stress_method = stress_method_lombardozzi2015
     else if (o3_veg_stress_method=='stress_falk') then 
        this%stress_method = stress_method_falk
+       if (.not. use_luna ) call endrun(' use_luna=.true. is required when o3_veg_stress_method = stress_falk.')
     else 
        call endrun('unknown ozone stress method')
     end if

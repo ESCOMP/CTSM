@@ -3043,6 +3043,13 @@ sub setup_logic_o3_veg_stress_method {
   my $var = 'o3_veg_stress_method';
  
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var );
+
+  my $val = $nl->get_value($var);
+
+  if (remove_leading_and_trailing_quotes($val) eq "stress_falk" && not (&value_is_true($nl_flags->{'use_luna'})) ) {
+    $log->fatal_error(" use_luna=.true. is required for $var='stress_falk'.");
+  }
+
 }
 
 #-------------------------------------------------------------------------------
