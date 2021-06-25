@@ -1,4 +1,120 @@
 ===============================================================
+Tag name:  ctsm5.1.dev046
+Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date:  Fri Jun 25 14:08:24 MDT 2021
+One-line Summary: Include CWD in heterotrophic respiration (HR)
+
+Purpose and description of changes
+----------------------------------
+
+ Params file sets the respiration fractions for CWD to zero:
+ rf_cwdl2_bgc = 0
+ rf_cwdl3_bgc = 0
+ The model has no code to handle rf_cwd* > 0. So...
+ - I have introduced cwdhr_col to track this HR the same way that we track
+ lithr_col for litter.
+ - I have removed if-statements that prevented CWD HR pools and decomposition
+ from writing to history.
+ - I have introduced a new test to the cheyenne test-suite that makes active
+ seven history fields pertaining to CWD HR and points to a params file with
+ rf_cwd* > 0. I have confirmed that the new test returns the new active
+ variables as greater than 0 when pointing to the new params file and equal
+ to 0 when pointing to the default params file.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #1361
+
+
+Notes of particular relevance for users
+---------------------------------------
+Substantial timing or memory changes:
+ This warning appears in many tests on both cheyenne and izumi:
+ Memory usage increase > 10% from baseline
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+ New test added to cheyenne test-suite (see details in
+ Purpose and description of changes)
+
+Testing summary:
+----------------
+
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - 
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - 
+
+  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
+  (PTCLM is being deprecated, so we only expect this to be done on occasion)
+
+    cheyenne - 
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) - 
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  fates tests:
+    cheyenne ---- 
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1400
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev045
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev044
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev043
 Originator(s):  slevis/ekluzek (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Thu Jun  3 17:14:30 MDT 2021
