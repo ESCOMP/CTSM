@@ -56,8 +56,9 @@ Notes of particular relevance for developers:
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
 Changes to tests or testing:
- New test added to cheyenne test-suite (see details in
- Purpose and description of changes)
+ New test added to cheyenne test-suite:
+ ERS_Ld3.f10_f10_mg37.I2000Clm51Bgc.cheyenne_intel.clm-ciso_cwd_hr
+ Details in "Purpose and description of changes"
 
 Testing summary:
 ----------------
