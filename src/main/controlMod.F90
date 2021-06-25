@@ -228,7 +228,7 @@ contains
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode
     
-   ! Ozone vegitation stress method 
+   ! Ozone vegetation stress method 
    namelist / clm_inparam / o3_veg_stress_method
 
     ! CLM 5.0 nitrogen flags
@@ -1056,7 +1056,7 @@ contains
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
     write(iulog, *) '  use_luna = ', use_luna
-    write(iulog, *) '  ozone vegitation stress method = ', o3_veg_stress_method
+    write(iulog, *) '  ozone vegetation stress method = ', o3_veg_stress_method
 
     write(iulog, *) '  ED/FATES: '
     write(iulog, *) '    use_fates = ', use_fates

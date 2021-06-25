@@ -3036,7 +3036,7 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
 
 sub setup_logic_o3_veg_stress_method {
   #
-  # Ozone vegitation stress method 
+  # Ozone vegetation stress method 
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
   
