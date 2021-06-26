@@ -1014,8 +1014,8 @@ contains
     do k = i_litr_min, i_litr_max
        this%dwt_frootn_to_litr_n_col(begc:endc,:,k) = spval
        data2dptr => this%dwt_frootn_to_litr_n_col(begc:endc,:,k)
-       fieldname = 'DWT_FROOTN_TO_LITR_'//trim(decomp_cascade_con%decomp_pool_name_short(k))//'_N'
-       longname =  'fine root N to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' litter due to landcover change'
+       fieldname = 'DWT_FROOTN_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_N'
+       longname =  'fine root N to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
        call hist_addfld_decomp (fname=fieldname, units='gN/m^2/s',  type2d='levdcmp', &
             avgflag='A', long_name=longname, &
             ptr_col=data2dptr, default='inactive')

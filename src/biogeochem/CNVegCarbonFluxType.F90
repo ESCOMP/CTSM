@@ -2895,8 +2895,8 @@ contains
        do k = i_litr_min, i_litr_max
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'DWT_FROOTC_TO_LITR_'//trim(decomp_cascade_con%decomp_pool_name_short(k))//'_C'
-          longname =  'fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' litter due to landcover change'
+          fieldname = 'DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
@@ -3073,8 +3073,8 @@ contains
        do k = i_litr_min, i_litr_max
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'C13_DWT_FROOTC_TO_LITR_'//trim(decomp_cascade_con%decomp_pool_name_short(k))//'_C'
-          longname =  'C13 fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' litter due to landcover change'
+          fieldname = 'C13_DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'C13 fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
@@ -3233,8 +3233,8 @@ contains
        do k = i_litr_min, i_litr_max
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'C14_DWT_FROOTC_TO_LITR_'//trim(decomp_cascade_con%decomp_pool_name_short(k))//'_C'
-          longname =  'C14 fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' litter due to landcover change'
+          fieldname = 'C14_DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'C14 fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
