@@ -354,8 +354,8 @@ contains
       floating_cn_ratio_decomp_pools(i_met_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_met_lit) = 'litr1'
       decomp_cascade_con%decomp_pool_name_history(i_met_lit) = 'LITR1'
-      decomp_cascade_con%decomp_pool_name_long(i_met_lit) = 'litter 1'
-      decomp_cascade_con%decomp_pool_name_short(i_met_lit) = 'L1'
+      decomp_cascade_con%decomp_pool_name_long(i_met_lit) = 'metabolic'
+      decomp_cascade_con%decomp_pool_name_short(i_met_lit) = 'MET'
       is_litter(i_met_lit) = .true.
       is_soil(i_met_lit) = .false.
       is_cwd(i_met_lit) = .false.
@@ -369,8 +369,8 @@ contains
       floating_cn_ratio_decomp_pools(i_cel_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_cel_lit) = 'litr2'
       decomp_cascade_con%decomp_pool_name_history(i_cel_lit) = 'LITR2'
-      decomp_cascade_con%decomp_pool_name_long(i_cel_lit) = 'litter 2'
-      decomp_cascade_con%decomp_pool_name_short(i_cel_lit) = 'L2'
+      decomp_cascade_con%decomp_pool_name_long(i_cel_lit) = 'cellulosic'
+      decomp_cascade_con%decomp_pool_name_short(i_cel_lit) = 'CEL'
       is_litter(i_cel_lit) = .true.
       is_soil(i_cel_lit) = .false.
       is_cwd(i_cel_lit) = .false.
@@ -384,8 +384,8 @@ contains
       floating_cn_ratio_decomp_pools(i_lig_lit) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_lig_lit) = 'litr3'
       decomp_cascade_con%decomp_pool_name_history(i_lig_lit) = 'LITR3'
-      decomp_cascade_con%decomp_pool_name_long(i_lig_lit) = 'litter 3'
-      decomp_cascade_con%decomp_pool_name_short(i_lig_lit) = 'L3'
+      decomp_cascade_con%decomp_pool_name_long(i_lig_lit) = 'lignin'
+      decomp_cascade_con%decomp_pool_name_short(i_lig_lit) = 'LIG'
       is_litter(i_lig_lit) = .true.
       is_soil(i_lig_lit) = .false.
       is_cwd(i_lig_lit) = .false.

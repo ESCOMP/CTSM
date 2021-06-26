@@ -518,7 +518,6 @@ contains
     integer        :: begp, endp
     integer        :: begc, endc
     integer        :: begg, endg
-    character(1)   :: k_str
     character(10)  :: active
     character(24)  :: fieldname
     character(100) :: longname
@@ -1013,11 +1012,10 @@ contains
          ptr_patch=this%dwt_conv_nflux_patch, default='inactive')
     
     do k = i_litr_min, i_litr_max
-       write(k_str,'(I1)') k  ! convert 1-digit integer to string
        this%dwt_frootn_to_litr_n_col(begc:endc,:,k) = spval
        data2dptr => this%dwt_frootn_to_litr_n_col(begc:endc,:,k)
-       fieldname = 'DWT_FROOTN_TO_LITR_'//k_str//'_N'
-       longname =  'fine root N to litter_'//k_str//' due to landcover change'
+       fieldname = 'DWT_FROOTN_TO_LITR_'//trim(decomp_cascade_con%decomp_pool_name_short(k))//'_N'
+       longname =  'fine root N to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' litter due to landcover change'
        call hist_addfld_decomp (fname=fieldname, units='gN/m^2/s',  type2d='levdcmp', &
             avgflag='A', long_name=longname, &
             ptr_col=data2dptr, default='inactive')
