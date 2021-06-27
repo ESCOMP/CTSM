@@ -2510,12 +2510,12 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <use_aereoxid_prog use_cn=".true."   >.true.</use_aereoxid_prog>
 <use_aereoxid_prog use_fates=".true.">.true.</use_aereoxid_prog>
 
-<finundation_res finundation_method="TWS_inversion">1.9x2.5</finundation_res>
-<finundation_res finundation_method="ZWT_inversion">1.9x2.5</finundation_res>
+<finundation_res finundation_method="TWS_inversion">0.9x1.25</finundation_res>
+<finundation_res finundation_method="ZWT_inversion">0.9x1.25</finundation_res>
 
-<stream_fldfilename_ch4finundated finundation_method="TWS_inversion" hgrid="1.9x2.5"
+<stream_fldfilename_ch4finundated finundation_method="TWS_inversion" hgrid="0.9x1.25"
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
-<stream_fldfilename_ch4finundated finundation_method="ZWT_inversion" hgrid="1.9x2.5"
+<stream_fldfilename_ch4finundated finundation_method="ZWT_inversion" hgrid="0.9x1.25"
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
 
 <!-- =========================================  -->
