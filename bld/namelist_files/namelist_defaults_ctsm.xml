@@ -1498,15 +1498,12 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <ndep_taxmode            phys="clm5_1"  use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_1"  use_cn=".true.">NDEP_month</ndep_varlist>
-<ndep_taxmode            phys="clm5_1"  use_cn=".true.">limit</ndep_taxmode>
 
 <ndep_taxmode            phys="clm5_0"  use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm5_0"  use_cn=".true.">NDEP_month</ndep_varlist>
-<ndep_taxmode            phys="clm5_0"  use_cn=".true.">limit</ndep_taxmode>
 
 <ndep_taxmode            phys="clm4_5"  use_cn=".true.">cycle</ndep_taxmode>
 <ndep_varlist            phys="clm4_5"  use_cn=".true.">NDEP_month</ndep_varlist>
-<ndep_taxmode            phys="clm4_5"  use_cn=".true.">limit</ndep_taxmode>
 
 <ndepmapalgo                use_cn=".true." >bilinear</ndepmapalgo>
 
