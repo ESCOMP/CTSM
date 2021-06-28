@@ -14,6 +14,7 @@
 /
 &atmaero_stream 
  stream_fldfilename='$INPUTDATA/atm/cam/chem/trop_mozart_aero/aero/aerosoldep_WACCM.ensmean_monthly_hist_1849-2015_0.9x1.25_CMIP6_c180926.nc'
+ stream_meshfile = '$INPUTDATA/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc'
  stream_year_first = 2000
  stream_year_last = 2000
 /
