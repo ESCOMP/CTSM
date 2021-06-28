@@ -271,7 +271,7 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
 
     run_type = check_run_type(start_year, end_year)
     if (run_type == "transient"):
-        ereate_landuse(start_year, end_year)
+        create_landuse(start_year, end_year)
         lu_fname = landuse_filename (start_year, end_year)
     else:
         lu_fname = " "
