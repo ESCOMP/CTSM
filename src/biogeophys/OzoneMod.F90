@@ -638,7 +638,7 @@ contains
     ! This subroutine uses the Falk formulation for ozone stress
     !
     ! !USES:
-    use LunaMod        , only : is_time_to_run_luna
+    use LunaMod        , only : is_time_to_run_LUNA
     !   
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
@@ -653,8 +653,8 @@ contains
     character(len=*), parameter :: subname = 'CalcOzoneStressFalk'
     !-----------------------------------------------------------------------
     
-    if (is_time_to_run_luna()) then 
-      !
+    if (is_time_to_run_LUNA()) then 
+      
       associate( &
          o3uptakesha => this%o3uptakesha_patch                 , & ! Input:  [real(r8) (:)] ozone dose
          o3uptakesun => this%o3uptakesun_patch                 , & ! Input:  [real(r8) (:)] ozone dose

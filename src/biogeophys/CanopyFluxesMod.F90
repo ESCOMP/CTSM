@@ -237,7 +237,7 @@ contains
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
-    use LunaMod            , only : is_time_to_run_luna
+    use LunaMod            , only : is_time_to_run_LUNA
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)            :: bounds 
@@ -1576,7 +1576,7 @@ bioms:   do f = 1, fn
                  surfalb_inst, solarabs_inst, &
                  temperature_inst)
             
-            if(is_time_to_run_luna())then
+            if(is_time_to_run_LUNA())then
                
                call Acc240_Climate_LUNA(bounds, fn, filterp, &
                     o2(begp:endp), &

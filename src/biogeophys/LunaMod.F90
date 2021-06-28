@@ -40,7 +40,7 @@ module LunaMod
   public  :: Acc240_Climate_LUNA                           !subroutine to accumulate 10 day climates
   public  :: Clear24_Climate_LUNA                          !subroutine to clear 24 hr climates
   public  :: readParams                                    ! Read in parameters on parameter file
-  public  :: is_time_to_run_luna                           !check if we should we run luna
+  public  :: is_time_to_run_LUNA                           !check if we should we run luna
 
   type, private :: params_type
       ! cp25, kc25, ko25: Bernacchi et al (2001) Plant, Cell & Environment 24:253-259
@@ -192,7 +192,7 @@ module LunaMod
    end subroutine readParams
 
   !-----------------------------------------------------------------------
-  function is_time_to_run_luna() result(run_luna)
+  function is_time_to_run_LUNA() result(run_luna)
    ! 
    ! !DESCRIPTION:
    ! A logical check to see if we are on the end of our current day and 
@@ -210,7 +210,7 @@ module LunaMod
       run_luna = .false. 
    end if 
 
-  end function is_time_to_run_luna 
+  end function is_time_to_run_LUNA 
 
 
 
