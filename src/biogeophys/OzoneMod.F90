@@ -637,6 +637,9 @@ contains
     !
     ! This subroutine uses the Falk formulation for ozone stress
     !
+    ! !USES:
+    use LunaMod        , only : is_time_to_run_luna
+    !   
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
@@ -650,28 +653,34 @@ contains
     character(len=*), parameter :: subname = 'CalcOzoneStressFalk'
     !-----------------------------------------------------------------------
     
-    associate( &
+    if (is_time_to_run_luna()) then 
+      !
+      associate( &
          o3uptakesha => this%o3uptakesha_patch                 , & ! Input:  [real(r8) (:)] ozone dose
          o3uptakesun => this%o3uptakesun_patch                 , & ! Input:  [real(r8) (:)] ozone dose
          o3coefjmaxsha => this%o3coefjmaxsha_patch             , & ! Output: [real(r8) (:)] ozone coef jmax sha
          o3coefjmaxsun => this%o3coefjmaxsun_patch               & ! Output: [real(r8) (:)] ozone coef jmax sun
          )
       
-    do fp = 1, num_exposedvegp
-       p = filter_exposedvegp(fp)
+      do fp = 1, num_exposedvegp
+         p = filter_exposedvegp(fp)
 
-       ! Ozone stress for shaded leaves
-       call CalcOzoneStressFalkOnePoint( &
+         ! Ozone stress for shaded leaves
+          call CalcOzoneStressFalkOnePoint( &
             pft_type=patch%itype(p), o3uptake=o3uptakesha(p), &
             o3coefjmax=o3coefjmaxsha(p))
 
-       ! Ozone stress for sunlit leaves
-       call CalcOzoneStressFalkOnePoint( &
+         ! Ozone stress for sunlit leaves
+         call CalcOzoneStressFalkOnePoint( &
             pft_type=patch%itype(p), o3uptake=o3uptakesun(p), &
             o3coefjmax=o3coefjmaxsun(p))
 
-    end do
-    end associate
+      end do
+      !
+      end associate
+      !
+   end if 
+
 
   end subroutine CalcOzoneStressFalk
 

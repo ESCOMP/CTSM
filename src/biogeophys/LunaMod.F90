@@ -40,6 +40,7 @@ module LunaMod
   public  :: Acc240_Climate_LUNA                           !subroutine to accumulate 10 day climates
   public  :: Clear24_Climate_LUNA                          !subroutine to clear 24 hr climates
   public  :: readParams                                    ! Read in parameters on parameter file
+  public  :: is_time_to_run_luna                           !check if we should we run luna
 
   type, private :: params_type
       ! cp25, kc25, ko25: Bernacchi et al (2001) Plant, Cell & Environment 24:253-259
@@ -190,6 +191,29 @@ module LunaMod
 
    end subroutine readParams
 
+  !-----------------------------------------------------------------------
+  function is_time_to_run_luna() result(run_luna)
+   ! 
+   ! !DESCRIPTION:
+   ! A logical check to see if we are on the end of our current day and 
+   ! if it is time to run the LUNA module 
+   ! 
+   ! !USES
+   use clm_time_manager   , only : is_end_curr_day
+   !
+   ! !ARGUMENTS 
+   logical                        :: run_luna 
+
+   if (is_end_curr_day()) then 
+      run_luna = .true. 
+   else 
+      run_luna = .false. 
+   end if 
+
+  end function is_time_to_run_luna 
+
+
+
   !********************************************************************************************************************************************************************** 
   ! this subroutine updates the photosynthetic capacity as determined by Vcmax25 and Jmax25
   subroutine Update_Photosynthesis_Capacity(bounds, fn, filterp, &
@@ -209,7 +233,7 @@ module LunaMod
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real
     use clm_varpar            , only : nlevsoi, mxpft
     use perf_mod              , only : t_startf, t_stopf
     use clm_varctl            , only : use_cn
@@ -331,7 +355,7 @@ module LunaMod
       !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
 
-    is_end_day   =  is_end_curr_day()
+    is_end_day   =  is_time_to_run_luna()
     fnps         =  0.15_r8
     call t_startf('LUNA')
     do f  =  1,fn
@@ -519,7 +543,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real
     implicit none
     
       ! !ARGUMENTS:
@@ -574,7 +598,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
 
     !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
-    is_end_day   =  is_end_curr_day()
+    is_end_day   =  is_time_to_run_luna()
     do f  =  1,fn
       p  =  filterp(f)
       ft =  patch%itype(p)
@@ -746,7 +770,7 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
     ! subroutine CanopyFluxes 
   
     ! !USES:
-    use clm_time_manager      , only : get_step_size_real, is_end_curr_day
+    use clm_time_manager      , only : get_step_size_real
     implicit none
     
     ! !ARGUMENTS:
@@ -785,7 +809,7 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
 
     !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
-    is_end_day   =  is_end_curr_day()
+    is_end_day   =  is_time_to_run_luna()
     do f  =  1,fn
       p  =  filterp(f)
       ft =  patch%itype(p)
