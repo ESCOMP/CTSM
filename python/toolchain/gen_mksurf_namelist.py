@@ -2,14 +2,52 @@
 
 # 2020-11-08                Negin Sobhani
 
-import subprocess
-import os
-import argparse
-import re
-from datetime import datetime
-import logging
-import sys
+"""
+|------------------------------------------------------------------|
+|---------------------  Instructions  -----------------------------|
+|------------------------------------------------------------------|
 
+This Python script is for automatically creating namelist (control 
+file) that is needed for creating surface dataset and other relevant
+files for running CTSM cases.
+
+*** transient
+
+
+-------------------------------------------------------------------
+Instructions for running on Cheyenne/Casper:
+
+load the following into your local environment:
+
+    module load python
+    ncar_pylib
+-------------------------------------------------------------------
+To see the available options:
+    ./gen_mksurf_namelist.py --help
+
+To run the script:
+    ./gen_mksurf_namelist.py
+ 
+To remove NPL from your environment on Cheyenne/Casper:
+    deactivate
+-------------------------------------------------------------------
+"""
+
+#TODO (NS)
+
+#  Import libraries
+from __future__ import print_function
+
+import os
+import re
+import sys
+import argparse
+import subprocess
+import logging
+
+from datetime import datetime
+
+# valid options for resolution and SSP scenarios:
 valid_opts = {
         'res' :
         ['512x1024','360x720cru','128x256','64x128','48x96','94x192','0.23x0.31','0.47x0.63','0.9x1.25','1.9x2.5','2.5x3.33',
@@ -28,8 +66,10 @@ class ctsm_case:
         print ("testing")
 
 def get_parser():
-## Add default values in the help page.
-        """Get parser object for this script."""
+        ## Add default values in the help page.
+        """
+            Get parser object for this script.
+        """
         from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
         parser = ArgumentParser(description=__doc__,
                             formatter_class=ArgumentDefaultsHelpFormatter)
