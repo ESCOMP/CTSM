@@ -41,9 +41,9 @@ from __future__ import print_function
 import os
 import re
 import sys
+import logging
 import argparse
 import subprocess
-import logging
 
 from datetime import datetime
 
@@ -93,6 +93,7 @@ def get_parser():
                     type = int)
                     #type = end_year_type,
                     #default="start_year")
+##TODO###########################################
 # Possibly remove year --years and range options
 # comment them out
         parser.add_argument('-y','--year',
@@ -110,7 +111,7 @@ def get_parser():
                     choices = ['1850-2000','1850-2005','1850-2100'])
 ###############################################
 
-        parser.add_argument('--ge','--glc_nec',
+        parser.add_argument('--glc_nec',
                     help='''
                     Number of glacier elevation classes to use. 
                     [default: %(default)s] 
@@ -120,71 +121,124 @@ def get_parser():
                     type = glc_nec_type,
                     default = "10")
         parser.add_argument('--rundir', 
-                    help='Directory to run in. [default: %(default)s] ' ,
+                    help='''
+                    Directory to run in. 
+                    [default: %(default)s] 
+                    ''' ,
                     action="store",
                     dest="run_dir", 
                     required = False, 
                     default =os.getcwd())
         parser.add_argument('--ssp_rcp',
                     help='''
-                    Shared Socioeconomic Pathway and Representative 
+                    Shared Socioeconomic Pathway and Representative
                     Concentration Pathway Scenario name(s).
-                    [default: %(default)s] 
+                    [default: %(default)s]
                     ''' ,
                     action="store",
-                    dest="ssp_rcp", 
+                    dest="ssp_rcp",
                     required = False,
-                    choices=valid_opts['ssp_rcp'], 
+                    choices=valid_opts['ssp_rcp'],
                     default = "hist")
+
 ##############################################
+##############################################
+
         parser.add_argument('-l','--dinlc',  #--raw_dir or --rawdata_dir
-                    help='/path/of/root/of/input/data',  
+                    help='''
+                    /path/of/root/of/input/data', 
+                    [default: %(default)s]
+                    ''',
                     action="store",
                     dest="input_path",
                     default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/")
-#maybe a verbose option and removing debug
+        #TODO: maybe a verbose option and removing debug
+        #TODO: not working
         parser.add_argument('-d','--debug', 
                     help='Just print out what would happen if ran', 
                     action="store_true", 
                     dest="debug", 
                     default=False)
-        parser.add_argument('-vic','--vic', 
-                    help='Add the fields required for the VIC model', 
+        parser.add_argument('--vic', 
+                    help='''
+                    Add the fields required for the VIC model.
+                    [default: %(default)s]
+                    ''', 
                     action="store_true", 
                     dest="vic_flag", 
                     default=False)
-        parser.add_argument('-glc','--glc', 
-                    help='Add the optional 3D glacier fields for verification of the glacier model', 
+        parser.add_argument('--glc', 
+                    help='''
+                    Add the optional 3D glacier fields for verification of the glacier model.
+                    [default: %(default)s]
+                    ''', 
                     action="store_true", 
                     dest="glc_flag", 
                     default=False)
-        parser.add_argument('-hirespft','--hirespft', 
-                    help='If you want to use the high-resolution pft dataset rather \n' 
-                        'than the default lower resolution dataset \n'
-#add error check for hi-res and years if they are 1850 and 2005.
-                        '(low resolution is at quarter-degree, high resolution at 3minute)\n'
-                        '(hires only available for 1850 and 2005))', 
+        parser.add_argument('--hirespft', 
+        #add error check for hi-res and years if they are 1850 and 2005.
+                    help='''
+                    If you want to use the high-resolution pft dataset rather
+                    than the default lower resolution dataset.
+                    (Low resolution is at quarter-degree, high resolution at 3-minute)
+                    [Note: hires only available for 1850 and 2005.]
+                    ''', 
                     action="store_true", 
                     dest="hres_flag", 
                     default=False)
-        parser.add_argument('-nocrop','--nocrop', 
-                    help='Create datasets without the extensive list of prognostic crop types', 
-                    action="store_false", 
+        # TODO: Do we need --crop to accept y/n or just --crop is enough?
+        parser.add_argument('--crop', 
+                    help='''
+                    Create datasets with the extensive list of prognostic crop types.
+                    [default: %(default)s]
+                    ''', 
+                    action="store",
+                    type = str2bool,  
+                    nargs = '?',
+                    const = True,
+                    required = False,
                     dest="crop_flag", 
-                    default=True)
+                    default=False)
         parser.add_argument('-f','--fast', 
                     help='Toggle fast mode which does not user the large mapping file', 
                     action="store_true", 
                     dest="fast_flag", 
                     default=False)
         parser.add_argument('-r','--res',
-                    help='Resolution is the supported resolution(s) to use for files.',
+                    help='''
+                    Resolution is the supported resolution(s) to use for files.
+                    [default: %(default)s]
+                    ''',
                     action="store", 
                     dest="res", 
                     choices=valid_opts['res'], 
                     required=False, 
                     default="4x5")
         return parser
+
+
+def str2bool(v):
+    """
+    Function for converting different forms of
+    command line boolean strings to boolean value.
+    Args:
+        v (str): String bool input
+    Raises:
+        if the argument is not an acceptable boolean string
+        (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
+        argparse.ArgumentTypeError: The string should be one of the mentioned values.
+    Returns:
+        bool: Boolean value corresponding to the input.
+    """
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected. [true or false] or [y or n]')
+
 
 def name_nl  (start_year,end_year, res, ssp_rcp, num_pft):
     """
@@ -356,7 +410,6 @@ def check_run_type (start_year, end_year):
     return (run_type)
 
 def main ():
-    print ('Testing gen_mksurf_namelist...')
 
     args         = get_parser().parse_args()
 
