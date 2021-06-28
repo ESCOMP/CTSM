@@ -325,7 +325,7 @@ contains
    !
    ! arguments
    implicit none
-   class(streamcontrol_type) :: this
+   class(streamcontrol_type)    :: this
    type(bounds_type), intent(in) :: bounds
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !
@@ -345,7 +345,7 @@ contains
 
    ! Default values for namelist
 
-   ! Read ch4finundateddyn_nml namelist
+   ! Read ch4finundated namelist
    if (masterproc) then
       nu_nml = getavu()
       open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )

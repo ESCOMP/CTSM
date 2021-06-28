@@ -28,7 +28,7 @@ contains
 
     use clm_varpar    , only: nlevsoi
     use clm_varctl    , only: fatmlndfrc, use_soil_moisture_streams
-    use decompInitMod , only: decompInit_lnd, decompInit_lnd3D
+    use decompInitMod , only: decompInit_lnd
     use decompMod     , only: bounds_type, get_proc_bounds
     use domainMod     , only: ldomain, domain_init, domain_check
 
@@ -212,7 +212,7 @@ contains
     character(len=256)    :: locfn              ! local file name
     integer               :: n                  ! indices
     character(len=32) :: subname = 'surfrd_get_grid'     ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if (masterproc) then
        if (filename == ' ') then
@@ -290,5 +290,60 @@ contains
     call ncd_pio_closefile(ncid)
 
   end subroutine surfrd_get_grid
+
+  !------------------------------------------------------------------------------
+  subroutine decompInit_lnd3D(lni,lnj,lnk)
+    !
+    ! !DESCRIPTION:
+    !
+    !   Create a 3D decomposition gsmap for the global 2D grid with soil levels
+    !   as the 3rd dimesnion.
+    !
+    ! !USES:
+    use decompMod, only : ldecomp, gsmap_lnd2dsoi_gdc2glo, get_proc_bounds
+    use spmdMod  , only : comp_id, mpicom
+    use mct_mod  , only : mct_gsmap_init 
+    !
+    ! !ARGUMENTS:
+    integer , intent(in) :: lni,lnj,lnk   ! domain global size
+    !
+    ! !LOCAL VARIABLES:
+    integer :: m,n,k                    ! indices
+    integer :: begg,endg,lsize,gsize    ! used for gsmap init
+    integer :: begg3d,endg3d
+    integer, pointer :: gindex(:)       ! global index for gsmap init
+    !------------------------------------------------------------------------------
+
+    ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
+    call get_proc_bounds(begg, endg)
+    begg3d = (begg-1)*lnk + 1
+    endg3d = endg*lnk
+    lsize = (endg3d - begg3d + 1 )
+    allocate(gindex(begg3d:endg3d))
+    do k = 1, lnk
+       do n = begg,endg
+          m = (begg-1)*lnk + (k-1)*(endg-begg+1) + (n-begg+1)
+          gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
+       enddo
+    enddo
+    gsize = lni * lnj * lnk
+    call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
+
+    ! Diagnostic output
+
+    if (masterproc) then
+       write(iulog,*)' 3D GSMap'
+       write(iulog,*)'   longitude points               = ',lni
+       write(iulog,*)'   latitude points                = ',lnj
+       write(iulog,*)'   soil levels                    = ',lnk
+       write(iulog,*)'   gsize                          = ',gsize
+       write(iulog,*)'   lsize                          = ',lsize
+       write(iulog,*)'   bounds(gindex)                 = ',size(gindex)
+       write(iulog,*)
+    end if
+
+    deallocate(gindex)
+
+  end subroutine decompInit_lnd3D
 
 end module lnd_set_decomp_and_domain
