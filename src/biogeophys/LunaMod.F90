@@ -31,7 +31,7 @@ module LunaMod
   
   implicit none
   save
-  
+
   !------------------------------------------------------------------------------
   ! PUBLIC MEMBER FUNCTIONS:
   public  :: LunaReadNML                                   !subroutine to read in the Luna namelist
@@ -310,7 +310,6 @@ module LunaMod
     real (r8) :: jmx25_opt	                                          ! optimal Jmax25 (umol electron/m**2/s)        
     real (r8) :: chg                                                      ! change in Vcmax25  or Jmax25     
     real (r8) :: chg_constrn                                              ! constrained change in Vcmax25  or Jmax25
-    logical   :: is_end_day                                               ! is end of current day
     !-------------------------------------------------------------------------------------------------------------------------------------------------       
     associate(                                                          &
     c3psn         => pftcon%c3psn                                     , & ! photosynthetic pathway: 0.  =  c4, 1.  =  c3
@@ -354,8 +353,6 @@ module LunaMod
 
       !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
-
-    is_end_day   =  is_time_to_run_luna()
     fnps         =  0.15_r8
     call t_startf('LUNA')
     do f  =  1,fn
@@ -575,7 +572,6 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
     real (r8) :: t_veg_dayi                                               ! daytime mean vegetation temperature (Kelvin)
     real (r8) :: t_veg_nighti                                             ! nighttime mean vegetation temperature (Kelvin)
     real (r8) :: par24d_z_i(1:nlevcan)                                    ! daytime mean radiation (w/m**2)             
-    logical   :: is_end_day                                               ! is end of current day
     !-------------------------------------------------------------------------------------------------------------------------------------------------       
     associate(                                                          &
     par24d_z      => solarabs_inst%par24d_z_patch                     , & ! Input:  [real(r8) (:,:) ] daily accumulated absorbed PAR for leaves in canopy layer (W/m**2) 
@@ -598,7 +594,6 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
 
     !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
-    is_end_day   =  is_time_to_run_luna()
     do f  =  1,fn
       p  =  filterp(f)
       ft =  patch%itype(p)
@@ -793,7 +788,6 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
     integer   :: ft                                                       ! plant functional type
     integer   :: z                                                        ! the index across leaf layers
     real (r8) :: dtime                                                    ! stepsize in seconds
-    logical   :: is_end_day                                               ! is end of current day
     !-------------------------------------------------------------------------------------------------------------------------------------------------       
     associate(                                                          &
     par24d_z      => solarabs_inst%par24d_z_patch                     , & ! Output:  [real(r8) (:,:) ] daily accumulated absorbed PAR for leaves in canopy layer (W/m**2) 
@@ -809,7 +803,6 @@ subroutine Clear24_Climate_LUNA(bounds, fn, filterp, canopystate_inst, photosyns
 
     !Initialize enzyme decay Q10
     dtime        =  get_step_size_real()
-    is_end_day   =  is_time_to_run_luna()
     do f  =  1,fn
       p  =  filterp(f)
       ft =  patch%itype(p)
