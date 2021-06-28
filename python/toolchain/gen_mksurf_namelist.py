@@ -57,13 +57,6 @@ valid_opts = {
         ,'ssp_rcp': ["hist","SSP1-2.6","SSP3-7.0","SSP5-3.4","SSP2-4.5","SSP1-1.9","SSP4-3.4","SSP4-6.0","SSP5-8.5"]
         }
 
-class ctsm_case:
-    def __init__ (self, res, glc_nec, ssp_rcp):
-        self.res = res
-        self.glc_nec = glc_nec
-        self_ssp_rcp = ssp_rcp
-    def name_nl  (self):
-        print ("testing")
 
 def get_parser():
         ## TODO Add default values in the help page.
@@ -239,6 +232,27 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected. [true or false] or [y or n]')
 
+class CtsmCase:
+    def __init__ (self, res, glc_nec, ssp_rcp, start_year, end_year, num_pft):
+        self.res = res
+        self.glc_nec = glc_nec
+        self.ssp_rcp = ssp_rcp
+        self.start_year = start_year
+        self.end_year = end_year
+        self.num_pft = num_pft
+    def name_nl  (self):
+        print ("testing")
+        time_stamp = datetime.today().strftime('%y%m%d')
+        namelist_fname = "surfdata_"+ \
+            self.res+"_"+ \
+            self.ssp_rcp+"_"+ \
+            self.num_pft+ \
+            "pfts_CMIP6_"+ \
+            self.start_year.__str__()+'-' + \
+            self.end_year.__str__()+ \
+            "_c"+time_stamp+".namelist"
+
+        return namelist_fname 
 
 def name_nl  (start_year,end_year, res, ssp_rcp, num_pft):
     """
@@ -257,7 +271,7 @@ def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, 
 
     run_type = check_run_type(start_year, end_year)
     if (run_type == "transient"):
-        create_landuse(start_year, end_year)
+        ereate_landuse(start_year, end_year)
         lu_fname = landuse_filename (start_year, end_year)
     else:
         lu_fname = " "
