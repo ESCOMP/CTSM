@@ -47,7 +47,7 @@ import logging
 
 from datetime import datetime
 
-# valid options for resolution and SSP scenarios:
+## valid options for resolution and SSP scenarios:
 valid_opts = {
         'res' :
         ['512x1024','360x720cru','128x256','64x128','48x96','94x192','0.23x0.31','0.47x0.63','0.9x1.25','1.9x2.5','2.5x3.33',
@@ -66,26 +66,27 @@ class ctsm_case:
         print ("testing")
 
 def get_parser():
-        ## Add default values in the help page.
+        ## TODO Add default values in the help page.
         """
             Get parser object for this script.
         """
-        from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-        parser = ArgumentParser(description=__doc__,
-                            formatter_class=ArgumentDefaultsHelpFormatter)
-        parser = argparse.ArgumentParser(description='Setting the flags and input files.')
+        parser = argparse.ArgumentParser(description=__doc__,
+                           formatter_class=argparse.RawDescriptionHelpFormatter)
 
-        parser.add_argument('-sy','--start_year',
-                    help='Simulation start year.', 
+        parser.print_usage = parser.print_help
+
+
+        parser.add_argument('--sy','--start_year',
+                    help='Simulation start year. [default: %(default)s] ', 
                     action="store",
                     dest="start_year",
                     required=False,
                     type = start_year_type,
                     default=2000)
-        parser.add_argument('-ey','--end_year',
-## Add information about if this is optional
-## Add info for help page note -- by default is start_year
-                    help='Simulation end year.', 
+        parser.add_argument('--ey','--end_year',
+        ## Add information about if this is optional
+        ## Add info for help page note -- by default is start_year
+                    help='Simulation end year. [default: %(default)s] ', 
                     action="store",
                     dest="end_year",
                     required=False,
@@ -108,25 +109,34 @@ def get_parser():
                     required=False,
                     choices = ['1850-2000','1850-2005','1850-2100'])
 ###############################################
-        parser.add_argument('-ge','--glc_nec',
-                    help='Number of glacier elevation classes to use' ,
+
+        parser.add_argument('--ge','--glc_nec',
+                    help='''
+                    Number of glacier elevation classes to use. 
+                    [default: %(default)s] 
+                    ''' ,
                     action="store",
                     dest="glc_nec",
                     type = glc_nec_type,
                     default = "10")
         parser.add_argument('--rundir', 
-                    help='Directory to run in.' ,
+                    help='Directory to run in. [default: %(default)s] ' ,
                     action="store",
                     dest="run_dir", 
                     required = False, 
                     default =os.getcwd())
         parser.add_argument('--ssp_rcp',
-                    help='Shared Socioeconomic Pathway and Representative Concentration Pathway Scenario name(s).' ,
+                    help='''
+                    Shared Socioeconomic Pathway and Representative 
+                    Concentration Pathway Scenario name(s).
+                    [default: %(default)s] 
+                    ''' ,
                     action="store",
                     dest="ssp_rcp", 
                     required = False,
                     choices=valid_opts['ssp_rcp'], 
                     default = "hist")
+##############################################
         parser.add_argument('-l','--dinlc',  #--raw_dir or --rawdata_dir
                     help='/path/of/root/of/input/data',  
                     action="store",
