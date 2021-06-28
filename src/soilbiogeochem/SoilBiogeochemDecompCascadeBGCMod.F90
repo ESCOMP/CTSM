@@ -42,9 +42,9 @@ module SoilBiogeochemDecompCascadeBGCMod
   real(r8), public :: normalization_tref = 15._r8            ! reference temperature for normalizaion (degrees C)
   !
   ! !PRIVATE DATA MEMBERS 
-  integer, private :: i_pas_som  ! index of protected Soil Organic Matter (SOM)
-  integer, private :: i_slo_som  ! index of recalcitrant SOM
-  integer, private :: i_act_som  ! index of available SOM
+  integer, private :: i_pas_som  ! index of passive (aka protected) Soil Organic Matter (SOM)
+  integer, private :: i_slo_som  ! index of slow (aka recalcitrant) SOM
+  integer, private :: i_act_som  ! index of active (aka available) SOM
   integer, private :: i_cel_lit  ! index of cellulose litter pool
   integer, private :: i_lig_lit  ! index of lignin litter pool
 
