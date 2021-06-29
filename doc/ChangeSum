@@ -1,7 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev046   slevis 06/25/2021 Include CWD in heterotrophic respiration
-    ctsm5.1.dev045
+    ctsm5.1.dev045   slevis 06/29/2021 Include CWD in heterotrophic respiration
     ctsm5.1.dev044 mvertens 06/24/2021 New stream functionality when using NUOPC or LILAC
     ctsm5.1.dev043   slevis 06/03/2021 Refactor of CascadeBGC code in preparation for MIMICS
     ctsm5.1.dev042     erik 05/28/2021 Small answer changes for double precision constants and soil limits

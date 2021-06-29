@@ -1,7 +1,7 @@
 ===============================================================
-Tag name:  ctsm5.1.dev046
+Tag name:  ctsm5.1.dev045
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Fri Jun 25 14:08:24 MDT 2021
+Date:  Tue Jun 29 10:21:11 MDT 2021
 One-line Summary: Include CWD in heterotrophic respiration (HR)
 
 Purpose and description of changes
@@ -41,15 +41,18 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-
 Issues fixed (include CTSM Issue #): #1361
 
 
 Notes of particular relevance for users
 ---------------------------------------
 Substantial timing or memory changes:
- This warning appears in many tests on both cheyenne and izumi:
+ Total 17 MEMCOMP non-passes with the same warning as this one:
+ FAIL PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel MEMCOMP Error:
  Memory usage increase > 10% from baseline
+
+ Total 5 TPUTCOMP non-passes with this warning:
+ TPUTCOMP: Computation time increase > 25% from baseline
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -63,43 +66,16 @@ Changes to tests or testing:
 Testing summary:
 ----------------
 
-[Remove any lines that don't apply.]
-
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
-
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    cheyenne - 
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
-  (PTCLM is being deprecated, so we only expect this to be done on occasion)
-
-    cheyenne - 
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    (any machine) - 
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK
     izumi ------- OK
   
-  fates tests:
-    cheyenne ---- 
-
-  any other testing (give details below):
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
 
 Answer changes
 --------------
-
 Changes answers relative to baseline: No
 
 
@@ -108,9 +84,6 @@ Other details
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/1400
 
-===============================================================
-===============================================================
-Tag name:  ctsm5.1.dev045
 ===============================================================
 ===============================================================
 Tag name:  ctsm5.1.dev044
