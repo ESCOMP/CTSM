@@ -29,3 +29,4 @@ stream_year_last_ndep = 2019
 model_year_align_popdens = 2018
 stream_year_first_popdens = 2018
 stream_year_last_popdens = 2019
+stream_fldfilename_lightng = '$DIN_LOC_ROOT/atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_NEONarea_c210625.nc'
