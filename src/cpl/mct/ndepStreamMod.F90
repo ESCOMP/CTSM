@@ -30,6 +30,7 @@ module ndepStreamMod
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: check_units   ! Check the units and make sure they can be used
+
   ! ! PRIVATE TYPES
   type(shr_strdata_type)  :: sdat           ! input data stream
   integer :: stream_year_first_ndep         ! first year in stream to use

@@ -709,11 +709,11 @@ contains
                      ! Set road top layer to initial air temperature and interpolate other
                      ! layers down to 20C in bottom layer
                      do j = 1, nlevgrnd
-                        this%t_soisno_col(c,j) = 297.56 - (j-1) * ((297.56-293.16)/(nlevgrnd-1))
+                        this%t_soisno_col(c,j) = 297.56_r8 - (j-1) * ((297.56_r8-293.16_r8)/(nlevgrnd-1))
                      end do
                      ! Set wall and roof layers to initial air temperature
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
-                     this%t_soisno_col(c,1:nlevurb) = 297.56
+                     this%t_soisno_col(c,1:nlevurb) = 297.56_r8
                   else
                      this%t_soisno_col(c,1:nlevgrnd) = 283._r8
                   end if
@@ -722,11 +722,11 @@ contains
                      ! Set road top layer to initial air temperature and interpolate other
                      ! layers down to 22C in bottom layer
                      do j = 1, nlevgrnd
-                        this%t_soisno_col(c,j) = 289.46 - (j-1) * ((289.46-295.16)/(nlevgrnd-1))
+                        this%t_soisno_col(c,j) = 289.46_r8 - (j-1) * ((289.46_r8-295.16_r8)/(nlevgrnd-1))
                      end do
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
                      ! Set wall and roof layers to initial air temperature
-                     this%t_soisno_col(c,1:nlevurb) = 289.46
+                     this%t_soisno_col(c,1:nlevurb) = 289.46_r8
                   else
                      this%t_soisno_col(c,1:nlevgrnd) = 283._r8
                   end if
@@ -807,27 +807,27 @@ contains
          this%t_stem_patch(p)   = this%t_veg_patch(p)
 
          if (use_vancouver) then
-            this%t_ref2m_patch(p) = 297.56
+            this%t_ref2m_patch(p) = 297.56_r8
          else if (use_mexicocity) then
-            this%t_ref2m_patch(p) = 289.46
+            this%t_ref2m_patch(p) = 289.46_r8
          else
             this%t_ref2m_patch(p) = 283._r8
          end if
 
          if (lun%urbpoi(l)) then
             if (use_vancouver) then
-               this%t_ref2m_u_patch(p) = 297.56
+               this%t_ref2m_u_patch(p) = 297.56_r8
             else if (use_mexicocity) then
-               this%t_ref2m_u_patch(p) = 289.46
+               this%t_ref2m_u_patch(p) = 289.46_r8
             else
                this%t_ref2m_u_patch(p) = 283._r8
             end if
          else
             if (.not. lun%ifspecial(l)) then
                if (use_vancouver) then
-                  this%t_ref2m_r_patch(p) = 297.56
+                  this%t_ref2m_r_patch(p) = 297.56_r8
                else if (use_mexicocity) then
-                  this%t_ref2m_r_patch(p) = 289.46
+                  this%t_ref2m_r_patch(p) = 289.46_r8
                else
                   this%t_ref2m_r_patch(p) = 283._r8
                end if
