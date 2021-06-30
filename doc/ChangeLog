@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev045
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Tue Jun 29 10:21:11 MDT 2021
+Date: Tue Jun 29 20:05:21 MDT 2021
 One-line Summary: Include CWD in heterotrophic respiration (HR)
 
 Purpose and description of changes
@@ -41,12 +41,13 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-Issues fixed (include CTSM Issue #): #1361
-
+Issues fixed (include CTSM Issue #): #1361 #1417
+  Fixes #1361 -- HR fluxes don't include CWD
+  Fixes #1417 -- NoAnthro build-namelist test fails
 
 Notes of particular relevance for users
 ---------------------------------------
-Substantial timing or memory changes:
+Substantial timing or memory changes: None
  Total 17 MEMCOMP non-passes with the same warning as this one:
  FAIL PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel MEMCOMP Error:
  Memory usage increase > 10% from baseline
@@ -67,6 +68,14 @@ Testing summary:
 ----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - OK (2 tests fail compare because of fix in #1417)
+
+     python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+       cheyenne - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
