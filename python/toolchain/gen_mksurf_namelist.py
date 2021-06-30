@@ -46,6 +46,12 @@ To remove NPL from your environment on Cheyenne/Casper:
 #TODO: add error check for hi-res and years if they are 1850 and 2005.
 # TODO: Do we need --crop to accept y/n or just --crop is enough?
 
+# different path for each range of years for transient cases. 
+# defualt should be picked based on the year. 1850 - 2015 -->
+# /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/
+
+#850-1850 
+#pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012
 
 #  Import libraries
 from __future__ import print_function
@@ -56,6 +62,7 @@ import sys
 import logging
 import argparse
 import subprocess
+import tqdm
 
 from datetime import datetime
 
@@ -331,6 +338,7 @@ class CtsmCase:
         Build the namelist/control file for a ctsm
         case.
     """
+
     def __init__ (self, res, glc_nec, ssp_rcp, num_pft, input_path, vic_flag, glc_flag, start_year, end_year=None):
         self.res = res
         self.glc_nec = glc_nec
@@ -341,6 +349,12 @@ class CtsmCase:
         self.glc_flag = glc_flag
         self.start_year = start_year
         self.end_year = end_year if end_year is not None else start_year
+
+        #-- check if end year value is a valid value
+        self.check_endyear()
+
+        #-- Determine if the case is transient
+        self.check_run_type()
 
     def __str__(self):
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item])
@@ -383,15 +397,30 @@ class CtsmCase:
     def create_landuse(self):
         self.landuse_filename()
         lu_file = open (self.lu_fname,'w')
-        for yr in range (self.start_year, self.end_year+1):
-            print (yr)
-            lu_fname_line = \
-            "/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_landuse_histclm50_LUH2_"+str(yr)+".c170412.nc"\
-            +"\t\t\t"+ str(yr) + "\n"
-            print (lu_fname_line)
-            lu_file.write (lu_fname_line)
+
+        for yr in tqdm.tqdm(range(self.start_year, self.end_year+1)):
+
+            #-- choose different files for years of 850-1850:
+            if (849 < yr < 1850):
+                lu_input_fname = os.path.join(self.input_path, 
+                            "pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012",
+                            "mksrf_landuse_histclm50_LUH2_"+str(yr)+".c171012.nc"
+                            )
+            else : 
+                lu_input_fname = os.path.join(self.input_path, 
+                            "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412",
+                            "mksrf_landuse_histclm50_LUH2_"+str(yr)+".c170412.nc"
+                            )
+            #-- Check if the land-use input file exist:
+            if not os.path.isfile(lu_input_fname):
+                print ("lu_input_fname:", lu_input_fname)
+                print ("Error: land-use input file does not exist for year:", yr,".")
+
+            # TODO: make the space/tab exactly the same as pl code:
+            lu_line = lu_input_fname + "\t\t\t"+ str(yr) + "\n"
+            lu_file.write (lu_line)
         print ("Successfully created land use file : ", self.lu_fname,".")
-        print ("---------------------------------------------------")
+        print ("-------------------------------------------------------")
 
 
     def build_nl (self):
@@ -519,12 +548,9 @@ def main ():
     start_year   = args.start_year
     end_year     = args.end_year
 
-    # determine end_year
+    # determine end_year if not given as an argument:
     if not end_year:
         end_year = start_year
-
-    #check_endyear (start_year, end_year)
-    #run_type = check_run_type(start_year, end_year)
 
     if crop_flag:
         num_pft      = "78"
@@ -534,44 +560,16 @@ def main ():
     logging.debug(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
 
 
-    ctsm_case = CtsmCase(res, glc_nec, ssp_rcp, num_pft, input_path, vic_flag, glc_flag, 
-                         start_year, end_year)
+    ctsm_case = CtsmCase(res, glc_nec, ssp_rcp, num_pft, input_path,
+                         vic_flag, glc_flag, start_year, end_year)
 
-    print (ctsm_case)
-
-    ctsm_case.check_endyear()
-    ctsm_case.check_run_type()
     ctsm_case.name_nl()
-    print ("------")
-    print (ctsm_case)
-    print ("------")
+
+    logging.debug('--------------------------')
+    logging.debug(' ctsm case : %s', ctsm_case)
+    logging.debug('--------------------------')
 
     ctsm_case.build_nl()
-
-
-    # different path for each range of years for transient cases. 
-    # defualt should be picked based on the year. 1850 - 2015 -->
-    # /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/
-
-    #850-1850 
-    #pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012
-
-    #based on sscp it should choose also 
-    ################################################
-    #sim_year         = args.sim_year
-    #if args.sim_range:
-    #    run_type = "transient"
-    #    sim_range = args.sim_range
-    #else:
-    #    run_type = "timeslice"
-
-    #if (run_type =="timeslice"):
-    #    start_year = sim_year
-    #    end_year   = sim_year
-    #elif (run_type =="transient"):
-    #    start_year, end_year = sim_range.split("-")
-
-    #build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, run_type, vic_flag, glc_flag)
 
 if __name__ == "__main__":
     main()
