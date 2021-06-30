@@ -146,7 +146,7 @@ def get_parser():
                     dest="input_path",
                     default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/")
         #TODO: maybe a verbose option and removing debug
-        #TODO: not working
+        #TODO: --debug mode is not working...
         parser.add_argument('-d','--debug', 
                     help='Just print out what would happen if ran', 
                     action="store_true", 
@@ -233,15 +233,52 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected. [true or false] or [y or n]')
 
 class CtsmCase:
-    def __init__ (self, res, glc_nec, ssp_rcp, start_year, end_year, num_pft):
+    """
+    A class for encapsulate different ctsm cases.
+
+    ...
+
+    Attributes
+    ---------
+    res
+    glc_nec
+    ssp_rcp
+    start_year
+    end_year
+    num_pft
+
+    Methods
+    -------
+    name_nl
+        build the name of namelist for a specific case.
+    """
+    def __init__ (self, res, glc_nec, ssp_rcp, num_pft, input_path, vic_flag, glc_flag, start_year, end_year=None):
         self.res = res
         self.glc_nec = glc_nec
         self.ssp_rcp = ssp_rcp
-        self.start_year = start_year
-        self.end_year = end_year
         self.num_pft = num_pft
+        self.input_path = input_path
+        self.vic_flag = vic_flag
+        self.glc_flag = glc_flag
+        self.start_year = start_year
+        self.end_year = end_year if end_year is not None else start_year
+
+    def __str__(self):
+        return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item])
+                    for item in self.__dict__))
+
+    def check_endyear (self):
+        if (int(self.end_year) < int(self.start_year)):
+            sys.exit('ERROR: end_year should be bigger than the start_year : '
+                     + self.start_year.__str__() + '.')
+
+    def check_run_type (self):
+        if (self.end_year > self.start_year):
+            self.run_type = "transient"
+        else:               
+            self.run_type = "timeslice"
+
     def name_nl  (self):
-        print ("testing")
         time_stamp = datetime.today().strftime('%y%m%d')
         namelist_fname = "surfdata_"+ \
             self.res+"_"+ \
@@ -252,7 +289,101 @@ class CtsmCase:
             self.end_year.__str__()+ \
             "_c"+time_stamp+".namelist"
 
-        return namelist_fname 
+        self.namelist_fname  = namelist_fname
+
+    def landuse_filename(self):
+        if (self.run_type == 'transient'):
+            lu_fname = "landuse_timeseries_hist_78pfts_simyr"+str(self.start_year)+"-"+str(self.end_year)+".txt"
+        else:
+            lu_fname = ""
+        self.lu_fname = lu_fname
+
+    def create_landuse(self):
+        self.landuse_filename()
+        lu_file = open (self.lu_fname,'w')
+        for yr in range (self.start_year, self.end_year+1):
+            print (yr)
+            lu_fname_line = \
+            "/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_landuse_histclm50_LUH2_"+str(yr)+".c170412.nc"\
+            +"\t\t\t"+ str(yr) + "\n"
+            print (lu_fname_line)
+            lu_file.write (lu_fname_line)
+        print ("Successfully created land use file : ", self.lu_fname,".")
+        print ("---------------------------------------------------")
+
+
+    def build_nl (self):
+        """
+        Build the namelist/control file for ****. 
+        """
+
+        self.check_run_type()
+        self.landuse_filename()
+        if (self.run_type == "transient"):
+            self.create_landuse()
+
+        self.name_nl()
+        namelist_file = open (self.namelist_fname,'w')
+
+        label = tag_describe()
+        
+        if (self.run_type == "transient"):
+            use_transient = ".true."
+        else: 
+            use_transient = ".false"
+       
+        dst_mesh = which_mesh (self.res)
+
+        print ('dst mesh is :', dst_mesh)
+
+        nl_template = ( \
+                "&clmexp\n"                                                                                                                                                                  
+                "nglcec           = "+self.glc_nec + "\n"
+                "mksrf_fsoitex    = "+self.input_path+"mksrf_soitex.10level.c201018.nc"+"\n"
+                "mksrf_forganic   = "+self.input_path+"mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc"+"\n"
+                "mksrf_flakwat    = "+self.input_path+"mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"+"\n"
+                "mksrf_fwetlnd    = "+self.input_path+"mksrf_lanwat.050425.nc"+"\n"
+                "mksrf_fmax       = "+self.input_path+"mksrf_fmax_3x3min_USGS_c120911.nc"+"\n"
+                "mksrf_fglacier   = "+self.input_path+"mksrf_glacier_3x3min_simyr2000.c120926.nc"+"\n"
+                "mksrf_fvocef     = "+self.input_path+"mksrf_vocef_0.5x0.5_simyr2000.c110531.nc" +"\n"
+                "mksrf_furbtopo   = "+self.input_path+"mksrf_topo.10min.c080912.nc"+"\n"
+                "mksrf_fgdp       = "+self.input_path+"mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc"+"\n"
+                "mksrf_fpeat      = "+self.input_path+"mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc"+"\n"
+                "mksrf_fsoildepth = "+self.input_path+"mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc"+"\n"
+                "mksrf_fabm       = "+self.input_path+"mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc"+"\n"
+                "outnc_double     = .true. \n"
+                "all_urban        = .false.\n"
+                "no_inlandwet     = .true. \n"
+                "mksrf_furban     = "+self.input_path+"mksrf_urban_0.05x0.05_simyr2000.c170724.nc"+"\n"
+                "gitdescribe      = "+label+"\n"
+                "mksrf_ftopostats = "+self.input_path+"mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc"+"\n"
+                "mksrf_fvegtyp    = "+self.input_path + "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_1850.c170629.nc"+"\n"
+                "mksrf_fsoicol    = "+self.input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc"+"\n"
+                "mksrf_flai       = "+self.input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc" +"\n"
+                "fdyndat          = ''\n"
+                "numpft           = "+self.num_pft+"\n"
+                "dst_mesh_file    = "+self.input_path+dst_mesh+"\n"
+                "\n&transient\n"
+                "use_transient    = "+use_transient + "\n"
+                "start_year       = "+self.start_year.__str__() + "\n"
+                "end_year         = "+self.end_year.__str__() + "\n"
+                "mksrf_dyn_lu     = "+self.input_path+ "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629" + "\n"
+                "mksrf_fdynuse    = "+self.lu_fname + "\n"
+                "\n&vic\n"
+                "use_vic          = "+self.vic_flag.__str__()+"\n"
+                "mksrf_fvic       = "+self.input_path+"mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc\n"
+                "outnc_vic        = \n"
+                "\n&glc\n"
+                #"use_glc          = "+self.glc_flag.__str__()+"\n"
+                "outnc_3dglc      = \n"
+                "/\n"
+                )
+
+        print ("Successfully created namelist file : ", self.namelist_fname,".")
+        print ("--------------------------------------------------------")
+        namelist_file.write (nl_template)
+        namelist_file.close ()
+
 
 def name_nl  (start_year,end_year, res, ssp_rcp, num_pft):
     """
@@ -446,7 +577,7 @@ def main ():
     if not end_year:
         end_year = start_year
 
-    check_endyear (start_year, end_year)
+    #check_endyear (start_year, end_year)
     run_type = check_run_type(start_year, end_year)
 
     if crop_flag:
@@ -455,6 +586,21 @@ def main ():
         num_pft      = "16"
 
     logging.debug(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
+
+
+    ctsm_case = CtsmCase(res, glc_nec, ssp_rcp, num_pft, input_path, vic_flag, glc_flag, 
+                         start_year, end_year)
+
+    print (ctsm_case)
+
+    ctsm_case.check_endyear()
+    ctsm_case.check_run_type()
+    ctsm_case.name_nl()
+    print ("------")
+    print (ctsm_case)
+    print ("------")
+
+    ctsm_case.build_nl()
 
 
     # different path for each range of years for transient cases. 
@@ -479,7 +625,7 @@ def main ():
     #elif (run_type =="transient"):
     #    start_year, end_year = sim_range.split("-")
 
-    build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, run_type, vic_flag, glc_flag)
+    #build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, run_type, vic_flag, glc_flag)
 
 if __name__ == "__main__":
     main()
