@@ -1,11 +1,59 @@
 #!/usr/bin/env python                                                                                                                                         
-# -*- coding: utf-8 -*-
+
 # 2020-12-13                Negin Sobhani
+
+
+"""
+|------------------------------------------------------------------|
+|---------------------  Instructions  -----------------------------|
+|------------------------------------------------------------------|
+This Python script is part of the simplified toolchain for creating
+the surface dataset for ctsm cases.
+
+After creating the namelist/control file using ./gen_mksurf_namelist.py
+with options for your desired case, you should run :
+
+./mkmap_data.py --namelist [namelist from ./gen_mksurf_namelist.py]
+
+to create mapping files.
+
+
+This python script is the alternative code to mkmapdata.sh with
+ few differences:
+
+1. It reads namelist file for DST mesh file.
+
+2. For raw dataset in the namelist it finds their SRC mesh file and mask from
+the necdf metadata.
+
+3. Check if the weight (mapping file) already exists or not. 
+
+4. If it does not exist, it creates the mapping (weight) file. 
  
+-------------------------------------------------------------------
+Instructions for running on Cheyenne/Casper:
+ 
+load the following into your local environment:
+ 
+    module load python
+    ncar_pylib
+-------------------------------------------------------------------
+To see the available options:
+    ./mkmap_data.py --help
+ 
+To run the script:
+    ./mkmap_data.py --namelist ${namelist from ./gen_mksurf_namelist.py}
+ 
+To remove NPL from your environment on Cheyenne/Casper:
+    deactivate
+-------------------------------------------------------------------
 """
-Description:
-This script includes mkmap_data.py ***
-"""
+
+#TODO (NS):
+# - [ ] Add docs and notes for functions.
+# - [ ] Job submission classes for different machines. 
+# - [x]  should read the correct namelist and check if it exist.
+# - [ ] Check if the desired input_path exist
  
 from __future__ import print_function
  
@@ -22,16 +70,42 @@ import xarray as xr
  
 from datetime import datetime
  
-from gen_mksurf_namelist import get_parser, build_nl
+#from gen_mksurf_namelist import get_parser, build_nl
  
 __author__ = 'Negin Sobhani'
 __email__ = 'negins@ucar.edu'
 
-#def create_job (****):
-    #"pbs script that gets submited" 
+def get_parser():
+        """ 
+            Get parser object for this script.
+        """
+        parser = argparse.ArgumentParser(description=__doc__,
+                           formatter_class=argparse.RawDescriptionHelpFormatter)
+ 
+        parser.print_usage = parser.print_help
 
-def submit_job (file_name):
-    qsub file_name
+        parser.add_argument('--namelist',
+                    help='namelist for the ctsm case created by gen_mksurf_namelist.py ', 
+                    action="store",
+                    dest="namelist",
+                    required=True)
+        parser.add_argument('-d','--debug', 
+                    help='Debug mode will print more information. ', 
+                    action="store_true", 
+                    dest="debug", 
+                    default=False)
+        parser.add_argument('--input_dir',
+                    help='''
+                    Path of your mesh files and input data.', 
+                    [default: %(default)s]
+                    ''',
+                    action="store",
+                    dest="input_path",
+                    default="/glade/p/cesm/cseg/inputdata/")
+
+        return parser                                                                                                        
+
+
 
 def get_pair(line):
     line = re.sub('=', '', line)
@@ -43,7 +117,7 @@ def name_weightfile(src_res, src_mask, dst_res,dst_mask):
     weight_fname = 'map_'+src_res+'_'+src_mask+'_to_'+dst_res+'_'+dst_mask+'.nc'
     return weight_fname 
 
-def read_nl (nl_fname):
+def read_nl (namelist):
     nl_d={}
     with open("surfdata_4x5_hist_78pfts_CMIP6_2000-2005_c201215.namelist") as data:
         for line in data:
@@ -68,6 +142,13 @@ def parse_mesh_fname(mesh_fname):
 
     return res, mask
 
+# I removed the sections of schedulers because they were not working.
+#def create_job (****):
+    #"pbs script that gets submited" 
+
+#def submit_job (file_name):
+#    qsub file_name
+
 
 def main ():                                                                                                                                                  
     args = get_parser().parse_args()
@@ -75,15 +156,29 @@ def main ():
         logging.basicConfig(level=logging.DEBUG)
 
     logging.debug('debugging in debug mode.')
+    namelist = args.namelist
+    input_path = args.input_path
 
-    # TODO: should read the correct namelist
-    nl_fname = "surfdata_4x5_hist_78pfts_CMIP6_2000-2005_c201215.namelist"
+
+    #-- check if the given namelist exist 
+    if not os.path.isfile(namelist):
+        print ("namelist filename :", namelist)
+        print ("Error: namelist_fname :",namelist, "does not exist!")
+        sys.exit('Please run ./gen_mksur_namelist.py to create the'+ 
+                 'namelist for your case and make sure you are pointing '+ \
+                 'to the created namelist using --namelist option.') 
+
+    #-- check if the given input path exist
+    if not os.path.exists(input_path):
+        sys.exit('ERROR: \n'+
+                 '\t input_path does not exist on this machine. \n'+
+                 '\t Please point to the correct raw_dir using --input_path'+
+                 'flag.')
+
 
     # read the namelist
-    nl_d = read_nl(nl_fname)
-    input_path = "/glade/p/cesm/cseg/inputdata/"
+    nl_d = read_nl(namelist)
 
-    
     print ('-----------------------')
     dst_mesh_file = nl_d['dst_mesh_file']
     dst_res, dst_mask = parse_mesh_fname(dst_mesh_file)
