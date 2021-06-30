@@ -428,7 +428,8 @@ class CtsmCase:
 
     def landuse_filename(self):
         if (self.run_type == 'transient'):
-            lu_fname = "landuse_timeseries_hist_78pfts_simyr"+str(self.start_year)+"-"+str(self.end_year)+".txt"
+            lu_fname = "landuse_timeseries_hist_"+self.num_pft.__str__()+ \
+                       "pfts_simyr"+str(self.start_year)+"-"+str(self.end_year)+".txt"
         else:
             lu_fname = ""
         self.lu_fname = lu_fname
