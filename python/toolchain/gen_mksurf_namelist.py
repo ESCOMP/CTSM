@@ -35,23 +35,27 @@ To remove NPL from your environment on Cheyenne/Casper:
 """
 
 #TODO (NS)
-## TODO Add default values in the help page.
-## Add information about if this is optional
-## Add info for help page note -- by default is start_year
-##TODO###########################################
-# Possibly remove year --years and range options
-# comment them out
-#TODO: maybe a verbose option and removing debug
-#TODO: --debug mode is not working...
-#TODO: add error check for hi-res and years if they are 1850 and 2005.
-# TODO: Do we need --crop to accept y/n or just --crop is enough?
 
-# different path for each range of years for transient cases. 
-# defualt should be picked based on the year. 1850 - 2015 -->
-# /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/
+# -[x] Add default values in the help page.
+# -[x] Add info for help page note for end_year -- by default is start_year
+# -[ ] Possibly remove year --years and range options
+#      Currently comment them out.
 
-#850-1850 
-#pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012
+# -[ ] maybe a verbose option and removing debug
+# -[x] --debug mode is not working...
+
+# -[ ] add error check for hi-res and years if they are 1850 and 2005.
+
+# -[x] different path for each range of years for transient cases. 
+#      default should be picked based on the year. 1850 - 2015 -->
+#       /glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/
+#      850-1850 --> 
+#       pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012
+
+#QUESTIONS:
+# -[ ] Do we need --crop to accept y/n or just --crop is enough?
+# -[ ] Add information about if this is optional.
+# Everything is optional because they have defaults...
 
 #  Import libraries
 from __future__ import print_function
@@ -164,9 +168,14 @@ def get_parser():
                     dest="input_path",
                     default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/")
         parser.add_argument('-d','--debug', 
-                    help='Just print out what would happen if ran', 
+                    help='Debug mode will print more information. ', 
                     action="store_true", 
                     dest="debug", 
+                    default=False)
+        parser.add_argument('-v','--verbose', 
+                    help='Verbose mode will print more information. ', 
+                    action="store_true", 
+                    dest="verbose", 
                     default=False)
         parser.add_argument('--vic', 
                     help='''
@@ -311,21 +320,37 @@ class CtsmCase:
 
     Attributes
     ---------
-    res
-    glc_nec
-    ssp_rcp
-    start_year
-    end_year
-    num_pft
+    res : str
+        resolution from a list of acceptable options.
+    glc_nec : str
+        number of glacier elevation classes.  
+    ssp_rcp : str
+        Shared Socioeconomic Pathway and Representative
+        Concentration Pathway Scenario name.
+    crop_flag : bool 
+        Crop flag for determining number of pfts
+    input_path : str
+        Raw data input path
+    vic_flag : bool
+        Flag for VIC model
+    glc_flag : bool
+        Flag for 3D glacier model
+    start_year : str
+        Simulation start year
+    end_year : str
+        Simulation end year 
 
     Methods
     -------
-    check_endyear
+    check_endyear:
         Check if end_year is bigger than start year
         in a ctsm case.
-    check_run_type
+    check_run_type:
         Determine if a ctsm case is transient or
         time-slice. 
+    def check_run_type:
+        Determine num_pft based on crop_flag for a
+        ctsm case.
     landuse_filename:
         Build the land-use filename for a transient 
         case.
@@ -339,11 +364,11 @@ class CtsmCase:
         case.
     """
 
-    def __init__ (self, res, glc_nec, ssp_rcp, num_pft, input_path, vic_flag, glc_flag, start_year, end_year=None):
+    def __init__ (self, res, glc_nec, ssp_rcp, crop_flag, input_path, vic_flag, glc_flag, start_year, end_year=None):
         self.res = res
         self.glc_nec = glc_nec
         self.ssp_rcp = ssp_rcp
-        self.num_pft = num_pft
+        self.crop_flag = crop_flag
         self.input_path = input_path
         self.vic_flag = vic_flag
         self.glc_flag = glc_flag
@@ -355,6 +380,10 @@ class CtsmCase:
 
         #-- Determine if the case is transient
         self.check_run_type()
+
+        #-- determine the num_pft
+        self.check_num_pft()
+    
 
     def __str__(self):
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item])
@@ -370,6 +399,16 @@ class CtsmCase:
             self.run_type = "transient"
         else:               
             self.run_type = "timeslice"
+        logging.debug(' run_type  = '+ self.run_type)
+
+    def check_num_pft (self):
+        #-- determine the num_pft
+        if self.crop_flag:
+            self.num_pft      = "78"
+        else:
+            self.num_pft      = "16"
+        logging.debug(' crop_flag = '+ self.crop_flag.__str__()+ ' => num_pft ='+ self.num_pft)
+
 
     def name_nl  (self):
         """
@@ -428,7 +467,6 @@ class CtsmCase:
         Build the namelist/control file for a ctsm class.  
         """
 
-        self.check_run_type()
         self.landuse_filename()
         if (self.run_type == "transient"):
             self.create_landuse()
@@ -533,7 +571,7 @@ def main ():
 
     args         = get_parser().parse_args()
 
-    if args.debug:
+    if args.debug or args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
 
@@ -544,23 +582,23 @@ def main ():
     crop_flag    = args.crop_flag
     vic_flag     = args.vic_flag
     glc_flag     = args.glc_flag
+    hres_flag    = args.hres_flag
 
     start_year   = args.start_year
     end_year     = args.end_year
 
-    # determine end_year if not given as an argument:
+    #-- determine end_year if not given as an argument:
     if not end_year:
         end_year = start_year
 
-    if crop_flag:
-        num_pft      = "78"
-    else:
-        num_pft      = "16"
+    #-- check if the input path exist
+    if not os.path.exists(input_path):
+        sys.exit('ERROR: \n'+
+                 '\t raw_dir does not exist on this machine. \n'+
+                 '\t Please point to the correct raw_dir using --raw_dir'+
+                 'or --rawdata_dir flags.')
 
-    logging.debug(' crop_flag = '+ crop_flag.__str__()+ ' num_pft ='+ num_pft)
-
-
-    ctsm_case = CtsmCase(res, glc_nec, ssp_rcp, num_pft, input_path,
+    ctsm_case = CtsmCase(res, glc_nec, ssp_rcp, crop_flag, input_path,
                          vic_flag, glc_flag, start_year, end_year)
 
     ctsm_case.name_nl()
