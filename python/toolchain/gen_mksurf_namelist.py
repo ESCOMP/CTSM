@@ -6,13 +6,14 @@
 |------------------------------------------------------------------|
 |---------------------  Instructions  -----------------------------|
 |------------------------------------------------------------------|
-
-This Python script is for automatically creating namelist (control 
-file) that is needed for creating surface dataset and other relevant
-files for running CTSM cases.
-
-*** transient
-
+This Python script is part of the simplified toolchain for creating
+the surface dataset for ctsm cases.
+This script should be used as the first step of the new toolchain. 
+It will automatically creating namelist (control  file) that is 
+needed for creating surface dataset and other relevant files for
+running CTSM cases. 
+For transient cases, it will also create a txt file that includes the
+landuse files for every year. 
 
 -------------------------------------------------------------------
 Instructions for running on Cheyenne/Casper:
@@ -34,6 +35,17 @@ To remove NPL from your environment on Cheyenne/Casper:
 """
 
 #TODO (NS)
+## TODO Add default values in the help page.
+## Add information about if this is optional
+## Add info for help page note -- by default is start_year
+##TODO###########################################
+# Possibly remove year --years and range options
+# comment them out
+#TODO: maybe a verbose option and removing debug
+#TODO: --debug mode is not working...
+#TODO: add error check for hi-res and years if they are 1850 and 2005.
+# TODO: Do we need --crop to accept y/n or just --crop is enough?
+
 
 #  Import libraries
 from __future__ import print_function
@@ -59,7 +71,6 @@ valid_opts = {
 
 
 def get_parser():
-        ## TODO Add default values in the help page.
         """
             Get parser object for this script.
         """
@@ -77,32 +88,29 @@ def get_parser():
                     type = start_year_type,
                     default=2000)
         parser.add_argument('--ey','--end_year',
-        ## Add information about if this is optional
-        ## Add info for help page note -- by default is start_year
-                    help='Simulation end year. [default: %(default)s] ', 
+                    help='Simulation end year.  [default: start_year] ', 
                     action="store",
                     dest="end_year",
                     required=False,
                     type = int)
                     #type = end_year_type,
                     #default="start_year")
-##TODO###########################################
-# Possibly remove year --years and range options
-# comment them out
-        parser.add_argument('-y','--year',
-                    help='Simulation year to run over.', 
-                    action="store",
-                    dest="sim_year",
-                    required=False,
-                    choices = ['1885','1895','1980','1982','2000'],
-                    default='2000')
-        parser.add_argument('--range',
-                    help='Simulation years to run over.', 
-                    action="store",
-                    dest="sim_range",
-                    required=False,
-                    choices = ['1850-2000','1850-2005','1850-2100'])
-###############################################
+
+        # We decided to use start year and end year instead of years or range:
+        # These lines should be ultimately removed if everyone agrees. 
+        #parser.add_argument('-y','--year',
+        #            help='Simulation year to run over.', 
+        #            action="store",
+        #            dest="sim_year",
+        #            required=False,
+        #            choices = ['1885','1895','1980','1982','2000'],
+        #            default='2000')
+        #parser.add_argument('--range',
+        #            help='Simulation years to run over.', 
+        #            action="store",
+        #            dest="sim_range",
+        #            required=False,
+        #            choices = ['1850-2000','1850-2005','1850-2100'])
 
         parser.add_argument('--glc_nec',
                     help='''
@@ -134,10 +142,13 @@ def get_parser():
                     choices=valid_opts['ssp_rcp'],
                     default = "hist")
 
-##############################################
-##############################################
+        ##############################################
+        # In mksurfdata.pl these options are -l --dinlc
+        # But the group decided --raw_dir is more descriptive.
+        # If everyone agrees, the commented out line should be removed. 
+        #parser.add_argument('-l','--dinlc',  #--raw_dir or --rawdata_dir
 
-        parser.add_argument('-l','--dinlc',  #--raw_dir or --rawdata_dir
+        parser.add_argument('--raw_dir','--rawdata_dir',
                     help='''
                     /path/of/root/of/input/data', 
                     [default: %(default)s]
@@ -145,8 +156,6 @@ def get_parser():
                     action="store",
                     dest="input_path",
                     default="/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/")
-        #TODO: maybe a verbose option and removing debug
-        #TODO: --debug mode is not working...
         parser.add_argument('-d','--debug', 
                     help='Just print out what would happen if ran', 
                     action="store_true", 
@@ -169,7 +178,6 @@ def get_parser():
                     dest="glc_flag", 
                     default=False)
         parser.add_argument('--hirespft', 
-        #add error check for hi-res and years if they are 1850 and 2005.
                     help='''
                     If you want to use the high-resolution pft dataset rather
                     than the default lower resolution dataset.
@@ -179,7 +187,6 @@ def get_parser():
                     action="store_true", 
                     dest="hres_flag", 
                     default=False)
-        # TODO: Do we need --crop to accept y/n or just --crop is enough?
         parser.add_argument('--crop', 
                     help='''
                     Create datasets with the extensive list of prognostic crop types.
@@ -214,12 +221,15 @@ def str2bool(v):
     """
     Function for converting different forms of
     command line boolean strings to boolean value.
+
     Args:
         v (str): String bool input
+
     Raises:
         if the argument is not an acceptable boolean string
         (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
         argparse.ArgumentTypeError: The string should be one of the mentioned values.
+
     Returns:
         bool: Boolean value corresponding to the input.
     """
@@ -231,6 +241,60 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected. [true or false] or [y or n]')
+
+def tag_describe ():
+    """
+    Function for converting different forms of
+    command line boolean strings to boolean value.
+
+    Args:
+
+    Raises:
+
+    Returns:
+        label.decode (str) : ouput of running 'git describe' in shell
+    """
+    label = subprocess.check_output(["git", "describe"]).strip()
+    return label.decode()
+
+def glc_nec_type(x):
+    """
+    Function for defining acceptable glc_nec input.
+
+    Args:
+        x (str) : glc_nec value from command line args.
+
+    Raises:
+        Error if value of glc_nec is not in the range 
+        of 1-99. 
+
+    Returns:
+        x (int) : Acceptable glc_nec value.
+    """
+    x = int(x)
+    if (x <= 0) or (x >= 100):
+        raise argparse.ArgumentTypeError("ERROR: glc_nec must be between 1 and 99.")
+    return x
+
+def start_year_type(x):
+    """
+    Function for defining acceptable start_year input.
+
+    Args:
+        x (str) : start_year string from command line args.
+
+    Raises:
+        Error if value of glc_start_year is not in the range 
+        of 850-2015. 
+
+    Returns:
+        x (int) : Acceptable start_year value.
+    """
+    x = int(x)
+    if (x < 850) or (x > 2105):
+        raise argparse.ArgumentTypeError(
+                "ERROR: Simulation start year should be between 850 and 2105.")
+    return x
 
 class CtsmCase:
     """
@@ -249,8 +313,23 @@ class CtsmCase:
 
     Methods
     -------
+    check_endyear
+        Check if end_year is bigger than start year
+        in a ctsm case.
+    check_run_type
+        Determine if a ctsm case is transient or
+        time-slice. 
+    landuse_filename:
+        Build the land-use filename for a transient 
+        case.
+    create_landuse:
+        Create land-use txt file a transient case. 
     name_nl
-        build the name of namelist for a specific case.
+        Build the name of the namelist/control file
+        for a ctsm case.
+    build_nl:
+        Build the namelist/control file for a ctsm
+        case.
     """
     def __init__ (self, res, glc_nec, ssp_rcp, num_pft, input_path, vic_flag, glc_flag, start_year, end_year=None):
         self.res = res
@@ -279,6 +358,9 @@ class CtsmCase:
             self.run_type = "timeslice"
 
     def name_nl  (self):
+        """
+        Build namelist file name.
+        """
         time_stamp = datetime.today().strftime('%y%m%d')
         namelist_fname = "surfdata_"+ \
             self.res+"_"+ \
@@ -314,7 +396,7 @@ class CtsmCase:
 
     def build_nl (self):
         """
-        Build the namelist/control file for ****. 
+        Build the namelist/control file for a ctsm class.  
         """
 
         self.check_run_type()
@@ -384,89 +466,6 @@ class CtsmCase:
         namelist_file.write (nl_template)
         namelist_file.close ()
 
-
-def name_nl  (start_year,end_year, res, ssp_rcp, num_pft):
-    """
-    Build namelist file name.
-    """
-
-    time_stamp = datetime.today().strftime('%y%m%d')
-    namelist_fname = "surfdata_"+res+"_"+ssp_rcp+"_"+num_pft+"pfts_CMIP6_"+start_year.__str__()+'-'+end_year.__str__()+"_c"+time_stamp+".namelist"
-
-    return namelist_fname 
-
-def build_nl (start_year, end_year, res, ssp_rcp, glc_nec, num_pft, input_path, run_type, vic_flag, glc_flag ):
-    """
-    Build the namelist/control file for ****. 
-    """
-
-    run_type = check_run_type(start_year, end_year)
-    if (run_type == "transient"):
-        create_landuse(start_year, end_year)
-        lu_fname = landuse_filename (start_year, end_year)
-    else:
-        lu_fname = " "
-    namelist_fname = name_nl (start_year,end_year, res, ssp_rcp, num_pft)
-    namelist_file = open (namelist_fname,'w')
-
-    label = tag_describe()
-    
-    if (run_type == "transient"):
-        use_transient = ".true."
-    else: 
-        use_transient = ".false"
-   
-    dst_mesh = which_mesh (res)
-
-    print ('dst mesh is :', dst_mesh)
-    nl_template = ( \
-            "&clmexp\n"                                                                                                                                                                  
-            "nglcec           = "+glc_nec + "\n"
-            "mksrf_fsoitex    = "+input_path+"mksrf_soitex.10level.c201018.nc"+"\n"
-            "mksrf_forganic   = "+input_path+"mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc"+"\n"
-            "mksrf_flakwat    = "+input_path+"mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc"+"\n"
-            "mksrf_fwetlnd    = "+input_path+"mksrf_lanwat.050425.nc"+"\n"
-            "mksrf_fmax       = "+input_path+"mksrf_fmax_3x3min_USGS_c120911.nc"+"\n"
-            "mksrf_fglacier   = "+input_path+"mksrf_glacier_3x3min_simyr2000.c120926.nc"+"\n"
-            "mksrf_fvocef     = "+input_path+"mksrf_vocef_0.5x0.5_simyr2000.c110531.nc" +"\n"
-            "mksrf_furbtopo   = "+input_path+"mksrf_topo.10min.c080912.nc"+"\n"
-            "mksrf_fgdp       = "+input_path+"mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc"+"\n"
-            "mksrf_fpeat      = "+input_path+"mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc"+"\n"
-            "mksrf_fsoildepth = "+input_path+"mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc"+"\n"
-            "mksrf_fabm       = "+input_path+"mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc"+"\n"
-            "outnc_double     = .true. \n"
-            "all_urban        = .false.\n"
-            "no_inlandwet     = .true. \n"
-            "mksrf_furban     = "+input_path+"mksrf_urban_0.05x0.05_simyr2000.c170724.nc"+"\n"
-            "gitdescribe      = "+label+"\n"
-            "mksrf_ftopostats = "+input_path+"mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc"+"\n"
-            "mksrf_fvegtyp    = "+input_path + "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_1850.c170629.nc"+"\n"
-            "mksrf_fsoicol    = "+input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc"+"\n"
-            "mksrf_flai       = "+input_path + "pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc" +"\n"
-            "fdyndat          = ''\n"
-            "numpft           = "+num_pft+"\n"
-            "dst_mesh_file    = "+input_path+dst_mesh+"\n"
-            "\n&transient\n"
-            "use_transient    = "+use_transient + "\n"
-            "start_year       = "+start_year.__str__() + "\n"
-            "end_year         = "+end_year.__str__() + "\n"
-            "mksrf_dyn_lu     = "+input_path+ "pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629" + "\n"
-            "mksrf_fdynuse    = "+lu_fname + "\n"
-            "\n&vic\n"
-            "use_vic          = "+vic_flag.__str__()+"\n"
-            "mksrf_fvic       = "+input_path+"mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc\n"
-            "outnc_vic        = \n"
-            "\n&glc\n"
-            "use_glc          = "+glc_flag.__str__()+"\n"
-            "outnc_3dglc      = \n"
-            "/\n"
-            )
-
-    print ("Successfully created namelist file : ", namelist_fname)
-    print ("---------------------------------------------------")
-    namelist_file.write (nl_template)
-    namelist_file.close ()
-
 def which_mesh(res):
    '''
    Figure out the dst mesh file for each res
@@ -501,59 +500,6 @@ def which_mesh(res):
 
    return switcher.get(res, "nothing") 
 
-
-
-
-
-
-
-def tag_describe ():
-    label = subprocess.check_output(["git", "describe"]).strip()
-    return label.decode()
-
-def glc_nec_type(x):
-    x = int(x)
-    if (x <= 0) or (x >= 100):
-        raise argparse.ArgumentTypeError("ERROR: glc_nec must be between 1 and 99.")
-    return x
-
-def start_year_type(x):
-    x = int(x)
-    if (x < 850) or (x > 2105):
-        raise argparse.ArgumentTypeError("ERROR: Simulation start year should be between 850 and 2105.")
-    return x
-
-def check_endyear(start_year, end_year):
-    if (int(end_year) < int(start_year)):
-        print ( "ERROR: end_year should be bigger than the start_year : ", start_year, ".")
-        sys.exit()
-
-def create_landuse(start_year, end_year):
-    lu_fname = landuse_filename (start_year, end_year)
-    lu_file = open (lu_fname,'w')
-    for yr in range (start_year, end_year+1):
-        print (yr)
-        lu_fname_line = \
-        "/glade/p/cesm/cseg/inputdata/lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_landuse_histclm50_LUH2_"+str(yr)+".c170412.nc"\
-        +"\t\t\t"+ str(yr) + "\n"
-        print (lu_fname_line)
-        lu_file.write (lu_fname_line)
-    print ("Successfully created land use file : ", lu_fname)
-    print ("---------------------------------------------------")
-    lu_file.close ()
-
-
-def landuse_filename(start_year, end_year):
-    lu_fname = "landuse_timeseries_hist_78pfts_simyr"+str(start_year)+"-"+str(end_year)+".txt"
-    return (lu_fname)
-
-def check_run_type (start_year, end_year):
-    if (end_year > start_year):
-        run_type = "transient"
-    else:
-        run_type = "timeslice"
-    return (run_type)
-
 def main ():
 
     args         = get_parser().parse_args()
@@ -578,7 +524,7 @@ def main ():
         end_year = start_year
 
     #check_endyear (start_year, end_year)
-    run_type = check_run_type(start_year, end_year)
+    #run_type = check_run_type(start_year, end_year)
 
     if crop_flag:
         num_pft      = "78"
