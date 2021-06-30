@@ -1,7 +1,7 @@
 ===============================================================
-Tag name:  ctsm5.1.dev047
+Tag name:  ctsm5.1.dev046
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Mon Jun 28 15:54:57 MDT 2021
+Date:  Wed Jun 30 13:20:57 MDT 2021
 One-line Summary: Make certain history fields descriptive inst. of labeling by number
 
 Purpose and description of changes
@@ -116,9 +116,9 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
-Tag name:  ctsm5.1.dev046
+Tag name:  ctsm5.1.dev045
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Fri Jun 25 14:08:24 MDT 2021
+Date: Tue Jun 29 20:05:21 MDT 2021
 One-line Summary: Include CWD in heterotrophic respiration (HR)
 
 Purpose and description of changes
@@ -158,15 +158,19 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-
-Issues fixed (include CTSM Issue #): #1361
-
+Issues fixed (include CTSM Issue #): #1361 #1417
+  Fixes #1361 -- HR fluxes don't include CWD
+  Fixes #1417 -- NoAnthro build-namelist test fails
 
 Notes of particular relevance for users
 ---------------------------------------
-Substantial timing or memory changes:
- This warning appears in many tests on both cheyenne and izumi:
+Substantial timing or memory changes: None
+ Total 17 MEMCOMP non-passes with the same warning as this one:
+ FAIL PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel MEMCOMP Error:
  Memory usage increase > 10% from baseline
+
+ Total 5 TPUTCOMP non-passes with this warning:
+ TPUTCOMP: Computation time increase > 25% from baseline
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -180,43 +184,24 @@ Changes to tests or testing:
 Testing summary:
 ----------------
 
-[Remove any lines that don't apply.]
-
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    cheyenne - 
+       cheyenne - OK (2 tests fail compare because of fix in #1417)
 
-  tools-tests (test/tools) (if tools have been changed):
+     python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
-  (PTCLM is being deprecated, so we only expect this to be done on occasion)
-
-    cheyenne - 
-
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
-
-    (any machine) - 
+       cheyenne - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK
     izumi ------- OK
   
-  fates tests:
-    cheyenne ---- 
-
-  any other testing (give details below):
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
 
 Answer changes
 --------------
-
 Changes answers relative to baseline: No
 
 
@@ -227,10 +212,6 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
-Tag name:  ctsm5.1.dev045
-===============================================================
-===============================================================
-Tag name:  ctsm5.1.dev044
 Originator(s): mvertens (Mariana Vertenstein)
 Date:  Thu Jun 24 15:59:08 MDT 2021
 One-line Summary: New stream functionality when using NUOPC or LILAC
