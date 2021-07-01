@@ -405,22 +405,22 @@ contains
               errMsg(sourcefile, __LINE__))
       end if
 
-      i_pas_som = i_lig_lit + 1
-      floating_cn_ratio_decomp_pools(i_pas_som) = .false.
-      decomp_cascade_con%decomp_pool_name_restart(i_pas_som) = 'soil1'
-      decomp_cascade_con%decomp_pool_name_history(i_pas_som) = 'PAS_SOM'
-      decomp_cascade_con%decomp_pool_name_long(i_pas_som) = 'passive soil organic matter'
-      decomp_cascade_con%decomp_pool_name_short(i_pas_som) = 'S1'
-      is_litter(i_pas_som) = .false.
-      is_soil(i_pas_som) = .true.
-      is_cwd(i_pas_som) = .false.
-      initial_cn_ratio(i_pas_som) = cn_s1
-      initial_stock(i_pas_som) = params_inst%initial_Cstocks(i_pas_som)
-      is_metabolic(i_pas_som) = .false.
-      is_cellulose(i_pas_som) = .false.
-      is_lignin(i_pas_som) = .false.
+      i_act_som = i_lig_lit + 1
+      floating_cn_ratio_decomp_pools(i_act_som) = .false.
+      decomp_cascade_con%decomp_pool_name_restart(i_act_som) = 'soil1'
+      decomp_cascade_con%decomp_pool_name_history(i_act_som) = 'ACT_SOM'
+      decomp_cascade_con%decomp_pool_name_long(i_act_som) = 'active soil organic matter'
+      decomp_cascade_con%decomp_pool_name_short(i_act_som) = 'S1'
+      is_litter(i_act_som) = .false.
+      is_soil(i_act_som) = .true.
+      is_cwd(i_act_som) = .false.
+      initial_cn_ratio(i_act_som) = cn_s1
+      initial_stock(i_act_som) = params_inst%initial_Cstocks(i_act_som)
+      is_metabolic(i_act_som) = .false.
+      is_cellulose(i_act_som) = .false.
+      is_lignin(i_act_som) = .false.
 
-      i_slo_som = i_pas_som + 1
+      i_slo_som = i_act_som + 1
       floating_cn_ratio_decomp_pools(i_slo_som) = .false.
       decomp_cascade_con%decomp_pool_name_restart(i_slo_som) = 'soil2'
       decomp_cascade_con%decomp_pool_name_history(i_slo_som) = 'SLO_SOM'
@@ -435,24 +435,24 @@ contains
       is_cellulose(i_slo_som) = .false.
       is_lignin(i_slo_som) = .false.
 
-      i_act_som = i_slo_som + 1
-      floating_cn_ratio_decomp_pools(i_act_som) = .false.
-      decomp_cascade_con%decomp_pool_name_restart(i_act_som) = 'soil3'
-      decomp_cascade_con%decomp_pool_name_history(i_act_som) = 'ACT_SOM'
-      decomp_cascade_con%decomp_pool_name_long(i_act_som) = 'active soil organic matter'
-      decomp_cascade_con%decomp_pool_name_short(i_act_som) = 'S3'
-      is_litter(i_act_som) = .false.
-      is_soil(i_act_som) = .true.
-      is_cwd(i_act_som) = .false.
-      initial_cn_ratio(i_act_som) = cn_s3
-      initial_stock(i_act_som) = params_inst%initial_Cstocks(i_act_som)
-      is_metabolic(i_act_som) = .false.
-      is_cellulose(i_act_som) = .false.
-      is_lignin(i_act_som) = .false.
+      i_pas_som = i_slo_som + 1
+      floating_cn_ratio_decomp_pools(i_pas_som) = .false.
+      decomp_cascade_con%decomp_pool_name_restart(i_pas_som) = 'soil3'
+      decomp_cascade_con%decomp_pool_name_history(i_pas_som) = 'PAS_SOM'
+      decomp_cascade_con%decomp_pool_name_long(i_pas_som) = 'passive soil organic matter'
+      decomp_cascade_con%decomp_pool_name_short(i_pas_som) = 'S3'
+      is_litter(i_pas_som) = .false.
+      is_soil(i_pas_som) = .true.
+      is_cwd(i_pas_som) = .false.
+      initial_cn_ratio(i_pas_som) = cn_s3
+      initial_stock(i_pas_som) = params_inst%initial_Cstocks(i_pas_som)
+      is_metabolic(i_pas_som) = .false.
+      is_cellulose(i_pas_som) = .false.
+      is_lignin(i_pas_som) = .false.
 
       if (.not. use_fates) then
          ! CWD
-         i_cwd = i_act_som + 1
+         i_cwd = i_pas_som + 1
          floating_cn_ratio_decomp_pools(i_cwd) = .true.
          decomp_cascade_con%decomp_pool_name_restart(i_cwd) = 'cwd'
          decomp_cascade_con%decomp_pool_name_history(i_cwd) = 'CWD'
@@ -480,10 +480,10 @@ contains
          spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
       end if
       !som1
-      spinup_factor(i_pas_som) = 1._r8
+      spinup_factor(i_act_som) = 1._r8
       !som2,3
       spinup_factor(i_slo_som) = max(1._r8, (speedup_fac * params_inst%tau_s2_bgc))
-      spinup_factor(i_act_som) = max(1._r8, (speedup_fac * params_inst%tau_s3_bgc))
+      spinup_factor(i_pas_som) = max(1._r8, (speedup_fac * params_inst%tau_s3_bgc))
 
       if ( masterproc ) then
          write(iulog,*) 'Spinup_state ',spinup_state
@@ -495,14 +495,14 @@ contains
       decomp_cascade_con%cascade_step_name(i_l1s1) = 'L1S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
       cascade_donor_pool(i_l1s1) = i_met_lit
-      cascade_receiver_pool(i_l1s1) = i_pas_som
+      cascade_receiver_pool(i_l1s1) = i_act_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
 
       i_l2s1 = 2
       decomp_cascade_con%cascade_step_name(i_l2s1) = 'L2S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = rf_l2s1
       cascade_donor_pool(i_l2s1) = i_cel_lit
-      cascade_receiver_pool(i_l2s1) = i_pas_som
+      cascade_receiver_pool(i_l2s1) = i_act_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)= 1.0_r8
 
       i_l3s2 = 3
@@ -515,36 +515,36 @@ contains
       i_s1s2 = 4
       decomp_cascade_con%cascade_step_name(i_s1s2) = 'S1S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
-      cascade_donor_pool(i_s1s2) = i_pas_som
+      cascade_donor_pool(i_s1s2) = i_act_som
       cascade_receiver_pool(i_s1s2) = i_slo_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
 
       i_s1s3 = 5
       decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
-      cascade_donor_pool(i_s1s3) = i_pas_som
-      cascade_receiver_pool(i_s1s3) = i_act_som
+      cascade_donor_pool(i_s1s3) = i_act_som
+      cascade_receiver_pool(i_s1s3) = i_pas_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
 
       i_s2s1 = 6
       decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
       cascade_donor_pool(i_s2s1) = i_slo_som
-      cascade_receiver_pool(i_s2s1) = i_pas_som
+      cascade_receiver_pool(i_s2s1) = i_act_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
 
       i_s2s3 = 7 
       decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
       cascade_donor_pool(i_s2s3) = i_slo_som
-      cascade_receiver_pool(i_s2s3) = i_act_som
+      cascade_receiver_pool(i_s2s3) = i_pas_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
 
       i_s3s1 = 8
       decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
-      cascade_donor_pool(i_s3s1) = i_act_som
-      cascade_receiver_pool(i_s3s1) = i_pas_som
+      cascade_donor_pool(i_s3s1) = i_pas_som
+      cascade_receiver_pool(i_s3s1) = i_act_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
 
       if (.not. use_fates) then
@@ -700,8 +700,8 @@ contains
                endif
             endif
             !
-            if ( abs(spinup_factor(i_pas_som) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_s1(c) = spinup_factor(i_pas_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_act_som) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s1(c) = spinup_factor(i_act_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s1(c) = 1._r8
             endif
@@ -712,8 +712,8 @@ contains
                spinup_geogterm_s2(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_act_som) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_s3(c) = spinup_factor(i_act_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_pas_som) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s3(c) = spinup_factor(i_pas_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s3(c) = 1._r8
             endif
@@ -945,11 +945,11 @@ contains
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
             decomp_k(c,j,i_lig_lit) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c)
-            decomp_k(c,j,i_pas_som) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
+            decomp_k(c,j,i_act_som) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c)
             decomp_k(c,j,i_slo_som) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c)
-            decomp_k(c,j,i_act_som) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * &
+            decomp_k(c,j,i_pas_som) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * &
                depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c)
             ! same for cwd but only if fates is not enabled; fates handles CWD
             ! on its own structure
