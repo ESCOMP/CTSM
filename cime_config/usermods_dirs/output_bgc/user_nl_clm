@@ -3,8 +3,8 @@
 !----------------------------------------------------------------------------------
 
 ! h0 stream (monthly average, gridcell-level)
-hist_fexcl1 += 'PAS_SOMC_vr', 'PAS_SOMN_vr', 'SLO_SOMC_vr', 'SLO_SOMN_vr', 'ACT_SOMC_vr', 'ACT_SOMN_vr', 'SOILC_vr','SOILN_vr', 'CWDC_vr', 'MET_LITC_vr', 'CEL_LITC_vr', 'LIG_LITC_vr', 'MET_LITN_vr', 'CEL_LITN_vr', 'LIG_LITN_vr', 'CWDN_vr', 'SMIN_NO3_vr', 'CONC_O2_UNSAT', 'CONC_O2_SAT','SMIN_NH4_vr','SMINN_vr'
-hist_fincl1 += 'LEAFC_TO_LITTER', 'FROOTC_TO_LITTER','MET_LITC_TO_PAS_SOMC','MET_LITN_TO_PAS_SOMN','CEL_LITC_TO_PAS_SOMC', 'CEL_LITN_TO_PAS_SOMN','LIG_LITC_TO_SLO_SOMC','LIG_LITN_TO_SLO_SOMN','DWT_WOOD_PRODUCTC_GAIN_PATCH'
+hist_fexcl1 += 'ACT_SOMC_vr', 'ACT_SOMN_vr', 'SLO_SOMC_vr', 'SLO_SOMN_vr', 'PAS_SOMC_vr', 'PAS_SOMN_vr', 'SOILC_vr','SOILN_vr', 'CWDC_vr', 'MET_LITC_vr', 'CEL_LITC_vr', 'LIG_LITC_vr', 'MET_LITN_vr', 'CEL_LITN_vr', 'LIG_LITN_vr', 'CWDN_vr', 'SMIN_NO3_vr', 'CONC_O2_UNSAT', 'CONC_O2_SAT','SMIN_NH4_vr','SMINN_vr'
+hist_fincl1 += 'LEAFC_TO_LITTER', 'FROOTC_TO_LITTER','MET_LITC_TO_ACT_SOMC','MET_LITN_TO_ACT_SOMN','CEL_LITC_TO_ACT_SOMC', 'CEL_LITN_TO_ACT_SOMN','LIG_LITC_TO_SLO_SOMC','LIG_LITN_TO_SLO_SOMN','DWT_WOOD_PRODUCTC_GAIN_PATCH'
 
 ! h1 stream (monthly average, finest sub-grid)
 hist_fincl2 += 'GPP', 'NPP', 'AGNPP', 'TOTVEGC', 'NPP_NUPTAKE', 'AR', 'HR', 'HTOP'
