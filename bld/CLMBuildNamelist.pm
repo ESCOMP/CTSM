@@ -4252,7 +4252,7 @@ sub add_default {
       } else {
         if ($is_input_pathname eq 'abs') {
           $val = set_abs_filepath($val, $inputdata_rootdir);
-          if ( $test_files and ($val !~ /null/) and (! -f "$val") ) {
+          if ( $test_files and ($val !~ /null|none/) and (! -f "$val") ) {
             $log->fatal_error("file not found: $var = $val");
           }
         }

@@ -9,7 +9,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varpar                         , only : nlevsoi, nlevgrnd, nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+  use clm_varpar                         , only : nlevdecomp
   use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates, use_soil_matrixcn
   use clm_varcon                         , only : zsoi
@@ -714,8 +714,6 @@ contains
     real(r8):: k_s2                         ! decomposition rate constant SOM 2 (1/sec)
     real(r8):: k_s3                         ! decomposition rate constant SOM 3 (1/sec)
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
-    real(r8):: cwdc_loss                    ! fragmentation rate for CWD carbon (gC/m2/s)
-    real(r8):: cwdn_loss                    ! fragmentation rate for CWD nitrogen (gN/m2/s)
     real(r8):: Q10                          ! temperature dependence
     real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [

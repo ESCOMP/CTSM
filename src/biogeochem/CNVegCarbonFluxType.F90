@@ -301,7 +301,6 @@ module CNVegCarbonFluxType
      real(r8), pointer :: xsmrpool_recover_patch                    (:)     ! (gC/m2/s) C flux assigned to recovery of negative cpool
      real(r8), pointer :: xsmrpool_c13ratio_patch                   (:)     ! C13/C(12+13) ratio for xsmrpool (proportion)
 
-     real(r8), pointer :: cwdc_hr_col                               (:)     ! (gC/m2/s) col-level coarse woody debris C heterotrophic respiration
      real(r8), pointer :: cwdc_loss_col                             (:)     ! (gC/m2/s) col-level coarse woody debris C loss
      real(r8), pointer :: litterc_loss_col                          (:)     ! (gC/m2/s) col-level litter C loss
      real(r8), pointer :: frootc_alloc_patch                        (:)     ! (gC/m2/s) patch-level fine root C alloc
@@ -1014,7 +1013,6 @@ contains
 
     allocate(this%crop_seedc_to_leaf_patch          (begp:endp))                  ; this%crop_seedc_to_leaf_patch  (:)  =nan
 
-    allocate(this%cwdc_hr_col                       (begc:endc))                  ; this%cwdc_hr_col               (:)  =nan
     allocate(this%cwdc_loss_col                     (begc:endc))                  ; this%cwdc_loss_col             (:)  =nan
     allocate(this%litterc_loss_col                  (begc:endc))                  ; this%litterc_loss_col          (:)  =nan
 
@@ -4387,7 +4385,6 @@ contains
        i = filter_column(fi)
 
        this%grainc_to_cropprodc_col(i)       = value_column
-       this%cwdc_hr_col(i)                   = value_column
        this%cwdc_loss_col(i)                 = value_column
        this%litterc_loss_col(i)              = value_column
 
@@ -4494,8 +4491,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Summary_carbonflux(this, &
-       bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
-       isotope, soilbiogeochem_hr_col, soilbiogeochem_lithr_col, &
+       bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, isotope, &
+       soilbiogeochem_hr_col, soilbiogeochem_cwdhr_col, soilbiogeochem_lithr_col, &
        soilbiogeochem_decomp_cascade_ctransfer_col, &
        product_closs_grc)
     !
@@ -4519,6 +4516,7 @@ contains
     integer           , intent(in) :: filter_soilp(:) ! filter for soil patches
     character(len=*)  , intent(in) :: isotope   
     real(r8)          , intent(in) :: soilbiogeochem_hr_col(bounds%begc:)
+    real(r8)          , intent(in) :: soilbiogeochem_cwdhr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_lithr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
     real(r8)          , intent(in) :: product_closs_grc(bounds%begg:)
@@ -5011,9 +5009,6 @@ contains
             this%ar_col(c) + &
             soilbiogeochem_hr_col(c)
        
-       ! coarse woody debris heterotrophic respiration
-       this%cwdc_hr_col(c) = 0._r8
-
        ! net ecosystem production, excludes fire flux, landcover change, 
        ! and loss from wood products, positive for sink (NEP)
        this%nep_col(c) = &
@@ -5075,7 +5070,7 @@ contains
     ! coarse woody debris C loss
     do fc = 1,num_soilc
        c  = filter_soilc(fc)
-       this%cwdc_loss_col(c)  = 0._r8
+       this%cwdc_loss_col(c)  = soilbiogeochem_cwdhr_col(c)
     end do
     associate(is_cwd    => decomp_cascade_con%is_cwd) ! TRUE => pool is a cwd pool   
       do l = 1, ndecomp_pools
