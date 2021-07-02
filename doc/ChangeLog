@@ -2,7 +2,7 @@
 Tag name:  ctsm5.1.dev046
 Originator(s):  rgknox (Ryan Knox,,,)
 Date: Fri Jul  2 14:36:44 MDT 2021
-One-line Summary: Updating external fates has to tag sci.1.46.2_api.16.1.0. FATES side changes expand the FATES parameter file to include new fields (unused at present).
+One-line Summary: Updating external fates has to tag sci.1.46.2_api.16.1.0. FATES side changes expand the FATES parameter file to include new fields (unused at present). This also includes sci.1.46.1_api.16.0.0 which contained a sublte bug-fix on how FATES passes fragmentation fluxes (correcting seed decay fragmentation).
 
 Purpose and description of changes
 ----------------------------------
