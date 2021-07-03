@@ -24,7 +24,6 @@ module decompInitMod
   public :: decompInit_glcp   ! initializes g,l,c,p decomp info
   !
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: set_subgrid_start
   !
   ! PUBLIC TYPES:
   integer, public :: clump_pproc ! number of clumps per MPI process
@@ -32,8 +31,10 @@ module decompInitMod
   ! !PRIVATE TYPES:
   integer, pointer :: lcid(:)          ! temporary for setting decomposition
   integer          :: nglob_x, nglob_y ! global sizes
-  character(len=*), parameter, private :: sourcefile = &
+  character(len=*), parameter :: sourcefile = &
        __FILE__
+
+#include <mpif.h>         ! mpi library include file
   !------------------------------------------------------------------------------
 
 contains
@@ -52,7 +53,6 @@ contains
     use decompMod  , only : bounds_type, get_proc_bounds, procinfo
     !
     ! !ARGUMENTS:
-    implicit none
     integer , intent(in) :: amask(:)
     integer , intent(in) :: lni,lnj   ! domain global size
     !
@@ -281,7 +281,7 @@ contains
     end do
 
     ! Initialize global gindex (non-compressed, includes ocean points)
-    ! Note that gindex_global goes from (1:endg-begg_1)
+    ! Note that gindex_global goes from (1:endg)
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
     call get_proc_bounds(bounds)
@@ -321,7 +321,6 @@ contains
     use decompMod      , only : numg, numl, numc, nump, numCohort
     use decompMod      , only : gindex_global
     use glcBehaviorMod , only : glc_behavior_type
-    use spmdMod        , only : MPI_INTEGER, MPI_SUM
     !
     ! !ARGUMENTS:
     integer                 , intent(in) :: lni,lnj ! land domain global size
@@ -482,78 +481,84 @@ contains
     ! !USES:
     use clm_varctl             , only : use_fates
     use subgridMod             , only : subgrid_get_gcellinfo
-    use decompMod              , only : bounds_type, nclumps, get_proc_global, get_proc_bounds
+    use decompMod              , only : bounds_type, get_proc_global, get_proc_bounds
     use decompMod              , only : gindex_global
     use decompMod              , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, gindex_Cohort
-    use decompMod              , only : procinfo, nclumps, clump_type, clumps, get_proc_global
+    use decompMod              , only : procinfo, clump_type, clumps, get_proc_global
     use LandunitType           , only : lun
     use ColumnType             , only : col
     use PatchType              , only : patch
     use FatesInterfaceTypesMod , only : fates_maxElementsPerSite
     use glcBehaviorMod         , only : glc_behavior_type
-    use mct_mod                , only : mct_gsmap, mct_gsMap_init, mct_gsmap_clean
-    use spmdMod                , only : comp_id
     !
     ! !ARGUMENTS:
     integer                 , intent(in) :: lni,lnj ! land domain global size
     type(glc_behavior_type) , intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
-    integer                 :: gi,li,ci,pi,coi     ! indices
-    integer                 :: i,l,n,np            ! indices
-    integer                 :: cid,pid             ! indices
-    integer                 :: begg,endg           ! beg,end gridcells
-    integer                 :: begl,endl           ! beg,end landunits
-    integer                 :: begc,endc           ! beg,end columns
-    integer                 :: begp,endp           ! beg,end patches
-    integer                 :: begCohort,endCohort ! beg,end cohorts
-    integer                 :: numg                ! total number of land gridcells across all processors
-    integer                 :: numl                ! total number of landunits across all processors
-    integer                 :: numc                ! total number of columns across all processors
-    integer                 :: nump                ! total number of patches across all processors
-    integer                 :: numCohort           ! fates cohorts
-    integer                 :: ilunits             ! temporary
-    integer                 :: icols               ! temporary
-    integer                 :: ipatches            ! temporary
-    integer                 :: icohorts            ! temporary
-    integer                 :: ier                 ! error code
-    integer                 :: npmin,npmax,npint   ! do loop values for printing
-    integer                 :: clmin,clmax         ! do loop values for printing
-    integer                 :: ng                  ! number of global gridcells
-    integer, pointer        :: array_glob(:)       ! temporaroy
-    integer, pointer        :: gstart(:), gcount(:)
-    integer, pointer        :: lstart(:), lcount(:)
-    integer, pointer        :: cstart(:), ccount(:)
-    integer, pointer        :: pstart(:), pcount(:)
-    integer, pointer        :: coStart(:), coCount(:)
-    integer, pointer        :: ioff(:)
-    type(bounds_type)       :: bounds
-    type(mct_gsMap), target :: gsmap_global        ! global seg map
-    integer                 :: lsize, gsize
-    integer, parameter      :: dbug=1              ! 0 = min, 1=normal, 2=much, 3=max
+    integer              :: gi,li,ci,pi,coi     ! indices
+    integer              :: i,l,n,np            ! indices
+    integer              :: cid,pid             ! indices
+    integer              :: numg                ! total number of land gridcells across all processors
+    integer              :: numl                ! total number of landunits across all processors
+    integer              :: numc                ! total number of columns across all processors
+    integer              :: nump                ! total number of patches across all processors
+    integer              :: numCohort           ! fates cohorts
+    integer              :: ilunits             ! temporary
+    integer              :: icols               ! temporary
+    integer              :: ipatches            ! temporary
+    integer              :: icohorts            ! temporary
+    integer              :: ier                 ! error code
+    integer              :: npmin,npmax,npint   ! do loop values for printing
+    integer              :: clmin,clmax         ! do loop values for printing
+    integer, pointer     :: array_glob(:)       ! temporaroy
+    integer, pointer     :: gcount(:)
+    integer, pointer     :: lcount(:)
+    integer, pointer     :: ccount(:)
+    integer, pointer     :: pcount(:)
+    integer, pointer     :: coCount(:)
+    type(bounds_type)    :: bounds
+    integer, allocatable :: ioff(:)
+    integer, allocatable :: gridcells_per_pe(:) ! needed for all calcs
+    integer, allocatable :: gridcell_offsets(:) ! needed for all calcs
+    integer, allocatable :: index_gridcells(:)  ! needed for all calcs
+    integer, allocatable :: start_global(:)
+    integer, allocatable :: start(:) 
+    integer, allocatable :: index_lndgridcells(:)
+    integer              :: count
+    integer              :: temp
+    integer              :: lsize_g, lsize_l, lsize_c, lsize_p, lsize_cohort
+    integer              :: gsize
+    integer, parameter   :: dbug=1              ! 0 = min, 1=normal, 2=much, 3=max
     Character(len=32), parameter :: subname = 'decompInit_glcp'
     !------------------------------------------------------------------------------
 
     ! Get processor bounds
 
     call get_proc_bounds(bounds)
-    begg = bounds%begg; endg = bounds%endg
-    begl = bounds%begl; endl = bounds%endl
-    begc = bounds%begc; endc = bounds%endc
-    begp = bounds%begp; endp = bounds%endp
-    begCohort = bounds%begCoHort; endCohort = bounds%endCoHort
-
     call get_proc_global(ng=numg, nl=numl, nc=numc, np=nump, nCohorts=numCohort)
 
-    ! Allocate start and count for determining subgrid level global index space
-    allocate(gcount(begg:endg)) ; gcount(:) = 0
-    allocate(lcount(begg:endg)) ; lcount(:) = 0
-    allocate(ccount(begg:endg)) ; ccount(:) = 0
-    allocate(pcount(begg:endg)) ; pcount(:) = 0
-    allocate(coCount(begg:endg)); coCount(:) = 0
+    lsize_g = bounds%endg
+    lsize_l = bounds%endl
+    lsize_c = bounds%endc
+    lsize_p = bounds%endp
+    lsize_cohort = bounds%endCohort
+    gsize = nglob_x * nglob_y
 
-    ! Determine gcount, lcount, ccount and pcount
-    do gi = begg,endg
+    ! allocate module variables in decompMod.F90
+    allocate(gindex_grc(lsize_g))
+    allocate(gindex_lun(lsize_l))
+    allocate(gindex_col(lsize_c))
+    allocate(gindex_patch(lsize_p))
+    allocate(gindex_cohort(lsize_cohort))
+
+    ! Determine counts
+    allocate(gcount(lsize_g))  ; gcount(:) = 0
+    allocate(lcount(lsize_g))  ; lcount(:) = 0
+    allocate(ccount(lsize_g))  ; ccount(:) = 0
+    allocate(pcount(lsize_g))  ; pcount(:) = 0
+    allocate(coCount(lsize_g)) ; coCount(:) = 0
+    do gi = 1,lsize_g
        call subgrid_get_gcellinfo (gi, nlunits=ilunits, ncols=icols, npatches=ipatches, &
             ncohorts=icohorts, glc_behavior=glc_behavior)
        gcount(gi)  = 1         ! number of gridcells for local gridcell index gi
@@ -563,128 +568,200 @@ contains
        coCount(gi) = icohorts  ! number of fates cohorts for local gricell index gi
     enddo
 
-    ! Determine gstart, lstart, cstart, pstart, coStart for the OUTPUT 1d data structures
-    ! gather the gdc subgrid counts to masterproc in glo order
-    ! compute glo ordered start indices from the counts
-    ! scatter the subgrid start indices back out to the gdc gridcells
-    ! set the local gindex array for the subgrid from the subgrid start and count arrays
-
-    ! Initialize gsmap_global
-    lsize = size(gindex_global)
-    ng = nglob_x * nglob_y
-    call mct_gsmap_init(gsmap_global, gindex_global, mpicom, comp_id, lsize, ng)
-
     ! ---------------------------------------
-    ! Determine total number of global gridcells (including ocean)
+    ! Arrays needed to determine gindex_xxx(:)
     ! ---------------------------------------
 
-    allocate(array_glob(ng))
-    allocate(ioff(begg:endg)); ioff(:) = 0
+    allocate(ioff(lsize_g))
+
+    if (masterproc) then
+       allocate (gridcells_per_pe(0:npes-1))
+    else
+       allocate(gridcells_per_pe(0))
+    endif
+    call mpi_gather(lsize_g, 1, MPI_INTEGER, gridcells_per_pe, 1, MPI_INTEGER, 0, mpicom, ier)
+
+    if (masterproc) then
+       allocate(gridcell_offsets(0:npes-1))
+       gridcell_offsets(0) = 0
+       do n = 1 ,npes-1
+          gridcell_offsets(n) = gridcell_offsets(n-1) + gridcells_per_pe(n-1)
+       end do
+    else
+       allocate(gridcell_offsets(0))
+    end if
+
+    if (masterproc) then
+       allocate(start_global(numg)) ! number of landunits in a gridcell
+    else
+       allocate(start_global(0))
+    end if
+
+    allocate(start(lsize_g))
 
     ! ---------------------------------------
     ! Gridcell gindex (compressed, no ocean points)
     ! ---------------------------------------
 
-    allocate(gstart(begg:endg)) ; gstart(:) = 0
-    call set_subgrid_start(gsmap_global, array_glob, gcount, gstart)
-    allocate(gindex_grc(endg-begg+1))
-    i = 0
-    do gi = begg,endg
-       if (gcount(gi) <  1) then
-          write(iulog,*) 'decompInit_glcp warning count g ',iam,gi,gcount(gi)
-       endif
-       do l = 1,gcount(gi)
-          i = i + 1
-          gindex_grc(i) = gstart(gi) + l - 1
-       enddo
-    enddo
-    deallocate(gstart)
+    ! gstart_global the global index of all of the land points in task order 
+    call mpi_gatherv(gindex_global, lsize_g, MPI_INTEGER, start_global, &
+         gridcells_per_pe, gridcell_offsets, MPI_INTEGER, 0, mpicom, ier)
+
+    if (masterproc) then
+       ! Create a global size index_gridcells that will have 0 for all ocean points
+       ! Fill the location of each land point with the gatherv location of that land point
+       allocate(index_gridcells(gsize))
+       index_gridcells(:) = 0
+       do n = 1,numg
+          ! if n = 3, start_global(3)=100, index_gridcells(100)=3
+          ! n is the task order location - so for global index 100 - the task order location is 3
+          index_gridcells(start_global(n)) = n
+       end do
+
+       ! Create a land-only global index based on the original global index ordering
+       ! Count is the running global land index
+       allocate(index_lndgridcells(numg))
+       count = 0
+       do n = 1,gsize
+          if (index_gridcells(n) > 0) then
+             count = count + 1
+             ! e.g. n=20, count=4 and index_gridcells(20)=100, then start_global(100)=4
+             start_global(index_gridcells(n)) = count  
+             index_lndgridcells(count) = index_gridcells(n)
+          end if
+       end do
+       deallocate(index_gridcells)
+    end if
+
+    ! Determine gindex_grc
+    call mpi_scatterv(start_global, gridcells_per_pe, gridcell_offsets, MPI_INTEGER, gindex_grc, &
+         lsize_g, MPI_INTEGER, 0, mpicom, ier)
     deallocate(gcount)
 
     ! ---------------------------------------
     ! Landunit gindex
     ! ---------------------------------------
 
-    ! lstart for gridcell (n) is the total number of the landunits over gridcells 1->n-1
-    allocate(lstart(begg:endg)) ; lstart(:) = 0
-    call set_subgrid_start(gsmap_global, array_glob, lcount, lstart)
-    allocate(gindex_lun(endl-begl+1))
+    start(:) = 0 
+    call mpi_gatherv(lcount, lsize_g, MPI_INTEGER, start_global, &
+         gridcells_per_pe, gridcell_offsets, MPI_INTEGER, 0, mpicom, ier)
+    if (masterproc) then
+       count = 1
+       do n = 1,numg
+          temp = start_global(index_lndgridcells(n))
+          start_global(index_lndgridcells(n)) = count
+          count = count + temp
+       end do
+    endif
+    call mpi_scatterv(start_global, gridcells_per_pe, gridcell_offsets, MPI_INTEGER, start, &
+         lsize_g, MPI_INTEGER, 0, mpicom, ier)
+
     ioff(:) = 0
-    do li = begl,endl
-       !this is determined internally from how landunits are spread
-       !out in memory
+    do li = 1,lsize_l
        gi = lun%gridcell(li)
-       ! the output gindex is ALWAYS the same regardless of how
-       ! landuntis are spread out in memory
-       gindex_lun(li-begl+1) = lstart(gi) + ioff(gi)
+       gindex_lun(li) = start(gi) + ioff(gi)
        ioff(gi)  = ioff(gi) + 1
-       ! check that this is less than [lstart(gi) + lcount(gi)]
     enddo
-    deallocate(lstart)
     deallocate(lcount)
 
     ! ---------------------------------------
     ! Column gindex
     ! ---------------------------------------
 
-    allocate(cstart(begg:endg)) ; cstart(:) = 0
-    call set_subgrid_start(gsmap_global, array_glob, ccount, cstart)
-    allocate(gindex_col(endc-begc+1))
+    start(:) = 0
+    call mpi_gatherv(ccount, lsize_g, MPI_INTEGER, start_global, &
+         gridcells_per_pe, gridcell_offsets, MPI_INTEGER, 0, mpicom, ier)
+    if (masterproc) then
+       count = 1
+       do n = 1,numg
+          temp = start_global(index_lndgridcells(n))
+          start_global(index_lndgridcells(n)) = count
+          count = count + temp
+       end do
+    endif
+    call mpi_scatterv(start_global, gridcells_per_pe, gridcell_offsets, MPI_INTEGER, start, &
+         lsize_g, MPI_INTEGER, 0, mpicom, ier)
+
     ioff(:) = 0
-    do ci = begc,endc
+    do ci = 1,lsize_c
        gi = col%gridcell(ci)
-       gindex_col(ci-begc+1) = cstart(gi) + ioff(gi)
+       gindex_col(ci) = start(gi) + ioff(gi)
        ioff(gi) = ioff(gi) + 1
-       ! check that this is less than [cstart(gi) + ccount(gi)]
     enddo
-    deallocate(cstart)
     deallocate(ccount)
 
     ! ---------------------------------------
     ! PATCH gindex
     ! ---------------------------------------
 
-    allocate(pstart(begg:endg)) ; pstart(:) = 0
-    call set_subgrid_start(gsmap_global, array_glob, pcount, pstart)
-    allocate(gindex_patch(endp-begp+1))
+    start(:) = 0
+    call mpi_gatherv(pcount, lsize_g, MPI_INTEGER, start_global, &
+         gridcells_per_pe, gridcell_offsets, MPI_INTEGER, 0, mpicom, ier)
+    if (masterproc) then
+       count = 1
+       do n = 1,numg
+          temp = start_global(index_lndgridcells(n))
+          start_global(index_lndgridcells(n)) = count
+          count = count + temp
+       end do
+    endif
+    call mpi_scatterv(start_global, gridcells_per_pe, gridcell_offsets, MPI_INTEGER, start, &
+         lsize_g, MPI_INTEGER, 0, mpicom, ier)
+
     ioff(:) = 0
-    do pi = begp,endp
+    do pi = 1,lsize_p
        gi = patch%gridcell(pi)
-       gindex_patch(pi-begp+1) = pstart(gi) + ioff(gi)
+       gindex_patch(pi) = start(gi) + ioff(gi)
        ioff(gi) = ioff(gi) + 1
-       ! check that this is less than [pstart(gi) + pcount(gi)]
     enddo
     deallocate(pcount)
-    deallocate(pstart)
 
     ! ---------------------------------------
     ! FATES gindex for the cohort/element vector
     ! ---------------------------------------
 
     if ( use_fates ) then
-       allocate(coStart(begg:endg)); coStart(:) = 0
-       call set_subgrid_start(gsmap_global, array_glob, coCount, coStart)
-       allocate(gindex_cohort(endCohort-begCohort+1))
+       start(:) = 0
+       call mpi_gatherv(coCount, lsize_g, MPI_INTEGER, start_global, &
+            gridcells_per_pe, gridcell_offsets, MPI_INTEGER, 0, mpicom, ier)
+       if (masterproc) then
+          count = 1
+          do n = 1,numg
+             temp = start_global(index_lndgridcells(n))
+             start_global(index_lndgridcells(n)) = count
+             count = count + temp
+          end do
+       endif
+       call mpi_scatterv(start_global, gridcells_per_pe, gridcell_offsets, MPI_INTEGER, start, &
+            lsize_g, MPI_INTEGER, 0, mpicom, ier)
+
        ioff(:) = 0
-       gi = begg
-       do coi = begCohort,endCohort
-          gindex_cohort(coi-begCohort+1) = coStart(gi) + ioff(gi)
+       gi = 1
+       do coi = 1, lsize_cohort
+          gindex_cohort(coi) = start(gi) + ioff(gi)
           ioff(gi) = ioff(gi) + 1
-          if ( mod(coi, fates_maxElementsPerSite ) == 0 ) gi = gi + 1
+          if ( mod(coi, fates_maxElementsPerSite ) == 0 ) then
+             gi = gi + 1
+          end if
        enddo
-       deallocate(coStart)
        deallocate(coCount)
     endif
 
     ! ---------------------------------------
-    ! Deallocate memory and diagnostic output
+    ! Deallocate memory
     ! ---------------------------------------
 
-    ! Deallocate start/count arrays
-    deallocate(array_glob)
     deallocate(ioff)
+    deallocate(gridcells_per_pe)
+    deallocate(gridcell_offsets)
+    deallocate(start)
+    deallocate(start_global)
+    if (allocated(index_lndgridcells)) deallocate(index_lndgridcells)
 
+    ! ---------------------------------------
     ! Diagnostic output
+    ! ---------------------------------------
+
     if (masterproc) then
        write(iulog,*)' Surface Grid Characteristics'
        write(iulog,*)'   longitude points          = ',lni
@@ -788,85 +865,6 @@ contains
     end do
     call shr_sys_flush(iulog)
 
-    ! Destroy gsmap
-    call mct_gsmap_clean(gsmap_global)
-
   end subroutine decompInit_glcp
-
-  !------------------------------------------------------------------------------
-  subroutine set_subgrid_start(gsmap, array_glob, count, start)
-
-    ! !USES:
-    use mct_mod , only : mct_aVect, mct_gsMap
-    use mct_mod , only : mct_aVect_init, mct_aVect_importIattr, mct_aVect_scatter
-    use mct_mod , only : mct_aVect_gather, mct_aVect_exportIattr, mct_aVect_clean
-    use mct_mod , only : mct_aVect_exportRattr, mct_aVect_importRattr
-
-    ! !ARGUMENTS:
-    type(mct_gsmap)  :: gsmap         ! global gsmap
-    integer, pointer :: array_glob(:) ! input
-    integer, pointer :: count(:)      ! input
-    integer, pointer :: start(:)      ! output
-
-    ! !LOCAL VARIABLES:
-    integer            :: n,lb,ub    ! indices
-    integer            :: lsize      ! size of local array
-    type(mct_aVect)    :: AVi, AVo   ! attribute vectors
-    integer ,pointer   :: adata(:)   ! temporary data array
-    integer            :: val1, val2 ! temporaries
-    !-----------------------------------------------------------------------
-
-    ! Initialize array_glob
-    array_glob(:) = 0
-
-    ! Gather count to master and place the data in arrray_global
-    lsize = size(count, dim=1)
-    lb = lbound(count, dim=1); ub = ubound(count, dim=1)
-    call mct_aVect_init(AVi, rList="", iList='f1', lsize=lsize)
-    allocate(adata(lsize))
-    do n = lb,ub
-       adata(n-lb+1) = count(n)
-    enddo
-    call mct_aVect_importIattr(AVi, 'f1', adata, lsize)
-    deallocate(adata)
-    call mct_aVect_gather(AVi, AVo, gsmap, 0, mpicom)
-    if (masterproc) then
-       lsize = size(array_glob,dim=1)
-       call mct_aVect_exportIattr(AVo, 'f1', array_glob, lsize)
-       call mct_aVect_clean(AVo)
-    endif
-    call mct_aVect_clean(AVi)
-
-    ! Create global start array in array_glob
-    if (masterproc) then
-       val1 = array_glob(1)
-       array_glob(1) = 1
-       do n = 2,size(array_glob, dim=1)
-          val2 = array_glob(n)
-          array_glob(n) = array_glob(n-1) + val1
-          val1 = val2
-       enddo
-    endif
-
-    ! Now scatter start array (i.e. array_glob from master)
-    if (masterproc) then
-       call mct_aVect_init(AVi, rList="", iList="f1", lsize=lsize)
-       call mct_aVect_importIattr(AVi, 'f1', array_glob, size(array_glob,dim=1))
-    endif
-    call mct_aVect_scatter(AVi, AVo, gsmap, 0, mpicom)
-    lsize = size(start, dim=1)
-    allocate(adata(lsize))
-    call mct_aVect_exportIattr(AVo, 'f1', adata, lsize)
-    lb = lbound(start, dim=1); ub = ubound(start, dim=1)
-    do n = lb,ub
-       start(n) = adata(n-lb+1)
-    enddo
-    deallocate(adata)
-    if (masterproc) then
-       call mct_aVect_clean(AVi)
-    endif
-    call mct_aVect_clean(AVo)
-
-  end subroutine set_subgrid_start
 
 end module decompInitMod
