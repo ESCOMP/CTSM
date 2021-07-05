@@ -296,8 +296,7 @@ contains
     !  as the 3rd dimesnion.
     !
     ! !USES:
-    use decompMod, only : gindex_global, bounds_type
-    use decompMod, only : gsmap_lnd2dsoi_gdc2glo, get_proc_bounds
+    use decompMod, only : gindex_global, bounds_type, get_proc_bounds
     use spmdMod  , only : comp_id, mpicom
     use mct_mod  , only : mct_gsmap_init 
     !
