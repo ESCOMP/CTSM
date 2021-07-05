@@ -1,2 +1,0 @@
- o3_veg_stress_method    = 'stress_falk'
- hist_fincl2 += 'O3UPTAKESUN', 'O3UPTAKESHA'
