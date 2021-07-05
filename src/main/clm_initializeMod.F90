@@ -252,7 +252,13 @@ contains
 
     ! Build hierarchy and topological info for derived types
     ! This is needed here for the following call to decompInit_glcp
-    call initGridCells(glc_behavior)
+    nclumps = get_proc_clumps()
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1, nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call initGridCells(bounds_clump, glc_behavior)
+    end do
+    !$OMP END PARALLEL DO
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call decompInit_glcp(ni, nj, glc_behavior)
@@ -260,7 +266,6 @@ contains
     ! Set filters
     call allocFilters()
 
-    nclumps = get_proc_clumps()
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)
