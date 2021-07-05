@@ -155,7 +155,7 @@ contains
    !
    ! !ARGUMENTS:
    implicit none
-   class(fire_base_type)       :: this
+   class(fire_base_type)         :: this
    type(bounds_type), intent(in) :: bounds
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !

@@ -296,9 +296,10 @@ contains
     !  as the 3rd dimesnion.
     !
     ! !USES:
-    use decompMod, only : gindex_global, get_proc_bounds, bounds_type
-    use spmdMod  , only : mpicom, comp_id
-    use mct_mod  , only : mct_gsMap_init, mct_gsmap_ngseg
+    use decompMod, only : gindex_global, bounds_type
+    use decompMod, only : gsmap_lnd2dsoi_gdc2glo, get_proc_bounds
+    use spmdMod  , only : comp_id, mpicom
+    use mct_mod  , only : mct_gsmap_init 
     !
     ! !ARGUMENTS:
     integer , intent(in) :: lni,lnj,lnk   ! domain global size
@@ -338,8 +339,6 @@ contains
        write(iulog,*)'   gsize                          = ',gsize
        write(iulog,*)'   lsize                          = ',lsize
        write(iulog,*)'   bounds(gindex)                 = ',size(gindex)
-       write(iulog,*)' gsMap Characteristics'
-       write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd2Dsoi_gdc2glo)
        write(iulog,*)
     end if
 
