@@ -29,8 +29,9 @@ module decompInitMod
   integer, public :: clump_pproc ! number of clumps per MPI process
   !
   ! !PRIVATE TYPES:
-  integer, pointer :: lcid(:)          ! temporary for setting decomposition
-  integer          :: nglob_x, nglob_y ! global sizes
+  integer, pointer   :: lcid(:)          ! temporary for setting decomposition
+  integer            :: nglob_x, nglob_y ! global sizes
+  integer, parameter :: dbug=1           ! 0 = min, 1=normal, 2=much, 3=max
   character(len=*), parameter :: sourcefile = &
        __FILE__
 
@@ -317,7 +318,8 @@ contains
     !
     ! !USES:
     use subgridMod     , only : subgrid_get_gcellinfo
-    use decompMod      , only : bounds_type, get_proc_bounds, clumps, nclumps, procinfo
+    use decompMod      , only : bounds_type, clumps, nclumps, procinfo
+    use decompMod      , only : get_proc_global, get_proc_bounds
     use decompMod      , only : numg, numl, numc, nump, numCohort
     use decompMod      , only : gindex_global
     use glcBehaviorMod , only : glc_behavior_type
@@ -327,20 +329,22 @@ contains
     type(glc_behavior_type) , intent(in) :: glc_behavior
     !
     ! !LOCAL VARIABLES:
-    integer :: ln,an              ! indices
-    integer :: i,g,l,k            ! indices
-    integer :: cid                ! indices
-    integer :: n,m,np             ! indices
-    integer :: anumg              ! lnd num gridcells
-    integer :: icells             ! temporary
-    integer :: begg, endg         ! temporary
-    integer :: ilunits            ! temporary
-    integer :: icols              ! temporary
-    integer :: ipatches           ! temporary
-    integer :: icohorts           ! temporary
-    integer :: ier                ! error code
-    type(bounds_type) :: bounds   ! bounds
-    integer, allocatable :: allvecg(:,:)  ! temporary vector "global"
+    integer           :: ln,an             ! indices
+    integer           :: i,g,l,k           ! indices
+    integer           :: cid,pid           ! indices
+    integer           :: n,m,np            ! indices
+    integer           :: anumg             ! lnd num gridcells
+    integer           :: icells            ! temporary
+    integer           :: begg, endg        ! temporary
+    integer           :: ilunits           ! temporary
+    integer           :: icols             ! temporary
+    integer           :: ipatches          ! temporary
+    integer           :: icohorts          ! temporary
+    integer           :: ier               ! error code
+    integer           :: npmin,npmax,npint ! do loop values for printing
+    integer           :: clmin,clmax       ! do loop values for printing
+    type(bounds_type) :: bounds            ! bounds
+    integer, allocatable :: allvecg(:,:)   ! temporary vector "global"
     integer, allocatable :: allvecl(:,:)  ! temporary vector "local"
     character(len=32), parameter :: subname = 'decompInit_clumps'
     !------------------------------------------------------------------------------
@@ -470,6 +474,101 @@ contains
     deallocate(allvecg,allvecl)
     deallocate(lcid)
 
+    ! Diagnostic output
+
+    call get_proc_global(ng=numg, nl=numl, nc=numc, np=nump, nCohorts=numCohort)
+    if (masterproc) then
+       write(iulog,*)' Surface Grid Characteristics'
+       write(iulog,*)'   longitude points          = ',lni
+       write(iulog,*)'   latitude points           = ',lnj
+       write(iulog,*)'   total number of gridcells = ',numg
+       write(iulog,*)'   total number of landunits = ',numl
+       write(iulog,*)'   total number of columns   = ',numc
+       write(iulog,*)'   total number of patches   = ',nump
+       write(iulog,*)'   total number of cohorts   = ',numCohort
+       write(iulog,*)' Decomposition Characteristics'
+       write(iulog,*)'   clumps per process        = ',clump_pproc
+       write(iulog,*)
+    end if
+
+    ! Write out clump and proc info, one pe at a time,
+    ! barrier to control pes overwriting each other on stdout
+    call shr_sys_flush(iulog)
+    call mpi_barrier(mpicom,ier)
+    npmin = 0
+    npmax = npes-1
+    npint = 1
+    if (dbug == 0) then
+       npmax = 0
+    elseif (dbug == 1) then
+       npmax = min(npes-1,4)
+    elseif (dbug == 2) then
+       npint = npes/8
+    endif
+    do np = npmin,npmax,npint
+       pid = np
+       if (dbug == 1) then
+          if (np == 2) pid=npes/2-1
+          if (np == 3) pid=npes-2
+          if (np == 4) pid=npes-1
+       endif
+       pid = max(pid,0)
+       pid = min(pid,npes-1)
+
+       if (iam == pid) then
+          write(iulog,*)
+          write(iulog,'(4(a,2x,i10))')'proc = ',pid,                                        &
+               ' beg gridcell= ',procinfo%begg,' end gridcell= ',procinfo%endg,             &
+               ' gridcells per proc = ',procinfo%ncells
+          write(iulog,'(4(a,2x,i10))')'proc = ',pid,                                        &
+               ' beg landunit= ',procinfo%begl,' end landunit= ',procinfo%endl,             &
+               ' landunits per proc = ',procinfo%nlunits
+          write(iulog,'(4(a,2x,i10))')'proc = ',pid,                                        &
+               ' beg column  = ',procinfo%begc,' end column  = ',procinfo%endc,           &
+               ' columns per proc = ',procinfo%ncols
+          write(iulog,'(4(a,2x,i10))')'proc = ',pid,                                        &
+               ' beg patch   = ',procinfo%begp,' end patch   = ',procinfo%endp,           &
+               ' patches per proc = ',procinfo%npatches
+          write(iulog,'(4(a,2x,i10))')'proc = ',pid,                                        &
+               ' beg cohort  = ',procinfo%begCohort,' end cohort  = ',procinfo%endCohort, &
+               ' coh per proc = ',procinfo%nCohorts
+          write(iulog,'(2(a,2x,i10))')'proc = ',pid,' nclumps = ',procinfo%nclumps
+          if (dbug == 0) then
+             clmax = -1
+          else
+             clmax = procinfo%nclumps 
+          endif
+          do n = 1,clmax
+             cid = procinfo%cid(n)
+             write(iulog,'(6(a,2x,i10))')'proc = ',pid,' clump no = ',n,                             &
+                  ' clump id= ',procinfo%cid(n),                                                     &
+                  ' beg gridcell= ',clumps(cid)%begg,' end gridcell= ',clumps(cid)%endg,             &
+                  ' gridcells per clump= ',clumps(cid)%ncells
+             write(iulog,'(6(a,2x,i10))')'proc = ',pid,' clump no = ',n,                             &
+                  ' clump id= ',procinfo%cid(n),                                                     &
+                  ' beg landunit= ',clumps(cid)%begl,' end landunit= ',clumps(cid)%endl,             &
+                  ' landunits per clump = ',clumps(cid)%nlunits
+             write(iulog,'(6(a,2x,i10))')'proc = ',pid,' clump no = ',n,                             &
+                  ' clump id= ',procinfo%cid(n),                                                     &
+                  ' beg column  = ',clumps(cid)%begc,' end column  = ',clumps(cid)%endc,           &
+                  ' columns per clump = ',clumps(cid)%ncols
+             write(iulog,'(6(a,2x,i10))')'proc = ',pid,' clump no = ',n,                             &
+                  ' clump id= ',procinfo%cid(n),                                                     &
+                  ' beg patch   = ',clumps(cid)%begp,' end patch   = ',clumps(cid)%endp,           &
+                  ' patches per clump = ',clumps(cid)%npatches
+             write(iulog,'(6(a,2x,i10))')'proc = ',pid,' clump no = ',n,                             &
+                  ' clump id= ',procinfo%cid(n),                                                     &
+                  ' beg cohort  = ',clumps(cid)%begCohort,' end cohort  = ',clumps(cid)%endCohort, &
+                  ' cohorts per clump = ',clumps(cid)%nCohorts
+
+          end do
+       end if
+       call shr_sys_flush(iulog)
+       call mpi_barrier(mpicom,ier)
+    end do
+    write(iulog,*)
+    call shr_sys_flush(iulog)
+
   end subroutine decompInit_clumps
 
   !------------------------------------------------------------------------------
@@ -509,9 +608,6 @@ contains
     integer              :: ipatches            ! temporary
     integer              :: icohorts            ! temporary
     integer              :: ier                 ! error code
-    integer              :: npmin,npmax,npint   ! do loop values for printing
-    integer              :: clmin,clmax         ! do loop values for printing
-    integer, pointer     :: array_glob(:)       ! temporaroy
     integer, pointer     :: gcount(:)
     integer, pointer     :: lcount(:)
     integer, pointer     :: ccount(:)
@@ -529,7 +625,6 @@ contains
     integer              :: temp
     integer              :: lsize_g, lsize_l, lsize_c, lsize_p, lsize_cohort
     integer              :: gsize
-    integer, parameter   :: dbug=1              ! 0 = min, 1=normal, 2=much, 3=max
     Character(len=32), parameter :: subname = 'decompInit_glcp'
     !------------------------------------------------------------------------------
 
@@ -757,113 +852,6 @@ contains
     deallocate(start)
     deallocate(start_global)
     if (allocated(index_lndgridcells)) deallocate(index_lndgridcells)
-
-    ! ---------------------------------------
-    ! Diagnostic output
-    ! ---------------------------------------
-
-    if (masterproc) then
-       write(iulog,*)' Surface Grid Characteristics'
-       write(iulog,*)'   longitude points          = ',lni
-       write(iulog,*)'   latitude points           = ',lnj
-       write(iulog,*)'   total number of gridcells = ',numg
-       write(iulog,*)'   total number of landunits = ',numl
-       write(iulog,*)'   total number of columns   = ',numc
-       write(iulog,*)'   total number of patches   = ',nump
-       write(iulog,*)'   total number of cohorts   = ',numCohort
-       write(iulog,*)' Decomposition Characteristics'
-       write(iulog,*)'   clumps per process        = ',clump_pproc
-       write(iulog,*)
-    end if
-
-    ! Write out clump and proc info, one pe at a time,
-    ! barrier to control pes overwriting each other on stdout
-    call shr_sys_flush(iulog)
-    call mpi_barrier(mpicom,ier)
-    npmin = 0
-    npmax = npes-1
-    npint = 1
-    if (dbug == 0) then
-       npmax = 0
-    elseif (dbug == 1) then
-       npmax = min(npes-1,4)
-    elseif (dbug == 2) then
-       npint = npes/8
-    endif
-    do np = npmin,npmax,npint
-       pid = np
-       if (dbug == 1) then
-          if (np == 2) pid=npes/2-1
-          if (np == 3) pid=npes-2
-          if (np == 4) pid=npes-1
-       endif
-       pid = max(pid,0)
-       pid = min(pid,npes-1)
-
-       if (iam == pid) then
-          write(iulog,*)
-          write(iulog,*)'proc= ',pid,&
-               ' beg gridcell= ',procinfo%begg, &
-               ' end gridcell= ',procinfo%endg,                   &
-               ' total gridcells per proc= ',procinfo%ncells
-          write(iulog,*)'proc= ',pid,&
-               ' beg landunit= ',procinfo%begl, &
-               ' end landunit= ',procinfo%endl,                   &
-               ' total landunits per proc= ',procinfo%nlunits
-          write(iulog,*)'proc= ',pid,&
-               ' beg column  = ',procinfo%begc, &
-               ' end column  = ',procinfo%endc,                   &
-               ' total columns per proc  = ',procinfo%ncols
-          write(iulog,*)'proc= ',pid,&
-               ' beg patch     = ',procinfo%begp, &
-               ' end patch     = ',procinfo%endp,                   &
-               ' total patches per proc = ',procinfo%npatches
-          write(iulog,*)'proc= ',pid,&
-               ' beg coh     = ',procinfo%begCohort, &
-               ' end coh     = ',procinfo%endCohort,                   &
-               ' total coh per proc     = ',procinfo%nCohorts
-          write(iulog,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
-
-          clmin = 1
-          clmax = procinfo%nclumps
-          if (dbug == 1) then
-            clmax = 1
-          elseif (dbug == 0) then
-            clmax = -1
-          endif
-          do n = clmin,clmax
-             cid = procinfo%cid(n)
-             write(iulog,*)'proc= ',pid,' clump no = ',n, &
-                  ' clump id= ',procinfo%cid(n),    &
-                  ' beg gridcell= ',clumps(cid)%begg, &
-                  ' end gridcell= ',clumps(cid)%endg, &
-                  ' total gridcells per clump= ',clumps(cid)%ncells
-             write(iulog,*)'proc= ',pid,' clump no = ',n, &
-                  ' clump id= ',procinfo%cid(n),    &
-                  ' beg landunit= ',clumps(cid)%begl, &
-                  ' end landunit= ',clumps(cid)%endl, &
-                  ' total landunits per clump = ',clumps(cid)%nlunits
-             write(iulog,*)'proc= ',pid,' clump no = ',n, &
-                  ' clump id= ',procinfo%cid(n),    &
-                  ' beg column  = ',clumps(cid)%begc, &
-                  ' end column  = ',clumps(cid)%endc, &
-                  ' total columns per clump  = ',clumps(cid)%ncols
-             write(iulog,*)'proc= ',pid,' clump no = ',n, &
-                  ' clump id= ',procinfo%cid(n),    &
-                  ' beg patch     = ',clumps(cid)%begp, &
-                  ' end patch     = ',clumps(cid)%endp, &
-                  ' total patches per clump = ',clumps(cid)%npatches
-             write(iulog,*)'proc= ',pid,' clump no = ',n, &
-                  ' clump id= ',procinfo%cid(n),    &
-                  ' beg cohort     = ',clumps(cid)%begCohort, &
-                  ' end cohort     = ',clumps(cid)%endCohort, &
-                  ' total cohorts per clump     = ',clumps(cid)%nCohorts
-          end do
-       end if
-       call shr_sys_flush(iulog)
-       call mpi_barrier(mpicom,ier)
-    end do
-    call shr_sys_flush(iulog)
 
   end subroutine decompInit_glcp
 
