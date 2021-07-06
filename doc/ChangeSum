@@ -1,5 +1,10 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev046   rgknox 07/02/2021 Updating external fates has to tag sci.1.46.2_api.16.1.0
+    ctsm5.1.dev045   slevis 06/29/2021 Include CWD in heterotrophic respiration
+    ctsm5.1.dev044 mvertens 06/24/2021 New stream functionality when using NUOPC or LILAC
+    ctsm5.1.dev043   slevis 06/03/2021 Refactor of CascadeBGC code in preparation for MIMICS
+    ctsm5.1.dev042     erik 05/28/2021 Small answer changes for double precision constants and soil limits
     ctsm5.1.dev041   rgknox 05/27/2021 bring FATES API up to sci.1.46.0_api.16.0.0 (methane and cn hooks)
     ctsm5.1.dev040   slevis 05/20/2021 mksurfdata_map: replace SRC files of various masks with SRC files w no mask
     ctsm5.1.dev039 jedwards 05/18/2021 Add NEON sites

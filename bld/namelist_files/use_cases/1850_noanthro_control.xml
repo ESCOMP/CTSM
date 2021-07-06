@@ -34,6 +34,7 @@
 <!-- zero population density file -->
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_cn=".true."
 >lnd/clm2/firedata/clmforc.no_anthro_zero_hdm_1x1_simyr1925_181113.nc</stream_fldfilename_popdens>
+<stream_meshfile_popdens hgrid="0.5x0.5"   use_cn=".true.">none</stream_meshfile_popdens>
 <popdensmapalgo use_cn=".true.">nn</popdensmapalgo>
 
 <stream_year_first_urbantv phys="clm5_1"  >1850</stream_year_first_urbantv>

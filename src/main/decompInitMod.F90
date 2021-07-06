@@ -19,7 +19,7 @@ module decompInitMod
   use PatchType       , only : patch
   use glcBehaviorMod  , only : glc_behavior_type
   use decompMod
-  use mct_mod         , only : mct_gsMap_init, mct_gsMap_ngseg, mct_gsMap_nlseg, mct_gsmap_gsize
+  use mct_mod         , only : mct_gsMap_init, mct_gsmap_gsize
   use FatesInterfaceTypesMod, only : fates_maxElementsPerSite
   !
   ! !PUBLIC TYPES:
@@ -27,8 +27,6 @@ module decompInitMod
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public decompInit_lnd    ! initializes lnd grid decomposition into clumps and processors
-  public decompInit_lnd3D  ! initializes lnd grid 3D decomposition
-  public decompInit_ocn    ! initializes grid ocean points decomposition
   public decompInit_clumps ! initializes atm grid decomposition into clumps
   public decompInit_glcp   ! initializes g,l,c,p decomp info
   !
@@ -306,126 +304,12 @@ contains
        write(iulog,*)'   total number of land gridcells = ',numg
        write(iulog,*)' Decomposition Characteristics'
        write(iulog,*)'   clumps per process             = ',clump_pproc
-       write(iulog,*)' gsMap Characteristics'
-       write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo)
        write(iulog,*)
     end if
 
     call shr_sys_flush(iulog)
 
   end subroutine decompInit_lnd
-
-  !------------------------------------------------------------------------------
-  subroutine decompInit_lnd3D(lni,lnj,lnk)
-    !
-    ! !DESCRIPTION:
-    !
-    !   Create a 3D decomposition gsmap for the global 2D grid with soil levels
-    !   as the 3rd dimesnion.
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    implicit none
-    integer , intent(in) :: lni,lnj,lnk   ! domain global size
-    !
-    ! !LOCAL VARIABLES:
-    integer :: m,n,k                    ! indices
-    integer :: begg,endg,lsize,gsize    ! used for gsmap init
-    integer :: begg3d,endg3d
-    integer, pointer :: gindex(:)       ! global index for gsmap init
-
-
-    ! Set gsMap_lnd_gdc2glo (the global index here includes mask=0 or ocean points)
-    call get_proc_bounds(begg, endg)
-    begg3d = (begg-1)*lnk + 1
-    endg3d = endg*lnk
-    lsize = (endg3d - begg3d + 1 )
-    allocate(gindex(begg3d:endg3d))
-    do k = 1, lnk
-       do n = begg,endg
-          m = (begg-1)*lnk + (k-1)*(endg-begg+1) + (n-begg+1)
-          gindex(m) = ldecomp%gdc2glo(n) + (k-1)*(lni*lnj)
-       enddo
-    enddo
-    gsize = lni * lnj * lnk
-    call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
-
-    ! Diagnostic output
-
-    if (masterproc) then
-       write(iulog,*)' 3D GSMap'
-       write(iulog,*)'   longitude points               = ',lni
-       write(iulog,*)'   latitude points                = ',lnj
-       write(iulog,*)'   soil levels                    = ',lnk
-       write(iulog,*)'   gsize                          = ',gsize
-       write(iulog,*)'   lsize                          = ',lsize
-       write(iulog,*)'   bounds(gindex)                 = ',size(gindex)
-       write(iulog,*)' gsMap Characteristics'
-       write(iulog,*) '  lnd gsmap glo num of segs      = ',mct_gsMap_ngseg(gsMap_lnd2Dsoi_gdc2glo)
-       write(iulog,*)
-    end if
-
-    deallocate(gindex)
-
-    call shr_sys_flush(iulog)
-
-  end subroutine decompInit_lnd3D
-
-  !------------------------------------------------------------------------------
-  subroutine decompInit_ocn(ni, nj, amask, gindex_ocn)
-
-    ! !DESCRIPTION:
-    ! calculate a decomposition of only ocn points (needed for the nuopc interface)
-
-    ! !USES:
-    use spmdMod  , only : npes, iam
-
-    ! !ARGUMENTS:
-    integer , intent(in) :: amask(:)
-    integer , intent(in) :: ni,nj   ! domain global size
-    integer , pointer, intent(out) :: gindex_ocn(:) ! this variable is allocated here, and is assumed to start unallocated
-
-    ! !LOCAL VARIABLES:
-    integer :: n,i,j,nocn
-    integer :: nlnd_global
-    integer :: nocn_global
-    integer :: nocn_local
-    integer :: my_ocn_start, my_ocn_end
-    !------------------------------------------------------------------------------
-
-    ! count total land and ocean gridcells
-    nlnd_global = 0
-    nocn_global = 0
-    do n = 1,ni*nj
-       if (amask(n) == 1) then
-          nlnd_global = nlnd_global + 1
-       else
-          nocn_global = nocn_global + 1
-       endif
-    enddo
-
-    ! create the a global index array for ocean points
-    nocn_local = nocn_global / npes
-
-    my_ocn_start = nocn_local*iam + min(iam, mod(nocn_global, npes)) + 1
-    if (iam < mod(nocn_global, npes)) then
-       nocn_local = nocn_local + 1
-    end if
-    my_ocn_end = my_ocn_start + nocn_local - 1
-
-    allocate(gindex_ocn(nocn_local))
-    nocn = 0
-    do n = 1,ni*nj
-       if (amask(n) == 0) then
-          nocn = nocn + 1
-          if (nocn >= my_ocn_start .and. nocn <= my_ocn_end) then
-             gindex_ocn(nocn - my_ocn_start + 1) = n
-          end if
-       end if
-    end do
-
-  end subroutine decompInit_ocn
 
   !------------------------------------------------------------------------------
   subroutine decompInit_clumps(lni,lnj,glc_behavior)
@@ -880,13 +764,6 @@ contains
        write(iulog,*)'   total number of cohorts   = ',numCohort
        write(iulog,*)' Decomposition Characteristics'
        write(iulog,*)'   clumps per process        = ',clump_pproc
-       write(iulog,*)' gsMap Characteristics'
-       write(iulog,*) '  lnd gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo)
-       write(iulog,*) '  gce gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_gce_gdc2glo)
-       write(iulog,*) '  lun gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_lun_gdc2glo)
-       write(iulog,*) '  col gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_col_gdc2glo)
-       write(iulog,*) '  patch gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_patch_gdc2glo)
-       write(iulog,*) '  coh gsmap glo num of segs = ',mct_gsMap_ngseg(gsMap_cohort_gdc2glo)
        write(iulog,*)
     end if
 
@@ -937,24 +814,6 @@ contains
                ' beg coh     = ',procinfo%begCohort, &
                ' end coh     = ',procinfo%endCohort,                   &
                ' total coh per proc     = ',procinfo%nCohorts
-          write(iulog,*)'proc= ',pid,&
-               ' lnd ngseg   = ',mct_gsMap_ngseg(gsMap_lnd_gdc2glo), &
-               ' lnd nlseg   = ',mct_gsMap_nlseg(gsMap_lnd_gdc2glo,iam)
-          write(iulog,*)'proc= ',pid,&
-               ' gce ngseg   = ',mct_gsMap_ngseg(gsMap_gce_gdc2glo), &
-               ' gce nlseg   = ',mct_gsMap_nlseg(gsMap_gce_gdc2glo,iam)
-          write(iulog,*)'proc= ',pid,&
-               ' lun ngseg   = ',mct_gsMap_ngseg(gsMap_lun_gdc2glo), &
-               ' lun nlseg   = ',mct_gsMap_nlseg(gsMap_lun_gdc2glo,iam)
-          write(iulog,*)'proc= ',pid,&
-               ' col ngseg   = ',mct_gsMap_ngseg(gsMap_col_gdc2glo), &
-               ' col nlseg   = ',mct_gsMap_nlseg(gsMap_col_gdc2glo,iam)
-          write(iulog,*)'proc= ',pid,&
-               ' patch ngseg   = ',mct_gsMap_ngseg(gsMap_patch_gdc2glo), &
-               ' patch nlseg   = ',mct_gsMap_nlseg(gsMap_patch_gdc2glo,iam)
-          write(iulog,*)'proc= ',pid,&
-               ' coh ngseg   = ',mct_gsMap_ngseg(gsMap_cohort_gdc2glo), &
-               ' coh nlseg   = ',mct_gsMap_nlseg(gsMap_cohort_gdc2glo,iam)
           write(iulog,*)'proc= ',pid,' nclumps = ',procinfo%nclumps
 
           clmin = 1
