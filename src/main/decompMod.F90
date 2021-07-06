@@ -226,7 +226,7 @@ contains
      bounds%endl      = clumps(cid)%endl - procinfo%begl + 1
      bounds%begg      = clumps(cid)%begg - procinfo%begg + 1
      bounds%endg      = clumps(cid)%endg - procinfo%begg + 1
-     bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
+     bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
      bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
 
      bounds%level = BOUNDS_LEVEL_CLUMP
