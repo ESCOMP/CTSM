@@ -615,9 +615,9 @@ contains
     integer, pointer     :: coCount(:)
     type(bounds_type)    :: bounds
     integer, allocatable :: ioff(:)
-    integer, allocatable :: gridcells_per_pe(:) ! needed for all calcs
-    integer, allocatable :: gridcell_offsets(:) ! needed for all calcs
-    integer, allocatable :: index_gridcells(:)  ! needed for all calcs
+    integer, allocatable :: gridcells_per_pe(:) ! needed for gindex at all levels
+    integer, allocatable :: gridcell_offsets(:) ! needed for gindex at all levels
+    integer, allocatable :: index_gridcells(:)  ! needed for gindex at all levels
     integer, allocatable :: start_global(:)
     integer, allocatable :: start(:) 
     integer, allocatable :: index_lndgridcells(:)

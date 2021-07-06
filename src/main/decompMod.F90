@@ -102,7 +102,6 @@ module decompMod
   integer, public, pointer :: gindex_col(:)      => null()
   integer, public, pointer :: gindex_patch(:)    => null()
   integer, public, pointer :: gindex_cohort(:)   => null()
-  integer, public, pointer :: gindex_lnd2Dsoi(:) => null()
   !------------------------------------------------------------------------------
 
 contains
