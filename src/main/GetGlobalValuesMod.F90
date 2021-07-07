@@ -137,6 +137,7 @@ contains
     use LandunitType , only : lun                
     use ColumnType   , only : col                
     use PatchType    , only : patch                
+    use spmdMod      , only : iam
     !
     ! Arguments:
     integer          , intent(in) :: decomp_index
@@ -145,6 +146,8 @@ contains
     ! Local Variables:
     integer :: igrc, ilun, icol, ipft 
     !-----------------------------------------------------------------------
+
+    write(iulog,*)'proc_id = ',iam
 
     if (trim(clmlevel) == nameg) then
 
