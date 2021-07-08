@@ -83,12 +83,11 @@ module unittestSubgridMod
 
   ! Indices of initial grid cell / landunit / column / patch
   !
-  ! Note that we do NOT start at 1, in order to catch any code that assumes indices start
-  ! at 1.
-  integer, parameter, public :: begg = 11
-  integer, parameter, public :: begl = 21
-  integer, parameter, public :: begc = 31
-  integer, parameter, public :: begp = 41
+  ! Now we do start at 1.
+  integer, parameter, public :: begg = 1
+  integer, parameter, public :: begl = 1
+  integer, parameter, public :: begc = 1
+  integer, parameter, public :: begp = 1
 
   ! Indices of final grid cell / landunit / column / patch
   ! Note that these are the final indices of the allocated arrays, which may be greater

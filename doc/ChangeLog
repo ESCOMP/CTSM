@@ -1,4 +1,101 @@
 ===============================================================
+Tag name:  ctsm5.1.dev047
+Originator(s): mvertens (Mariana Vertenstein)
+Date:  Thu Jul  8 12:03:31 MDT 2021
+One-line Summary: Start bounds at 1; remove references to MCT
+
+Purpose and description of changes
+----------------------------------
+
+Users: take note of (1), and in particular the caveat for users noted
+below (in the "Notes of particular relevance for users").
+
+(1) All global index arrays on a given processor now have a starting index of 1
+  - bounds_proc for each subgrid level has a starting index of 1 for each level
+  - bounds_clump for each subgrid level has a starting index of 1 for just
+    the first clump on the processor - but all the other clumps on the
+    processor do not start at 1 - but rather are offset with the number of
+    gridcells, columns, ...etc on the preceeding clumps
+
+(2) There are no longer any references to any mct data structures other than in the mct cap
+  - All references to gsmap have been removed from decompMod.F90 and
+    replaced with new global index arrays for the various subgrid levels
+  - decompInitMod has been refactored to calculated these global index
+    arrays using pure MPI rather than mct
+  - ncdio_pio_F90.in has been refactored to use the new global index
+    arrays rather than the gsmap data structures
+  - the data struture ldecomp is no longer needed
+  - the module spmdGathScatMod.F90 is no longer needed and has been removed
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Addresses the first part of ESCOMP/CTSM#293 (Rework threading to be
+  done at a higher level, simplifying array argument passing)
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+- Until now, if the model produced an error message with a gridcell or
+  subgrid index (e.g., "Error at p = 1234"), you could rerun the model
+  with write statements in conditionals like "if (p == 1234) then". With
+  the changes in this tag, this simple conditional is no longer
+  possible. Instead, you will need to also reference the processor
+  number that produces the error.
+
+  If the error message is produced in the lnd log file, then you can
+  have a conditional like:
+    if (masterproc .and. p == 1234) then
+
+  If the error message is produced in the cesm log file, then you can
+  have a conditional like:
+    if (iam == X .and. p == 1234) then
+
+  where X is the processor number that produced the message. On some
+  machines (including cheyenne), this processor number is printed at the
+  start of each line in the cesm log file. In addition, some aborts will
+  now print "proc_id = X", and that value can be used.
+
+  Soon we will update
+  https://escomp.github.io/ctsm-docs/versions/master/html/users_guide/trouble-shooting/trouble-shooting.html
+  to document the new recommended procedure.
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1420
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev046
 Originator(s):  rgknox (Ryan Knox,,,)
 Date: Fri Jul  2 14:36:44 MDT 2021
