@@ -114,6 +114,15 @@ module CNPhenologyMod
   logical,  private :: min_crtical_dayl_depends_on_lat = .false. ! If critical day-length for onset depends on latitude
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
 
+    ! arameters for critical day length, higher for high latitudes and shorter
+    ! for temperature regions
+    ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
+    ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
+    integer, parameter :: critical_onset_time_at_high_lat = 54000  ! critical onset at high latitudes (min)
+    integer, parameter :: critical_onset_lat_slope        = 720    ! Slope of time for critical onset with latitude (min/deg)
+    integer, parameter :: critical_onset_high_lat         = 65     ! Start of what's considered high latitude (degrees)
+    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8 ! 5-day snow depth threshold for onset
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -680,15 +689,9 @@ contains
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
     real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal 
     logical :: do_onset       ! Flag if onset should happen
-    real(r8):: soilt
-    ! arameters for critical day length, higher for high latitudes and shorter
-    ! for temperature regions
-    ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
-    ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
-    integer, parameter :: critical_onset_time_at_high_lat = 54000  ! critical onset at high latitudes (min)
-    integer, parameter :: critical_onset_lat_slope        = 720    ! Slope of time for critical onset with latitude (min/deg)
-    integer, parameter :: critical_onset_high_lat         = 65     ! Start of what's considered high latitude (degrees)
-    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8 ! 5-day snow depth threshold for onset
+    real(r8):: soilt          ! soil temperature for layer to use for seasonal phenology trigger
+    real(r8):: onset_gdd_start
+    real(r8):: onset_gddflag_start
     !-----------------------------------------------------------------------
 
     associate(                                                                                                   & 
@@ -876,7 +879,11 @@ contains
 
             ! test for switching from dormant period to growth period
             if (dormant_flag(p) == 1.0_r8) then
+               soilt = t_soisno(c, phenology_soil_layer)
+
                do_onset = .false.
+               onset_gdd_start = onset_gdd(p)
+               onset_gddflag_start = onset_gddflag(p)
                ! Test to turn on growing degree-day sum, if off.
                ! switch on the growing degree day sum on the winter solstice
 
@@ -899,7 +906,6 @@ contains
                ! if the gdd flag is set, and if the soil is above freezing
                ! then accumulate growing degree days for onset trigger
 
-               soilt = t_soisno(c, phenology_soil_layer)
                if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
                   onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
                end if
@@ -920,6 +926,14 @@ contains
                else
                  ! set onset_flag if critical growing degree-day sum is exceeded
                  if (onset_gdd(p) > crit_onset_gdd) do_onset = .true.
+               end if
+
+               if ( do_onset /= SeasonalDecidOnset( onset_gdd_start, onset_gddflag_start, soilt, soila10(c), t_a5min(p), dayl(g), &
+                                                    snow_5day(c), ws_flag, crit_onset_gdd, season_decid_temperate(ivt(p)) ) )then
+                   call endrun( "Problem in SeasonalDecidOnset" )
+               end if
+               if ( (onset_gdd(p) /= onset_gdd_start) .or.  (onset_gddflag(p) /= onset_gddflag_start) )then
+                   call endrun( "Problem in SeasonalDecidOnset" )
                end if
                ! If onset is being triggered
                if (do_onset) then
@@ -997,6 +1011,75 @@ contains
     end associate
  
   end subroutine CNSeasonDecidPhenology
+
+  logical function SeasonalDecidOnset( onset_gdd, onset_gddflag, soilt, soila10, t_a5min, dayl, &
+                                          snow_5day, ws_flag, crit_onset_gdd, season_decid_temperate )
+
+    use shr_const_mod   , only: SHR_CONST_TKFRZ
+    real(r8), intent(INOUT) :: onset_gdd
+    real(r8), intent(INOUT) :: onset_gddflag
+    real(r8), intent(IN)    :: soilt          ! Soil temperture at specific level for this evaluation
+    real(r8), intent(IN)    :: soila10
+    real(r8), intent(IN)    :: t_a5min
+    real(r8), intent(IN)    :: dayl
+    real(r8), intent(IN)    :: snow_5day
+    real(r8), intent(IN)    :: ws_flag        !winter-summer solstice flag (0 or 1)
+    real(r8), intent(IN)    :: crit_onset_gdd !critical onset growing degree-day sum
+    real(r8), intent(IN)    :: season_decid_temperate
+
+    logical :: do_onset       ! Flag if onset should happen
+
+     do_onset = .false.
+     ! Test to turn on growing degree-day sum, if off.
+     ! switch on the growing degree day sum on the winter solstice
+
+     if (onset_gddflag == 0._r8 .and. ws_flag == 1._r8) then
+        onset_gddflag = 1._r8
+        onset_gdd = 0._r8
+     end if
+
+     ! Test to turn off growing degree-day sum, if on.
+     ! This test resets the growing degree day sum if it gets past
+     ! the summer solstice without reaching the threshold value.
+     ! In that case, it will take until the next winter solstice
+     ! before the growing degree-day summation starts again.
+
+     if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8) then
+        onset_gddflag = 0._r8
+        onset_gdd = 0._r8
+     end if
+
+     ! if the gdd flag is set, and if the soil is above freezing
+     ! then accumulate growing degree days for onset trigger
+
+     if (onset_gddflag == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
+        onset_gdd = onset_gdd + (soilt-SHR_CONST_TKFRZ)*fracday
+     end if
+     if ( onset_thresh_depends_on_veg) then
+       ! separate into non-arctic seasonally deciduous pfts
+       ! (temperate broadleaf deciduous
+       ! tree) and arctic/boreal seasonally deciduous pfts (boreal
+       ! needleleaf deciduous tree,
+       ! boreal broadleaf deciduous tree, boreal broadleaf deciduous
+       ! shrub, C3 arctic grass)
+       if (onset_gdd > crit_onset_gdd .and.  season_decid_temperate == 1) then
+           do_onset = .true.
+        ! Note: The divide by 2 of crit_dayl is just to make sure
+        ! onset doesn't happen with less than 6 hours of daylight
+        else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
+                soila10 > SHR_CONST_TKFRZ .and. &
+                t_a5min > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
+                dayl>(crit_dayl/2.0_r8) .and.  snow_5day<snow5d_thresh_for_onset) then
+           do_onset = .true.
+        end if
+     else
+       ! set onset_flag if critical growing degree-day sum is exceeded
+       if (onset_gdd > crit_onset_gdd) do_onset = .true.
+     end if
+
+     SeasonalDecidOnset = do_onset
+
+  end function SeasonalDecidOnset
 
   !-----------------------------------------------------------------------
   subroutine CNStressDecidPhenology (num_soilp, filter_soilp , &
