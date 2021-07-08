@@ -1048,7 +1048,6 @@ contains
        call NUOPC_CompAttributeGet(gcomp, name="stop_tod", value=cvalue, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        read(cvalue,*) stop_tod
-       print *,__FILE__,__LINE__,trim(stop_option), stop_ymd, stop_tod
 
        call alarmInit(mclock,           &
             alarm = stop_alarm,         &

@@ -19,7 +19,7 @@
     <values>
       <value component="clm"       >$SRCROOT</value>
       <value component="ctsm"      >$SRCROOT</value>
-      <value component="dlnd" comp_interface="mct">$CIMEROOT/src/components/data_comps_mct/dlnd</value>
+      <value component="dlnd" comp_interface="mct">$SRCROOT/components/cpl7/components/data_comps_mct/dlnd</value>
       <value component="dlnd" comp_interface="nuopc">$SRCROOT/components/cdeps/dlnd</value>
       <value component="slnd"      >$CIMEROOT/src/components/stub_comps_$COMP_INTERFACE/slnd</value>
       <value component="xlnd"      >$CIMEROOT/src/components/xcpl_comps_$COMP_INTERFACE/xlnd</value>
