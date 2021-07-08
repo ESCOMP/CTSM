@@ -2421,7 +2421,7 @@ module CLMFatesInterfaceMod
        c = this%f2hmap(nc)%fcolumn(s)
        do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
           p = ifp+col%patchi(c)
-          this%fates(nc)%bc_in(s)%tveg_pa(ifp) = temperature_inst%t_veg_patch(p)
+          this%fates(nc)%bc_in(s)%t_veg_pa(ifp) = temperature_inst%t_veg_patch(p)
        end do
     end do
 

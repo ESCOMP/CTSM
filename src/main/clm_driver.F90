@@ -1088,6 +1088,8 @@ contains
                soilbiogeochem_carbonflux_inst, &
                soilbiogeochem_carbonstate_inst)
 
+          ! This call updates some history diagnostics and must be called
+          ! after wrap_update_hifrq_hist
           call clm_fates%WrapUpdateFatesRmean(nc,temperature_inst)
           
           
