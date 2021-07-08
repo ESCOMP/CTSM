@@ -1918,7 +1918,7 @@ Horizontal grid resolutions for mksurfdata input files
 <!-- ========================================================================================  -->
 
 <entry id="finundation_res" type="char*10" category="default_settings"
-       group="default_settings" valid_values="none,1.9x2.5" >
+       group="default_settings" valid_values="none,0.9x1.25" >
 Resolution of finundated inversion streams dataset (stream_fldfilename_ch4finundated)
 to use for methane model
 (only applies when CN and methane model are turned on)
