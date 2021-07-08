@@ -15,6 +15,7 @@ module test_CNPhenology
   @TestCase
   type, extends(TestCase) :: TestCNPhenology
      integer  :: dtime
+     real(r8) :: fracday
      real(r8) :: onset_gdd
      real(r8) :: onset_gddflag
      real(r8) :: soilt
@@ -42,6 +43,7 @@ contains
 
     use_crop = .false.
     this%dtime = 1800
+    this%fracday = real(this%dtime,r8) / 3600._r8 * 24._r8
     ! Setup time manager
     call unittest_timemgr_setup(dtime=this%dtime)
 
@@ -104,5 +106,47 @@ contains
     call this%calc_doonset( do_onset )
     @assertTrue( do_onset )
   end subroutine check_doonset_normal
+
+  @Test
+  subroutine check_onsetflag_winter(this)
+    class(TestCNPhenology), intent(inout) :: this
+    logical :: do_onset
+
+    call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
+                            input_min_crtical_dayl_depends_on_lat = .false. )
+    this%onset_gdd = 1.0_r8
+    this%onset_gddflag = 1.0_r8
+    this%ws_flag = 0._r8
+    call this%calc_doonset( do_onset )
+    @assertEqual( this%onset_gddflag, 0._r8 )
+    @assertEqual( this%onset_gdd, 0._r8 )
+    @assertFalse( do_onset )
+  end subroutine check_onsetflag_winter
+
+
+  !@Test
+  !subroutine check_onsetflag_spring(this)
+    !use shr_const_mod   , only: SHR_CONST_TKFRZ
+    !class(TestCNPhenology), intent(inout) :: this
+    !logical :: do_onset
+    !real(r8), parameter :: temp = 5._r8
+!
+    !call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
+                            !input_min_crtical_dayl_depends_on_lat = .false. )
+    !this%onset_gdd = 9.0_r8
+    !this%onset_gddflag = 0._r8
+    !this%ws_flag = 1._r8
+    !this%soilt = 270._r8
+    !call this%calc_doonset( do_onset )
+    !@assertEqual( this%onset_gddflag, 1._r8 )
+    !@assertEqual( this%onset_gdd, 0._r8 )
+    !@assertFalse( do_onset )
+    !this%soilt = SHR_CONST_TKFRZ + temp
+    !this%onset_gddflag = 0._r8
+    !call this%calc_doonset( do_onset )
+    !@assertEqual( this%onset_gddflag, 1._r8 )
+    !@assertEqual( this%onset_gdd, temp*this%fracday )
+    !@assertFalse( do_onset )
+  !end subroutine check_onsetflag_spring
 
 end module test_CNPhenology
