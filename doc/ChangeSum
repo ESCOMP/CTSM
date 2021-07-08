@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev047 mvertens 07/08/2021 Start bounds at 1; remove references to MCT
     ctsm5.1.dev046   rgknox 07/02/2021 Updating external fates has to tag sci.1.46.2_api.16.1.0
     ctsm5.1.dev045   slevis 06/29/2021 Include CWD in heterotrophic respiration
     ctsm5.1.dev044 mvertens 06/24/2021 New stream functionality when using NUOPC or LILAC
