@@ -3,28 +3,106 @@ module test_CNPhenology
   ! Tests of CNPhenologyMod
 
   use pfunit_mod
+  use unittestSubgridMod
   use CNPhenologyMod
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestTimeManagerMod, only : unittest_timemgr_set_curr_date
+  use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
   use shr_kind_mod , only : r8 => shr_kind_r8
 
   implicit none
 
   @TestCase
   type, extends(TestCase) :: TestCNPhenology
+     integer  :: dtime
+     real(r8) :: onset_gdd
+     real(r8) :: onset_gddflag
+     real(r8) :: soilt
+     real(r8) :: soila10
+     real(r8) :: t_a5min
+     real(r8) :: dayl
+     real(r8) :: snow_5day
+     real(r8) :: ws_flag
+     real(r8) :: crit_onset_gdd
+     real(r8) :: season_decid_temperate
    contains
      procedure :: setUp
      procedure :: tearDown
+     procedure :: calc_doonset
   end type TestCNPhenology
 
 contains
 
   subroutine setUp(this)
+    use clm_varctl, only : use_crop
+    use clm_varcon, only: clm_varcon_init, zisoi
+    use clm_varpar, only: nlevlak, nlevgrnd, nlevdecomp_full
     class(TestCNPhenology), intent(inout) :: this
+    real(r8), parameter :: my_zisoi(5) = [0.01_r8, 0.02_r8, 2._r8, 4._r8, 6._r8]
+
+    use_crop = .false.
+    this%dtime = 1800
+    ! Setup time manager
+    call unittest_timemgr_setup(dtime=this%dtime)
+
+    this%onset_gdd = 1._r8
+    this%onset_gddflag = 1._r8
+    this%soilt = 275._r8
+    this%soila10 = 273._r8
+    this%t_a5min = 273._r8
+    this%dayl = 11._r8
+    this%snow_5day = 0._r8
+    this%ws_flag = 1._r8
+    this%crit_onset_gdd = 1._r8
+    this%season_decid_temperate = 1._r8
+
+    call setup_single_veg_patch(pft_type=1)
+
+    nlevgrnd = size(my_zisoi)
+    nlevlak = 10
+    nlevdecomp_full = nlevgrnd
+    call clm_varcon_init( is_simple_buildtemp = .true.)
+    zisoi(0) = 0._r8
+    zisoi(1:nlevgrnd) = my_zisoi(:)
+
+    call CNPhenologySetParams()
+    call CNPhenologyInit( bounds )
 
   end subroutine setUp
 
   subroutine tearDown(this)
+    use clm_varcon, only: clm_varcon_clean
     class(TestCNPhenology), intent(inout) :: this
 
+    call unittest_timemgr_teardown()
+    call clm_varcon_clean()
+    call unittest_subgrid_teardown()
+
   end subroutine tearDown
+
+  subroutine calc_doonset(this, do_onset)
+    class(TestCNPhenology), intent(inout) :: this
+    logical, intent(out) :: do_onset
+
+    do_onset = SeasonalDecidOnset( this%onset_gdd, this%onset_gddflag, this%soilt, this%soila10, this%t_a5min, this%dayl, &
+                                   this%snow_5day, this%ws_flag, this%crit_onset_gdd, this%season_decid_temperate )
+  end subroutine calc_doonset
+
+  @Test
+  subroutine check_doonset_normal(this)
+    class(TestCNPhenology), intent(inout) :: this
+    logical :: do_onset
+    logical :: expected
+
+    call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
+                            input_min_crtical_dayl_depends_on_lat = .false. )
+    this%onset_gdd = 1.0_r8
+    this%crit_onset_gdd = 2.0_r8
+    call this%calc_doonset( do_onset )
+    @assertFalse( do_onset )
+    this%onset_gdd = 2.000001_r8
+    call this%calc_doonset( do_onset )
+    @assertTrue( do_onset )
+  end subroutine check_doonset_normal
 
 end module test_CNPhenology
