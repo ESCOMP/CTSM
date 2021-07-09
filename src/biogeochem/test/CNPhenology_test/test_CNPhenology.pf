@@ -216,5 +216,21 @@ contains
     @assertEqual( 39200._r8, crit_daylat, tolerance=1.e-13_r8 )
   end subroutine check_crit_dayl_normal
 
+  @Test
+  subroutine check_crit_dayl_dependsonlat(this)
+    use GridcellType                    , only : grc
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: p, g
+    real(r8) :: crit_daylat
+
+    call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
+                            input_min_crtical_dayl_depends_on_lat = .true. )
+    g = bounds%begg
+    p = bounds%begp
+    grc%latdeg(g) = 0.0_r8
+    crit_daylat = SeasonalCriticalDaylength( p, g )
+    @assertEqual( 39200._r8, crit_daylat, tolerance=1.e-13_r8 )
+  end subroutine check_crit_dayl_dependsonlat
+
 
 end module test_CNPhenology
