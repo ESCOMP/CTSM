@@ -47,16 +47,18 @@ contains
     ! Setup time manager
     call unittest_timemgr_setup(dtime=this%dtime)
 
-    this%onset_gdd = 1._r8
-    this%onset_gddflag = 1._r8
-    this%soilt = 275._r8
-    this%soila10 = 273._r8
-    this%t_a5min = 273._r8
-    this%dayl = 11._r8
-    this%snow_5day = 0._r8
-    this%ws_flag = 1._r8
+    this%onset_gdd = 0._r8      ! Will be reset...
+    this%onset_gddflag = 0._r8  ! Will be reset...
+    ! Temperatures
+    this%soilt = 273._r8        ! Below freezing
+    this%soila10 = 273._r8      ! Below freezing
+    this%t_a5min = 273._r8      ! Below freezing
+
+    this%dayl = 39000._r8       ! Below critical
+    this%snow_5day = 1._r8      ! Above threshold
+    this%ws_flag = 1._r8        ! After winter solstice
     this%crit_onset_gdd = 1._r8
-    this%season_decid_temperate = 1._r8
+    this%season_decid_temperate = 0._r8  ! Non temperate plant
 
     call setup_single_veg_patch(pft_type=1)
 
@@ -94,7 +96,6 @@ contains
   subroutine check_doonset_normal(this)
     class(TestCNPhenology), intent(inout) :: this
     logical :: do_onset
-    logical :: expected
 
     call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
                             input_min_crtical_dayl_depends_on_lat = .false. )
@@ -107,6 +108,57 @@ contains
     @assertTrue( do_onset )
   end subroutine check_doonset_normal
 
+  @Test
+  subroutine check_doonset_vegdepend_buttemperate(this)
+    class(TestCNPhenology), intent(inout) :: this
+    logical :: do_onset
+
+    ! This should be identical to the normal case
+    call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.true.,        &
+                            input_min_crtical_dayl_depends_on_lat = .false. )
+    this%onset_gdd = 1.0_r8
+    this%crit_onset_gdd = 2.0_r8
+    this%season_decid_temperate = 1._r8
+    call this%calc_doonset( do_onset )
+    @assertFalse( do_onset )
+    this%onset_gdd = 2.000001_r8
+    call this%calc_doonset( do_onset )
+    @assertTrue( do_onset )
+  end subroutine check_doonset_vegdepend_buttemperate
+
+  !@Test
+  !subroutine check_doonset_vegdepend(this)
+    !class(TestCNPhenology), intent(inout) :: this
+    !logical :: do_onset
+!
+    !call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.true.,        &
+                            !input_min_crtical_dayl_depends_on_lat = .false. )
+    !this%onset_gdd = 1.0_r8
+    !this%crit_onset_gdd = 2.0_r8
+    !this%season_decid_temperate = 0._r8
+    !call this%calc_doonset( do_onset )
+    !@assertFalse( do_onset )
+    !this%onset_gdd = 9999.000001_r8   ! No longer matters for veg dependent case
+    !call this%calc_doonset( do_onset )
+    !@assertFalse( do_onset )
+    !! Set soila10 above freezing should still be off
+    !this%soila10 = 275._r8
+    !call this%calc_doonset( do_onset )
+    !@assertFalse( do_onset )
+    !! Set t_a5min above freezing should still be off
+    !this%t_a5min = 275._r8
+    !call this%calc_doonset( do_onset )
+    !@assertFalse( do_onset )
+    !! Set snow_5day below threshold should still be off
+    !this%snow_5day = 0._r8
+    !call this%calc_doonset( do_onset )
+    !@assertFalse( do_onset )
+    !! Set dayl over twice critical dayl and should now be on
+    !this%dayl = 78600._r8
+    !call this%calc_doonset( do_onset )
+    !@assertTrue( do_onset )
+  !end subroutine check_doonset_vegdepend
+!
   @Test
   subroutine check_onsetflag_winter(this)
     class(TestCNPhenology), intent(inout) :: this
