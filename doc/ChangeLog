@@ -1,7 +1,7 @@
 ===============================================================
-Tag name:  ctsm5.1.dev046
+Tag name:  ctsm5.1.dev048
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Wed Jun 30 13:20:57 MDT 2021
+Date:  Fri Jul 09 11:32:57 MDT 2021
 One-line Summary: Make certain history fields descriptive inst. of labeling by number
 
 Purpose and description of changes
@@ -116,6 +116,233 @@ Pull Requests that document the changes (include PR ids):
 
 ===============================================================
 ===============================================================
+Tag name:  ctsm5.1.dev047
+Originator(s): mvertens (Mariana Vertenstein)
+Date:  Thu Jul  8 12:03:31 MDT 2021
+One-line Summary: Start bounds at 1; remove references to MCT
+
+Purpose and description of changes
+----------------------------------
+
+Users: take note of (1), and in particular the caveat for users noted
+below (in the "Notes of particular relevance for users").
+
+(1) All global index arrays on a given processor now have a starting index of 1
+  - bounds_proc for each subgrid level has a starting index of 1 for each level
+  - bounds_clump for each subgrid level has a starting index of 1 for just
+    the first clump on the processor - but all the other clumps on the
+    processor do not start at 1 - but rather are offset with the number of
+    gridcells, columns, ...etc on the preceeding clumps
+
+(2) There are no longer any references to any mct data structures other than in the mct cap
+  - All references to gsmap have been removed from decompMod.F90 and
+    replaced with new global index arrays for the various subgrid levels
+  - decompInitMod has been refactored to calculated these global index
+    arrays using pure MPI rather than mct
+  - ncdio_pio_F90.in has been refactored to use the new global index
+    arrays rather than the gsmap data structures
+  - the data struture ldecomp is no longer needed
+  - the module spmdGathScatMod.F90 is no longer needed and has been removed
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Addresses the first part of ESCOMP/CTSM#293 (Rework threading to be
+  done at a higher level, simplifying array argument passing)
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+- Until now, if the model produced an error message with a gridcell or
+  subgrid index (e.g., "Error at p = 1234"), you could rerun the model
+  with write statements in conditionals like "if (p == 1234) then". With
+  the changes in this tag, this simple conditional is no longer
+  possible. Instead, you will need to also reference the processor
+  number that produces the error.
+
+  If the error message is produced in the lnd log file, then you can
+  have a conditional like:
+    if (masterproc .and. p == 1234) then
+
+  If the error message is produced in the cesm log file, then you can
+  have a conditional like:
+    if (iam == X .and. p == 1234) then
+
+  where X is the processor number that produced the message. On some
+  machines (including cheyenne), this processor number is printed at the
+  start of each line in the cesm log file. In addition, some aborts will
+  now print "proc_id = X", and that value can be used.
+
+  Soon we will update
+  https://escomp.github.io/ctsm-docs/versions/master/html/users_guide/trouble-shooting/trouble-shooting.html
+  to document the new recommended procedure.
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1420
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev046
+Originator(s):  rgknox (Ryan Knox,,,)
+Date: Fri Jul  2 14:36:44 MDT 2021
+One-line Summary: Updating external fates has to tag sci.1.46.2_api.16.1.0. FATES side changes expand the FATES parameter file to include new fields (unused at present). This also includes sci.1.46.1_api.16.0.0 which contained a sublte bug-fix on how FATES passes fragmentation fluxes (correcting seed decay fragmentation).
+
+Purpose and description of changes
+----------------------------------
+
+  This change brings the fates external up to sci.1.46.2_api.16.1.0. FATES side changes expand 
+  the FATES parameter file to include new fields.
+
+  New and UNUSED parameters include:
+	fates_hydr_htftype_node
+        fates_prt_organ_id
+	fates_hydr_organname_node
+        fates_litterclass_name
+        fates_allom_zroot_k
+        fates_allom_zroot_max_dbh
+	fates_allom_zroot_max_z
+	fates_allom_zroot_min_dbh
+	fates_allom_zroot_min_z
+	fates_hydr_k_lwp
+	fates_hydr_vg_alpha_node
+	fates_hydr_vg_m_node
+	fates_hydr_vg_n_node
+	fates_hlm_pft_map
+	fates_maintresp_model
+	fates_photo_temp_acclim_timescale
+	fates_photo_tempsens_model
+	fates_vai_top_bin_width
+	fates_vai_width_increase_factor
+
+  New parameters that now over-ride previously hard-coded parameters:
+	fates_theta_cj_c3
+	fates_theta_cj_c4
+
+
+  New parameters that are unset for developer convenience:
+	fates_dev_arbitrary_pft
+	fates_dev_arbitrary
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+   Fixes #1383 -- changes shebang lines to python3
+
+   fates issue: https://github.com/NGEET/fates/issues/753
+
+Notes of particular relevance for users
+---------------------------------------
+
+ The FATES parameter file now contains new fields. Users must update their personal parameter 
+ files to contain these new fields.  See src/fates/parameter_files/fates_params_default.cdl
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+   Developers should also be aware of the new fates parameter file format.
+
+Changes to tests or testing: None
+
+Testing summary:   regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (60 compare tests differ to previous tag)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  fates tests:
+    cheyenne ---- OK
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+    Original testing was done compared to ctsm5.1.dev044, but testing is being rerun now
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Just for FATES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Just when running FATES
+    - what platforms/compilers: All
+    - nature of change: minor changes related to a bug-fix
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): FATES
+    fates to sci.1.46.2_api.16.1.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #1414 -- Fates api16.1 (parameter file updates)
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev045
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Tue Jun 29 20:05:21 MDT 2021
@@ -158,29 +385,15 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-Issues fixed (include CTSM Issue #): #1361 #1417
-  Fixes #1361 -- HR fluxes don't include CWD
-  Fixes #1417 -- NoAnthro build-namelist test fails
+
 
 Notes of particular relevance for users
 ---------------------------------------
-Substantial timing or memory changes: None
- Total 17 MEMCOMP non-passes with the same warning as this one:
- FAIL PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel MEMCOMP Error:
- Memory usage increase > 10% from baseline
-
- Total 5 TPUTCOMP non-passes with this warning:
- TPUTCOMP: Computation time increase > 25% from baseline
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
-Changes to tests or testing:
- New test added to cheyenne test-suite:
- ERS_Ld3.f10_f10_mg37.I2000Clm51Bgc.cheyenne_intel.clm-ciso_cwd_hr
- Details in "Purpose and description of changes"
-
+	
 Testing summary:
 ----------------
 
@@ -208,7 +421,7 @@ Changes answers relative to baseline: No
 Other details
 -------------
 Pull Requests that document the changes (include PR ids):
- https://github.com/ESCOMP/ctsm/pull/1400
+   https://github.com/ESCOMP/CTSM/pull/1414
 
 ===============================================================
 ===============================================================

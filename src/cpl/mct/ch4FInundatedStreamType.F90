@@ -70,13 +70,14 @@ contains
    use shr_mpi_mod      , only : shr_mpi_bcast
    use ndepStreamMod    , only : clm_domain_mct
    use domainMod        , only : ldomain
-   use decompMod        , only : bounds_type, gsmap_lnd_gdc2glo
+   use decompMod        , only : bounds_type
    use mct_mod          , only : mct_ggrid, mct_avect_indexra
    use shr_strdata_mod  , only : shr_strdata_type, shr_strdata_create
    use shr_strdata_mod  , only : shr_strdata_print, shr_strdata_advance
    use spmdMod          , only : comp_id, iam
    use ch4varcon        , only : finundation_mtd_h2osfc
    use ch4varcon        , only : finundation_mtd_ZWT_inversion, finundation_mtd_TWS_inversion
+   use lnd_set_decomp_and_domain , only : gsmap_global
    !
    ! arguments
    implicit none
@@ -108,30 +109,30 @@ contains
       if ( this%useStreams() )then
          call clm_domain_mct (bounds, dom_clm)
 
-         call shr_strdata_create(sdat,name=stream_name,&
-           pio_subsystem=pio_subsystem,               &
-           pio_iotype=shr_pio_getiotype(inst_name),       &
-           mpicom=mpicom, compid=comp_id,             &
-           gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
-           nxg=ldomain%ni, nyg=ldomain%nj,            &
-           yearFirst=1996,                            &
-           yearLast=1996,                             &
-           yearAlign=1,                               &
-           offset=0,                                  &
-           domFilePath='',                            &
-           domFileName=trim(control%stream_fldFileName_ch4finundated), &
-           domTvarName='time',                        &
-           domXvarName='LONGXY' ,                     &
-           domYvarName='LATIXY' ,                     &
-           domAreaName='AREA',                        &
-           domMaskName='LANDMASK',                    &
-           filePath='',                               &
-           filename=(/trim(control%stream_fldFileName_ch4finundated)/),&
-           fldListFile=control%fldList,               &
-           fldListModel=control%fldList,              &
-           fillalgo='none',                           &
-           mapalgo=control%ch4finundatedmapalgo,      &
-           calendar=get_calendar(),                   &
+         call shr_strdata_create(sdat,name=stream_name,                 &
+           pio_subsystem=pio_subsystem,                                 &
+           pio_iotype=shr_pio_getiotype(inst_name),                     &
+           mpicom=mpicom, compid=comp_id,                               &
+           gsmap=gsmap_global, ggrid=dom_clm,                           &
+           nxg=ldomain%ni, nyg=ldomain%nj,                              &
+           yearFirst=1996,                                              &
+           yearLast=1996,                                               &
+           yearAlign=1,                                                 &
+           offset=0,                                                    &
+           domFilePath='',                                              &
+           domFileName=trim(control%stream_fldFileName_ch4finundated),  &
+           domTvarName='time',                                          &
+           domXvarName='LONGXY' ,                                       &
+           domYvarName='LATIXY' ,                                       &
+           domAreaName='AREA',                                          &
+           domMaskName='LANDMASK',                                      &
+           filePath='',                                                 &
+           filename=(/trim(control%stream_fldFileName_ch4finundated)/), &
+           fldListFile=control%fldList,                                 &
+           fldListModel=control%fldList,                                &
+           fillalgo='none',                                             &
+           mapalgo=control%ch4finundatedmapalgo,                        &
+           calendar=get_calendar(),                                     &
            taxmode='extend'                           )
 
          if (masterproc) then

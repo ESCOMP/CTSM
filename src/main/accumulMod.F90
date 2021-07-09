@@ -150,9 +150,9 @@ contains
     ! possible that init_value doesn't matter even in this case).
     !
     ! !USES:
-    use shr_const_mod, only: SHR_CONST_CDAY
-    use clm_time_manager, only : get_step_size
-    use decompMod, only : get_proc_bounds
+    use shr_const_mod    , only: SHR_CONST_CDAY
+    use clm_time_manager , only : get_step_size
+    use decompMod        , only : get_proc_bounds, bounds_type
     !
     ! !ARGUMENTS:
     implicit none
@@ -175,6 +175,7 @@ contains
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
     integer :: begCohort, endCohort   ! per-proc beg end cohort indices
+    type(bounds_type) :: bounds
     character(len=*), parameter :: subname = 'init_accum_field'
     !------------------------------------------------------------------------
 
@@ -188,8 +189,12 @@ contains
 
     ! Determine necessary indices
 
-    call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp, &
-         begCohort, endCohort )
+    call get_proc_bounds(bounds)
+    begg = bounds%begg; endg = bounds%endg
+    begl = bounds%begl; endl = bounds%endl
+    begc = bounds%begc; endc = bounds%endc
+    begp = bounds%begp; endp = bounds%endp
+    begCohort = bounds%begCoHort; endCohort = bounds%endCoHort
 
     ! update field index
     ! Consistency check that number of accumulated does not exceed maximum.

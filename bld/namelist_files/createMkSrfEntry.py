@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os, sys
 
@@ -41,9 +41,9 @@ class mksrfDataEntry_prog:
 
    def printentry( self, year ):
       "Print a single entry"
-      print '<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="%s" sim_year="%d" crop="on"' % (self.ssp_rcp, year)
-      print '>lnd/clm2/rawdata/%s/mksrf_landuse_%s_%s.c%s.nc' % (self.subdir, self.desc, year, self.cdate)
-      print '</mksrf_fvegtyp>\n'
+      print( '<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="%s" sim_year="%d" crop="on"' % (self.ssp_rcp, year) )
+      print( '>lnd/clm2/rawdata/%s/mksrf_landuse_%s_%s.c%s.nc' % (self.subdir, self.desc, year, self.cdate) )
+      print( '</mksrf_fvegtyp>\n' )
 
 entry = mksrfDataEntry_prog()
 entry.parse_cmdline_args()
