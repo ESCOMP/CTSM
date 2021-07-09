@@ -720,8 +720,6 @@ contains
     real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal 
     logical :: do_onset       ! Flag if onset should happen
     real(r8):: soilt          ! soil temperature for layer to use for seasonal phenology trigger
-    real(r8):: onset_gdd_start
-    real(r8):: onset_gddflag_start
     !-----------------------------------------------------------------------
 
     associate(                                                                                                   & 
@@ -972,6 +970,9 @@ contains
                else
                   crit_daylat = crit_dayl
                end if
+               if ( crit_daylat /= SeasonalCriticalDaylength( g, p ) )then
+                  call endrun( "error" )
+               end if
                
                ! only begin to test for offset daylength once past the summer sol
                if (ws_flag == 0._r8 .and. dayl(g) < crit_daylat) then
@@ -990,6 +991,24 @@ contains
  
   end subroutine CNSeasonDecidPhenology
 
+   function SeasonalCriticalDaylength( p, g ) result( crit_daylat )
+     integer, intent(IN) :: p ! Patch index
+     integer, intent(IN) :: g ! Gridcell index
+     real(r8) :: crit_daylat
+
+     if ( min_crtical_dayl_depends_on_lat )then
+        ! Critical daylength is higher at high latitudes and shorter
+        ! for temperatre regions
+        crit_daylat=critical_onset_time_at_high_lat-critical_onset_lat_slope* \
+                    (critical_onset_high_lat-abs(grc%latdeg(g)))
+        if (crit_daylat < crit_dayl) then
+           crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
+        end if
+     else
+        crit_daylat = crit_dayl
+     end if
+
+   end function SeasonalCriticalDaylength
   logical function SeasonalDecidOnset( onset_gdd, onset_gddflag, soilt, soila10, t_a5min, dayl, &
                                           snow_5day, ws_flag, crit_onset_gdd, season_decid_temperate )
 

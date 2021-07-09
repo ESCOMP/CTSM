@@ -128,7 +128,6 @@ contains
 
   @Test
   subroutine check_doonset_vegdepend(this)
-    use CNPhenologyMod, only: crit_dayl
     class(TestCNPhenology), intent(inout) :: this
     logical :: do_onset
 
@@ -137,34 +136,24 @@ contains
     this%onset_gdd = 1.0_r8
     this%crit_onset_gdd = 2.0_r8
     this%season_decid_temperate = 0._r8
-    print *, 'Setup onset flag'
     call this%calc_doonset( do_onset )
     @assertFalse( do_onset )
     this%onset_gdd = 9999.000001_r8   ! No longer matters for veg dependent case
-    print *, 'Should be false no matter the onset'
     call this%calc_doonset( do_onset )
     @assertFalse( do_onset )
     ! Set soila10 above freezing should still be off
-    print *, 'soila10 above freezing still off'
     this%soila10 = 275._r8
     call this%calc_doonset( do_onset )
     @assertFalse( do_onset )
     ! Set t_a5min above freezing should still be off
-    print *, 't_a5min above freezing still off'
     this%t_a5min = 275._r8
     call this%calc_doonset( do_onset )
     @assertFalse( do_onset )
     ! Set snow_5day below threshold should still be off
-    print *, 'snow_5day low still off'
     this%snow_5day = 0._r8
-    print *, 'calc doonset again'
     call this%calc_doonset( do_onset )
-    print *, 'dayl = ', this%dayl
-    print *, 'crit_dayl = ', crit_dayl
-    print *, 'make sure still False: ', do_onset
     @assertFalse( do_onset )
     ! Set dayl over half of critical and now should be on
-    print *, 'dayl over half of critical now should be on'
     this%dayl = 19700._r8
     call this%calc_doonset( do_onset )
     @assertTrue( do_onset )
