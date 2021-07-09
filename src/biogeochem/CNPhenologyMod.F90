@@ -972,6 +972,9 @@ contains
                   crit_daylat = crit_dayl
                end if
                if ( crit_daylat /= SeasonalCriticalDaylength( g, p ) )then
+                  write(iulog,*) 'latdeg      = ', grc%latdeg(g)
+                  write(iulog,*) 'crit_daylat = ', crit_daylat
+                  write(iulog,*) 'function    = ', SeasonalCriticalDaylength( g, p )
                   call endrun( "error" )
                end if
                
@@ -992,9 +995,9 @@ contains
  
   end subroutine CNSeasonDecidPhenology
 
-   function SeasonalCriticalDaylength( p, g ) result( crit_daylat )
-     integer, intent(IN) :: p ! Patch index
+   function SeasonalCriticalDaylength( g, p ) result( crit_daylat )
      integer, intent(IN) :: g ! Gridcell index
+     integer, intent(IN) :: p ! Patch index
      real(r8) :: crit_daylat
 
      if ( min_crtical_dayl_depends_on_lat )then
@@ -1008,8 +1011,12 @@ contains
      else
         crit_daylat = crit_dayl
      end if
+     if ( (crit_daylat > 72000._r8) .or. (crit_daylat < crit_dayl) )then
+        call endrun( "Bad value of SeasonalCriticalDaylength" )
+     end if
 
    end function SeasonalCriticalDaylength
+
   logical function SeasonalDecidOnset( onset_gdd, onset_gddflag, soilt, soila10, t_a5min, dayl, &
                                           snow_5day, ws_flag, crit_onset_gdd, season_decid_temperate )
 

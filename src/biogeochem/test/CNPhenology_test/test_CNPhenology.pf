@@ -214,7 +214,7 @@ contains
                             input_min_crtical_dayl_depends_on_lat = .false. )
     g = bounds%begg
     p = bounds%begp
-    crit_daylat = SeasonalCriticalDaylength( p, g )
+    crit_daylat = SeasonalCriticalDaylength( g, p )
     @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
   end subroutine check_crit_dayl_normal
 
@@ -230,16 +230,16 @@ contains
     g = bounds%begg
     p = bounds%begp
     grc%latdeg(g) = 0.0_r8
-    crit_daylat = SeasonalCriticalDaylength( p, g )
+    crit_daylat = SeasonalCriticalDaylength( g, p )
     @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
     grc%latdeg(g) = 65.0_r8
-    crit_daylat = SeasonalCriticalDaylength( p, g )
+    crit_daylat = SeasonalCriticalDaylength( g, p )
     @assertEqual( 54000._r8, crit_daylat, tolerance=tol )
     grc%latdeg(g) = 90.0_r8
-    crit_daylat = SeasonalCriticalDaylength( p, g )
+    crit_daylat = SeasonalCriticalDaylength( g, p )
     @assertEqual( 72000._r8, crit_daylat, tolerance=tol )
     grc%latdeg(g) = 44.4_r8
-    crit_daylat = SeasonalCriticalDaylength( p, g )
+    crit_daylat = SeasonalCriticalDaylength( g, p )
     @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
   end subroutine check_crit_dayl_dependsonlat
 
