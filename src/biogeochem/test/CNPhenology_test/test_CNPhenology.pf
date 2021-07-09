@@ -32,6 +32,8 @@ module test_CNPhenology
      procedure :: calc_doonset
   end type TestCNPhenology
 
+  real(r8), parameter :: tol = 1.e-13_r8
+
 contains
 
   subroutine setUp(this)
@@ -213,7 +215,7 @@ contains
     g = bounds%begg
     p = bounds%begp
     crit_daylat = SeasonalCriticalDaylength( p, g )
-    @assertEqual( 39200._r8, crit_daylat, tolerance=1.e-13_r8 )
+    @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
   end subroutine check_crit_dayl_normal
 
   @Test
@@ -229,7 +231,16 @@ contains
     p = bounds%begp
     grc%latdeg(g) = 0.0_r8
     crit_daylat = SeasonalCriticalDaylength( p, g )
-    @assertEqual( 39200._r8, crit_daylat, tolerance=1.e-13_r8 )
+    @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
+    grc%latdeg(g) = 65.0_r8
+    crit_daylat = SeasonalCriticalDaylength( p, g )
+    @assertEqual( 54000._r8, crit_daylat, tolerance=tol )
+    grc%latdeg(g) = 90.0_r8
+    crit_daylat = SeasonalCriticalDaylength( p, g )
+    @assertEqual( 72000._r8, crit_daylat, tolerance=tol )
+    grc%latdeg(g) = 44.4_r8
+    crit_daylat = SeasonalCriticalDaylength( p, g )
+    @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
   end subroutine check_crit_dayl_dependsonlat
 
 
