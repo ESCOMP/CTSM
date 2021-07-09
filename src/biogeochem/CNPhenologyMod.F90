@@ -50,7 +50,8 @@ module CNPhenologyMod
   ! !PUBLIC for unit testing
   public :: CNPhenologySetNML    ! Set the namelist setttings explicitly for unit tests
   public :: CNPhenologySetParams ! Set the parameters explicitly for unit tests
-  public :: SeasonalDecidOnset   ! Logical function to determine is seasonal decisious onset should be triggered
+  public :: SeasonalDecidOnset   ! Logical function to determine is seasonal decidious onset should be triggered
+  public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious onset
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
