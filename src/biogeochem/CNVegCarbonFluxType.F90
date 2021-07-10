@@ -782,7 +782,6 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer           :: k,l,ii,jj
-    character(1)      :: k_str
     character(8)      :: vr_suffix
     character(10)     :: active
     integer           :: begp,endp
@@ -2894,11 +2893,10 @@ contains
             ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        do k = i_litr_min, i_litr_max
-          write(k_str,'(I1)') k  ! convert 1-digit integer to string
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'DWT_FROOTC_TO_LITR_'//k_str//'_C'
-          longname =  'fine root to litter_'//k_str//' due to landcover change'
+          fieldname = 'DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
@@ -3073,11 +3071,10 @@ contains
             ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        do k = i_litr_min, i_litr_max
-          write(k_str,'(I1)') k  ! convert 1-digit integer to string
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'C13_DWT_FROOTC_TO_LITR_'//k_str//'_C'
-          longname =  'C13 fine root to litter_'//k_str//' due to landcover change'
+          fieldname = 'C13_DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'C13 fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
@@ -3234,11 +3231,10 @@ contains
             ptr_patch=this%dwt_slash_cflux_patch, default='inactive')
 
        do k = i_litr_min, i_litr_max
-          write(k_str,'(I1)') k  ! convert 1-digit integer to string
           this%dwt_frootc_to_litr_c_col(begc:endc,:,k) = spval
           data2dptr => this%dwt_frootc_to_litr_c_col(begc:endc,:,k)
-          fieldname = 'C14_DWT_FROOTC_TO_LITR_'//k_str//'_C'
-          longname =  'C14 fine root to litter_'//k_str//' due to landcover change'
+          fieldname = 'C14_DWT_FROOTC_TO_'//trim(decomp_cascade_con%decomp_pool_name_history(k))//'_C'
+          longname =  'C14 fine root to '//trim(decomp_cascade_con%decomp_pool_name_long(k))//' due to landcover change'
           call hist_addfld_decomp (fname=fieldname, units='gC/m^2/s',  type2d='levdcmp', &
                avgflag='A', long_name=longname, &
                ptr_col=data2dptr, default='inactive')
