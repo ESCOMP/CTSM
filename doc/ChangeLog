@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev048
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Fri Jul 09 17:51:57 MDT 2021
+Date: Sat Jul 10 11:39:55 MDT 2021
 One-line Summary: Make certain history fields descriptive inst. of labeling by number
 
 Purpose and description of changes
@@ -10,6 +10,9 @@ Purpose and description of changes
  I used existing infrastructure to add descriptive strings to certain history
  fields that I had labeled by number in #1340. While doing this, I applied the
  change to a bunch of other history fields that needed it.
+
+ Some variable names for pools was also changed to use terms consistent with the new
+ names as well.
 
 
 Significant changes to scientifically-supported configurations
@@ -32,6 +35,7 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 Issues fixed (include CTSM Issue #): #1392
+   #1392 -- Some soil decomposition history fields have the pool number rather than a description in their name
 
 
 Notes of particular relevance for users
@@ -40,15 +44,24 @@ Caveats for users (e.g., need to interpolate initial conditions):
  The names of certain history fields have changed to be more descriptive
  in place of using numbers to differentiate them.
 
-Substantial timing or memory changes:
- The PFS test PASSes but
- TPUTCOMP non-passes: 4
- MEMCOMP non-passes: 25
- on Cheyenne
-
+ history field name change as follows...
+   LITR1 becomes MET_LIT (metabolic)
+   LITR2 becomes CEL_LIT (cellulosic)
+   LITR3 becomes LIG_LIT (lignin)
+   SOIL1 becomes ACT_SOM (active)
+   SOIL2 becomes SLO_SOM (slow)
+   SOIL3 becomes PAS_SOM (passive)
 
 Testing summary:
 ----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+      cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+      cheyenne - PASS
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
@@ -60,7 +73,7 @@ Testing summary:
 
 Answer changes
 --------------
-Changes answers relative to baseline: NO
+Changes answers relative to baseline: NO bit-for-bit
 
 
 Other details
