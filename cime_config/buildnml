@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 CTSM namelist creator
@@ -62,6 +62,7 @@ def buildnml(case, caseroot, compname):
     glc_nec = case.get_value("GLC_NEC")
     cism_use_antarctica = case.get_value("CISM_USE_ANTARCTICA")
     mask = case.get_value("MASK_GRID")
+    driver = case.get_value("COMP_INTERFACE").lower()
 
     # -----------------------------------------------------
     # Set ctsmconf
@@ -231,12 +232,12 @@ def buildnml(case, caseroot, compname):
         command = ("%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
                    "%s %s -res %s %s -clm_start_type %s -envxml_dir %s "
                    "-configuration %s -structure %s "
-                   "-lnd_frac %s -glc_nec %s %s -co2_ppmv %s -co2_type %s -config %s "
+                   "-lnd_frac %s -glc_nec %s %s -co2_ppmv %s -co2_type %s -config %s -driver %s "
                    "%s %s %s %s"
                    %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts, 
                      nomeg, usecase, lnd_grid, clmusr, start_type, caseroot,
                      configuration, structure,
-                     lndfrac_file, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file,
+                     lndfrac_file, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file, driver, 
                      clm_bldnml_opts, spinup, tuning, gridmask))
 
         rc, out, err = run_cmd(command, from_dir=ctsmconf)
