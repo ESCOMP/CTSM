@@ -120,15 +120,6 @@ module CNPhenologyMod
   logical,  private :: min_crtical_dayl_depends_on_lat = .false. ! If critical day-length for onset depends on latitude
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
 
-    ! arameters for critical day length, higher for high latitudes and shorter
-    ! for temperature regions
-    ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
-    ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
-    integer, parameter :: critical_onset_time_at_high_lat = 54000  ! critical onset at high latitudes (min)
-    integer, parameter :: critical_onset_lat_slope        = 720    ! Slope of time for critical onset with latitude (min/deg)
-    integer, parameter :: critical_onset_high_lat         = 65     ! Start of what's considered high latitude (degrees)
-    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8 ! 5-day snow depth threshold for onset
-
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !-----------------------------------------------------------------------
@@ -960,23 +951,7 @@ contains
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
 
-               if ( min_crtical_dayl_depends_on_lat )then
-                  ! Critical daylength is higher at high latitudes and shorter
-                  ! for temperatre regions
-                  crit_daylat=critical_onset_time_at_high_lat-critical_onset_lat_slope* \
-                              (critical_onset_high_lat-abs(grc%latdeg(g)))
-                  if (crit_daylat < crit_dayl) then
-                     crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
-                  end if
-               else
-                  crit_daylat = crit_dayl
-               end if
-               if ( crit_daylat /= SeasonalCriticalDaylength( g, p ) )then
-                  write(iulog,*) 'latdeg      = ', grc%latdeg(g)
-                  write(iulog,*) 'crit_daylat = ', crit_daylat
-                  write(iulog,*) 'function    = ', SeasonalCriticalDaylength( g, p )
-                  call endrun( "error" )
-               end if
+               crit_daylat = SeasonalCriticalDaylength( g, p )
                
                ! only begin to test for offset daylength once past the summer sol
                if (ws_flag == 0._r8 .and. dayl(g) < crit_daylat) then
@@ -999,6 +974,13 @@ contains
      integer, intent(IN) :: g ! Gridcell index
      integer, intent(IN) :: p ! Patch index
      real(r8) :: crit_daylat
+    ! arameters for critical day length, higher for high latitudes and shorter
+    ! for temperature regions
+    ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
+    ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
+    real(r8), parameter :: critical_onset_time_at_high_lat = 54000._r8  ! critical onset at high latitudes (min)
+    real(r8), parameter :: critical_onset_lat_slope        = 720._r8    ! Slope of time for critical onset with latitude (min/deg)
+    real(r8), parameter :: critical_onset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
      if ( min_crtical_dayl_depends_on_lat )then
         ! Critical daylength is higher at high latitudes and shorter
@@ -1010,9 +992,6 @@ contains
         end if
      else
         crit_daylat = crit_dayl
-     end if
-     if ( (crit_daylat > 72000._r8) .or. (crit_daylat < crit_dayl) )then
-        call endrun( "Bad value of SeasonalCriticalDaylength" )
      end if
 
    end function SeasonalCriticalDaylength
@@ -1033,6 +1012,7 @@ contains
     real(r8), intent(IN)    :: season_decid_temperate
 
     logical :: do_onset       ! Flag if onset should happen
+    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8 ! 5-day snow depth threshold for onset
 
      do_onset = .false.
      ! Test to turn on growing degree-day sum, if off.
