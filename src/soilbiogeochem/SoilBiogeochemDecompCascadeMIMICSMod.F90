@@ -104,11 +104,10 @@ contains
     ! Read off of netcdf file
     ! TODO Add new params here and in the params file.
     ! TODO tau_s1, tau_s2, etc may need _bgc added/removed here/params file
-    ! TODO Read MIMICS-specific params here & shared ones (eg *_bgc) like this:
+    ! TODO Read MIMICS-specific params here & shared ones (eg *_bgc) as:
     !      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
-    ! TODO If Melannie's testbed values differ from the BGC values,
-    !      make separate _mimics params.
-    ! TODO When ready for all final params values, talk to @wwieder
+    ! TODO When ready for all final params values, talk to @wwieder and,
+    !      if values differ from the BGC values, make separate _mimics params.
     tString='tau_s1_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -894,10 +893,54 @@ contains
       end do
 
       ! calculate rates for all litter and som pools
-      do j = 1,nlevdecomp
-         do fc = 1,num_soilc
-            c = filter_soilc(fc)
-            ! vmax, tau, and km are time-dependent terms.
+      ! TODO Ok that I reversed order of do-loops for convenience?
+      do fc = 1,num_soilc
+         c = filter_soilc(fc)
+
+         ! TODO Move all to the params files
+         fmet_p1 = 0.85
+         fmet_p2 = 0.85
+         fmet_p3 = 0.013
+         tauMod_denom = 100.0_r8  ! For efficiency put _factor in params files
+         tauMod_factor = 1.0_r8 / tauMod_denom  ! ...instead of _denom?
+         tauMod_min = 0.8_r8
+         tauMod_max = 1.2_r8
+         tau_r1 = 5.2e-4_r8
+         tau_r2 = 0.3_r8  ! or 0.4?
+         tau_k1 = 2.4e-4_r8
+         tau_k2 = 0.1_r8
+
+         ! Time-dependent params from Wieder et al. 2015 & testbed code
+         ! TODO STILL MISSING N-related stuff: DIN...
+
+         ! TODO LOOK FOR EXISTING ligninNratioAvg or calculate as follows
+           ligninNratioAvg(c) =  &
+              (ligninNratio(c,leaf) * (cleaf2met(c) + cleaf2str(c)) + &
+               ligninNratio(c,froot) * (croot2met(c) + croot2str(c)) + &
+               ligninNratio(c,wood) * (cwd2str(c))) / &
+              max(0.001, cleaf2met(c) + cleaf2str(c) + &
+                         croot2met(c) + croot2str(c) + cwd2str(c))
+
+         ! Set limits on Lignin:N to keep fmet > 0.2
+         ! Necessary for litter quality in boreal forests with high cwd flux
+         fmet = fmet_p1 * (fmet_p2 - fmet_p3 * min(40.0_r8, &
+                                                   ligninNratioAvg(c)))
+         ! TODO LOOK FOR EXISTING avg_ann_npp_gC_m2_yr or calculate
+         tauMod = min(tauMod_max, max(tauMod_min, &
+                                      sqrt(avg_ann_npp_gC_m2_yr(c) * &
+                                           tauMod_factor)))
+
+         ! tau_m1_s* are tauR and tau_m2_s* are tauK in Wieder et al. 2015
+         ! and are time-dependent terms
+         tau_m1_s1 = tau_r1 * exp(tau_r2 * fmet) * tauMod
+         tau_m1_s2 = tau_r1 * exp(tau_r2 * fmet) * tauMod
+         tau_m1_s3 = tau_r1 * exp(tau_r2 * fmet) * tauMod
+         tau_m2_s1 = tau_k1 * exp(tau_k2 * fmet) * tauMod
+         tau_m2_s2 = tau_k1 * exp(tau_k2 * fmet) * tauMod
+         tau_m2_s3 = tau_k1 * exp(tau_k2 * fmet) * tauMod
+
+         do j = 1,nlevdecomp
+            ! vmax are time-dependent terms
             ! Table B1 Wieder et al. (2015) & MIMICS params file give different
             ! kslope. I used the params file value(s).
             ! TODO Introduce t_soi24_degC_col following t_veg24_patch (running
@@ -909,41 +952,13 @@ contains
             vmax_s3_m1 = exp(vslope_s3_m1 * t_soi24_degC_col(c,j) + vint_s3_m1) * vmod_l2_m1
             vmax_s3_m2 = exp(vslope_s3_m2 * t_soi24_degC_col(c,j) + vint_s3_m2) * vmod_l2_m2
 
+            ! km are time-dependent terms
             km_l1_m1 = exp(kslope_l1_m1 * t_soi24_degC_col(c,j) + kint_l1_m1) * kmod_l1_m1
             km_l1_m2 = exp(kslope_l1_m2 * t_soi24_degC_col(c,j) + kint_l1_m2) * kmod_l1_m2
             km_l2_m1 = exp(kslope_l2_m1 * t_soi24_degC_col(c,j) + kint_l2_m1) * kmod_l2_m1
             km_l2_m2 = exp(kslope_l2_m2 * t_soi24_degC_col(c,j) + kint_l2_m2) * kmod_l2_m2
             km_s3_m1 = exp(kslope_s3_m1 * t_soi24_degC_col(c,j) + kint_s3_m1) * kmod_s3_m1 / p_scalar(c,j)
             km_s3_m2 = exp(kslope_s3_m2 * t_soi24_degC_col(c,j) + kint_s3_m2) * kmod_s3_m2 / p_scalar(c,j)
-
-! TODO mapping tau params to Wieder et al. 2015 & testbed code
-! --------------------------------------------------------------
-! tau* are time-dependent
-
-! Solving for tauR (tau_m1_s* here) & tauK (tau_m2_s* here)
-
-! fmet_p(1) = 0.85, fmet_p(2) = 0.85, fmet_p(3) = 0.013
-! ligninNratioAvg(npt) =  &
-!  ( ligninNratio(npt,leaf)  * (cleaf2met(npt) + cleaf2str(npt)) &
-!  + ligninNratio(npt,froot) * (croot2met(npt) + croot2str(npt)) &
-!  + ligninNratio(npt,wood)  * (cwd2str(npt)) ) &
-!  / max(0.001, cleaf2met(npt)+cleaf2str(npt)+croot2met(npt)+croot2str(npt)+cwd2str(npt))
-! set limits on Lignin:N to keep fmet > 0.2
-! necessary for litter quality in boreal forests with high cwd flux
-! ligninNratioAvg(npt) = min(40.0, ligninNratioAvg(npt))
-! fmet(npt) = fmet_p(1) * (fmet_p(2) - fmet_p(3) * ligninNratioAvg(npt))
-
-! tauModDenom = 100, tauMod_min = 0.8, tauMod_max = 1.2
-! tauMod(npt) = sqrt(avg_ann_npp_gC_m2_yr / tauModDenom)
-! tauMod(npt) = min(tauMod_max, max(tauMod_min, tauMod(npt)))
-
-! tau_r(1) = 5.2e-4_r8, tau_r(2) = 0.3_r8 or 0.4?
-! tauR(npt) = tau_r(1) * exp(tau_r(2) * fmet(npt)) * tauMod(npt)
-
-! tau_k(1) = 2.4e-4_r8, tau_k(2) = 0.1_r8
-! tauK(npt) = tau_k(1) * exp(tau_k(2) * fmet(npt)) * tauMod(npt)
-! --------------------------------------------------------------
-! TODO STILL MISSING N-related stuff: DIN...
 
             ! Product of w_scalar * depth_scalar * o_scalar
             w_d_o_scalars = w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
