@@ -913,7 +913,7 @@ contains
          ! Time-dependent params from Wieder et al. 2015 & testbed code
          ! TODO STILL MISSING N-related stuff: DIN...
 
-         ! TODO LOOK FOR EXISTING ligninNratioAvg or calculate as follows
+         ! TODO I don't see existing ligninNratioAvg, so calculate
            ligninNratioAvg(c) =  &
               (ligninNratio(c,leaf) * (cleaf2met(c) + cleaf2str(c)) + &
                ligninNratio(c,froot) * (croot2met(c) + croot2str(c)) + &
@@ -925,10 +925,12 @@ contains
          ! Necessary for litter quality in boreal forests with high cwd flux
          fmet = fmet_p1 * (fmet_p2 - fmet_p3 * min(40.0_r8, &
                                                    ligninNratioAvg(c)))
-         ! TODO LOOK FOR EXISTING avg_ann_npp_gC_m2_yr or calculate
+         ! TODO USE cnveg_carbonflux_inst%annsum_npp_col (gC/m2/yr) updated 1/yr
+         !       OR annavg_[ag+bg]npp_patch (gC/m2/s) from ch4Mod
+         !       OR calculate an annual running mean with accumulMod?
          tauMod = min(tauMod_max, max(tauMod_min, &
-                                      sqrt(avg_ann_npp_gC_m2_yr(c) * &
-                                           tauMod_factor)))
+                                      sqrt(tauMod_factor * &
+                                     cnveg_carbonflux_inst%annsum_npp_col(c))))
 
          ! tau_m1_s* are tauR and tau_m2_s* are tauK in Wieder et al. 2015
          ! and are time-dependent terms
