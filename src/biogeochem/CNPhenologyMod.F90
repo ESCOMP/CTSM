@@ -117,8 +117,11 @@ module CNPhenologyMod
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
-  logical,  private :: min_crtical_dayl_depends_on_lat = .false. ! If critical day-length for onset depends on latitude
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
+  integer,  public, parameter :: critical_daylight_constant       = 1
+  integer,  public, parameter :: critical_daylight_depends_on_lat = 2
+  integer,  public, parameter :: critical_daylight_depends_on_veg = 3
+  integer,  private :: critical_daylight_method = critical_daylight_constant
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -146,6 +149,7 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
+    logical  :: min_crtical_dayl_depends_on_lat = .false. ! If critical day-length for onset depends on latitude
     character(len=*), parameter :: subname = 'CNPhenologyReadNML'
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
@@ -175,6 +179,12 @@ contains
     call shr_mpi_bcast (onset_thresh_depends_on_veg,     mpicom)
     call shr_mpi_bcast (min_crtical_dayl_depends_on_lat, mpicom)
 
+    if ( min_crtical_dayl_depends_on_lat )then
+       critical_daylight_method = critical_daylight_depends_on_lat
+    else
+       critical_daylight_method = critical_daylight_constant
+    end if
+
     if (masterproc) then
        write(iulog,*) ' '
        write(iulog,*) nmlname//' settings:'
@@ -187,17 +197,28 @@ contains
     
   end subroutine CNPhenologyReadNML
 
-  subroutine CNPhenologySetNML( input_onset_thresh_depends_on_veg, input_min_crtical_dayl_depends_on_lat )
+  subroutine CNPhenologySetNML( input_onset_thresh_depends_on_veg, input_critical_daylight_method )
+    !
+    ! !DESCRIPTION:
+    ! Set the namelist items for unit-testing
+    !
     logical, intent(in) :: input_onset_thresh_depends_on_veg
-    logical, intent(in) :: input_min_crtical_dayl_depends_on_lat
+    integer, intent(in) :: input_critical_daylight_method
 
     onset_thresh_depends_on_veg = input_onset_thresh_depends_on_veg
-    min_crtical_dayl_depends_on_lat = input_min_crtical_dayl_depends_on_lat
-
+    critical_daylight_method = input_critical_daylight_method
+    if ( (critical_daylight_method < critical_daylight_constant) .or. &
+         (critical_daylight_method > critical_daylight_depends_on_veg) )then
+       call endrun(msg="ERROR critical_daylight_method "//errmsg(sourcefile, __LINE__))
+    end if
   end subroutine CNPhenologySetNML
   
   !-----------------------------------------------------------------------
   subroutine CNPhenologySetParams( )
+    !
+    ! !DESCRIPTION:
+    ! Set the parameters for unit-testing
+    !
     params_inst%crit_dayl        = 39200._r8
     params_inst%ndays_on         = 15._r8
     params_inst%ndays_off        = 30._r8
@@ -982,7 +1003,10 @@ contains
     real(r8), parameter :: critical_onset_lat_slope        = 720._r8    ! Slope of time for critical onset with latitude (min/deg)
     real(r8), parameter :: critical_onset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
-     if ( min_crtical_dayl_depends_on_lat )then
+     select case( critical_daylight_method )
+     case(critical_daylight_depends_on_veg)
+        crit_daylat=critical_onset_time_at_high_lat
+     case(critical_daylight_depends_on_lat)
         ! Critical daylength is higher at high latitudes and shorter
         ! for temperatre regions
         crit_daylat=critical_onset_time_at_high_lat-critical_onset_lat_slope* \
@@ -990,9 +1014,11 @@ contains
         if (crit_daylat < crit_dayl) then
            crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
         end if
-     else
+     case(critical_daylight_constant)
         crit_daylat = crit_dayl
-     end if
+     case default
+        call endrun(msg="ERROR SeasonalCriticalDaylength crtical_daylight_method not implemented "//errmsg(sourcefile, __LINE__))
+     end select
 
    end function SeasonalCriticalDaylength
 

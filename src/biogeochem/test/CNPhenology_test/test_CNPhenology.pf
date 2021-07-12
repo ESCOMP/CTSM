@@ -100,7 +100,7 @@ contains
     logical :: do_onset
 
     call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
-                            input_min_crtical_dayl_depends_on_lat = .false. )
+                            input_critical_daylight_method = critical_daylight_constant )
     this%onset_gdd = 1.0_r8
     this%crit_onset_gdd = 2.0_r8
     call this%calc_doonset( do_onset )
@@ -117,7 +117,7 @@ contains
 
     ! This should be identical to the normal case
     call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.true.,        &
-                            input_min_crtical_dayl_depends_on_lat = .false. )
+                            input_critical_daylight_method = critical_daylight_constant )
     this%onset_gdd = 1.0_r8
     this%crit_onset_gdd = 2.0_r8
     this%season_decid_temperate = 1._r8
@@ -134,7 +134,7 @@ contains
     logical :: do_onset
 
     call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.true.,        &
-                             input_min_crtical_dayl_depends_on_lat = .false. )
+                            input_critical_daylight_method = critical_daylight_constant )
     this%onset_gdd = 1.0_r8
     this%crit_onset_gdd = 2.0_r8
     this%season_decid_temperate = 0._r8
@@ -167,7 +167,7 @@ contains
     logical :: do_onset
 
     call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
-                            input_min_crtical_dayl_depends_on_lat = .false. )
+                            input_critical_daylight_method = critical_daylight_constant )
     this%onset_gdd = 1.0_r8
     this%onset_gddflag = 1.0_r8
     this%ws_flag = 0._r8
@@ -186,7 +186,7 @@ contains
     real(r8), parameter :: temp = 5._r8
 
     call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
-                            input_min_crtical_dayl_depends_on_lat = .false. )
+                            input_critical_daylight_method = critical_daylight_constant )
     this%onset_gdd = 0.0_r8
     this%onset_gddflag = 0._r8
     this%ws_flag = 1._r8
@@ -211,7 +211,7 @@ contains
     real(r8) :: crit_daylat
 
     call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
-                            input_min_crtical_dayl_depends_on_lat = .false. )
+                            input_critical_daylight_method = critical_daylight_constant )
     g = bounds%begg
     p = bounds%begp
     crit_daylat = SeasonalCriticalDaylength( g, p )
@@ -226,7 +226,7 @@ contains
     real(r8) :: crit_daylat
 
     call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
-                            input_min_crtical_dayl_depends_on_lat = .true. )
+                            input_critical_daylight_method = critical_daylight_depends_on_lat )
     g = bounds%begg
     p = bounds%begp
     grc%latdeg(g) = 0.0_r8
