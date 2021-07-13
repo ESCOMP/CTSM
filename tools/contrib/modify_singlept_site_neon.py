@@ -29,16 +29,17 @@ To see the available options:
     ./modify_singlept_site_neon.py --help
 -------------------------------------------------------------------
 """
-# TODO
-# if file not found run subset_data.py
-# Clean up imports for both codes...
-# Check against a list of valid names.
+# TODO (NS)
+#--[] f file not found run subset_data.py
+#--[] Clean up imports for both codes...
+#--[] Check against a list of valid names.
+#--[] List of valid neon sites for all scripts come from one place.
 
 #  Import libraries
 from __future__ import print_function
 
-import sys
 import os
+import sys
 import glob
 import argparse
 import requests
@@ -51,9 +52,26 @@ from datetime import date
 from getpass import getuser
 
 
-myname = getuser()  
+myname = getuser()
 
-def get_parser():                                                                                                                                                                   
+
+#-- valid neon sites
+valid_neon_sites = ['ABBY','BARR','BART','BLAN',
+                    'BONA','CLBJ','CPER','DCFS',
+                    'DEJU','DELA','DSNY','GRSM',
+                    'GUAN','HARV','HEAL','JERC',
+                    'JORN','KONA','KONZ','LAJA',
+                    'LENO','MLBS','MOAB','NIWO',
+                    'NOGP','OAES','ONAQ','ORNL',
+                    'OSBS','PUUM','RMNP','SCBI',
+                    'SERC','SJER','SOAP','SRER',
+                    'STEI','STER','TALL','TEAK',
+                    'TOOL','TREE','UKFS','UNDE',
+                    'WOOD','WREF','YELL'
+                   ]
+
+
+def get_parser(): 
     """
     Get parser object for this script.
     """
@@ -66,9 +84,13 @@ def get_parser():
                 help='4-letter neon site code.', 
                 action="store",
                 dest="site_name",
+                choices=valid_neon_sites,
                 required=True) 
     parser.add_argument('--surf_dir',
-                help='Directory of single point surface dataset. [default: %(default)s]', 
+                help='''
+                Directory of single point surface dataset. 
+                [default: %(default)s]
+                ''',
                 action="store", 
                 dest="surf_dir",
                 type =str,
