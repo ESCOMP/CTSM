@@ -107,6 +107,14 @@ def get_parser():
                 type =str,
                 required=False,
                 default="/glade/scratch/"+myname+"/single_point_neon_updated/")
+    parser.add_argument('-d','--debug', 
+                help='''
+                Debug mode will print more information. 
+                [default: %(default)s] 
+                ''', 
+                action="store_true", 
+                dest="debug", 
+                default=False)
 
     return parser
 
@@ -347,6 +355,10 @@ def main():
 
     args = get_parser().parse_args()
 
+    #-- debugging option
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
     #--  specify site from which to extract data 
     site_name=args.site_name
 
@@ -379,16 +391,16 @@ def main():
     # better suggestion by WW to write dzsoi to neon surface dataset
     # This todo needs to go to the subset_data
 
-    print (soil_top)
+    # TODO Will: if I sum them up , are they 3.5? (m) YES
+    print ("soil_top:", soil_top)
+    print ("soil_bot:", soil_bot)
     print ("Sum of soil top depths    :", sum(soil_top))
-    print (soil_bot)
     print ("Sum of soil bottom depths :",sum(soil_bot))
 
     soil_top = np.cumsum(soil_top)
     soil_bot = np.cumsum(soil_bot)
     soil_mid = 0.5*(soil_bot - soil_top)+soil_top
-    print ("Cumulative sum of soil bottom depths :", sum(soil_bot))
-    # TODO Will: if I sum them up , are they 3.5? (m)
+    #print ("Cumulative sum of soil bottom depths :", sum(soil_bot))
 
     obs_top = df['biogeoTopDepth']/100
     obs_bot = df['biogeoBottomDepth']/100
@@ -435,12 +447,18 @@ def main():
         f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58 
 
     #TODO : max depth for neon sites from WW (zbedrock)
-    print (f2['zbedrock'])
+    # Update zbedrock if neon observation don't make it down to 2m depth
+    # zbedrock = neon depth if neon does not make to 2m depth
 
-    rock_thresh = 200
+    rock_thresh = 2
 
-    if (f2['zbedrock']<rock_thresh):
-        f2['zbedrock']=200
+    if (obs_bot.iloc[-1]<rock_thresh):
+        f2['zbedrock']=obs_bot.iloc[-1]*100
+        print (f2['zbedrock'])
+        zb_flag = True
+
+    #if (f2['zbedrock']<rock_thresh):
+    #    f2['zbedrock']=200
 
     sort_print_soil_layers(obs_bot, soil_bot)
 
