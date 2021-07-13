@@ -9,6 +9,7 @@ module test_CNPhenology
   use unittestTimeManagerMod, only : unittest_timemgr_set_curr_date
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use pftconMod
 
   implicit none
 
@@ -73,6 +74,8 @@ contains
 
     call CNPhenologySetParams()
     call CNPhenologyInit( bounds )
+    call pftcon%InitForTesting()
+    pftcon%season_decid_temperate =  this%season_decid_temperate
 
   end subroutine setUp
 
@@ -83,6 +86,7 @@ contains
     call unittest_timemgr_teardown()
     call clm_varcon_clean()
     call unittest_subgrid_teardown()
+    call pftcon%Clean()
 
   end subroutine tearDown
 
@@ -242,6 +246,25 @@ contains
     crit_daylat = SeasonalCriticalDaylength( g, p )
     @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
   end subroutine check_crit_dayl_dependsonlat
+
+  @Test
+  subroutine check_crit_dayl_dependsonveg(this)
+    use PatchType                       , only : patch
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: p, g
+    real(r8) :: crit_daylat
+
+    call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
+                            input_critical_daylight_method = critical_daylight_depends_on_veg )
+    g = bounds%begg
+    p = bounds%begp
+    crit_daylat = SeasonalCriticalDaylength( g, p )
+    @assertEqual( 54000._r8, crit_daylat, tolerance=tol )
+    pftcon%season_decid_temperate = 1
+    crit_daylat = SeasonalCriticalDaylength( g, p )
+    @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
+  end subroutine check_crit_dayl_dependsonveg
+
 
 
 end module test_CNPhenology

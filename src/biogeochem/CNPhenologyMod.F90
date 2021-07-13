@@ -119,8 +119,8 @@ module CNPhenologyMod
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
   integer,  public, parameter :: critical_daylight_constant       = 1
-  integer,  public, parameter :: critical_daylight_depends_on_lat = 2
-  integer,  public, parameter :: critical_daylight_depends_on_veg = 3
+  integer,  public, parameter :: critical_daylight_depends_on_lat = critical_daylight_constant + 1
+  integer,  public, parameter :: critical_daylight_depends_on_veg = critical_daylight_depends_on_lat + 1
   integer,  private :: critical_daylight_method = critical_daylight_constant
 
   character(len=*), parameter, private :: sourcefile = &
@@ -1005,7 +1005,11 @@ contains
 
      select case( critical_daylight_method )
      case(critical_daylight_depends_on_veg)
-        crit_daylat=critical_onset_time_at_high_lat
+        if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
+           crit_daylat = crit_dayl
+        else
+           crit_daylat=critical_onset_time_at_high_lat
+        end if
      case(critical_daylight_depends_on_lat)
         ! Critical daylength is higher at high latitudes and shorter
         ! for temperatre regions
