@@ -456,10 +456,13 @@ def main():
 
     rock_thresh = 2
 
+    zb_flag = False
+
     if (obs_bot.iloc[-1]<rock_thresh):
         f2['zbedrock']=obs_bot.iloc[-1]*100
         print (f2['zbedrock'])
         zb_flag = True
+
 
     #if (f2['zbedrock']<rock_thresh):
     #    f2['zbedrock']=200
