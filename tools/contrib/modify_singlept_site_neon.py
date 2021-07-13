@@ -34,6 +34,7 @@ To see the available options:
 #--[] Clean up imports for both codes...
 #--[] Check against a list of valid names.
 #--[] List of valid neon sites for all scripts come from one place.
+#--[] zbedrock
 
 #  Import libraries
 from __future__ import print_function
@@ -376,6 +377,7 @@ def main():
     # TODO: how? NS uses metadata on file to find 
     # soil strucure
     # better suggestion by WW to write dzsoi to neon surface dataset
+    # This todo needs to go to the subset_data
 
     print (soil_top)
     print ("Sum of soil top depths    :", sum(soil_top))
@@ -432,7 +434,13 @@ def main():
         layer_depth = df['biogeoBottomDepth'][bin_index[soil_lev]] - df['biogeoTopDepth'][bin_index[soil_lev]]
         f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58 
 
-    #TODO : max depth for neon sites from WW
+    #TODO : max depth for neon sites from WW (zbedrock)
+    print (f2['zbedrock'])
+
+    rock_thresh = 200
+
+    if (f2['zbedrock']<rock_thresh):
+        f2['zbedrock']=200
 
     sort_print_soil_layers(obs_bot, soil_bot)
 
