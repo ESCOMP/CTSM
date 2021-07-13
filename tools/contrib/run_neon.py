@@ -31,20 +31,32 @@ To see the available options:
 -------------------------------------------------------------------
 """
 
+#TODO (NS)
+#- [ ]
+#- [ ] Add debug or verbose option
+
+#- [ ] Check if it would be better to use cime case obj
+#- [ ] Make sure both AD and SASU are not on at the same time
+#- [ ]  wget the fields available and run for those available:
+#- [ ] Switch to check manage_externals status instead of running it always
+#- [ ] query the end year from neon?
+
+#QUESTIONS (NS):
+#- [ ] Matrix spin-up if Eric merged it
+
+
 #Import libraries
 from __future__ import print_function
 
 import os
 import sys
-#import glob
 import shutil
+import logging
 import argparse
 import requests
 import subprocess
 
-#import numpy as np
 import pandas as pd
-#import xarray as xr
 
 from datetime import date
 from getpass import getuser
@@ -52,6 +64,7 @@ from getpass import getuser
 
 myname = getuser()
 
+#-- valid neon site options
 valid_neon_sites = ['ABBY','BARR','BART','BLAN',
                     'BONA','CLBJ','CPER','DCFS',
                     'DEJU','DELA','DSNY','GRSM',
@@ -133,6 +146,15 @@ def get_parser():
                 required = False,
                 type = int,
                 default = 2020)
+    parser.add_argument('--spinup',
+                help='''
+                AD spin-up
+                [default: %(default)s]
+                ''', 
+                action="store_true",
+                dest="ad_flag",
+                required = False,
+                default = True)
     parser.add_argument('--sasu','--matrix',
                 help='''
                 Matrix (SASU) spin-up
@@ -142,10 +164,16 @@ def get_parser():
                 dest="sasu_flag",
                 required = False,
                 default = False)
+    parser.add_argument('-d','--debug', 
+                help='Debug mode will print more information. ', 
+                action="store_true", 
+                dest="debug", 
+                default=False)
 
 
     return parser
 
+"""
 def execute(cmd):
 
     print ('\n',' >>  ',*cmd,'\n')
@@ -159,9 +187,19 @@ def execute(cmd):
     return_code = process.wait()
     if return_code:
         raise subprocess.CalledProcessError(return_code, cmd)
+"""
 
+def execute(command):
+    """
+    Function for running a command on shell.
 
-def execute_2(command):
+    Args:
+        command (str):
+            command that we want to run.
+
+    Raises:
+        Error with the return code from shell.
+    """
     print ('\n',' >>  ',*command,'\n')
 
     try:
@@ -173,6 +211,15 @@ def execute_2(command):
 
 class NeonSite :
     """
+    A class for encapsulating neon sites.
+
+    ...
+
+    Attributes
+    ----------
+
+    Methods
+    -------
     """
     def __init__(self, name, start_year, end_year, start_month, end_month):
         self.name = name
@@ -187,6 +234,10 @@ class NeonSite :
 
 
 def check_neon_listing():
+    """
+    A function to download and parse neon listing file.
+ 
+    """
     listing_file = 'listing.csv'
     url = 'https://neon-ncar.s3.data.neonscience.org/listing.csv'
 
@@ -196,6 +247,19 @@ def check_neon_listing():
 
 
 def parse_neon_listing(listing_file):
+    """
+    A function to parse neon listing file
+    and find neon sites with the dates
+    where data is available.
+
+    Args:
+        listing_file (str): downloaded listing file
+
+    Returns:
+        available_list :
+            list of neon_site objects that is found
+            on the downloaded listing file.
+    """
 
     #pd.set_option("display.max_rows", None, "display.max_columns", None)
 
@@ -249,6 +313,16 @@ def parse_neon_listing(listing_file):
     return available_list
 
 def download_file(url, fname):
+    """
+    Function to download a file.
+
+    Args:
+        url (str): 
+            url of the file for downloading
+
+        fname (str) : 
+            file name to save the downloaded file.
+    """
     response = requests.get(url)
 
     with open(fname, 'wb') as f:
@@ -267,6 +341,9 @@ def main():
 
     args = get_parser().parse_args()
 
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
     #--  specify site/sites to run ctsm
 
     site_list=args.site_name
@@ -282,20 +359,22 @@ def main():
         os.mkdir(out_dir)
 
 
-    #-- wget the fields available and run for those available:
-
+    #-- check neon listing file for available data:
     available_list = check_neon_listing()
+
 
     #1 - run manage externals to make sure CIME exist:
 
     #-- First go to top level directory:
-    os.chdir('../..')
-    print("Current working directory: {0}".format(os.getcwd()))
+    clone_dir = os.path.abspath(os.path.join(__file__, "../../.."))
+    print (clone_dir)
 
-    execute_2(['./manage_externals/checkout_externals','-vv'])
+    os.chdir(clone_dir)
+    logging.debug("Current working directory: {0}".format(os.getcwd()))
 
+    execute(['./manage_externals/checkout_externals','-vv'])
 
-    #--  Looping over neon_sites
+    #--  Looping over neon sites
 
     for neon_site in available_list:
         if neon_site.name in site_list:
@@ -313,14 +392,12 @@ def main():
             user_mod = 'NEON/'+neon_site.name
 
 
-
             #3 - Create case for neon site
 
             os.chdir('cime/scripts/')
-
             print("Current working directory: {0}".format(os.getcwd()))
 
-            execute_2(['./create_newcase','--case', case_dir, 
+            execute(['./create_newcase','--case', case_dir, 
                        '--compset','I1PtClm51Bgc',
                        '--res','CLM_USRDAT',
                        '--driver','nuopc',
@@ -331,36 +408,63 @@ def main():
             os.chdir (case_dir)
             print("Current working directory: {0}".format(os.getcwd()))
 
-            execute_2(['./case.setup'])
+            execute(['./case.setup'])
 
             #5 - Make the changes
-            #TODO: query the end year from neon?
-            execute_2(['./xmlchange','DATM_YR_END=2020'])
-            execute_2(['./xmlchange','STOP_OPTION=nyears'])
+            execute(['./xmlchange','DATM_YR_END=2020'])
+            execute(['./xmlchange','STOP_OPTION=nyears'])
 
 
-        # from WW
-        #execute_2(['./xmlchange','DATM_CLMNCEP_YR_START=2018'])
-        #execute_2(['./xmlchange','DATM_CLMNCEP_YR_END=2019'])
+            # Spin-up AD mode:
+            if args.ad_flag:
 
-        #execute_2(['./xmlchange','CLM_FORCE_COLDSTART=on'])
-        #execute_2(['./xmlchange','CLM_ACCELERATED_SPINUP=on'])
-        #execute_2(['./xmlchange','STOP_N=400'])
-        #execute_2(['./xmlchange','REST_N=100'])
-        #execute_2(['./xmlchange','RUN_REFDATE=0018-01-01'])
-        #execute_2(['./xmlchange','RUN_STARTDATE=0018-01-01'])
-        #execute_2(['./xmlchange','RUN_STARTDATE=0018-01-01'])
+            #-- cycle over available input data
+                #execute(['./xmlchange','DATM_CLMNCEP_YR_START='+neon_site.start_year])
+                #execute(['./xmlchange','DATM_CLMNCEP_YR_END='+neon_site.end_year])
 
-        #execute_2(['./xmlchange','CONTINUE_RUN=FALSE'])
-        #execute_2(['./xmlchange','RESUBMIT=0'])
+                execute(['./xmlchange','DATM_YR_START='+neon_site.start_year])
+                execute(['./xmlchange','DATM_YR_END=2020'])
+                #execute(['./xmlchange','DATM_YR_END='+neon_site.end_year])
+                execute(['./xmlchange','STOP_OPTION=nyears'])
 
-        #6- TODO: Changes for Matrix ...
+                execute(['./xmlchange','CLM_FORCE_COLDSTART=on'])
+                execute(['./xmlchange','CLM_ACCELERATED_SPINUP=on'])
+                execute(['./xmlchange','STOP_N=400'])
+                execute(['./xmlchange','REST_N=100'])
+
+                execute(['./xmlchange','RUN_REFDATE=0018-01-01'])
+                execute(['./xmlchange','RUN_STARTDATE=0018-01-01'])
+
+                execute(['./xmlchange','CONTINUE_RUN=FALSE'])
+                execute(['./xmlchange','RESUBMIT=0'])
 
 
+                #execute(['./xmlchange','CLM_FORCE_COLDSTART=on'])
+                #execute(['./xmlchange','CLM_ACCELERATED_SPINUP=on'])
+                #execute(['./xmlchange','STOP_N=400'])
+                #execute(['./xmlchange','REST_N=100'])
+                #execute(['./xmlchange','RUN_REFDATE=0018-01-01'])
+                #execute(['./xmlchange','RUN_STARTDATE=0018-01-01'])
+                #execute(['./xmlchange','RUN_STARTDATE=0018-01-01'])
+                #execute(['./xmlchange','CONTINUE_RUN=FALSE'])
+                #execute(['./xmlchange','RESUBMIT=0'])
 
-        #execute_2(['./preview_namelist'])
-        execute_2(['./case.build'])
-        execute_2(['./case.submit'])
+                print("Current working directory: {0}".format(os.getcwd()))
+                execute(['./preview_namelists'])
+
+            #6- TODO: Changes for Matrix ...
+
+
+            #on cheyenne:
+            # execute(['qcmd --','./case.build'])
+            execute(['./case.build'])
+            execute(['./case.submit'])
+            os.chdir(clone_dir)
+
+            #postAD spin-up
+
+            #transient
+            #exit()
 
 
 if __name__ == "__main__": 
