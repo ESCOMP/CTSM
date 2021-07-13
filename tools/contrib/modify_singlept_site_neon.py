@@ -256,7 +256,7 @@ def find_soil_structure (surf_file):
 
     return soil_bot, soil_top
 
-def update_metadata(nc, surf_file, neon_file):
+def update_metadata(nc, surf_file, neon_file, zb_flag):
     """
     Function for updating modified surface dataset
     metadat for neon sites.
@@ -277,7 +277,11 @@ def update_metadata(nc, surf_file, neon_file):
     nc.attrs['Updated_with'] = os.path.abspath(__file__)
     nc.attrs['Updated_from'] = surf_file
     nc.attrs['Updated_using'] = neon_file
-    nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC']
+    if zb_flag:
+        nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC','zbedrock']
+    else:
+        nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC']
+
     return nc
 
 def update_time_tag (fname_in):
@@ -472,7 +476,7 @@ def main():
     wfile= out_dir+ update_time_tag(surf_file)
 
     #-- update netcdf metadata
-    f2 = update_metadata(f2, surf_file, neon_file)
+    f2 = update_metadata(f2, surf_file, neon_file,zb_flag)
 
     f2.to_netcdf(path=wfile, mode='w')
 
