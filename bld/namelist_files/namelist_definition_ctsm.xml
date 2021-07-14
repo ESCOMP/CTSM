@@ -724,6 +724,11 @@ LUNA: Leaf Utilization of Nitrogen for Assimilation
 Toggle to turn on the hillslope hydrology model
 </entry>
 
+<entry id="use_hillslope_routing" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on surface water routing in the hillslope hydrology model
+</entry>
+
 <entry id="use_hydrstress" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the plant hydraulic stress model

@@ -11,6 +11,7 @@ module HillslopeHydrologyMod
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
+  use clm_varctl     , only : use_hillslope_routing
   use decompMod      , only : bounds_type
   use clm_varcon     , only : rpi
 
@@ -262,40 +263,42 @@ contains
 
     deallocate(ihillslope_in)
 
-    allocate(fstream_in(bounds%begg:bounds%endg))
-    call ncd_io(ncid=ncid, varname='h_stream_depth', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-    if (readvar) then
-       if (masterproc) then
-          write(iulog,*) 'h_stream_depth found on surface data set'
+    if (use_hillslope_routing) then 
+       allocate(fstream_in(bounds%begg:bounds%endg))
+       call ncd_io(ncid=ncid, varname='h_stream_depth', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
+       if (readvar) then
+          if (masterproc) then
+             write(iulog,*) 'h_stream_depth found on surface data set'
+          end if
+          do l = bounds%begl,bounds%endl
+             g = lun%gridcell(l)
+             lun%stream_channel_depth(l) = fstream_in(g)
+          enddo
+       endif
+       call ncd_io(ncid=ncid, varname='h_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
+       if (readvar) then
+          if (masterproc) then
+             write(iulog,*) 'h_stream_width found on surface data set'
+          end if
+          do l = bounds%begl,bounds%endl
+             g = lun%gridcell(l)
+             lun%stream_channel_width(l) = fstream_in(g)
+          enddo
        end if
-       do l = bounds%begl,bounds%endl
-          g = lun%gridcell(l)
-          lun%stream_channel_depth(l) = fstream_in(g)
-       enddo
-    endif
-    call ncd_io(ncid=ncid, varname='h_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-    if (readvar) then
-       if (masterproc) then
-          write(iulog,*) 'h_stream_width found on surface data set'
+       call ncd_io(ncid=ncid, varname='h_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
+       if (readvar) then
+          if (masterproc) then
+             write(iulog,*) 'h_stream_slope found on surface data set'
+          end if
+          do l = bounds%begl,bounds%endl
+             g = lun%gridcell(l)
+             lun%stream_channel_slope(l) = fstream_in(g)
+          enddo
        end if
-       do l = bounds%begl,bounds%endl
-          g = lun%gridcell(l)
-          lun%stream_channel_width(l) = fstream_in(g)
-       enddo
-    end if
-    call ncd_io(ncid=ncid, varname='h_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
-    if (readvar) then
-       if (masterproc) then
-          write(iulog,*) 'h_stream_slope found on surface data set'
-       end if
-       do l = bounds%begl,bounds%endl
-          g = lun%gridcell(l)
-          lun%stream_channel_slope(l) = fstream_in(g)
-       enddo
-    end if
 
-    deallocate(fstream_in)
-    
+       deallocate(fstream_in)
+    endif
+       
     !  Set hillslope hydrology column level variables
     !  This needs to match how columns set up in subgridMod
     do l = bounds%begl,bounds%endl
@@ -356,8 +359,8 @@ contains
 
           enddo
 
-          ! Calculate total (representative) hillslope area on landunit
-          ! weighted relative to one another via pct_hillslope
+          ! Calculate total hillslope area on landunit and
+          ! number of columns in each hillslope
           ncol_per_hillslope(:)= 0._r8
           hillslope_area(:)    = 0._r8
           do c = lun%coli(l), lun%colf(l)
@@ -1054,6 +1057,14 @@ contains
                   /lun%stream_channel_length(l) &
                   /lun%stream_channel_width(l)
 
+             if (1==2) then
+                write(iulog,*) 'checktdepth2: ',g,l,stream_water_volume(l),stream_water_volume(l)*(1.e3/(grc%area(g)*1.e6_r8))
+                write(iulog,*) 'checktdepth3: ',g,l,qstreamflow(l),&
+                     qstreamflow(l)*(1.e3/(grc%area(g)*1.e6_r8))*dtime
+                write(iulog,*) 'checktdepth4: ',lun%stream_channel_length(l), &
+                     lun%stream_channel_width(l),lun%stream_channel_depth(l)
+                write(iulog,*) ' '
+             endif
           endif
        enddo
       

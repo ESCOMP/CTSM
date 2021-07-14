@@ -592,6 +592,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- Hillslope hydrology -->
 <use_hillslope phys="clm4_5"                 >.false.</use_hillslope>
 <use_hillslope phys="clm5_0"                 >.false.</use_hillslope>
+<use_hillslope_routing                       >.false.</use_hillslope_routing>
 
 <!-- Plant hydraulic stress -->
 <use_hydrstress                                                       >.false.</use_hydrstress>

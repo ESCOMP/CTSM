@@ -54,7 +54,8 @@ contains
     use landunit_varcon  , only : istwet, istsoil, istice_mec, istcrop
     use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv, icol_sunwall, icol_shadewall
     use clm_varcon       , only : denh2o, denice
-    use clm_varctl       , only : use_vichydro, use_hillslope
+    use clm_varctl       , only : use_vichydro, use_hillslope, use_hillslope_routing
+
     use clm_varpar       , only : nlevgrnd, nlevurb
     use clm_time_manager , only : get_step_size_real, get_nstep
     use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, PerchedLateralFlowHillslope, LateralFlowPowerLaw, LateralFlowHillslope
@@ -157,15 +158,16 @@ contains
                  soilhydrology_inst, soilstate_inst, &
                  waterstatebulk_inst, waterfluxbulk_inst, &
                  wateratm2lndbulk_inst)
-
-            call HillslopeStreamOutflow(bounds,&
-                 waterstatebulk_inst, waterfluxbulk_inst, &
-                 streamflow_method=streamflow_manning)
-
-            call HillslopeUpdateStreamWater(bounds, &
-                 waterstatebulk_inst, waterfluxbulk_inst, &
-                 wateratm2lndbulk_inst)
             
+            if(use_hillslope_routing) then 
+               call HillslopeStreamOutflow(bounds,&
+                    waterstatebulk_inst, waterfluxbulk_inst, &
+                    streamflow_method=streamflow_manning)
+               
+               call HillslopeUpdateStreamWater(bounds, &
+                    waterstatebulk_inst, waterfluxbulk_inst, &
+                    wateratm2lndbulk_inst)
+            endif
          else
             call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
                  num_urbanc, filter_urbanc,&

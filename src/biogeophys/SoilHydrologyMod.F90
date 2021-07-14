@@ -2520,6 +2520,7 @@ contains
      use clm_time_manager , only : get_step_size
      use clm_varpar       , only : nlevsoi, nlevgrnd, nlayer, nlayert
      use clm_varcon       , only : pondmx, watmin,rpi, secspday, nlvic
+     use clm_varctl       , only : use_hillslope_routing
      use column_varcon    , only : icol_roof, icol_road_imperv, icol_road_perv
      use abortutils       , only : endrun
      use GridcellType     , only : grc  
@@ -2588,13 +2589,14 @@ contains
      real(r8) :: transmis                         ! transmissivity
      real(r8) :: dgrad                            ! hydraulic head gradient
      real(r8) :: stream_water_depth               ! depth of water in stream channel
+     real(r8) :: stream_channel_depth             ! depth of stream channel
      real(r8), parameter :: n_baseflow = 1        ! drainage power law exponent
      real(r8), parameter :: k_anisotropic = 1._r8 ! anisotropy scalar
      real(r8) :: qflx_latflow_out_vol(bounds%begc:bounds%endc) 
      real(r8) :: qflx_net_latflow(bounds%begc:bounds%endc) 
      real(r8) :: qflx_latflow_avg(bounds%begc:bounds%endc) 
      real(r8) :: larea
-     integer  :: c0, c_src, c_dst, nstep, nbase
+     integer  :: c0, c_src, c_dst, nstep
      integer  :: l
      
      !-----------------------------------------------------------------------
@@ -2615,6 +2617,9 @@ contains
           qflx_latflow_out   =>    waterfluxbulk_inst%qflx_latflow_out_col, & ! Output: [real(r8) (:)   ] lateral saturated outflow (mm/s)
           qflx_latflow_in    =>    waterfluxbulk_inst%qflx_latflow_in_col, & ! Output: [real(r8) (:)   ]  lateral saturated inflow (mm/s)
           qdischarge         =>    waterfluxbulk_inst%qdischarge_col     , & ! Output: [real(r8) (:)   ]  discharge from column (m3/s)
+
+          tdepth             =>    wateratm2lndbulk_inst%tdepth_grc      , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
+          tdepth_bankfull    =>    wateratm2lndbulk_inst%tdepthmax_grc   , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
 
           depth              =>    soilhydrology_inst%depth_col          , & ! Input:  [real(r8) (:,:) ] VIC soil depth                                   
           c_param            =>    soilhydrology_inst%c_param_col        , & ! Input:  [real(r8) (:)   ] baseflow exponent (Qb)                             
@@ -2720,14 +2725,20 @@ contains
                     - (col%hill_elev(col%cold(c))-zwt(col%cold(c)))
                dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
             else
-               stream_water_depth = stream_water_volume(l) &
-                    /lun%stream_channel_length(l)/lun%stream_channel_width(l)
+               if(use_hillslope_routing) then
+                  stream_water_depth = stream_water_volume(l) &
+                       /lun%stream_channel_length(l)/lun%stream_channel_width(l)
+                  stream_channel_depth = lun%stream_channel_depth(l)
+               else
+                  stream_water_depth = tdepth(g)
+                  stream_channel_depth = tdepth_bankfull(g)
+               endif
                
                ! flow between channel and lowest column
                ! bankfull height is defined to be zero
                dgrad = (col%hill_elev(c)-zwt(c)) &
                     ! ignore overbankfull storage
-                    - min((stream_water_depth - lun%stream_channel_depth(l)),0._r8)
+                    - min((stream_water_depth - stream_channel_depth),0._r8)
                
                dgrad = dgrad / (col%hill_distance(c))
                ! dgrad cannot be negative when channel is empty

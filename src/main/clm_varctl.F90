@@ -310,6 +310,7 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
+  logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
 
   !----------------------------------------------------------
   ! plant hydraulic stress switch

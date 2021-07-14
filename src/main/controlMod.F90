@@ -247,6 +247,8 @@ contains
 
     namelist /clm_inparm/ use_hillslope
 
+    namelist /clm_inparm/ use_hillslope_routing
+
     namelist /clm_inparm/ use_hydrstress
 
     namelist /clm_inparm/ use_dynroot
@@ -748,6 +750,8 @@ contains
 
     call mpi_bcast (use_hillslope, 1, MPI_LOGICAL, 0, mpicom, ier)
 
+    call mpi_bcast (use_hillslope_routing, 1, MPI_LOGICAL, 0, mpicom, ier)
+
     call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -1015,6 +1019,7 @@ contains
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   hillslope hydrology    = ', use_hillslope
+    write(iulog,*) '   hillslope routing      = ', use_hillslope_routing
     write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
     write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
