@@ -365,28 +365,28 @@ contains
          hbot               => canopystate_inst%hbot_patch    ,          & ! Output: [real(r8) (:) ] canopy bottom (m)
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch & ! Output: [integer  (:) ] fraction of vegetation not covered by snow (0 OR 1) [-]
          )
-       
+
       if (use_lai_streams) then
          call lai_interp(bounds, canopystate_inst)
       endif
 
 
-      if(use_fates_sp)then
+      !if(use_fates_sp)then
         ! when we use FATES SP mode, the inactive points are not in the nolakep filter
         ! thus we need to force a loop around all patches to get at the SP inputs the
         ! are indexed in the HLM 'P' space.
-        nploop = bounds%endp-bounds%begp+1 
-      else
+      !  nploop = bounds%endp-bounds%begp+1
+      !else
         nploop=num_nolakep
-      endif
+      !endif
       do fp = 1, nploop
-         if(use_fates_sp)then
-          p = fp + bounds%begp -1 
-        else
+         !if(use_fates_sp)then
+         ! p = fp + bounds%begp -1
+        !else
           p = filter_nolakep(fp)
-        endif
+        !endif
          c = patch%column(p)
-         
+
 
          ! need to update elai and esai only every albedo time step so do not
          ! have any inconsistency in lai and sai between SurfaceAlbedo calls (i.e.,
@@ -431,9 +431,9 @@ contains
 
          ! area weight by snow covered fraction
          if(.not.use_fates_sp)then
-     
+
          ! Do not set these in FATES_SP mode as they turn on the 'vegsol' filter and also
-         ! are duplicated by the FATE variables (in the FATES IFP indexing space) 
+         ! are duplicated by the FATE variables (in the FATES IFP indexing space)
            elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
            esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
            if (elai(p) < 0.05_r8) elai(p) = 0._r8
