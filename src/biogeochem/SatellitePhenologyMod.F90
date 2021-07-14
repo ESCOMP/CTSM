@@ -430,7 +430,7 @@ contains
          endif
 
          ! area weight by snow covered fraction
-         !if(.not.use_fates_sp)then
+         if(.not.use_fates_sp)then
      
          ! Do not set these in FATES_SP mode as they turn on the 'vegsol' filter and also
          ! are duplicated by the FATE variables (in the FATES IFP indexing space) 
@@ -446,7 +446,7 @@ contains
            else
               frac_veg_nosno_alb(p) = 0
            end if
-         !endif !fates_sp
+         endif !fates_sp
       end do ! end of patch loop
 
     end associate
