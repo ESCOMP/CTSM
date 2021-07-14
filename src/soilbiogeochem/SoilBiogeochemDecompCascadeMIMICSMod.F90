@@ -41,17 +41,14 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   ! !PRIVATE DATA MEMBERS 
   integer, private :: i_pas_som  ! index of passive (aka protected) Soil Organic Matter (SOM)
   integer, private :: i_slo_som  ! index of slow (aka recalcitrant) SOM
-  integer, private :: i_act_som  ! index of active (aka available) SOM
+  integer, private :: i_avl_som  ! index of available (aka active) SOM
   integer, private :: i_str_lit  ! index of structural litter pool
   integer, private :: i_cop_mic  ! index of copiotrophic microbial pool
   integer, private :: i_oli_mic  ! index of oligotrophic microbial pool
 
   type, private :: params_type
-     real(r8):: rf_s2s3_bgc    
      ! Respiration fraction cwd --> structural litter (keep comment sep for dif)
      real(r8):: rf_cwdl2_bgc 
-     real(r8):: tau_s1_bgc    ! 1/turnover time of  SOM 1 from Century (1/7.3) (1/yr)
-     real(r8):: tau_s2_bgc    ! 1/turnover time of  SOM 2 from Century (1/0.2) (1/yr)
      real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
 
      real(r8) :: cwd_fcel_bgc !cellulose fraction for CWD
@@ -103,30 +100,15 @@ contains
 
     ! Read off of netcdf file
     ! TODO Add new params here and in the params file.
-    ! TODO tau_s1, tau_s2, etc may need _bgc added/removed here/params file
+    ! TODO Some may need _bgc added/removed here and in the params file
     ! TODO Read MIMICS-specific params here & shared ones (eg *_bgc) as:
     !      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
     ! TODO When ready for all final params values, talk to @wwieder and,
     !      if values differ from the BGC values, make separate _mimics params.
-    tString='tau_s1_bgc'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_s1_bgc=tempr
-
-    tString='tau_s2_bgc'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_s2_bgc=tempr
-
     tString='tau_cwd_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_cwd_bgc=tempr
-
-    tString='rf_s2s3_bgc'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_s2s3_bgc=tempr
 
     ! MIMICS value = 0 (same as BGC value)
     tString='rf_cwdl2_bgc'
@@ -219,39 +201,39 @@ contains
     !-- properties of each decomposing pool
     real(r8) :: rf_l1m1
     real(r8) :: rf_l2m1
-    real(r8) :: rf_s3m1
+    real(r8) :: rf_s1m1
     real(r8) :: rf_l1m2
     real(r8) :: rf_l2m2
-    real(r8) :: rf_s3m2
-    real(r8), allocatable :: rf_s1s3(:,:)
-    real(r8) :: rf_s2s3
+    real(r8) :: rf_s1m2
     real(r8) :: rf_cwdl2
     real(r8) :: cwd_fcel
     real(r8) :: cwd_flig
-    real(r8), allocatable :: f_s1s3(:,:)
-    real(r8) :: f_s2s3
     real(r8), allocatable :: p_scalar(:,:)
 
     integer :: i_l1m1
     integer :: i_l2m1
-    integer :: i_s3m1
+    integer :: i_s1m1
     integer :: i_l1m2
     integer :: i_l2m2
-    integer :: i_s3m2
-    integer :: i_s1s3
-    integer :: i_s2s3
+    integer :: i_s1m2
+    integer :: i_s3s1
+    integer :: i_s2s1
+    integer :: i_m1s1
+    integer :: i_m1s2
+    integer :: i_m1s3
+    integer :: i_m2s1
+    integer :: i_m2s2
+    integer :: i_m2s3
     integer :: i_cwdl2
     real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
 
     integer  :: c, j    ! indices
-    real(r8) :: t       ! temporary variable
     !-----------------------------------------------------------------------
 
     associate(                                                                                     &
          rf_decomp_cascade              => soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Input:  [real(r8)          (:,:,:) ]  respired fraction in decomposition step (frac)       
          pathfrac_decomp_cascade        => soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Input:  [real(r8)          (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
 
-         cellsand                       => soilstate_inst%cellsand_col                           , & ! Input:  [real(r8)          (:,:)   ]  column 3D sand                                         
          cellclay                       => soilstate_inst%cellclay_col                           , & ! Input:  [real(r8)          (:,:)   ]  column 3D clay
          
          cascade_donor_pool             => decomp_cascade_con%cascade_donor_pool                 , & ! Output: [integer           (:)     ]  which pool is C taken from for a given decomposition step 
@@ -271,80 +253,65 @@ contains
 
          )
 
-      allocate(rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
-      allocate(f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(p_scalar(bounds%begc:bounds%endc,1:nlevdecomp))
 
       !------- time-constant coefficients ---------- !
       ! set respiration fractions for fluxes between compartments
       rf_l1m1 = 1.0_r8 - params_inst%mge(1)
       rf_l2m1 = 1.0_r8 - params_inst%mge(2)
-      rf_s3m1 = 1.0_r8 - params_inst%mge(3)
+      rf_s1m1 = 1.0_r8 - params_inst%mge(3)
       rf_l1m2 = 1.0_r8 - params_inst%mge(4)
       rf_l2m2 = 1.0_r8 - params_inst%mge(5)
-      rf_s3m2 = 1.0_r8 - params_inst%mge(6)
+      rf_s1m2 = 1.0_r8 - params_inst%mge(6)
 
-      rf_s2s3 = params_inst%rf_s2s3_bgc
       rf_cwdl2 = params_inst%rf_cwdl2_bgc
 
-      ! set the structural fraction for coarse woody debris
-      ! TODO Renamed LHS to cwd_fstr. Make RHS = sum or avg of the two?
-      cwd_fstr = min(1.0_r8, &
-                     params_inst%cwd_fcel_bgc + params_inst%cwd_flig_bgc)
-
       ! vmod = "old" vmod * av  AND  kmod = ak / "old" kmod
-      ! Table B1 Wieder et al. (2015) and MIMICS params file give different
+      ! Table B1 Wieder et al. (2015) and MIMICS params file give diff
       ! ak and av values. I used the params file values.
-      vmod_l1m1 = params_inst%vmod(1)
-      vmod_l2m1 = params_inst%vmod(2)
-      vmod_s3m1 = params_inst%vmod(3)
-      vmod_l1m2 = params_inst%vmod(4)
-      vmod_l2m2 = params_inst%vmod(5)
-      vmod_s3m2 = params_inst%vmod(6)
-      kmod_l1m1 = params_inst%kmod(1)
-      kmod_l2m1 = params_inst%kmod(2)
-      kmod_s3m1 = params_inst%kmod(3)
-      kmod_l1m2 = params_inst%kmod(4)
-      kmod_l2m2 = params_inst%kmod(5)
-      kmod_s3m2 = params_inst%kmod(6)
-      vslope_l1m1 = params_inst%vslope(1)
-      vslope_l2m1 = params_inst%vslope(2)
-      vslope_s3m1 = params_inst%vslope(3)
-      vslope_l1m2 = params_inst%vslope(4)
-      vslope_l2m2 = params_inst%vslope(5)
-      vslope_s3m2 = params_inst%vslope(6)
-      kslope_l1m1 = params_inst%kslope(1)
-      kslope_l2m1 = params_inst%kslope(2)
-      kslope_s3m1 = params_inst%kslope(3)
-      kslope_l1m2 = params_inst%kslope(4)
-      kslope_l2m2 = params_inst%kslope(5)
-      kslope_s3m2 = params_inst%kslope(6)
-      vint_l1m1 = params_inst%vint(1)
-      vint_l2m1 = params_inst%vint(2)
-      vint_s3m1 = params_inst%vint(3)
-      vint_l1m2 = params_inst%vint(4)
-      vint_l2m2 = params_inst%vint(5)
-      vint_s3m2 = params_inst%vint(6)
-      kint_l1m1 = params_inst%kint(1)
-      kint_l2m1 = params_inst%kint(2)
-      kint_s3m1 = params_inst%kint(3)
-      kint_l1m2 = params_inst%kint(4)
-      kint_l2m2 = params_inst%kint(5)
-      kint_s3m2 = params_inst%kint(6)
-
-      ! set path fractions
-      f_s2s3 = 0.03_r8/(0.45_r8)
+      vmod_l1_m1 = params_inst%vmod(1)
+      vmod_l2_m1 = params_inst%vmod(2)
+      vmod_s1_m1 = params_inst%vmod(3)
+      vmod_l1_m2 = params_inst%vmod(4)
+      vmod_l2_m2 = params_inst%vmod(5)
+      vmod_s1_m2 = params_inst%vmod(6)
+      kmod_l1_m1 = params_inst%kmod(1)
+      kmod_l2_m1 = params_inst%kmod(2)
+      kmod_s1_m1 = params_inst%kmod(3)
+      kmod_l1_m2 = params_inst%kmod(4)
+      kmod_l2_m2 = params_inst%kmod(5)
+      kmod_s1_m2 = params_inst%kmod(6)
+      vslope_l1_m1 = params_inst%vslope(1)
+      vslope_l2_m1 = params_inst%vslope(2)
+      vslope_s1_m1 = params_inst%vslope(3)
+      vslope_l1_m2 = params_inst%vslope(4)
+      vslope_l2_m2 = params_inst%vslope(5)
+      vslope_s1_m2 = params_inst%vslope(6)
+      kslope_l1_m1 = params_inst%kslope(1)
+      kslope_l2_m1 = params_inst%kslope(2)
+      kslope_s1_m1 = params_inst%kslope(3)
+      kslope_l1_m2 = params_inst%kslope(4)
+      kslope_l2_m2 = params_inst%kslope(5)
+      kslope_s1_m2 = params_inst%kslope(6)
+      vint_l1_m1 = params_inst%vint(1)
+      vint_l2_m1 = params_inst%vint(2)
+      vint_s1_m1 = params_inst%vint(3)
+      vint_l1_m2 = params_inst%vint(4)
+      vint_l2_m2 = params_inst%vint(5)
+      vint_s1_m2 = params_inst%vint(6)
+      kint_l1_m1 = params_inst%kint(1)
+      kint_l2_m1 = params_inst%kint(2)
+      kint_s1_m1 = params_inst%kint(3)
+      kint_l1_m2 = params_inst%kint(4)
+      kint_l2_m2 = params_inst%kint(5)
+      kint_s1_m2 = params_inst%kint(6)
 
       ! some of these are dependent on the soil texture properties
-      ! TODO rf_s1s3 -> rf_decomp_cascade as template for p_scalar?
-      !      One-time initializations here.
+      ! TODO One-time initializations here.
       !      Time-dep params in subr. decomp_rates_mimics.
 
       do c = bounds%begc, bounds%endc
          do j = 1, nlevdecomp
-            t = 0.85_r8 - 0.68_r8 * 0.01_r8 * (100._r8 - cellsand(c,j))
-            f_s1s3(c,j) = .004_r8 / (1._r8 - t)
-            rf_s1s3(c,j) = t
             p_scalar(c,j) = (0.8_r8 * exp(-3.0_r8 * sqrt(cellclay(c,j))))** &
                             (-1.0_r8)
          end do
@@ -395,23 +362,23 @@ contains
               errMsg(sourcefile, __LINE__))
       end if
 
-      i_act_som = i_str_lit + 1
-      floating_cn_ratio_decomp_pools(i_act_som) = .true.
-      decomp_cascade_con%decomp_pool_name_restart(i_act_som) = 'soil1'
-      decomp_cascade_con%decomp_pool_name_history(i_act_som) = 'ACT_SOM'
-      decomp_cascade_con%decomp_pool_name_long(i_act_som) = 'active soil organic matter'
-      decomp_cascade_con%decomp_pool_name_short(i_act_som) = 'S1'
-      is_microbe(i_act_som) = .false.
-      is_litter(i_act_som) = .false.
-      is_soil(i_act_som) = .true.
-      is_cwd(i_act_som) = .false.
-      initial_cn_ratio(i_act_som) = 10._r8  ! cn_s1 in BGC; not used in MIMICS
-      initial_stock(i_act_som) = params_inst%initial_Cstocks(i_act_som)
-      is_metabolic(i_act_som) = .false.
-      is_cellulose(i_act_som) = .false.
-      is_lignin(i_act_som) = .false.
+      i_avl_som = i_str_lit + 1
+      floating_cn_ratio_decomp_pools(i_avl_som) = .true.
+      decomp_cascade_con%decomp_pool_name_restart(i_avl_som) = 'soil1'
+      decomp_cascade_con%decomp_pool_name_history(i_avl_som) = 'AVL_SOM'
+      decomp_cascade_con%decomp_pool_name_long(i_avl_som) = 'available soil organic matter'
+      decomp_cascade_con%decomp_pool_name_short(i_avl_som) = 'S1'
+      is_microbe(i_avl_som) = .false.
+      is_litter(i_avl_som) = .false.
+      is_soil(i_avl_som) = .true.
+      is_cwd(i_avl_som) = .false.
+      initial_cn_ratio(i_avl_som) = 10._r8  ! cn_s1 in BGC; not used in MIMICS
+      initial_stock(i_avl_som) = params_inst%initial_Cstocks(i_avl_som)
+      is_metabolic(i_avl_som) = .false.
+      is_cellulose(i_avl_som) = .false.
+      is_lignin(i_avl_som) = .false.
 
-      i_slo_som = i_act_som + 1
+      i_slo_som = i_avl_som + 1
       floating_cn_ratio_decomp_pools(i_slo_som) = .true.
       decomp_cascade_con%decomp_pool_name_restart(i_slo_som) = 'soil2'
       decomp_cascade_con%decomp_pool_name_history(i_slo_som) = 'SLO_SOM'
@@ -504,7 +471,7 @@ contains
          spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
       end if
       !som1,2,3
-      spinup_factor(i_act_som) = 1._r8
+      spinup_factor(i_avl_som) = 1._r8
       spinup_factor(i_slo_som) = 1._r8  ! BGC used cwd formula above but
       spinup_factor(i_pas_som) = 1._r8  ! ...w the respective tau_s values
       ! micr1,2
@@ -531,12 +498,12 @@ contains
       cascade_receiver_pool(i_l2m1) = i_cop_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1)= 1.0_r8
 
-      i_s3m1 = 3
-      decomp_cascade_con%cascade_step_name(i_s3m1) = 'S3M1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m1) = rf_s3m1
-      cascade_donor_pool(i_s3m1) = i_pas_som
-      cascade_receiver_pool(i_s3m1) = i_cop_mic
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m1) = 1.0_r8
+      i_s1m1 = 3
+      decomp_cascade_con%cascade_step_name(i_s1m1) = 'S1M1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m1) = rf_s1m1
+      cascade_donor_pool(i_s1m1) = i_avl_som
+      cascade_receiver_pool(i_s1m1) = i_cop_mic
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m1) = 1.0_r8
 
       i_l1m2 = 4
       decomp_cascade_con%cascade_step_name(i_l1m2) = 'L1M2'
@@ -552,39 +519,78 @@ contains
       cascade_receiver_pool(i_l2m2) = i_oli_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2)= 1.0_r8
 
-      i_s3m2 = 6
-      decomp_cascade_con%cascade_step_name(i_s3m2) = 'S3M2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m2) = rf_s3m2
-      cascade_donor_pool(i_s3m2) = i_pas_som
-      cascade_receiver_pool(i_s3m2) = i_oli_mic
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3m2) = 1.0_r8
+      i_s1m2 = 6
+      decomp_cascade_con%cascade_step_name(i_s1m2) = 'S1M2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m2) = rf_s1m2
+      cascade_donor_pool(i_s1m2) = i_avl_som
+      cascade_receiver_pool(i_s1m2) = i_oli_mic
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m2) = 1.0_r8
 
-      ! TODO If keeping s1_s3 & s2_s3 code, is pathfrac correct or should = 1?
-      i_s1s3 = 7
-      decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
-      cascade_donor_pool(i_s1s3) = i_act_som
-      cascade_receiver_pool(i_s1s3) = i_pas_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+      i_s3s1 = 7
+      decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 0.0_r8
+      cascade_donor_pool(i_s3s1) = i_pas_som
+      cascade_receiver_pool(i_s3s1) = i_avl_som
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
 
-      i_s2s3 = 8
-      decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
-      cascade_donor_pool(i_s2s3) = i_slo_som
-      cascade_receiver_pool(i_s2s3) = i_pas_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
+      i_s2s1 = 8
+      decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 0.0_r8
+      cascade_donor_pool(i_s2s1) = i_slo_som
+      cascade_receiver_pool(i_s2s1) = i_avl_som
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 1.0_r8
+
+      i_m1s1 = 9
+      decomp_cascade_con%cascade_step_name(i_m1s1) = 'M1S1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = rf_m1s1
+      cascade_donor_pool(i_m1s1) = i_cop_mic
+      cascade_receiver_pool(i_m1s1) = i_avl_som
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = fphys  ! TODO fphys is a function of clay
+
+      i_m1s2 = 10
+      decomp_cascade_con%cascade_step_name(i_m1s2) = 'M1S2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = rf_m1s2
+      cascade_donor_pool(i_m1s2) = i_cop_mic
+      cascade_receiver_pool(i_m1s2) = i_slo_som
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = fchem  ! TODO fchem is a function of litter quality (fmet)
+
+      i_m1s3 = 11
+      decomp_cascade_con%cascade_step_name(i_m1s3) = 'M1S3'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = rf_m1s3
+      cascade_donor_pool(i_m1s3) = i_cop_mic
+      cascade_receiver_pool(i_m1s3) = i_pas_som
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = faval  ! TODO faval = 1 - fphys - fchem
+
+      i_m2s1 = 12
+      decomp_cascade_con%cascade_step_name(i_m2s1) = 'M2S1'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = rf_m2s1
+      cascade_donor_pool(i_m2s1) = i_oli_mic
+      cascade_receiver_pool(i_m2s1) = i_avl_som
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = fphys
+
+      i_m2s2 = 13
+      decomp_cascade_con%cascade_step_name(i_m2s2) = 'M2S2'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = rf_m2s2
+      cascade_donor_pool(i_m2s2) = i_oli_mic
+      cascade_receiver_pool(i_m2s2) = i_slo_som
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = fchem
+
+      i_m2s3 = 14
+      decomp_cascade_con%cascade_step_name(i_m2s3) = 'M2S3'
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = rf_m2s3
+      cascade_donor_pool(i_m2s3) = i_oli_mic
+      cascade_receiver_pool(i_m2s3) = i_pas_som
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = faval
 
       if (.not. use_fates) then
-         i_cwdl2 = 9
+         i_cwdl2 = 15
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_str_lit
-         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fstr
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 1.0_r8
       end if
 
-      deallocate(rf_s1s3)
-      deallocate(f_s1s3)
       deallocate(p_scalar)
       deallocate(params_inst%mge)
       deallocate(params_inst%vmod)
@@ -624,27 +630,21 @@ contains
     real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
     real(r8), allocatable:: fr(:,:)         ! column-level rooting fraction by soil depth
     real(r8):: psi                          ! temporary soilpsi for water scalar
-    real(r8):: k_s1_s3  ! decomposition rate SOM 1 (1/sec)
-    real(r8):: k_s2_s3  ! decomposition rate SOM 2 (1/sec)
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
     real(r8):: vmax_l1_m1  !
     real(r8):: vmax_l2_m1  !
-    real(r8):: vmax_s3_m1  !
+    real(r8):: vmax_s1_m1  !
     real(r8):: vmax_l1_m2  !
     real(r8):: vmax_l2_m2  !
-    real(r8):: vmax_s3_m2  !
+    real(r8):: vmax_s1_m2  !
     real(r8):: km_l1_m1  !
     real(r8):: km_l2_m1  !
-    real(r8):: km_s3_m1  !
+    real(r8):: km_s1_m1  !
     real(r8):: km_l1_m2  !
     real(r8):: km_l2_m2  !
-    real(r8):: km_s3_m2  !
-    real(r8):: tau_m1_s1  !
-    real(r8):: tau_m1_s2  !
-    real(r8):: tau_m1_s3  !
-    real(r8):: tau_m2_s1  !
-    real(r8):: tau_m2_s2  !
-    real(r8):: tau_m2_s3  !
+    real(r8):: km_s1_m2  !
+    real(r8):: tau_m1  !
+    real(r8):: tau_m2  !
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
     integer :: c, fc, j, k, l
     real(r8):: days_per_year                ! days per year
@@ -688,8 +688,6 @@ contains
 
       ! translate to per-second time constant
       ! TODO vmax, km, tau terms replaced (most?) k_ terms; CONFIRM s-1 UNITS
-      k_s1_s3 = 1._r8 / (secspday * days_per_year * params_inst%tau_s1_bgc)
-      k_s2_s3 = 1._r8 / (secspday * days_per_year * params_inst%tau_s2_bgc)
       k_frag = 1._r8 / (secspday * days_per_year * params_inst%tau_cwd_bgc)
 
      ! calc ref rate
@@ -717,8 +715,8 @@ contains
                endif
             endif
             !
-            if ( abs(spinup_factor(i_act_som) - 1._r8) .gt. .000001_r8) then
-               spinup_geogterm_s1(c) = spinup_factor(i_act_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
+            if ( abs(spinup_factor(i_avl_som) - 1._r8) .gt. .000001_r8) then
+               spinup_geogterm_s1(c) = spinup_factor(i_avl_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s1(c) = 1._r8
             endif
@@ -810,7 +808,7 @@ contains
             end do
          end do
 
-         ! TODO @wwieder concerned about breaking ch4 code
+         ! TODO May need a hook from MIMICS to ch4 code for this to work
          if (use_lch4) then
             ! Calculate ANOXIA
             if (anoxia) then
@@ -901,19 +899,22 @@ contains
          fmet_p1 = 0.85
          fmet_p2 = 0.85
          fmet_p3 = 0.013
-         tauMod_denom = 100.0_r8  ! For efficiency put _factor in params files
-         tauMod_factor = 1.0_r8 / tauMod_denom  ! ...instead of _denom?
+         tauMod_factor = 0.01_r8  ! was tauMod_denom = 100
          tauMod_min = 0.8_r8
          tauMod_max = 1.2_r8
          tau_r1 = 5.2e-4_r8
          tau_r2 = 0.3_r8  ! or 0.4?
          tau_k1 = 2.4e-4_r8
          tau_k2 = 0.1_r8
+         densdep = 1.0_r8
 
          ! Time-dependent params from Wieder et al. 2015 & testbed code
          ! TODO STILL MISSING N-related stuff: DIN...
 
-         ! TODO I don't see existing ligninNratioAvg, so calculate
+         ! TODO cleaf2met is leaf carbon to metabolic litter
+         !      Similarly the others
+         !      Rethink this as the sum of input to met + str litter?
+         !      @wwieder will investigate.
            ligninNratioAvg(c) =  &
               (ligninNratio(c,leaf) * (cleaf2met(c) + cleaf2str(c)) + &
                ligninNratio(c,froot) * (croot2met(c) + croot2str(c)) + &
@@ -925,92 +926,77 @@ contains
          ! Necessary for litter quality in boreal forests with high cwd flux
          fmet = fmet_p1 * (fmet_p2 - fmet_p3 * min(40.0_r8, &
                                                    ligninNratioAvg(c)))
-         ! TODO USE cnveg_carbonflux_inst%annsum_npp_col (gC/m2/yr) updated 1/yr
-         !       OR annavg_[ag+bg]npp_patch (gC/m2/s) from ch4Mod
-         !       OR calculate an annual running mean with accumulMod?
+         ! TODO Need to mention cnveg_carbonflux_inst above somewhere
          tauMod = min(tauMod_max, max(tauMod_min, &
                                       sqrt(tauMod_factor * &
                                      cnveg_carbonflux_inst%annsum_npp_col(c))))
 
-         ! tau_m1_s* are tauR and tau_m2_s* are tauK in Wieder et al. 2015
-         ! and are time-dependent terms
-         tau_m1_s1 = tau_r1 * exp(tau_r2 * fmet) * tauMod
-         tau_m1_s2 = tau_r1 * exp(tau_r2 * fmet) * tauMod
-         tau_m1_s3 = tau_r1 * exp(tau_r2 * fmet) * tauMod
-         tau_m2_s1 = tau_k1 * exp(tau_k2 * fmet) * tauMod
-         tau_m2_s2 = tau_k1 * exp(tau_k2 * fmet) * tauMod
-         tau_m2_s3 = tau_k1 * exp(tau_k2 * fmet) * tauMod
+         ! tau_m1 is tauR and tau_m2 is tauK in Wieder et al. 2015
+         ! They are time-dependent terms
+         tau_m1 = tau_r1 * exp(tau_r2 * fmet) * tauMod
+         tau_m2 = tau_k1 * exp(tau_k2 * fmet) * tauMod
 
          do j = 1,nlevdecomp
             ! vmax are time-dependent terms
             ! Table B1 Wieder et al. (2015) & MIMICS params file give different
             ! kslope. I used the params file value(s).
-            ! TODO Introduce t_soi24_degC_col following t_veg24_patch (running
-            !        mean) or t_mo_patch (30-d avg) or ...
-            vmax_l1_m1 = exp(vslope_l1_m1 * t_soi24_degC_col(c,j) + vint_l1_m1) * vmod_l1_m1
-            vmax_l1_m2 = exp(vslope_l1_m2 * t_soi24_degC_col(c,j) + vint_l1_m2) * vmod_l1_m2
-            vmax_l2_m1 = exp(vslope_l2_m1 * t_soi24_degC_col(c,j) + vint_l2_m1) * vmod_l2_m1
-            vmax_l2_m2 = exp(vslope_l2_m2 * t_soi24_degC_col(c,j) + vint_l2_m2) * vmod_l2_m2
-            vmax_s3_m1 = exp(vslope_s3_m1 * t_soi24_degC_col(c,j) + vint_s3_m1) * vmod_l2_m1
-            vmax_s3_m2 = exp(vslope_s3_m2 * t_soi24_degC_col(c,j) + vint_s3_m2) * vmod_l2_m2
+            t_soi_degC = t_soisno(c,j) + tfrz  ! TODO find global const
+            vmax_l1_m1 = exp(vslope_l1_m1 * t_soi_degC + vint_l1_m1) * vmod_l1_m1
+            vmax_l1_m2 = exp(vslope_l1_m2 * t_soi_degC + vint_l1_m2) * vmod_l1_m2
+            vmax_l2_m1 = exp(vslope_l2_m1 * t_soi_degC + vint_l2_m1) * vmod_l2_m1
+            vmax_l2_m2 = exp(vslope_l2_m2 * t_soi_degC + vint_l2_m2) * vmod_l2_m2
+            vmax_s1_m1 = exp(vslope_s1_m1 * t_soi_degC + vint_s1_m1) * vmod_s1_m1
+            vmax_s1_m2 = exp(vslope_s1_m2 * t_soi_degC + vint_s1_m2) * vmod_s1_m2
 
             ! km are time-dependent terms
-            km_l1_m1 = exp(kslope_l1_m1 * t_soi24_degC_col(c,j) + kint_l1_m1) * kmod_l1_m1
-            km_l1_m2 = exp(kslope_l1_m2 * t_soi24_degC_col(c,j) + kint_l1_m2) * kmod_l1_m2
-            km_l2_m1 = exp(kslope_l2_m1 * t_soi24_degC_col(c,j) + kint_l2_m1) * kmod_l2_m1
-            km_l2_m2 = exp(kslope_l2_m2 * t_soi24_degC_col(c,j) + kint_l2_m2) * kmod_l2_m2
-            km_s3_m1 = exp(kslope_s3_m1 * t_soi24_degC_col(c,j) + kint_s3_m1) * kmod_s3_m1 / p_scalar(c,j)
-            km_s3_m2 = exp(kslope_s3_m2 * t_soi24_degC_col(c,j) + kint_s3_m2) * kmod_s3_m2 / p_scalar(c,j)
+            km_l1_m1 = exp(kslope_l1_m1 * t_soi_degC + kint_l1_m1) * kmod_l1_m1
+            km_l1_m2 = exp(kslope_l1_m2 * t_soi_degC + kint_l1_m2) * kmod_l1_m2
+            km_l2_m1 = exp(kslope_l2_m1 * t_soi_degC + kint_l2_m1) * kmod_l2_m1
+            km_l2_m2 = exp(kslope_l2_m2 * t_soi_degC + kint_l2_m2) * kmod_l2_m2
+            km_s1_m1 = exp(kslope_s1_m1 * t_soi_degC + kint_s1_m1) * kmod_s1_m1 / p_scalar(c,j)
+            km_s1_m2 = exp(kslope_s1_m2 * t_soi_degC + kint_s1_m2) * kmod_s1_m2 / p_scalar(c,j)
 
             ! Product of w_scalar * depth_scalar * o_scalar
             w_d_o_scalars = w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
 
             ! decomp_k used in SoilBiogeochemPotentialMod.F90
-            ! TODO Defined correctly here?
-            ! TODO Combine multiple terms of same donor pools...
-            ! TODO Where to calculate m1_pool and m2_pool?
-            ! TODO When to introduce litter/soil biomass to the calculation?
-            ! TODO Excluded spinup terms for now. See cwd below how used.
-            decomp_k(c,j,i_met_lit) = (vmax_l1_m1 * m1_pool(c,j) / &
-                                       (km_l1_m1 + m1_pool(c,j))) * &
-                                      w_d_o_scalars
-            decomp_k(c,j,i_met_lit) = (vmax_l1_m2 * m2_pool(c,j) / &
-                                       (km_l1_m2 + m2_pool(c,j))) * &
-                                      w_d_o_scalars
-
-            decomp_k(c,j,i_str_lit) = (vmax_l2_m1 * m1_pool(c,j) / &
-                                       (km_l2_m1 + m1_pool(c,j))) * &
-                                      w_d_o_scalars
-            decomp_k(c,j,i_str_lit) = (vmax_l2_m2 * m2_pool(c,j) / &
-                                       (km_l2_m2 + m2_pool(c,j))) * &
+            ! TODO Excluded spinup terms for now (except see cwd below)
+            ! TODO Calc m*_conc = m*_pool(c,j) / dz(j) layer thickness
+            !           mgC/cm3 = gC/m3 * (1e3 mg/g) / (1e6 cm3/m3)
+            ! TODO decomp_k will end up in units of per hour and we
+            !      need per s so apply conversion to the coeffs above
+            decomp_k(c,j,i_met_lit) = (vmax_l1_m1 * m1_conc(c,j) / &
+                                       (km_l1_m1 + m1_conc(c,j)) + &
+                                       vmax_l1_m2 * m2_conc(c,j) / &
+                                       (km_l1_m2 + m2_conc(c,j))) * &
                                       w_d_o_scalars
 
-            decomp_k(c,j,i_pas_som) = (vmax_s3_m1 * m1_pool(c,j) / &
-                                       (km_s3_m1 + m1_pool(c,j))) * &
-                                      w_d_o_scalars
-            decomp_k(c,j,i_pas_som) = (vmax_s3_m2 * m2_pool(c,j) / &
-                                       (km_s3_m2 + m2_pool(c,j))) * &
+            decomp_k(c,j,i_str_lit) = (vmax_l2_m1 * m1_conc(c,j) / &
+                                       (km_l2_m1 + m1_conc(c,j)) + &
+                                       vmax_l2_m2 * m2_conc(c,j) / &
+                                       (km_l2_m2 + m2_conc(c,j))) * &
                                       w_d_o_scalars
 
-            decomp_k(c,j,i_act_som) = k_s1_s3 * w_d_o_scalars
-            decomp_k(c,j,i_slo_som) = k_s2_s3 * w_d_o_scalars
+            decomp_k(c,j,i_avl_som) = (vmax_s1_m1 * m1_conc(c,j) / &
+                                       (km_s1_m1 + m1_conc(c,j)) + &
+                                       vmax_s1_m2 * m2_conc(c,j) / &
+                                       (km_s1_m2 + m2_conc(c,j))) * &
+                                      w_d_o_scalars
 
-            decomp_k(c,j,i_cop_mic) = tau_m1_s1 * m1_pool(c,j)**(densdep) * &
-                                      fphys(c) * w_d_o_scalars
-            decomp_k(c,j,i_cop_mic) = tau_m1_s2 * m1_pool(c,j)**(densdep) * &
-                                      fchem(c) * w_d_o_scalars
-            decomp_k(c,j,i_cop_mic) = tau_m1_s3 * m1_pool(c,j)**(densdep) * &
-                                      faval(c) *w_d_o_scalars
-            decomp_k(c,j,i_oli_mic) = tau_m2_s1 * m2_pool(c,j)**(densdep) * &
-                                      fphys(c) * w_d_o_scalars
-            decomp_k(c,j,i_oli_mic) = tau_m2_s2 * m2_pool(c,j)**(densdep) * &
-                                      fchem(c) * w_d_o_scalars
-            decomp_k(c,j,i_oli_mic) = tau_m2_s3 * m2_pool(c,j)**(densdep) * &
-                                      faval(c) * w_d_o_scalars
+! TODO Near line 1145 I see desorption for s3_s1
+            decomp_k(c,j,i_pas_som) = desorption * w_d_o_scalars
+! Controlled by microbial biomass through OXIDAT (line 1145 in testbed)
+! TODO OXIDAT = MICk * Vmax(K2) * SOMc / (KO(2) * Km(K2) + MICk) + &
+!               MICr * Vmax(R2) * SOMc / (KO(1) * Km(R2) + MICr)
+            decomp_k(c,j,i_slo_som) = TODO * w_d_o_scalars
+
+            decomp_k(c,j,i_cop_mic) = tau_m1 * m1_conc(c,j)**(densdep) * &
+                                      w_d_o_scalars
+            decomp_k(c,j,i_oli_mic) = tau_m2 * m2_conc(c,j)**(densdep) * &
+                                      w_d_o_scalars
             ! Same for cwd but only if fates not enabled; fates handles cwd on
             ! its own structure
-            ! TODO Kept cwd bc we do not have a MIMICS replacement for it.
-            !      Also this shows what the BGC decomp_k formulas looked like.
+            ! TODO This shows how BGC applied the spinup coefficients
             if (.not. use_fates) then
                decomp_k(c,j,i_cwd) = k_frag * w_d_o_scalars * spinup_geogterm_cwd(c)
             end if
