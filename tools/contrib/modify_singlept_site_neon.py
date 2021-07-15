@@ -30,7 +30,7 @@ To see the available options:
 -------------------------------------------------------------------
 """
 # TODO (NS)
-#--[] f file not found run subset_data.py
+#--[] If file not found run subset_data.py
 #--[] Clean up imports for both codes...
 #--[] Check against a list of valid names.
 #--[] List of valid neon sites for all scripts come from one place.
@@ -193,8 +193,10 @@ def find_surffile (surf_dir, site_name):
         surf_file (str): name of the surface dataset file
     """
 
-    sf_name = "surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_"+site_name+"*.nc"
-    surf_file = glob.glob(surf_dir+sf_name)
+    #sf_name = "surfdata_hist_16pfts_Irrig_CMIP6_simyr2000_"+site_name+"*.nc"
+    sf_name = "surfdata_hist_78pfts_CMIP6_simyr2000_"+site_name+"*.nc"
+    #surf_file = glob.glob(os.path.join(surf_dir,sf_name))
+    surf_file = glob.glob(surf_dir+"/"+sf_name)
 
     if len(surf_file)>1:
         print ("The following files found :", *surf_file, sep='\n- ')
@@ -203,6 +205,7 @@ def find_surffile (surf_dir, site_name):
     elif len(surf_file)==1:
         print ("File found : ")
         print (surf_file)
+        surf_file = surf_file[0]
     else:
         sys.exit('Surface data for this site '+site_name+
                  'was not found:'+ surf_file,'.',
@@ -232,7 +235,11 @@ def find_soil_structure (surf_file):
     """
     #TODO: What if not cheyenne? Self-contained depth info.
 
+    print ('------------')
+    print (surf_file)
+    print (type(surf_file))
     f1 = xr.open_dataset(surf_file)
+    print ('------------')
     #print (f1.attrs["Soil_texture_raw_data_file_name"])
 
     clm_input_dir = "/glade/p/cesmdata/cseg/inputdata/lnd/clm2/rawdata/"
@@ -354,6 +361,48 @@ def sort_print_soil_layers(obs_bot, soil_bot):
     print ("--------------------------------"+
            "--------------------------------")
 
+def check_neon_time():
+    """
+    A function to download and parse neon listing file.
+    """
+    listing_file = 'listing.csv'
+    url = 'https://neon-ncar.s3.data.neonscience.org/listing.csv'
+
+    download_file(url, listing_file)
+
+    df = pd.read_csv(listing_file)
+    df = df[df['object'].str.contains("_surfaceData.csv")]
+    #df=df.join(df['object'].str.split("/", expand=True))
+    dict_out = dict(zip(df['object'],df['last_modified']))
+    print (dict_out)
+    #df_out = df[['object','6','last_modified']]
+    #print (df['last_modified'])
+    #print (df_out)
+    #print (df['last_modified'].to_datetime())
+    return dict_out
+
+
+def download_file(url, fname):
+    """
+    Function to download a file.
+    Args:
+        url (str): 
+            url of the file for downloading
+        fname (str) : 
+            file name to save the downloaded file.
+    """
+    response = requests.get(url)
+
+    with open(fname, 'wb') as f:
+        f.write(response.content)
+
+    #-- Check if download status_code
+    if response.status_code == 200:
+        print('Download finished successfully for', fname,'.')
+    elif response.status_code == 404:
+        print('File '+fname+'was not available on the neon server:'+ url)
+
+
 
 def main():
 
@@ -362,6 +411,8 @@ def main():
     #-- debugging option
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
+
+    file_time = check_neon_time()
 
     #--  specify site from which to extract data 
     site_name=args.site_name
@@ -384,6 +435,8 @@ def main():
     df = pd.read_csv (neon_file)
 
     # -- Read surface dataset files
+    print (type(surf_file))
+    print ("surf_file:", surf_file)
     f1 = xr.open_dataset(surf_file)
 
     # -- Find surface dataset soil depth information
