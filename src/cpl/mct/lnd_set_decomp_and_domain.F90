@@ -1,9 +1,9 @@
 module lnd_set_decomp_and_domain
 
-  use shr_kind_mod , only : r8 => shr_kind_r8, cl=>shr_kind_cl
+  use shr_kind_mod , only : r8 => shr_kind_r8
   use spmdMod      , only : masterproc
   use clm_varctl   , only : iulog
-  use perf_mod     , only : t_startf, t_stopf, t_barrierf
+  use mct_mod      , only : mct_gsMap
 
   implicit none
   private ! except
@@ -15,6 +15,13 @@ module lnd_set_decomp_and_domain
   private :: surfrd_get_globmask  ! Reads global land mask (needed for setting domain decomp)
   private :: surfrd_get_grid      ! Read grid/ladnfrac data into domain (after domain decomp)
 
+  ! translation between local and global indices at gridcell level
+  type(mct_gsmap), pointer, public :: gsmap_global           
+
+  ! translation between local and global indices at gridcell level for multiple levels
+  ! needed for 3d soil moisture stream
+  type(mct_gsmap), target , public :: gsMap_lnd2Dsoi_gdc2glo 
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -24,13 +31,13 @@ contains
 
   subroutine lnd_set_decomp_and_domain_from_surfrd(noland, ni, nj)
 
-    ! Initialize ldecomp and ldomain data types
+    ! Initialize ldomain data types
 
     use clm_varpar    , only: nlevsoi
     use clm_varctl    , only: fatmlndfrc, use_soil_moisture_streams
-    use decompInitMod , only: decompInit_lnd, decompInit_lnd3D
+    use decompInitMod , only: decompInit_lnd
     use decompMod     , only: bounds_type, get_proc_bounds
-    use domainMod     , only: ldomain, domain_init, domain_check
+    use domainMod     , only: ldomain, domain_check
 
     ! input/output variables
     logical, intent(out) :: noland
@@ -61,7 +68,6 @@ contains
        noland = .false.
     end if
 
-    ! Initialize ldecomp data type
     ! Determine ctsm gridcell decomposition and processor bounds for gridcells
     call decompInit_lnd(ni, nj, amask)
     deallocate(amask)
@@ -112,7 +118,6 @@ contains
     integer               :: n,i,j       ! index
     integer               :: ier         ! error status
     type(file_desc_t)     :: ncid        ! netcdf id
-    character(len=256)    :: varname     ! variable name
     character(len=256)    :: locfn       ! local file name
     logical               :: readvar     ! read variable in or not
     integer , allocatable :: idata2d(:,:)
@@ -174,7 +179,7 @@ contains
   end subroutine surfrd_get_globmask
 
   !-----------------------------------------------------------------------
-  subroutine surfrd_get_grid(begg, endg, ldomain, filename, glcfilename)
+  subroutine surfrd_get_grid(begg, endg, ldomain, filename)
 
     ! Read the surface dataset grid related information:
     ! This is called after the domain decomposition has been created
@@ -182,28 +187,24 @@ contains
     ! - real longitude of grid cell (degrees)
 
     use clm_varcon   , only : spval, re, grlnd
-    use domainMod    , only : domain_type, domain_init, domain_clean, lon1d, lat1d
+    use domainMod    , only : domain_type, lon1d, lat1d, domain_init
     use fileutils    , only : getfil
     use abortutils   , only : endrun
     use shr_log_mod  , only : errMsg => shr_log_errMsg
-    use ncdio_pio    , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
-    use ncdio_pio    , only : ncd_io, check_var, ncd_inqfdims, check_dim_size, ncd_inqdid, ncd_inqdlen
+    use ncdio_pio    , only : file_desc_t, ncd_pio_openfile, ncd_pio_closefile
+    use ncdio_pio    , only : ncd_io, check_var, ncd_inqfdims, check_dim_size
     use pio
 
     ! input/output variables
     integer                    , intent(in)    :: begg, endg
     type(domain_type)          , intent(inout) :: ldomain     ! domain to init
     character(len=*)           , intent(in)    :: filename    ! grid filename
-    character(len=*) ,optional , intent(in)    :: glcfilename ! glc mask filename
 
     ! local variables
     type(file_desc_t)     :: ncid               ! netcdf id
     integer               :: beg                ! local beg index
     integer               :: end                ! local end index
     integer               :: ni,nj,ns           ! size of grid on file
-    integer               :: dimid,varid        ! netCDF id's
-    integer               :: start(1), count(1) ! 1d lat/lon array sections
-    integer               :: ier,ret            ! error status
     logical               :: readvar            ! true => variable is on input file
     logical               :: isgrid2d           ! true => file is 2d lat/lon
     logical               :: istype_domain      ! true => input file is of type domain
@@ -212,7 +213,7 @@ contains
     character(len=256)    :: locfn              ! local file name
     integer               :: n                  ! indices
     character(len=32) :: subname = 'surfrd_get_grid'     ! subroutine name
-!-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
 
     if (masterproc) then
        if (filename == ' ') then
@@ -290,5 +291,62 @@ contains
     call ncd_pio_closefile(ncid)
 
   end subroutine surfrd_get_grid
+
+  !------------------------------------------------------------------------------
+  subroutine decompInit_lnd3D(lni,lnj,lnk)
+    !
+    ! !DESCRIPTION:
+    !  Create a 3D decomposition gsmap for the global 2D grid with soil levels
+    !  as the 3rd dimesnion.
+    !
+    ! !USES:
+    use decompMod, only : gindex_global, bounds_type, get_proc_bounds
+    use spmdMod  , only : comp_id, mpicom
+    use mct_mod  , only : mct_gsmap_init 
+    !
+    ! !ARGUMENTS:
+    integer , intent(in) :: lni,lnj,lnk   ! domain global size
+    !
+    ! !LOCAL VARIABLES:
+    integer           :: m,n,k                 ! indices
+    integer           :: begg,endg,lsize,gsize ! used for gsmap init
+    integer           :: begg3d,endg3d
+    integer, pointer  :: gindex(:)             ! global index for gsmap init
+    type(bounds_type) :: bounds
+    !------------------------------------------------------------------------------
+
+    ! Initialize gsmap_lnd2dsoi_gdc2glo
+    call get_proc_bounds(bounds)
+    begg = bounds%begg; endg=bounds%endg
+
+    begg3d = (begg-1)*lnk + 1
+    endg3d = endg*lnk
+    lsize = (endg3d - begg3d + 1 )
+    allocate(gindex(begg3d:endg3d))
+    do k = 1, lnk
+       do n = begg,endg
+          m = (begg-1)*lnk + (k-1)*(endg-begg+1) + (n-begg+1)
+          gindex(m) = gindex_global(n-begg+1) + (k-1)*(lni*lnj)
+       enddo
+    enddo
+    gsize = lni * lnj * lnk
+    call mct_gsMap_init(gsMap_lnd2Dsoi_gdc2glo, gindex, mpicom, comp_id, lsize, gsize)
+
+    ! Diagnostic output
+
+    if (masterproc) then
+       write(iulog,*)' 3D GSMap'
+       write(iulog,*)'   longitude points               = ',lni
+       write(iulog,*)'   latitude points                = ',lnj
+       write(iulog,*)'   soil levels                    = ',lnk
+       write(iulog,*)'   gsize                          = ',gsize
+       write(iulog,*)'   lsize                          = ',lsize
+       write(iulog,*)'   bounds(gindex)                 = ',size(gindex)
+       write(iulog,*)
+    end if
+
+    deallocate(gindex)
+
+  end subroutine decompInit_lnd3D
 
 end module lnd_set_decomp_and_domain

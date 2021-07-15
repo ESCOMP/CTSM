@@ -321,7 +321,7 @@ contains
     use ESMF                      , only : ESMF_VM, ESMF_VMGet
     use clm_instMod               , only : lnd2atm_inst, lnd2glc_inst, water_inst
     use domainMod                 , only : ldomain
-    use decompMod                 , only : ldecomp, bounds_type, get_proc_bounds
+    use decompMod                 , only : bounds_type, get_proc_bounds
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
     use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column
