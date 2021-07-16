@@ -54,11 +54,11 @@ To remove NPL from your environment on Cheyenne/Casper:
 # - [x] Check if the desired input_dir exist
 # - [x] Add out_dir option here
 
-# - [~] Add options and choices for PBS 
+# - [~] Add options and choices for PBS
 
 # TODO []: error checking grid and mask between global attributes and ****.
 # for src files only and not dst files.
-#Negin:
+# Negin:
 # If we include this error check, we should require the users to add
 # grid and landmask attributes to their own raw dataset if they are
 # using their own data.
@@ -167,7 +167,7 @@ def get_parser():
         dest="overwrite",
     )
 
-    #TODO : necessary?
+    # TODO : necessary?
     # if host_name contains cheyenne
     if "cheyenne" or "casper" in host_name:
         parser.add_argument(
@@ -202,7 +202,6 @@ def get_pair(line):
     key, sep, value = line.strip().partition(" ")
     value = value.strip()
     return key, value
-
 
 
 def read_nl(namelist):
@@ -252,7 +251,6 @@ def read_nl(namelist):
         logging.debug(" " + k + " : " + v)
 
     return nl_d
-
 
 
 class PbsScheduler:
@@ -323,7 +321,8 @@ class PbsScheduler:
         queue,
         walltime,
         email=None,
-        mail_events=None):
+        mail_events=None,
+    ):
 
         self.account = account
         self.nproc = nproc
@@ -336,20 +335,17 @@ class PbsScheduler:
         self.mail_events = mail_events
 
         if self.email is None:
-            self.email =''
+            self.email = ""
 
         if self.mail_events is None:
-            self.mail_events ='n'
+            self.mail_events = "n"
 
     def __str__(self):
         return (
             str(self.__class__)
             + "\n"
             + "\n".join(
-                (
-                    str(item) + " = " + str(self.__dict__[item])
-                    for item in sorted(self.__dict__)
-                )
+                (str(item) + " = " + str(self.__dict__[item]) for item in self.__dict__)
             )
         )
 
@@ -358,7 +354,7 @@ class PbsScheduler:
 
         job_file = open(self.job_fname, "w")
 
-        print ("cmd:",cmd)
+        print("cmd:", cmd)
 
         self.job_template = (
             "#!/bin/tcsh\n"
@@ -367,8 +363,8 @@ class PbsScheduler:
             "#PBS -l walltime=" + self.walltime + "\n"
             "#PBS -q " + self.queue + "\n"
             "#PBS -j oe" + "\n\n"
-            "#PBS -m "+ self.mail_events+"\n"
-            #"#PBS -M " + self.email + "\n"
+            "#PBS -m " + self.mail_events + "\n"
+            # "#PBS -M " + self.email + "\n"
             "#PBS -l select="
             + self.nnodes
             + ":ncpus="
@@ -389,32 +385,30 @@ class PbsScheduler:
         qsub = subprocess.run(["qsub", self.job_fname], stdout=subprocess.PIPE)
         qsub_out = qsub.stdout.decode("utf-8")
 
-        print ("\n Job successfully submitted:", qsub_out,'\n')
+        print("\n Job successfully submitted:", qsub_out, "\n")
         job_id = re.findall(r"^\D*(\d+)", qsub_out)
-        self.job_id = ''.join(job_id)
-
+        self.job_id = "".join(job_id)
 
     def check_status(self):
         """
         Quick function to check the status of the submitted job.
         """
 
-        cmd= "qstat -x "+self.job_id + "|awk '{print $5}'"
+        cmd = "qstat -x " + self.job_id + "|awk '{print $5}'"
 
         tmp = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         out, err = tmp.communicate()
         out = out.decode("utf-8").split("\n")
         self.job_status = out[2]
 
-        #qsub = subprocess.run(["qstat","-x", job_id2], stdout=subprocess.PIPE)
-        #qsub_out = qsub.stdout.decode("utf-8").split("\n") 
-        #print (qsub_out)
+        # qsub = subprocess.run(["qstat","-x", job_id2], stdout=subprocess.PIPE)
+        # qsub_out = qsub.stdout.decode("utf-8").split("\n")
+        # print (qsub_out)
 
 
-
-
-class MakeMapper():
+class MakeMapper:
     """
     A class to encapsulate the necessary information for making
     a mapping / weight file
@@ -424,18 +418,18 @@ class MakeMapper():
     Attributes
     ----------
     src_mesh : MeshType
-        Source mesh in MeshType which contains the information of 
+        Source mesh in MeshType which contains the information of
         src mesh file.
 
     dst_mesh : MeshType
-        Destination mesh in MeshType which contains the information of 
+        Destination mesh in MeshType which contains the information of
         dst mesh file.
 
     map_dir : str
         Directory where you want to store your weight/mapping files.
 
     mapping_fname: str
-        Mapping /weight filename, if not explicitly given the 
+        Mapping /weight filename, if not explicitly given the
         class will create one based on src_mesh and dst_mesh information.
 
 
@@ -451,32 +445,34 @@ class MakeMapper():
         source and destination files resolutions and masks.
     """
 
-    def __init__(self, src_mesh, dst_mesh, map_dir, mapping_fname= None):
+    def __init__(self, src_mesh, dst_mesh, map_dir, mapping_fname=None):
 
-        if not isinstance (src_mesh, MeshType):
-            raise TypeError ("src_mesh should be an instance of MeshType.")
-        if not isinstance (dst_mesh, MeshType):
-            raise TypeError ("dst_mesh should be an instance of MeshType.")
+        if not isinstance(src_mesh, MeshType):
+            raise TypeError("src_mesh should be an instance of MeshType.")
+        if not isinstance(dst_mesh, MeshType):
+            raise TypeError("dst_mesh should be an instance of MeshType.")
 
         self.src_mesh = src_mesh
         self.dst_mesh = src_mesh
 
         self.map_dir = map_dir
 
-        #-- create mapping_fname if not given
+        # -- create mapping_fname if not given
         if mapping_fname is not None:
             self.mapping_fname = mapping_fname
         else:
             self.name_mappingfile()
 
-
     def __str__(self):
-        return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item])
-                for item in self.__dict__))
+        return (
+            str(self.__class__)
+            + "\n"
+            + "\n".join(
+                (str(item) + " = " + str(self.__dict__[item]) for item in self.__dict__)
+            )
+        )
 
-
-
-    def create_mapping_file(self,  pbs_job, overwrite, esmf_bin_path=None):
+    def create_mapping_file(self, pbs_job, overwrite, esmf_bin_path=None):
         """
         Create mapping/weight files based on src and dst resolutions.
         First, it uses ESMF_bin_path to find the ESMF_RegridWeightGen binary.
@@ -497,35 +493,36 @@ class MakeMapper():
         """
 
         if esmf_bin_path is None:
-            esmf_bin_path = os.environ.get('ESMF_BIN')
+            esmf_bin_path = os.environ.get("ESMF_BIN")
 
-        #TODO : remove the hard-coded esmf_bin_path?:
+        # TODO : remove the hard-coded esmf_bin_path?:
         esmf_bin_path = "/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/"
 
-
-        esmf_regrid = os.path.join(esmf_bin_path, 'ESMF_RegridWeightGen')
+        esmf_regrid = os.path.join(esmf_bin_path, "ESMF_RegridWeightGen")
 
         if not os.path.isfile(esmf_regrid):
             sys.exit(
-            "ERROR: \n"
-            + "\t ESMF_RegridWeightGen"+esmf_regrid+" does not exist. \n"
-            + "\t Please point to ESMF library using ESMF_BIN environment.")
+                "ERROR: \n"
+                + "\t ESMF_RegridWeightGen"
+                + esmf_regrid
+                + " does not exist. \n"
+                + "\t Please point to ESMF library using ESMF_BIN environment."
+            )
 
-
-        #-- check if mapping file already exists
+        # -- check if mapping file already exists
         mapping_file = os.path.join(self.map_dir, self.mapping_fname)
 
-        #-- If exists, skip mapping file creation unless overwrite
+        # -- If exists, skip mapping file creation unless overwrite
         if os.path.exists(mapping_file) and overwrite is False:
-            print ("Mapping file:"+mapping_file+" already exists!")
-            print ("If you'd like to overwrite these files, use --overwrite option!")
+            print("Mapping file:" + mapping_file + " already exists!")
+            print("If you'd like to overwrite these files, use --overwrite option!")
         else:
             cmd = esmf_regrid + " --ignore_unmapped"
 
             cmd = cmd + " -s " + self.src_mesh.mesh_file
             cmd = cmd + " -d " + self.dst_mesh.mesh_file
 
-            #TODO (NS): Do we ever need to use other methods?
+            # TODO (NS): Do we ever need to use other methods?
             cmd = cmd + " -m conserve "
 
             cmd = cmd + " -w " + self.mapping_fname
@@ -537,12 +534,22 @@ class MakeMapper():
 
             cmd = cmd + lrg_args
 
-            #-- options depracted. remove in future.
+            # -- options depracted. remove in future.
             cmd = cmd + "  --src_type SCRIP  --dst_type SCRIP"
 
             cmd = cmd + "--no_log"
-            job_fname = "regrid_" + self.src_mesh.res + "-"+self.src_mesh.mask+"_to_" + self.dst_mesh.res +"_"+self.dst_mesh.mask+".sh"
-            #job_fname = "regrid_" + self.mapping_fname + ".sh"
+            job_fname = (
+                "regrid_"
+                + self.src_mesh.res
+                + "-"
+                + self.src_mesh.mask
+                + "_to_"
+                + self.dst_mesh.res
+                + "_"
+                + self.dst_mesh.mask
+                + ".sh"
+            )
+            # job_fname = "regrid_" + self.mapping_fname + ".sh"
 
             pbs_job.write_job_pbs(job_fname, cmd)
             pbs_job.schedule()
@@ -561,13 +568,22 @@ class MakeMapper():
         Returns:
             mapping_fname (str): mapping/weight file name.
         """
-        mapping_fname = "map_" + self.src_mesh.res + "_" + self.src_mesh.mask + "_to_" + self.dst_mesh.res + "_" +self.dst_mesh.mask + ".nc"
+        mapping_fname = (
+            "map_"
+            + self.src_mesh.res
+            + "_"
+            + self.src_mesh.mask
+            + "_to_"
+            + self.dst_mesh.res
+            + "_"
+            + self.dst_mesh.mask
+            + ".nc"
+        )
         self.mapping_fname = mapping_fname
 
 
-
-class MeshType : 
-    '''
+class MeshType:
+    """
     A simple wrapper class to encapsulate mesh files.
 
     ...
@@ -589,7 +605,7 @@ class MeshType :
 
     Methods
     -------
-    figure_mesh_type: 
+    figure_mesh_type:
         Figure out what the mesh type is based on the filename. For example, files
         starting with SCRIP are SCRIP grid files.
 
@@ -600,9 +616,9 @@ class MeshType :
     check_meta_res:
         TODO: do we want this here?
 
-    '''
+    """
 
-    def __init__(self, mesh_file, mesh_type= None, res=None, mask= None):
+    def __init__(self, mesh_file, mesh_type=None, res=None, mask=None):
 
         # -- check if the mesh file exists
         # TODO: What should they do if mesh file does not exist
@@ -615,26 +631,22 @@ class MeshType :
         self.res = res
         self.mask = mask
 
-        if (self.mesh_type is None):
+        if self.mesh_type is None:
             self.figure_mesh_type()
 
-        #-- parse mesh_file for res and mask if not given
+        # -- parse mesh_file for res and mask if not given
         if (self.res is None) or (self.mask is None):
             self.parse_mesh_file()
 
         # TODO: What if there are miss-match between user res and mesh res?
-        #self.check_meta_res()
-
+        # self.check_meta_res()
 
     def __str__(self):
         return (
             str(self.__class__)
             + "\n"
             + "\n".join(
-                (
-                    str(item) + " = " + str(self.__dict__[item])
-                    for item in self.__dict__
-                )
+                (str(item) + " = " + str(self.__dict__[item]) for item in self.__dict__)
             )
         )
 
@@ -655,7 +667,6 @@ class MeshType :
             mask (str) : mesh mask from mesh filename
         """
 
-
         mesh_fname = self.mesh_file.rsplit("/")[-1]
         mesh_items = mesh_fname.rsplit("_")
 
@@ -671,19 +682,18 @@ class MeshType :
 
     def figure_mesh_type(self):
         ds = xr.open_dataset(self.mesh_file)
-        if 'Conventions' in ds.attrs:
-            print ("akhdkjhfasdkfjslkd")
+        if "Conventions" in ds.attrs:
+            print("akhdkjhfasdkfjslkd")
         if "SCRIP" in self.mesh_file:
             self.mesh_type = "SCRIP"
-        #else:
-        #TODO: TALK to SAM about thi
+        # else:
+        # TODO: TALK to SAM about thi
 
-    def check_meta_res (self):
+    def check_meta_res(self):
         ds = xr.open_dataset(self.mesh_file)
-        #print (ds.attrs['input_file'])
-        input_file = ds.Attributes['input_file']
-        #if 'input_file' in ds.attrs:
-
+        # print (ds.attrs['input_file'])
+        input_file = ds.Attributes["input_file"]
+        # if 'input_file' in ds.attrs:
 
 
 def main():
@@ -714,12 +724,11 @@ def main():
 
     # -- dst mesh file
     dst_mesh_file = nl_d["dst_mesh_file"]
-    dst_mesh = MeshType (dst_mesh_file)
+    dst_mesh = MeshType(dst_mesh_file)
 
     logging.debug("\n dst_mesh_file  = " + dst_mesh_file + ".\n")
     logging.debug("\n dst_mesh  :")
     logging.debug(dst_mesh)
-
 
     # -- src mesh files
     src_flist = [
@@ -742,9 +751,9 @@ def main():
         "mksrf_flai",
         "mksrf_dyn_lu",
         "mksrf_fvic",
-             ]
+    ]
 
-    #TODO: check the defaults (how to merge in in the class when Casper and Cheyenne are not consistent??)
+    # TODO: check the defaults (how to merge in in the class when Casper and Cheyenne are not consistent??)
 
     account = "P93300606"
     nproc = "2"
@@ -757,7 +766,7 @@ def main():
     for src_file in tqdm.tqdm(src_flist):
         src_fname = nl_d[src_file].strip()
         logging.debug("\n dst_mesh_file  = " + dst_mesh_file + ".\n")
-        logging.debug("\n"+src_file+ " : "+ src_fname)
+        logging.debug("\n" + src_file + " : " + src_fname)
 
         # -- check if src_file exist
         if not os.path.isfile(src_fname):
@@ -771,20 +780,19 @@ def main():
             src_mesh_file = os.path.join(input_dir, ds.src_mesh_file)
             src_mesh = MeshType(src_mesh_file)
 
-            #--check res and metadata
+            # --check res and metadata
 
-            #-- scheduler class
-            pbs_job = PbsScheduler(
-                    account, nproc, nnodes, mem, ppn, queue, walltime)
+            # -- scheduler class
+            pbs_job = PbsScheduler(account, nproc, nnodes, mem, ppn, queue, walltime)
 
-            regridder = MakeMapper(src_mesh, dst_mesh,map_dir)
+            regridder = MakeMapper(src_mesh, dst_mesh, map_dir)
 
             logging.debug("\n regridder: \n")
             logging.debug(regridder)
 
             regridder.create_mapping_file(pbs_job, overwrite)
-            #time.sleep(60)
-            #pbs_job.check_status()
+            # time.sleep(60)
+            # pbs_job.check_status()
 
 
 if __name__ == "__main__":
