@@ -2,7 +2,6 @@
 
 # 2020-12-13                Negin Sobhani
 
-
 """
 |------------------------------------------------------------------|
 |---------------------  Instructions  -----------------------------|
@@ -10,8 +9,8 @@
 This Python script is part of the simplified toolchain for creating
 the surface dataset for ctsm cases.
 
-After creating the namelist/control file using ./gen_mksurf_namelist.py
-using the  options for your desired case, you should run :
+After creating the namelist/control file with ./gen_mksurf_namelist.py
+using the options for your desired case, you should run :
 
 ./mkmap_data.py --namelist [namelist from ./gen_mksurf_namelist.py]
 
@@ -55,6 +54,8 @@ To remove NPL from your environment on Cheyenne/Casper:
 # - [x] Should read the correct namelist and check if it exist.
 # - [x] Check if the desired input_dir exist
 # - [ ] Check if the given namelist exist
+# - [ ] Check imports and clean-ups
+# - [ ] Add out_dir option here
 # - [ ] Download if the data does not exist: instead of download here download in gen_mksur_namelist
 
 
@@ -69,8 +70,8 @@ import subprocess
 import argparse
 import logging
 import shlex
-import xarray as xr
 
+import xarray as xr
 
 from datetime import datetime
 from getpass import getuser
@@ -134,6 +135,7 @@ def get_parser():
         default=True,
     )
 
+    #TODO : necessary?
     # if host_name contains cheyenne
     if "cheyenne" or "casper" in host_name:
         parser.add_argument(
@@ -169,25 +171,6 @@ def get_pair(line):
     value = value.strip()
     return key, value
 
-
-def name_weightfile(src_res, src_mask, dst_res, dst_mask):
-    """
-    Function for creating weight file name based on
-    source and destination files resolutions and masks.
-
-    Args:
-        src_res (str) : Source file resolution
-        src_mask (str) : Source file mask
-        dst_res (str) : Destination file resolution
-        dst_mask (str) : Destination file mask
-
-    Returns:
-        weight_fname (str): mapping/weight file name.
-    """
-    weight_fname = (
-        "map_" + src_res + "_" + src_mask + "_to_" + dst_res + "_" + dst_mask + ".nc"
-    )
-    return weight_fname
 
 
 def read_nl(namelist):
@@ -238,44 +221,6 @@ def read_nl(namelist):
 
     return nl_d
 
-
-def parse_mesh_fname(mesh_fname):
-    """
-    This function parse mesh filename
-    to find the corresponding resolution and mask.
-    It assumes this information in in the mesh_fname.
-
-    Args:
-        mesh_fname (str) : Mesh filename
-
-    Raises:
-        Error if mesh file does not exists.
-
-    Returns:
-        res (str) : mesh file resolution from mesh filename
-        mask (str) : mesh mask from mesh filename
-    """
-
-    # -- check if the mesj file exists
-    if not os.path.isfile(mesh_fname):
-        print("mesh filename :", mesh_fname)
-        print("Error: mesh_fname :", mesh_fname, "does not exist!")
-
-        # TODO: What should they do if mesh file does not exist
-
-    print("mesh_fname : ", mesh_fname)
-
-    mesh_fname = mesh_fname.rsplit("/")[-1]
-    mesh_fname = mesh_fname.rsplit("_")
-
-    res = mesh_fname[1]
-    mask = mesh_fname[2]
-
-    # -- verbose print of res and mask in debug mode.
-    logging.debug("  ==> res  : " + res)
-    logging.debug("  ==> mask : " + mask)
-
-    return res, mask
 
 
 # TODO []: error checking grid and mask between global attributes and ****.
@@ -415,6 +360,174 @@ class PbsScheduler:
 
         print("------")
 
+class MakeMapper():
+
+    def __init__(self, src_mesh, dst_mesh, mapping_fname= None):
+
+        self.src_mesh = src_mesh
+        self.dst_mesh = src_mesh
+        if mapping_fname is not None:
+            self.mapping_fname = mapping_fname
+        else:
+            self.name_weightfile()
+
+    def __str__(self):
+        return (
+            str(self.__class__)
+            + "\n"
+            + "\n".join(
+                (
+                    str(item) + " = " + str(self.__dict__[item])
+                    for item in sorted(self.__dict__)
+                )
+            )
+        )
+
+    def build_mapping_file(self):
+            esmf_bin_path = "/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/"
+            esmf_regrid = esmf_bin_path + "/ESMF_RegridWeightGen"
+
+            cmd = esmf_regrid + " --ignore_unmapped"
+
+            cmd = cmd + " -s " + self.src_mesh.mesh_file + " -d " + self.dst_mesh.mesh_file
+            cmd = cmd + " -m conserve " + " -w " + self.mapping_fname
+
+            lrg_args = " "
+            if self.src_mesh.res == "3minx3min" or "1km-merge-10min":
+                lrg_args = " --64bit_offset "
+            cmd = cmd + lrg_args
+            cmd = cmd + "  --src_type SCRIP  --dst_type SCRIP"
+
+            account = "P93300606"
+            nproc = "2"
+            nnodes = "2"
+            mem = "109GB"
+            ppn = "16"
+            queue = "regular"
+            walltime = "12:00:00"
+            email = "negins@ucar.edu"
+
+            # scheduler class:
+            pbs_job = PbsScheduler(
+                account, nproc, nnodes, mem, ppn, queue, walltime, email
+            )
+
+            job_fname = "regrid_submit" + self.mapping_fname + ".sh"
+
+            print("cmd:", cmd)
+            pbs_job.write_job_pbs(job_fname, cmd)
+            pbs_job.schedule()
+            # print (pbs_job)
+
+    def name_weightfile(self):
+        """
+        Function for creating weight file name based on
+        source and destination files resolutions and masks.
+
+        Args:
+            src_res (str) : Source file resolution
+            src_mask (str) : Source file mask
+            dst_res (str) : Destination file resolution
+            dst_mask (str) : Destination file mask
+
+        Returns:
+            weight_fname (str): mapping/weight file name.
+        """
+        weight_fname = "map_" + self.src_mesh.res + "_" + self.src_mesh.mask + "_to_" + self.dst_mesh.res + "_" +self.dst_mesh.mask + ".nc"
+        
+        self.mapping_fname = weight_fname
+
+
+
+class MeshType : 
+    '''
+    A simple wrapper class to encapsulate mesh files.
+    '''
+
+    def __init__(self, mesh_file, mesh_type= None, res=None, mask= None):
+
+        # -- check if the mesh file exists
+        # TODO: What should they do if mesh file does not exist
+        if not os.path.isfile(mesh_file):
+            print("Warning Mesh file:", mesh_file, "does not exist.")
+
+        self.mesh_file = mesh_file
+        self.mesh_type = mesh_type
+
+        self.res = res
+        self.mask = mask
+
+        if (self.mesh_type is None):
+            self.figure_mesh_type()
+
+        #-- parse mesh_file for res and mask if not given
+        if (self.res is None) or (self.mask is None):
+            self.parse_mesh_file()
+        #self.check_meta_res()
+
+
+    def __str__(self):
+        return (
+            str(self.__class__)
+            + "\n"
+            + "\n".join(
+                (
+                    str(item) + " = " + str(self.__dict__[item])
+                    for item in self.__dict__
+                )
+            )
+        )
+
+    def parse_mesh_file(self):
+        """
+        This function parse mesh filename
+        to find the corresponding resolution and mask.
+        It assumes this information in in the mesh_file.
+
+        Args:
+            mesh_file (str) : Mesh filename
+
+        Raises:
+            Error if mesh file does not exists.
+
+        Returns:
+            res (str) : mesh file resolution from mesh filename
+            mask (str) : mesh mask from mesh filename
+        """
+
+
+        mesh_fname = self.mesh_file.rsplit("/")[-1]
+        mesh_items = mesh_fname.rsplit("_")
+
+        res = mesh_items[1]
+        mask = mesh_items[2]
+
+        # -- verbose print of res and mask in debug mode.
+        logging.debug("  ==> res  : " + res)
+        logging.debug("  ==> mask : " + mask)
+
+        self.res = res
+        self.mask = mask
+
+    def figure_mesh_type(self):
+        ds = xr.open_dataset(self.mesh_file)
+        if 'Conventions' in ds.attrs:
+            print ("akhdkjhfasdkfjslkd")
+        if "SCRIP" in self.mesh_file:
+            self.mesh_type = "SCRIP"
+        #else:
+        #TODO: TALK to SAM about thi
+
+    def check_meta_res (self):
+        ds = xr.open_dataset(self.mesh_file)
+        print (ds.attrs['input_file'])
+        if 'input_file' in ds.attrs:
+            print("123")
+
+
+
+
+
 
 def main():
     args = get_parser().parse_args()
@@ -446,7 +559,8 @@ def main():
     print("dst_mesh_file :", dst_mesh_file)
     print("-----------------------")
 
-    dst_res, dst_mask = parse_mesh_fname(dst_mesh_file)
+    dst_mesh = MeshType (dst_mesh_file)
+    print (dst_mesh)
 
     # src mesh files
     src_flist = [
@@ -468,7 +582,7 @@ def main():
         "mksrf_fsoicol",
         "mksrf_flai",
         "mksrf_dyn_lu" "mksrf_fvic",
-    ]
+             ]
 
     for src_file in tqdm.tqdm(src_flist):
         src_fname = nl_d[src_file].strip()
@@ -483,19 +597,29 @@ def main():
         else:
             ds = xr.open_dataset(src_fname)
             src_mesh_file = input_dir + ds.src_mesh_file
-            src_res, src_mask = parse_mesh_fname(src_mesh_file)
+            src_mesh = MeshType(src_mesh_file)
+            #src_res, src_mask = parse_mesh_fname(src_mesh_file)
 
             lrg_args = " "
-            if src_res == "3minx3min" or "1km-merge-10min":
+            if src_mesh.res == "3minx3min" or "1km-merge-10min":
                 lrg_args = " --64bit_offset "
 
-            w_fname = name_weightfile(src_res, src_mask, dst_res, dst_mask)
+            #w_fname = name_weightfile(src_res, src_mask, dst_res, dst_mask)
 
-            print("src_mesh_file is : ", src_mesh_file)
-            print("weight file is : ", w_fname)
+            remapper = MakeMapper(src_mesh, dst_mesh)
+
+            print (remapper)
+
+            #print("src_mesh_file is : ", src_mesh_file)
+            #print("weight file is : ", w_fname)
 
             # TODO : How to get esmf binary path when not on cheyenne.
 
+
+            
+            remapper.build_mapping_file()
+            print ('exit')
+            exit()
             esmf_bin_path = "/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/"
             esmf_regrid = esmf_bin_path + "/ESMF_RegridWeightGen"
 
@@ -527,47 +651,6 @@ def main():
             # pbs_job.schedule()
             # print (pbs_job)
             # exit()
-
-            # job_fname = "regrid_submit.sh"
-            # job_file= open (job_fname, 'w')
-
-            # job scheduler for myself:
-            # job_template = ( \
-            #        "#!/bin/tcsh\n"
-            #        "#PBS -N ctsm_nwp"+"\n"
-            #        "#PBS -A P93300606"+"\n"
-            #        "#PBS -l walltime=12:00:00"+"\n"
-            #        "#PBS -q regular"+"\n"
-            #        "#PBS -j oe"+"\n\n"
-            #        #"#PBS -l select=4:ncpus=16:mpiprocs=16"+"\n"
-            #        "#PBS -l select=4:ncpus=2:mpiprocs=2:mem=109GB"+"\n"
-            #        "set MPI_SHEPHERD=true"+"\n"
-            #        "mpiexec_mpt "+cmd+"\n"
-            #        )
-
-            # job_file.write(job_template)
-            # job_file.close()
-
-            # cmd = "qsub "+job_fname
-
-            # if os.path.isfile(w_fname):
-            #    print ('weight file ', w_fname, 'already exists!')
-            # else:
-            #    print (cmd)
-            #    os.system(cmd)
-            # print ('-----------------------')
-
-    """
-     /glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/ESMF_RegridWeightGen
-     --ignore_unmapped -s /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_AVHRR_c110228.nc  -d
-     /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc -m conserve -w
-     map_0.5x0.5_AVHRR_to_10x15_nomask_aave_da_c201215.nc --src_type SCRIP  --dst_type SCRIP 
-
-    /glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default//ESMF_RegridWeightGen -s
-    /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/SCRIPgrid_0.25x0.25_MODIS_c170321.nc -d
-    /glade/p/cesm/cseg/inputdata/lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc -m conserve  -w
-    map_0.25x0.25_MODIS_to_10x15nomask.nc  --src_type SCRIP  --dst_type SCRIP
-    """
 
 
 if __name__ == "__main__":
