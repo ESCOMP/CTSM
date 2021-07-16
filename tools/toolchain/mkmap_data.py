@@ -58,30 +58,31 @@ To remove NPL from your environment on Cheyenne/Casper:
 
 # TODO []: error checking grid and mask between global attributes and ****.
 # for src files only and not dst files.
-# If we include this erro check, we should require the users to add
+#Negin:
+# If we include this error check, we should require the users to add
 # grid and landmask attributes to their own raw dataset if they are
 # using their own data.
 
 # TODO : How to get esmf binary path when not on cheyenne.
-# 2 mechanisms for esmf_path:
+# 2 mechanisms for esmf_path: either environment or command line
 
-# - [ ] Add docs and notes for functions.
-# - [ ] Job submission classes for different machines.
-# - [ ] Check imports and clean-ups
+# - [~] Add docs and notes for functions.
+# - [ ] Job submission classes for different machines. --> provide examples?
+# - [~] Check imports and clean-ups
 # - [ ] Download if the data does not exist: instead of download here download in gen_mksur_namelist?
 
 from __future__ import print_function
 
 # python standard libraries
 import os
-import sys
 import re
+import sys
 import tqdm
-import subprocess
-import argparse
-import logging
-import shlex
 import time
+import shlex
+import logging
+import argparse
+import subprocess
 
 import xarray as xr
 
@@ -468,17 +469,12 @@ class MakeMapper():
         else:
             self.name_mappingfile()
 
+
     def __str__(self):
-        return (
-            str(self.__class__)
-            + "\n"
-            + "\n".join(
-                (
-                    str(item) + " = " + str(self.__dict__[item])
-                    for item in sorted(self.__dict__)
-                )
-            )
-        )
+        return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' + str(self.__dict__[item])
+                for item in self.__dict__))
+
+
 
     def create_mapping_file(self,  pbs_job, overwrite, esmf_bin_path=None):
         """
@@ -529,7 +525,7 @@ class MakeMapper():
             cmd = cmd + " -s " + self.src_mesh.mesh_file
             cmd = cmd + " -d " + self.dst_mesh.mesh_file
 
-            #TODO (SAM): Do we ever need to use other methods?
+            #TODO (NS): Do we ever need to use other methods?
             cmd = cmd + " -m conserve "
 
             cmd = cmd + " -w " + self.mapping_fname
@@ -544,10 +540,9 @@ class MakeMapper():
             #-- options depracted. remove in future.
             cmd = cmd + "  --src_type SCRIP  --dst_type SCRIP"
 
+            cmd = cmd + "--no_log"
             job_fname = "regrid_" + self.src_mesh.res + "-"+self.src_mesh.mask+"_to_" + self.dst_mesh.res +"_"+self.dst_mesh.mask+".sh"
             #job_fname = "regrid_" + self.mapping_fname + ".sh"
-
-            #print("cmd:", cmd)
 
             pbs_job.write_job_pbs(job_fname, cmd)
             pbs_job.schedule()
@@ -574,6 +569,37 @@ class MakeMapper():
 class MeshType : 
     '''
     A simple wrapper class to encapsulate mesh files.
+
+    ...
+
+    Attributes
+    ----------
+    mesh_file : str
+        Cheyenne or Casper project code or account code
+
+    mesh_type : str
+        Mesh Type either script or ESMF
+
+    res : str
+        Resolution either by the user or constructed by the class from filename
+
+    mask : str
+        Mask either by the user or constructed by the class from filename
+
+
+    Methods
+    -------
+    figure_mesh_type: 
+        Figure out what the mesh type is based on the filename. For example, files
+        starting with SCRIP are SCRIP grid files.
+
+    parse_mesh_file:
+        If res and mask is not given parse mesh filename to find mask and resolution
+        Assuming resolution and mask information is in the filename
+
+    check_meta_res:
+        TODO: do we want this here?
+
     '''
 
     def __init__(self, mesh_file, mesh_type= None, res=None, mask= None):
@@ -595,6 +621,8 @@ class MeshType :
         #-- parse mesh_file for res and mask if not given
         if (self.res is None) or (self.mask is None):
             self.parse_mesh_file()
+
+        # TODO: What if there are miss-match between user res and mesh res?
         #self.check_meta_res()
 
 
@@ -652,9 +680,9 @@ class MeshType :
 
     def check_meta_res (self):
         ds = xr.open_dataset(self.mesh_file)
-        print (ds.attrs['input_file'])
-        if 'input_file' in ds.attrs:
-            print("123")
+        #print (ds.attrs['input_file'])
+        input_file = ds.Attributes['input_file']
+        #if 'input_file' in ds.attrs:
 
 
 
@@ -716,6 +744,8 @@ def main():
         "mksrf_fvic",
              ]
 
+    #TODO: check the defaults (how to merge in in the class when Casper and Cheyenne are not consistent??)
+
     account = "P93300606"
     nproc = "2"
     nnodes = "2"
@@ -723,11 +753,11 @@ def main():
     ppn = "16"
     queue = "regular"
     walltime = "12:00:00"
-    #email = "negins@ucar.edu"
 
     for src_file in tqdm.tqdm(src_flist):
         src_fname = nl_d[src_file].strip()
-        logging.debug(src_file, " : ", src_fname)
+        logging.debug("\n dst_mesh_file  = " + dst_mesh_file + ".\n")
+        logging.debug("\n"+src_file+ " : "+ src_fname)
 
         # -- check if src_file exist
         if not os.path.isfile(src_fname):
@@ -741,8 +771,9 @@ def main():
             src_mesh_file = os.path.join(input_dir, ds.src_mesh_file)
             src_mesh = MeshType(src_mesh_file)
 
-            #--check res and metadata?
-            # scheduler class:
+            #--check res and metadata
+
+            #-- scheduler class
             pbs_job = PbsScheduler(
                     account, nproc, nnodes, mem, ppn, queue, walltime)
 
@@ -752,10 +783,9 @@ def main():
             logging.debug(regridder)
 
             regridder.create_mapping_file(pbs_job, overwrite)
-            time.sleep(60)
-            pbs_job.check_status()
-            print ('exit')
-            exit()
+            #time.sleep(60)
+            #pbs_job.check_status()
+
 
 if __name__ == "__main__":
     main()
