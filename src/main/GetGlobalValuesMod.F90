@@ -147,57 +147,65 @@ contains
     integer :: igrc, ilun, icol, ipft 
     !-----------------------------------------------------------------------
 
-    write(iulog,*)'proc_id = ',iam
-
     if (trim(clmlevel) == nameg) then
 
        igrc = decomp_index
-       write(iulog,*)'local  gridcell index = ',igrc
-       write(iulog,*)'global gridcell index = ',GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
-       write(iulog,*)'gridcell longitude    = ',grc%londeg(igrc)
-       write(iulog,*)'gridcell latitude     = ',grc%latdeg(igrc)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  gridcell index = ', igrc
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
+            GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
 
     else if (trim(clmlevel) == namel) then
 
        ilun = decomp_index
        igrc = lun%gridcell(ilun)
-       write(iulog,*)'local  landunit index = ',ilun
-       write(iulog,*)'global landunit index = ',GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
-       write(iulog,*)'global gridcell index = ',GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
-       write(iulog,*)'gridcell longitude    = ',grc%londeg(igrc)
-       write(iulog,*)'gridcell latitude     = ',grc%latdeg(igrc)
-       write(iulog,*)'landunit type         = ',lun%itype(decomp_index)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  landunit index = ', ilun
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
+            GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
+            GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(decomp_index)
 
     else if (trim(clmlevel) == namec) then
 
        icol = decomp_index
        ilun = col%landunit(icol)
        igrc = col%gridcell(icol)
-       write(iulog,*)'local  column   index = ',icol
-       write(iulog,*)'global column   index = ',GetGlobalIndex(decomp_index=icol, clmlevel=namec)
-       write(iulog,*)'global landunit index = ',GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
-       write(iulog,*)'global gridcell index = ',GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
-       write(iulog,*)'gridcell longitude    = ',grc%londeg(igrc)
-       write(iulog,*)'gridcell latitude     = ',grc%latdeg(igrc)
-       write(iulog,*)'column   type         = ',col%itype(icol)
-       write(iulog,*)'landunit type         = ',lun%itype(ilun)
-   
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  column   index = ', icol
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', &
+            GetGlobalIndex(decomp_index=icol, clmlevel=namec)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
+            GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
+            GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': column   type         = ', col%itype(icol)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(ilun)
+
     else if (trim(clmlevel) == namep) then
 
        ipft = decomp_index
        icol = patch%column(ipft)
        ilun = patch%landunit(ipft)
        igrc = patch%gridcell(ipft)
-       write(iulog,*)'local  patch      index = ',ipft
-       write(iulog,*)'global patch      index = ',GetGlobalIndex(decomp_index=ipft, clmlevel=namep)
-       write(iulog,*)'global column   index = ',GetGlobalIndex(decomp_index=icol, clmlevel=namec)
-       write(iulog,*)'global landunit index = ',GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
-       write(iulog,*)'global gridcell index = ',GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
-       write(iulog,*)'gridcell longitude    = ',grc%londeg(igrc)
-       write(iulog,*)'gridcell latitude     = ',grc%latdeg(igrc)
-       write(iulog,*)'pft      type         = ',patch%itype(ipft)
-       write(iulog,*)'column   type         = ',col%itype(icol)
-       write(iulog,*)'landunit type         = ',lun%itype(ilun)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  patch    index = ', ipft
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global patch    index = ', &
+            GetGlobalIndex(decomp_index=ipft, clmlevel=namep)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', &
+            GetGlobalIndex(decomp_index=icol, clmlevel=namec)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
+            GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
+            GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': pft      type         = ', patch%itype(ipft)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': column   type         = ', col%itype(icol)
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(ilun)
 
     else		       
        call shr_sys_abort('clmlevel '//trim(clmlevel)//'not supported '//errmsg(sourcefile, __LINE__))
