@@ -834,8 +834,6 @@ module CLMFatesInterfaceMod
             this%fates(nc)%bc_in(s)%wind24_pa(ifp) = &
                   atm2lnd_inst%wind24_patch(p)
 
-            this%fates(nc)bc_in(s)%snocan_pa(ifp) = &
-                     
          end do
          
          if(use_fates_planthydro)then
