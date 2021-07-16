@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 # 2020-12-13                Negin Sobhani
 
 """
@@ -49,15 +50,25 @@ To remove NPL from your environment on Cheyenne/Casper:
 """
 
 # TODO (NS):
-# - [ ] Add docs and notes for functions.
-# - [ ] Job submission classes for different machines.
 # - [x] Should read the correct namelist and check if it exist.
 # - [x] Check if the desired input_dir exist
-# - [ ] Check if the given namelist exist
-# - [ ] Check imports and clean-ups
-# - [ ] Add out_dir option here
-# - [ ] Download if the data does not exist: instead of download here download in gen_mksur_namelist
+# - [x] Add out_dir option here
 
+# - [~] Add options and choices for PBS 
+
+# TODO []: error checking grid and mask between global attributes and ****.
+# for src files only and not dst files.
+# If we include this erro check, we should require the users to add
+# grid and landmask attributes to their own raw dataset if they are
+# using their own data.
+
+# TODO : How to get esmf binary path when not on cheyenne.
+# 2 mechanisms for esmf_path:
+
+# - [ ] Add docs and notes for functions.
+# - [ ] Job submission classes for different machines.
+# - [ ] Check imports and clean-ups
+# - [ ] Download if the data does not exist: instead of download here download in gen_mksur_namelist?
 
 from __future__ import print_function
 
@@ -133,6 +144,16 @@ def get_parser():
         action="store_true",
         dest="debug",
         default=True,
+    )
+    parser.add_argument(
+        "--overwrite",
+        help="""
+                Flag to overwrite the existing mapping files.
+                [default: %(default)s]
+             """,
+        action="store_true",
+        dest="overwrite",
+        default=False,
     )
 
     #TODO : necessary?
@@ -223,13 +244,6 @@ def read_nl(namelist):
 
 
 
-# TODO []: error checking grid and mask between global attributes and ****.
-# for src files only and not dst files.
-# If we include this erro check, we should require the users to add
-# grid and landmask attributes to their own raw dataset if they are
-# using their own data.
-
-
 class PbsScheduler:
     """
     A class to encapsulate the scheduler object compatible
@@ -275,6 +289,13 @@ class PbsScheduler:
 
     Methods
     -------
+    write_job_pbs
+        write a tcsh PBS script to the local directory
+        for submitting each job.
+
+    schedule
+        submit the tcsh PBS script to the queue using
+        qsub $job_fname
 
     """
 
@@ -288,8 +309,7 @@ class PbsScheduler:
         queue,
         walltime,
         email=None,
-        mail_events=None,
-    ):
+        mail_events=None):
 
         self.account = account
         self.nproc = nproc
@@ -300,7 +320,9 @@ class PbsScheduler:
         self.walltime = walltime
         self.email = email
         self.mail_events = mail_events
-        # self.mail_events = "abe" if mail_events is not None
+
+        if self.mail_events is None:
+            self.mail_events ='n'
 
     def __str__(self):
         return (
@@ -326,10 +348,8 @@ class PbsScheduler:
             "#PBS -l walltime=" + self.walltime + "\n"
             "#PBS -q " + self.queue + "\n"
             "#PBS -j oe" + "\n\n"
-            # "#PBS -m "+ self.mail_events+"\n"
+            "#PBS -m "+ self.mail_events+"\n"
             "#PBS -M " + self.email + "\n"
-            # "#PBS -l select=4:ncpus=16:mpiprocs=16"+"\n"
-            # "#PBS -l select=4:ncpus=2:mpiprocs=2:mem=109GB"+"\n"
             "#PBS -l select="
             + self.nnodes
             + ":ncpus="
@@ -346,30 +366,71 @@ class PbsScheduler:
         job_file.close()
 
     def schedule(self):
-        # cmd = "qsub "+self.job_fname
 
-        # print (cmd)
-        # khar = subprocess.check_output(["qsub", self.job_fname])
-        khar = subprocess.run(["qsub", self.job_fname], stdout=subprocess.PIPE)
-        # os.system(cmd)
+        # qsub = subprocess.check_output(["qsub", self.job_fname])
 
-        print("------")
-        test = khar.stdout.decode("utf-8")
-        print(test)
-        print(re.findall(r"^\D*(\d+)", test))
+        qsub = subprocess.run(["qsub", self.job_fname], stdout=subprocess.PIPE)
+        qsub_out = qsub.stdout.decode("utf-8")
 
-        print("------")
+        print ("Job successfully submitted:", qsub_out)
+        job_id = re.findall(r"^\D*(\d+)", qsub_out)
+        self.job_id = job_id
+
 
 class MakeMapper():
+    """
+    A class to encapsulate the necessary information for making
+    a mapping / weight file
 
-    def __init__(self, src_mesh, dst_mesh, mapping_fname= None):
+    ...
+
+    Attributes
+    ----------
+    src_mesh : MeshType
+        Source mesh in MeshType which contains the information of 
+        src mesh file.
+
+    dst_mesh : MeshType
+        Destination mesh in MeshType which contains the information of 
+        dst mesh file.
+
+    map_dir : str
+        Directory where you want to store your weight/mapping files.
+
+    mapping_fname: str
+        Mapping /weight filename, if not explicitly given the 
+        class will create one based on src_mesh and dst_mesh information.
+
+
+    Methods
+    -------
+    create_mapping_file (pbs_job, overwrite, esmf_bin_path):
+        Create the command for ESMF regridding using esmf_bin_path and
+        src and dst resolutions. It will use pbs_job to submit a job
+        of regridding to the queue.
+
+    name_mappingfile
+        Function for creating mapping/ weight file name based on
+        source and destination files resolutions and masks.
+    """
+
+    def __init__(self, src_mesh, dst_mesh, map_dir, mapping_fname= None):
+
+        if not isinstance (src_mesh, MeshType):
+            raise TypeError ("src_mesh should be an instance of MeshType.")
+        if not isinstance (dst_mesh, MeshType):
+            raise TypeError ("dst_mesh should be an instance of MeshType.")
 
         self.src_mesh = src_mesh
         self.dst_mesh = src_mesh
+
+        self.map_dir = map_dir
+
+        #-- create mapping_fname if not given
         if mapping_fname is not None:
             self.mapping_fname = mapping_fname
         else:
-            self.name_weightfile()
+            self.name_mappingfile()
 
     def __str__(self):
         return (
@@ -383,43 +444,79 @@ class MakeMapper():
             )
         )
 
-    def build_mapping_file(self):
-            esmf_bin_path = "/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/"
-            esmf_regrid = esmf_bin_path + "/ESMF_RegridWeightGen"
+    def create_mapping_file(self,  pbs_job, overwrite, esmf_bin_path=None):
+        """
+        Create mapping/weight files based on src and dst resolutions.
+        First, it uses ESMF_bin_path to find the ESMF_RegridWeightGen binary.
+        Next, it creates the command for ESMF regridding using src and dst
+        resolutions. If the mapping file does not exist or overwrite flag is
+        on, it will use pbs_job to write and submit a job of
+        regridding to the queue.
 
+        Args:
+            pbs_job (PBSScheduler) :
+                Object that includes the job characteristics
+
+            overwrite (bool) :
+                Flag for overwriting the mapping files if they exist.
+
+            esmf_bin_path (str) :
+                Path to the ESMF binary
+        """
+
+        if esmf_bin_path is None:
+            esmf_bin_path = os.environ.get('ESMF_BIN')
+
+        #TODO : remove the hard-coded esmf_bin_path?:
+        esmf_bin_path = "/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/"
+
+
+        esmf_regrid = os.path.join(esmf_bin_path, 'ESMF_RegridWeightGen')
+
+        if not os.path.isfile(esmf_regrid):
+            sys.exit(
+            "ERROR: \n"
+            + "\t ESMF_RegridWeightGen"+esmf_regrid+" does not exist. \n"
+            + "\t Please point to ESMF library using ESMF_BIN environment.")
+
+
+        #-- check if mapping file already exists
+        mapping_file = os.path.join(self.map_dir, self.mapping_fname)
+
+        #-- If exists, skip mapping file creation unless overwrite
+        if os.path.exists(mapping_file) and overwrite is False:
+            print ("Mapping file:"+mapping_file+" already exists!")
+            print ("If you'd like to overwrite these files, use --overwrite option!")
+        else:
             cmd = esmf_regrid + " --ignore_unmapped"
 
-            cmd = cmd + " -s " + self.src_mesh.mesh_file + " -d " + self.dst_mesh.mesh_file
-            cmd = cmd + " -m conserve " + " -w " + self.mapping_fname
+            cmd = cmd + " -s " + self.src_mesh.mesh_file
+            cmd = cmd + " -d " + self.dst_mesh.mesh_file
+
+            #TODO (SAM): Do we ever need to use other methods?
+            cmd = cmd + " -m conserve "
+
+            cmd = cmd + " -w " + self.mapping_fname
 
             lrg_args = " "
+
             if self.src_mesh.res == "3minx3min" or "1km-merge-10min":
                 lrg_args = " --64bit_offset "
+
             cmd = cmd + lrg_args
+
+            #-- options depracted. remove in future.
             cmd = cmd + "  --src_type SCRIP  --dst_type SCRIP"
 
-            account = "P93300606"
-            nproc = "2"
-            nnodes = "2"
-            mem = "109GB"
-            ppn = "16"
-            queue = "regular"
-            walltime = "12:00:00"
-            email = "negins@ucar.edu"
+            job_fname = "regrid_" + self.src_mesh.res + "-"+self.src_mesh.mask+"_to_" + self.dst_mesh.res +"_"+self.dst_mesh.mask+".sh"
+            #job_fname = "regrid_" + self.mapping_fname + ".sh"
 
-            # scheduler class:
-            pbs_job = PbsScheduler(
-                account, nproc, nnodes, mem, ppn, queue, walltime, email
-            )
+            #print("cmd:", cmd)
 
-            job_fname = "regrid_submit" + self.mapping_fname + ".sh"
-
-            print("cmd:", cmd)
             pbs_job.write_job_pbs(job_fname, cmd)
             pbs_job.schedule()
-            # print (pbs_job)
 
-    def name_weightfile(self):
+    def name_mappingfile(self):
         """
         Function for creating weight file name based on
         source and destination files resolutions and masks.
@@ -431,11 +528,10 @@ class MakeMapper():
             dst_mask (str) : Destination file mask
 
         Returns:
-            weight_fname (str): mapping/weight file name.
+            mapping_fname (str): mapping/weight file name.
         """
-        weight_fname = "map_" + self.src_mesh.res + "_" + self.src_mesh.mask + "_to_" + self.dst_mesh.res + "_" +self.dst_mesh.mask + ".nc"
-        
-        self.mapping_fname = weight_fname
+        mapping_fname = "map_" + self.src_mesh.res + "_" + self.src_mesh.mask + "_to_" + self.dst_mesh.res + "_" +self.dst_mesh.mask + ".nc"
+        self.mapping_fname = mapping_fname
 
 
 
@@ -526,9 +622,6 @@ class MeshType :
 
 
 
-
-
-
 def main():
     args = get_parser().parse_args()
 
@@ -540,6 +633,8 @@ def main():
     namelist = args.namelist
     input_dir = args.input_dir
     map_dir = args.map_dir
+
+    overwrite = args.overwrite
 
     # -- check if the given input_dir exist
     if not os.path.exists(input_dir):
@@ -554,15 +649,15 @@ def main():
     nl_d = read_nl(namelist)
 
     # -- dst mesh file
-    print("-----------------------")
     dst_mesh_file = nl_d["dst_mesh_file"]
-    print("dst_mesh_file :", dst_mesh_file)
-    print("-----------------------")
-
     dst_mesh = MeshType (dst_mesh_file)
-    print (dst_mesh)
 
-    # src mesh files
+    logging.debug("\n dst_mesh_file  = " + dst_mesh_file + ".\n")
+    logging.debug("\n dst_mesh  :")
+    logging.debug(dst_mesh)
+
+
+    # -- src mesh files
     src_flist = [
         "mksrf_fsoitex",
         "mksrf_forganic",
@@ -581,8 +676,18 @@ def main():
         "mksrf_fvegtyp",
         "mksrf_fsoicol",
         "mksrf_flai",
-        "mksrf_dyn_lu" "mksrf_fvic",
+        "mksrf_dyn_lu",
+        "mksrf_fvic",
              ]
+
+    account = "P93300606"
+    nproc = "2"
+    nnodes = "2"
+    mem = "109GB"
+    ppn = "16"
+    queue = "regular"
+    walltime = "12:00:00"
+    email = "negins@ucar.edu"
 
     for src_file in tqdm.tqdm(src_flist):
         src_fname = nl_d[src_file].strip()
@@ -593,65 +698,30 @@ def main():
             print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             print("src_fname: ", src_fname, "does not exist!")
             print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            sys.exit()
 
         else:
             ds = xr.open_dataset(src_fname)
-            src_mesh_file = input_dir + ds.src_mesh_file
+            src_mesh_file = os.path.join(input_dir, ds.src_mesh_file)
             src_mesh = MeshType(src_mesh_file)
-            #src_res, src_mask = parse_mesh_fname(src_mesh_file)
 
-            lrg_args = " "
-            if src_mesh.res == "3minx3min" or "1km-merge-10min":
-                lrg_args = " --64bit_offset "
-
-            #w_fname = name_weightfile(src_res, src_mask, dst_res, dst_mask)
-
-            remapper = MakeMapper(src_mesh, dst_mesh)
-
-            print (remapper)
-
-            #print("src_mesh_file is : ", src_mesh_file)
-            #print("weight file is : ", w_fname)
-
-            # TODO : How to get esmf binary path when not on cheyenne.
-
-
-            
-            remapper.build_mapping_file()
-            print ('exit')
-            exit()
-            esmf_bin_path = "/glade/work/dunlap/ESMF-INSTALL/8.0.0bs38/bin/bing/Linux.intel.64.mpt.default/"
-            esmf_regrid = esmf_bin_path + "/ESMF_RegridWeightGen"
-
-            cmd = esmf_regrid + " --ignore_unmapped"
-
-            cmd = cmd + " -s " + src_mesh_file + " -d " + dst_mesh_file
-            cmd = cmd + " -m conserve " + " -w " + w_fname
-            cmd = cmd + lrg_args
-            cmd = cmd + "  --src_type SCRIP  --dst_type SCRIP"
-
-            account = "P93300606"
-            nproc = "2"
-            nnodes = "2"
-            mem = "109GB"
-            ppn = "16"
-            queue = "regular"
-            walltime = "12:00:00"
-            email = "negins@ucar.edu"
-
+            #--check res and metadata?
             # scheduler class:
             pbs_job = PbsScheduler(
-                account, nproc, nnodes, mem, ppn, queue, walltime, email
-            )
+                    account, nproc, nnodes, mem, ppn, queue, walltime, email)
 
-            job_fname = "regrid_submit" + w_fname + ".sh"
+            regridder = MakeMapper(src_mesh, dst_mesh,map_dir)
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print ("map_dir:",map_dir)
 
-            print("cmd:", cmd)
-            pbs_job.write_job_pbs(job_fname, cmd)
-            # pbs_job.schedule()
-            # print (pbs_job)
-            # exit()
+            logging.debug("\n regridder: \n")
+            logging.debug(regridder)
 
+            regridder.create_mapping_file(pbs_job, overwrite)
+
+            print ('exit')
+            exit()
 
 if __name__ == "__main__":
     main()
