@@ -164,7 +164,7 @@ def get_parser():
                 [default: %(default)s]
              """,
         action="store",
-        dest="overwrite",
+        dest="esmf_bin_path",
     )
 
     # TODO : necessary?
