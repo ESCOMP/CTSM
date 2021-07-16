@@ -81,6 +81,7 @@ import subprocess
 import argparse
 import logging
 import shlex
+import time
 
 import xarray as xr
 
@@ -143,7 +144,7 @@ def get_parser():
                     """,
         action="store_true",
         dest="debug",
-        default=True,
+        default=False,
     )
     parser.add_argument(
         "--overwrite",
@@ -154,6 +155,15 @@ def get_parser():
         action="store_true",
         dest="overwrite",
         default=False,
+    )
+    parser.add_argument(
+        "--esmf_path",
+        help="""
+                Path of the ESMF library.
+                [default: %(default)s]
+             """,
+        action="store",
+        dest="overwrite",
     )
 
     #TODO : necessary?
@@ -297,6 +307,9 @@ class PbsScheduler:
         submit the tcsh PBS script to the queue using
         qsub $job_fname
 
+    check_status
+        A quick function around qstat -x to check the
+        submitted job status.
     """
 
     def __init__(
@@ -321,6 +334,9 @@ class PbsScheduler:
         self.email = email
         self.mail_events = mail_events
 
+        if self.email is None:
+            self.email =''
+
         if self.mail_events is None:
             self.mail_events ='n'
 
@@ -341,6 +357,8 @@ class PbsScheduler:
 
         job_file = open(self.job_fname, "w")
 
+        print ("cmd:",cmd)
+
         self.job_template = (
             "#!/bin/tcsh\n"
             "#PBS -N " + self.job_fname + "\n"
@@ -349,7 +367,7 @@ class PbsScheduler:
             "#PBS -q " + self.queue + "\n"
             "#PBS -j oe" + "\n\n"
             "#PBS -m "+ self.mail_events+"\n"
-            "#PBS -M " + self.email + "\n"
+            #"#PBS -M " + self.email + "\n"
             "#PBS -l select="
             + self.nnodes
             + ":ncpus="
@@ -367,14 +385,32 @@ class PbsScheduler:
 
     def schedule(self):
 
-        # qsub = subprocess.check_output(["qsub", self.job_fname])
-
         qsub = subprocess.run(["qsub", self.job_fname], stdout=subprocess.PIPE)
         qsub_out = qsub.stdout.decode("utf-8")
 
-        print ("Job successfully submitted:", qsub_out)
+        print ("\n Job successfully submitted:", qsub_out,'\n')
         job_id = re.findall(r"^\D*(\d+)", qsub_out)
-        self.job_id = job_id
+        self.job_id = ''.join(job_id)
+
+
+    def check_status(self):
+        """
+        Quick function to check the status of the submitted job.
+        """
+
+        cmd= "qstat -x "+self.job_id + "|awk '{print $5}'"
+
+        tmp = subprocess.Popen(
+                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = tmp.communicate()
+        out = out.decode("utf-8").split("\n")
+        self.job_status = out[2]
+
+        #qsub = subprocess.run(["qstat","-x", job_id2], stdout=subprocess.PIPE)
+        #qsub_out = qsub.stdout.decode("utf-8").split("\n") 
+        #print (qsub_out)
+
+
 
 
 class MakeMapper():
@@ -687,11 +723,11 @@ def main():
     ppn = "16"
     queue = "regular"
     walltime = "12:00:00"
-    email = "negins@ucar.edu"
+    #email = "negins@ucar.edu"
 
     for src_file in tqdm.tqdm(src_flist):
         src_fname = nl_d[src_file].strip()
-        print(src_file, " : ", src_fname)
+        logging.debug(src_file, " : ", src_fname)
 
         # -- check if src_file exist
         if not os.path.isfile(src_fname):
@@ -708,18 +744,16 @@ def main():
             #--check res and metadata?
             # scheduler class:
             pbs_job = PbsScheduler(
-                    account, nproc, nnodes, mem, ppn, queue, walltime, email)
+                    account, nproc, nnodes, mem, ppn, queue, walltime)
 
             regridder = MakeMapper(src_mesh, dst_mesh,map_dir)
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print ("map_dir:",map_dir)
 
             logging.debug("\n regridder: \n")
             logging.debug(regridder)
 
             regridder.create_mapping_file(pbs_job, overwrite)
-
+            time.sleep(60)
+            pbs_job.check_status()
             print ('exit')
             exit()
 
