@@ -997,7 +997,9 @@ contains
           
        call clm_fates%wrap_canopy_radiation(bounds, nc, &
             num_vegsol, filter_vegsol, &
-            coszen_patch(bounds%begp:bounds%endp), surfalb_inst)
+            coszen_patch(bounds%begp:bounds%endp), &
+            waterdiagnosticbulk_inst%fcansno_patch(bounds%begp:bounds%endp), &
+            surfalb_inst)
 
     else
 
