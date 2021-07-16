@@ -453,7 +453,7 @@ class MakeMapper:
             raise TypeError("dst_mesh should be an instance of MeshType.")
 
         self.src_mesh = src_mesh
-        self.dst_mesh = src_mesh
+        self.dst_mesh = dst_mesh
 
         self.map_dir = map_dir
 
@@ -765,7 +765,6 @@ def main():
 
     for src_file in tqdm.tqdm(src_flist):
         src_fname = nl_d[src_file].strip()
-        logging.debug("\n dst_mesh_file  = " + dst_mesh_file + ".\n")
         logging.debug("\n" + src_file + " : " + src_fname)
 
         # -- check if src_file exist
