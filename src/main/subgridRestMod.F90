@@ -8,7 +8,7 @@ module subgridRestMod
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use glc_elevclass_mod  , only : glc_get_num_elevation_classes, glc_get_elevclass_bounds
   use abortutils         , only : endrun
-  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, ldecomp
+  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, gindex_global
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
   use clm_varcon         , only : nameg, namel, namec, namep
@@ -115,6 +115,7 @@ contains
     integer , pointer :: ilarr(:)    ! temporary
     integer , pointer :: icarr(:)    ! temporary
     integer , pointer :: iparr(:)    ! temporary
+    integer           :: gindex      ! global index
 
     real(r8), pointer :: elevclass_bounds(:)
 
@@ -141,7 +142,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=grc%latdeg)
 
     do g=bounds%begg,bounds%endg
-       igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
+       gindex = gindex_global(g-bounds%begg+1)
+       igarr(g)= mod(gindex-1,ldomain%ni) + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='grid1d_ixy', xtype=ncd_int,    &
          dim1name='gridcell',                                          &
@@ -149,7 +151,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=igarr)
 
     do g=bounds%begg,bounds%endg
-       igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
+       gindex = gindex_global(g-bounds%begg+1)
+       igarr(g)= (gindex - 1)/ldomain%ni + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='grid1d_jxy', xtype=ncd_int,    &
          dim1name='gridcell',                                          &
@@ -182,7 +185,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=rlarr)
 
     do l=bounds%begl,bounds%endl
-       ilarr(l) = mod(ldecomp%gdc2glo(lun%gridcell(l))-1,ldomain%ni) + 1
+       gindex = gindex_global(lun%gridcell(l)-bounds%begg+1)
+       ilarr(l) = mod(gindex-1,ldomain%ni) + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='land1d_ixy', xtype=ncd_int,     &
          dim1name='landunit',                                                      &
@@ -190,7 +194,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=ilarr)
 
     do l=bounds%begl,bounds%endl
-       ilarr(l) = (ldecomp%gdc2glo(lun%gridcell(l))-1)/ldomain%ni + 1
+       gindex = gindex_global(lun%gridcell(l)-bounds%begg+1)
+       ilarr(l) = (gindex-1)/ldomain%ni + 1
     end do
     call restartvar(ncid=ncid, flag=flag, varname='land1d_jxy', xtype=ncd_int,     &
          dim1name='landunit',                                                      &
@@ -245,7 +250,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=rcarr)
 
     do c= bounds%begc, bounds%endc
-       icarr(c) = mod(ldecomp%gdc2glo(col%gridcell(c))-1,ldomain%ni) + 1
+       gindex = gindex_global(col%gridcell(c)-bounds%begg+1)
+       icarr(c) = mod(gindex-1,ldomain%ni) + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_ixy', xtype=ncd_int,      &
          dim1name='column',                                                         &
@@ -253,7 +259,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
     do c= bounds%begc, bounds%endc
-       icarr(c) = (ldecomp%gdc2glo(col%gridcell(c))-1)/ldomain%ni + 1
+       gindex = gindex_global(col%gridcell(c)-bounds%begg+1)
+       icarr(c) = (gindex-1)/ldomain%ni + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_jxy', xtype=ncd_int,      &
          dim1name='column',                                                         &
@@ -346,7 +353,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=rparr)
 
     do p=bounds%begp,bounds%endp
-       iparr(p) = mod(ldecomp%gdc2glo(patch%gridcell(p))-1,ldomain%ni) + 1
+       gindex = gindex_global(patch%gridcell(p)-bounds%begg+1)
+       iparr(p) = mod(gindex-1,ldomain%ni) + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_ixy', xtype=ncd_int, &
          dim1name='pft',                                                       &
@@ -354,7 +362,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
     do p=bounds%begp,bounds%endp
-       iparr(p) = (ldecomp%gdc2glo(patch%gridcell(p))-1)/ldomain%ni + 1
+       gindex = gindex_global(patch%gridcell(p)-bounds%begg+1)
+       iparr(p) = (gindex-1)/ldomain%ni + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_jxy', xtype=ncd_int, &
          dim1name='pft',                                                       &

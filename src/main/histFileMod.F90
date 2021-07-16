@@ -3459,7 +3459,7 @@ contains
     ! Write/define 1d info for history tape.
     !
     ! !USES:
-    use decompMod   , only : ldecomp
+    use decompMod   , only : gindex_global
     use domainMod   , only : ldomain, ldomain
     !
     ! !ARGUMENTS:
@@ -3471,6 +3471,7 @@ contains
     integer :: k                         ! 1d index
     integer :: g,c,l,p                   ! indices
     integer :: ier                       ! errir status
+    integer :: gindex                    ! global gridcell index  
     real(r8), pointer :: rgarr(:)        ! temporary
     real(r8), pointer :: rcarr(:)        ! temporary
     real(r8), pointer :: rlarr(:)        ! temporary
@@ -3479,7 +3480,7 @@ contains
     integer , pointer :: icarr(:)        ! temporary
     integer , pointer :: ilarr(:)        ! temporary
     integer , pointer :: iparr(:)        ! temporary
-    type(file_desc_t), pointer :: ncid            ! netcdf file
+    type(file_desc_t), pointer :: ncid   ! netcdf file
     type(bounds_type) :: bounds
     character(len=*),parameter :: subname = 'hfields_1dinfo'
 !-----------------------------------------------------------------------
@@ -3640,11 +3641,13 @@ contains
        call ncd_io(varname='grid1d_lon', data=grc%londeg, dim1name=nameg, ncid=ncid, flag='write')
        call ncd_io(varname='grid1d_lat', data=grc%latdeg, dim1name=nameg, ncid=ncid, flag='write')
        do g = bounds%begg,bounds%endg
-         igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
+         gindex = gindex_global(g-bounds%begg+1)
+         igarr(g)= mod(gindex-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='grid1d_ixy', data=igarr      , dim1name=nameg, ncid=ncid, flag='write')
        do g = bounds%begg,bounds%endg
-         igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
+         gindex = gindex_global(g-bounds%begg+1)
+         igarr(g)= (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='grid1d_jxy', data=igarr      , dim1name=nameg, ncid=ncid, flag='write')
 
@@ -3659,11 +3662,13 @@ contains
        enddo
        call ncd_io(varname='land1d_lat', data=rlarr, dim1name=namel, ncid=ncid, flag='write')
        do l= bounds%begl,bounds%endl
-         ilarr(l) = mod(ldecomp%gdc2glo(lun%gridcell(l))-1,ldomain%ni) + 1
+         gindex = gindex_global(lun%gridcell(l)-bounds%begg+1)
+         ilarr(l) = mod(gindex-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='land1d_ixy', data=ilarr, dim1name=namel, ncid=ncid, flag='write')
        do l = bounds%begl,bounds%endl
-         ilarr(l) = (ldecomp%gdc2glo(lun%gridcell(l))-1)/ldomain%ni + 1
+         gindex = gindex_global(lun%gridcell(l)-bounds%begg+1)
+         ilarr(l) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='land1d_jxy'      , data=ilarr        , dim1name=namel, ncid=ncid, flag='write')
        ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
@@ -3683,11 +3688,13 @@ contains
        enddo
        call ncd_io(varname='cols1d_lat', data=rcarr, dim1name=namec, ncid=ncid, flag='write')
        do c = bounds%begc,bounds%endc
-         icarr(c) = mod(ldecomp%gdc2glo(col%gridcell(c))-1,ldomain%ni) + 1
+         gindex = gindex_global(col%gridcell(c)-bounds%begg+1)
+         icarr(c) = mod(gindex-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='cols1d_ixy', data=icarr, dim1name=namec, ncid=ncid, flag='write')
        do c = bounds%begc,bounds%endc
-         icarr(c) = (ldecomp%gdc2glo(col%gridcell(c))-1)/ldomain%ni + 1
+         gindex = gindex_global(col%gridcell(c)-bounds%begg+1)
+         icarr(c) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='cols1d_jxy'    , data=icarr         ,dim1name=namec, ncid=ncid, flag='write')
        icarr = GetGlobalIndexArray(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=nameg)
@@ -3717,11 +3724,13 @@ contains
        enddo
        call ncd_io(varname='pfts1d_lat', data=rparr, dim1name=namep, ncid=ncid, flag='write')
        do p = bounds%begp,bounds%endp
-         iparr(p) = mod(ldecomp%gdc2glo(patch%gridcell(p))-1,ldomain%ni) + 1
+         gindex = gindex_global(patch%gridcell(p)-bounds%begg+1)
+         iparr(p) = mod(gindex-1,ldomain%ni) + 1
        enddo
        call ncd_io(varname='pfts1d_ixy', data=iparr, dim1name=namep, ncid=ncid, flag='write')
        do p = bounds%begp,bounds%endp
-         iparr(p) = (ldecomp%gdc2glo(patch%gridcell(p))-1)/ldomain%ni + 1
+         gindex = gindex_global(patch%gridcell(p)-bounds%begg+1)
+         iparr(p) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='pfts1d_jxy'      , data=iparr        , dim1name=namep, ncid=ncid, flag='write')
 
