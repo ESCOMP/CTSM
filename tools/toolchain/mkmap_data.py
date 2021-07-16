@@ -10,8 +10,8 @@
 This Python script is part of the simplified toolchain for creating
 the surface dataset for ctsm cases.
 
-After creating the namelist/control file using ./gen_mksurf_namelist.py
-using the  options for your desired case, you should run :
+After creating the namelist/control file with ./gen_mksurf_namelist.py
+using the options for your desired case, you should run :
 
 ./mkmap_data.py --namelist [namelist from ./gen_mksurf_namelist.py]
 
