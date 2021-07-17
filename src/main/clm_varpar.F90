@@ -238,16 +238,16 @@ contains
     ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
     ! init_decompcascade_bgc where they might have otherwise been derived on the
     ! fly. For reference, if they were determined in init_decompcascade_bgc:
-    ! ndecomp_pools would get the value of i_pas_som or i_cwd and
-    ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
+    ! ndecomp_pools would get the value of i_oli_mic or i_cwd and
+    ! ndecomp_cascade_transitions would get the value of i_m2s3 or i_cwdl2
     ! depending on how use_fates is set.
     if ( use_fates ) then
        if (use_century_decomp) then
           ndecomp_pools = 6
           ndecomp_cascade_transitions = 8
        else if (use_mimics_decomp) then
-          ndecomp_pools = ?
-          ndecomp_cascade_transitions = ?
+          ndecomp_pools = 7
+          ndecomp_cascade_transitions = 14
        else  ! TODO slevis: Currently for CN (deprecated)
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 7
@@ -257,8 +257,8 @@ contains
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
        else if (use_mimics_decomp) then
-          ndecomp_pools = ?
-          ndecomp_cascade_transitions = ?
+          ndecomp_pools = 8
+          ndecomp_cascade_transitions = 15
        else  ! TODO slevis: Currently for CN (deprecated)
           ndecomp_pools = 8
           ndecomp_cascade_transitions = 9

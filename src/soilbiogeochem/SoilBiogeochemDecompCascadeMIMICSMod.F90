@@ -272,7 +272,7 @@ contains
       rf_s1m2 = 1.0_r8 - params_inst%mge(6)
 
       rf_m1s1 =  ! TODO Set or calculate these...
-      rf_m1s2 =
+      rf_m1s2 =  !      Or are all six of them zero?
       rf_m1s3 =
       rf_m2s1 =
       rf_m2s2 =
