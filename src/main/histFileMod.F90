@@ -5733,6 +5733,7 @@ contains
     !
     ! !USES:
     use clm_varcon      , only : isecspday
+    use clm_time_manager, only : get_step_size
     !
     ! !ARGUMENTS:
     logical :: valid  ! function result
@@ -5743,6 +5744,7 @@ contains
 
     character(len=*), parameter :: subname = 'avgflag_valid'
     integer :: tod                      ! Desired local solar time of output in seconds
+    integer :: dtime                    ! timestep size [seconds]
     !-----------------------------------------------------------------------
 
     ! This initial check is mainly here to catch the possibility that someone has added a
@@ -5757,6 +5759,7 @@ contains
          avgflag == 'SUM') then
        valid = .true.
     else if (avgflag(1:1) == 'L') then
+       dtime = get_step_size()
        read(avgflag(2:6), *) tod
        if (tod >= 0 .and. tod <= isecspday) then
           valid = .true.
