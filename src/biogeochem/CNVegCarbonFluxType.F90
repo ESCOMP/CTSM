@@ -4420,6 +4420,18 @@ contains
             l2g_scale_type = 'unity')
     end if
 
+    if (use_mimics_decomp) then
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%leafc_to_litter_patch(bounds%begp:bounds%endp), &
+            this%leafc_to_litter_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%frootc_to_litter_patch(bounds%begp:bounds%endp), &
+            this%frootc_to_litter_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%m_deadstemc_to_litter_patch(bounds%begp:bounds%endp), &
+            this%m_deadstemc_to_litter_col(bounds%begc:bounds%endc))
+    end if
+
     call p2c(bounds, num_soilc, filter_soilc, &
          this%fire_closs_patch(bounds%begp:bounds%endp), &
          this%fire_closs_p2c_col(bounds%begc:bounds%endc))

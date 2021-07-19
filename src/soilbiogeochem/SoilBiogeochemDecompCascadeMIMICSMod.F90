@@ -61,7 +61,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
      ! Respiration fraction cwd --> structural litter (keep comment sep for dif)
      real(r8):: rf_cwdl2_bgc 
      real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
-
+     real(r8) :: cwd_flig_bgc !
      real(r8) :: minpsi_bgc   !minimum soil water potential for heterotrophic resp
      real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
 
@@ -133,6 +133,11 @@ contains
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%maxpsi_bgc=tempr 
+
+    tString='cwd_flig'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%cwd_flig_bgc=tempr 
 
     tString='initial_Cstocks_depth_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -271,8 +276,8 @@ contains
       rf_l2m2 = 1.0_r8 - params_inst%mge(5)
       rf_s1m2 = 1.0_r8 - params_inst%mge(6)
 
-      rf_m1s1 =  ! TODO Set or calculate these...
-      rf_m1s2 =  !      Or are all six of them zero?
+      rf_m1s1 =  ! TODO Set or calculate these here OR
+      rf_m1s2 =  !      are all six of them zero?
       rf_m1s3 =
       rf_m2s1 =
       rf_m2s2 =
@@ -684,12 +689,21 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                           &
+         annsum_npp_col => cnveg_carbonflux_inst%annsum_npp_col        , & ! Input:  [real(r8) (:)     ]  annual sum of NPP at the column level (gC/m2/yr)
+         leafc_to_litter  => cnveg_carbonflux_inst%leafc_to_litter_col , & ! Input:  [real(r8) (:)     ]  leaf C litterfall at the column level (gC/m2/s)
+         frootc_to_litter => cnveg_carbonflux_inst%frootc_to_litter_col, & ! Input:  [real(r8) (:)     ]  fine root C litterfall at the column level (gC/m2/s)
+         m_deadstemc_to_litter => cnveg_carbonflux_inst%m_deadstemc_to_litter_col                                                                      , & ! Input:  [real(r8) (:)]  dead stem C mortality (gC/m2/s)
+
+         ! TODO pftcon% or params_inst% and are these already read in pftcon?
+         lflitcn        => pftcon%lflitcn                              , & ! Input:  [real(r8) (:)     ]  leaf litter C:N (gC/gN)
+         frootcn        => pftcon%frootcn                              , & ! Input:  [real(r8) (:)     ]  fine root C:N (gC/gN)
+         lf_flig        => pftcon%lf_flig                              , & ! Input:  [real(r8) (:)     ]  fraction of lignin in leaves (0 to 1)
+         fr_flig        => pftcon%fr_flig                              , & ! Input:  [real(r8) (:)     ]  fraction of lignin in fine roots (0 to 1)
+         cwd_flig       => params_inst%cwd_flig                        , & ! Input:  [real(r8)         ]  fraction of lignin in cwd (0 to 1)
          minpsi         => params_inst%minpsi_bgc                      , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
          maxpsi         => params_inst%maxpsi_bgc                      , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
          soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
-
          t_soisno       => temperature_inst%t_soisno_col               , & ! Input:  [real(r8) (:,:)   ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
-
          o2stress_sat   => ch4_inst%o2stress_sat_col                   , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          o2stress_unsat => ch4_inst%o2stress_unsat_col                 , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          finundated     => ch4_inst%finundated_col                     , & ! Input:  [real(r8) (:)     ]  fractional inundated area                                
@@ -914,6 +928,7 @@ contains
       fmet_p1 = 0.85_r8
       fmet_p2 = 0.85_r8
       fmet_p3 = 0.013_r8
+      fmet_p4 = 40.0_r8
       fchem_r_p1 = 0.1_r8
       fchem_r_p2 = -3.0_r8
       fchem_k_p1 = 0.3_r8
@@ -921,10 +936,10 @@ contains
       tauMod_factor = 0.01_r8  ! was tauMod_denom = 100
       tauMod_min = 0.8_r8
       tauMod_max = 1.2_r8
-      tau_r1 = 5.2e-4_r8
-      tau_r2 = 0.3_r8  ! or 0.4?
-      tau_k1 = 2.4e-4_r8
-      tau_k2 = 0.1_r8
+      tau_r_p1 = 5.2e-4_r8
+      tau_r_p2 = 0.3_r8  ! or 0.4?
+      tau_k_p1 = 2.4e-4_r8
+      tau_k_p2 = 0.1_r8
       ko_r = 4.0_r8
       ko_k = 4.0_r8
       densdep = 1.0_r8
@@ -939,30 +954,41 @@ contains
          ! Time-dependent params from Wieder et al. 2015 & testbed code
          ! TODO STILL MISSING N-related stuff: DIN...
 
-         ! TODO cleaf2met is leaf C to met litter; similarly the others
-         !      Rethink this as the sum of input to met + str litter?
-         !      @wwieder posted to the discussion in the PR.
-         ligninNratioAvg(c) =  &
-              (ligninNratio(c,leaf) * (cleaf2met(c) + cleaf2str(c)) + &
-               ligninNratio(c,froot) * (croot2met(c) + croot2str(c)) + &
-               ligninNratio(c,wood) * (cwd2str(c))) / &
-              max(0.001, cleaf2met(c) + cleaf2str(c) + &
-                         croot2met(c) + croot2str(c) + cwd2str(c))
+         ! TODO Did I translate this testbed code correctly?
+         ! ligninNratioAvg(c) =  &
+         !    (ligninNratio(c,leaf) * (cleaf2met(c) + cleaf2str(c)) + &
+         !     ligninNratio(c,froot) * (croot2met(c) + croot2str(c)) + &
+         !     ligninNratio(c,wood) * (cwd2str(c))) / &
+         !    max(0.001, cleaf2met(c) + cleaf2str(c) + &
+         !               croot2met(c) + croot2str(c) + cwd2str(c))
+         ! Concerns:
+         ! - all-pft avg of ratios .ne. to ratios of the averages
+         ! so better to calculate all-pft avg ligninNratios in pftconMod
+         ! - Or should we even calculate them only for pfts that are present?
+         ! If so, we could do that just before call p2c and then call p2c only
+         ! once for the column-level ligninNratioAvg
+         ligninNratioAvg = ((sum(lf_flig(1:)) / size(lf_flig(1:))) * &
+                            (sum(lflitcn(1:) / size(lflitcn(1:)))) * &
+                            leafc_to_litter(c) + &
+           (sum(fr_flig(1:)) / size(fr_flig(1:))) * &
+           (sum(frootcn(1:)) / size(frootcn(1:))) * &
+           frootc_to_litter(c) + &
+           cwd_flig * (cwdc_col(c) / cwdn_col(c)) * m_deadstem_to_litter(c)) / &
+           max(1.0e-3_r8, leafc_to_litter(c) + frootc_to_litter(c) + &
+                          m_deadstem_to_litter(c))
 
          ! Set limits on Lignin:N to keep fmet > 0.2
          ! Necessary for litter quality in boreal forests with high cwd flux
-         fmet = fmet_p1 * (fmet_p2 - fmet_p3 * min(40.0_r8, &
-                                                   ligninNratioAvg(c)))
+         fmet = fmet_p1 * (fmet_p2 - fmet_p3 * min(fmet_p4, ligninNratioAvg(c)))
          tauMod = min(tauMod_max, max(tauMod_min, &
-                                      sqrt(tauMod_factor * &
-                                           cnveg_carbonflux_inst%annsum_npp_col(c))))
+                                      sqrt(tauMod_factor * annsum_npp_col(c))))
 
          ! tau_m1 is tauR and tau_m2 is tauK in Wieder et al. 2015
          ! tau ends up in units of per hour but is expected
          ! in units of per second, so convert here; alternatively
          ! place the conversion once in w_d_o_scalars
-         tau_m1 = tau_r1 * exp(tau_r2 * fmet) * tauMod * secsphr
-         tau_m2 = tau_k1 * exp(tau_k2 * fmet) * tauMod * secsphr
+         tau_m1 = tau_r_p1 * exp(tau_r_p2 * fmet) * tauMod * secsphr
+         tau_m2 = tau_k_p1 * exp(tau_k_p2 * fmet) * tauMod * secsphr
 
          ! Used in the update of certain pathfrac terms that vary with time
          ! in the next loop
@@ -1012,7 +1038,7 @@ contains
 
             ! Microbial concentration with necessary unit conversions
             ! mgC/cm3 = gC/m3 * (1e3 mg/g) / (1e6 cm3/m3)
-            ! TODO Point to decomp_cpools_vr appropriately
+            ! TODO Does the CTSM have (these) unit conversions parameterized?
             m1_conc = (decomp_cpools_vr(c,j,i_cop_mic) / col%dz(c,j)) * &
                       1.0e3_r8 * 1.0e-6_r8
             m2_conc = (decomp_cpools_vr(c,j,i_oli_mic) / col%dz(c,j)) * &
@@ -1024,8 +1050,9 @@ contains
             ! decomp_k used in SoilBiogeochemPotentialMod.F90
             ! also updating pathfrac terms that vary with time
             ! TODO No spinup terms for now (see cwd below)
-            ! TODO @wwieder wrote: Build in the efolding capability that would
-            !                      modify decomp_k on all fluxes with depth
+            ! TODO wwieder: Build in the efolding capability that would modify
+            !               decomp_k on all fluxes with depth.
+            !      slevis: Already in place with decomp_depth_efolding?
             term_1 = vmax_l1_m1 * m1_conc / (km_l1_m1 + m1_conc)
             term_2 = vmax_l1_m2 * m2_conc / (km_l1_m2 + m2_conc)
             decomp_k(c,j,i_met_lit) = (term_1 + term_2) * w_d_o_scalars
