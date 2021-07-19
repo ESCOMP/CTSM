@@ -2,4 +2,3 @@
 
 ./xmlchange CLM_BLDNML_OPTS="-fire_emis" --append
 ./xmlchange BFBFLAG="TRUE"
-

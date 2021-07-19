@@ -14,7 +14,7 @@ thing, but support different options:
 
    You can specify a few arguments to this:
    
-   - python version: `make python=python3 test`
+   - python version: `make python=python3.9 test` (defaults to `python3`; you should expect errors if trying to run with python2)
    - verbose: `make verbose=true test`
    - debug: `make debug=true test`
 

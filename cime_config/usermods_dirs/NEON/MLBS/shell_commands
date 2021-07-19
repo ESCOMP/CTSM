@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=MLBS
+./xmlchange PTS_LON=279.47575
+./xmlchange PTS_LAT=37.37783

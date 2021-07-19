@@ -19,7 +19,7 @@ module BiogeophysPreFluxCalcsMod
   use clm_varctl              , only : use_fates
   use pftconMod               , only : pftcon
   use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
-  use landunit_varcon         , only : istsoil, istcrop, istice_mec
+  use landunit_varcon         , only : istsoil, istcrop, istice
   use clm_varcon              , only : hvap, hsub
   use CLMFatesInterfaceMod    , only : hlm_fates_interface_type
   use atm2lndType             , only : atm2lnd_type
@@ -285,7 +285,7 @@ contains
        ! Ground emissivity - only calculate for non-urban landunits 
        ! Urban emissivities are currently read in from data file
        if (.not. urbpoi(l)) then
-          if (lun%itype(l)==istice_mec) then
+          if (lun%itype(l)==istice) then
              emg(c) = 0.97_r8
           else
              emg(c) = (1._r8-frac_sno(c))*0.96_r8 + frac_sno(c)*0.97_r8
