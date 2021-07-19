@@ -1038,11 +1038,12 @@ contains
 
             ! Microbial concentration with necessary unit conversions
             ! mgC/cm3 = gC/m3 * (1e3 mg/g) / (1e6 cm3/m3)
-            ! TODO Does the CTSM have (these) unit conversions parameterized?
+            g_to_mg = 1.0e3_r8  ! put unit conversions in clm_varcon?
+            cm3_to_m3 = 1.0e-6_r8
             m1_conc = (decomp_cpools_vr(c,j,i_cop_mic) / col%dz(c,j)) * &
-                      1.0e3_r8 * 1.0e-6_r8
+                      g_to_mg * cm3_to_m3
             m2_conc = (decomp_cpools_vr(c,j,i_oli_mic) / col%dz(c,j)) * &
-                      1.0e3_r8 * 1.0e-6_r8
+                      g_to_mg * cm3_to_m3
 
             ! Product of w_scalar * depth_scalar * o_scalar
             w_d_o_scalars = w_scalar(c,j) * depth_scalar(c,j) * o_scalar(c,j)
