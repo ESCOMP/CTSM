@@ -347,7 +347,7 @@ contains
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
-
+      this%stream_water_lun(bounds%begl:bounds%endl) = 0._r8
 
       !--------------------------------------------
       ! Set soil water
