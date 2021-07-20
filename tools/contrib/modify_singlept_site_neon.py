@@ -285,9 +285,11 @@ def update_metadata(nc, surf_file, neon_file, zb_flag):
     nc.attrs['Updated_from'] = surf_file
     nc.attrs['Updated_using'] = neon_file
     if zb_flag:
-        nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC','zbedrock']
+        nc.attrs['Updated_fields'] = "PCT_CLAY, PCT_SAND, ORGANIC, zbedrock"
+        #nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC','zbedrock']
     else:
-        nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC']
+        nc.attrs['Updated_fields'] = "PCT_CLAY, PCT_SAND, ORGANIC"
+    #    nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC']
 
     return nc
 
@@ -536,7 +538,9 @@ def main():
     #-- update netcdf metadata
     f2 = update_metadata(f2, surf_file, neon_file,zb_flag)
 
-    f2.to_netcdf(path=wfile, mode='w', format='NETCDF3_64BIT')
+    print (f2.attrs)
+    f2.to_netcdf(path=wfile, mode='w', format="NETCDF3_64BIT")
+
 
     print('Successfully updated surface data file for neon site('+site_name+'):\n - '+wfile)
 
