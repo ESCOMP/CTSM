@@ -4864,7 +4864,7 @@ contains
    end function getname
 
    !-----------------------------------------------------------------------
-   character(len=1) function getflag (inname)
+   character(len=avgflag_strlen) function getflag (inname)
      !
      ! !DESCRIPTION:
      ! Retrieve flag portion of inname. If an averaging flag separater character
@@ -4889,7 +4889,7 @@ contains
      getflag = ' '
      do i = 1,length
         if (inname(i:i) == ':') then
-           getflag = inname(i+1:i+1)
+           getflag = trim(inname(i+1:length))
            exit
         end if
      end do
@@ -5760,16 +5760,20 @@ contains
        valid = .true.
     else if (avgflag(1:1) == 'L') then
        dtime = get_step_size()
-       read(avgflag(2:6), *) tod
-       if (tod >= 0 .and. tod <= isecspday) then
-          valid = .true.
-          if(tod < dtime .or. isecspday - tod <= dtime) then
-             write(iulog,*) 'Warning: Local time history output ', avgflag, ' is closer than ', &
-                'dtime to midnight! This problematic particularly for daily output.'
-          end if
-       else
+       if ( len_trim(avgflag) < 6 )then
           valid = .false.
-       end if      
+       else
+          read(avgflag(2:6), *) tod
+          if (tod >= 0 .and. tod <= isecspday) then
+             valid = .true.
+             if(tod < dtime .or. isecspday - tod <= dtime) then
+                write(iulog,*) 'Warning: Local time history output ', avgflag, ' is closer than ', &
+                   'dtime to midnight! This problematic particularly for daily output.'
+             end if
+          else
+             valid = .false.
+          end if
+       end if
     else
        valid = .false.
     end if
