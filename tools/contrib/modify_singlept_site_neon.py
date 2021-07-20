@@ -494,7 +494,9 @@ def main():
     f2= f1
     soil_levels = f2['PCT_CLAY'].size
     for soil_lev in range(soil_levels):
+        #print ("--------------------------")
         #print (soil_lev)
+        #print (df['clayTotal'][bin_index[soil_lev]])
         f2['PCT_CLAY'][soil_lev] = df['clayTotal'][bin_index[soil_lev]]
         f2['PCT_SAND'][soil_lev] = df['sandTotal'][bin_index[soil_lev]]
         bulk_den = df['bulkDensExclCoarseFrag'][bin_index[soil_lev]]
@@ -512,7 +514,7 @@ def main():
     zb_flag = False
 
     if (obs_bot.iloc[-1]<rock_thresh):
-        f2['zbedrock']=obs_bot.iloc[-1]*100
+        f2['zbedrock']=obs_bot.iloc[-1]
         print (f2['zbedrock'])
         zb_flag = True
 
