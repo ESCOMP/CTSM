@@ -536,7 +536,7 @@ def main():
     #-- update netcdf metadata
     f2 = update_metadata(f2, surf_file, neon_file,zb_flag)
 
-    f2.to_netcdf(path=wfile, mode='w')
+    f2.to_netcdf(path=wfile, mode='w', format='NETCDF3_64BIT')
 
     print('Successfully updated surface data file for neon site('+site_name+'):\n - '+wfile)
 
