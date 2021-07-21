@@ -757,7 +757,7 @@ contains
     integer  :: c,l,g,n      ! indices
     real(r8) :: norm(numrad)
     real(r8) :: sum_solar(bounds%begg:bounds%endg,numrad)
-    real(r8) :: sum_wt(bounds%begg:bounds%endg)
+    real(r8) :: sum_wtlunit(bounds%begg:bounds%endg)
 
     character(len=*), parameter :: subname = 'downscale_hillslope_solar'
     !-----------------------------------------------------------------------
@@ -776,7 +776,7 @@ contains
       
       ! Initialize column forcing
       sum_solar(bounds%begg:bounds%endg,1:numrad) = 0._r8
-      sum_wt(bounds%begg:bounds%endg) = 0._r8
+      sum_wtlunit(bounds%begg:bounds%endg) = 0._r8
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
          forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)
@@ -787,7 +787,7 @@ contains
             endif
             
             sum_solar(g,1:numrad) = sum_solar(g,1:numrad) + col%wtlunit(c)*forc_solad_col(c,1:numrad)
-            sum_wt(g) = sum_wt(g) + col%wtlunit(c)
+            sum_wtlunit(g) = sum_wtlunit(g) + col%wtlunit(c)
          end if
       end do
       ! Normalize column level solar
@@ -796,10 +796,13 @@ contains
          if (lun%itype(col%landunit(c)) == istsoil) then
             g = col%gridcell(c)
             do n = 1,numrad
-               norm(n) = (sum_solar(g,n)/sum_wt(g))
-               if(norm(n) > 0._r8) then
-                  forc_solad_col(c,n)  = forc_solad_col(c,n)*(forc_solad_grc(g,n)/norm(n))
+               ! absorbed energy is solar flux x area landunit (sum_wtlunit)
+               if(sum_solar(g,n) > 0._r8) then
+                  norm(n) = sum_wtlunit(g)*forc_solad_grc(g,n)/sum_solar(g,n)
+               else
+                  norm(n) = 0._r8
                endif
+               forc_solad_col(c,n)  = forc_solad_col(c,n)*norm(n)
             enddo
          end if
          forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))
