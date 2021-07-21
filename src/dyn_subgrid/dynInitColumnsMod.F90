@@ -52,7 +52,7 @@ contains
     ! Do initialization for all columns that are newly-active in this time step
     !
     ! !USES:
-    use GetGlobalValuesMod , only : GetGlobalWrite
+    use GetGlobalValuesMod , only : write_point_context
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                        ! bounds
@@ -79,7 +79,7 @@ contains
           else
              write(iulog,*) subname// ' WARNING: No template column found to initialize newly-active column'
              write(iulog,*) '-- keeping the state that was already in memory, possibly from arbitrary initialization'
-             call GetGlobalWrite(decomp_index=c, clmlevel=namec)
+             call write_point_context(decomp_index=c, clmlevel=namec)
           end if
        end if
     end do

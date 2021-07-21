@@ -60,7 +60,7 @@ CONTAINS
     !
     use shr_sys_mod       , only: shr_sys_abort
     use clm_varctl        , only: iulog
-    use GetGlobalValuesMod, only: GetGlobalWrite
+    use GetGlobalValuesMod, only: write_point_context
     !
     ! Arguments:
     implicit none
@@ -79,8 +79,7 @@ CONTAINS
     integer :: igrc, ilun, icol 
     !-----------------------------------------------------------------------
 
-    write(6,*)'calling getglobalwrite with decomp_index= ',decomp_index,' and clmlevel= ',trim(clmlevel)
-    call GetGlobalWrite(decomp_index, clmlevel)
+    call write_point_context(decomp_index, clmlevel)
 
     if (present (additional_msg)) then
        write(iulog,*)'ENDRUN: ', additional_msg

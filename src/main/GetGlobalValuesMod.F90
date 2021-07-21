@@ -8,9 +8,9 @@ module GetGlobalValuesMod
 
   ! PUBLIC MEMBER FUNCTIONS:
 
-  public :: GetGlobalIndex
-  public :: GetGlobalIndexArray
-  public :: GetGlobalWrite
+  public :: get_global_index
+  public :: get_global_index_array
+  public :: write_point_context
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -19,7 +19,7 @@ module GetGlobalValuesMod
 contains
 
   !-----------------------------------------------------------------------
-  integer function GetGlobalIndex(decomp_index, clmlevel)
+  integer function get_global_index(decomp_index, clmlevel)
 
     !----------------------------------------------------------------
     ! Description
@@ -59,19 +59,19 @@ contains
     end if
 
     call get_clmlevel_gindex(clmlevel=trim(clmlevel), gindex=gindex)
-    GetGlobalIndex = gindex(decomp_index - beg_index + 1)
+    get_global_index = gindex(decomp_index - beg_index + 1)
 
-  end function GetGlobalIndex
+  end function get_global_index
 
   !-----------------------------------------------------------------------
-  function GetGlobalIndexArray(decomp_index, bounds1, bounds2, clmlevel)
+  function get_global_index_array(decomp_index, bounds1, bounds2, clmlevel)
 
     !----------------------------------------------------------------
     ! Description
     ! Determine global index space value for target array at given clmlevel
     !
     ! Example from histFileMod.F90:
-    ! ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
+    ! ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
     ! Note that the last argument (clmlevel) is set to nameg, which corresponds
     ! to the "gridcell" not the "lun" of the first argument.
     !
@@ -89,7 +89,7 @@ contains
     integer          , intent(in) :: bounds2  ! upper bound of the input & returned arrays
     integer          , intent(in) :: decomp_index(bounds1:)
     character(len=*) , intent(in) :: clmlevel
-    integer                       :: GetGlobalIndexArray(bounds1:bounds2)
+    integer                       :: get_global_index_array(bounds1:bounds2)
     !
     ! Local Variables:
     type(bounds_type) :: bounds_proc   ! processor bounds
@@ -116,13 +116,13 @@ contains
 
     call get_clmlevel_gindex(clmlevel=trim(clmlevel), gindex=gindex)
     do i=bounds1,bounds2
-       GetGlobalIndexArray(i) = gindex(decomp_index(i) - beg_index + 1)
+       get_global_index_array(i) = gindex(decomp_index(i) - beg_index + 1)
     enddo
 
-  end function GetGlobalIndexArray
+  end function get_global_index_array
 
   !-----------------------------------------------------------------------
-  subroutine GetGlobalWrite(decomp_index, clmlevel)
+  subroutine write_point_context(decomp_index, clmlevel)
 
     !-----------------------------------------------------------------------
     ! Description:
@@ -152,7 +152,7 @@ contains
        igrc = decomp_index
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  gridcell index = ', igrc
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
+            get_global_index(decomp_index=igrc, clmlevel=nameg)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
 
@@ -162,9 +162,9 @@ contains
        igrc = lun%gridcell(ilun)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  landunit index = ', ilun
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
+            get_global_index(decomp_index=ilun, clmlevel=namel)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
+            get_global_index(decomp_index=igrc, clmlevel=nameg)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(decomp_index)
@@ -176,11 +176,11 @@ contains
        igrc = col%gridcell(icol)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  column   index = ', icol
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', &
-            GetGlobalIndex(decomp_index=icol, clmlevel=namec)
+            get_global_index(decomp_index=icol, clmlevel=namec)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
+            get_global_index(decomp_index=ilun, clmlevel=namel)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
+            get_global_index(decomp_index=igrc, clmlevel=nameg)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': column   type         = ', col%itype(icol)
@@ -194,13 +194,13 @@ contains
        igrc = patch%gridcell(ipft)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  patch    index = ', ipft
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global patch    index = ', &
-            GetGlobalIndex(decomp_index=ipft, clmlevel=namep)
+            get_global_index(decomp_index=ipft, clmlevel=namep)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', &
-            GetGlobalIndex(decomp_index=icol, clmlevel=namec)
+            get_global_index(decomp_index=icol, clmlevel=namec)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            GetGlobalIndex(decomp_index=ilun, clmlevel=namel)
+            get_global_index(decomp_index=ilun, clmlevel=namel)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            GetGlobalIndex(decomp_index=igrc, clmlevel=nameg)
+            get_global_index(decomp_index=igrc, clmlevel=nameg)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': pft      type         = ', patch%itype(ipft)
@@ -214,6 +214,6 @@ contains
 
     call shr_sys_flush(iulog)
 
-  end subroutine GetGlobalWrite
+  end subroutine write_point_context
 
 end module GetGlobalValuesMod

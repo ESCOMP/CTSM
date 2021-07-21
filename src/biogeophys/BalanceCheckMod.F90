@@ -14,7 +14,7 @@ module BalanceCheckMod
   use clm_varctl         , only : use_fates_planthydro
   use clm_varcon         , only : namep, namec, nameg
   use clm_varpar         , only : nlevsoi
-  use GetGlobalValuesMod , only : GetGlobalIndex
+  use GetGlobalValuesMod , only : get_global_index
   use atm2lndType        , only : atm2lnd_type
   use EnergyFluxType     , only : energyflux_type
   use SolarAbsorbedType  , only : solarabs_type
@@ -650,7 +650,7 @@ contains
            write(iulog,*)'WARNING:  column-level water balance error ',&
              ' nstep= ',nstep, &
              ' local indexc= ',indexc,&
-           ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
+             ' global indexc= ',get_global_index(decomp_index=indexc, clmlevel=namec), &
              ' errh2o= ',errh2o_col(indexc)
          if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
               
@@ -831,7 +831,7 @@ contains
             write(iulog,*)'WARNING:  snow balance error '
             write(iulog,*)'nstep= ',nstep, &
                  ' local indexc= ',indexc, &
-                 ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
+                 ' global indexc= ',get_global_index(decomp_index=indexc, clmlevel=namec), &
                  ' col%itype= ',col%itype(indexc), &
                  ' lun%itype= ',lun%itype(col%landunit(indexc)), &
                  ' errh2osno= ',errh2osno(indexc)
