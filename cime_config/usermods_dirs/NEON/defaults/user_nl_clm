@@ -19,7 +19,7 @@
 !----------------------------------------------------------------------------------
 
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
-fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/surfdata_hist_78pfts_CMIP6_simyr2000_${NEONSITE}_c210715.nc"
+fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_map/NEON/surfdata_hist_78pfts_CMIP6_simyr2000_${NEONSITE}_c210720.nc"
 model_year_align_urbantv = 2018
 stream_year_first_urbantv = 2018
 stream_year_last_urbantv = 2019
