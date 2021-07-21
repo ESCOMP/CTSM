@@ -2520,16 +2520,6 @@
       </machine>
     </machines>
   </test>
-  <test name="SMS_D_Lm1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm51Bgc" testmods="clm/localtimeOutput">
-    <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm">
-        <options>
-          <option name="wallclock">00:20:00</option>
-          <option name="comment">A short single-point test for local time output test mods </option>
-        </options>
-      </machine>
-    </machines>
-  </test>
   <test name="SMS_Ly1_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/output_sp_highfreq">
     <machines>
       <machine name="cheyenne" compiler="gnu" category="aux_clm">
