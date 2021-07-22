@@ -477,6 +477,7 @@ contains
      integer  :: nstep                                  ! time step number
      integer  :: DAnstep                                ! time step number since last Data Assimilation (DA)
      integer  :: indexp,indexc,indexl,indexg            ! index of first found in search loop
+     integer  :: global_index                           ! index in global index space
      real(r8) :: errh2o_grc(bounds%begg:bounds%endg)    ! grid cell level water conservation error [mm H2O]
      real(r8) :: forc_rain_col(bounds%begc:bounds%endc) ! column level rain rate [mm/s]
      real(r8) :: forc_snow_col(bounds%begc:bounds%endc) ! column level snow rate [mm/s]
@@ -647,10 +648,11 @@ contains
        if (errh2o_max_val > h2o_warning_thresh) then
 
            indexc = maxloc( abs(errh2o_col(bounds%begc:bounds%endc)), 1 ) + bounds%begc - 1
+           global_index = get_global_index(decomp_index=indexc, clmlevel=namec)
            write(iulog,*)'WARNING:  column-level water balance error ',&
              ' nstep= ',nstep, &
              ' local indexc= ',indexc,&
-             ' global indexc= ',get_global_index(decomp_index=indexc, clmlevel=namec), &
+             ' global indexc= ',global_index, &
              ' errh2o= ',errh2o_col(indexc)
          if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
               
@@ -828,10 +830,11 @@ contains
        
        if (errh2osno_max_val > h2o_warning_thresh) then
             indexc = maxloc( abs(errh2osno(bounds%begc:bounds%endc)), 1) + bounds%begc -1
+            global_index = get_global_index(decomp_index=indexc, clmlevel=namec)
             write(iulog,*)'WARNING:  snow balance error '
             write(iulog,*)'nstep= ',nstep, &
                  ' local indexc= ',indexc, &
-                 ' global indexc= ',get_global_index(decomp_index=indexc, clmlevel=namec), &
+                 ' global indexc= ',global_index, &
                  ' col%itype= ',col%itype(indexc), &
                  ' lun%itype= ',lun%itype(col%landunit(indexc)), &
                  ' errh2osno= ',errh2osno(indexc)
