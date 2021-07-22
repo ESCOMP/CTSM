@@ -132,20 +132,20 @@ contains
       endif
 
 
-      if(use_fates_sp)then
+      !if(use_fates_sp)then
         ! when we use FATES SP mode, the inactive points are not in the nolakep filter
         ! thus we need to force a loop around all patches to get at the SP inputs the
         ! are indexed in the HLM 'P' space.
-        nploop = bounds%endp-bounds%begp+1
-      else
+      !  nploop = bounds%endp-bounds%begp+1
+      !else
         nploop=num_nolakep
-      endif
+      !endif
       do fp = 1, nploop
-         if(use_fates_sp)then
-          p = fp + bounds%begp -1
-        else
+         !if(use_fates_sp)then
+         ! p = fp + bounds%begp -1
+        !else
           p = filter_nolakep(fp)
-        endif
+        !endif
          c = patch%column(p)
 
 
