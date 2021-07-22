@@ -770,7 +770,7 @@ contains
              write(iulog,*) '(Called from: ', trim(caller), ')'
              write(iulog,*) 'c, snl, h2osno_no_layers = ', c, col%snl(c), &
                   this%h2osno_no_layers_col(c)
-             call endrun(decomp_index=c, clmlevel=namec, &
+             call endrun(subgrid_index=c, subgrid_level=namec, &
                   msg = subname//' ERROR: col has snow layers but non-zero h2osno_no_layers')
           end if
        end if
@@ -783,7 +783,7 @@ contains
              write(iulog,*) '(Called from: ', trim(caller), ')'
              write(iulog,*) 'c, j, snl, h2osoi_ice, h2osoi_liq = ', c, j, col%snl(c), &
                   this%h2osoi_ice_col(c,j), this%h2osoi_liq_col(c,j)
-             call endrun(decomp_index=c, clmlevel=namec, &
+             call endrun(subgrid_index=c, subgrid_level=namec, &
                   msg = subname//' ERROR: col has non-zero h2osoi_ice or h2osoi_liq outside resolved snow layers')
           end if
        end do

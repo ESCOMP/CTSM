@@ -31,8 +31,8 @@ module decompMod
   public get_proc_clumps    ! number of clumps for this processor
   public get_proc_total     ! total no. of gridcells, landunits, columns and patchs for any processor
   public get_proc_global    ! total gridcells, landunits, columns, patchs across all processors
-  public get_clmlevel_gsize ! get global size associated with clmlevel
-  public get_clmlevel_gindex! get global size associated with clmlevel
+  public get_subgrid_level_gsize ! get global size associated with subgrid_level
+  public get_subgrid_level_gindex! get global index array associated with subgrid_level
   public get_clump_bounds   ! clump beg and end gridcell,landunit,column,patch
   public get_proc_bounds    ! this processor beg and end gridcell,landunit,column,patch
 
@@ -347,41 +347,41 @@ contains
    end function get_proc_clumps
 
    !-----------------------------------------------------------------------
-   integer function get_clmlevel_gsize (clmlevel)
+   integer function get_subgrid_level_gsize (subgrid_level)
      !
      ! !DESCRIPTION:
-     ! Determine 1d size from clmlevel
+     ! Determine 1d size from subgrid_level
      !
      ! !USES:
      use domainMod , only : ldomain
      use clm_varcon, only : grlnd, nameg, namel, namec, namep, nameCohort
      !
      ! !ARGUMENTS:
-     character(len=*), intent(in) :: clmlevel    !type of clm 1d array
+     character(len=*), intent(in) :: subgrid_level    !type of clm 1d array
      !-----------------------------------------------------------------------
 
-     select case (clmlevel)
+     select case (subgrid_level)
      case(grlnd)
-        get_clmlevel_gsize = ldomain%ns
+        get_subgrid_level_gsize = ldomain%ns
      case(nameg)
-        get_clmlevel_gsize = numg
+        get_subgrid_level_gsize = numg
      case(namel)
-        get_clmlevel_gsize = numl
+        get_subgrid_level_gsize = numl
      case(namec)
-        get_clmlevel_gsize = numc
+        get_subgrid_level_gsize = numc
      case(namep)
-        get_clmlevel_gsize = nump
+        get_subgrid_level_gsize = nump
      case(nameCohort)
-        get_clmlevel_gsize = numCohort
+        get_subgrid_level_gsize = numCohort
      case default
-        write(iulog,*) 'get_clmlevel_gsize does not match clmlevel type: ', trim(clmlevel)
+        write(iulog,*) 'get_subgrid_level_gsize does not match subgrid_level type: ', trim(subgrid_level)
         call shr_sys_abort()
      end select
 
-   end function get_clmlevel_gsize
+   end function get_subgrid_level_gsize
 
    !-----------------------------------------------------------------------
-   subroutine get_clmlevel_gindex (clmlevel, gindex)
+   subroutine get_subgrid_level_gindex (subgrid_level, gindex)
      !
      ! !DESCRIPTION:
      ! Get subgrid global index space
@@ -390,11 +390,11 @@ contains
      use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
      !
      ! !ARGUMENTS:
-     character(len=*), intent(in) :: clmlevel     ! type of input data
+     character(len=*), intent(in) :: subgrid_level     ! type of input data
      integer         , pointer    :: gindex(:)
      !----------------------------------------------------------------------
 
-    select case (clmlevel)
+    select case (subgrid_level)
     case(grlnd)
        gindex => gindex_global
     case(nameg)
@@ -408,10 +408,10 @@ contains
     case(nameCohort)
        gindex => gindex_cohort
     case default
-       write(iulog,*) 'get_clmlevel_gindex: Invalid expansion character: ',trim(clmlevel)
+       write(iulog,*) 'get_subgrid_level_gindex: Invalid expansion character: ',trim(subgrid_level)
        call shr_sys_abort()
     end select
 
-  end subroutine get_clmlevel_gindex
+  end subroutine get_subgrid_level_gindex
 
 end module decompMod

@@ -2813,14 +2813,14 @@ contains
                 if ( abs(dztot(c)) > 1.e-10_r8) then
                    write(iulog,*)'Inconsistency in SnowDivision_Lake! c, remainders', &
                         'dztot = ',c,dztot(c)
-                   call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                   call endrun(subgrid_index=c, subgrid_level=namec, msg=errmsg(sourcefile, __LINE__))
                 end if
 
                 do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
                    if ( abs(snwicetot(wi,c)) > 1.e-7_r8 .or. abs(snwliqtot(wi,c)) > 1.e-7_r8 ) then
                       write(iulog,*)'Inconsistency in SnowDivision_Lake! wi, c, remainders', &
                            'snwicetot, snwliqtot = ',wi,c,snwicetot(wi,c),snwliqtot(wi,c)
-                      call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                      call endrun(subgrid_index=c, subgrid_level=namec, msg=errmsg(sourcefile, __LINE__))
                    end if
                 end do
              end if
@@ -3558,7 +3558,7 @@ contains
        if (h2osoi_ice_bottom(c) < 0._r8 .or. h2osoi_liq_bottom(c) < 0._r8 ) then
           write(iulog,*)'ERROR: capping procedure failed (negative mass remaining) c = ',c
           write(iulog,*)'h2osoi_ice_bottom = ', h2osoi_ice_bottom(c), ' h2osoi_liq_bottom = ', h2osoi_liq_bottom(c)
-          call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=c, subgrid_level=namec, msg=errmsg(sourcefile, __LINE__))
        end if
 
     end do

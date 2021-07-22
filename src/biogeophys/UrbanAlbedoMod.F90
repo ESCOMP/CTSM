@@ -623,7 +623,7 @@ contains
              if (abs(err1(l)) > 0.001_r8) then
                 write (iulog,*) 'urban direct beam solar radiation balance error',err1(l)
                 write (iulog,*) 'clm model is stopping'
-                call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+                call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
              endif
           endif
        end do
@@ -660,12 +660,12 @@ contains
                 if (abs(err2(l)) > 0.0006_r8 ) then
                    write (iulog,*) 'urban road incident direct beam solar radiation error',err2(l)
                    write (iulog,*) 'clm model is stopping'
-                   call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+                   call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
                 endif
                 if (abs(err3(l)) > 0.0006_r8 ) then
                    write (iulog,*) 'urban wall incident direct beam solar radiation error',err3(l)
                    write (iulog,*) 'clm model is stopping'
-                   call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+                   call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
                 end if
              end if
           end do
@@ -737,7 +737,7 @@ contains
             if (abs(err(l)) > 0.001_r8) then
                write (iulog,*) 'urban diffuse solar radiation balance error',err(l) 
                write (iulog,*) 'clm model is stopping'
-               call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
             endif
          end do
 
@@ -1136,7 +1136,7 @@ contains
                if (iter_dir >= n) then
                   write (iulog,*) 'urban net solar radiation error: no convergence, direct beam'
                   write (iulog,*) 'clm model is stopping'
-                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
                endif
 
                ! reflected diffuse
@@ -1208,7 +1208,7 @@ contains
                if (iter_dif >= n) then
                   write (iulog,*) 'urban net solar radiation error: no convergence, diffuse'
                   write (iulog,*) 'clm model is stopping'
-                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
                endif
 
                ! total reflected by canyon - sum of solar reflection to sky from canyon.
@@ -1254,7 +1254,7 @@ contains
                   write(iulog,*)' sref_canyon_dir = ',sref_canyon_dir(l)
                   write(iulog,*)' sref_canyon_dif = ',sref_canyon_dir(l)
                   write(iulog,*) 'clm model is stopping'
-                  call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
                endif
 
                ! canyon albedo

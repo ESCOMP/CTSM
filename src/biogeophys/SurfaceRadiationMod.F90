@@ -843,7 +843,7 @@ contains
              write(iulog,*)"flx_absin2  = ",sum(flx_absin(c,:))*tri(p,2)
              write(iulog,*)"albgrd_nir  = ",albgrd(c,2)
              write(iulog,*)"coszen      = ",coszen(c)
-             call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=c, subgrid_level=namec, msg=errmsg(sourcefile, __LINE__))
           endif
 
           ! Diagnostic: shortwave penetrating ground (e.g. top layer)

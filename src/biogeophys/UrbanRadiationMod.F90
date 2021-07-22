@@ -491,7 +491,7 @@ contains
             write(iulog,*) 'vf_sw      = ',vf_sw(l)
             write(iulog,*) 'canyon_hwr = ',canyon_hwr(l)
             write(iulog,*) 'clm model is stopping'
-            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
          endif
       end do
 
@@ -671,7 +671,7 @@ contains
          if (iter >= n) then
             write (iulog,*) 'urban net longwave radiation error: no convergence'
             write (iulog,*) 'clm model is stopping'
-            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
          endif
 
          ! total net longwave radiation for canyon. project wall fluxes to horizontal surface
@@ -696,7 +696,7 @@ contains
          if (abs(err) > .10_r8 ) then
             write (iulog,*) 'urban net longwave radiation balance error',err
             write (iulog,*) 'clm model is stopping'
-            call endrun(decomp_index=l, clmlevel=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
          end if
 
       end do

@@ -923,7 +923,7 @@ bioms:   do f = 1, fn
       if (found) then
          if ( .not. use_fates ) then
             write(iulog,*)'Error: Forcing height is below canopy height for patch index '
-            call endrun(decomp_index=index, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=index, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
          end if
       end if
 

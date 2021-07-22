@@ -79,7 +79,7 @@ contains
           else
              write(iulog,*) subname// ' WARNING: No template column found to initialize newly-active column'
              write(iulog,*) '-- keeping the state that was already in memory, possibly from arbitrary initialization'
-             call write_point_context(decomp_index=c, clmlevel=namec)
+             call write_point_context(subgrid_index=c, subgrid_level=namec)
           end if
        end if
     end do
@@ -124,19 +124,19 @@ contains
     case(istice)
        write(iulog,*) subname// ' ERROR: Ability to initialize a newly-active glacier mec column not yet implemented'
        write(iulog,*) 'Expectation is that glacier mec columns should be active from the start of the run wherever they can grow'
-       call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=c_new, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
     case(istdlak)
        write(iulog,*) subname// ' ERROR: Ability to initialize a newly-active lake column not yet implemented'
-       call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=c_new, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
     case(istwet)
        write(iulog,*) subname// ' ERROR: Ability to initialize a newly-active wetland column not yet implemented'
-       call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=c_new, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
     case(isturb_MIN:isturb_MAX)
        write(iulog,*) subname// ' ERROR: Ability to initialize a newly-active urban column not yet implemented'
-       call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=c_new, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
     case default
        write(iulog,*) subname// ' ERROR: Unknown landunit type: ', ltype
-       call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=c_new, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
     end select
 
   end function initial_template_col_dispatcher
@@ -167,7 +167,7 @@ contains
     if (col%wtgcell(c_new) > 0._r8) then
        write(iulog,*) subname// ' ERROR: Expectation is that the only vegetated columns that&
             & can newly become active are ones with 0 weight on the grid cell'
-       call endrun(decomp_index=c_new, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=c_new, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
     end if
 
     c_template = TEMPLATE_NONE_FOUND

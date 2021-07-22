@@ -761,7 +761,7 @@ contains
              this%irrig_method_patch(p) = this%params%irrig_method_default
           else if (irrig_method(g,m) /= irrig_method_drip .and. irrig_method(g,m) /= irrig_method_sprinkler) then
              write(iulog,*) subname //' invalid irrigation method specified'
-             call endrun(decomp_index=g, clmlevel=nameg, msg='bad irrig_method '// &
+             call endrun(subgrid_index=g, subgrid_level=nameg, msg='bad irrig_method '// &
                   errMsg(sourcefile, __LINE__))
           end if
        else
@@ -1262,7 +1262,7 @@ contains
                 write(iulog,*) 'qflx_sfc_irrig_bulk_patch = ', qflx_sfc_irrig_bulk_patch(p)
                 write(iulog,*) 'waterflux_inst%qflx_sfc_irrig_col = ', &
                      waterflux_inst%qflx_sfc_irrig_col(c)
-                call endrun(decomp_index=p, clmlevel=namep, &
+                call endrun(subgrid_index=p, subgrid_level=namep, &
                      msg = 'If qflx_sfc_irrig_bulk_col <= 0, ' // &
                      'expect qflx_sfc_irrig_bulk_patch = waterflux_inst%qflx_sfc_irrig_col = 0', &
                      additional_msg = errMsg(sourcefile, __LINE__))
@@ -1295,7 +1295,7 @@ contains
              write(iulog,*) 'qflx_gw_demand_bulk_col = ', qflx_gw_demand_bulk_col(c)
              write(iulog,*) 'qflx_gw_demand_bulk_patch = ', qflx_gw_demand_bulk_patch(p)
              write(iulog,*) 'qflx_gw_irrig_withdrawn_col = ', qflx_gw_irrig_withdrawn_col(c)
-             call endrun(decomp_index=p, clmlevel=namep, &
+             call endrun(subgrid_index=p, subgrid_level=namep, &
                   msg = 'If qflx_gw_demand_bulk_col <= 0, expect qflx_gw_demand_bulk_patch = qflx_gw_irrig_withdrawn_col = 0', &
                   additional_msg = errMsg(sourcefile, __LINE__))
           end if
@@ -1547,7 +1547,7 @@ contains
              write(iulog,*) subname//' ERROR: deficit < 0'
              write(iulog,*) 'This implies that irrigation target is less than irrigatio&
                   &n threshold, which should never happen'
-             call endrun(decomp_index=c, clmlevel=namec, msg='deficit < 0 '// &
+             call endrun(subgrid_index=c, subgrid_level=namec, msg='deficit < 0 '// &
                   errMsg(sourcefile, __LINE__))
           end if
        else

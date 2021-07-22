@@ -159,7 +159,7 @@ contains
              write(iulog,*) '  check_dynpft_consistency = .false.'
              write(iulog,*) 'in user_nl_clm'
              write(iulog,*) ' '
-             call endrun(decomp_index=g, clmlevel=nameg, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=g, subgrid_level=nameg, msg=errMsg(sourcefile, __LINE__))
           end if
        end do
 

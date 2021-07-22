@@ -14,7 +14,7 @@ module abortutils
 
   interface endrun
      module procedure endrun_vanilla
-     module procedure endrun_globalindex
+     module procedure endrun_write_point_context
   end interface
 
 CONTAINS
@@ -52,11 +52,13 @@ CONTAINS
   end subroutine endrun_vanilla
 
   !-----------------------------------------------------------------------
-  subroutine endrun_globalindex(decomp_index, clmlevel, msg, additional_msg)
+  subroutine endrun_write_point_context(subgrid_index, subgrid_level, msg, additional_msg)
 
     !-----------------------------------------------------------------------
     ! Description:
     ! Abort the model for abnormal termination
+    !
+    ! This version also prints additional information about the point causing the error.
     !
     use shr_sys_mod       , only: shr_sys_abort
     use clm_varctl        , only: iulog
@@ -64,8 +66,8 @@ CONTAINS
     !
     ! Arguments:
     implicit none
-    integer          , intent(in)           :: decomp_index
-    character(len=*) , intent(in)           :: clmlevel
+    integer          , intent(in)           :: subgrid_index  ! index of interest (can be at any subgrid level or gridcell level)
+    character(len=*) , intent(in)           :: subgrid_level  ! one of nameg, namel, namec or namep
 
     ! Generally you want to at least provide msg. The main reason to separate msg from
     ! additional_msg is to supported expected-exception unit testing: you can put
@@ -79,7 +81,7 @@ CONTAINS
     integer :: igrc, ilun, icol 
     !-----------------------------------------------------------------------
 
-    call write_point_context(decomp_index, clmlevel)
+    call write_point_context(subgrid_index, subgrid_level)
 
     if (present (additional_msg)) then
        write(iulog,*)'ENDRUN: ', additional_msg
@@ -89,6 +91,6 @@ CONTAINS
 
     call shr_sys_abort(msg)
 
-  end subroutine endrun_globalindex
+  end subroutine endrun_write_point_context
 
 end module abortutils

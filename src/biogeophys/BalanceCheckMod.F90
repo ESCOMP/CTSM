@@ -648,7 +648,7 @@ contains
        if (errh2o_max_val > h2o_warning_thresh) then
 
            indexc = maxloc( abs(errh2o_col(bounds%begc:bounds%endc)), 1 ) + bounds%begc - 1
-           global_index = get_global_index(decomp_index=indexc, clmlevel=namec)
+           global_index = get_global_index(subgrid_index=indexc, subgrid_level=namec)
            write(iulog,*)'WARNING:  column-level water balance error ',&
              ' nstep= ',nstep, &
              ' local indexc= ',indexc,&
@@ -686,7 +686,7 @@ contains
               end if
               
               write(iulog,*)'CTSM is stopping'
-              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+              call endrun(subgrid_index=indexc, subgrid_level=namec, msg=errmsg(sourcefile, __LINE__))
          end if
        
        end if
@@ -762,7 +762,7 @@ contains
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
 
              write(iulog,*)'CTSM is stopping'
-             call endrun(decomp_index=indexg, clmlevel=nameg, msg=errmsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=indexg, subgrid_level=nameg, msg=errmsg(sourcefile, __LINE__))
           end if
 
        end if
@@ -830,7 +830,7 @@ contains
        
        if (errh2osno_max_val > h2o_warning_thresh) then
             indexc = maxloc( abs(errh2osno(bounds%begc:bounds%endc)), 1) + bounds%begc -1
-            global_index = get_global_index(decomp_index=indexc, clmlevel=namec)
+            global_index = get_global_index(subgrid_index=indexc, subgrid_level=namec)
             write(iulog,*)'WARNING:  snow balance error '
             write(iulog,*)'nstep= ',nstep, &
                  ' local indexc= ',indexc, &
@@ -864,7 +864,7 @@ contains
                  write(iulog,*)'qflx_snwcp_discarded_liq = ',qflx_snwcp_discarded_liq_col(indexc)*dtime
                  write(iulog,*)'qflx_sl_top_soil   = ',qflx_sl_top_soil(indexc)*dtime
                  write(iulog,*)'CTSM is stopping'
-                 call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                 call endrun(subgrid_index=indexc, subgrid_level=namec, msg=errmsg(sourcefile, __LINE__))
             end if
 
        end if
@@ -945,7 +945,7 @@ contains
                write(iulog,*)'forc_tot      = ',forc_solad(indexg,1)+forc_solad(indexg,2) &
                   +forc_solai(indexg,1)+forc_solai(indexg,2)
                write(iulog,*)'CTSM is stopping'
-               call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=indexp, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
            end if
 
        end if
@@ -962,7 +962,7 @@ contains
             write(iulog,*)'errlon       = ',errlon(indexp)
             if (errlon_max_val > error_thresh ) then
                  write(iulog,*)'CTSM is stopping because errlon > ', error_thresh, ' W/m2'
-                 call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+                 call endrun(subgrid_index=indexp, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
             end if
        end if
 
@@ -999,7 +999,7 @@ contains
               write(iulog,*)'ftii ftdd ftid = ' ,ftii(indexp,:), ftdd(indexp,:),ftid(indexp,:)
               write(iulog,*)'elai esai = '      ,elai(indexp),   esai(indexp)
               write(iulog,*)'CTSM is stopping'
-              call endrun(decomp_index=indexp, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+              call endrun(subgrid_index=indexp, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
            end if
 
        end if
@@ -1016,7 +1016,7 @@ contains
 
            if ((errsoi_col_max_val > 1.e-4_r8) .and. (DAnstep > skip_steps)) then
               write(iulog,*)'CTSM is stopping'
-              call endrun(decomp_index=indexc, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+              call endrun(subgrid_index=indexc, subgrid_level=namec, msg=errmsg(sourcefile, __LINE__))
            end if
        end if 
        
