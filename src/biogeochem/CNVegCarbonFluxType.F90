@@ -17,7 +17,7 @@ module CNVegCarbonFluxType
   use clm_varctl                         , only : use_grainproduct
   use clm_varctl                         , only : iulog
   use landunit_varcon                    , only : istsoil, istcrop, istdlak 
-  use pftconMod                          , only : npcropmin
+  use pftconMod                          , only : npcropmin, pftcon
   use LandunitType                       , only : lun                
   use ColumnType                         , only : col                
   use PatchType                          , only : patch                
@@ -4396,6 +4396,18 @@ contains
             this%hrv_gresp_storage_to_litter_patch(p)      + &
             this%hrv_gresp_xfer_to_litter_patch(p)
 
+       if (use_mimics_decomp) then
+          ! Calculate ligninNratio for leaves and fine roots
+          ! TODO Declare ligninNratio vars wherever they need to be.
+          associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
+            ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
+                                         pftcon%lflitcn(ivt(p)) * &
+                                         this%leafc_to_litter_patch(p)
+            ligninNratio_froot_patch(p) = pftcon%fr_flig(ivt(p)) * &
+                                          pftcon%frootcn(ivt(p)) * &
+                                          this%frootc_to_litter_patch(p)
+          end associate
+       end if
     end do  ! end of patches loop
 
     !------------------------------------------------
@@ -4422,14 +4434,17 @@ contains
 
     if (use_mimics_decomp) then
        call p2c(bounds, num_soilc, filter_soilc, &
+            ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
+            ligninNratio_leaf_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            ligninNratio_froot_patch(bounds%begp:bounds%endp), &
+            ligninNratio_froot_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
             this%leafc_to_litter_patch(bounds%begp:bounds%endp), &
-            this%leafc_to_litter_col(bounds%begc:bounds%endc))
+            leafc_to_litter_col(bounds%begc:bounds%endc))
        call p2c(bounds, num_soilc, filter_soilc, &
             this%frootc_to_litter_patch(bounds%begp:bounds%endp), &
-            this%frootc_to_litter_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            this%m_deadstemc_to_litter_patch(bounds%begp:bounds%endp), &
-            this%m_deadstemc_to_litter_col(bounds%begc:bounds%endc))
+            frootc_to_litter_col(bounds%begc:bounds%endc))
     end if
 
     call p2c(bounds, num_soilc, filter_soilc, &
@@ -4451,6 +4466,22 @@ contains
     call p2c(bounds, num_soilc, filter_soilc, &
          this%gpp_patch(bounds%begp:bounds%endp), &
          this%gpp_col(bounds%begc:bounds%endc))
+
+    if (use_mimics_decomp) then
+       ! Calculate ligninNratioAve
+       ! TODO define new var cwdc_to_litter as the flux from cwdl2 transition
+       ! TODO See how *CascadeBGC gets cwd_flig but prob needs to be read as
+       !      a shared param now
+       do fc = 1,num_soilc
+          c = filter_soilc(fc)
+          this%ligninNratioAvg_col(c) = &
+             (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
+              cwd_flig * (this%cwdc_col(c) / this%cwdn_col(c)) * cwdc_to_litter(c)) / &
+              max(1.0e-3_r8, leafc_to_litter_col(c) + &
+                             frootc_to_litter_col(c) + &
+                             cwdc_to_litter(c))
+       end do
+    end if
 
     ! this code is to calculate an exponentially-relaxed npp value for use in NDynamics code
 

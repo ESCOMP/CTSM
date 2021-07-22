@@ -61,7 +61,6 @@ module SoilBiogeochemDecompCascadeMIMICSMod
      ! Respiration fraction cwd --> structural litter (keep comment sep for dif)
      real(r8):: rf_cwdl2_bgc 
      real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
-     real(r8) :: cwd_flig_bgc !
      real(r8) :: minpsi_bgc   !minimum soil water potential for heterotrophic resp
      real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
 
@@ -108,7 +107,9 @@ contains
 
     ! Read off of netcdf file
     ! TODO Add new params here and in the params file.
-    ! TODO Some may need _bgc added/removed here and in the params file
+    ! TODO Some may need _bgc or _mimics added/removed here and in the params
+    !      file. Nicer to add as prefix instead of as suffix because params will
+    !      then appear grouped in the file. Need approval from Bill/Erik.
     ! TODO Read MIMICS-specific params here & shared ones (eg *_bgc) as:
     !      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
     ! TODO When ready for all final params values, talk to @wwieder and,
@@ -133,11 +134,6 @@ contains
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%maxpsi_bgc=tempr 
-
-    tString='cwd_flig'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%cwd_flig_bgc=tempr 
 
     tString='initial_Cstocks_depth_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
@@ -208,12 +204,6 @@ contains
     real(r8) :: rf_l2m2
     real(r8) :: rf_s1m1
     real(r8) :: rf_s1m2
-    real(r8) :: rf_m1s1
-    real(r8) :: rf_m1s2
-    real(r8) :: rf_m1s3
-    real(r8) :: rf_m2s1
-    real(r8) :: rf_m2s2
-    real(r8) :: rf_m2s3
     real(r8) :: rf_cwdl2
     real(r8), allocatable :: desorp(:,:)
     real(r8), allocatable :: fphys_m1(:,:)
@@ -275,13 +265,6 @@ contains
       rf_l1m2 = 1.0_r8 - params_inst%mge(4)
       rf_l2m2 = 1.0_r8 - params_inst%mge(5)
       rf_s1m2 = 1.0_r8 - params_inst%mge(6)
-
-      rf_m1s1 =  ! TODO Set or calculate these here OR
-      rf_m1s2 =  !      are all six of them zero?
-      rf_m1s3 =
-      rf_m2s1 =
-      rf_m2s2 =
-      rf_m2s3 =
 
       rf_cwdl2 = params_inst%rf_cwdl2_bgc
 
@@ -567,42 +550,42 @@ contains
 
       i_m1s1 = 9
       decomp_cascade_con%cascade_step_name(i_m1s1) = 'M1S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = rf_m1s1
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = 0.0_r8
       cascade_donor_pool(i_m1s1) = i_cop_mic
       cascade_receiver_pool(i_m1s1) = i_avl_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = 0.5_r8 * (1.0_r8 - fphys_m1(bounds%begc:bounds%endc,1:nlevdecomp))
 
       i_m1s2 = 10
       decomp_cascade_con%cascade_step_name(i_m1s2) = 'M1S2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = rf_m1s2
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = 0.0_r8
       cascade_donor_pool(i_m1s2) = i_cop_mic
       cascade_receiver_pool(i_m1s2) = i_chem_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = 0.5_r8 * (1.0_r8 - fphys_m1(bounds%begc:bounds%endc,1:nlevdecomp))
 
       i_m1s3 = 11
       decomp_cascade_con%cascade_step_name(i_m1s3) = 'M1S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = rf_m1s3
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = 0.0_r8
       cascade_donor_pool(i_m1s3) = i_cop_mic
       cascade_receiver_pool(i_m1s3) = i_phys_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = fphys_m1(bounds%begc:bounds%endc,1:nlevdecomp)
 
       i_m2s1 = 12
       decomp_cascade_con%cascade_step_name(i_m2s1) = 'M2S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = rf_m2s1
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = 0.0_r8
       cascade_donor_pool(i_m2s1) = i_oli_mic
       cascade_receiver_pool(i_m2s1) = i_avl_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = 0.5_r8 * (1.0_r8 - fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp))
 
       i_m2s2 = 13
       decomp_cascade_con%cascade_step_name(i_m2s2) = 'M2S2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = rf_m2s2
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = 0.0_r8
       cascade_donor_pool(i_m2s2) = i_oli_mic
       cascade_receiver_pool(i_m2s2) = i_chem_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = 0.5_r8 * (1.0_r8 - fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp))
 
       i_m2s3 = 14
       decomp_cascade_con%cascade_step_name(i_m2s3) = 'M2S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = rf_m2s3
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = 0.0_r8
       cascade_donor_pool(i_m2s3) = i_oli_mic
       cascade_receiver_pool(i_m2s3) = i_phys_som
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp)
@@ -690,16 +673,8 @@ contains
 
     associate(                                                           &
          annsum_npp_col => cnveg_carbonflux_inst%annsum_npp_col        , & ! Input:  [real(r8) (:)     ]  annual sum of NPP at the column level (gC/m2/yr)
-         leafc_to_litter  => cnveg_carbonflux_inst%leafc_to_litter_col , & ! Input:  [real(r8) (:)     ]  leaf C litterfall at the column level (gC/m2/s)
-         frootc_to_litter => cnveg_carbonflux_inst%frootc_to_litter_col, & ! Input:  [real(r8) (:)     ]  fine root C litterfall at the column level (gC/m2/s)
-         m_deadstemc_to_litter => cnveg_carbonflux_inst%m_deadstemc_to_litter_col                                                                      , & ! Input:  [real(r8) (:)]  dead stem C mortality (gC/m2/s)
+         ligninNratioAvg => cnveg_carbonflux_inst%ligninNratioAvg_col  , & ! Input:  [real(r8) (:)     ]  column-level lignin to nitrogen ratio (TODO Are numerator/denominator units the same as in testbed?)
 
-         ! TODO pftcon% or params_inst% and are these already read in pftcon?
-         lflitcn        => pftcon%lflitcn                              , & ! Input:  [real(r8) (:)     ]  leaf litter C:N (gC/gN)
-         frootcn        => pftcon%frootcn                              , & ! Input:  [real(r8) (:)     ]  fine root C:N (gC/gN)
-         lf_flig        => pftcon%lf_flig                              , & ! Input:  [real(r8) (:)     ]  fraction of lignin in leaves (0 to 1)
-         fr_flig        => pftcon%fr_flig                              , & ! Input:  [real(r8) (:)     ]  fraction of lignin in fine roots (0 to 1)
-         cwd_flig       => params_inst%cwd_flig                        , & ! Input:  [real(r8)         ]  fraction of lignin in cwd (0 to 1)
          minpsi         => params_inst%minpsi_bgc                      , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
          maxpsi         => params_inst%maxpsi_bgc                      , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
          soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
@@ -911,13 +886,15 @@ contains
       end if
 
       ! Term that reduces decomposition rate at depth
+      ! Placeholder. For now depth_scalar = 1.
       do j = 1, nlevdecomp
          do fc = 1, num_soilc
             c = filter_soilc(fc)
             if (use_vertsoilc) then
                ! Using fixed e-folding depth as in
                ! SoilBiogeochemDecompCascadeBGCMod.F90
-               depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
+!              depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
+               depth_scalar(c,j) = 1.0_r8
             else
                depth_scalar(c,j) = 1.0_r8
             end if
@@ -943,7 +920,7 @@ contains
       ko_r = 4.0_r8
       ko_k = 4.0_r8
       densdep = 1.0_r8
-      desorpQ10 = 1.1_r8
+      desorpQ10 = 1.0_r8
       t_soi_ref = 25.0_r8  ! deg C
 
       ! calculate rates for all litter and som pools
@@ -952,33 +929,15 @@ contains
          c = filter_soilc(fc)
 
          ! Time-dependent params from Wieder et al. 2015 & testbed code
-         ! TODO STILL MISSING N-related stuff: DIN...
-
-         ! TODO Did I translate this testbed code correctly?
-         ! ligninNratioAvg(c) =  &
-         !    (ligninNratio(c,leaf) * (cleaf2met(c) + cleaf2str(c)) + &
-         !     ligninNratio(c,froot) * (croot2met(c) + croot2str(c)) + &
-         !     ligninNratio(c,wood) * (cwd2str(c))) / &
-         !    max(0.001, cleaf2met(c) + cleaf2str(c) + &
-         !               croot2met(c) + croot2str(c) + cwd2str(c))
-         ! Concerns:
-         ! - all-pft avg of ratios .ne. to ratios of the averages
-         ! so better to calculate all-pft avg ligninNratios in pftconMod
-         ! - Or should we even calculate them only for pfts that are present?
-         ! If so, we could do that just before call p2c and then call p2c only
-         ! once for the column-level ligninNratioAvg
-         ligninNratioAvg = ((sum(lf_flig(1:)) / size(lf_flig(1:))) * &
-                            (sum(lflitcn(1:) / size(lflitcn(1:)))) * &
-                            leafc_to_litter(c) + &
-           (sum(fr_flig(1:)) / size(fr_flig(1:))) * &
-           (sum(frootcn(1:)) / size(frootcn(1:))) * &
-           frootc_to_litter(c) + &
-           cwd_flig * (cwdc_col(c) / cwdn_col(c)) * m_deadstem_to_litter(c)) / &
-           max(1.0e-3_r8, leafc_to_litter(c) + frootc_to_litter(c) + &
-                          m_deadstem_to_litter(c))
+         ! TODO STILL MISSING N-related stuff (DIN... in the testbed).
+         !      Start looking in NitrogenCompetitionMod. We will need hooks to
+         !      the ctsm no3 and nh4 terms. The nh4 fluxes are "nmin".
 
          ! Set limits on Lignin:N to keep fmet > 0.2
          ! Necessary for litter quality in boreal forests with high cwd flux
+         ! TODO Check for high-freq variations in ligninNratioAvg. To avoid,
+         !      replace pool_to_litter terms with ann or other long term mean
+         !      in CNVegCarbonFluxType.
          fmet = fmet_p1 * (fmet_p2 - fmet_p3 * min(fmet_p4, ligninNratioAvg(c)))
          tauMod = min(tauMod_max, max(tauMod_min, &
                                       sqrt(tauMod_factor * annsum_npp_col(c))))
@@ -1051,9 +1010,6 @@ contains
             ! decomp_k used in SoilBiogeochemPotentialMod.F90
             ! also updating pathfrac terms that vary with time
             ! TODO No spinup terms for now (see cwd below)
-            ! TODO wwieder: Build in the efolding capability that would modify
-            !               decomp_k on all fluxes with depth.
-            !      slevis: Already in place with decomp_depth_efolding?
             term_1 = vmax_l1_m1 * m1_conc / (km_l1_m1 + m1_conc)
             term_2 = vmax_l1_m2 * m2_conc / (km_l1_m2 + m2_conc)
             decomp_k(c,j,i_met_lit) = (term_1 + term_2) * w_d_o_scalars
@@ -1072,7 +1028,7 @@ contains
             pathfrac_decomp_cascade(c,j,i_s1m1) = term_1 / (term_1 + term_2)
             pathfrac_decomp_cascade(c,j,i_s1m2) = term_2 / (term_1 + term_2)
 
-            decomp_k(c,j,i_phys_som) = desorption * w_d_o_scalars
+            decomp_k(c,j,i_phys_som) = desorption * depth_scalar(c,j)
 
             term_1 = vmax_l2_m1 * m1_conc / (ko_r * km_l2_m1 + m1_conc)
             term_2 = vmax_l2_m2 * m2_conc / (ko_k * km_l2_m2 + m2_conc)
