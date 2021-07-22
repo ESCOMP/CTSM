@@ -1,15 +1,5 @@
 module SoilMoistureStreamMod
 
-  ! **********************************************************************
-  ! --------------------------- IMPORTANT NOTE ---------------------------
-  !
-  ! This file is here temporarily in order to exercise the CDEPS stream code for this 3-d
-  ! stream. In cases using the NUOPC driver/mediator, this version is used instead of the
-  ! version in src/biogeophys. Changes to the science here should also be made in the
-  ! similar file in src/biogeophys. Once we start using CDEPS by default, we can remove
-  ! the version in src/biogeophys and move this version into there.
-  ! **********************************************************************
-
 #include "shr_assert.h"
 
   !-----------------------------------------------------------------------
@@ -64,15 +54,11 @@ module SoilMoistureStreamMod
        __FILE__
   character(*), parameter :: u_FILE_u = &
        __FILE__
-  !-----------------------------------------------------------------------
 
+!==============================================================================
 contains
+!==============================================================================
   
-  !-----------------------------------------------------------------------
-  !
-  ! soil_moisture_init
-  !
-  !-----------------------------------------------------------------------
   subroutine PrescribedSoilMoistureInit(bounds)
     !
     ! Initialize data stream information for soil moisture.
@@ -193,11 +179,7 @@ contains
 
   end subroutine PrescribedSoilMoistureInit
 
-  !-----------------------------------------------------------------------
-  !
-  ! PrescribedSoilMoistureAdvance
-  !
-  !-----------------------------------------------------------------------
+  !==============================================================================
   subroutine PrescribedSoilMoistureAdvance( bounds )
     !
     ! Advanace the prescribed soil moisture stream
@@ -247,11 +229,7 @@ contains
 
   end subroutine PrescribedSoilMoistureAdvance
 
-  !-----------------------------------------------------------------------
-  !
-  ! PrescribedSoilMoistureInterp
-  !
-  !-----------------------------------------------------------------------
+  !==============================================================================
   subroutine PrescribedSoilMoistureInterp(bounds, soilstate_inst, waterstatebulk_inst)
     !
     ! Assign data stream information for prescribed soil moisture.
