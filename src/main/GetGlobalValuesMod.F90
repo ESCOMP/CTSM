@@ -8,9 +8,9 @@ module GetGlobalValuesMod
 
   ! PUBLIC MEMBER FUNCTIONS:
 
-  public :: get_global_index
-  public :: get_global_index_array
-  public :: write_point_context
+  public :: get_global_index        ! Determine global index space value for target point
+  public :: get_global_index_array  ! Determine global index space value for target array
+  public :: write_point_context     ! Write context for the given index, including global index information and more
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
