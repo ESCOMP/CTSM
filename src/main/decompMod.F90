@@ -230,23 +230,35 @@ contains
    end subroutine get_clump_bounds
 
    !------------------------------------------------------------------------------
-   subroutine get_proc_bounds (bounds)
+   subroutine get_proc_bounds (bounds, allow_call_from_threaded_region)
      !
      ! !DESCRIPTION:
      ! Retrieve processor bounds
      !
      ! !ARGUMENTS:
      type(bounds_type), intent(out) :: bounds ! processor bounds bounds
+
+     ! Normally this routine will abort if it is called from within a threaded region,
+     ! because in most cases you should be calling get_clump_bounds in that situation. If
+     ! you really want to be using this routine from within a threaded region, then set
+     ! allow_call_from_threaded_region to .true.
+     logical, intent(in), optional :: allow_call_from_threaded_region
      !
      ! !LOCAL VARIABLES:
+     logical :: l_allow_call_from_threaded_region
 #ifdef _OPENMP
      integer, external :: OMP_GET_NUM_THREADS
 #endif
      character(len=32), parameter :: subname = 'get_proc_bounds'  ! Subroutine name
      !------------------------------------------------------------------------------
      !    Make sure this is NOT being called from a threaded region
+     if (present(allow_call_from_threaded_region)) then
+        l_allow_call_from_threaded_region = allow_call_from_threaded_region
+     else
+        l_allow_call_from_threaded_region = .false.
+     end if
 #ifdef _OPENMP
-     if ( OMP_GET_NUM_THREADS() > 1 )then
+     if ( OMP_GET_NUM_THREADS() > 1 .and. .not. l_allow_call_from_threaded_region )then
         call shr_sys_abort( trim(subname)//' ERROR: Calling from inside  a threaded region')
      end if
 #endif

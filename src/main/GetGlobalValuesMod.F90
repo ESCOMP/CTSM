@@ -43,7 +43,7 @@ contains
     integer, pointer  :: gindex(:)
     !----------------------------------------------------------------
 
-    call get_proc_bounds(bounds_proc)
+    call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
 
     if (trim(clmlevel) == nameg) then
        beg_index = bounds_proc%begg
@@ -99,7 +99,7 @@ contains
     !----------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(decomp_index) == (/bounds2/)), sourcefile, __LINE__)
-    call get_proc_bounds(bounds_proc)
+    call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
 
     if (trim(clmlevel) == nameg) then
        beg_index = bounds_proc%begg
