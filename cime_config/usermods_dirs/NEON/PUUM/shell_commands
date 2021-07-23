@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=PUUM
+./xmlchange PTS_LON=204.68269
+./xmlchange PTS_LAT=19.55309

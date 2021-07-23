@@ -2851,7 +2851,7 @@ contains
             r_soil = sqrt(1./(rpi*root_length_density)) 
 
             ! length scale approach
-            soil_conductance = min(hksat(c,j),hk_l(c,j))/(1.e3*r_soil)
+            soil_conductance = min(hksat(c,j),hk_l(c,j))/(1.e3_r8*r_soil)
             
 ! use vegetation plc function to adjust root conductance
                fs(j)=  plc(smp(c,j),p,c,root,veg)
@@ -2873,7 +2873,7 @@ contains
             if(rai(j)*rootfr(p,j) > 0._r8 .and. j > 1) then
                k_soil_root(p,j) =  1._r8/rs_resis
             else
-               k_soil_root(p,j) =  0.
+               k_soil_root(p,j) =  0._r8
             endif
             
          end do
@@ -4163,8 +4163,8 @@ contains
           bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
           cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
-               (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
-               (1.0 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
+               (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
+               (1.0_r8 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
 
           call quadratic (aquad, bquad, cquad, r1, r2)
           gs_mol_sun = max(r1,r2) * 1.e06_r8
@@ -4278,7 +4278,7 @@ contains
     logical  :: flag                  ! signal that matrix was not invertible
     logical  :: night                 ! signal to store vegwp within this routine, b/c it is night-time and full suite won't be called
     integer, parameter  :: itmax=50   ! exit newton's method if iters>itmax
-    real(r8), parameter :: tolf=1.e-6,toldx=1.e-9 !tolerances for a satisfactory solution
+    real(r8), parameter :: tolf=1.e-6_r8,toldx=1.e-9_r8 !tolerances for a satisfactory solution
     logical  :: havegs                ! signals direction of calculation gs->qflx or qflx->gs 
     real(r8) :: soilflux              ! total soil column transpiration [mm/s] 
     real(r8), parameter :: tol_lai=.001_r8 ! minimum lai where transpiration is calc'd 
