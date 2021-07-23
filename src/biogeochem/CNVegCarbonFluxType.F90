@@ -4004,7 +4004,7 @@ contains
     use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c, c2g
     use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
-    use CNSharedParamsMod                  , only: use_fun
+    use CNSharedParamsMod                  , only: use_fun, CNParamsShareInst
     !
     ! !ARGUMENTS:
     class(cnveg_carbonflux_type)   :: this
@@ -4398,7 +4398,8 @@ contains
 
        if (use_mimics_decomp) then
           ! Calculate ligninNratio for leaves and fine roots
-          ! TODO Declare ligninNratio vars wherever they need to be.
+          ! TODO Declare ligninNratio vars wherever they need to be and
+          !      initialize if necessary for call p2c to work correctly
           associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
             ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
                                          pftcon%lflitcn(ivt(p)) * &
@@ -4467,12 +4468,10 @@ contains
             frootc_to_litter_col(bounds%begc:bounds%endc))
 
        ! Calculate ligninNratioAve
-       ! TODO define new var cwdc_to_litter as the flux from cwdl2 transition
-       ! TODO See how *CascadeBGC gets cwd_flig but prob needs to be read as
-       !      a shared param now
        do fc = 1,num_soilc
           c = filter_soilc(fc)
-          ligninNratio_cwd = cwd_flig * &
+          ! TODO Use cwd_flig in *CascadeBGC the same way for consistency?
+          ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
                              (this%cwdc_col(c) / this%cwdn_col(c)) * &
                              this%decomp_cascade_ctransfer_col(c,i_cwdl2)
           this%ligninNratioAvg_col(c) = &
@@ -4480,7 +4479,7 @@ contains
               ligninNratio_cwd) / &
               max(1.0e-3_r8, leafc_to_litter_col(c) + &
                              frootc_to_litter_col(c) + &
-                             cwdc_to_litter(c))
+                             this%decomp_cascade_ctransfer_col(c,i_cwdl2))
        end do
     end if
 

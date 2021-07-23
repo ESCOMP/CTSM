@@ -672,7 +672,7 @@ contains
 
     associate(                                                           &
          annsum_npp_col => cnveg_carbonflux_inst%annsum_npp_col        , & ! Input:  [real(r8) (:)     ]  annual sum of NPP at the column level (gC/m2/yr)
-         ligninNratioAvg => cnveg_carbonflux_inst%ligninNratioAvg_col  , & ! Input:  [real(r8) (:)     ]  column-level lignin to nitrogen ratio (TODO Are numerator/denominator units the same as in testbed?)
+         ligninNratioAvg => cnveg_carbonflux_inst%ligninNratioAvg_col  , & ! Input:  [real(r8) (:)     ]  column-level lignin to nitrogen ratio
 
          minpsi         => params_inst%minpsi_bgc                      , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
          maxpsi         => params_inst%maxpsi_bgc                      , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
@@ -996,7 +996,6 @@ contains
 
             ! Microbial concentration with necessary unit conversions
             ! mgC/cm3 = gC/m3 * (1e3 mg/g) / (1e6 cm3/m3)
-            ! TODO Check that decomp_cpools_vr is populating for microbial pools
             g_to_mg = 1.0e3_r8  ! put unit conversions in clm_varcon?
             cm3_to_m3 = 1.0e-6_r8
             m1_conc = (decomp_cpools_vr(c,j,i_cop_mic) / col%dz(c,j)) * &
