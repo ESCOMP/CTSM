@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
-  use clm_varpar                         , only : i_met_lit, i_litr_min, i_litr_max, i_cwd
+  use clm_varpar                         , only : i_met_lit, i_litr_min, i_litr_max, i_cwd, i_cwdl2
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -214,7 +214,6 @@ contains
     integer :: i_s3s1
     integer :: i_m1s3
     integer :: i_m2s3
-    integer :: i_cwdl2
     real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
 
     integer  :: c, j    ! indices
@@ -997,6 +996,7 @@ contains
 
             ! Microbial concentration with necessary unit conversions
             ! mgC/cm3 = gC/m3 * (1e3 mg/g) / (1e6 cm3/m3)
+            ! TODO Check that decomp_cpools_vr is populating for microbial pools
             g_to_mg = 1.0e3_r8  ! put unit conversions in clm_varcon?
             cm3_to_m3 = 1.0e-6_r8
             m1_conc = (decomp_cpools_vr(c,j,i_cop_mic) / col%dz(c,j)) * &

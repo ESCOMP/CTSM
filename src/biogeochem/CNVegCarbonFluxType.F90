@@ -11,7 +11,7 @@ module CNVegCarbonFluxType
   use decompMod                          , only : bounds_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
+  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max, i_cwdl2
   use clm_varcon                         , only : spval, dzsoi_decomp
   use clm_varctl                         , only : use_cndv, use_c13, use_nitrif_denitrif, use_crop
   use clm_varctl                         , only : use_grainproduct
@@ -4432,21 +4432,6 @@ contains
             l2g_scale_type = 'unity')
     end if
 
-    if (use_mimics_decomp) then
-       call p2c(bounds, num_soilc, filter_soilc, &
-            ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
-            ligninNratio_leaf_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            ligninNratio_froot_patch(bounds%begp:bounds%endp), &
-            ligninNratio_froot_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            this%leafc_to_litter_patch(bounds%begp:bounds%endp), &
-            leafc_to_litter_col(bounds%begc:bounds%endc))
-       call p2c(bounds, num_soilc, filter_soilc, &
-            this%frootc_to_litter_patch(bounds%begp:bounds%endp), &
-            frootc_to_litter_col(bounds%begc:bounds%endc))
-    end if
-
     call p2c(bounds, num_soilc, filter_soilc, &
          this%fire_closs_patch(bounds%begp:bounds%endp), &
          this%fire_closs_p2c_col(bounds%begc:bounds%endc))
@@ -4468,15 +4453,31 @@ contains
          this%gpp_col(bounds%begc:bounds%endc))
 
     if (use_mimics_decomp) then
+       call p2c(bounds, num_soilc, filter_soilc, &
+            ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
+            ligninNratio_leaf_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            ligninNratio_froot_patch(bounds%begp:bounds%endp), &
+            ligninNratio_froot_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%leafc_to_litter_patch(bounds%begp:bounds%endp), &
+            leafc_to_litter_col(bounds%begc:bounds%endc))
+       call p2c(bounds, num_soilc, filter_soilc, &
+            this%frootc_to_litter_patch(bounds%begp:bounds%endp), &
+            frootc_to_litter_col(bounds%begc:bounds%endc))
+
        ! Calculate ligninNratioAve
        ! TODO define new var cwdc_to_litter as the flux from cwdl2 transition
        ! TODO See how *CascadeBGC gets cwd_flig but prob needs to be read as
        !      a shared param now
        do fc = 1,num_soilc
           c = filter_soilc(fc)
+          ligninNratio_cwd = cwd_flig * &
+                             (this%cwdc_col(c) / this%cwdn_col(c)) * &
+                             this%decomp_cascade_ctransfer_col(c,i_cwdl2)
           this%ligninNratioAvg_col(c) = &
              (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
-              cwd_flig * (this%cwdc_col(c) / this%cwdn_col(c)) * cwdc_to_litter(c)) / &
+              ligninNratio_cwd) / &
               max(1.0e-3_r8, leafc_to_litter_col(c) + &
                              frootc_to_litter_col(c) + &
                              cwdc_to_litter(c))
