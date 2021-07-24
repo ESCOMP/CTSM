@@ -1120,6 +1120,7 @@ contains
     if (this%params%use_groundwater_irrigation) then
 
        call CalcTracerFromBulk( &
+            subgrid_level = namec, &
             lb            = begc, &
             num_pts       = num_soilc, &
             filter_pts    = filter_soilc, &
@@ -1129,6 +1130,7 @@ contains
             tracer_val    = waterflux_tracer_inst%qflx_gw_con_irrig_col(begc:endc))
        do j = 1, nlevsoi
           call CalcTracerFromBulk( &
+               subgrid_level = namec, &
                lb            = begc, &
                num_pts       = num_soilc, &
                filter_pts    = filter_soilc, &
@@ -1314,7 +1316,7 @@ contains
        else if(this%irrig_method_patch(p) == irrig_method_sprinkler) then
           waterflux_inst%qflx_irrig_sprinkler_patch(p) = qflx_irrig_tot
        else
-          call endrun(msg=' ERROR: irrig_method_patch set to invalid value ' // &
+          call endrun(subgrid_index=p, subgrid_level=namep, msg=' ERROR: irrig_method_patch set to invalid value ' // &
                errMsg(sourcefile, __LINE__))
        endif
 

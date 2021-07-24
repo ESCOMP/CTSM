@@ -10,7 +10,7 @@ module Wateratm2lndType
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
   use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
-  use clm_varcon     , only : spval
+  use clm_varcon     , only : spval, namec
   use ColumnType     , only : col
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
@@ -385,6 +385,7 @@ contains
       end do
 
       call CalcTracerFromBulk( &
+           subgrid_level = namec, &
            lb = begc, &
            num_pts = num_allc, &
            filter_pts = filter_allc, &

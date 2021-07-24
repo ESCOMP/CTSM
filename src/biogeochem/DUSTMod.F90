@@ -16,7 +16,7 @@ module DUSTMod
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
   use clm_varpar           , only : dst_src_nbr, ndst, sz_nbr
-  use clm_varcon           , only : grav, spval
+  use clm_varcon           , only : grav, spval, namep, namel
   use landunit_varcon      , only : istcrop, istsoil
   use clm_varctl           , only : iulog
   use abortutils           , only : endrun
@@ -297,7 +297,7 @@ contains
       end do
       if (found) then
          write(iulog,*) subname//':: error: sumwt is greater than 1.0 at l= ',index
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=index, subgrid_level=namel, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Loop through patches
@@ -333,7 +333,7 @@ contains
          p = filter_nolakep(fp)
          if (lnd_frc_mbl(p)>1.0_r8 .or. lnd_frc_mbl(p)<0.0_r8) then
             write(iulog,*)'Error dstmbl: pft= ',p,' lnd_frc_mbl(p)= ',lnd_frc_mbl(p)
-            call endrun(msg=errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=p, subgrid_level=namep, msg=errMsg(sourcefile, __LINE__))
          end if
       end do
 

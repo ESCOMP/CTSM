@@ -10,7 +10,7 @@ module UrbanParamsType
   use abortutils   , only : endrun
   use decompMod    , only : bounds_type
   use clm_varctl   , only : iulog, fsurdat
-  use clm_varcon   , only : namel, grlnd, spval
+  use clm_varcon   , only : nameg, namel, grlnd, spval
   use LandunitType , only : lun                
   !
   implicit none
@@ -811,7 +811,7 @@ contains
           write(iulog,*)'tk_improad: ',urbinp%tk_improad(nindx,dindx,1:nlev)
           write(iulog,*)'cv_improad: ',urbinp%cv_improad(nindx,dindx,1:nlev)
        end if
-       call endrun(msg=errmsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=nindx, subgrid_level=nameg, msg=errmsg(sourcefile, __LINE__))
     end if
 
   end subroutine CheckUrban

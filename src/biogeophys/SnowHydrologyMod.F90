@@ -1229,7 +1229,8 @@ contains
           write(iulog,*) "frac_sno_eff        = ", frac_sno_eff(c)
           write(iulog,*) "qflx_soliddew_to_top_layer*dtime = ", qflx_soliddew_to_top_layer(c)*dtime
           write(iulog,*) "qflx_solidevap_from_top_layer*dtime = ", qflx_solidevap_from_top_layer(c)*dtime
-          call endrun("In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative")
+          call endrun(subgrid_index=c, subgrid_level=namec, &
+               msg="In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative")
        end if
 
        if (h2osoi_liq(c,lev_top(c)) < 0._r8) then
@@ -1242,7 +1243,8 @@ contains
           write(iulog,*) "qflx_liq_grnd*dtime  = ", qflx_liq_grnd(c)*dtime
           write(iulog,*) "qflx_liqdew_to_top_layer*dtime  = ", qflx_liqdew_to_top_layer(c)*dtime
           write(iulog,*) "qflx_liqevap_from_top_layer*dtime = ", qflx_liqevap_from_top_layer(c)*dtime
-          call endrun("In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative")
+          call endrun(subgrid_index=c, subgrid_level=namec, &
+               msg="In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative")
        end if
 
     end do
@@ -1393,6 +1395,7 @@ contains
        end do
 
        call CalcTracerFromBulkMasked( &
+            subgrid_level = namec, &
             lb            = begc, &
             num_pts       = num_snowc, &
             filter_pts    = filter_snowc, &
@@ -3478,6 +3481,7 @@ contains
          )
 
     call CalcTracerFromBulk( &
+         subgrid_level = namec, &
          lb            = begc, &
          num_pts       = snow_capping_filterc%num, &
          filter_pts    = snow_capping_filterc%indices, &
@@ -3487,6 +3491,7 @@ contains
          tracer_val    = trac_qflx_snwcp_ice(begc:endc))
 
     call CalcTracerFromBulk( &
+         subgrid_level = namec, &
          lb            = begc, &
          num_pts       = snow_capping_filterc%num, &
          filter_pts    = snow_capping_filterc%indices, &
@@ -3496,6 +3501,7 @@ contains
          tracer_val    = trac_qflx_snwcp_liq(begc:endc))
 
     call CalcTracerFromBulk( &
+         subgrid_level = namec, &
          lb            = begc, &
          num_pts       = snow_capping_filterc%num, &
          filter_pts    = snow_capping_filterc%indices, &
@@ -3505,6 +3511,7 @@ contains
          tracer_val    = trac_qflx_snwcp_discarded_ice(begc:endc))
 
     call CalcTracerFromBulk( &
+         subgrid_level = namec, &
          lb            = begc, &
          num_pts       = snow_capping_filterc%num, &
          filter_pts    = snow_capping_filterc%indices, &

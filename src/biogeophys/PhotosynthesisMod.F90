@@ -1374,7 +1374,7 @@ contains
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
             
            if ( (slatop(patch%itype(p)) *leafcn(patch%itype(p))) .le. 0.0_r8)then
-              call endrun( "ERROR: slatop or leafcn is zero" )
+              call endrun(subgrid_index=p, subgrid_level=namep, msg="ERROR: slatop or leafcn is zero")
            end if
            lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(patch%itype(p)))
          end if   
@@ -2200,7 +2200,7 @@ contains
     fb=f2
     if((fa > 0._r8 .and. fb > 0._r8).or.(fa < 0._r8 .and. fb < 0._r8))then
        write(iulog,*) 'root must be bracketed for brent'
-       call endrun(msg=errmsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=ip, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
     endif
     c=b
     fc=fb
@@ -3884,7 +3884,7 @@ contains
     do phase=1, nphs
        if ( (fa(phase) > 0._r8 .and. fb(phase) > 0._r8) .or. (fa(phase) < 0._r8 .and. fb(phase) < 0._r8) ) then
           write(iulog,*) 'root must be bracketed for brent'
-          call endrun(msg=errmsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=ip, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
        endif
     enddo
     
@@ -4507,7 +4507,8 @@ contains
 #ifndef NDEBUG
     ! Only execute this code if DEBUG=TRUE
     if ( nvegwcs /= 4 )then
-       call endrun(msg='Error:: this function is hardcoded for 4x4 matrices with nvegwcs==4'//errMsg(__FILE__, __LINE__))
+       call endrun(subgrid_index=p, subgrid_level=namep, &
+            msg='Error:: this function is hardcoded for 4x4 matrices with nvegwcs==4'//errMsg(__FILE__, __LINE__))
     end if
 #endif
     

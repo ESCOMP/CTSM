@@ -392,7 +392,7 @@ contains
                end do
             else
                write(iulog,*) 'water_state_type InitCold: unhandled landunit type ', lun%itype(l)
-               call endrun(msg = 'unhandled landunit type', &
+               call endrun(subgrid_index=c, subgrid_level=namec, msg = 'unhandled landunit type', &
                     additional_msg = errMsg(sourcefile, __LINE__))
             endif
             do j = 1, nlevs

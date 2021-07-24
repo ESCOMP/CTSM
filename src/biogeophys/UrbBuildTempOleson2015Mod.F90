@@ -205,7 +205,7 @@ contains
     use clm_varcon      , only : rair, pstd, cpair, sb, hcv_roof, hcv_roof_enhanced, &
                                  hcv_floor, hcv_floor_enhanced, hcv_sunw, hcv_shdw, &
                                  em_roof_int, em_floor_int, em_sunw_int, em_shdw_int, &
-                                 dz_floor, dens_floor, cp_floor, vent_ach
+                                 dz_floor, dens_floor, cp_floor, vent_ach, namel
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl      , only : iulog
     use abortutils      , only : endrun
@@ -447,19 +447,19 @@ contains
          if (abs(sum-1._r8) > 1.e-06_r8 ) then
             write (iulog,*) 'urban floor view factor error',sum
             write (iulog,*) 'clm model is stopping'
-            call endrun()
+            call endrun(subgrid_index=l, subgrid_level=namel)
          endif
          sum = vf_rw(l) + vf_fw(l) + vf_ww(l)
          if (abs(sum-1._r8) > 1.e-06_r8 ) then
             write (iulog,*) 'urban wall view factor error',sum
             write (iulog,*) 'clm model is stopping'
-            call endrun()
+            call endrun(subgrid_index=l, subgrid_level=namel)
          endif
          sum = vf_fr(l) + vf_wr(l) + vf_wr(l)
          if (abs(sum-1._r8) > 1.e-06_r8 ) then
             write (iulog,*) 'urban roof view factor error',sum
             write (iulog,*) 'clm model is stopping'
-            call endrun()
+            call endrun(subgrid_index=l, subgrid_level=namel)
          endif
 
        endif
@@ -662,7 +662,7 @@ contains
            write(iulog,*)'dgesv info: ',info
            write (iulog,*) 'dgesv error'
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=namel)
          end if
          ! Assign new temperatures
          t_roof_inner(l)  = result(1)
@@ -835,7 +835,7 @@ contains
          if (abs(qrd_building(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside building net longwave radiation balance error ',qrd_building(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=namel)
          end if
 
          qcv_roof(l) = 0.5_r8*hcv_roofi(l)*(t_roof_inner(l) - t_building(l)) + 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) &
@@ -847,7 +847,7 @@ contains
          if (abs(enrgy_bal_roof(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside roof energy balance error ',enrgy_bal_roof(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=namel)
          end if
 
          qcv_sunw(l) = 0.5_r8*hcv_sunwi(l)*(t_sunw_inner(l) - t_building(l)) + 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) &
@@ -859,7 +859,7 @@ contains
          if (abs(enrgy_bal_sunw(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside sunwall energy balance error ',enrgy_bal_sunw(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=namel)
          end if
 
          qcv_shdw(l) = 0.5_r8*hcv_shdwi(l)*(t_shdw_inner(l) - t_building(l)) + 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) &
@@ -871,7 +871,7 @@ contains
          if (abs(enrgy_bal_shdw(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside shadewall energy balance error ',enrgy_bal_shdw(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=namel)
          end if
 
          qcv_floor(l) = 0.5_r8*hcv_floori(l)*(t_floor(l) - t_building(l)) + 0.5_r8*hcv_floori(l)*(t_floor_bef(l) &
@@ -881,7 +881,7 @@ contains
          if (abs(enrgy_bal_floor(l)) > .10_r8 ) then
            write (iulog,*) 'urban inside floor energy balance error ',enrgy_bal_floor(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=namel)
          end if
 
          enrgy_bal_buildair(l) = (ht_roof(l)*rho_dair(l)*cpair/dtime)*(t_building(l) - t_building_bef(l)) &
@@ -897,7 +897,7 @@ contains
          if (abs(enrgy_bal_buildair(l)) > .10_r8 ) then
            write (iulog,*) 'urban building air energy balance error ',enrgy_bal_buildair(l)
            write (iulog,*) 'clm model is stopping'
-           call endrun()
+           call endrun(subgrid_index=l, subgrid_level=namel)
          end if
        end if
     end do

@@ -1070,7 +1070,7 @@ contains
     use abortutils           , only : endrun
     use decompMod            , only : bounds_type
     use clm_varctl           , only : iulog, use_hydrstress
-    use clm_varcon           , only : denh2o, denice
+    use clm_varcon           , only : denh2o, denice, namec
     use clm_varpar           , only : nlevsoi
     use clm_time_manager     , only : get_step_size_real, get_nstep
     use SoilStateType        , only : soilstate_type
@@ -1307,7 +1307,8 @@ contains
                           rhs,       & ! intent(inout): [r8(nlayers  )] RHS vector; becomes the solution vector on output
                           nlayers,   & ! intent(in):    [integer]       the leading dimension of matrix rhs
                           err)
-               if(err/=0) call endrun(subname // ':: problem with the lapack solver')
+               if(err/=0) call endrun(subgrid_index=c, subgrid_level=namec, &
+                    msg = subname // ':: problem with the lapack solver')
 
                ! save the iteration increment
                dwat(filter_hydrologyc(fc),1:nlayers) = rhs(1:nlayers)

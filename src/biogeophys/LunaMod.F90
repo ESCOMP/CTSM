@@ -12,7 +12,7 @@ module LunaMod
   use clm_varcon            , only : rgas, tfrz,spval
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog
-  use clm_varcon            , only : namep 
+  use clm_varcon            , only : namep
   use clm_varpar            , only : nlevcan
   use decompMod             , only : bounds_type
   use pftconMod             , only : pftcon
@@ -446,7 +446,7 @@ module LunaMod
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:',FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(sourcefile, __LINE__))
+                             call endrun(subgrid_index=p, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
                          endif
                          if(vcmx25_z(p, z)>1000._r8 .or. vcmx25_z(p, z)<0._r8)then
                              write(iulog, *) 'Warning: Vc,mx25 become unrealistic (>1000 or negative) for patch=', &
@@ -460,7 +460,7 @@ module LunaMod
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:', FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(sourcefile, __LINE__))
+                             call endrun(subgrid_index=p, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
                          endif
                          if(jmx25_z(p, z)>2000._r8 .or.  jmx25_z(p, z)<0._r8)then
                              write(iulog, *) 'Warning: Jmx25 become unrealistic (>2000, or negative) for patch=', &

@@ -10,6 +10,7 @@ module CNBalanceCheckMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use decompMod                       , only : bounds_type
   use abortutils                      , only : endrun
+  use clm_varcon                      , only : namec, nameg
   use clm_varctl                      , only : iulog, use_nitrif_denitrif
   use clm_time_manager                , only : get_step_size_real
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
@@ -306,7 +307,7 @@ contains
          write(iulog,*)'wood_harvestc            = ',wood_harvestc(c)*dt
          write(iulog,*)'grainc_to_cropprodc      = ',grainc_to_cropprodc(c)*dt
          write(iulog,*)'-1*som_c_leached         = ',som_c_leached(c)*dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=c, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Repeat error check at the gridcell level
@@ -378,7 +379,7 @@ contains
          write(iulog,*)'dwt_seedc_to_deadstem_grc =', dwt_seedc_to_deadstem_grc(g) * dt
          write(iulog,*)'--- Outputs ---'
          write(iulog,*)'-1*som_c_leached_grc    = ', som_c_leached_grc(g) * dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=nameg, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate
@@ -541,10 +542,7 @@ contains
          write(iulog,*)'net flux                 = ',(col_ninputs(c)-col_noutputs(c))*dt
          write(iulog,*)'inputs,ffix,nfix,ndep    = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
          write(iulog,*)'outputs,ffix,nfix,ndep   = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
-        
-         
-         
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=c, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Repeat error check at the gridcell level
@@ -618,7 +616,7 @@ contains
          write(iulog,*) 'grc_noutputs_partial     =', grc_noutputs_partial(g) * dt
          write(iulog,*) 'dwt_conv_nflux_grc       =', dwt_conv_nflux_grc(g) * dt
          write(iulog,*) 'product_loss_grc         =', product_loss_grc(g) * dt
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=nameg, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate

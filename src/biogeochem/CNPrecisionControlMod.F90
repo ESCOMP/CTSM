@@ -8,6 +8,7 @@ module CNPrecisionControlMod
   ! 
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
+  use clm_varcon             , only : namep
   use CNVegCarbonStateType   , only : cnveg_carbonstate_type
   use CNVegNitrogenStateType , only : cnveg_nitrogenstate_type
   use PatchType              , only : patch
@@ -690,7 +691,8 @@ contains
           if ( .not. lallowneg .and. ((carbon_patch(p) < cnegcrit) .or. (nitrogen_patch(p) < nnegcrit)) ) then
              write(iulog,*) 'ERROR: Carbon or Nitrogen patch negative = ', carbon_patch(p), nitrogen_patch(p)
              write(iulog,*) 'ERROR: limits = ', cnegcrit, nnegcrit
-             call endrun(msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
+             call endrun(subgrid_index=p, subgrid_level=namep, &
+                  msg='ERROR: carbon or nitrogen state critically negative '//errMsg(sourcefile, lineno))
           else if ( abs(carbon_patch(p)) < ccrit .or. (use_nguardrail .and. abs(nitrogen_patch(p)) < ncrit) ) then
              num_truncatep = num_truncatep + 1
              filter_truncatep(num_truncatep) = p
@@ -759,7 +761,8 @@ contains
           if ( .not. lallowneg .and. (carbon_patch(p) < cnegcrit) ) then
              write(iulog,*) 'ERROR: Carbon patch negative = ', carbon_patch(p)
              write(iulog,*) 'ERROR: limit = ', cnegcrit
-             call endrun(msg='ERROR: carbon state critically negative '//errMsg(sourcefile, lineno))
+             call endrun(subgrid_index=p, subgrid_level=namep, &
+                  msg='ERROR: carbon state critically negative '//errMsg(sourcefile, lineno))
           else if ( abs(carbon_patch(p)) < ccrit) then
 
              num_truncatep = num_truncatep + 1
@@ -800,8 +803,9 @@ contains
     do fp = 1,num_soilp
        p = filter_soilp(fp)
        if ( nitrogen_patch(p) < nnegcrit ) then
-          !write(iulog,*) 'WARNING: Nitrogen patch negative = ', nitrogen_patch
-          !call endrun(msg='ERROR: nitrogen state critically negative'//errMsg(sourcefile, lineno))
+          ! write(iulog,*) 'WARNING: Nitrogen patch negative = ', nitrogen_patch
+          ! call endrun(subgrid_index=p, subgrid_level=namep, &
+          !      msg='ERROR: nitrogen state critically negative'//errMsg(sourcefile, lineno))
        else if ( abs(nitrogen_patch(p)) < ncrit) then
           pn(p) = pn(p) + nitrogen_patch(p)
           nitrogen_patch(p) = 0._r8

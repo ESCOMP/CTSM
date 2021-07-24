@@ -7,6 +7,7 @@ module CNDVEstablishmentMod
   !
   ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
+  use clm_varcon           , only : nameg
   use decompMod            , only : bounds_type
   use pftconMod            , only : pftcon
   use atm2lndType          , only : atm2lnd_type
@@ -443,7 +444,7 @@ contains
       if (fn > 0) then
          g = filterg(1)
          write(iulog,*) 'Error in Establishment: fpc_total =',fpc_total(g), ' at gridcell ',g
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=nameg, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate 

@@ -936,7 +936,11 @@ contains
              call bulk_vars%get_data(var_num, bulk)
              call tracer_vars%get_data(var_num, tracer)
 
-             call CompareBulkToTracer(begi, endi, &
+             ! FIXME(wjs, 2021-07-23) set subgrid_level appropriately here
+             call CompareBulkToTracer( &
+                  subgrid_level = 'FIXME', &
+                  bounds_beg = begi, &
+                  bounds_end = endi, &
                   bulk   = bulk(begi:endi), &
                   tracer = tracer(begi:endi), &
                   ratio = tracer_info%get_ratio(), &
