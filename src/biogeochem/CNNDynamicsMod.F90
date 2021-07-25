@@ -125,7 +125,7 @@ contains
     ! directly into the canopy and mineral N entering the soil pool.
     !
     ! !USES:
-    use CNSharedParamsMod    , only: use_fun
+    !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst

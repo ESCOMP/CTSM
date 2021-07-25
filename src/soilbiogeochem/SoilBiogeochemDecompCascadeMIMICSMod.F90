@@ -928,9 +928,9 @@ contains
          c = filter_soilc(fc)
 
          ! Time-dependent params from Wieder et al. 2015 & testbed code
-         ! TODO STILL MISSING N-related stuff (DIN... in the testbed).
-         !      Start looking in NitrogenCompetitionMod. We will need hooks to
-         !      the ctsm no3 and nh4 terms. The nh4 fluxes are "nmin".
+         ! TODO STILL MISSING N-related stuff:
+         !      - DIN... in the testbed
+         !      - Need hooks to no3, nh4 terms. The nh4 fluxes are "nmin".
 
          ! Set limits on Lignin:N to keep fmet > 0.2
          ! Necessary for litter quality in boreal forests with high cwd flux
