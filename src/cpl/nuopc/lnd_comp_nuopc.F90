@@ -76,9 +76,9 @@ module lnd_comp_nuopc
   real(R8)               :: orb_mvelp       ! attribute - moving vernal equinox longitude
   real(R8)               :: orb_eccen       ! attribute and update-  orbital eccentricity
 
-  logical                :: scol_valid      ! if single_column, does point have a mask of zero 
+  logical                :: scol_valid      ! if single_column, does point have a mask of zero
 
-  integer                :: nthrds          ! Number of threads per task in this component  
+  integer                :: nthrds          ! Number of threads per task in this component
 
   character(len=*) , parameter :: orb_fixed_year       = 'fixed_year'
   character(len=*) , parameter :: orb_variable_year    = 'variable_year'
@@ -324,7 +324,7 @@ contains
     use decompMod                 , only : bounds_type, get_proc_bounds
     use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_from_readmesh
     use lnd_set_decomp_and_domain , only : lnd_set_mesh_for_single_column
-    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column 
+    use lnd_set_decomp_and_domain , only : lnd_set_decomp_and_domain_for_single_column
 
     ! input/output variables
     type(ESMF_GridComp)  :: gcomp
@@ -385,7 +385,7 @@ contains
     call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     !----------------------------------------------------------------------------
-    ! Single column logic - if mask is zero for nearest neighbor search then 
+    ! Single column logic - if mask is zero for nearest neighbor search then
     ! set all export state fields to zero and return
     !----------------------------------------------------------------------------
 
@@ -477,24 +477,24 @@ contains
        call memmon_dump_fort('memmon.out','lnd_comp_nuopc_InitializeRealize:start::',lbnum)
     endif
 #endif
-    !----------------------------------------------------------------------------                               
-    ! Initialize component threading                                                                            
-    !----------------------------------------------------------------------------                               
-                                                                                                                
-    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)                                               
-    if (chkerr(rc,__LINE__,u_FILE_u)) return                                                                    
-    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)                                              
-    if (chkerr(rc,__LINE__,u_FILE_u)) return                                                                    
-                                                                                                                
-    if(localPeCount == 1) then                                                                                  
-       call NUOPC_CompAttributeGet(gcomp, "nthreads", value=cvalue, rc=rc)                                      
-       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return     
-       read(cvalue,*) nthrds                                                                                    
-    else                                                                                                        
-       nthrds = localPeCount                                                                                    
-    endif                                                                                                       
-                                                                                                                
-    !$  call omp_set_num_threads(nthrds)                                                                        
+    !----------------------------------------------------------------------------
+    ! Initialize component threading
+    !----------------------------------------------------------------------------
+
+    call ESMF_GridCompGet(gcomp, vm=vm, localPet=localPet, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    call ESMF_VMGet(vm, pet=localPet, peCount=localPeCount, rc=rc)
+    if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    if(localPeCount == 1) then
+       call NUOPC_CompAttributeGet(gcomp, "nthreads", value=cvalue, rc=rc)
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=u_FILE_u)) return
+       read(cvalue,*) nthrds
+    else
+       nthrds = localPeCount
+    endif
+
+    !$  call omp_set_num_threads(nthrds)
 
     !----------------------
     ! Consistency check on namelist filename
@@ -966,6 +966,7 @@ contains
     character(len=256)       :: stop_option    ! Stop option units
     integer                  :: stop_n         ! Number until stop interval
     integer                  :: stop_ymd       ! Stop date (YYYYMMDD)
+    integer                  :: stop_tod       ! Stop time of day (seconds)
     type(ESMF_ALARM)         :: stop_alarm
     character(len=128)       :: name
     integer                  :: alarmcount
@@ -1004,7 +1005,7 @@ contains
 
        call ESMF_GridCompGet(gcomp, name=name, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_LogWrite(subname//'setting alarms for' // trim(name), ESMF_LOGMSG_INFO)
+       call ESMF_LogWrite(subname//'setting alarms for ' // trim(name), ESMF_LOGMSG_INFO)
 
        !----------------
        ! Restart alarm
@@ -1044,10 +1045,17 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        read(cvalue,*) stop_ymd
 
-       call alarmInit(mclock, stop_alarm, stop_option, &
+       call NUOPC_CompAttributeGet(gcomp, name="stop_tod", value=cvalue, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       read(cvalue,*) stop_tod
+
+       call alarmInit(mclock,           &
+            alarm = stop_alarm,         &
+            option = stop_option,       &
             opt_n   = stop_n,           &
             opt_ymd = stop_ymd,         &
-            RefTime = mcurrTime,           &
+            opt_tod = stop_tod,         &
+            RefTime = mcurrTime,        &
             alarmname = 'alarm_stop', rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 

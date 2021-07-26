@@ -1,4 +1,132 @@
 ===============================================================
+Tag name:  ctsm5.1.dev049
+Originator(s):  jedwards4b/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Jul 26 01:31:04 MDT 2021
+One-line Summary: Update externals, NEON updates, fix stop_option=date, move neon niwo test to match user_mods, local time option
+
+Purpose and description of changes
+----------------------------------
+
+Move the NEON_NIWO test to NEON/NIWO to match the names in usermods. Output particular fields for the NEON
+cases, and use a reduced size dataset for lightning for NEON sites. Update NEON surface datasets with
+new scripts included here. Fix stop option for NUOPC. NEON NIWO test in testlist explicity uses the user-mod
+as well as the defaults testmod.
+
+This script is for modifying the surface dataset at neon sites using data available from the neon server.
+
+Also add the ability to output history fields for a particular time of day (in seconds) with the LXXXXX 
+history averaging option from Ronny Meier.
+
+Externals are updated extensively to the version with cpl7 cime directories split out for CESM.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #1412
+   Fixes #1412 -- Reduce data requirements for NEON single point sites
+   Fixes #1353 -- Need script to modify NEON surface datasets
+
+CIME Issues fixed (include issue #): #3915
+  Fixes cime/#3915 -- CESM nuopc build fails on izumi_nag
+
+Known bugs introduced in this tag (include issue #):
+  #1437 -- modify_singlept_site_neon.py seems to have trouble finding latest file and creates hidden file for output
+  #1436 -- Need subset_data.py script to be able to run from any directory
+
+Known bugs found since the previous tag (include issue #):
+   #1429 -- Modified NEON surface datasets have errors
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  NEON cases now download data to $RUNDIR
+
+Changes to the datasets (e.g., parameter, surface or initial files): NEON sufdata
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Note when you have a test with two testmod directories it won't be able to reduce any deuplication
+   that happens in directories used between the two.
+
+Changes to tests or testing:
+   Test mods in testlists can now include multiple test mod directories and this is used for the NEON test
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+ 
+    cheyenne - PASS (47 tests differ from before because of NEON surface dataset update)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cism, mosart, rtm, cime, cmeps, cdeps (cime split)
+   cism   to cismwrap_2_1_85
+   mosart to mosart1_0_43
+   rtm    to rtm1_0_77
+   cime   to cime6.0.3
+   cmeps  to cmeps0.13.15
+   cdeps  to cdeps0.12.14
+
+   New cime-split externals:
+
+   cpl7.0.3
+   share1.0.2
+   MCT_2.11.0
+   pio2_5_4
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #1411 -- fix stop_option=date, move neon niwo test to match user_mods
+   #1375 -- Script for modifying neon surface dataset 
+   #1374 -- Local solar time option for average flag
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev048
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Sat Jul 10 11:39:55 MDT 2021

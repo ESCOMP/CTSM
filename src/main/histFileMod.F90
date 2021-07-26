@@ -5768,7 +5768,7 @@ contains
              valid = .true.
              if(tod < dtime .or. isecspday - tod <= dtime) then
                 write(iulog,*) 'Warning: Local time history output ', avgflag, ' is closer than ', &
-                   'dtime to midnight! This problematic particularly for daily output.'
+                   'dtime to midnight! This is problematic particularly for daily output.'
              end if
           else
              valid = .false.

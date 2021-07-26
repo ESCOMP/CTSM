@@ -1432,7 +1432,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases, 
+      <option name="comment"  >Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases,
                 (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
     </options>
   </test>
@@ -1680,7 +1680,7 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="SMS_D_Vnuopc_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/NEON_NIWO">
+  <test name="SMS_D_Vnuopc_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm51Bgc" testmods="clm/default--clm/NEON/NIWO">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="izumi"    compiler="nag"   category="aux_clm"/>
@@ -2422,7 +2422,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
-      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>      
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2442,7 +2442,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
-      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>      
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2516,16 +2516,6 @@
         <options>
           <option name="wallclock">00:20:00</option>
           <option name="comment">Want a year-long test covering the output_bgc and output_bgc_highfreq usermods; don't want a highfreq, year-long global test because of the output volume, so this is single-point.</option>
-        </options>
-      </machine>
-    </machines>
-  </test>
-  <test name="SMS_D_Lm1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm51Bgc" testmods="clm/localtimeOutput">
-    <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm">
-        <options>
-          <option name="wallclock">00:20:00</option>
-          <option name="comment">A short single-point test for local time output test mods </option>
         </options>
       </machine>
     </machines>
