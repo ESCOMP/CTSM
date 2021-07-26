@@ -38,6 +38,9 @@ bliT4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_200
 smiT2 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 bliT2 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 
+smia1 TSMscript_tools.sh contrib subset_data.py subset_data_YELL
+blia1 TSMscript_tools.sh contrib subset_data.py subset_data_YELL
+
 smi#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 bli#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 smi59 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
