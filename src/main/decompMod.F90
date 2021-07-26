@@ -22,8 +22,8 @@ module decompMod
   integer, parameter, public :: BOUNDS_SUBGRID_COHORT   = 5
 
   ! Define possible bounds levels
-  integer, parameter, public :: BOUNDS_LEVEL_PROC  = 1
-  integer, parameter, public :: BOUNDS_LEVEL_CLUMP = 2
+  integer, parameter, public :: bounds_level_proc  = 1
+  integer, parameter, public :: bounds_level_clump = 2
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: get_beg                  ! get beg bound for a given subgrid level
@@ -229,7 +229,7 @@ contains
     bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
     bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
 
-    bounds%level = BOUNDS_LEVEL_CLUMP
+    bounds%level = bounds_level_clump
     bounds%clump_index = n
 
   end subroutine get_clump_bounds
@@ -279,7 +279,7 @@ contains
     bounds%begCohort = 1
     bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
 
-    bounds%level = BOUNDS_LEVEL_PROC
+    bounds%level = bounds_level_proc
     bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
 
   end subroutine get_proc_bounds

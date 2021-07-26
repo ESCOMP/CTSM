@@ -8,7 +8,7 @@ module subgridRestMod
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use glc_elevclass_mod  , only : glc_get_num_elevation_classes, glc_get_elevclass_bounds
   use abortutils         , only : endrun
-  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, gindex_global, get_global_index_array
+  use decompMod          , only : bounds_type, bounds_level_proc, gindex_global, get_global_index_array
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
   use clm_varcon         , only : nameg, namel, namec, namep
@@ -593,7 +593,7 @@ contains
     character(len=*), parameter :: subname = 'save_old_weights'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname//' ERROR: expect proc-level bounds')
+    SHR_ASSERT(bounds%level == bounds_level_proc, subname//' ERROR: expect proc-level bounds')
 
     allocate(pft_wtlunit_before_rest_read(bounds%begp:bounds%endp))
     pft_wtlunit_before_rest_read(bounds%begp:bounds%endp) = patch%wtlunit(bounds%begp:bounds%endp)

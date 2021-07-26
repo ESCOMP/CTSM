@@ -157,7 +157,7 @@ contains
     use landunit_varcon, only : max_lunit
     use clm_varpar     , only : maxpatch_glc, natpft_size, cft_size
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use decompMod      , only : BOUNDS_LEVEL_PROC
+    use decompMod      , only : bounds_level_proc
     use histFileMod    , only : hist_addfld2d
     !
     ! !ARGUMENTS:
@@ -168,7 +168,7 @@ contains
     character(len=*), parameter :: subname = 'init_subgrid_weights_mod'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     ! ------------------------------------------------------------------------
     ! Allocate variables in subgrid_weights_diagnostics

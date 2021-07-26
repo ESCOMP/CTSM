@@ -1285,7 +1285,7 @@ contains
     !
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
-    use decompMod       , only : BOUNDS_LEVEL_PROC
+    use decompMod       , only : bounds_level_proc
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t            ! tape index
@@ -1316,7 +1316,7 @@ contains
     integer k_offset                    ! offset for mapping sliced subarray pointers when outputting variables in PFT/col vector form
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
@@ -1579,7 +1579,7 @@ contains
     !
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
-    use decompMod       , only : BOUNDS_LEVEL_PROC
+    use decompMod       , only : bounds_level_proc
     use clm_varctl      , only : iulog
     !
     ! !ARGUMENTS:
@@ -1614,7 +1614,7 @@ contains
     character(len=*),parameter :: subname = 'hist_update_hbuf_field_2d'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     avgflag             =  tape(t)%hlist(f)%avgflag
     nacs                => tape(t)%hlist(f)%nacs

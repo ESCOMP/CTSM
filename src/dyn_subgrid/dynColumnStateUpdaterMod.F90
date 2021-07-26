@@ -94,7 +94,7 @@ module dynColumnStateUpdaterMod
   use abortutils           , only : endrun
   use clm_varctl           , only : iulog  
   use clm_varcon           , only : namec, spval
-  use decompMod            , only : bounds_type, BOUNDS_LEVEL_PROC
+  use decompMod            , only : bounds_type, bounds_level_proc
   use ColumnType           , only : col
   use LandunitType         , only : lun
   use landunit_varcon      , only : max_lunit, landunit_is_special
@@ -187,7 +187,7 @@ contains
     character(len=*), parameter :: subname = 'constructor'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     allocate(constructor%cwtgcell_old(bounds%begc:bounds%endc))
     constructor%cwtgcell_old(:) = nan

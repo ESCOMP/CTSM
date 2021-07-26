@@ -9,7 +9,7 @@ module dynpftFileMod
   ! !USES:
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
-  use decompMod             , only : bounds_type, BOUNDS_LEVEL_PROC
+  use decompMod             , only : bounds_type, bounds_level_proc
   use dynFileMod            , only : dyn_file_type
   use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
   use clm_varctl            , only : iulog
@@ -66,7 +66,7 @@ contains
     character(len= 32)     :: subname='dynpft_init'! subroutine name
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT_ALL(bounds%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     if (masterproc) then
        write(iulog,*) 'Attempting to read pft dynamic landuse data .....'
@@ -259,7 +259,7 @@ contains
     ! NOTE(wjs, 2014-12-10) I'm not sure if there is still the requirement that SCAM
     ! hasn't been defined
 
-    SHR_ASSERT_ALL(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT_ALL(bounds%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     ! Get pft weights for this time step
 
