@@ -15,8 +15,7 @@ module histFileMod
   use clm_varctl     , only : iulog, use_vertsoilc, use_fates, compname
   use clm_varcon     , only : spval, ispval
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
-  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
-  use GetGlobalValuesMod , only : get_global_index_array
+  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index_array
   use GridcellType   , only : grc
   use LandunitType   , only : lun
   use ColumnType     , only : col

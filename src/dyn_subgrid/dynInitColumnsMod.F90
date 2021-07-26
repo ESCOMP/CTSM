@@ -10,7 +10,7 @@ module dynInitColumnsMod
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
   use decompMod            , only : bounds_type
-  use abortutils           , only : endrun
+  use abortutils           , only : endrun, write_point_context
   use clm_varctl           , only : iulog  
   use clm_varcon           , only : namec
   use TemperatureType      , only : temperature_type
@@ -50,9 +50,6 @@ contains
     !
     ! !DESCRIPTION:
     ! Do initialization for all columns that are newly-active in this time step
-    !
-    ! !USES:
-    use GetGlobalValuesMod , only : write_point_context
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds                        ! bounds

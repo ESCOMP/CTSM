@@ -8,15 +8,14 @@ module subgridRestMod
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use glc_elevclass_mod  , only : glc_get_num_elevation_classes, glc_get_elevclass_bounds
   use abortutils         , only : endrun
-  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, gindex_global
+  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, gindex_global, get_global_index_array
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
   use clm_varcon         , only : nameg, namel, namec, namep
   use clm_varpar         , only : nlevsno, nlevmaxurbgrnd
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
-  use GetGlobalValuesMod , only : get_global_index_array
-  use GridcellType       , only : grc                
+  use GridcellType       , only : grc
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
   use PatchType          , only : patch                

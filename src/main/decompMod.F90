@@ -7,7 +7,7 @@ module decompMod
   !
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
-  
+
   use shr_sys_mod , only : shr_sys_abort ! use shr_sys_abort instead of endrun here to avoid circular dependency
   use clm_varctl  , only : iulog
   !
@@ -26,15 +26,17 @@ module decompMod
   integer, parameter, public :: BOUNDS_LEVEL_CLUMP = 2
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public get_beg            ! get beg bound for a given subgrid level
-  public get_end            ! get end bound for a given subgrid level
-  public get_proc_clumps    ! number of clumps for this processor
-  public get_proc_total     ! total no. of gridcells, landunits, columns and patchs for any processor
-  public get_proc_global    ! total gridcells, landunits, columns, patchs across all processors
-  public get_subgrid_level_gsize ! get global size associated with subgrid_level
-  public get_subgrid_level_gindex! get global index array associated with subgrid_level
-  public get_clump_bounds   ! clump beg and end gridcell,landunit,column,patch
-  public get_proc_bounds    ! this processor beg and end gridcell,landunit,column,patch
+  public :: get_beg                  ! get beg bound for a given subgrid level
+  public :: get_end                  ! get end bound for a given subgrid level
+  public :: get_clump_bounds         ! clump beg and end gridcell,landunit,column,patch
+  public :: get_proc_bounds          ! this processor beg and end gridcell,landunit,column,patch
+  public :: get_proc_total           ! total no. of gridcells, landunits, columns and patchs for any processor
+  public :: get_proc_global          ! total gridcells, landunits, columns, patchs across all processors
+  public :: get_proc_clumps          ! number of clumps for this processor
+  public :: get_global_index         ! Determine global index space value for target point
+  public :: get_global_index_array   ! Determine global index space value for target array
+  public :: get_subgrid_level_gsize  ! get global size associated with subgrid_level
+  public :: get_subgrid_level_gindex ! get global index array associated with subgrid_level
 
   ! !PRIVATE MEMBER FUNCTIONS:
   !
@@ -103,6 +105,9 @@ module decompMod
   integer, public, pointer :: gindex_patch(:)    => null()
   integer, public, pointer :: gindex_cohort(:)   => null()
   !------------------------------------------------------------------------------
+
+  character(len=*), parameter, private :: sourcefile = &
+       __FILE__
 
 contains
 
@@ -188,211 +193,306 @@ contains
   end function get_end
 
   !------------------------------------------------------------------------------
-   subroutine get_clump_bounds (n, bounds)
-     !
-     ! !DESCRIPTION:
-     ! Determine clump bounds
-     !
-     ! !ARGUMENTS:
-     integer, intent(in)  :: n                ! processor clump index
-     type(bounds_type), intent(out) :: bounds ! clump bounds
-     !
-     ! !LOCAL VARIABLES:
-     character(len=32), parameter :: subname = 'get_clump_bounds'  ! Subroutine name
-     integer :: cid                                                ! clump id
+  subroutine get_clump_bounds (n, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Determine clump bounds
+    !
+    ! !ARGUMENTS:
+    integer, intent(in)  :: n                ! processor clump index
+    type(bounds_type), intent(out) :: bounds ! clump bounds
+    !
+    ! !LOCAL VARIABLES:
+    character(len=32), parameter :: subname = 'get_clump_bounds'  ! Subroutine name
+    integer :: cid                                                ! clump id
 #ifdef _OPENMP
-     integer, external :: OMP_GET_MAX_THREADS
-     integer, external :: OMP_GET_NUM_THREADS
+    integer, external :: OMP_GET_MAX_THREADS
+    integer, external :: OMP_GET_NUM_THREADS
 #endif
-     !------------------------------------------------------------------------------
-     !    Make sure this IS being called from a threaded region
+    !------------------------------------------------------------------------------
+    !    Make sure this IS being called from a threaded region
 #ifdef _OPENMP
-     if ( OMP_GET_NUM_THREADS() == 1 .and. OMP_GET_MAX_THREADS() > 1 )then
-        call shr_sys_abort( trim(subname)//' ERROR: Calling from inside a non-threaded region)')
-     end if
-#endif
-
-     cid  = procinfo%cid(n)
-     bounds%begp      = clumps(cid)%begp - procinfo%begp + 1
-     bounds%endp      = clumps(cid)%endp - procinfo%begp + 1
-     bounds%begc      = clumps(cid)%begc - procinfo%begc + 1
-     bounds%endc      = clumps(cid)%endc - procinfo%begc + 1
-     bounds%begl      = clumps(cid)%begl - procinfo%begl + 1
-     bounds%endl      = clumps(cid)%endl - procinfo%begl + 1
-     bounds%begg      = clumps(cid)%begg - procinfo%begg + 1
-     bounds%endg      = clumps(cid)%endg - procinfo%begg + 1
-     bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
-     bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
-
-     bounds%level = BOUNDS_LEVEL_CLUMP
-     bounds%clump_index = n
-
-   end subroutine get_clump_bounds
-
-   !------------------------------------------------------------------------------
-   subroutine get_proc_bounds (bounds, allow_call_from_threaded_region)
-     !
-     ! !DESCRIPTION:
-     ! Retrieve processor bounds
-     !
-     ! !ARGUMENTS:
-     type(bounds_type), intent(out) :: bounds ! processor bounds bounds
-
-     ! Normally this routine will abort if it is called from within a threaded region,
-     ! because in most cases you should be calling get_clump_bounds in that situation. If
-     ! you really want to be using this routine from within a threaded region, then set
-     ! allow_call_from_threaded_region to .true.
-     logical, intent(in), optional :: allow_call_from_threaded_region
-     !
-     ! !LOCAL VARIABLES:
-     logical :: l_allow_call_from_threaded_region
-#ifdef _OPENMP
-     integer, external :: OMP_GET_NUM_THREADS
-#endif
-     character(len=32), parameter :: subname = 'get_proc_bounds'  ! Subroutine name
-     !------------------------------------------------------------------------------
-     !    Make sure this is NOT being called from a threaded region
-     if (present(allow_call_from_threaded_region)) then
-        l_allow_call_from_threaded_region = allow_call_from_threaded_region
-     else
-        l_allow_call_from_threaded_region = .false.
-     end if
-#ifdef _OPENMP
-     if ( OMP_GET_NUM_THREADS() > 1 .and. .not. l_allow_call_from_threaded_region )then
-        call shr_sys_abort( trim(subname)//' ERROR: Calling from inside  a threaded region')
-     end if
+    if ( OMP_GET_NUM_THREADS() == 1 .and. OMP_GET_MAX_THREADS() > 1 )then
+       call shr_sys_abort( trim(subname)//' ERROR: Calling from inside a non-threaded region)')
+    end if
 #endif
 
-     bounds%begp = 1
-     bounds%endp = procinfo%endp - procinfo%begp + 1
-     bounds%begc = 1
-     bounds%endc = procinfo%endc - procinfo%begc + 1
-     bounds%begl = 1
-     bounds%endl = procinfo%endl - procinfo%begl + 1
-     bounds%begg = 1
-     bounds%endg = procinfo%endg - procinfo%begg + 1
-     bounds%begCohort = 1
-     bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
+    cid  = procinfo%cid(n)
+    bounds%begp      = clumps(cid)%begp - procinfo%begp + 1
+    bounds%endp      = clumps(cid)%endp - procinfo%begp + 1
+    bounds%begc      = clumps(cid)%begc - procinfo%begc + 1
+    bounds%endc      = clumps(cid)%endc - procinfo%begc + 1
+    bounds%begl      = clumps(cid)%begl - procinfo%begl + 1
+    bounds%endl      = clumps(cid)%endl - procinfo%begl + 1
+    bounds%begg      = clumps(cid)%begg - procinfo%begg + 1
+    bounds%endg      = clumps(cid)%endg - procinfo%begg + 1
+    bounds%begCohort = clumps(cid)%begCohort - procinfo%begCohort + 1
+    bounds%endCohort = clumps(cid)%endCohort - procinfo%begCohort + 1
 
-     bounds%level = BOUNDS_LEVEL_PROC
-     bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
+    bounds%level = BOUNDS_LEVEL_CLUMP
+    bounds%clump_index = n
 
-   end subroutine get_proc_bounds
+  end subroutine get_clump_bounds
 
-   !------------------------------------------------------------------------------
-   subroutine get_proc_total(pid, ncells, nlunits, ncols, npatches, nCohorts)
-     !
-     ! !DESCRIPTION:
-     ! Count up gridcells, landunits, columns, and patchs on process.
-     !
-     ! !ARGUMENTS:
-     integer, intent(in)  :: pid     ! proc id
-     integer, intent(out) :: ncells  ! total number of gridcells on the processor
-     integer, intent(out) :: nlunits ! total number of landunits on the processor
-     integer, intent(out) :: ncols   ! total number of columns on the processor
-     integer, intent(out) :: npatches ! total number of patchs on the processor
-     integer, intent(out) :: nCohorts! total number of cohorts on the processor
-     !
-     ! !LOCAL VARIABLES:
-     integer :: cid       ! clump index
-     !------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  subroutine get_proc_bounds (bounds, allow_call_from_threaded_region)
+    !
+    ! !DESCRIPTION:
+    ! Retrieve processor bounds
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(out) :: bounds ! processor bounds bounds
 
-     npatches  = 0
-     nlunits  = 0
-     ncols    = 0
-     ncells   = 0
-     nCohorts = 0
-     do cid = 1,nclumps
-        if (clumps(cid)%owner == pid) then
-           ncells  = ncells    + clumps(cid)%ncells
-           nlunits = nlunits   + clumps(cid)%nlunits
-           ncols   = ncols     + clumps(cid)%ncols
-           npatches = npatches   + clumps(cid)%npatches
-           nCohorts = nCohorts + clumps(cid)%nCohorts
-        end if
-     end do
-   end subroutine get_proc_total
+    ! Normally this routine will abort if it is called from within a threaded region,
+    ! because in most cases you should be calling get_clump_bounds in that situation. If
+    ! you really want to be using this routine from within a threaded region, then set
+    ! allow_call_from_threaded_region to .true.
+    logical, intent(in), optional :: allow_call_from_threaded_region
+    !
+    ! !LOCAL VARIABLES:
+    logical :: l_allow_call_from_threaded_region
+#ifdef _OPENMP
+    integer, external :: OMP_GET_NUM_THREADS
+#endif
+    character(len=32), parameter :: subname = 'get_proc_bounds'  ! Subroutine name
+    !------------------------------------------------------------------------------
+    !    Make sure this is NOT being called from a threaded region
+    if (present(allow_call_from_threaded_region)) then
+       l_allow_call_from_threaded_region = allow_call_from_threaded_region
+    else
+       l_allow_call_from_threaded_region = .false.
+    end if
+#ifdef _OPENMP
+    if ( OMP_GET_NUM_THREADS() > 1 .and. .not. l_allow_call_from_threaded_region )then
+       call shr_sys_abort( trim(subname)//' ERROR: Calling from inside  a threaded region')
+    end if
+#endif
 
-   !------------------------------------------------------------------------------
-   subroutine get_proc_global(ng, nl, nc, np, nCohorts)
-     !
-     ! !DESCRIPTION:
-     ! Return number of gridcells, landunits, columns, and patchs across all processes.
-     !
-     ! !ARGUMENTS:
-     integer, optional, intent(out) :: ng        ! total number of gridcells across all processors
-     integer, optional, intent(out) :: nl        ! total number of landunits across all processors
-     integer, optional, intent(out) :: nc        ! total number of columns across all processors
-     integer, optional, intent(out) :: np        ! total number of patchs across all processors
-     integer, optional, intent(out) :: nCohorts  ! total number fates cohorts
-     !------------------------------------------------------------------------------
+    bounds%begp = 1
+    bounds%endp = procinfo%endp - procinfo%begp + 1
+    bounds%begc = 1
+    bounds%endc = procinfo%endc - procinfo%begc + 1
+    bounds%begl = 1
+    bounds%endl = procinfo%endl - procinfo%begl + 1
+    bounds%begg = 1
+    bounds%endg = procinfo%endg - procinfo%begg + 1
+    bounds%begCohort = 1
+    bounds%endCohort = procinfo%endCohort - procinfo%begCohort + 1
 
-     if (present(np)) np             = nump
-     if (present(nc)) nc             = numc
-     if (present(nl)) nl             = numl
-     if (present(ng)) ng             = numg
-     if (present(nCohorts)) nCohorts = numCohort
+    bounds%level = BOUNDS_LEVEL_PROC
+    bounds%clump_index = -1           ! irrelevant for proc, so assigned a bogus value
 
-   end subroutine get_proc_global
+  end subroutine get_proc_bounds
 
-   !------------------------------------------------------------------------------
-   integer function get_proc_clumps()
-     !
-     ! !DESCRIPTION:
-     ! Return the number of clumps.
-     !------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------
+  subroutine get_proc_total(pid, ncells, nlunits, ncols, npatches, nCohorts)
+    !
+    ! !DESCRIPTION:
+    ! Count up gridcells, landunits, columns, and patchs on process.
+    !
+    ! !ARGUMENTS:
+    integer, intent(in)  :: pid     ! proc id
+    integer, intent(out) :: ncells  ! total number of gridcells on the processor
+    integer, intent(out) :: nlunits ! total number of landunits on the processor
+    integer, intent(out) :: ncols   ! total number of columns on the processor
+    integer, intent(out) :: npatches ! total number of patchs on the processor
+    integer, intent(out) :: nCohorts! total number of cohorts on the processor
+    !
+    ! !LOCAL VARIABLES:
+    integer :: cid       ! clump index
+    !------------------------------------------------------------------------------
 
-     get_proc_clumps = procinfo%nclumps
+    npatches  = 0
+    nlunits  = 0
+    ncols    = 0
+    ncells   = 0
+    nCohorts = 0
+    do cid = 1,nclumps
+       if (clumps(cid)%owner == pid) then
+          ncells  = ncells    + clumps(cid)%ncells
+          nlunits = nlunits   + clumps(cid)%nlunits
+          ncols   = ncols     + clumps(cid)%ncols
+          npatches = npatches   + clumps(cid)%npatches
+          nCohorts = nCohorts + clumps(cid)%nCohorts
+       end if
+    end do
+  end subroutine get_proc_total
 
-   end function get_proc_clumps
+  !------------------------------------------------------------------------------
+  subroutine get_proc_global(ng, nl, nc, np, nCohorts)
+    !
+    ! !DESCRIPTION:
+    ! Return number of gridcells, landunits, columns, and patchs across all processes.
+    !
+    ! !ARGUMENTS:
+    integer, optional, intent(out) :: ng        ! total number of gridcells across all processors
+    integer, optional, intent(out) :: nl        ! total number of landunits across all processors
+    integer, optional, intent(out) :: nc        ! total number of columns across all processors
+    integer, optional, intent(out) :: np        ! total number of patchs across all processors
+    integer, optional, intent(out) :: nCohorts  ! total number fates cohorts
+    !------------------------------------------------------------------------------
 
-   !-----------------------------------------------------------------------
-   integer function get_subgrid_level_gsize (subgrid_level)
-     !
-     ! !DESCRIPTION:
-     ! Determine 1d size from subgrid_level
-     !
-     ! !USES:
-     use domainMod , only : ldomain
-     use clm_varcon, only : grlnd, nameg, namel, namec, namep, nameCohort
-     !
-     ! !ARGUMENTS:
-     character(len=*), intent(in) :: subgrid_level    !type of clm 1d array
-     !-----------------------------------------------------------------------
+    if (present(np)) np             = nump
+    if (present(nc)) nc             = numc
+    if (present(nl)) nl             = numl
+    if (present(ng)) ng             = numg
+    if (present(nCohorts)) nCohorts = numCohort
 
-     select case (subgrid_level)
-     case(grlnd)
-        get_subgrid_level_gsize = ldomain%ns
-     case(nameg)
-        get_subgrid_level_gsize = numg
-     case(namel)
-        get_subgrid_level_gsize = numl
-     case(namec)
-        get_subgrid_level_gsize = numc
-     case(namep)
-        get_subgrid_level_gsize = nump
-     case(nameCohort)
-        get_subgrid_level_gsize = numCohort
-     case default
-        write(iulog,*) 'get_subgrid_level_gsize does not match subgrid_level type: ', trim(subgrid_level)
-        call shr_sys_abort()
-     end select
+  end subroutine get_proc_global
 
-   end function get_subgrid_level_gsize
+  !------------------------------------------------------------------------------
+  integer function get_proc_clumps()
+    !
+    ! !DESCRIPTION:
+    ! Return the number of clumps.
+    !------------------------------------------------------------------------------
 
-   !-----------------------------------------------------------------------
-   subroutine get_subgrid_level_gindex (subgrid_level, gindex)
-     !
-     ! !DESCRIPTION:
-     ! Get subgrid global index space
-     !
-     ! !USES
-     use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
-     !
-     ! !ARGUMENTS:
-     character(len=*), intent(in) :: subgrid_level     ! type of input data
-     integer         , pointer    :: gindex(:)
-     !----------------------------------------------------------------------
+    get_proc_clumps = procinfo%nclumps
+
+  end function get_proc_clumps
+
+  !-----------------------------------------------------------------------
+  integer function get_global_index(subgrid_index, subgrid_level)
+
+    !----------------------------------------------------------------
+    ! Description
+    ! Determine global index space value for target point at given subgrid level
+    !
+    ! Uses:
+    use shr_log_mod, only: errMsg => shr_log_errMsg
+    use clm_varcon , only: nameg, namel, namec, namep
+    !
+    ! Arguments
+    integer          , intent(in) :: subgrid_index  ! index of interest (can be at any subgrid level or gridcell level)
+    character(len=*) , intent(in) :: subgrid_level  ! one of nameg, namel, namec or namep
+    !
+    ! Local Variables:
+    type(bounds_type) :: bounds_proc   ! processor bounds
+    integer           :: beg_index     ! beginning proc index for subgrid_level
+    integer, pointer  :: gindex(:)
+    !----------------------------------------------------------------
+
+    call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
+
+    if (trim(subgrid_level) == nameg) then
+       beg_index = bounds_proc%begg
+    else if (trim(subgrid_level) == namel) then
+       beg_index = bounds_proc%begl
+    else if (trim(subgrid_level) == namec) then
+       beg_index = bounds_proc%begc
+    else if (trim(subgrid_level) == namep) then
+       beg_index = bounds_proc%begp
+    else
+       call shr_sys_abort('subgrid_level of '//trim(subgrid_level)//' not supported' // &
+            errmsg(sourcefile, __LINE__))
+    end if
+
+    call get_subgrid_level_gindex(subgrid_level=trim(subgrid_level), gindex=gindex)
+    get_global_index = gindex(subgrid_index - beg_index + 1)
+
+  end function get_global_index
+
+  !-----------------------------------------------------------------------
+  function get_global_index_array(subgrid_index, bounds1, bounds2, subgrid_level)
+
+    !----------------------------------------------------------------
+    ! Description
+    ! Determine global index space value for target array at given subgrid level
+    !
+    ! Example from histFileMod.F90:
+    ! ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, subgrid_level=nameg)
+    ! Note that the last argument (subgrid_level) is set to nameg, which corresponds
+    ! to the "gridcell" not the "lun" of the first argument.
+    !
+    ! Uses:
+#include "shr_assert.h"
+    use shr_log_mod, only: errMsg => shr_log_errMsg
+    use clm_varcon , only: nameg, namel, namec, namep
+    !
+    ! Arguments
+    integer          , intent(in) :: bounds1  ! lower bound of the input & returned arrays
+    integer          , intent(in) :: bounds2  ! upper bound of the input & returned arrays
+    integer          , intent(in) :: subgrid_index(bounds1:)  ! array of indices of interest (can be at any subgrid level or gridcell level)
+    character(len=*) , intent(in) :: subgrid_level  ! one of nameg, namel, namec or namep
+    integer                       :: get_global_index_array(bounds1:bounds2)
+    !
+    ! Local Variables:
+    type(bounds_type) :: bounds_proc   ! processor bounds
+    integer           :: beg_index     ! beginning proc index for subgrid_level
+    integer           :: i
+    integer , pointer :: gindex(:)
+    !----------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(subgrid_index) == (/bounds2/)), sourcefile, __LINE__)
+    call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
+
+    if (trim(subgrid_level) == nameg) then
+       beg_index = bounds_proc%begg
+    else if (trim(subgrid_level) == namel) then
+       beg_index = bounds_proc%begl
+    else if (trim(subgrid_level) == namec) then
+       beg_index = bounds_proc%begc
+    else if (trim(subgrid_level) == namep) then
+       beg_index = bounds_proc%begp
+    else
+       call shr_sys_abort('subgrid_level of '//trim(subgrid_level)//' not supported' // &
+            errmsg(__FILE__, __LINE__))
+    end if
+
+    call get_subgrid_level_gindex(subgrid_level=trim(subgrid_level), gindex=gindex)
+    do i=bounds1,bounds2
+       get_global_index_array(i) = gindex(subgrid_index(i) - beg_index + 1)
+    enddo
+
+  end function get_global_index_array
+
+  !-----------------------------------------------------------------------
+  integer function get_subgrid_level_gsize (subgrid_level)
+    !
+    ! !DESCRIPTION:
+    ! Determine 1d size from subgrid_level
+    !
+    ! !USES:
+    use domainMod , only : ldomain
+    use clm_varcon, only : grlnd, nameg, namel, namec, namep, nameCohort
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: subgrid_level    !type of clm 1d array
+    !-----------------------------------------------------------------------
+
+    select case (subgrid_level)
+    case(grlnd)
+       get_subgrid_level_gsize = ldomain%ns
+    case(nameg)
+       get_subgrid_level_gsize = numg
+    case(namel)
+       get_subgrid_level_gsize = numl
+    case(namec)
+       get_subgrid_level_gsize = numc
+    case(namep)
+       get_subgrid_level_gsize = nump
+    case(nameCohort)
+       get_subgrid_level_gsize = numCohort
+    case default
+       write(iulog,*) 'get_subgrid_level_gsize does not match subgrid_level type: ', trim(subgrid_level)
+       call shr_sys_abort()
+    end select
+
+  end function get_subgrid_level_gsize
+
+  !-----------------------------------------------------------------------
+  subroutine get_subgrid_level_gindex (subgrid_level, gindex)
+    !
+    ! !DESCRIPTION:
+    ! Get subgrid global index space
+    !
+    ! !USES
+    use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: subgrid_level     ! type of input data
+    integer         , pointer    :: gindex(:)
+    !----------------------------------------------------------------------
 
     select case (subgrid_level)
     case(grlnd)

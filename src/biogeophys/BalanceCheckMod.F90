@@ -8,13 +8,12 @@ module BalanceCheckMod
 #include "shr_assert.h"
   use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
-  use decompMod          , only : bounds_type
+  use decompMod          , only : bounds_type, get_global_index
   use abortutils         , only : endrun
   use clm_varctl         , only : iulog
   use clm_varctl         , only : use_fates_planthydro
   use clm_varcon         , only : namep, namec, nameg
   use clm_varpar         , only : nlevsoi
-  use GetGlobalValuesMod , only : get_global_index
   use atm2lndType        , only : atm2lnd_type
   use EnergyFluxType     , only : energyflux_type
   use SolarAbsorbedType  , only : solarabs_type
