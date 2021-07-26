@@ -9,7 +9,7 @@ module Wateratm2lndType
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : subgrid_level_column, subgrid_level_gridcell
   use clm_varcon     , only : spval, namec
   use ColumnType     , only : col
   use WaterInfoBaseType, only : water_info_base_type
@@ -94,38 +94,38 @@ contains
 
     call AllocateVar1d(var = this%forc_q_not_downscaled_grc, name = 'forc_q_not_downscaled_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%forc_rain_not_downscaled_grc, name = 'forc_rain_not_downscaled_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%forc_snow_not_downscaled_grc, name = 'forc_snow_not_downscaled_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%forc_q_downscaled_col, name = 'forc_q_downscaled_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          ival=ival)
     call AllocateVar1d(var = this%forc_flood_grc, name = 'forc_flood_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          ival=ival)
     call AllocateVar1d(var = this%forc_rain_downscaled_col, name = 'forc_rain_downscaled_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          ival=ival)
     call AllocateVar1d(var = this%forc_snow_downscaled_col, name = 'forc_snow_downscaled_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          ival=ival)
     call AllocateVar1d(var = this%rain_to_snow_conversion_col, name = 'rain_to_snow_conversion_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%snow_to_rain_conversion_col, name = 'snow_to_rain_conversion_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
   end subroutine InitAllocate
 

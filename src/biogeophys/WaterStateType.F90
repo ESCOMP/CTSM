@@ -12,7 +12,7 @@ module WaterStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
   use clm_varctl     , only : use_bedrock, iulog
   use clm_varctl     , only : use_fates_planthydro
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
@@ -115,41 +115,41 @@ contains
 
     call AllocateVar1d(var = this%h2osno_no_layers_col, name = 'h2osno_no_layers_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar2d(var = this%h2osoi_vol_col, name = 'h2osoi_vol_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = 1, dim2end = nlevmaxurbgrnd)
     call AllocateVar2d(var = this%h2osoi_vol_prs_grc, name = 'h2osoi_vol_prs_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
          dim2beg = 1, dim2end = nlevgrnd)
     call AllocateVar2d(var = this%h2osoi_ice_col, name = 'h2osoi_ice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
     call AllocateVar2d(var = this%h2osoi_liq_col, name = 'h2osoi_liq_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN, &
+         bounds = bounds, subgrid_level = subgrid_level_column, &
          dim2beg = -nlevsno+1, dim2end = nlevmaxurbgrnd)
     call AllocateVar1d(var = this%snocan_patch, name = 'snocan_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%liqcan_patch, name = 'liqcan_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%h2osfc_col, name = 'h2osfc_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%wa_col, name = 'wa_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%dynbal_baseline_liq_col, name = 'dynbal_baseline_liq_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
   end subroutine InitAllocate
 

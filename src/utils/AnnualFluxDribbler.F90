@@ -62,7 +62,7 @@ module AnnualFluxDribbler
   use abortutils       , only : endrun
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use decompMod        , only : bounds_type, get_beg, get_end
-  use decompMod        , only : BOUNDS_SUBGRID_GRIDCELL, BOUNDS_SUBGRID_PATCH
+  use decompMod        , only : subgrid_level_gridcell, subgrid_level_patch
   use clm_varcon       , only : secspday, nameg, namep
   use clm_time_manager , only : get_days_per_year, get_step_size_real, is_beg_curr_year
   use clm_time_manager , only : get_curr_yearfrac, get_prev_yearfrac, get_prev_date
@@ -168,7 +168,7 @@ contains
 
     this%dim1name = 'gridcell'
     this%name_subgrid = nameg
-    this%bounds_subgrid_level = BOUNDS_SUBGRID_GRIDCELL
+    this%bounds_subgrid_level = subgrid_level_gridcell
 
     call this%allocate_and_initialize_data(bounds)
     call this%set_metadata(name, units, allows_non_annual_delta)
@@ -205,7 +205,7 @@ contains
 
     this%dim1name = 'pft'
     this%name_subgrid = namep
-    this%bounds_subgrid_level = BOUNDS_SUBGRID_PATCH
+    this%bounds_subgrid_level = subgrid_level_patch
 
     call this%allocate_and_initialize_data(bounds)
     call this%set_metadata(name, units, allows_non_annual_delta)

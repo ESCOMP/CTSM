@@ -15,11 +15,11 @@ module decompMod
   implicit none
 
   ! Define possible bounds subgrid levels
-  integer, parameter, public :: BOUNDS_SUBGRID_GRIDCELL = 1
-  integer, parameter, public :: BOUNDS_SUBGRID_LANDUNIT = 2
-  integer, parameter, public :: BOUNDS_SUBGRID_COLUMN   = 3
-  integer, parameter, public :: BOUNDS_SUBGRID_PATCH    = 4
-  integer, parameter, public :: BOUNDS_SUBGRID_COHORT   = 5
+  integer, parameter, public :: subgrid_level_gridcell = 1
+  integer, parameter, public :: subgrid_level_landunit = 2
+  integer, parameter, public :: subgrid_level_column   = 3
+  integer, parameter, public :: subgrid_level_patch    = 4
+  integer, parameter, public :: subgrid_level_cohort   = 5
 
   ! Define possible bounds levels
   integer, parameter, public :: bounds_level_proc  = 1
@@ -118,7 +118,7 @@ contains
     ! Get beginning bounds for a given subgrid level
     !
     ! subgrid_level should be one of the constants defined in this module:
-    ! BOUNDS_SUBGRID_GRIDCELL, BOUNDS_SUBGRID_LANDUNIT, etc.
+    ! subgrid_level_gridcell, subgrid_level_landunit, etc.
     !
     ! Returns -1 for invalid subgrid_level (does not abort in this case, in order to keep
     ! this function pure).
@@ -136,15 +136,15 @@ contains
     !-----------------------------------------------------------------------
 
     select case (subgrid_level)
-    case (BOUNDS_SUBGRID_GRIDCELL)
+    case (subgrid_level_gridcell)
        beg_index = bounds%begg
-    case (BOUNDS_SUBGRID_LANDUNIT)
+    case (subgrid_level_landunit)
        beg_index = bounds%begl
-    case (BOUNDS_SUBGRID_COLUMN)
+    case (subgrid_level_column)
        beg_index = bounds%begc
-    case (BOUNDS_SUBGRID_PATCH)
+    case (subgrid_level_patch)
        beg_index = bounds%begp
-    case (BOUNDS_SUBGRID_COHORT)
+    case (subgrid_level_cohort)
        beg_index = bounds%begCohort
     case default
        beg_index = -1
@@ -159,7 +159,7 @@ contains
     ! Get end bounds for a given subgrid level
     !
     ! subgrid_level should be one of the constants defined in this module:
-    ! BOUNDS_SUBGRID_GRIDCELL, BOUNDS_SUBGRID_LANDUNIT, etc.
+    ! subgrid_level_gridcell, subgrid_level_landunit, etc.
     !
     ! Returns -1 for invalid subgrid_level (does not abort in this case, in order to keep
     ! this function pure).
@@ -176,15 +176,15 @@ contains
     !-----------------------------------------------------------------------
 
     select case (subgrid_level)
-    case (BOUNDS_SUBGRID_GRIDCELL)
+    case (subgrid_level_gridcell)
        end_index = bounds%endg
-    case (BOUNDS_SUBGRID_LANDUNIT)
+    case (subgrid_level_landunit)
        end_index = bounds%endl
-    case (BOUNDS_SUBGRID_COLUMN)
+    case (subgrid_level_column)
        end_index = bounds%endc
-    case (BOUNDS_SUBGRID_PATCH)
+    case (subgrid_level_patch)
        end_index = bounds%endp
-    case (BOUNDS_SUBGRID_COHORT)
+    case (subgrid_level_cohort)
        end_index = bounds%endCohort
     case default
        end_index = -1
