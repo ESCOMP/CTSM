@@ -648,7 +648,8 @@ contains
                 l_ice = grc%landunit_indices(istice, g)
                 if (l_ice == ispval) then
                    write(iulog,*) subname//' ERROR: no ice landunit found within the icemask, for g = ', g
-                   call endrun()
+                   call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                        msg="no ice landunit found within the icemask")
                 end if
 
                 frac_assigned(1:maxpatch_glc) = .false.
@@ -674,7 +675,8 @@ contains
                         this%frac_grc(g, 1:maxpatch_glc)
                    write(iulog,*) 'frac_assigned(1:maxpatch_glc) = ', &
                         frac_assigned(1:maxpatch_glc)
-                   call endrun()
+                   call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                        msg="at least one glc column has non-zero area from cpl but has no slot in memory")
                 end if  ! error
              end if  ! area_ice > 0
           end if  ! this%icemask_grc(g) > 0

@@ -13,7 +13,7 @@ module glcBehaviorMod
   use clm_varctl     , only : iulog
   use landunit_varcon, only : istice
   use clm_instur     , only : wt_lunit, wt_glc_mec
-  use decompMod      , only : bounds_type
+  use decompMod      , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use filterColMod   , only : filter_col_type
   use ColumnType     , only : col
   use PatchType      , only : patch
@@ -758,7 +758,8 @@ contains
           else
              write(iulog,*) subname, ': ERROR getting elevation class for topo = ', atm_topo
              write(iulog,*) glc_errcode_to_string(err_code)
-             call endrun(msg=subname//': ERROR getting elevation class')
+             call endrun(subgrid_index=gi, subgrid_level=subgrid_level_gridcell, &
+                  msg=subname//': ERROR getting elevation class')
           end if
 
           if (elev_class == atm_elev_class) then
@@ -1001,7 +1002,8 @@ contains
           write(iulog,*) subname, ': ERROR getting elevation class for topo = ', &
                topo_col(c)
           write(iulog,*) glc_errcode_to_string(err_code)
-          call endrun(msg=subname//': ERROR getting elevation class')
+          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+               msg=subname//': ERROR getting elevation class')
        end if
 
        new_coltype = ice_class_to_col_itype(elev_class)
