@@ -225,7 +225,7 @@ class NeonCase (Case):
         Create DATM domain file at a single point.
     """
 
-    def __init__(self, case_root, read_only, compset="I1PtClm51Bgc", res="f19_g17"):
+    def __init__(self, case_root, read_only, compset="I1PtClm51Bgc", res="CLM_USRDAT"):
         super().__init__(case_root, read_only)
 
         self.compset =compset
@@ -243,25 +243,21 @@ class NeonCase (Case):
     def set_compset(self):
         self._compsetname = self.compset
 
-    def build_base_case (self,base_root, basecasename, res, compset, overwrite,
+    def build_base_case (self,base_root, base_case_name, res, compset, overwrite,
                         user_mods_dir):
 
         print (">>>>> BUILDING BASE CASE...<<<<<")
         print ('base_root:',base_root)
 
-        case_root = os.path.join(base_root,basecasename)
+        case_root = os.path.join(base_root,base_case_name)
         print ('user_mods_dir:',user_mods_dir)
         print ('case_root:',case_root)
         if overwrite and os.path.isdir(case_root):
             shutil.rmtree(case_root)
+            print ("Removing the case...")
+
         print ("Creating the case....")
 
-
-        print ("Creating the case....")
-
-        print ("user_mods_dir:",user_mods_dir)
-        print ("case_root", case_root)
-        exit()
         #a_neon_case = NeonCase(case_root, read_only=False)
         #print (a_neon_case)
         #if not os.path.isdir(case_root):
@@ -270,31 +266,28 @@ class NeonCase (Case):
         #            machine_name="cheyenne", driver="nuopc",
         #            run_unsupported=True, answer="r",walltime="01:00:00")
         #print (a_neon_case)
-        #exit()
-        with NeonCase(case_root, read_only=False) as neon_case:
-            if not os.path.isdir(case_root):
-                neon_case.create(os.path.basename(case_root), cesmroot, compset, res,
-                            run_unsupported=True, answer="r",walltime="04:00:00",
-                            user_mods_dirs = ["NEON/HARV"], driver="nuopc")
 
-        #with Case(case_root, read_only=False) as case:
+        #self.create(os.path.basename(case_root), srcroot=cesmroot, compset_name=self.compset, grid_name=res,
+        print (self.__str__())
+        if not os.path.isdir(case_root):
+            self.create(os.path.basename(case_root), cesmroot, self.compset, res,
+                        run_unsupported=True, answer="r",walltime="04:00:00",
+                        user_mods_dirs = ["NEON/HARV"], driver="nuopc")
+
+        self.base_case = os.path.basename(case_root)
+        self.case_setup()
+
+        build.case_build(case_root, case=self, save_build_provenance=False)
+
+        #exit()
+        #with NeonCase(case_root, read_only=False) as neon_case:
+        #    print (neon_case.__str__())
         #    if not os.path.isdir(case_root):
-        #        #case.create(os.path.basename(case_root), cesmroot, compset, res,
-        #        #            driver="nuopc",
-        #        #            run_unsupported=True, answer="r",walltime="01:00:00",user_mods_dir=user_mods_dir)
-        #        case.create(os.path.basename(case_root), cesmroot, compset, res,
+        #        neon_case.create(os.path.basename(case_root), cesmroot, compset, res,
         #                    run_unsupported=True, answer="r",walltime="04:00:00",
         #                    user_mods_dirs = ["NEON/HARV"], driver="nuopc")
+    #def clone_base_case (self, case_root, case_name, 
 
-
-
-
-
-        #        print (case.__str__())
-        #        print ("case is created!")
-        #        # make sure that changing the casename will not affect these variables                                           
-        #        case.set_value("EXEROOT",case.get_value("EXEROOT", resolved=True))
-        #        case.set_value("RUNDIR",case.get_value("RUNDIR",resolved=True)+".00")
 
 def download_file(url, fname):
     """
@@ -495,11 +488,12 @@ def main():
     # But what to do now?
     #) just create a case for your neon
 
-    base_case_name = "test_0720"
+    base_case_name = "base_case"
 
-    base_root = os.path.join("/home/negins/","neon_0723",base_case_name)
+    base_root = os.path.join("/home/negins/","neon_0725",base_case_name)
 
     print ("base_root:",base_root)
+
     res = "CLM_USRDAT"
     compset = "I1PtClm51Bgc"
 
@@ -532,27 +526,29 @@ def main():
 
     print ("user_mods_dir:",user_mods_dir)
 
-    neon_case = NeonCase(case_root, read_only=False)
-    print (neon_case)
+    #neon_case = NeonCase(case_root, read_only=False)
+    #print (neon_case)
 
     with NeonCase(case_root, read_only=False) as neon_case:
         if not os.path.isdir(case_root):
             print ("not a case")
-            print ("------------")
-            print (neon_case)
             print ("~~~~~~~~~~~~~")
             print (case_root)
             print (os.path.basename(case_root))
             print (cesmroot)
             print ("~~~~~~~~~~~~~")
+            print ("~~~~~~~~~~~~~")
+            print (neon_case)
+            print ("~~~~~~~~~~~~~")
+
         
-            neon_case.create(os.path.basename(case_root), cesmroot, compset, res,
-                run_unsupported=True, answer="r",walltime="04:00:00",
-                user_mods_dirs = ["NEON/HARV"], driver="nuopc")
+            #neon_case.create(os.path.basename(case_root), cesmroot, compset, res,
+            #    run_unsupported=True, answer="r",walltime="04:00:00",
+            #    user_mods_dirs = ["NEON/HARV"], driver="nuopc")
 
+            #neon_case.build_base_case (base_root, base_case_name, res, compset, overwrite, user_mods_dir)
             neon_case.build_base_case (base_root, base_case_name, res, compset, overwrite, user_mods_dir)
-
-            neon_case.clone_base_case (base_root, )
+            #neon_case.clone_base_case (base_root, )
 
 
     #print (neon_case)
@@ -563,29 +559,8 @@ def main():
             neon_case.create(os.path.basename(case_root), cesmroot, compset, res,
                         run_unsupported=True, answer="r",walltime="04:00:00",
                         user_mods_dirs = ["NEON/HARV"], driver="nuopc")
-
-    #with Case(case_root, read_only=False) as case:
-    #    if not os.path.isdir(case_root):
-    #        #case.create(os.path.basename(case_root), cesmroot, compset, res,
-    #        #            driver="nuopc",
-    #        #            run_unsupported=True, answer="r",walltime="01:00:00",user_mods_dir=user_mods_dir)
-    #        case.create(os.path.basename(case_root), cesmroot, compset, res,
-    #                    run_unsupported=True, answer="r",walltime="04:00:00",
-    #                    user_mods_dirs = ["NEON/HARV"], driver="nuopc")
-
-
-
-
-
-    #        print (case.__str__())
-    #        print ("case is created!")
-    #        # make sure that changing the casename will not affect these variables                                           
-    #        case.set_value("EXEROOT",case.get_value("EXEROOT", resolved=True))
-    #        case.set_value("RUNDIR",case.get_value("RUNDIR",resolved=True)+".00")
-    #     
-    #        case.set_value("RUN_TYPE","startup")
-    #        case.set_value("GET_REFCASE",False)
-
+            print (neon_case.__str__())
+            print ("case is created!")
 
 
     print ("Done!")
