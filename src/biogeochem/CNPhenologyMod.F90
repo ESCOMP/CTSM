@@ -118,9 +118,10 @@ module CNPhenologyMod
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
-  integer,  public, parameter :: critical_daylight_constant       = 1
-  integer,  public, parameter :: critical_daylight_depends_on_lat = critical_daylight_constant + 1
-  integer,  public, parameter :: critical_daylight_depends_on_veg = critical_daylight_depends_on_lat + 1
+  integer,  public, parameter :: critical_daylight_constant           = 1
+  integer,  public, parameter :: critical_daylight_depends_on_lat     = critical_daylight_constant + 1
+  integer,  public, parameter :: critical_daylight_depends_on_veg     = critical_daylight_depends_on_lat + 1
+  integer,  public, parameter :: critical_daylight_depends_on_latnveg = critical_daylight_depends_on_veg + 1
   integer,  private :: critical_daylight_method = critical_daylight_constant
 
   character(len=*), parameter, private :: sourcefile = &
@@ -208,7 +209,7 @@ contains
     onset_thresh_depends_on_veg = input_onset_thresh_depends_on_veg
     critical_daylight_method = input_critical_daylight_method
     if ( (critical_daylight_method < critical_daylight_constant) .or. &
-         (critical_daylight_method > critical_daylight_depends_on_veg) )then
+         (critical_daylight_method > critical_daylight_depends_on_latnveg) )then
        call endrun(msg="ERROR critical_daylight_method "//errmsg(sourcefile, __LINE__))
     end if
   end subroutine CNPhenologySetNML
@@ -1004,6 +1005,19 @@ contains
     real(r8), parameter :: critical_onset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
      select case( critical_daylight_method )
+     case(critical_daylight_depends_on_latnveg)
+        ! Critical day length for onset is fixed for temperate type vegetation
+        if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
+           crit_daylat = crit_dayl
+        ! For Arctic vegetation -- critical daylength is higher at high latitudes and shorter
+        ! at midlatitudes
+        else
+           crit_daylat=critical_onset_time_at_high_lat-critical_onset_lat_slope* \
+                       (critical_onset_high_lat-abs(grc%latdeg(g)))
+           if (crit_daylat < crit_dayl) then
+              crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
+           end if
+        end if
      case(critical_daylight_depends_on_veg)
         if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
            crit_daylat = crit_dayl
