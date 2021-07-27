@@ -10,8 +10,8 @@ module abortutils
   ! in conjunction with aborting the model, or at least issuing a warning.
   !-----------------------------------------------------------------------
 
+  implicit none
   private
-  save
 
   public :: endrun              ! Abort the model for abnormal termination
   public :: write_point_context ! Write context for the given index, including global index information and more
@@ -37,8 +37,6 @@ contains
     use clm_varctl  , only: iulog
     !
     ! !ARGUMENTS:
-    implicit none
-
     ! Generally you want to at least provide msg. The main reason to separate msg from
     ! additional_msg is to supported expected-exception unit testing: you can put
     ! volatile stuff in additional_msg, as in:
@@ -71,9 +69,8 @@ contains
     use clm_varctl  , only: iulog
     !
     ! Arguments:
-    implicit none
-    integer          , intent(in)           :: subgrid_index  ! index of interest (can be at any subgrid level or gridcell level)
-    character(len=*) , intent(in)           :: subgrid_level  ! one of nameg, namel, namec or namep
+    integer , intent(in) :: subgrid_index ! index of interest (can be at any subgrid level or gridcell level)
+    integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod
 
     ! Generally you want to at least provide msg. The main reason to separate msg from
     ! additional_msg is to supported expected-exception unit testing: you can put
@@ -109,7 +106,8 @@ contains
     !
     use shr_sys_mod  , only : shr_sys_flush, shr_sys_abort
     use shr_log_mod  , only : errMsg => shr_log_errMsg
-    use clm_varcon   , only : nameg, namel, namec, namep
+    use clm_varctl   , only : iulog
+    use decompMod    , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
     use decompMod    , only : get_global_index
     use GridcellType , only : grc
     use LandunitType , only : lun
@@ -118,53 +116,53 @@ contains
     use spmdMod      , only : iam
     !
     ! Arguments:
-    integer          , intent(in) :: subgrid_index  ! index of interest (can be at any subgrid level or gridcell level)
-    character(len=*) , intent(in) :: subgrid_level  ! one of nameg, namel, namec or namep
+    integer , intent(in) :: subgrid_index ! index of interest (can be at any subgrid level or gridcell level)
+    integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod
     !
     ! Local Variables:
     integer :: igrc, ilun, icol, ipft
     !-----------------------------------------------------------------------
 
-    if (trim(subgrid_level) == nameg) then
+    if (subgrid_level == subgrid_level_gridcell) then
 
        igrc = subgrid_index
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  gridcell index = ', igrc
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            get_global_index(subgrid_index=igrc, subgrid_level=nameg)
+            get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
 
-    else if (trim(subgrid_level) == namel) then
+    else if (subgrid_level == subgrid_level_landunit) then
 
        ilun = subgrid_index
        igrc = lun%gridcell(ilun)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  landunit index = ', ilun
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            get_global_index(subgrid_index=ilun, subgrid_level=namel)
+            get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            get_global_index(subgrid_index=igrc, subgrid_level=nameg)
+            get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(subgrid_index)
 
-    else if (trim(subgrid_level) == namec) then
+    else if (subgrid_level == subgrid_level_column) then
 
        icol = subgrid_index
        ilun = col%landunit(icol)
        igrc = col%gridcell(icol)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  column   index = ', icol
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', &
-            get_global_index(subgrid_index=icol, subgrid_level=namec)
+            get_global_index(subgrid_index=icol, subgrid_level=subgrid_level_column)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            get_global_index(subgrid_index=ilun, subgrid_level=namel)
+            get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            get_global_index(subgrid_index=igrc, subgrid_level=nameg)
+            get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': column   type         = ', col%itype(icol)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(ilun)
 
-    else if (trim(subgrid_level) == namep) then
+    else if (subgrid_level == subgrid_level_patch) then
 
        ipft = subgrid_index
        icol = patch%column(ipft)
@@ -172,13 +170,13 @@ contains
        igrc = patch%gridcell(ipft)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  patch    index = ', ipft
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global patch    index = ', &
-            get_global_index(subgrid_index=ipft, subgrid_level=namep)
+            get_global_index(subgrid_index=ipft, subgrid_level=subgrid_level_patch)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', &
-            get_global_index(subgrid_index=icol, subgrid_level=namec)
+            get_global_index(subgrid_index=icol, subgrid_level=subgrid_level_column)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', &
-            get_global_index(subgrid_index=ilun, subgrid_level=namel)
+            get_global_index(subgrid_index=ilun, subgrid_level=subgrid_level_landunit)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', &
-            get_global_index(subgrid_index=igrc, subgrid_level=nameg)
+            get_global_index(subgrid_index=igrc, subgrid_level=subgrid_level_gridcell)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
        write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': pft      type         = ', patch%itype(ipft)
@@ -186,8 +184,8 @@ contains
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(ilun)
 
     else
-       call shr_sys_abort('subgrid_level '//trim(subgrid_level)//'not supported '//errmsg(sourcefile, __LINE__))
-
+       write(iulog,*) 'subgrid_level not supported: ', subgrid_level
+       call shr_sys_abort('subgrid_level not supported '//errmsg(sourcefile, __LINE__))
     end if
 
     call shr_sys_flush(iulog)

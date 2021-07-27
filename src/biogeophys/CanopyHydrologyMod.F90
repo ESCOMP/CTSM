@@ -14,8 +14,7 @@ module CanopyHydrologyMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use shr_sys_mod     , only : shr_sys_flush
-  use clm_varcon      , only : namep
-  use decompMod       , only : bounds_type
+  use decompMod       , only : bounds_type, subgrid_level_patch
   use abortutils      , only : endrun
   use clm_time_manager, only : get_step_size_real
   use clm_varctl      , only : iulog
@@ -620,7 +619,7 @@ contains
           )
 
      call CalcTracerFromBulk( &
-          subgrid_level = namep, &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_nolakep, &
           filter_pts    = filter_nolakep, &
@@ -630,7 +629,7 @@ contains
           tracer_val    = trac_qflx_through_snow(begp:endp))
 
      call CalcTracerFromBulk( &
-          subgrid_level = namep, &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_nolakep, &
           filter_pts    = filter_nolakep, &
@@ -640,7 +639,7 @@ contains
           tracer_val    = trac_qflx_intercepted_snow(begp:endp))
 
      call CalcTracerFromBulk( &
-          subgrid_level = namep, &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_nolakep, &
           filter_pts    = filter_nolakep, &
@@ -650,7 +649,7 @@ contains
           tracer_val    = trac_qflx_through_liq(begp:endp))
 
      call CalcTracerFromBulk( &
-          subgrid_level = namep, &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_nolakep, &
           filter_pts    = filter_nolakep, &
@@ -805,7 +804,7 @@ contains
           )
 
      call CalcTracerFromBulk( &
-          subgrid_level = namep, &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_soilp, &
           filter_pts    = filter_soilp, &
@@ -815,7 +814,7 @@ contains
           tracer_val    = trac_qflx_liqcanfall(begp:endp))
 
      call CalcTracerFromBulk( &
-          subgrid_level = namep, &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_soilp, &
           filter_pts    = filter_soilp, &
@@ -958,7 +957,7 @@ contains
           )
 
      call CalcTracerFromBulk( &
-          subgrid_level = namep, &
+          subgrid_level = subgrid_level_patch, &
           lb            = begp, &
           num_pts       = num_soilp, &
           filter_pts    = filter_soilp, &

@@ -6,8 +6,9 @@ module test_compare_bulk_to_tracer
   use WaterTracerUtils, only : CompareBulkToTracer
   use shr_kind_mod , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
+  use decompMod, only : subgrid_level_gridcell
   use unittestUtils, only : endrun_msg
-  use clm_varcon, only : spval, nameg
+  use clm_varcon, only : spval
 
   implicit none
 
@@ -40,7 +41,7 @@ contains
     real(r8), intent(in) :: bulk
     real(r8), intent(in) :: tracer
     real(r8), intent(in) :: ratio
-    call CompareBulkToTracer(subgrid_level = nameg, &  ! subgrid_level is arbitrary here
+    call CompareBulkToTracer(subgrid_level = subgrid_level_gridcell, &  ! subgrid_level is arbitrary here
          bounds_beg = 1, bounds_end = 1, &
          bulk = [bulk], tracer = [tracer], &
          ratio = ratio, &

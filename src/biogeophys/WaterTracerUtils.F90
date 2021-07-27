@@ -53,7 +53,7 @@ contains
     character(len=*)                  , intent(in)    :: name          ! variable name
     type(water_tracer_container_type) , intent(inout) :: container
     type(bounds_type)                 , intent(in)    :: bounds
-    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in decompMod
+    integer                           , intent(in)    :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod
     real(r8)                   , intent(in), optional :: ival          ! initial value, if not NaN
     !
     ! !LOCAL VARIABLES:
@@ -94,7 +94,7 @@ contains
     character(len=*)                  , intent(in)    :: name          ! variable name
     type(water_tracer_container_type) , intent(inout) :: container
     type(bounds_type)                 , intent(in)    :: bounds
-    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in decompMod
+    integer                           , intent(in)    :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod
     integer                           , intent(in)    :: dim2beg
     integer                           , intent(in)    :: dim2end
     real(r8)                   , intent(in), optional :: ival          ! initial value, if not NaN
@@ -145,7 +145,7 @@ contains
     ! values elsewhere
     !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: subgrid_level  ! nameg, namel, namec or namep (just needed for error messages)
+    integer  , intent(in)    :: subgrid_level      ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages)
     integer  , intent(in)    :: lb                 ! lower bound for arrays
     integer  , intent(in)    :: num_pts            ! number of points in the filter
     integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
@@ -191,7 +191,7 @@ contains
     ! See documentation in CalcTracerFromBulk for details
     !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: subgrid_level  ! nameg, namel, namec or namep (just needed for error messages)
+    integer  , intent(in)    :: subgrid_level      ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages)
     integer  , intent(in)    :: lb                 ! lower bound for arrays
     integer  , intent(in)    :: num_pts            ! number of points in the filter
     integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
@@ -243,7 +243,7 @@ contains
     ! !ARGUMENTS:
     character(len=*), intent(in) :: caller ! name of caller (just used for error messages)
     integer , intent(in)  :: n             ! index of point (just used for error messages)
-    character(len=*), intent(in) :: subgrid_level  ! nameg, namel, namec or namep (just needed for error messages)
+    integer , intent(in)  :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages)
     real(r8), intent(in)  :: bulk_source   ! value of the source for this variable, for bulk
     real(r8), intent(in)  :: bulk_val      ! value of the variable of interest, for bulk
     real(r8), intent(in)  :: tracer_source ! value of the source for this variable, for the tracer
@@ -331,7 +331,7 @@ contains
     ! Compare the bulk and tracer quantities; abort if they differ
     !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: subgrid_level  ! nameg, namel, namec or namep (just needed for error messages)
+    integer, intent(in) :: subgrid_level  ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages)
     ! We could get bounds_beg and bounds_end from the lbound and ubound of the bulk or
     ! tracer arrays, but passing them in helps catch any accidental omission of bounds
     ! slicing in the caller (e.g., passing in foo_col rather than

@@ -15,6 +15,7 @@ module decompMod
   implicit none
 
   ! Define possible bounds subgrid levels
+  integer, parameter, public :: subgrid_level_lndgrid  = 0
   integer, parameter, public :: subgrid_level_gridcell = 1
   integer, parameter, public :: subgrid_level_landunit = 2
   integer, parameter, public :: subgrid_level_column   = 3
@@ -26,17 +27,18 @@ module decompMod
   integer, parameter, public :: bounds_level_clump = 2
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: get_beg                  ! get beg bound for a given subgrid level
-  public :: get_end                  ! get end bound for a given subgrid level
-  public :: get_clump_bounds         ! clump beg and end gridcell,landunit,column,patch
-  public :: get_proc_bounds          ! this processor beg and end gridcell,landunit,column,patch
-  public :: get_proc_total           ! total no. of gridcells, landunits, columns and patchs for any processor
-  public :: get_proc_global          ! total gridcells, landunits, columns, patchs across all processors
-  public :: get_proc_clumps          ! number of clumps for this processor
-  public :: get_global_index         ! Determine global index space value for target point
-  public :: get_global_index_array   ! Determine global index space value for target array
-  public :: get_subgrid_level_gsize  ! get global size associated with subgrid_level
-  public :: get_subgrid_level_gindex ! get global index array associated with subgrid_level
+  public :: get_beg                     ! get beg bound for a given subgrid level
+  public :: get_end                     ! get end bound for a given subgrid level
+  public :: get_clump_bounds            ! clump beg and end gridcell,landunit,column,patch
+  public :: get_proc_bounds             ! this processor beg and end gridcell,landunit,column,patch
+  public :: get_proc_total              ! total no. of gridcells, landunits, columns and patchs for any processor
+  public :: get_proc_global             ! total gridcells, landunits, columns, patchs across all processors
+  public :: get_proc_clumps             ! number of clumps for this processor
+  public :: get_global_index            ! Determine global index space value for target point
+  public :: get_global_index_array      ! Determine global index space value for target array
+  public :: get_subgrid_level_from_name ! Given a name like nameg, return a subgrid level index like subgrid_level_gridcell
+  public :: get_subgrid_level_gsize     ! get global size associated with subgrid_level
+  public :: get_subgrid_level_gindex    ! get global index array associated with subgrid_level
 
   ! !PRIVATE MEMBER FUNCTIONS:
   !
@@ -360,11 +362,10 @@ contains
     !
     ! Uses:
     use shr_log_mod, only: errMsg => shr_log_errMsg
-    use clm_varcon , only: nameg, namel, namec, namep
     !
     ! Arguments
-    integer          , intent(in) :: subgrid_index  ! index of interest (can be at any subgrid level or gridcell level)
-    character(len=*) , intent(in) :: subgrid_level  ! one of nameg, namel, namec or namep
+    integer , intent(in) :: subgrid_index ! index of interest (can be at any subgrid level or gridcell level)
+    integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined above
     !
     ! Local Variables:
     type(bounds_type) :: bounds_proc   ! processor bounds
@@ -373,21 +374,14 @@ contains
     !----------------------------------------------------------------
 
     call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
-
-    if (trim(subgrid_level) == nameg) then
-       beg_index = bounds_proc%begg
-    else if (trim(subgrid_level) == namel) then
-       beg_index = bounds_proc%begl
-    else if (trim(subgrid_level) == namec) then
-       beg_index = bounds_proc%begc
-    else if (trim(subgrid_level) == namep) then
-       beg_index = bounds_proc%begp
-    else
-       call shr_sys_abort('subgrid_level of '//trim(subgrid_level)//' not supported' // &
+    beg_index = get_beg(bounds_proc, subgrid_level)
+    if (beg_index == -1) then
+       write(iulog,*) 'get_global_index: subgrid_level not supported: ', subgrid_level
+       call shr_sys_abort('subgrid_level not supported' // &
             errmsg(sourcefile, __LINE__))
     end if
 
-    call get_subgrid_level_gindex(subgrid_level=trim(subgrid_level), gindex=gindex)
+    call get_subgrid_level_gindex(subgrid_level=subgrid_level, gindex=gindex)
     get_global_index = gindex(subgrid_index - beg_index + 1)
 
   end function get_global_index
@@ -400,21 +394,20 @@ contains
     ! Determine global index space value for target array at given subgrid level
     !
     ! Example from histFileMod.F90:
-    ! ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, subgrid_level=nameg)
+    ! ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, subgrid_level=subgrid_level_gridcell)
     ! Note that the last argument (subgrid_level) is set to nameg, which corresponds
     ! to the "gridcell" not the "lun" of the first argument.
     !
     ! Uses:
 #include "shr_assert.h"
     use shr_log_mod, only: errMsg => shr_log_errMsg
-    use clm_varcon , only: nameg, namel, namec, namep
     !
     ! Arguments
-    integer          , intent(in) :: bounds1  ! lower bound of the input & returned arrays
-    integer          , intent(in) :: bounds2  ! upper bound of the input & returned arrays
-    integer          , intent(in) :: subgrid_index(bounds1:)  ! array of indices of interest (can be at any subgrid level or gridcell level)
-    character(len=*) , intent(in) :: subgrid_level  ! one of nameg, namel, namec or namep
-    integer                       :: get_global_index_array(bounds1:bounds2)
+    integer , intent(in) :: bounds1                 ! lower bound of the input & returned arrays
+    integer , intent(in) :: bounds2                 ! upper bound of the input & returned arrays
+    integer , intent(in) :: subgrid_index(bounds1:) ! array of indices of interest (can be at any subgrid level or gridcell level)
+    integer , intent(in) :: subgrid_level           ! one of the subgrid_level_* constants defined above
+    integer              :: get_global_index_array(bounds1:bounds2)
     !
     ! Local Variables:
     type(bounds_type) :: bounds_proc   ! processor bounds
@@ -425,26 +418,58 @@ contains
 
     SHR_ASSERT_ALL_FL((ubound(subgrid_index) == (/bounds2/)), sourcefile, __LINE__)
     call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
-
-    if (trim(subgrid_level) == nameg) then
-       beg_index = bounds_proc%begg
-    else if (trim(subgrid_level) == namel) then
-       beg_index = bounds_proc%begl
-    else if (trim(subgrid_level) == namec) then
-       beg_index = bounds_proc%begc
-    else if (trim(subgrid_level) == namep) then
-       beg_index = bounds_proc%begp
-    else
-       call shr_sys_abort('subgrid_level of '//trim(subgrid_level)//' not supported' // &
-            errmsg(__FILE__, __LINE__))
+    beg_index = get_beg(bounds_proc, subgrid_level)
+    if (beg_index == -1) then
+       write(iulog,*) 'get_global_index_array: subgrid_level not supported: ', subgrid_level
+       call shr_sys_abort('subgrid_level not supported' // &
+            errmsg(sourcefile, __LINE__))
     end if
 
-    call get_subgrid_level_gindex(subgrid_level=trim(subgrid_level), gindex=gindex)
-    do i=bounds1,bounds2
+    call get_subgrid_level_gindex(subgrid_level=subgrid_level, gindex=gindex)
+    do i = bounds1, bounds2
        get_global_index_array(i) = gindex(subgrid_index(i) - beg_index + 1)
-    enddo
+    end do
 
   end function get_global_index_array
+
+  !-----------------------------------------------------------------------
+  function get_subgrid_level_from_name(subgrid_level_name) result(subgrid_level)
+    !
+    ! !DESCRIPTION:
+    ! Given a name like nameg, return a subgrid level index like subgrid_level_gridcell
+    !
+    ! !USES:
+    use clm_varcon, only : grlnd, nameg, namel, namec, namep, nameCohort
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: subgrid_level_name ! grlnd, nameg, namel, namec, namep, or nameCohort
+    integer :: subgrid_level  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_subgrid_level_from_name'
+    !-----------------------------------------------------------------------
+
+    select case (subgrid_level_name)
+    case(grlnd)
+       subgrid_level = subgrid_level_lndgrid
+    case(nameg)
+       subgrid_level = subgrid_level_gridcell
+    case(namel)
+       subgrid_level = subgrid_level_landunit
+    case(namec)
+       subgrid_level = subgrid_level_column
+    case(namep)
+       subgrid_level = subgrid_level_patch
+    case(nameCohort)
+       subgrid_level = subgrid_level_cohort
+    case default
+       write(iulog,*) subname//': unknown subgrid_level_name: ', trim(subgrid_level_name)
+       call shr_sys_abort()
+    end select
+
+  end function get_subgrid_level_from_name
+
 
   !-----------------------------------------------------------------------
   integer function get_subgrid_level_gsize (subgrid_level)
@@ -454,27 +479,26 @@ contains
     !
     ! !USES:
     use domainMod , only : ldomain
-    use clm_varcon, only : grlnd, nameg, namel, namec, namep, nameCohort
     !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: subgrid_level    !type of clm 1d array
+    integer, intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined above
     !-----------------------------------------------------------------------
 
     select case (subgrid_level)
-    case(grlnd)
+    case(subgrid_level_lndgrid)
        get_subgrid_level_gsize = ldomain%ns
-    case(nameg)
+    case(subgrid_level_gridcell)
        get_subgrid_level_gsize = numg
-    case(namel)
+    case(subgrid_level_landunit)
        get_subgrid_level_gsize = numl
-    case(namec)
+    case(subgrid_level_column)
        get_subgrid_level_gsize = numc
-    case(namep)
+    case(subgrid_level_patch)
        get_subgrid_level_gsize = nump
-    case(nameCohort)
+    case(subgrid_level_cohort)
        get_subgrid_level_gsize = numCohort
     case default
-       write(iulog,*) 'get_subgrid_level_gsize does not match subgrid_level type: ', trim(subgrid_level)
+       write(iulog,*) 'get_subgrid_level_gsize: unknown subgrid_level: ', subgrid_level
        call shr_sys_abort()
     end select
 
@@ -486,29 +510,26 @@ contains
     ! !DESCRIPTION:
     ! Get subgrid global index space
     !
-    ! !USES
-    use clm_varcon  , only : grlnd, nameg, namel, namec, namep, nameCohort
-    !
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: subgrid_level     ! type of input data
+    integer         , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined above
     integer         , pointer    :: gindex(:)
     !----------------------------------------------------------------------
 
     select case (subgrid_level)
-    case(grlnd)
+    case(subgrid_level_lndgrid)
        gindex => gindex_global
-    case(nameg)
+    case(subgrid_level_gridcell)
        gindex => gindex_grc
-    case(namel)
+    case(subgrid_level_landunit)
        gindex => gindex_lun
-    case(namec)
+    case(subgrid_level_column)
        gindex => gindex_col
-    case(namep)
+    case(subgrid_level_patch)
        gindex => gindex_patch
-    case(nameCohort)
+    case(subgrid_level_cohort)
        gindex => gindex_cohort
     case default
-       write(iulog,*) 'get_subgrid_level_gindex: Invalid expansion character: ',trim(subgrid_level)
+       write(iulog,*) 'get_subgrid_level_gindex: unknown subgrid_level: ', subgrid_level
        call shr_sys_abort()
     end select
 

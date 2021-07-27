@@ -8,10 +8,10 @@ module SoilHydrologyMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use abortutils        , only : endrun
-  use decompMod         , only : bounds_type
+  use decompMod         , only : bounds_type, subgrid_level_column
   use clm_varctl        , only : iulog, use_vichydro
   use clm_varcon        , only : denh2o, denice, rpi
-  use clm_varcon        , only : pondmx_urban, namec
+  use clm_varcon        , only : pondmx_urban
   use clm_varpar        , only : nlevsoi, nlevgrnd, nlayer, nlayert
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon     , only : icol_road_imperv
@@ -1221,7 +1221,7 @@ contains
                 !should never be positive... but include for completeness
                 if(rsub_top_tot > 0.) then !rising water table
 
-                   call endrun(subgrid_index=c, subgrid_level=namec, &
+                   call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                         msg="RSUB_TOP IS POSITIVE in Drainage!"//errmsg(sourcefile, __LINE__))
 
                 else ! deepening water table
@@ -2065,7 +2065,7 @@ contains
           !should never be positive... but include for completeness
           if(rsub_top_tot > 0.) then !rising water table
              
-             call endrun(subgrid_index=c, subgrid_level=namec, &
+             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                   msg="RSUB_TOP IS POSITIVE in Drainage!"//errmsg(sourcefile, __LINE__))
              
           else ! deepening water table
@@ -2315,7 +2315,7 @@ contains
              write(iulog,*) "h2osoi_ice_before_evap = ", h2osoi_ice_before_evap(c)
              write(iulog,*) "h2osoi_ice(c,1)        = ", h2osoi_ice(c,1)
              write(iulog,*) "qflx_solidevap_from_top_layer*dtime = ", qflx_solidevap_from_top_layer(c)*dtime
-             call endrun(subgrid_index=c, subgrid_level=namec, &
+             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                   msg="In RenewCondensation, h2osoi_ice has gone significantly negative")
           end if
        end do
@@ -2395,7 +2395,7 @@ contains
           ! should never be negative... but include for completeness
           if(irrig_demand_remaining < 0.) then
              
-             call endrun(subgrid_index=c, subgrid_level=namec, &
+             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                   msg="negative groundwater irrigation demand! "//errmsg(sourcefile, __LINE__))
              
           else 

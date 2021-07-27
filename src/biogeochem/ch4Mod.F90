@@ -15,12 +15,11 @@ module ch4Mod
   use clm_varpar                     , only : nlevsoi, ngases, nlevsno, nlevdecomp
   use clm_varcon                     , only : denh2o, denice, tfrz, grav, spval, rgas, grlnd
   use clm_varcon                     , only : catomw, s_con, d_con_w, d_con_g, c_h_inv, kh_theta, kh_tbase
-  use clm_varcon                     , only : nameg, namec
   use landunit_varcon                , only : istsoil, istcrop, istdlak
   use clm_time_manager               , only : get_step_size_real, get_nstep
   use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4, use_cn, use_fates
   use abortutils                     , only : endrun
-  use decompMod                      , only : bounds_type
+  use decompMod                      , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use atm2lndType                    , only : atm2lnd_type
   use CanopyStateType                , only : canopystate_type
   use CNSharedParamsMod              , only : CNParamsShareInst
@@ -1853,7 +1852,8 @@ contains
             if (forc_pch4(g) == 0._r8) then
                write(iulog,*)'not using ch4offline, but methane concentration not passed from the atmosphere', &
                     'to land model! CLM Model is stopping.'
-               call endrun(subgrid_index=g, subgrid_level=nameg, msg=' ERROR: Methane not being passed to atmosphere'//&
+               call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                    msg=' ERROR: Methane not being passed to atmosphere'//&
                     errMsg(sourcefile, __LINE__))
             end if
          end if
@@ -2255,7 +2255,7 @@ contains
                write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
                     ch4_surf_flux_tot_col(c)*1000._r8
-               call endrun(subgrid_index=c, subgrid_level=namec, &
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                     msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
             end if
          end if
@@ -2281,7 +2281,8 @@ contains
                   write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                   write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
                        ch4_surf_flux_tot_col(c)*1000._r8
-                  call endrun(subgrid_index=c, subgrid_level=namec, msg=' ERROR: Methane conservation error, allowlakeprod'//&
+                  call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                       msg=' ERROR: Methane conservation error, allowlakeprod'//&
                        errMsg(sourcefile, __LINE__))
                end if
             end if
@@ -2327,7 +2328,7 @@ contains
                write(iulog,*)'totcolch4_bef_grc =', totcolch4_bef_grc(g)
                write(iulog,*)'dtime * nem_grc   =', dtime * nem_grc(g)
                write(iulog,*)'dtime * ch4_surf_flux_tot * 1000 =', dtime * ch4_surf_flux_tot_grc(g) * 1000._r8
-               call endrun(subgrid_index=g, subgrid_level=nameg, &
+               call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
                     msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
             end if
          end if
@@ -3665,14 +3666,16 @@ contains
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=namec, msg=' ERROR: Methane demands exceed methane available.'&
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=' ERROR: Methane demands exceed methane available.'&
                     //errMsg(sourcefile, __LINE__))
             else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then
                write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=namec, msg=' ERROR: Methane limited, yet some left over.'//&
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=' ERROR: Methane limited, yet some left over.'//&
                     errMsg(sourcefile, __LINE__))
             end if
 
@@ -3682,14 +3685,15 @@ contains
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=namec, msg=' ERROR: Oxygen demands exceed oxygen available.'//&
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=' ERROR: Oxygen demands exceed oxygen available.'//&
                     errMsg(sourcefile, __LINE__) )
             else if (o2stress(c,j) < 1._r8 .and. source(c,j,2) + conc_o2(c,j) / dtime > 1.e-12_r8) then
                write(iulog,*) 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(subgrid_index=c, subgrid_level=namec, &
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                     msg=' ERROR: Oxygen limited, yet some left over.'//errMsg(sourcefile, __LINE__))
             end if
 
@@ -4157,7 +4161,8 @@ contains
                  nstep,c,errch4(c)
             g = col%gridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-            call endrun(subgrid_index=c, subgrid_level=namec, msg=' ERROR: CH4 Conservation Error in CH4Mod during diffusion'//&
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=' ERROR: CH4 Conservation Error in CH4Mod during diffusion'//&
                  errMsg(sourcefile, __LINE__))
          end if
       end do

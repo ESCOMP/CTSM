@@ -93,7 +93,6 @@ module AnnualFluxDribbler
 
      ! Which subgrid level this dribbler is operating at, stored in various ways
      character(len=subgrid_maxlen) :: dim1name
-     character(len=subgrid_maxlen) :: name_subgrid
      integer :: bounds_subgrid_level
 
      ! Annual amount to dribble in over the year
@@ -167,7 +166,6 @@ contains
     !-----------------------------------------------------------------------
 
     this%dim1name = 'gridcell'
-    this%name_subgrid = nameg
     this%bounds_subgrid_level = subgrid_level_gridcell
 
     call this%allocate_and_initialize_data(bounds)
@@ -204,7 +202,6 @@ contains
     !-----------------------------------------------------------------------
 
     this%dim1name = 'pft'
-    this%name_subgrid = namep
     this%bounds_subgrid_level = subgrid_level_patch
 
     call this%allocate_and_initialize_data(bounds)
@@ -274,7 +271,7 @@ contains
                 write(iulog,*) 'other than the first time step of the year, which this dribbler was told not to expect.'
                 write(iulog,*) 'If this non-zero mid-year delta is expected, then you can suppress this error'
                 write(iulog,*) 'by setting allows_non_annual_delta to .true. when constructing this dribbler.'
-                call endrun(subgrid_index=i, subgrid_level=this%name_subgrid, &
+                call endrun(subgrid_index=i, subgrid_level=this%bounds_subgrid_level, &
                      msg=subname//': found unexpected non-zero delta mid-year: ' // &
                      errMsg(sourcefile, __LINE__))
              end if

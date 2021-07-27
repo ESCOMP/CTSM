@@ -17,8 +17,8 @@ module  PhotosynthesisMod
   use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_fates, use_luna, use_hydrstress
   use clm_varctl          , only : iulog
   use clm_varpar          , only : nlevcan, nvegwcs, mxpft
-  use clm_varcon          , only : namep, c14ratio, spval, isecspday
-  use decompMod           , only : bounds_type
+  use clm_varcon          , only : c14ratio, spval, isecspday
+  use decompMod           , only : bounds_type, subgrid_level_patch
   use QuadraticMod        , only : quadratic
   use pftconMod           , only : pftcon
   use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
@@ -1374,7 +1374,7 @@ contains
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
             
            if ( (slatop(patch%itype(p)) *leafcn(patch%itype(p))) .le. 0.0_r8)then
-              call endrun(subgrid_index=p, subgrid_level=namep, msg="ERROR: slatop or leafcn is zero")
+              call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg="ERROR: slatop or leafcn is zero")
            end if
            lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(patch%itype(p)))
          end if   
@@ -1765,7 +1765,7 @@ contains
                if (gs_mol(p,iv) < 0._r8) then
                   write (iulog,*)'Negative stomatal conductance:'
                   write (iulog,*)'p,iv,gs_mol= ',p,iv,gs_mol(p,iv)
-                  call endrun(subgrid_index=p, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
                end if
 
                ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
@@ -2200,7 +2200,7 @@ contains
     fb=f2
     if((fa > 0._r8 .and. fb > 0._r8).or.(fa < 0._r8 .and. fb < 0._r8))then
        write(iulog,*) 'root must be bracketed for brent'
-       call endrun(subgrid_index=ip, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=ip, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
     endif
     c=b
     fc=fb
@@ -3440,7 +3440,7 @@ contains
                if (gs_mol_sun(p,iv) < 0._r8 .or. gs_mol_sha(p,iv) < 0._r8) then
                   write (iulog,*)'Negative stomatal conductance:'
                   write (iulog,*)'p,iv,gs_mol_sun,gs_mol_sha= ',p,iv,gs_mol_sun(p,iv),gs_mol_sha(p,iv)
-                  call endrun(subgrid_index=p, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
                end if
 
                ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
@@ -3884,7 +3884,7 @@ contains
     do phase=1, nphs
        if ( (fa(phase) > 0._r8 .and. fb(phase) > 0._r8) .or. (fa(phase) < 0._r8 .and. fb(phase) < 0._r8) ) then
           write(iulog,*) 'root must be bracketed for brent'
-          call endrun(subgrid_index=ip, subgrid_level=namep, msg=errmsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=ip, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
        endif
     enddo
     
@@ -4507,7 +4507,7 @@ contains
 #ifndef NDEBUG
     ! Only execute this code if DEBUG=TRUE
     if ( nvegwcs /= 4 )then
-       call endrun(subgrid_index=p, subgrid_level=namep, &
+       call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, &
             msg='Error:: this function is hardcoded for 4x4 matrices with nvegwcs==4'//errMsg(__FILE__, __LINE__))
     end if
 #endif

@@ -9,11 +9,11 @@ module dyncropFileMod
 #include "shr_assert.h"
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use shr_kind_mod          , only : r8 => shr_kind_r8
-  use decompMod             , only : bounds_type, bounds_level_proc
+  use decompMod             , only : bounds_type, bounds_level_proc, subgrid_level_column
   use dynFileMod            , only : dyn_file_type
   use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
   use clm_varctl            , only : iulog
-  use clm_varcon            , only : grlnd, namec
+  use clm_varcon            , only : grlnd
   use abortutils            , only : endrun
   use spmdMod               , only : masterproc, mpicom
   use LandunitType          , only : lun                
@@ -199,7 +199,7 @@ contains
           if (col_set(c)) then
              write(iulog,*) subname//' ERROR: attempt to set a column that has already been set.'
              write(iulog,*) 'This may happen if there are multiple crops on a single column.'
-             call endrun(subgrid_index=c, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
           end if
           
           col%wtlunit(c) = wtcft_cur(g,m)

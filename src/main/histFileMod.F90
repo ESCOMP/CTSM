@@ -14,8 +14,9 @@ module histFileMod
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog, use_vertsoilc, use_fates, compname
   use clm_varcon     , only : spval, ispval
-  use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
+  use clm_varcon     , only : grlnd, nameg, namel, namec, namep
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index_array
+  use decompMod      , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column
   use GridcellType   , only : grc
   use LandunitType   , only : lun
   use ColumnType     , only : col
@@ -3493,7 +3494,8 @@ contains
          ilarr(l) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='land1d_jxy'      , data=ilarr        , dim1name=namel, ncid=ncid, flag='write')
-       ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, subgrid_level=nameg)
+       ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='land1d_gi'       , data=ilarr, dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_wtgcell'  , data=lun%wtgcell , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_ityplunit', data=lun%itype   , dim1name=namel, ncid=ncid, flag='write')
@@ -3519,9 +3521,11 @@ contains
          icarr(c) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='cols1d_jxy'    , data=icarr         ,dim1name=namec, ncid=ncid, flag='write')
-       icarr = get_global_index_array(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, subgrid_level=nameg)
+       icarr = get_global_index_array(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='cols1d_gi'     , data=icarr, dim1name=namec, ncid=ncid, flag='write')
-       icarr = get_global_index_array(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, subgrid_level=namel)
+       icarr = get_global_index_array(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+            subgrid_level=subgrid_level_landunit)
        call ncd_io(varname='cols1d_li', data=icarr            , dim1name=namec, ncid=ncid, flag='write')
 
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write')
@@ -3556,11 +3560,14 @@ contains
        enddo
        call ncd_io(varname='pfts1d_jxy'      , data=iparr        , dim1name=namep, ncid=ncid, flag='write')
 
-       iparr = get_global_index_array(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, subgrid_level=nameg)
+       iparr = get_global_index_array(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='pfts1d_gi'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
-       iparr = get_global_index_array(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, subgrid_level=namel)
+       iparr = get_global_index_array(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_landunit)
        call ncd_io(varname='pfts1d_li'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
-       iparr = get_global_index_array(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, subgrid_level=namec)
+       iparr = get_global_index_array(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_column)
        call ncd_io(varname='pfts1d_ci'  , data=iparr              , dim1name=namep, ncid=ncid, flag='write')
 
        call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')

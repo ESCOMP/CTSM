@@ -93,8 +93,7 @@ module subgridWeightsMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use abortutils   , only : endrun
   use clm_varctl   , only : iulog, all_active, run_zero_weight_urban, use_fates
-  use clm_varcon   , only : nameg, namel, namec, namep
-  use decompMod    , only : bounds_type
+  use decompMod    , only : bounds_type, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
   use GridcellType , only : grc                
   use LandunitType , only : lun                
   use ColumnType   , only : col                
@@ -278,7 +277,7 @@ contains
        if (col%active(c) .and. .not. lun%active(l)) then
           write(iulog,*) trim(subname),' ERROR: active column found on inactive landunit', &
                          'at c = ', c, ', l = ', l
-          call endrun(subgrid_index=c, subgrid_level=namec, msg=errMsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -288,7 +287,7 @@ contains
        if (patch%active(p) .and. .not. col%active(c)) then
           write(iulog,*) trim(subname),' ERROR: active patch found on inactive column', &
                          'at p = ', p, ', c = ', c
-          call endrun(subgrid_index=p, subgrid_level=namep, msg=errMsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -519,7 +518,7 @@ contains
     else if (weight > 0._r8) then
        write(iulog,*) subname//' ERROR: Attempt to assign non-zero weight to a non-existent landunit'
        write(iulog,*) 'g, l, ltype, weight = ', g, l, ltype, weight
-       call endrun(subgrid_index=l, subgrid_level=namel, msg=errMsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errMsg(sourcefile, __LINE__))
     end if
     
   end subroutine set_landunit_weight

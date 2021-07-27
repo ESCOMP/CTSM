@@ -1068,9 +1068,9 @@ contains
     use shr_kind_mod         , only : r8 => shr_kind_r8
     use shr_const_mod        , only : SHR_CONST_TKFRZ, SHR_CONST_LATICE,SHR_CONST_G
     use abortutils           , only : endrun
-    use decompMod            , only : bounds_type
+    use decompMod            , only : bounds_type, subgrid_level_column
     use clm_varctl           , only : iulog, use_hydrstress
-    use clm_varcon           , only : denh2o, denice, namec
+    use clm_varcon           , only : denh2o, denice
     use clm_varpar           , only : nlevsoi
     use clm_time_manager     , only : get_step_size_real, get_nstep
     use SoilStateType        , only : soilstate_type
@@ -1307,7 +1307,7 @@ contains
                           rhs,       & ! intent(inout): [r8(nlayers  )] RHS vector; becomes the solution vector on output
                           nlayers,   & ! intent(in):    [integer]       the leading dimension of matrix rhs
                           err)
-               if(err/=0) call endrun(subgrid_index=c, subgrid_level=namec, &
+               if(err/=0) call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                     msg = subname // ':: problem with the lapack solver')
 
                ! save the iteration increment

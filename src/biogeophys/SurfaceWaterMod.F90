@@ -9,11 +9,11 @@ module SurfaceWaterMod
   use shr_kind_mod                , only : r8 => shr_kind_r8
   use shr_const_mod               , only : shr_const_pi
   use shr_spfn_mod                , only : erf => shr_spfn_erf
-  use clm_varcon                  , only : denh2o, denice, roverg, tfrz, pc, mu, rpi, namec
+  use clm_varcon                  , only : denh2o, denice, roverg, tfrz, pc, mu, rpi
   use clm_varpar                  , only : nlevsno, nlevmaxurbgrnd
   use clm_time_manager            , only : get_step_size_real
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
-  use decompMod                   , only : bounds_type
+  use decompMod                   , only : bounds_type, subgrid_level_column
   use ColumnType                  , only : col
   use NumericsMod                 , only : truncate_small_values
   use InfiltrationExcessRunoffMod , only : infiltration_excess_runoff_type
@@ -121,7 +121,7 @@ contains
        associate(w => water_inst%bulk_and_tracers(i))
        call CalcTracerFromBulk( &
             ! Inputs
-            subgrid_level = namec, &
+            subgrid_level = subgrid_level_column, &
             lb            = begc, &
             num_pts       = num_soilc, &
             filter_pts    = filter_soilc, &

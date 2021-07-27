@@ -8,9 +8,8 @@ module UrbanFluxesMod
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_sys_mod          , only : shr_sys_flush 
   use shr_log_mod          , only : errMsg => shr_log_errMsg
-  use decompMod            , only : bounds_type
+  use decompMod            , only : bounds_type, subgrid_level_landunit
   use clm_varpar           , only : numrad
-  use clm_varcon           , only : namel
   use clm_varctl           , only : iulog
   use abortutils           , only : endrun  
   use UrbanParamsType      , only : urbanparams_type
@@ -359,7 +358,7 @@ contains
             write (iulog,*) 'ht_roof, z_d_town, z_0_town: ', ht_roof(l), z_d_town(l), &
                  z_0_town(l)
             write (iulog,*) 'clm model is stopping'
-            call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
          end if
          if (forc_hgt_u_patch(lun%patchi(l)) - z_d_town(l) <= z_0_town(l)) then
             write (iulog,*) 'aerodynamic parameter error in UrbanFluxes'
@@ -367,7 +366,7 @@ contains
             write (iulog,*) 'forc_hgt_u_patch, z_d_town, z_0_town: ', forc_hgt_u_patch(lun%patchi(l)), z_d_town(l), &
                  z_0_town(l)
             write (iulog,*) 'clm model is stopping'
-            call endrun(subgrid_index=l, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
          end if
 
          ! Magnitude of atmospheric wind
@@ -604,7 +603,8 @@ contains
                write(iulog,*) 'c, ctype, pi = ', c, ctype(c), pi
                write(iulog,*) 'Column indices for: shadewall, sunwall, road_imperv, road_perv, roof: '
                write(iulog,*) icol_shadewall, icol_sunwall, icol_road_imperv, icol_road_perv, icol_roof
-               call endrun(subgrid_index=l, subgrid_level=namel, msg="ERROR, ctype out of range"//errmsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, &
+                    msg="ERROR, ctype out of range"//errmsg(sourcefile, __LINE__))
             end if
 
             taf_numer(l) = taf_numer(l) + t_grnd(c)*wtus(c)
@@ -824,7 +824,7 @@ contains
             write(iulog,*)'eflx_scale    = ',eflx_scale(indexl)
             write(iulog,*)'eflx_sh_grnd_scale: ',eflx_sh_grnd_scale(lun%patchi(indexl):lun%patchf(indexl))
             write(iulog,*)'eflx          = ',eflx(indexl)
-            call endrun(subgrid_index=indexl, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=indexl, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
          end if
       end if
 
@@ -845,7 +845,7 @@ contains
             write(iulog,*)'clm model is stopping - error is greater than 4.e-9 kg/m**2/s'
             write(iulog,*)'qflx_scale    = ',qflx_scale(indexl)
             write(iulog,*)'qflx          = ',qflx(indexl)
-            call endrun(subgrid_index=indexl, subgrid_level=namel, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=indexl, subgrid_level=subgrid_level_landunit, msg=errmsg(sourcefile, __LINE__))
          end if
       end if
 

@@ -152,7 +152,7 @@ contains
     ! !USES:
     use shr_log_mod         , only : errMsg => shr_log_errMsg
     use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
-    use decompMod           , only : bounds_type
+    use decompMod           , only : bounds_type, subgrid_level_gridcell
     use abortutils          , only : endrun
     use spmdMod             , only : masterproc
     use ncdio_pio           , only : file_desc_t, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
@@ -160,7 +160,7 @@ contains
     use clm_varpar          , only : numrad
     use clm_varpar          , only : nlevsoi, nlevgrnd, nlevlak, nlevsoifl, nlayer, nlayert, nlevmaxurbgrnd, nlevsno
     use clm_varcon          , only : zsoi, dzsoi, zisoi, spval
-    use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd, nameg
+    use clm_varcon          , only : secspday, pc, mu, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
     use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice
@@ -324,7 +324,7 @@ contains
        g = patch%gridcell(p)
        if ( sand3d(g,1)+clay3d(g,1) == 0.0_r8 )then
           if ( any( sand3d(g,:)+clay3d(g,:) /= 0.0_r8 ) )then
-             call endrun(subgrid_index=g, subgrid_level=nameg, &
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
                   msg='found depth points that do NOT sum to zero when surface does'//&
                   errMsg(sourcefile, __LINE__)) 
           end if
@@ -332,7 +332,7 @@ contains
           clay3d(g,:) = 1.0_r8
        end if
        if ( any( sand3d(g,:)+clay3d(g,:) == 0.0_r8 ) )then
-          call endrun(subgrid_index=g, subgrid_level=nameg, &
+          call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
                msg='after setting, found points sum to zero'//errMsg(sourcefile, __LINE__))
        end if
 

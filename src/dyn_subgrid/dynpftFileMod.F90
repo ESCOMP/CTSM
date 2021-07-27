@@ -9,13 +9,13 @@ module dynpftFileMod
   ! !USES:
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
-  use decompMod             , only : bounds_type, bounds_level_proc
+  use decompMod             , only : bounds_type, bounds_level_proc, subgrid_level_gridcell
   use dynFileMod            , only : dyn_file_type
   use dynVarTimeUninterpMod , only : dyn_var_time_uninterp_type
   use clm_varctl            , only : iulog
   use abortutils            , only : endrun
   use spmdMod               , only : masterproc, mpicom
-  use clm_varcon            , only : grlnd, nameg
+  use clm_varcon            , only : grlnd
   use LandunitType          , only : lun                
   use ColumnType            , only : col                
   use PatchType             , only : patch                
@@ -159,7 +159,7 @@ contains
              write(iulog,*) '  check_dynpft_consistency = .false.'
              write(iulog,*) 'in user_nl_clm'
              write(iulog,*) ' '
-             call endrun(subgrid_index=g, subgrid_level=nameg, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
           end if
        end do
 

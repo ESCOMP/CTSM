@@ -936,9 +936,8 @@ contains
              call bulk_vars%get_data(var_num, bulk)
              call tracer_vars%get_data(var_num, tracer)
 
-             ! FIXME(wjs, 2021-07-23) set subgrid_level appropriately here
              call CompareBulkToTracer( &
-                  subgrid_level = 'FIXME', &
+                  subgrid_level = tracer_vars%get_subgrid_level(var_num), &
                   bounds_beg = begi, &
                   bounds_end = endi, &
                   bulk   = bulk(begi:endi), &
