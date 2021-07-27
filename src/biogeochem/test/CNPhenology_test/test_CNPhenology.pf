@@ -266,5 +266,33 @@ contains
   end subroutine check_crit_dayl_dependsonveg
 
 
+  @Test
+  subroutine check_crit_dayl_dependsonlatnveg(this)
+    use GridcellType                    , only : grc
+    class(TestCNPhenology), intent(inout) :: this
+    integer :: p, g, lat
+    real(r8) :: crit_daylat
+    integer, parameter :: nlats = 4
+    real(r8) :: test_lats(nlats) = (/     0._r8,    65._r8,    90._r8,    44._r8 /)
+    real(r8) :: expected(nlats)  = (/ 39200._r8, 54000._r8, 72000._r8, 39200._r8 /)
+
+    call CNPhenologySetNML( input_onset_thresh_depends_on_veg=.false.,        &
+                            input_critical_daylight_method = critical_daylight_depends_on_latnveg )
+    g = bounds%begg
+    p = bounds%begp
+    do lat = 1, nlats
+       grc%latdeg(g) = test_lats(lat)
+       crit_daylat = SeasonalCriticalDaylength( g, p )
+       @assertEqual( expected(lat), crit_daylat, tolerance=tol )
+    end do
+    pftcon%season_decid_temperate = 1
+    do lat = 1, nlats
+       grc%latdeg(g) = test_lats(lat)
+       crit_daylat = SeasonalCriticalDaylength( g, p )
+       @assertEqual( 39200._r8, crit_daylat, tolerance=tol )
+    end do
+  end subroutine check_crit_dayl_dependsonlatnveg
+
+
 
 end module test_CNPhenology
