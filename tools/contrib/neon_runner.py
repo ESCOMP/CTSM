@@ -59,7 +59,7 @@ import logging
 import requests
 import argparse
 import subprocess
- 
+import time 
 import pandas as pd
  
 from datetime import date
@@ -197,6 +197,30 @@ def get_parser():
                                                                                                                                                             
  
     return parser
+
+class NeonSite :
+    """
+    A class for encapsulating neon sites.
+       
+    ...
+       
+    Attributes
+    ----------
+       
+    Methods
+    -------
+    """
+    def __init__(self, name, start_year, end_year, start_month, end_month):
+        self.name = name
+        self.start_year= start_year
+        self.end_year = end_year
+        self.start_month = start_month
+        self.end_month = end_month
+       
+    def __str__(self):
+        return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' 
+                    for item in (self.__dict__)))
+
 
 class NeonCase (Case):
     """
@@ -392,69 +416,86 @@ def parse_neon_listing(listing_file):
 
 
 #-----------------------------------
-def build_base_case2(base_root, basecasename, res, compset, overwrite,
+def build_base_case(base_root, base_case_name, res, compset, overwrite,
                     user_mods_dir):
 
-    print(">>>>> BUILDING BASE CASE...")
-    print ('base_root:',base_root)
+    print(">>>>> BUILDING BASE CASE...<<<<<<")
 
-    case_root = os.path.join(base_root,basecasename)
+    print ('base_root:',base_root)
     print ('user_mods_dir:',user_mods_dir)
+
+    case_root = os.path.join(base_root,base_case_name)
     print ('case_root:',case_root)
+
     if overwrite and os.path.isdir(case_root):
         shutil.rmtree(case_root)
+        print ("Removin the case existed!")
+
     print ("Creating the case....")
 
-
-    print ("Creating the case....")
-
-    print ("user_mods_dir:",user_mods_dir)
-    #a_neon_case = NeonCase(case_root, read_only=False)
-    #print (a_neon_case)
-    #if not os.path.isdir(case_root):
-    #print ("not a case")
-    #a_neon_case.create(os.path.basename(case_root), cesmroot, compset, res,
-    #            machine_name="cheyenne", driver="nuopc",
-    #            run_unsupported=True, answer="r",walltime="01:00:00")
-    #print (a_neon_case)
-    #exit()
-    with NeonCase(case_root, read_only=False) as neon_case:
+    with Case(case_root, read_only=False) as case:
         if not os.path.isdir(case_root):
-            neon_case.create(os.path.basename(case_root), cesmroot, compset, res,
+            case.create(os.path.basename(case_root), cesmroot, compset, res,
                         run_unsupported=True, answer="r",walltime="04:00:00",
                         user_mods_dirs = ["NEON/HARV"], driver="nuopc")
+            print ("case is created!")
 
-    #with Case(case_root, read_only=False) as case:
-    #    if not os.path.isdir(case_root):
-    #        #case.create(os.path.basename(case_root), cesmroot, compset, res,
-    #        #            driver="nuopc",
-    #        #            run_unsupported=True, answer="r",walltime="01:00:00",user_mods_dir=user_mods_dir)
-    #        case.create(os.path.basename(case_root), cesmroot, compset, res,
-    #                    run_unsupported=True, answer="r",walltime="04:00:00",
-    #                    user_mods_dirs = ["NEON/HARV"], driver="nuopc")
+            # make sure that changing the casename will not affect these variables                                           
+            #case.set_value("EXEROOT",case.get_value("EXEROOT", resolved=True))
+            #case.set_value("RUNDIR",case.get_value("RUNDIR",resolved=True)+".00")
+
+            #case.set_value("RUN_TYPE","startup")
+            #case.set_value("GET_REFCASE",False)
+
+        rundir = case.get_value("RUNDIR")
+
+        #case_root = case.get_value("case_root")
+        print(">> base case_setup...")
+        case.case_setup()
+        print(">> base case_build...")
+        print (case.__str__())
+        print (case_root)
+        t0 = time.time()
+        build.case_build(case_root, case=case)
+        t1 = time.time()
+        total = t1-t0
+        print ("total time:", total)
+
+
+    return case_root
+
+def spinup_case(orig_root, case_root, user_mods_dir, overwrite):
+    print(">>>>> CLONING BASE CASE...")
+    #if overwrite and os.path.isdir(caseroot):
+    #    shutil.rmtree(case_root)
+    cloneroot = orig_root
+
+    if not os.path.isdir(cloneroot):
+        print ("does not exist!")
+        exit()
+
+    if overwrite and os.path.isdir(case_root):
+        shutil.rmtree(case_root)
+        print ("removing the existing case")
+
+    if not os.path.isdir(case_root):
+        with Case(cloneroot, read_only=False) as clone:
+            print ("cloning the base base:")
+            clone.create_clone(case_root, keepexe=True)
+
+    with Case(case_root, read_only=False) as case:
+        case.set_value("CLM_FORCE_COLDSTART","on")
+        case.set_value("CLM_ACCELERATED_SPINUP","on")
+        case.set_value("STOP_OPTION", "nyears")
+
+        print (case.get_value("STOP_OPTION"))
+        case.create_namelists()
+        case.submit()
 
 
 
 
 
-    #        print (case.__str__())
-    #        print ("case is created!")
-    #        # make sure that changing the casename will not affect these variables                                           
-    #        case.set_value("EXEROOT",case.get_value("EXEROOT", resolved=True))
-    #        case.set_value("RUNDIR",case.get_value("RUNDIR",resolved=True)+".00")
-    #     
-    #        case.set_value("RUN_TYPE","startup")
-    #        case.set_value("GET_REFCASE",False)
-         
-         
-    #    rundir = case.get_value("RUNDIR")
-    #    case_root = case.get_value("case_root")
-    #    print(">> base case_setup...")
-    #    case.case_setup()
-    #    print(">> base case_build...")
-    #    build.case_build(case_root, case=case)
-         
-        return case_root
 
 def main():
 
@@ -478,8 +519,26 @@ def main():
     #if (not os.path.isdir(out_dir)):
     #    os.mkdir(out_dir)
 
-    neon_site= "ABBY"
+    #-- check neon listing file for available data:                       
+    available_list = check_neon_listing()
 
+    print (available_list)
+
+    neon_site= "HARV"
+
+    #--  Looping over neon sites
+ 
+    #for neon_site in available_list:                                                                                                                 
+    #    if neon_site.name in site_list:
+     
+    #        print ("-----------------------------------")
+    #        print ("Running CTSM for neon site : ", neon_site.name)
+    #        print ("-----------------------------------")
+            
+    #        case_dir = os.path.join(out_dir, 'NEON_'+neon_site.name+"_test_0724")
+    #        print ("case_dir:",case_dir)
+
+    #=================================
     # What to do?
     #1) Create a base case
     #2) Clone base case
@@ -488,7 +547,7 @@ def main():
     # But what to do now?
     #) just create a case for your neon
 
-    base_case_name = "base_case"
+    base_case_name = "base_case_"+neon_site
 
     base_root = os.path.join("/home/negins/","neon_0725",base_case_name)
 
@@ -497,23 +556,24 @@ def main():
     res = "CLM_USRDAT"
     compset = "I1PtClm51Bgc"
 
-    #res = "f19_g17"
-    #compset = "I1850Clm50Sp"
-
-
-    #user_mods_dir = os.path.join(cesmroot,"cime_config","usermods_dirs","scam_"+iop)
     user_mods_dir = [os.path.join(cesmroot,"cime_config","usermods_dirs","NEON",neon_site)]
-
-    #ensemble_startval = "001" # The startval strings should be the same length, or else
-    #basecase_startval = "000"
-    #project = "I1PtClm51Bgc"
 
     overwrite=True
 
     # Create and build the base case that all PPE cases are cloned from                                                                                     
-    #case_root = build_base_case2(base_root, base_case_name, res,
+    #orig_root = build_base_case(base_root, base_case_name, res,
     #                           compset, overwrite, user_mods_dir)
+    orig_root = "/home/negins/neon_0725/base_case_ABBY/base_case_ABBY"
+    print ("exit:exit!")
 
+    if args.ad_flag:
+        print ("Running Spin-Up case")
+        ad_case_name = "spinup_AD_"+neon_site
+        case_root = os.path.join("/home/negins/","neon_0725",ad_case_name) 
+
+        spinup_case(orig_root, case_root, user_mods_dir, overwrite)
+
+    exit()
     print(">>>>> BUILDING BASE CASE...")
     print ('base_root:',base_root)
 
