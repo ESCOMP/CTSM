@@ -100,6 +100,8 @@ contains
     use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
     use CanopyStateType         , only : canopystate_type
     use PatchType               , only : patch
+    use clm_varctl              , only : use_fates_sp
+
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
