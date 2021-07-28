@@ -395,10 +395,6 @@ def download_file(url, fname):
         print('File '+fname+'was not available on the neon server:'+ url)
 
 
-#-----------------------------------
-#-- First 
-#-----------------------------------
-
 def build_base_case(base_root, base_case_name, res, compset, overwrite,
                     user_mods_dir):
     """
@@ -409,10 +405,18 @@ def build_base_case(base_root, base_case_name, res, compset, overwrite,
     Args:
         base_root (str): 
             root of the base_case CIME 
- 
-        fname (str) : 
-            file name to save the downloaded file.
-
+        base_case_name (str):
+            Name of the base case 
+        res (str):
+            base_case resolution or gridname
+        compset (str):
+            base case compset
+        overwrite (bool) : 
+            Flag to overwrite the case if exists
+        user_mods_dir (list):
+            list of user_mods_dir
+            Note, cime does not accept str only
+            and it should be a list of strs.
     """
     print("---- building a base case -------")
 
@@ -453,7 +457,32 @@ def build_base_case(base_root, base_case_name, res, compset, overwrite,
 
     return case_root
 
+#-----------------------------------
+# NS thinks these should be inside NeonSite object.
+#-----------------------------------
 def run_spinup_ad(orig_root, case_root, user_mods_dir, overwrite, ad_length, neon_site):
+    """
+    Function to run accelerated decomposition over specific length.
+    Accelerated Decomposition is denoted as AD in the code.
+    For creating the ad case we clone the base case
+ 
+    Args:
+        orig_root (str): 
+            root of the base_case
+            that we want to clone from
+        case_root (str):
+            Name of the AD case root 
+        user_mods_dir (list):
+            list of user_mods_dir
+            Note, cime does not accept str only
+            and it should be a list of strs.
+        overwrite (bool) : 
+            Flag to overwrite the case if exists
+        ad_length (int) :
+            Length of the AD spinup in years
+        neon_site (NeonSite):
+            NeonSite object that we are running.
+    """
 
     if not os.path.isdir(orig_root):
         sys.exit('Base case does not exist in', orig_root)
@@ -504,6 +533,27 @@ def run_spinup_ad(orig_root, case_root, user_mods_dir, overwrite, ad_length, neo
 
 
 def run_postad(orig_root, case_root, user_mods_dir, overwrite, postad_length, neon_site):
+    """
+    Function to run post-ad simultion for a proper spin-up over specific length.
+    For creating the ad case we clone the base case
+ 
+    Args:
+        orig_root (str): 
+            root of the base_case
+            that we want to clone from
+        case_root (str):
+            Name of the AD case root 
+        user_mods_dir (list):
+            list of user_mods_dir
+            Note, cime does not accept str only
+            and it should be a list of strs.
+        overwrite (bool) : 
+            Flag to overwrite the case if exists
+        postad_length (int) :
+            Length of the AD spinup in years
+        neon_site (NeonSite):
+            NeonSite object that we are running.
+    """
 
     if not os.path.isdir(orig_root):
         sys.exit('Base case does not exist in', orig_root)
@@ -559,28 +609,48 @@ def run_postad(orig_root, case_root, user_mods_dir, overwrite, postad_length, ne
         case.create_namelists()
         case.submit()
 
-def run_transient(orig_root, case_root, user_mods_dir, overwrite):
-    print(">>>>> CLONING BASE CASE...")
-
-    cloneroot = orig_root
-
-    if not os.path.isdir(cloneroot):
-        print ("does not exist!")
-        exit()
+def run_transient(orig_root, transient_case_root, user_mods_dir, overwrite, start_year, end_year):
+    """
+    Function to run transient simultion for a single case.
+    For creating the transient case we clone the base case
+ 
+    Args:
+        orig_root (str): 
+            root of the base_case
+            that we want to clone from
+        case_root (str):
+            Name of the AD case root 
+        user_mods_dir (list):
+            list of user_mods_dir
+            Note, cime does not accept str only
+            and it should be a list of strs.
+        overwrite (bool) : 
+            Flag to overwrite the case if exists
+        postad_length (int) :
+            Length of the AD spinup in years
+        neon_site (NeonSite):
+            NeonSite object that we are running.
+        start_year (int):
+            start year that the user specifies
+        end_year (int):
+            end year that the user specifies.
+        """
+    if not os.path.isdir(orig_root):
+        sys.exit('Base case does not exist in', orig_root)
 
     if overwrite and os.path.isdir(case_root):
         shutil.rmtree(case_root)
-        print ("removing the existing case")
+        print("---- removing the existing case -------")
 
     if not os.path.isdir(case_root):
-        with Case(cloneroot, read_only=False) as clone:
-            print ("cloning the base base:")
+        with Case(orig_root, read_only=False) as clone:
+            print("---- cloning the base case -------")
             clone.create_clone(case_root, keepexe=True)
 
     with Case(case_root, read_only=False) as case:
-        case.set_value("DATM_YR_ALIGN","2018")
-        case.set_value("DATM_YR_START","2018")
-        case.set_value("DATM_YR_END","2020")
+        case.set_value("DATM_YR_ALIGN",start_year)
+        case.set_value("DATM_YR_START",start_year)
+        case.set_value("DATM_YR_END",end_year)
         case.set_value("STOP_OPTION", "nyears")
 
         case.set_value("CLM_FORCE_COLDSTART","off")
@@ -600,7 +670,7 @@ def run_transient(orig_root, case_root, user_mods_dir, overwrite):
         # No need to make any changes to this ?
         #Confirm this
 
-        #user_nl_file  = open(user_nl_fname, "a")
+        user_nl_file  = open(user_nl_fname, "a")
         #user_nl_lines = [
         #                "hist_mfilt = 48",
         #                "hist_nhtfrq = -1",
@@ -609,12 +679,12 @@ def run_transient(orig_root, case_root, user_mods_dir, overwrite):
         # point to the correct finidat
         #for line in user_nl_lines:
         #    user_nl_file.write("%s\n" % line)
+        fini_line = ("finidat="+post_finidat) 
 
-        #user_nl_file.close()
+        user_nl_file.close()
 
         case.create_namelists()
         case.submit()
-
 
 
 def main():
@@ -716,7 +786,6 @@ def main():
                 user_mods_dir=["NEON/"+neon_site.name]
 
                 run_transient(orig_root, transient_case_root, user_mods_dir, overwrite, start_year, end_year)
-
 
 
 
