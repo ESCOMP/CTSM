@@ -39,15 +39,12 @@ To see the available options:
 #TODO (NS)
 #- [ ]
 #- [ ] checkout_externals instead of using env varaiable
-#- [ ] Add debug or verbose option
- 
-#- [ ] Check if it would be better to use cime case obj
-#- [ ] Make sure both AD and SASU are not on at the same time
 #- [ ]  wget the fields available and run for those available:
-#- [ ] Switch to check manage_externals status instead of running it always
-#- [ ] query the end year from neon?
  
-#- [ ] Matrix spin-up if Eric merged it
+#- [ ] Matrix spin-up if (SASU) Eric merged it in 
+#- [ ] Make sure both AD and SASU are not on at the same time
+
+#TODO: Job dependency
  
 #Import libraries
 from __future__ import print_function
@@ -109,8 +106,6 @@ def get_parser():
                            formatter_class=argparse.RawDescriptionHelpFormatter)
  
     parser.print_usage = parser.print_help
-
-    #parser.add_argument('--help', action=_HelpAction, help='help for help if you need some help')
  
     parser.add_argument('--neon_site',
                 help='4-letter neon site code.', 
@@ -150,10 +145,9 @@ def get_parser():
                 dest="all_flag",
                 default = False)
 
-
     subparsers = parser.add_subparsers (
                         dest='run_type',
-                        help='Three different ways to run this script.')
+                        help='Four different ways to run this script.')
 
     ad_parser = subparsers.add_parser ('ad',
                 help=''' AD spin-up options ''') 
@@ -163,6 +157,9 @@ def get_parser():
 
     tr_parser = subparsers.add_parser ('transient',
                 help=''' Transient spin-up options ''')
+
+    sasu_parser = subparsers.add_parser ('sasu',
+                help=''' Sasu spin-up options --not in CTSM yet''')
 
     ad_parser.add_argument ('--ad_length',
                 help='''
@@ -252,21 +249,20 @@ def get_parser():
     #            required = False,
     #            default = True)
 
-    parser.add_argument('--sasu','--matrix',
-                help='''
-                Matrix (SASU) spin-up
-                [default: %(default)s]
-                ''', 
-                action="store_true",
-                dest="sasu_flag",
-                required = False,
-                default = False)
+    #parser.add_argument('--sasu','--matrix',
+    #            help='''
+    #            Matrix (SASU) spin-up
+    #            [default: %(default)s]
+    #            ''', 
+    #            action="store_true",
+    #            dest="sasu_flag",
+    #            required = False,
+    #            default = False)
     parser.add_argument('-d','--debug', 
                 help='Debug mode will print more information. ', 
                 action="store_true", 
                 dest="debug", 
                 default=False)
-                                                                                                                                                            
  
     return parser
 
@@ -737,10 +733,6 @@ def main():
     #                            compset, overwrite, user_mods_dir)
     orig_root = "/home/negins/neon_0725/base_case_ABBY/base_case_ABBY"
 
-    #=================================
-    #testing with only one site
-    #TODO: remove later
-    #neon_site= "HARV"
 
     #--  Looping over neon sites
 
@@ -750,7 +742,6 @@ def main():
             print ("-----------------------------------")
             print ("Running CTSM for neon site : ", neon_site.name)
 
-            #TODO: Job dependency
 
             #if args.ad_flag:
             if (args.run_type=="ad"):
