@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
  
 """
 |------------------------------------------------------------------|
@@ -55,7 +55,6 @@ To see the available options:
 
  
 #Import libraries
-from __future__ import print_function
  
 import os
 import sys
@@ -66,14 +65,18 @@ import requests
 import argparse
 import subprocess
 import pandas as pd
- 
+import glob 
 from datetime import date
 from getpass import getuser
  
 #-- get the environment variable
-cesmroot = os.environ.get('CESM_ROOT')
 
-cesmroot = '/home/negins/ctsm_cime/'
+cesmroot = os.environ.get('CTSM_ROOT')
+if not cesmroot:
+    cesmroot = os.environ.get('CESM_ROOT')
+
+if not cesmroot:
+    raise SystemExit("ERROR: CTSM_ROOT or CESM_ROOT must be defined in environment")
 
 _LIBDIR = os.path.join(cesmroot,"cime","scripts","Tools")
 sys.path.append(_LIBDIR)
@@ -87,70 +90,50 @@ from CIME.utils            import safe_copy
 from argparse              import RawTextHelpFormatter
 from CIME.locked_files     import lock_file, unlock_file
 
+logger = logging.getLogger(__name__) 
  
-myname = getuser()
- 
-#-- valid neon site options
-valid_neon_sites = ['ABBY','BARR','BART','BLAN',
-                    'BONA','CLBJ','CPER','DCFS',
-                    'DEJU','DELA','DSNY','GRSM',
-                    'GUAN','HARV','HEAL','JERC',
-                    'JORN','KONA','KONZ','LAJA',
-                    'LENO','MLBS','MOAB','NIWO',
-                    'NOGP','OAES','ONAQ','ORNL',
-                    'OSBS','PUUM','RMNP','SCBI',
-                    'SERC','SJER','SOAP','SRER',
-                    'STEI','STER','TALL','TEAK',
-                    'TOOL','TREE','UKFS','UNDE',
-                    'WOOD','WREF','YELL'
-                   ]
-
-def get_parser():                                                                                                                                           
+def get_parser(args, description, valid_neon_sites):                                                                                                                                           
     """
     Get parser object for this script.
     """
-    parser = argparse.ArgumentParser(description=__doc__,
+    parser = argparse.ArgumentParser(description=description,
                            formatter_class=argparse.RawDescriptionHelpFormatter)
- 
+
+    CIME.utils.setup_standard_logging_options(parser)
+    
     parser.print_usage = parser.print_help
- 
-    parser.add_argument('--neon_site',
+
+    parser.add_argument('--neon-sites',
                 help='4-letter neon site code.', 
                 action="store",
-                dest="site_name",
                 required=False,
-                choices=valid_neon_sites,
+                choices=valid_neon_sites + ['all'],
+                dest="neon_sites",
                 default=["OSBS"],
-                #action='append', 
                 nargs='+')
-    parser.add_argument('--surf_dir',
+
+# not used
+#    parser.add_argument('--surf-dir',
+#                help='''
+#                Directory of single point surface dataset.
+#                [default: %(default)s]
+#                ''', 
+#                action="store", 
+#                dest="surf_dir",
+#                type =str,
+#                required=False,
+#                default="/glade/scratch/"+myname+"/single_point/")
+
+    parser.add_argument('--case-root',
                 help='''
-                Directory of single point surface dataset.
-                [default: %(default)s]
-                ''', 
-                action="store", 
-                dest="surf_dir",
-                type =str,
-                required=False,
-                default="/glade/scratch/"+myname+"/single_point/")
-    parser.add_argument('--out_dir',
-                help='''
-                Directory to write updated single point surface dataset.
+                Root Directory of cases
                 [default: %(default)s] 
                 ''',
                 action="store", 
-                dest="out_dir",
+                dest="case_root",
                 type =str,
                 required=False,
-                default="/glade/scratch/"+myname+"/neon_sims/")
-    parser.add_argument('-a','--all',
-                help='''
-                Flag for running all neon sites, instead of selected few sites.
-                [default: %(default)s] 
-                ''',
-                action="store_true", 
-                dest="all_flag",
-                default = False)
+                default="CIME_OUTPUT_ROOT as defined in cime")
 
     subparsers = parser.add_subparsers (
                         dest='run_type',
@@ -168,7 +151,7 @@ def get_parser():
     sasu_parser = subparsers.add_parser ('sasu',
                 help=''' Sasu spin-up options --not in CTSM yet''')
 
-    ad_parser.add_argument ('--ad_length',
+    ad_parser.add_argument ('--ad-length',
                 help='''
                 How many years to run AD spin-up
                 [default: %(default)s]
@@ -177,7 +160,7 @@ def get_parser():
                 type = int, 
                 default = 200)
 
-    pad_parser.add_argument ('--postad_length',
+    pad_parser.add_argument ('--postad-length',
                 help='''
                 How many years to run in post-AD mode
                 [default: %(default)s]
@@ -196,7 +179,7 @@ def get_parser():
                 required = True,
                 type = str)
 
-    tr_parser.add_argument('--start_year',
+    tr_parser.add_argument('--start-year',
                 help='''           
                 Start year for running CTSM simulation.
                 [default: %(default)s]
@@ -207,7 +190,7 @@ def get_parser():
                 type = int,        
                 default = 2018)
 
-    tr_parser.add_argument('--end_year',
+    tr_parser.add_argument('--end-year',
                 help='''
                 End year for running CTSM simulation.
                 [default: %(default)s]
@@ -227,6 +210,16 @@ def get_parser():
                 dest="finidat_transient",
                 required = True,
                 type = str)
+
+    parser.add_argument('--overwrite',
+                help='''
+                overwrite existing case directories
+                [default: %(default)s]
+                ''', 
+                action="store_true",
+                dest="overwrite",
+                required = False,
+                default = False)
 
     #parser.add_argument('--spinup',
     #            help='''
@@ -265,13 +258,21 @@ def get_parser():
     #            dest="sasu_flag",
     #            required = False,
     #            default = False)
-    parser.add_argument('-d','--debug', 
-                help='Debug mode will print more information. ', 
-                action="store_true", 
-                dest="debug", 
-                default=False)
- 
-    return parser
+
+    args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
+
+    if 'all' in args.neon_sites:
+        neon_sites = valid_neon_sites
+    else:
+        neon_sites = args.neon_sites
+        for site in neon_sites:
+            if site not in valid_neon_sites:
+                raise ValueError("Invalid site name {}".format(site))
+
+    if "CIME_OUTPUT_ROOT" in args.case_root:
+        args.case_root = None
+            
+    return neon_sites, args.case_root, args.run_type, args.overwrite
 
 class NeonSite :
     """
@@ -291,13 +292,76 @@ class NeonSite :
         self.end_year = end_year
         self.start_month = start_month
         self.end_month = end_month
-
+        
     def __str__(self):
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' 
                     for item in (self.__dict__)))
 
+    def build_base_case(self, case_root, res, compset, overwrite):
+        """
+        Function for building a base_case to clone.
+        To spend less time on building ctsm for the neon cases,
+        all the other cases are cloned from this case
+        
+        Args:
+        self: 
+            The NeonSite object
+        base_root (str): 
+            root of the base_case CIME 
+        res (str):
+            base_case resolution or gridname
+        compset (str):
+            base case compset
+        overwrite (bool) : 
+            Flag to overwrite the case if exists
+        """
+        logger.info("---- building a base case -------")
+        user_mods_dirs = [os.path.join(cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
+        if case_root:
+            case_path = os.path.join(case_root,self.name)
+            logger.info ('case_root      : {}'.format(case_root))
+        else:
+            case_path = self.name
+            
+        logger.info ('base_case_name : {}'.format(self.name))
+        logger.info ('user_mods_dir  : {}'.format(user_mods_dirs[0]))
 
-def check_neon_listing():
+        if overwrite and os.path.isdir(case_path):
+            logger.info ("Removing the existing case at: ", case_path)
+            shutil.rmtree(case_path)
+            
+        with Case(case_path, read_only=False) as case:
+            if not os.path.isdir(case_path):
+                logger.info("---- creating a base case -------")
+
+                case.create(case_path, cesmroot, compset, res, mpilib="mpi-serial",
+                            run_unsupported=True, answer="r",walltime="04:00:00",
+                            user_mods_dirs = user_mods_dirs, driver="nuopc")
+
+                logger.info("---- base case created ------")
+
+                #--change any config for base_case:
+                #case.set_value("RUN_TYPE","startup")
+
+
+                logger.info("---- base case setup ------")
+                case.case_setup()
+            else:
+                case.case_setup(reset=True)
+
+            logger.info("---- base case build ------")
+            # always walk through the build process to make sure it's up to date. 
+            t0 = time.time()
+            build.case_build(case_path, case=case)
+            t1 = time.time()
+            total = t1-t0
+            logger.info ("Time required to building the base case: {} s.".format(total))
+            # update case_path to be the full path to the base case
+            case_path = case.get_value("CASEROOT")
+        return case_path
+
+
+def check_neon_listing(valid_neon_sites):
     """
     A function to download and parse neon listing file.
     """
@@ -305,10 +369,10 @@ def check_neon_listing():
     url = 'https://neon-ncar.s3.data.neonscience.org/listing.csv'
  
     download_file(url, listing_file)
-    available_list= parse_neon_listing(listing_file)
+    available_list= parse_neon_listing(listing_file, valid_neon_sites)
     return available_list
 
-def parse_neon_listing(listing_file):
+def parse_neon_listing(listing_file, valid_neon_sites):
     """
     A function to parse neon listing file
     and find neon sites with the dates
@@ -344,7 +408,7 @@ def parse_neon_listing(listing_file):
         #-- check if it is a valid neon site
         if any(key in x for x in valid_neon_sites):
             site_name = key
-            logging.debug ("Valid neon site " + site_name+" found!")
+            logger.info ("Valid neon site " + site_name+" found!")
 
             tmp_df = grouped_df.get_group(key)
  
@@ -364,13 +428,13 @@ def parse_neon_listing(listing_file):
             start_month = tmp_df2[1].iloc[0]  
             end_month = tmp_df2[1].iloc[-1] 
 
-            logging.debug ('start_year='+start_year)
-            logging.debug ('start_year=',end_year)
-            logging.debug ('start_month=',start_month)
-            logging.debug ('end_month=',end_month)
+            logger.debug ('start_year='+start_year)
+            logger.debug ('start_year=',end_year)
+            logger.debug ('start_month=',start_month)
+            logger.debug ('end_month=',end_month)
  
             neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month)
-            logging.debug (neon_site)
+            logger.debug (neon_site)
             available_list.append(neon_site)
  
     return available_list
@@ -398,67 +462,6 @@ def download_file(url, fname):
         print('File '+fname+'was not available on the neon server:'+ url)
 
 
-def build_base_case(base_root, base_case_name, res, compset, overwrite,
-                    user_mods_dir):
-    """
-    Function for building a base_case to clone.
-    To spend less time on building ctsm for the neon cases,
-    all the other cases are cloned from this case
- 
-    Args:
-        base_root (str): 
-            root of the base_case CIME 
-        base_case_name (str):
-            Name of the base case 
-        res (str):
-            base_case resolution or gridname
-        compset (str):
-            base case compset
-        overwrite (bool) : 
-            Flag to overwrite the case if exists
-        user_mods_dir (list):
-            list of user_mods_dir
-            Note, cime does not accept str only
-            and it should be a list of strs.
-    """
-    print("---- building a base case -------")
-
-    case_root = os.path.join(base_root,base_case_name)
-    print ('base_root      : ', base_root)
-    print ('base_case_name : ', base_case_name)
-    print ('user_mods_dir  : ', user_mods_dir)
-    print ('case_root      : ',case_root)
-
-    if overwrite and os.path.isdir(case_root):
-        shutil.rmtree(case_root)
-        print ("Removing the existing case at: ", case_root)
-
-    print("---- creating a base case -------")
-
-    with Case(case_root, read_only=False) as case:
-        if not os.path.isdir(case_root):
-            case.create(os.path.basename(case_root), cesmroot, compset, res,
-                        run_unsupported=True, answer="r",walltime="04:00:00",
-                        user_mods_dirs = ["NEON/HARV"], driver="nuopc")
-
-            print("---- base case created ------")
-
-            #--change any config for base_case:
-            #case.set_value("RUN_TYPE","startup")
-
-
-        print("---- base case setup ------")
-        case.case_setup()
-
-        print("---- base case build ------")
-
-        t0 = time.time()
-        build.case_build(case_root, case=case)
-        t1 = time.time()
-        total = t1-t0
-        print ("Time took for building this case: ", total, "s.")
-
-    return case_root
 
 #-----------------------------------
 # NS thinks these should be inside NeonSite object.
@@ -492,11 +495,11 @@ def run_spinup_ad(orig_root, case_root, user_mods_dir, overwrite, ad_length, neo
 
     if overwrite and os.path.isdir(case_root):
         shutil.rmtree(case_root)
-        print("---- removing the existing case -------")
+        logger.info("---- removing the existing case -------")
 
     if not os.path.isdir(case_root):
         with Case(orig_root, read_only=False) as clone:
-            print("---- cloning the base case -------")
+            logger.info("---- cloning the base case -------")
             clone.create_clone(case_root, keepexe=True)
 
     with Case(case_root, read_only=False) as case:
@@ -563,11 +566,11 @@ def run_postad(orig_root, case_root, user_mods_dir, overwrite, postad_length, ne
 
     if overwrite and os.path.isdir(case_root):
         shutil.rmtree(case_root)
-        print("---- removing the existing case -------")
+        logger.info("---- removing the existing case -------")
 
     if not os.path.isdir(case_root):
         with Case(orig_root, read_only=False) as clone:
-            print("---- cloning the base case -------")
+            logger.info("---- cloning the base case -------")
             clone.create_clone(case_root, keepexe=True)
 
     with Case(case_root, read_only=False) as case:
@@ -643,11 +646,11 @@ def run_transient(orig_root, case_root, user_mods_dir, overwrite, start_year, en
 
     if overwrite and os.path.isdir(case_root):
         shutil.rmtree(case_root)
-        print("---- removing the existing case -------")
+        logger.info("---- removing the existing case -------")
 
     if not os.path.isdir(case_root):
         with Case(orig_root, read_only=False) as clone:
-            print("---- cloning the base case -------")
+            logger.info("---- cloning the base case -------")
             clone.create_clone(case_root, keepexe=True)
 
     with Case(case_root, read_only=False) as case:
@@ -690,68 +693,42 @@ def run_transient(orig_root, case_root, user_mods_dir, overwrite, start_year, en
         case.submit()
 
 
-def main():
+def main(description):
 
+    # Get the list of supported neon sites from usermods
+    valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
+    valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
 
-    args = get_parser().parse_args()
+    site_list, case_root, run_type, overwrite = get_parser(sys.argv, description, valid_neon_sites)
 
-    if args.debug:   
-        logging.basicConfig(level=logging.DEBUG)
+    logger.debug ("case_root : "+ case_root)
 
-    #--  specify site/sites to run ctsm
-    site_list=args.site_name
-
-    #--  if -a or --all run all neon sites:
-    all_flag = args.all_flag
-    if all_flag:     
-        site_list = valid_neon_sites
-
-    out_dir = args.out_dir
-    out_dir = "/home/negins/"
-    logging.debug ("out_dir : "+ out_dir)
-
-    #if (not os.path.isdir(out_dir)):
-    #    os.mkdir(out_dir)
+    if not os.path.exists(case_root):
+        os.makedirs(case_root)
 
     #-- check neon listing file for available data: 
-    available_list = check_neon_listing()
+    available_list = check_neon_listing(valid_neon_sites)
 
     #=================================
     #-- all neon sites can be cloned from one generic case
     #-- so no need to define a base_case for every site.
 
-    #base_case_name = "base_case_"+neon_site
-    base_case_name = "base_case_neon"
-
-    base_root = os.path.join(out_dir,"neon_sims",base_case_name)
-
-    print ("base_root:", base_root)
-
     res = "CLM_USRDAT"
     compset = "I1PtClm51Bgc"
 
-    # base_case can be any neon case
-    base_neon_site = "HARV"
-    user_mods_dir = [os.path.join(cesmroot,"cime_config","usermods_dirs","NEON",base_neon_site)]
-
-    overwrite=True
-
-    #orig_root = build_base_case(base_root, base_case_name, res,
-    #                            compset, overwrite, user_mods_dir)
-    orig_root = "/home/negins/neon_0725/base_case_ABBY/base_case_ABBY"
-
-
     #--  Looping over neon sites
-
+    orig_root = None
     for neon_site in available_list: 
         if neon_site.name in site_list:
-     
-            print ("-----------------------------------")
-            print ("Running CTSM for neon site : ", neon_site.name)
+            if not orig_root:
+
+                orig_root = neon_site.build_base_case(case_root, res,
+                                                      compset, overwrite)
+            logger.info ("-----------------------------------")
+            logger.info ("Running CTSM for neon site : {}".format(neon_site.name))
 
 
-            #if args.ad_flag:
-            if (args.run_type=="ad"):
+            if (run_type=="ad"):
                 ad_length = args.ad_length
                 print ("Running Accelerated Decomposition Spinup for: ", args.ad_length)
                 print ("-----------------------------------")
@@ -763,7 +740,7 @@ def main():
                 run_spinup_ad(orig_root, ad_case_root, user_mods_dir, overwrite, ad_length, neon_site)
 
             #if args.postad_flag:
-            if (args.run_type=="postad"):
+            if (run_type=="postad"):
                 postad_length = args.postad_length
                 print ("Running in post-AD mode for: ", args.ad_length)
                 print ("-----------------------------------")
@@ -774,7 +751,7 @@ def main():
                 run_postad(orig_root, postad_case_root, user_mods_dir, overwrite, postad_length, neon_site)
 
             #if args.transient_flag:
-            if (args.run_type=="transient"):
+            if (run_type=="transient"):
                 start_year = args.start_year
                 end_year = args.start_year
                 print ("Running in transient mode for: ", start_year, "to", end_year)
@@ -788,6 +765,6 @@ def main():
 
 
 if __name__ == "__main__":                                                                                                                                  
-        main() 
+        main(__doc__) 
 
 
