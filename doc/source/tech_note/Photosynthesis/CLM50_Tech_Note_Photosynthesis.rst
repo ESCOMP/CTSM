@@ -51,7 +51,7 @@ Previous versions of CLM calculated leaf stomatal resistance using the Ball-Berr
 model as described by :ref:`Collatz et al. (1991)<Collatzetal1991>` and implemented in global
 climate models (:ref:`Sellers et al. 1996<Sellersetal1996>`). The Medlyn model 
 calculates stomatal conductance (i.e., the inverse of resistance) based on net leaf
-photosynthesis, the vapor pressure deficit, and the CO\ :sub:`2` concentration at the leaf surface. 
+photosynthesis, the leaf-to-air vapor pressure difference, and the CO\ :sub:`2` concentration at the leaf surface. 
 Leaf stomatal resistance is:
 
 .. math::
@@ -65,7 +65,7 @@ where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2`
 photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2`
 s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial
 pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric
-pressure (Pa), and :math:`D_{s}=(e_{i}-e{_s})/1000` is the vapor pressure deficit at the leaf surface (kPa)
+pressure (Pa), and :math:`D_{s}=(e_{i}-e{_s})/1000` is the leaf-to-air vapor pressure difference at the leaf surface (kPa)
 where :math:`e_{i}`  is the saturation vapor pressure (Pa) evaluated at the leaf temperature
 :math:`T_{v}` , and :math:`e_{s}` is the vapor pressure at the leaf surface (Pa).
 :math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`)
@@ -481,8 +481,9 @@ In terms of conductance with
    e_{s} =\frac{e_{a} g_{b} +e_{i} g_{s} }{g_{b} +g_{s} } .
 
 
-Substitution of equation :eq:`9.36` into equation :eq:`9.1` gives an expression for stomatal
-resistance (:math:`r_{s}` ) as a function of photosynthesis
+Substitution of equation :eq:`9.36` into equation :eq:`9.1` gives an expression for the stomatal
+resistance
+(:math:`r_{s}`) as a function of photosynthesis
 (:math:`A_{n}` )
 
 .. math::
@@ -495,11 +496,11 @@ where
 .. math::
    :label: 9.38
 
-   a = 1
+   \begin{array}{l}  a = 1 \\
 
-   b = -[2(g_{o} * 10^{-6} + d) + \frac{(g_{1}d)^{2}}{g_{b}*10^{-6}D_{l}}]
+   b = -[2(g_{o} * 10^{-6} + d) + \frac{(g_{1}d)^{2}}{g_{b}*10^{-6}D_{l}}] \\
 
-   c = (g_{o}*10^{-6})^{2} + [2g_{o}*10^{-6} + d (1-\frac{g_{1}^{2}} {D_{l}})]d
+   c = (g_{o}*10^{-6})^{2} + [2g_{o}*10^{-6} + d (1-\frac{g_{1}^{2}} {D_{l}})]d \end{array}
 
 and
 
