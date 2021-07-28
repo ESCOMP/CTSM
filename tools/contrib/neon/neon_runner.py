@@ -10,8 +10,12 @@ neon sites.
 This script is only for neon site and we will develop a more general
 code later.
 
+This script first creates and builds a generic base case. 
+Next, it will clone the base_case for different neon sites and run
+types to reduce the need to build ctsm everytime. 
+
 This script will do the following:
-    1) Make sure CIME and other dependencies is checked out.
+    1) Create a generic base case for cloning. 
     2) Make the case for the specific neon site(s).
     3) Make changes to the case, for:
         a. AD spinup
@@ -38,26 +42,29 @@ To see the available options:
 """
 #TODO (NS)
 #- [ ]
+#- [ ] Case dependency and the ability to check case status
+#- [ ] If Case dependency works we don't need finidat given explicilty for post-ad and transient.
+
 #- [ ] checkout_externals instead of using env varaiable
-#- [ ]  wget the fields available and run for those available:
+#- [ ] wget the fields available and run for those available
  
 #- [ ] Matrix spin-up if (SASU) Eric merged it in 
 #- [ ] Make sure both AD and SASU are not on at the same time
 
-#TODO: Job dependency
+#- [ ] Make sure CIME and other dependencies is checked out.
+
  
 #Import libraries
 from __future__ import print_function
  
 import os
 import sys
-import glob
+import time 
 import shutil
 import logging
 import requests
 import argparse
 import subprocess
-import time 
 import pandas as pd
  
 from datetime import date
@@ -186,7 +193,7 @@ def get_parser():
                 ''', 
                 action="store",
                 dest="finidat_postad",
-                required = False,
+                required = True,
                 type = str)
 
     tr_parser.add_argument('--start_year',
@@ -218,7 +225,7 @@ def get_parser():
                 ''', 
                 action="store",
                 dest="finidat_transient",
-                required = False,
+                required = True,
                 type = str)
 
     #parser.add_argument('--spinup',
@@ -605,7 +612,7 @@ def run_postad(orig_root, case_root, user_mods_dir, overwrite, postad_length, ne
         case.create_namelists()
         case.submit()
 
-def run_transient(orig_root, transient_case_root, user_mods_dir, overwrite, start_year, end_year):
+def run_transient(orig_root, case_root, user_mods_dir, overwrite, start_year, end_year):
     """
     Function to run transient simultion for a single case.
     For creating the transient case we clone the base case
