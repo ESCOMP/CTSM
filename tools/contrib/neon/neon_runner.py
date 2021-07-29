@@ -69,8 +69,7 @@ import glob
 from datetime import date
 from getpass import getuser
  
-#-- get the environment variable
-# Then something like this:
+# Get the ctsm util tools and then the cime tools.
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","..","..",'python'))
 print("{}".format(_CTSM_PYTHON))
 sys.path.insert(1, _CTSM_PYTHON)
