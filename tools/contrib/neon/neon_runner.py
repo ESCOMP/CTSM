@@ -55,7 +55,7 @@ To see the available options:
 
  
 #Import libraries
- 
+
 import os
 import sys
 import time 
@@ -70,18 +70,13 @@ from datetime import date
 from getpass import getuser
  
 #-- get the environment variable
+# Then something like this:
+_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","..","..",'python'))
+print("{}".format(_CTSM_PYTHON))
+sys.path.insert(1, _CTSM_PYTHON)
 
-cesmroot = os.environ.get('CTSM_ROOT')
-if not cesmroot:
-    cesmroot = os.environ.get('CESM_ROOT')
-
-if not cesmroot:
-    raise SystemExit("ERROR: CTSM_ROOT or CESM_ROOT must be defined in environment")
-
-_LIBDIR = os.path.join(cesmroot,"cime","scripts","Tools")
-sys.path.append(_LIBDIR)
-_LIBDIR = os.path.join(cesmroot,"cime","scripts","lib")
-sys.path.append(_LIBDIR)
+from ctsm import add_cime_to_path
+from ctsm.path_utils import path_to_ctsm_root
 
 import CIME.build as build
 from standard_script_setup import *
@@ -297,7 +292,7 @@ class NeonSite :
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' 
                     for item in (self.__dict__)))
 
-    def build_base_case(self, case_root, res, compset, overwrite):
+    def build_base_case(self, cesmroot, case_root, res, compset, overwrite):
         """
         Function for building a base_case to clone.
         To spend less time on building ctsm for the neon cases,
@@ -316,6 +311,7 @@ class NeonSite :
             Flag to overwrite the case if exists
         """
         logger.info("---- building a base case -------")
+        
         user_mods_dirs = [os.path.join(cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
         if case_root:
             case_path = os.path.join(case_root,self.name)
@@ -694,7 +690,7 @@ def run_transient(orig_root, case_root, user_mods_dir, overwrite, start_year, en
 
 
 def main(description):
-
+    cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
@@ -722,7 +718,7 @@ def main(description):
         if neon_site.name in site_list:
             if not orig_root:
 
-                orig_root = neon_site.build_base_case(case_root, res,
+                orig_root = neon_site.build_base_case(cesmroot, case_root, res,
                                                       compset, overwrite)
             logger.info ("-----------------------------------")
             logger.info ("Running CTSM for neon site : {}".format(neon_site.name))
