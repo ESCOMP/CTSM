@@ -4,7 +4,7 @@ module dynInitColumnsMod
   !
   ! !DESCRIPTION:
   ! Handle initialization of columns that just switched from inactive to active
-  !
+  ! 
   ! !USES:
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
