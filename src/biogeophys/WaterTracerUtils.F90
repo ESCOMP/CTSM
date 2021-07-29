@@ -8,7 +8,7 @@ module WaterTracerUtils
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod      , only : bounds_type, get_beg, get_end
+  use decompMod      , only : bounds_type, get_beg, get_end, subgrid_level_unspecified
   use clm_varctl     , only : iulog
   use abortutils     , only : endrun
   use shr_infnan_mod , only : shr_infnan_isnan
@@ -145,7 +145,7 @@ contains
     ! values elsewhere
     !
     ! !ARGUMENTS:
-    integer  , intent(in)    :: subgrid_level      ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages)
+    integer  , intent(in)    :: subgrid_level      ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages; subgrid_level_unspecified is allowed here, in which case some information will not be printed)
     integer  , intent(in)    :: lb                 ! lower bound for arrays
     integer  , intent(in)    :: num_pts            ! number of points in the filter
     integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
@@ -191,7 +191,7 @@ contains
     ! See documentation in CalcTracerFromBulk for details
     !
     ! !ARGUMENTS:
-    integer  , intent(in)    :: subgrid_level      ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages)
+    integer  , intent(in)    :: subgrid_level      ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages; subgrid_level_unspecified is allowed here, in which case some information will not be printed)
     integer  , intent(in)    :: lb                 ! lower bound for arrays
     integer  , intent(in)    :: num_pts            ! number of points in the filter
     integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
@@ -243,7 +243,7 @@ contains
     ! !ARGUMENTS:
     character(len=*), intent(in) :: caller ! name of caller (just used for error messages)
     integer , intent(in)  :: n             ! index of point (just used for error messages)
-    integer , intent(in)  :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages)
+    integer , intent(in)  :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages; subgrid_level_unspecified is allowed here, in which case some information will not be printed)
     real(r8), intent(in)  :: bulk_source   ! value of the source for this variable, for bulk
     real(r8), intent(in)  :: bulk_val      ! value of the variable of interest, for bulk
     real(r8), intent(in)  :: tracer_source ! value of the source for this variable, for the tracer
@@ -331,7 +331,7 @@ contains
     ! Compare the bulk and tracer quantities; abort if they differ
     !
     ! !ARGUMENTS:
-    integer, intent(in) :: subgrid_level  ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages)
+    integer, intent(in) :: subgrid_level  ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages; subgrid_level_unspecified is allowed here, in which case some information will not be printed)
     ! We could get bounds_beg and bounds_end from the lbound and ubound of the bulk or
     ! tracer arrays, but passing them in helps catch any accidental omission of bounds
     ! slicing in the caller (e.g., passing in foo_col rather than

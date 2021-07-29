@@ -15,12 +15,19 @@ module decompMod
   implicit none
 
   ! Define possible bounds subgrid levels
-  integer, parameter, public :: subgrid_level_lndgrid  = 0
-  integer, parameter, public :: subgrid_level_gridcell = 1
-  integer, parameter, public :: subgrid_level_landunit = 2
-  integer, parameter, public :: subgrid_level_column   = 3
-  integer, parameter, public :: subgrid_level_patch    = 4
-  integer, parameter, public :: subgrid_level_cohort   = 5
+  !
+  ! subgrid_level_unspecified can be used in some situations where a subgrid level is
+  ! generally needed but it would be hard for the caller to provide it; in this case,
+  ! some code that depends on subgrid level will be skipped. (But this should only be
+  ! used if you know what you're doing: places where this value is allowed will have a
+  ! comment documenting this.)
+  integer, parameter, public :: subgrid_level_unspecified = -1
+  integer, parameter, public :: subgrid_level_lndgrid     = 0
+  integer, parameter, public :: subgrid_level_gridcell    = 1
+  integer, parameter, public :: subgrid_level_landunit    = 2
+  integer, parameter, public :: subgrid_level_column      = 3
+  integer, parameter, public :: subgrid_level_patch       = 4
+  integer, parameter, public :: subgrid_level_cohort      = 5
 
   ! Define possible bounds levels
   integer, parameter, public :: bounds_level_proc  = 1

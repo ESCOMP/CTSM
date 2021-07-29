@@ -5,7 +5,7 @@ module test_calc_tracer_from_bulk
   use pfunit_mod
   use WaterTracerUtils
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod, only : subgrid_level_gridcell
+  use decompMod, only : subgrid_level_unspecified
   use unittestFilterBuilderMod, only : filter_from_range
   use unittestUtils, only : endrun_msg
 
@@ -81,7 +81,7 @@ contains
     bulk_vals(:) = [bulk_val_other, bulk_val, bulk_val_other]
     tracer_sources(:) = [tracer_source_other, tracer_source, tracer_source_other]
     call CalcTracerFromBulk( &
-         subgrid_level = subgrid_level_gridcell, & ! arbitrary
+         subgrid_level = subgrid_level_unspecified, &
          lb = 1, &
          num_pts = l_num_pts, &
          filter_pts = l_filter_pts, &
@@ -196,7 +196,7 @@ contains
     call filter_from_range(1, 3, num_pts, filter_pts)
 
     call CalcTracerFromBulkMasked( &
-         subgrid_level = subgrid_level_gridcell, & ! arbitrary
+         subgrid_level = subgrid_level_unspecified, &
          lb = 1, &
          num_pts = num_pts, &
          filter_pts = filter_pts, &

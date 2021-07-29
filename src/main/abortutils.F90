@@ -67,10 +67,11 @@ contains
     !
     use shr_sys_mod , only: shr_sys_abort
     use clm_varctl  , only: iulog
+    use decompMod   , only: subgrid_level_unspecified
     !
     ! Arguments:
     integer , intent(in) :: subgrid_index ! index of interest (can be at any subgrid level or gridcell level)
-    integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod
+    integer , intent(in) :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod; subgrid_level_unspecified is allowed here, in which case the additional information will not be printed
 
     ! Generally you want to at least provide msg. The main reason to separate msg from
     ! additional_msg is to supported expected-exception unit testing: you can put
@@ -84,7 +85,9 @@ contains
     integer :: igrc, ilun, icol 
     !-----------------------------------------------------------------------
 
-    call write_point_context(subgrid_index, subgrid_level)
+    if (subgrid_level /= subgrid_level_unspecified) then
+       call write_point_context(subgrid_index, subgrid_level)
+    end if
 
     if (present (additional_msg)) then
        write(iulog,*)'ENDRUN: ', additional_msg
