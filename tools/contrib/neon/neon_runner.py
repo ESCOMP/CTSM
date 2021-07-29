@@ -71,7 +71,6 @@ from getpass import getuser
  
 # Get the ctsm util tools and then the cime tools.
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..","..","..",'python'))
-print("{}".format(_CTSM_PYTHON))
 sys.path.insert(1, _CTSM_PYTHON)
 
 from ctsm import add_cime_to_path
@@ -304,10 +303,10 @@ class NeonSite :
     """
     def __init__(self, name, start_year, end_year, start_month, end_month):
         self.name = name
-        self.start_year= start_year
-        self.end_year = end_year
-        self.start_month = start_month
-        self.end_month = end_month
+        self.start_year= int(start_year)
+        self.end_year = int(end_year)
+        self.start_month = int(start_month)
+        self.end_month = int(end_month)
         self.cesmroot = path_to_ctsm_root()
         
     def __str__(self):
@@ -392,9 +391,7 @@ class NeonSite :
                 basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
 
         with Case(case_root, read_only=False) as case:
-            case.set_value("DATM_YR_ALIGN",self.start_year)
-            case.set_value("DATM_YR_START",self.start_year)
-            case.set_value("DATM_YR_END",self.end_year)
+
             case.set_value("STOP_OPTION", "nyears")
             case.set_value("STOP_N", run_length)
             case.set_value("REST_N", 100)
@@ -434,7 +431,24 @@ class NeonSite :
                     
                 case.set_value("RUN_REFDIR", postadrundir)
                 case.set_value("RUN_REFCASE", os.path.basename(postad_case_root))
+            
+                case.set_value("DATM_YR_ALIGN",self.start_year)
+                case.set_value("DATM_YR_START",self.start_year)
+                case.set_value("DATM_YR_END",self.end_year)
             else:
+                # for the spinup we want the start and end on year boundaries
+                if self.start_month == 1:
+                    case.set_value("DATM_YR_ALIGN",self.start_year)
+                    case.set_value("DATM_YR_START",self.start_year)
+                elif self.start_year + 1 <= self.end_year:
+                    case.set_value("DATM_YR_ALIGN",self.start_year+1)
+                    case.set_value("DATM_YR_START",self.start_year+1)
+                if self.end_month == 12:
+                    case.set_value("DATM_YR_END",self.end_year)
+                else:
+                    case.set_value("DATM_YR_END",self.end_year-1)
+
+                    
                 self.modify_user_nl(case_root, run_type)
                 
             case.create_namelists()
@@ -495,15 +509,12 @@ def parse_neon_listing(listing_file, valid_neon_sites):
     #-- filter lines with atm/cdep
     df = df[df['object'].str.contains("atm/cdeps/")]
 
-    print("df is {}".format(df))
-    
-    
     #-- split the object str to extract site name
     df=df['object'].str.split("/", expand=True)
  
     #-- groupby site name
     grouped_df = df.groupby(7)
- 
+     
     for key, item in grouped_df:
         #-- check if it is a valid neon site
         if any(key in x for x in valid_neon_sites):
@@ -528,10 +539,10 @@ def parse_neon_listing(listing_file, valid_neon_sites):
             start_month = tmp_df2[1].iloc[0]  
             end_month = tmp_df2[1].iloc[-1] 
 
-            logger.debug ('start_year='+start_year)
-            logger.debug ('start_year=',end_year)
-            logger.debug ('start_month=',start_month)
-            logger.debug ('end_month=',end_month)
+            logger.debug ('start_year={}'.format(start_year))
+            logger.debug ('end_year={}'.format(end_year))
+            logger.debug ('start_month={}'.format(start_month))
+            logger.debug ('end_month={}'.format(end_month))
  
             neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month)
             logger.debug (neon_site)
