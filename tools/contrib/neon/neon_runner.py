@@ -118,6 +118,17 @@ def get_parser(args, description, valid_neon_sites):
 #                required=False,
 #                default="/glade/scratch/"+myname+"/single_point/")
 
+    parser.add_argument('--base-case',
+                help='''
+                Root Directory of base case build
+                [default: %(default)s] 
+                ''',
+                action="store", 
+                dest="base_case_root",
+                type =str,
+                required=False,
+                default=None)
+
     parser.add_argument('--case-root',
                 help='''
                 Root Directory of cases
@@ -277,7 +288,7 @@ def get_parser(args, description, valid_neon_sites):
     else:
         run_length = 0
     exit
-    return neon_sites, args.case_root, run_type, args.overwrite, run_length
+    return neon_sites, args.case_root, run_type, args.overwrite, run_length, args.base_case_root
 
 class NeonSite :
     """
@@ -297,15 +308,12 @@ class NeonSite :
         self.end_year = end_year
         self.start_month = start_month
         self.end_month = end_month
-        self.cesmroot = None
+        self.cesmroot = path_to_ctsm_root()
         
     def __str__(self):
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' 
                     for item in (self.__dict__)))
 
-    def set_cesm_root(self, cesmroot):
-        self.cesmroot = cesmroot
-        
     def build_base_case(self, cesmroot, case_root, res, compset, overwrite):
         """
         Function for building a base_case to clone.
@@ -381,7 +389,7 @@ class NeonSite :
             # read_only = False should not be required here
             with Case(base_case_root, read_only=False) as basecase:
                 logger.info("---- cloning the base case in {}".format(case_root))
-                basecase.create_clone(case_root, keepexe=True)
+                basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
 
         with Case(case_root, read_only=False) as case:
             case.set_value("DATM_YR_ALIGN",self.start_year)
@@ -402,14 +410,30 @@ class NeonSite :
                 case.set_value("CLM_FORCE_COLDSTART","off")
                 case.set_value("CLM_ACCELERATED_SPINUP","off")
                 case.set_value("RESUBMIT", 0)
+                case.set_value("RUN_TYPE", "hybrid")
+                
             if run_type == "post_ad":
                 case.set_value("RUN_REFDATE", "0218-01-01")
                 case.set_value("RUN_STARTDATE", "0218-01-01")                
+                ad_case_root = case_root.replace(".postad",".ad")
+                expect(os.path.isdir(ad_case_root), "ERROR: ad spinup must be completed first")
+                with Case(ad_case_root) as adcase:
+                    adrundir = adcase.get_value("RUNDIR")
+                    
+                case.set_value("RUN_REFDIR", adrundir)
+                case.set_value("RUN_REFCASE", os.path.basename(ad_case_root))
                 
             if run_type == "transient":
                 case.set_value("REST_N", "12")
                 case.set_value("RUN_REFDATE", "2018-01-01")
                 case.set_value("RUN_STARTDATE", "2018-01-01")                
+                postad_case_root = case_root.replace(".transient",".postad")
+                expect(os.path.isdir(postad_case_root), "ERROR: postad spinup must be completed first")
+                with Case(postad_case_root) as postadcase:
+                    postadrundir = postadcase.get_value("RUNDIR")
+                    
+                case.set_value("RUN_REFDIR", postadrundir)
+                case.set_value("RUN_REFCASE", os.path.basename(postad_case_root))
             else:
                 self.modify_user_nl(case_root, run_type)
                 
@@ -422,6 +446,7 @@ class NeonSite :
 
         if run_type != "transient":
             user_nl_lines = [
+                "hist_fincl2 = ''",
                 "hist_mfilt = 20",
                 "hist_nhtfrq = -8760",
                 "hist_empty_htapes = .true.",
@@ -542,7 +567,7 @@ def main(description):
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
 
-    site_list, case_root, run_type, overwrite, run_length = get_parser(sys.argv, description, valid_neon_sites)
+    site_list, case_root, run_type, overwrite, run_length, base_case_root = get_parser(sys.argv, description, valid_neon_sites)
 
     logger.debug ("case_root : "+ case_root)
 
@@ -560,9 +585,8 @@ def main(description):
     compset = "I1PtClm51Bgc"
 
     #--  Looping over neon sites
-    base_case_root = None
+
     for neon_site in available_list: 
-        neon_site.set_cesm_root(cesmroot)
         if neon_site.name in site_list:
             if not base_case_root:
                 base_case_root = neon_site.build_base_case(cesmroot, case_root, res,
