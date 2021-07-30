@@ -1062,7 +1062,8 @@ contains
     real(r8), intent(IN)    :: season_decid_temperate
 
     logical :: do_onset       ! Flag if onset should happen
-    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8 ! 5-day snow depth threshold for onset
+    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8          ! 5-day snow depth threshold for onset
+    real(r8), parameter :: min_critial_daylength_onset    = 39300._r8/2._r8 !  Minimum daylength for onset to happen
 
      do_onset = .false.
      ! Test to turn on growing degree-day sum, if off.
@@ -1099,12 +1100,18 @@ contains
        ! shrub, C3 arctic grass)
        if (onset_gdd > crit_onset_gdd .and.  season_decid_temperate == 1) then
            do_onset = .true.
-        ! Note: The divide by 2 of crit_dayl is just to make sure
-        ! onset doesn't happen with less than 6 hours of daylight
+        ! Note: The min_critial_daylength_onset is because for some coastal
+        ! points the other triggers could allow onset in January/February
+        ! which isn't sustainable and is a degenerate case. To prevent this
+        ! condition was added, but now the other conditions aren't triggered
+        ! until much later so it's value just needs to be high enough to prevent
+        ! the degenerate case of happening too early, and low enough that it
+        ! doesn't restrict onset. As such the value of this parameter shouldn't
+        ! matter for reasonable values between the two degnerate cases.
         else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
                 soila10 > SHR_CONST_TKFRZ .and. &
                 t_a5min > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
-                dayl>(crit_dayl/2.0_r8) .and.  snow_5day<snow5d_thresh_for_onset) then
+                dayl>min_critial_daylength_onset .and.  snow_5day<snow5d_thresh_for_onset) then
            do_onset = .true.
         end if
      else
