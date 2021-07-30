@@ -479,7 +479,7 @@ def check_neon_listing(valid_neon_sites):
     listing_file = 'listing.csv'
     url = 'https://neon-ncar.s3.data.neonscience.org/listing.csv'
  
-#    download_file(url, listing_file)
+    download_file(url, listing_file)
     available_list= parse_neon_listing(listing_file, valid_neon_sites)
     return available_list
 
