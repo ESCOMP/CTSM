@@ -7,19 +7,19 @@ module FireDataBaseType
   ! module for handling of fire data
   !
   ! !USES:
-  use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
-  use shr_strdata_mod                    , only : shr_strdata_type, shr_strdata_create, shr_strdata_print
-  use shr_strdata_mod                    , only : shr_strdata_advance
-  use shr_log_mod                        , only : errMsg => shr_log_errMsg
-  use clm_varctl                         , only : iulog, inst_name
-  use spmdMod                            , only : masterproc, mpicom, comp_id
-  use fileutils                          , only : getavu, relavu
-  use decompMod                          , only : gsmap_lnd_gdc2glo
-  use domainMod                          , only : ldomain
-  use abortutils                         , only : endrun
-  use decompMod                          , only : bounds_type
+  use shr_kind_mod    , only : r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_strdata_mod , only : shr_strdata_type, shr_strdata_create, shr_strdata_print
+  use shr_strdata_mod , only : shr_strdata_advance
+  use shr_log_mod     , only : errMsg => shr_log_errMsg
+  use clm_varctl      , only : iulog, inst_name
+  use spmdMod         , only : masterproc, mpicom, comp_id
+  use fileutils       , only : getavu, relavu
+  use domainMod       , only : ldomain
+  use abortutils      , only : endrun
+  use decompMod       , only : bounds_type
+  use FireMethodType  , only : fire_method_type
+  use lnd_set_decomp_and_domain, only : gsmap_global
   use mct_mod
-  use FireMethodType                     , only : fire_method_type
   !
   implicit none
   private
@@ -37,7 +37,6 @@ module FireDataBaseType
 
       type(shr_strdata_type) :: sdat_hdm    ! Human population density input data stream
       type(shr_strdata_type) :: sdat_lnfm   ! Lightning input data stream
-
 
     contains
       !
@@ -156,7 +155,7 @@ contains
    !
    ! !ARGUMENTS:
    implicit none
-   class(fire_base_type)       :: this
+   class(fire_base_type)         :: this
    type(bounds_type), intent(in) :: bounds
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !
@@ -170,6 +169,7 @@ contains
    character(len=CL)  :: stream_fldFileName_popdens  ! population density streams filename
    character(len=CL)  :: popdensmapalgo = 'bilinear' ! mapping alogrithm for population density
    character(len=CL)  :: popdens_tintalgo = 'nearest'! time interpolation alogrithm for population density
+   character(len=CL)  :: stream_meshfile_popdens     ! not used
    character(*), parameter :: subName = "('hdmdyn_init')"
    character(*), parameter :: F00 = "('(hdmdyn_init) ',4a)"
    !-----------------------------------------------------------------------
@@ -180,6 +180,7 @@ contains
         model_year_align_popdens,   &
         popdensmapalgo,             &
         stream_fldFileName_popdens, &
+        stream_meshfile_popdens   , &
         popdens_tintalgo
 
    ! Default values for namelist
@@ -222,31 +223,31 @@ contains
 
    call clm_domain_mct (bounds, dom_clm)
 
-   call shr_strdata_create(this%sdat_hdm,name="clmhdm",     &
-        pio_subsystem=pio_subsystem,                   &
-        pio_iotype=shr_pio_getiotype(inst_name),           &
-        mpicom=mpicom, compid=comp_id,                 &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,        &
-        nxg=ldomain%ni, nyg=ldomain%nj,                &
-        yearFirst=stream_year_first_popdens,           &
-        yearLast=stream_year_last_popdens,             &
-        yearAlign=model_year_align_popdens,            &
-        offset=0,                                      &
-        domFilePath='',                                &
-        domFileName=trim(stream_fldFileName_popdens),  &
-        domTvarName='time',                            &
-        domXvarName='lon' ,                            &
-        domYvarName='lat' ,                            &
-        domAreaName='area',                            &
-        domMaskName='mask',                            &
-        filePath='',                                   &
+   call shr_strdata_create(this%sdat_hdm,name="clmhdm", &
+        pio_subsystem=pio_subsystem,                    &
+        pio_iotype=shr_pio_getiotype(inst_name),        &
+        mpicom=mpicom, compid=comp_id,                  &
+        gsmap=gsmap_global, ggrid=dom_clm,              &
+        nxg=ldomain%ni, nyg=ldomain%nj,                 &
+        yearFirst=stream_year_first_popdens,            &
+        yearLast=stream_year_last_popdens,              &
+        yearAlign=model_year_align_popdens,             &
+        offset=0,                                       &
+        domFilePath='',                                 &
+        domFileName=trim(stream_fldFileName_popdens),   &
+        domTvarName='time',                             &
+        domXvarName='lon' ,                             &
+        domYvarName='lat' ,                             &
+        domAreaName='area',                             &
+        domMaskName='mask',                             &
+        filePath='',                                    &
         filename=(/trim(stream_fldFileName_popdens)/) , &
-        fldListFile='hdm',                             &
-        fldListModel='hdm',                            &
-        fillalgo='none',                               &
-        mapalgo=popdensmapalgo,                        &
-        calendar=get_calendar(),                       &
-        tintalgo=popdens_tintalgo,                     &
+        fldListFile='hdm',                              &
+        fldListModel='hdm',                             &
+        fillalgo='none',                                &
+        mapalgo=popdensmapalgo,                         &
+        calendar=get_calendar(),                        &
+        tintalgo=popdens_tintalgo,                      &
         taxmode='extend'                           )
 
    if (masterproc) then
@@ -378,31 +379,31 @@ contains
 
    call clm_domain_mct (bounds, dom_clm)
 
-   call shr_strdata_create(this%sdat_lnfm,name="clmlnfm",  &
-        pio_subsystem=pio_subsystem,                  &
+   call shr_strdata_create(this%sdat_lnfm,name="clmlnfm", &
+        pio_subsystem=pio_subsystem,                      &
         pio_iotype=shr_pio_getiotype(inst_name),          &
-        mpicom=mpicom, compid=comp_id,                &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,       &
-        nxg=ldomain%ni, nyg=ldomain%nj,               &
-        yearFirst=stream_year_first_lightng,          &
-        yearLast=stream_year_last_lightng,            &
-        yearAlign=model_year_align_lightng,           &
-        offset=0,                                     &
-        domFilePath='',                               &
-        domFileName=trim(stream_fldFileName_lightng), &
-        domTvarName='time',                           &
-        domXvarName='lon' ,                           &
-        domYvarName='lat' ,                           &
-        domAreaName='area',                           &
-        domMaskName='mask',                           &
-        filePath='',                                  &
-        filename=(/trim(stream_fldFileName_lightng)/),&
-        fldListFile='lnfm',                           &
-        fldListModel='lnfm',                          &
-        fillalgo='none',                              &
-        tintalgo=lightng_tintalgo,                    &
-        mapalgo=lightngmapalgo,                       &
-        calendar=get_calendar(),                      &
+        mpicom=mpicom, compid=comp_id,                    &
+        gsmap=gsmap_global, ggrid=dom_clm,                &
+        nxg=ldomain%ni, nyg=ldomain%nj,                   &
+        yearFirst=stream_year_first_lightng,              &
+        yearLast=stream_year_last_lightng,                &
+        yearAlign=model_year_align_lightng,               &
+        offset=0,                                         &
+        domFilePath='',                                   &
+        domFileName=trim(stream_fldFileName_lightng),     &
+        domTvarName='time',                               &
+        domXvarName='lon' ,                               &
+        domYvarName='lat' ,                               &
+        domAreaName='area',                               &
+        domMaskName='mask',                               &
+        filePath='',                                      &
+        filename=(/trim(stream_fldFileName_lightng)/),    &
+        fldListFile='lnfm',                               &
+        fldListModel='lnfm',                              &
+        fillalgo='none',                                  &
+        tintalgo=lightng_tintalgo,                        &
+        mapalgo=lightngmapalgo,                           &
+        calendar=get_calendar(),                          &
         taxmode='cycle'                            )
 
    if (masterproc) then

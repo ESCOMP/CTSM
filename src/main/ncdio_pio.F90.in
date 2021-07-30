@@ -20,10 +20,9 @@ module ncdio_pio
   use clm_varcon     , only : spval,ispval, grlnd, nameg, namel, namec, namep
   use clm_varctl     , only : single_column, iulog
   use shr_sys_mod    , only : shr_sys_flush
-  use decompMod      , only : get_clmlevel_gsize,get_clmlevel_gsmap
+  use decompMod      , only : get_clmlevel_gsize, get_clmlevel_gindex
   use perf_mod       , only : t_startf, t_stopf
   use fileutils      , only : getavu, relavu
-  use mct_mod        , only : mct_gsMap, mct_gsMap_lsize, mct_gsMap_gsize, mct_gsMap_orderedPoints
   use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t
   use pio            , only : pio_bcast_error, pio_char, pio_clobber, pio_closefile, pio_createfile, pio_def_dim
   use pio            , only : pio_def_var, pio_double, pio_redef, pio_enddef, pio_get_att, pio_get_var, pio_global, pio_initdecomp
@@ -2576,19 +2575,17 @@ contains
     ! !LOCAL VARIABLES:
     integer :: k,m,n,cnt                     ! indices
     integer :: basetype                      ! pio basetype
-    integer :: gsmap_lsize                   ! local size of gsmap
-    integer :: gsmap_gsize                   ! global size of gsmap
     integer :: fullsize                      ! size of entire array on cdf
+    integer :: lsize                         ! local size of clmlevel gindex
     integer :: gsize                         ! global size of clmlevel
     integer :: vsize                         ! other dimensions
     integer :: vsize1, vsize2                ! other dimensions
     integer :: status                        ! error status
     logical :: found                         ! true => found created iodescriptor
     integer :: ndims_file                    ! temporary
-    character(len=64) dimname_file           ! dimension name on file
-    character(len=64) dimname_iodesc         ! dimension name from io descriptor
-    type(mct_gsMap),pointer       :: gsmap   ! global seg map
-    integer, pointer,dimension(:) :: gsmOP   ! gsmap ordered points
+    character(len=64) :: dimname_file        ! dimension name on file
+    character(len=64) :: dimname_iodesc      ! dimension name from io descriptor
+    integer, pointer  :: gindex(:)           ! global index space
     integer(pio_offset_kind), pointer  :: compDOF(:)
     character(len=32) :: subname = 'ncd_getiodesc'
     !------------------------------------------------------------------------
@@ -2662,12 +2659,12 @@ contains
        call shr_sys_abort(errMsg(sourcefile,__LINE__))
     end if
 
-    call get_clmlevel_gsmap(clmlevel,gsmap)
+    call get_clmlevel_gindex(clmlevel, gindex)
+    if (.not. associated(gindex)) then
+       call shr_sys_abort('gindex for clmlevel '//trim(clmlevel)//' is not associated')
+    end if
     gsize = get_clmlevel_gsize(clmlevel)
-    gsmap_lsize = mct_gsmap_lsize(gsmap,mpicom)
-    gsmap_gsize = mct_gsmap_gsize(gsmap)
-
-    call mct_gsMap_orderedPoints(gsmap,iam,gsmOP)
+    lsize = size(gindex)
 
     fullsize = 1
     do n = 1,ndims
@@ -2680,15 +2677,15 @@ contains
        call shr_sys_abort(errMsg(sourcefile, __LINE__))
     endif
 
-    allocate(compDOF(gsmap_lsize*vsize))
+    allocate(compDOF(lsize*vsize))
 
     if (present(switchdim)) then
        if (switchdim) then
           cnt = 0
-          do m = 1,gsmap_lsize
+          do m = 1,lsize
              do n = 1,vsize
                 cnt = cnt + 1
-                compDOF(cnt) = (gsmOP(m)-1)*vsize + n
+                compDOF(cnt) = (gindex(m)-1)*vsize + n
              enddo
           enddo
        else
@@ -2706,18 +2703,18 @@ contains
           cnt = 0
           do k = 1,vsize2
              do n = 1,vsize1
-                do m = 1,gsmap_lsize
+                do m = 1,lsize
                    cnt = cnt + 1
-                   compDOF(cnt) = (k-1)*vsize1*gsmap_gsize + (n-1)*gsmap_gsize +  gsmOP(m)
+                   compDOF(cnt) = (k-1)*vsize1*gsize + (n-1)*gsize + gindex(m)
                 enddo
              enddo
           end do
        else
           cnt = 0
           do n = 1,vsize
-             do m = 1,gsmap_lsize
+             do m = 1,lsize
                 cnt = cnt + 1
-                compDOF(cnt) = (n-1)*gsmap_gsize + gsmOP(m)
+                compDOF(cnt) = (n-1)*gsize + gindex(m)
              enddo
           enddo
        end if
@@ -2726,16 +2723,14 @@ contains
     if (debug > 1) then
        do m = 0,npes-1
           if (iam == m) then
-             write(iulog,*) trim(subname),' sizes1  = ',iam,gsize,gsmap_gsize,gsmap_lsize
-             write(iulog,*) trim(subname),' sizes2  = ',iam,fullsize,npes,vsize
-             write(iulog,*) trim(subname),' compDOF = ',iam,size(compDOF),minval(compDOF),maxval(compDOF)
+             write(iulog,'(a,3(i10,2x))') trim(subname)//' sizes1  = ',iam,gsize,lsize
+             write(iulog,'(a,4(i10,2x))') trim(subname)//' sizes2  = ',iam,fullsize,npes,vsize
+             write(iulog,'(a,5(i10,2x))') trim(subname)//' compDOF = ',iam,size(compDOF),minval(compDOF),maxval(compDOF)
              call shr_sys_flush(iulog)
           endif
           call mpi_barrier(mpicom,status)
        enddo
     endif
-
-    deallocate(gsmOP)
 
     call pio_initdecomp(pio_subsystem, xTYPE, dims(1:ndims), compDOF, iodesc_list(iodnum)%iodesc)
 

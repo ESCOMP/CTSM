@@ -100,10 +100,10 @@ contains
    use shr_mpi_mod      , only : shr_mpi_bcast
    use shr_string_mod   , only : shr_string_listAppend
    use shr_strdata_mod  , only : shr_strdata_create, shr_strdata_print
-   use decompMod        , only : gsmap_lnd_gdc2glo
    use domainMod        , only : ldomain
    use shr_infnan_mod   , only : nan => shr_infnan_nan, assignment(=)
    use landunit_varcon  , only : isturb_TBD, isturb_HD, isturb_MD
+   use lnd_set_decomp_and_domain , only : gsmap_global
    !
    ! !ARGUMENTS:
    implicit none
@@ -190,31 +190,31 @@ contains
       call shr_string_listAppend( fldList, stream_var_name(ifield) )
    end do
 
-   call shr_strdata_create(this%sdat_urbantv,name="clmurbantv",     &
-        pio_subsystem=pio_subsystem,                   &
-        pio_iotype=shr_pio_getiotype(inst_name),           &
-        mpicom=mpicom, compid=comp_id,                 &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,        &
-        nxg=ldomain%ni, nyg=ldomain%nj,                &
-        yearFirst=stream_year_first_urbantv,           &
-        yearLast=stream_year_last_urbantv,             &
-        yearAlign=model_year_align_urbantv,            &
-        offset=0,                                      &
-        domFilePath='',                                &
-        domFileName=trim(stream_fldFileName_urbantv),  &
-        domTvarName='time',                            &
-        domXvarName='lon' ,                            &
-        domYvarName='lat' ,                            &
-        domAreaName='area',                            &
-        domMaskName='LANDMASK',                        &
-        filePath='',                                   &
-        filename=(/trim(stream_fldFileName_urbantv)/) , &
-        fldListFile=fldList,                           &
-        fldListModel=fldList,                          &
-        fillalgo='none',                               &
-        mapalgo=urbantvmapalgo,                        &
-        calendar=get_calendar(),                       &
-        tintalgo=urbantv_tintalgo,                     &
+   call shr_strdata_create(this%sdat_urbantv,name="clmurbantv", &
+        pio_subsystem=pio_subsystem,                            &
+        pio_iotype=shr_pio_getiotype(inst_name),                &
+        mpicom=mpicom, compid=comp_id,                          &
+        gsmap=gsmap_global, ggrid=dom_clm,                      &
+        nxg=ldomain%ni, nyg=ldomain%nj,                         &
+        yearFirst=stream_year_first_urbantv,                    &
+        yearLast=stream_year_last_urbantv,                      &
+        yearAlign=model_year_align_urbantv,                     &
+        offset=0,                                               &
+        domFilePath='',                                         &
+        domFileName=trim(stream_fldFileName_urbantv),           &
+        domTvarName='time',                                     &
+        domXvarName='lon' ,                                     &
+        domYvarName='lat' ,                                     &
+        domAreaName='area',                                     &
+        domMaskName='LANDMASK',                                 &
+        filePath='',                                            &
+        filename=(/trim(stream_fldFileName_urbantv)/) ,         &
+        fldListFile=fldList,                                    &
+        fldListModel=fldList,                                   &
+        fillalgo='none',                                        &
+        mapalgo=urbantvmapalgo,                                 &
+        calendar=get_calendar(),                                &
+        tintalgo=urbantv_tintalgo,                              &
         taxmode='extend'                                 )
 
    if (masterproc) then
