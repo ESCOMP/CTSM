@@ -1091,7 +1091,7 @@ Phenology onset depends on the vegetation type
 
 <entry id="min_crtical_dayl_method" type="char*25" category="physics"
        group="cnphenology" valid_values="Constant,DependsOnLat,DependsOnVeg,DependsOnLatAndVeg">
-Method for determining what the minimum critical day length for seasonal decidious leaf onset depends on
+Method for determining what the minimum critical day length for seasonal decidious leaf offset depends on
 Constant ----------- constant value of crit_dayl from parameter file (value from White 2001)
 DependsOnLat ------- Higher values at high latitudes down to value from parameter file for temperate and equatorial regions
                      (L. Birch et. al, GMD 2021)

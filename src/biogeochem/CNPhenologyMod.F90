@@ -48,10 +48,10 @@ module CNPhenologyMod
   public :: CNPhenology          ! Update
 
   ! !PUBLIC for unit testing
-  public :: CNPhenologySetNML    ! Set the namelist setttings explicitly for unit tests
-  public :: CNPhenologySetParams ! Set the parameters explicitly for unit tests
-  public :: SeasonalDecidOnset   ! Logical function to determine is seasonal decidious onset should be triggered
-  public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious onset
+  public :: CNPhenologySetNML         ! Set the namelist setttings explicitly for unit tests
+  public :: CNPhenologySetParams      ! Set the parameters explicitly for unit tests
+  public :: SeasonalDecidOnset        ! Logical function to determine is seasonal decidious onset should be triggered
+  public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious offset
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
@@ -1006,7 +1006,7 @@ contains
     !
     ! !DESCRIPTION:
     ! Function to determine the critical day length needed for seasonal
-    ! decidious leaf onset.
+    ! decidious leaf offset.
     !
     ! !ARGUMENTS:
     integer, intent(IN) :: g ! Gridcell index
@@ -1014,26 +1014,26 @@ contains
     real(r8) :: crit_daylat  ! Return value
     !
     ! !LOCAL VARIABLES:
-    ! Parameters for critical day length, higher for high latitudes and shorter
+    ! Parameters for critical day length offset, higher for high latitudes and shorter
     ! for temperature regions
     ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
     ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
-    real(r8), parameter :: critical_onset_time_at_high_lat = 54000._r8  ! critical onset at high latitudes (min)
-    real(r8), parameter :: critical_onset_lat_slope        = 720._r8    ! Slope of time for critical onset with latitude (min/deg)
-    real(r8), parameter :: critical_onset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
+    real(r8), parameter :: critical_offset_time_at_high_lat = 54000._r8  ! critical offset at high latitudes (min)
+    real(r8), parameter :: critical_offset_lat_slope        = 720._r8    ! Slope of time for critical offset with latitude (min/deg)
+    real(r8), parameter :: critical_offset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
     !-----------------------------------------------------------------------
 
     select case( critical_daylight_method )
     ! Critical day length depends on both vegetation type and latitude
     case(critical_daylight_depends_on_latnveg)
-        ! Critical day length for onset is fixed for temperate type vegetation
+        ! Critical day length for offset is fixed for temperate type vegetation
         if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
            crit_daylat = crit_dayl
         ! For Arctic vegetation -- critical daylength is higher at high latitudes and shorter
         ! at midlatitudes
         else
-           crit_daylat=critical_onset_time_at_high_lat-critical_onset_lat_slope* \
-                       (critical_onset_high_lat-abs(grc%latdeg(g)))
+           crit_daylat=critical_offset_time_at_high_lat-critical_offset_lat_slope* \
+                       (critical_offset_high_lat-abs(grc%latdeg(g)))
            if (crit_daylat < crit_dayl) then
               crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
            end if
@@ -1043,14 +1043,14 @@ contains
         if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
            crit_daylat = crit_dayl
         else
-           crit_daylat=critical_onset_time_at_high_lat
+           crit_daylat=critical_offset_time_at_high_lat
         end if
     ! Critical day length depends on latitude
     case(critical_daylight_depends_on_lat)
         ! Critical daylength is higher at high latitudes and shorter
         ! for temperatre regions
-        crit_daylat=critical_onset_time_at_high_lat-critical_onset_lat_slope* \
-                    (critical_onset_high_lat-abs(grc%latdeg(g)))
+        crit_daylat=critical_offset_time_at_high_lat-critical_offset_lat_slope* \
+                    (critical_offset_high_lat-abs(grc%latdeg(g)))
         if (crit_daylat < crit_dayl) then
            crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
         end if
@@ -1064,8 +1064,9 @@ contains
   end function SeasonalCriticalDaylength
 
   !-----------------------------------------------------------------------
-  logical function SeasonalDecidOnset( onset_gdd, onset_gddflag, soilt, soila10, t_a5min, dayl, &
-                                          snow_5day, ws_flag, crit_onset_gdd, season_decid_temperate )
+  function SeasonalDecidOnset( onset_gdd, onset_gddflag, soilt, soila10, t_a5min, dayl, &
+                               snow_5day, ws_flag, crit_onset_gdd, season_decid_temperate ) &
+                       result( do_onset )
 
     !
     ! !DESCRIPTION:
@@ -1144,8 +1145,6 @@ contains
        ! set onset_flag if critical growing degree-day sum is exceeded
        if (onset_gdd > crit_onset_gdd) do_onset = .true.
     end if
-
-    SeasonalDecidOnset = do_onset
 
   end function SeasonalDecidOnset
 
