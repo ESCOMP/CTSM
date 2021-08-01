@@ -364,6 +364,41 @@ contains
             end do
          end do
 
+         ! TODO slevis: Add c_overflow_vr to the heterotrophic resp flux
+         if (use_mimics) then
+            do j = 1, nlevdecomp
+               do fc=1,num_soilc
+                  c = filter_soilc(fc)
+
+                  fpi_vr(c,j) = 0.0_r8
+
+                  do k = 1, ndecomp_cascade_transitions
+                     ! TODO slevis: correct to identify as receiver pools?
+                     if (cascade_decomp_receiver(k) == i_cop_mic .or. &
+                         cascade_decomp_receiver(k) == i_oli_mic) then
+                        if (pmnf_immob_vr(c,j,k) > 0.0_r8 .and. &
+                            sum_ndemand_vr(c,j) > 0.0_r8) then
+                           amnf_immob_vr = (sminn_vr(c,j) / dt) * &
+                                           (pmnf_immob_vr(c,j,k) / &
+                                            sum_ndemand_vr(c,j))
+                           n_deficit_vr = pmnf_immob_vr(c,j,k) - &
+                                          amnf_immob_vr
+                           c_overflow_vr(c,j,k) = n_deficit_vr * &
+                                                  p_decomp_cn_gain(c,j,k)
+                        else
+                           c_overflow_vr(c,j,k) = 0.0_r8
+                        end if
+                     else
+                        c_overflow_vr(c,j,k) = 0.0_r8
+                     end if
+                  end do
+               end do
+            end do
+         else  ! not use_mimics
+            c_overflow_vr(:,:,:) = 0.0_r8
+            c_overflow_vr(:,:,:) = 0.0_r8
+         end if
+
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
             call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst, &

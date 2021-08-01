@@ -165,6 +165,7 @@ contains
                     decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
                   p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
                        * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
+
                   if ( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)) ) then  !! not transition of cwd to litter
 
                      if (cascade_receiver_pool(k) /= i_atm ) then  ! not 100% respiration
@@ -180,15 +181,81 @@ contains
                      else   ! 100% respiration
                         pmnf_decomp_cascade(c,j,k) = - p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
                      endif
-
-                  else   ! CWD -> litter
+                  else   ! CWD -> litter OR use_mimics is true
                      pmnf_decomp_cascade(c,j,k) = 0._r8
+
+                     if (use_mimics) then
+                        ! N:C ratio of donor pools (N:C instead of C:N because
+                        ! already checked that we're not dividing by zero)
+                        decomp_nc_loss_donor = &
+                           decomp_npools_vr(c,j,cascade_donor_pool(k)) / &
+                           decomp_cpools_vr(c,j,cascade_donor_pool(k))
+                        ! calculate N fluxes from donor pools
+                        p_decomp_npool_loss(c,j,k) = &
+                           p_decomp_cpool_loss(c,j,k) * decomp_nc_loss_donor
+                        ! Track N lost to DIN from messy eating, ie the
+                        ! diff between p_decomp_npool_loss (pertains to
+                        ! donor) and p_decomp_npool_gain (receiver)
+                        p_decomp_cpool_gain(c,j,k) = p_decomp_cpool_loss(c,j,k) * &
+                                                     (1.0_r8 - rf_decomp_cascade(c,j,k))
+                        ! TODO slevis: nue = 0.85 for anything going into microbial biomass; else 1
+                        p_decomp_npool_gain(c,j,k) = p_decomp_npool_loss(c,j,k) * &
+                                                     nue_decomp_cascade(k)
+                        p_decomp_npool_to_din(c,j,k) = p_decomp_npool_loss(c,j,k) - &
+                                                       p_decomp_npool_gain(c,j,k)
+                     end if
                   end if
                end if
             end do
 
          end do
       end do
+
+      ! Determine immobilization vs. mineralization by comparing the
+      ! cn_gain into microbial biomass compared with the target C:N
+      ! ratio of microbial biomass pools
+      if (use_mimics) then
+         do j = 1,nlevdecomp
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               ! Sum C and N fluxes from all transitions into m1 and m2 pools
+               do k = 1, ndecomp_cascade_transitions
+                  if (cascade_receiver_pool(k) == i_cop_mic .or.
+                      cascade_receiver_pool(k) == i_oli_mic) then
+                     p_decomp_cpool_gain_sum(c,j,cascade_receiver_pool(k)) = &
+                        p_decomp_cpool_gain_sum_cop_mic(c,j,cascade_receiver_pool(k)) + &
+                        p_decomp_cpool_gain(c,j,k)
+                     p_decomp_npool_gain_sum(c,j,cascade_receiver_pool(k)) = &
+                        p_decomp_npool_gain_sum(c,j,cascade_receiver_pool(k)) + &
+                        p_decomp_npool_gain(c,j,k)
+                     ! Once k-loop completes, the left hand side should
+                     ! contain the correct cn ratio
+                     if (p_decomp_npool_gain_sum(c,j,cascade_receiver_pool(k)) > 0.0_r8) then
+                        p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) = &
+                           p_decomp_cpool_gain_sum(c,j,cascade_receiver_pool(k)) / &
+                           p_decomp_npool_gain_sum(c,j,cascade_receiver_pool(k))
+                     end if
+                  end if
+               end do
+               do k = 1, ndecomp_cascade_transitions
+                  if (cascade_receiver_pool(k) == i_cop_mic .or.
+                      cascade_receiver_pool(k) == i_oli_mic) then
+                     ! TODO slevis: CNmic is a function of a CN parameterization, modified by fMET
+                     ! https://github.com/wwieder/biogeochem_testbed_1.1/blob/Testbed_CN/SOURCE_CODE/mimics_cycle_CN.f90#L1613
+                     ! if p_decomp_cn_diff < 0  N mineralization
+                     !                     > 0  immobilization
+                     p_decomp_cn_diff_ratio = &
+                        (p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) - &
+                         CNmic(...)) / CNmic(...)
+                     ! Actual amount of N that's mineralized or that would need to be immobilized
+                     ! negative=mineralization: add to the DIN pool
+                     ! positive=immobilizaiton: compete for N with plants to see how much we get
+                     pmnf_decomp_cascade(c,j,k) = p_decomp_cn_diff_ratio * p_decomp_npool_gain(c,j,k)
+                  end if
+               end do
+            end do
+         end do
+      end if
 
       ! Sum up all the potential immobilization fluxes (positive pmnf flux)
       ! and all the mineralization fluxes (negative pmnf flux)
@@ -206,6 +273,9 @@ contains
                   immob(c,j) = immob(c,j) + pmnf_decomp_cascade(c,j,k)
                else
                   gross_nmin_vr(c,j) = gross_nmin_vr(c,j) - pmnf_decomp_cascade(c,j,k)
+               end if
+               if (use_mimics) then
+                  gross_nmin_vr(c,j) = gross_nmin_vr(c,j) + p_decomp_npool_to_din(c,j,k)
                end if
             end do
          end do
