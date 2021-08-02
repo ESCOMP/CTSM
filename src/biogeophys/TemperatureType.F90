@@ -84,6 +84,7 @@ module TemperatureType
      ! being: that way one parameterization is free to change the exact meaning of its
      ! accumulator without affecting the other).
      !
+     real(r8), pointer :: t_ref2m_24_patch        (:)   ! patch daily average 2 m height surface air temperature (K) ! Marius
      real(r8), pointer :: t_veg24_patch           (:)   ! patch 24hr average vegetation temperature (K)
      real(r8), pointer :: t_veg240_patch          (:)   ! patch 240hr average vegetation temperature (Kelvin)
      real(r8), pointer :: gdd0_patch              (:)   ! patch growing degree-days base  0C from planting  (ddays)
@@ -250,6 +251,7 @@ contains
     allocate(this%t_ref2m_min_inst_u_patch (begp:endp))                      ; this%t_ref2m_min_inst_u_patch (:)   = nan
 
     ! Accumulated fields
+    allocate(this%t_ref2m_24_patch         (begp:endp))                      ; this%t_ref2m_24_patch         (:)   = nan !Marius
     allocate(this%t_veg24_patch            (begp:endp))                      ; this%t_veg24_patch            (:)   = nan
     allocate(this%t_veg240_patch           (begp:endp))                      ; this%t_veg240_patch           (:)   = nan
     allocate(this%gdd0_patch               (begp:endp))                      ; this%gdd0_patch               (:)   = spval
@@ -566,6 +568,10 @@ contains
     end if
 
     ! Accumulated quantities
+    this%t_ref2m_24_patch(begp:endp)  = spval !Marius
+    call hist_addfld1d (fname='T2m_24', units='K',  &
+         avgflag='A', long_name='average temperature 2m (24hrs)', &
+         ptr_patch=this%t_ref2m_24_patch, default='inactive')
 
     this%t_veg24_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV24', units='K',  &
@@ -1146,6 +1152,12 @@ contains
          desc='240hr average of vegetation temperature',  accum_type='runmean', accum_period=-10,  &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
+    !Marius
+    this%t_ref2m_24_patch(bounds%begp:bounds%endp) = spval
+    call init_accum_field (name='T_REF2M_24', units='K', &    
+         desc='24 hour average of 2-m temperature', accum_type='timeavg', accum_period=-1, &
+         subgrid_type='pft', numlev=1, init_value=0._r8)
+
     call init_accum_field(name='TREFAV', units='K', &
          desc='average over an hour of 2-m temperature', accum_type='timeavg', accum_period=nint(3600._r8/dtime), &
          subgrid_type='pft', numlev=1, init_value=0._r8)
@@ -1195,7 +1207,6 @@ contains
        call init_accum_field (name='TDA', units='K', &
             desc='30-day average of 2-m temperature', accum_type='timeavg', accum_period=-30, &
             subgrid_type='pft', numlev=1, init_value=0._r8)
-
     end if
 
   end subroutine InitAccBuffer
@@ -1244,6 +1255,9 @@ contains
 
     call extract_accum_field ('T_VEG240', rbufslp, nstep)
     this%t_veg240_patch(begp:endp) = rbufslp(begp:endp)
+
+    call extract_accum_field ('T_REF2M_24', rbufslp, nstep)
+    this%t_ref2m_24_patch(begp:endp) = rbufslp(begp:endp)
 
     call extract_accum_field ('T10', rbufslp, nstep)
     this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
@@ -1343,6 +1357,13 @@ contains
     call extract_accum_field ('T_VEG24' , this%t_veg24_patch  , nstep)
     call update_accum_field  ('T_VEG240', rbufslp             , nstep)
     call extract_accum_field ('T_VEG240', this%t_veg240_patch , nstep)
+
+    ! Accumulate and extract T_REF2M_24 Marius
+    do p = begp,endp
+       rbufslp(p) = this%t_ref2m_patch(p)
+    end do
+    call update_accum_field  ('T_REF2M_24' , this%t_ref2m_24_patch , nstep) !Marius
+    call extract_accum_field ('T_REF2M_24' , rbufslp  , nstep)
 
     ! Accumulate and extract TREFAV - hourly average 2m air temperature
     ! Used to compute maximum and minimum of hourly averaged 2m reference
