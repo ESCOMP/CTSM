@@ -1075,15 +1075,15 @@ contains
     ! !USES:
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     ! !ARGUMENTS:
-    real(r8), intent(INOUT) :: onset_gdd      !
-    real(r8), intent(INOUT) :: onset_gddflag  !
+    real(r8), intent(INOUT) :: onset_gdd      ! onset growing degree days 
+    real(r8), intent(INOUT) :: onset_gddflag  ! Onset freeze flag
     real(r8), intent(IN)    :: soilt          ! Soil temperture at specific level for this evaluation
-    real(r8), intent(IN)    :: soila10        !
-    real(r8), intent(IN)    :: t_a5min        !
+    real(r8), intent(IN)    :: soila10        ! 10-day running mean of the 12cm soil layer temperature (K)
+    real(r8), intent(IN)    :: t_a5min        ! 5-day running mean of min 2-m temperature
     real(r8), intent(IN)    :: dayl           ! Day length
     real(r8), intent(IN)    :: snow_5day      ! 5-day average of snow
-    real(r8), intent(IN)    :: ws_flag        !winter-summer solstice flag (0 or 1)
-    real(r8), intent(IN)    :: crit_onset_gdd !critical onset growing degree-day sum
+    real(r8), intent(IN)    :: ws_flag        ! winter-summer solstice flag (0 or 1)
+    real(r8), intent(IN)    :: crit_onset_gdd ! critical onset growing degree-day sum
     real(r8), intent(IN)    :: season_decid_temperate  ! If this is a temperate seasonal decidious type 
     logical :: do_onset                       ! Flag if onset should happen (return value)
     !
