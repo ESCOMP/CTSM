@@ -70,18 +70,20 @@ module CNPhenologyMod
   !
   ! !PRIVATE DATA MEMBERS:
   type, private :: params_type
-     real(r8) :: crit_dayl       ! critical day length for senescence
-     real(r8) :: ndays_on     	 ! number of days to complete leaf onset
-     real(r8) :: ndays_off	 ! number of days to complete leaf offset
-     real(r8) :: fstor2tran      ! fraction of storage to move to transfer for each onset
-     real(r8) :: crit_onset_fdd  ! critical number of freezing days to set gdd counter
-     real(r8) :: crit_onset_swi  ! critical number of days > soilpsi_on for onset
-     real(r8) :: soilpsi_on      ! critical soil water potential for leaf onset
-     real(r8) :: crit_offset_fdd ! critical number of freezing days to initiate offset
-     real(r8) :: crit_offset_swi ! critical number of water stress days to initiate offset
-     real(r8) :: soilpsi_off     ! critical soil water potential for leaf offset
-     real(r8) :: lwtop   	 ! live wood turnover proportion (annual fraction)
-     real(r8) :: phenology_soil_depth ! soil depth used for measuring states for phenology triggers
+     real(r8) :: crit_dayl             ! critical day length for senescence
+     real(r8) :: crit_dayl_at_high_lat ! critical day length for senescence at high latitudes (sec)
+     real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg)
+     real(r8) :: ndays_on              ! number of days to complete leaf onset
+     real(r8) :: ndays_off             ! number of days to complete leaf offset
+     real(r8) :: fstor2tran            ! fraction of storage to move to transfer for each onset
+     real(r8) :: crit_onset_fdd        ! critical number of freezing days to set gdd counter
+     real(r8) :: crit_onset_swi        ! critical number of days > soilpsi_on for onset
+     real(r8) :: soilpsi_on            ! critical soil water potential for leaf onset
+     real(r8) :: crit_offset_fdd       ! critical number of freezing days to initiate offset
+     real(r8) :: crit_offset_swi       ! critical number of water stress days to initiate offset
+     real(r8) :: soilpsi_off           ! critical soil water potential for leaf offset
+     real(r8) :: lwtop                 ! live wood turnover proportion (annual fraction)
+     real(r8) :: phenology_soil_depth  ! soil depth used for measuring states for phenology triggers
   end type params_type
 
   type(params_type) :: params_inst
@@ -125,6 +127,7 @@ module CNPhenologyMod
   integer,  public, parameter :: critical_daylight_depends_on_veg     = critical_daylight_depends_on_lat + 1
   integer,  public, parameter :: critical_daylight_depends_on_latnveg = critical_daylight_depends_on_veg + 1
   integer,  private :: critical_daylight_method = critical_daylight_constant
+  real(r8), parameter :: critical_offset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -229,18 +232,20 @@ contains
     ! !DESCRIPTION:
     ! Set the parameters for unit-testing
     !
-    params_inst%crit_dayl        = 39200._r8
-    params_inst%ndays_on         = 15._r8
-    params_inst%ndays_off        = 30._r8
-    params_inst%fstor2tran       = 0.5
-    params_inst%crit_onset_fdd   = 15._r8
-    params_inst%crit_onset_swi   = 15._r8
-    params_inst%soilpsi_on       = -0.6_r8
-    params_inst%crit_offset_fdd  = 15._r8
-    params_inst%crit_offset_swi  = 15._r8
-    params_inst%soilpsi_off      = -0.8
-    params_inst%lwtop            = 0.7_r8
-    params_inst%phenology_soil_depth = 0.08_r8
+    params_inst%crit_dayl             = 39200._r8
+    params_inst%crit_dayl_at_high_lat = 54000._r8
+    params_inst%crit_dayl_lat_slope   = 720._r8
+    params_inst%ndays_on              = 15._r8
+    params_inst%ndays_off             = 30._r8
+    params_inst%fstor2tran            = 0.5
+    params_inst%crit_onset_fdd        = 15._r8
+    params_inst%crit_onset_swi        = 15._r8
+    params_inst%soilpsi_on            = -0.6_r8
+    params_inst%crit_offset_fdd       = 15._r8
+    params_inst%crit_offset_swi       = 15._r8
+    params_inst%soilpsi_off           = -0.8
+    params_inst%lwtop                 = 0.7_r8
+    params_inst%phenology_soil_depth  = 0.08_r8
   end subroutine CNPhenologySetParams
   
   !-----------------------------------------------------------------------
@@ -261,6 +266,8 @@ contains
     !-----------------------------------------------------------------------
 
     call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
+    call readNcdioScalar(ncid, 'crit_dayl_at_high_lat', subname, params_inst%crit_dayl_at_high_lat)
+    call readNcdioScalar(ncid, 'crit_dayl_lat_slope', subname, params_inst%crit_dayl_lat_slope)
     call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
     call readNcdioScalar(ncid, 'ndays_off', subname, params_inst%ndays_off)
     call readNcdioScalar(ncid, 'fstor2tran', subname, params_inst%fstor2tran)
@@ -272,6 +279,7 @@ contains
     call readNcdioScalar(ncid, 'soilpsi_off', subname, params_inst%soilpsi_off)
     call readNcdioScalar(ncid, 'lwtop_ann', subname, params_inst%lwtop)
     call readNcdioScalar(ncid, 'phenology_soil_depth', subname, params_inst%phenology_soil_depth)
+    
 
   end subroutine readParams
 
@@ -448,6 +456,31 @@ contains
     ! -----------------------------------------
 
     if ( use_crop ) call CropPhenologyInit(bounds)
+
+    ! Error checking for parameters
+    if ( (critical_daylight_method == critical_daylight_depends_on_lat) .or. &
+         (critical_daylight_method == critical_daylight_depends_on_veg) .or.  &
+         (critical_daylight_method == critical_daylight_depends_on_latnveg) )then
+        if ( params_inst%crit_dayl_at_high_lat < params_inst%crit_dayl )then
+            call endrun(msg="ERROR crit_dayl_at_high_lat should be higher than crit_dayl on paramsfile"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl_at_high_lat >= secspday )then
+            call endrun(msg="ERROR crit_dayl_at_high_lat can NOT be higher than seconds in a day"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl >= secspday )then
+            call endrun(msg="ERROR crit_dayl can NOT be higher than seconds in a day"//errmsg(sourcefile, __LINE__))
+        end if
+    end if
+    if ( (critical_daylight_method == critical_daylight_depends_on_lat) .or. &
+         (critical_daylight_method == critical_daylight_depends_on_latnveg) )then
+        if ( params_inst%crit_dayl_lat_slope <= 0.0_r8 )then
+            call endrun(msg="ERROR crit_dayl_lat_slope can not be negative or zero"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl_lat_slope >= (secspday - params_inst%crit_dayl_at_high_lat)/ &
+                                                 (90._r8 - critical_offset_high_lat) )then
+            call endrun(msg="ERROR crit_dayl_lat_slope can not higher than allowing a day at the poles"//errmsg(sourcefile, __LINE__))
+        end if
+    end if
 
   end subroutine CNPhenologyInit
 
@@ -1006,7 +1039,8 @@ contains
     !
     ! !DESCRIPTION:
     ! Function to determine the critical day length needed for seasonal
-    ! decidious leaf offset.
+    ! decidious leaf offset. When depends on latitude it's higher for
+    ! high latitudes and lower for temperate regions.
     !
     ! !ARGUMENTS:
     integer, intent(IN) :: g ! Gridcell index
@@ -1014,13 +1048,6 @@ contains
     real(r8) :: crit_daylat  ! Return value
     !
     ! !LOCAL VARIABLES:
-    ! Parameters for critical day length offset, higher for high latitudes and shorter
-    ! for temperature regions
-    ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
-    ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
-    real(r8), parameter :: critical_offset_time_at_high_lat = 54000._r8  ! critical offset at high latitudes (min)
-    real(r8), parameter :: critical_offset_lat_slope        = 720._r8    ! Slope of time for critical offset with latitude (min/deg)
-    real(r8), parameter :: critical_offset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
     !-----------------------------------------------------------------------
 
     select case( critical_daylight_method )
@@ -1032,7 +1059,7 @@ contains
         ! For Arctic vegetation -- critical daylength is higher at high latitudes and shorter
         ! at midlatitudes
         else
-           crit_daylat=critical_offset_time_at_high_lat-critical_offset_lat_slope* \
+           crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* \
                        (critical_offset_high_lat-abs(grc%latdeg(g)))
            if (crit_daylat < crit_dayl) then
               crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
@@ -1043,13 +1070,13 @@ contains
         if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
            crit_daylat = crit_dayl
         else
-           crit_daylat=critical_offset_time_at_high_lat
+           crit_daylat=params_inst%crit_dayl_at_high_lat
         end if
     ! Critical day length depends on latitude
     case(critical_daylight_depends_on_lat)
         ! Critical daylength is higher at high latitudes and shorter
         ! for temperatre regions
-        crit_daylat=critical_offset_time_at_high_lat-critical_offset_lat_slope* \
+        crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* \
                     (critical_offset_high_lat-abs(grc%latdeg(g)))
         if (crit_daylat < crit_dayl) then
            crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
