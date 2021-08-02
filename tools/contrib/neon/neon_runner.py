@@ -63,6 +63,7 @@ import shutil
 import logging
 import requests
 import argparse
+import re
 import subprocess
 import pandas as pd
 import glob 
@@ -79,7 +80,7 @@ from ctsm.path_utils import path_to_ctsm_root
 import CIME.build as build
 from standard_script_setup import *
 from CIME.case             import Case
-from CIME.utils            import safe_copy, expect
+from CIME.utils            import safe_copy, expect, symlink_force
 from argparse              import RawTextHelpFormatter
 from CIME.locked_files     import lock_file, unlock_file
 
@@ -183,16 +184,6 @@ def get_parser(args, description, valid_neon_sites):
                 type = int, 
                 default = 100)
 
-    pad_parser.add_argument('--finidat',
-                help='''
-                finidat file location from spinup step to start from.
-                [default: %(default)s]
-                ''', 
-                action="store",
-                dest="finidat_postad",
-                required = True,
-                type = str)
-
     tr_parser.add_argument('--start-year',
                 help='''           
                 Start year for running CTSM simulation.
@@ -214,16 +205,6 @@ def get_parser(args, description, valid_neon_sites):
                 required = False,
                 type = int,
                 default = 2020)
-
-    tr_parser.add_argument('--finidat',
-                help='''
-                finidat file location from spinup step to start from.
-                [default: %(default)s]
-                ''', 
-                action="store",
-                dest="finidat_transient",
-                required = True,
-                type = str)
 
     #parser.add_argument('--spinup',
     #            help='''
@@ -279,14 +260,13 @@ def get_parser(args, description, valid_neon_sites):
         run_type = args.run_type
     else:
         run_type = "ad"
-
     if run_type == "ad":
         run_length = int(args.ad_length)
     elif run_type == "postad":
         run_length = int(args.postad_length)
     else:
         run_length = 0
-    exit
+
     return neon_sites, args.case_root, run_type, args.overwrite, run_length, args.base_case_root
 
 class NeonSite :
@@ -390,8 +370,8 @@ class NeonSite :
                 logger.info("---- cloning the base case in {}".format(case_root))
                 basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
 
-        with Case(case_root, read_only=False) as case:
 
+        with Case(case_root, read_only=False) as case:
             case.set_value("STOP_OPTION", "nyears")
             case.set_value("STOP_N", run_length)
             case.set_value("REST_N", 100)
@@ -400,38 +380,19 @@ class NeonSite :
             if run_type == "ad":
                 case.set_value("CLM_FORCE_COLDSTART","on")
                 case.set_value("CLM_ACCELERATED_SPINUP","on")
-                case.set_value("RESUBMIT", 1)
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")                
             else:
                 case.set_value("CLM_FORCE_COLDSTART","off")
                 case.set_value("CLM_ACCELERATED_SPINUP","off")
-                case.set_value("RESUBMIT", 0)
                 case.set_value("RUN_TYPE", "hybrid")
                 
-            if run_type == "post_ad":
-                case.set_value("RUN_REFDATE", "0218-01-01")
-                case.set_value("RUN_STARTDATE", "0218-01-01")                
-                ad_case_root = case_root.replace(".postad",".ad")
-                expect(os.path.isdir(ad_case_root), "ERROR: ad spinup must be completed first")
-                with Case(ad_case_root) as adcase:
-                    adrundir = adcase.get_value("RUNDIR")
-                    
-                case.set_value("RUN_REFDIR", adrundir)
-                case.set_value("RUN_REFCASE", os.path.basename(ad_case_root))
+            if run_type == "postad":
+                self.set_ref_case(case)
                 
             if run_type == "transient":
+                self.set_ref_case(case)
                 case.set_value("REST_N", "12")
-                case.set_value("RUN_REFDATE", "2018-01-01")
-                case.set_value("RUN_STARTDATE", "2018-01-01")                
-                postad_case_root = case_root.replace(".transient",".postad")
-                expect(os.path.isdir(postad_case_root), "ERROR: postad spinup must be completed first")
-                with Case(postad_case_root) as postadcase:
-                    postadrundir = postadcase.get_value("RUNDIR")
-                    
-                case.set_value("RUN_REFDIR", postadrundir)
-                case.set_value("RUN_REFCASE", os.path.basename(postad_case_root))
-            
                 case.set_value("DATM_YR_ALIGN",self.start_year)
                 case.set_value("DATM_YR_START",self.start_year)
                 case.set_value("DATM_YR_END",self.end_year)
@@ -454,7 +415,32 @@ class NeonSite :
             case.create_namelists()
             case.submit()
 
-
+    def set_ref_case(self, case):
+        rundir = case.get_value("RUNDIR")
+        case_root = case.get_value("CASEROOT")
+        if case_root.endswith(".postad"):
+            ref_case_root = case_root.replace(".postad",".ad")
+        else:
+            ref_case_root = case_root.replace(".transient",".postad")
+            
+        expect(os.path.isdir(ref_case_root), "ERROR: spinup must be completed first, could not find directory {}".format(ref_case_root))
+        with Case(ref_case_root) as refcase:
+            refrundir = refcase.get_value("RUNDIR")
+        case.set_value("RUN_REFDIR", refrundir)
+        case.set_value("RUN_REFCASE", os.path.basename(ref_case_root))
+        for reffile in glob.iglob(refrundir + "/{}.*.nc".format(self.name)):
+            m = re.search("(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
+            if m:
+                refdate = m.group(1)
+            symlink_force(reffile, os.path.join(rundir,os.path.basename(reffile)))
+        for rpfile in glob.iglob(refrundir + "/rpointer*"):
+            safe_copy(rpfile, rundir)
+        if not os.path.isdir(os.path.join(rundir, "inputdata")) and os.path.isdir(os.path.join(refrundir,"inputdata")):
+            symlink_force(os.path.join(refrundir,"inputdata"),os.path.join(rundir,"inputdata"))
+        case.set_value("RUN_REFDATE", refdate)
+        case.set_value("RUN_STARTDATE", refdate)                
+                
+        
     def modify_user_nl(self, case_root, run_type):
         user_nl_fname = os.path.join(case_root, "user_nl_clm")
 
@@ -539,12 +525,12 @@ def parse_neon_listing(listing_file, valid_neon_sites):
             start_month = int(tmp_df2[1].iloc[0])
             end_month = int(tmp_df2[1].iloc[-1])
 
-            logger.info ("Valid neon site " + site_name+" found!")
-            logger.info ("File version {}".format(latest_version))
-            logger.info ('start_year={}'.format(start_year))
-            logger.info ('end_year={}'.format(end_year))
-            logger.info ('start_month={}'.format(start_month))
-            logger.info ('end_month={}'.format(end_month))
+            logger.debug ("Valid neon site " + site_name+" found!")
+            logger.debug ("File version {}".format(latest_version))
+            logger.debug ('start_year={}'.format(start_year))
+            logger.debug ('end_year={}'.format(end_year))
+            logger.debug ('start_month={}'.format(start_month))
+            logger.debug ('end_month={}'.format(end_month))
  
             neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month)
             logger.debug (neon_site)
