@@ -10,7 +10,7 @@ module dynHarvestMod
   ! !USES:
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use decompMod               , only : bounds_type, BOUNDS_LEVEL_PROC
+  use decompMod               , only : bounds_type, bounds_level_proc
   use abortutils              , only : endrun
   use dynFileMod              , only : dyn_file_type
   use dynVarTimeUninterpMod   , only : dyn_var_time_uninterp_type
@@ -87,7 +87,7 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_init'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     ! we only need to keep this summary variable in CN veg type
     if ( .not. use_fates ) then  
@@ -153,7 +153,7 @@ contains
     character(len=*), parameter :: subname = 'dynHarvest_interp'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     call dynHarvest_file%time_info%set_current_year()
 

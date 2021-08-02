@@ -16,9 +16,8 @@ module CanopyFluxesMod
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
                                      use_luna, use_hydrstress, use_biomass_heat_storage
   use clm_varpar            , only : nlevgrnd, nlevsno, mxpft
-  use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
-  use decompMod             , only : bounds_type
+  use decompMod             , only : bounds_type, subgrid_level_patch
   use ActiveLayerMod        , only : active_layer_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
@@ -923,7 +922,7 @@ bioms:   do f = 1, fn
       if (found) then
          if ( .not. use_fates ) then
             write(iulog,*)'Error: Forcing height is below canopy height for patch index '
-            call endrun(decomp_index=index, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=index, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
          end if
       end if
 

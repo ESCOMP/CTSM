@@ -1,4 +1,66 @@
 ===============================================================
+Tag name:  ctsm5.1.dev050
+Originator(s):  sacks (Bill Sacks)
+Date:  Mon Aug  2 17:17:10 MDT 2021
+One-line Summary: Improve and document method for getting diagnostics on a problem point
+
+Purpose and description of changes
+----------------------------------
+
+Following from the changes in ctsm5.1.dev047 to change the lower bounds
+to 1 on all processors: The one downside of that change was that it made
+it a bit harder to write diagnostics on a given point. This PR cleans up
+the method for writing these diagnostics and adds relevant
+documentation.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#164 (BalanceCheck: Calls get_proc_bounds from
+  threaded region)
+- Resolves ESCOMP/CTSM#1424 (Change all the endrun calls to write out
+  the point context information)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps: cdeps0.12.14 -> cdeps0.12.17
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/issues/1424
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev049
 Originator(s):  jedwards4b/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon Jul 26 01:31:04 MDT 2021
