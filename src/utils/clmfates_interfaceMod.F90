@@ -799,6 +799,7 @@ module CLMFatesInterfaceMod
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 
+
          ! Decomposition fluxes
          this%fates(nc)%bc_in(s)%w_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%w_scalar_col(c,1:nlevsoil)
          this%fates(nc)%bc_in(s)%t_scalar_sisl(1:nlevsoil) = soilbiogeochem_carbonflux_inst%t_scalar_col(c,1:nlevsoil)
@@ -807,12 +808,24 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
+         this%fates(nc)%bc_in(s)%t_veg24_si = &
+               temperature_inst%t_veg24_patch(col%patchi(c)) 
+
+         this%fates(nc)%bc_in(s)%t_ref2m_24_si = &
+               temperature_inst%t_ref2m_24_patch(col%patchi(c))  ! ! Marius
+
+         this%fates(nc)%bc_in(s)%t_ref2m_min_si = &
+               temperature_inst%t_ref2m_min_patch(col%patchi(c)) ! ! Marius
+
+         this%fates(nc)%bc_in(s)%t_ref2m_max_si = &
+               temperature_inst%t_ref2m_max_patch(col%patchi(c)) ! ! Marius
+
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
                min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
             p = ifp+col%patchi(c)
-            this%fates(nc)%bc_in(s)%t_veg24_pa(ifp) = &
+            this%fates(nc)%bc_in(s)%t_veg24_pa(ifp) = & !not copy
                  temperature_inst%t_veg24_patch(p)
 
             this%fates(nc)%bc_in(s)%precip24_pa(ifp) = &
@@ -2675,8 +2688,14 @@ module CLMFatesInterfaceMod
  ! ======================================================================================
 
  subroutine wrap_hydraulics_drive(this, bounds_clump, nc, &
+<<<<<<< HEAD
                                  soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
                                  fn, filterp, solarabs_inst, energyflux_inst)
+=======
+                                 fn, filterp, &
+                                 soilstate_inst, waterstate_inst, waterflux_inst, &
+                                 solarabs_inst, energyflux_inst)
+>>>>>>> dc29f83... pass vriables to fates for hardening
 
 
    implicit none
