@@ -1098,12 +1098,16 @@ contains
              if ( masterproc ) then
                 write(iulog,*)  'clm: calling FATES model ', get_nstep()
              end if
+
+            write(iulog,*)  'clm_drv: pre-dynamics: tlai_patch', canopystate_inst%tlai_patch
              
              call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                   atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                   water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
                   water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
                   frictionvel_inst)
+
+             write(iulog,*)  'clm_drv: post-dynamics: tlai_patch', canopystate_inst%tlai_patch
              
              ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
              ! call to reweight_wrapup, if it's needed at all.
@@ -1392,6 +1396,8 @@ contains
 
        ! Create history and write history tapes if appropriate
        call t_startf('clm_drv_io_htapes')
+
+       write(iulog,*)  'clm_drv: pre-hist_htapes_wrapup: tlai_patch', canopystate_inst%tlai_patch
 
        write(iulog,*) 'clm_drv: calling hist_htapes_wrapup'
        call hist_htapes_wrapup( rstwr, nlend, bounds_proc,                    &
