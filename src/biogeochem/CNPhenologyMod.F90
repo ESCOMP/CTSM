@@ -70,9 +70,9 @@ module CNPhenologyMod
   !
   ! !PRIVATE DATA MEMBERS:
   type, private :: params_type
-     real(r8) :: crit_dayl             ! critical day length for senescence
-     real(r8) :: crit_dayl_at_high_lat ! critical day length for senescence at high latitudes (sec)
-     real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg)
+     real(r8) :: crit_dayl             ! critical day length for senescence (sec)
+     real(r8) :: crit_dayl_at_high_lat ! critical day length for senescence at high latitudes (sec) (in Eitel 2019 this was 54000)
+     real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg) (Birch et. all 2021 it was 720)
      real(r8) :: ndays_on              ! number of days to complete leaf onset
      real(r8) :: ndays_off             ! number of days to complete leaf offset
      real(r8) :: fstor2tran            ! fraction of storage to move to transfer for each onset
