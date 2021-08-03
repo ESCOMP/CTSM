@@ -21,7 +21,6 @@ module GridcellType
   type, public :: gridcell_type
 
      ! topological mapping functionality, local 1d gdc arrays
-     integer , pointer :: gindex           (:) ! global index
      real(r8), pointer :: area             (:) ! total land area, gridcell (km^2)
      real(r8), pointer :: lat              (:) ! latitude (radians)
      real(r8), pointer :: lon              (:) ! longitude (radians)
@@ -63,7 +62,6 @@ contains
     !------------------------------------------------------------------------
 
     ! The following is set in InitGridCells
-    allocate(this%gindex    (begg:endg)) ; this%gindex    (:) = ispval
     allocate(this%area      (begg:endg)) ; this%area      (:) = nan
     allocate(this%lat       (begg:endg)) ; this%lat       (:) = nan
     allocate(this%lon       (begg:endg)) ; this%lon       (:) = nan
@@ -88,7 +86,6 @@ contains
     class(gridcell_type) :: this
     !------------------------------------------------------------------------
 
-    deallocate(this%gindex           )
     deallocate(this%area             )
     deallocate(this%lat              )
     deallocate(this%lon              )

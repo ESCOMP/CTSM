@@ -1,5 +1,17 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev050    sacks 08/02/2021 Improve and document method for getting diagnostics on a problem point
+    ctsm5.1.dev049 jedwards 07/26/2021 Update externals, NEON updates, fix stop_option=date, move neon niwo test to match user_mods, local time option
+    ctsm5.1.dev048   slevis 07/10/2021 Make certain history fields descriptive inst. of labeling by number
+    ctsm5.1.dev047 mvertens 07/08/2021 Start bounds at 1; remove references to MCT
+    ctsm5.1.dev046   rgknox 07/02/2021 Updating external fates has to tag sci.1.46.2_api.16.1.0
+    ctsm5.1.dev045   slevis 06/29/2021 Include CWD in heterotrophic respiration
+    ctsm5.1.dev044 mvertens 06/24/2021 New stream functionality when using NUOPC or LILAC
+    ctsm5.1.dev043   slevis 06/03/2021 Refactor of CascadeBGC code in preparation for MIMICS
+    ctsm5.1.dev042     erik 05/28/2021 Small answer changes for double precision constants and soil limits
+    ctsm5.1.dev041   rgknox 05/27/2021 bring FATES API up to sci.1.46.0_api.16.0.0 (methane and cn hooks)
+    ctsm5.1.dev040   slevis 05/20/2021 mksurfdata_map: replace SRC files of various masks with SRC files w no mask
+    ctsm5.1.dev039 jedwards 05/18/2021 Add NEON sites
     ctsm5.1.dev038     erik 04/27/2021 Bring in minor changes from the cesm2.2.0 release tag
 release-cesm2.2.01     erik 09/02/2020 Fix clm4_5 initial conditions
   ctsm5.1.dev037     slevis 04/23/2021 Correct vertical interpolation in init_interp when soil thicknesses change

@@ -17,8 +17,8 @@ module  PhotosynthesisMod
   use clm_varctl          , only : use_c13, use_c14, use_cn, use_cndv, use_fates, use_luna, use_hydrstress
   use clm_varctl          , only : iulog
   use clm_varpar          , only : nlevcan, nvegwcs, mxpft
-  use clm_varcon          , only : namep, c14ratio, spval, isecspday
-  use decompMod           , only : bounds_type
+  use clm_varcon          , only : c14ratio, spval, isecspday
+  use decompMod           , only : bounds_type, subgrid_level_patch
   use QuadraticMod        , only : quadratic
   use pftconMod           , only : pftcon
   use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
@@ -1374,7 +1374,7 @@ contains
             ! Leaf nitrogen concentration at the top of the canopy (g N leaf / m**2 leaf)
             
            if ( (slatop(patch%itype(p)) *leafcn(patch%itype(p))) .le. 0.0_r8)then
-              call endrun( "ERROR: slatop or leafcn is zero" )
+              call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg="ERROR: slatop or leafcn is zero")
            end if
            lnc(p) = 1._r8 / (slatop(patch%itype(p)) * leafcn(patch%itype(p)))
          end if   
@@ -1765,7 +1765,7 @@ contains
                if (gs_mol(p,iv) < 0._r8) then
                   write (iulog,*)'Negative stomatal conductance:'
                   write (iulog,*)'p,iv,gs_mol= ',p,iv,gs_mol(p,iv)
-                  call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
                end if
 
                ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
@@ -2200,7 +2200,7 @@ contains
     fb=f2
     if((fa > 0._r8 .and. fb > 0._r8).or.(fa < 0._r8 .and. fb < 0._r8))then
        write(iulog,*) 'root must be bracketed for brent'
-       call endrun(msg=errmsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=ip, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
     endif
     c=b
     fc=fb
@@ -2851,7 +2851,7 @@ contains
             r_soil = sqrt(1./(rpi*root_length_density)) 
 
             ! length scale approach
-            soil_conductance = min(hksat(c,j),hk_l(c,j))/(1.e3*r_soil)
+            soil_conductance = min(hksat(c,j),hk_l(c,j))/(1.e3_r8*r_soil)
             
 ! use vegetation plc function to adjust root conductance
                fs(j)=  plc(smp(c,j),p,c,root,veg)
@@ -2873,7 +2873,7 @@ contains
             if(rai(j)*rootfr(p,j) > 0._r8 .and. j > 1) then
                k_soil_root(p,j) =  1._r8/rs_resis
             else
-               k_soil_root(p,j) =  0.
+               k_soil_root(p,j) =  0._r8
             endif
             
          end do
@@ -3440,7 +3440,7 @@ contains
                if (gs_mol_sun(p,iv) < 0._r8 .or. gs_mol_sha(p,iv) < 0._r8) then
                   write (iulog,*)'Negative stomatal conductance:'
                   write (iulog,*)'p,iv,gs_mol_sun,gs_mol_sha= ',p,iv,gs_mol_sun(p,iv),gs_mol_sha(p,iv)
-                  call endrun(decomp_index=p, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
                end if
 
                ! Compare with Ball-Berry model: gs_mol = m * an * hs/cs p + b
@@ -3884,7 +3884,7 @@ contains
     do phase=1, nphs
        if ( (fa(phase) > 0._r8 .and. fb(phase) > 0._r8) .or. (fa(phase) < 0._r8 .and. fb(phase) < 0._r8) ) then
           write(iulog,*) 'root must be bracketed for brent'
-          call endrun(msg=errmsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=ip, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
        endif
     enddo
     
@@ -4163,8 +4163,8 @@ contains
           bquad = -(2.0 * (medlynintercept(patch%itype(p))*1.e-06_r8 + term) + (medlynslope(patch%itype(p)) * term)**2 / &
                (gb_mol*1.e-06_r8 * rh_can))
           cquad = medlynintercept(patch%itype(p))*medlynintercept(patch%itype(p))*1.e-12_r8 + &
-               (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
-               (1.0 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
+               (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
+               (1.0_r8 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
 
           call quadratic (aquad, bquad, cquad, r1, r2)
           gs_mol_sun = max(r1,r2) * 1.e06_r8
@@ -4278,7 +4278,7 @@ contains
     logical  :: flag                  ! signal that matrix was not invertible
     logical  :: night                 ! signal to store vegwp within this routine, b/c it is night-time and full suite won't be called
     integer, parameter  :: itmax=50   ! exit newton's method if iters>itmax
-    real(r8), parameter :: tolf=1.e-6,toldx=1.e-9 !tolerances for a satisfactory solution
+    real(r8), parameter :: tolf=1.e-6_r8,toldx=1.e-9_r8 !tolerances for a satisfactory solution
     logical  :: havegs                ! signals direction of calculation gs->qflx or qflx->gs 
     real(r8) :: soilflux              ! total soil column transpiration [mm/s] 
     real(r8), parameter :: tol_lai=.001_r8 ! minimum lai where transpiration is calc'd 
@@ -4507,7 +4507,8 @@ contains
 #ifndef NDEBUG
     ! Only execute this code if DEBUG=TRUE
     if ( nvegwcs /= 4 )then
-       call endrun(msg='Error:: this function is hardcoded for 4x4 matrices with nvegwcs==4'//errMsg(__FILE__, __LINE__))
+       call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, &
+            msg='Error:: this function is hardcoded for 4x4 matrices with nvegwcs==4'//errMsg(__FILE__, __LINE__))
     end if
 #endif
     

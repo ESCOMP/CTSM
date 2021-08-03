@@ -14,25 +14,16 @@ module lilac_atmaero
   use shr_nl_mod       , only : shr_nl_find_group_name
   use shr_log_mod      , only : shr_log_errMsg
   use shr_mpi_mod      , only : shr_mpi_bcast
-  use shr_strdata_mod  , only : shr_strdata_type, shr_strdata_create
-  use shr_strdata_mod  , only : shr_strdata_print, shr_strdata_advance
-  use shr_string_mod   , only : shr_string_listAppend
   use shr_cal_mod      , only : shr_cal_ymd2date
-  use shr_pio_mod      , only : shr_pio_getiotype
-  use mct_mod          , only : mct_avect_indexra, mct_gsmap, mct_ggrid
-  use mct_mod          , only : mct_gsmap_init, mct_gsmap_orderedpoints
-  use mct_mod          , only : mct_ggrid_init, mct_ggrid_importIAttr, mct_ggrid_importRattr
 
-  ! ctsm uses
-  use ncdio_pio        , only : pio_subsystem
-  use domainMod        , only : ldomain
-  use clm_time_manager , only : get_calendar
+  ! cdeps uses
+  use dshr_methods_mod , only : dshr_fldbun_getfldptr
+  use dshr_strdata_mod , only : shr_strdata_type, shr_strdata_init_from_inline, shr_strdata_advance
 
   ! lilac uses
-  use lilac_atmcap     , only : gindex_atm
   use lilac_methods    , only : chkerr
   use lilac_methods    , only : lilac_methods_FB_getFieldN
-  use lilac_constants  , only : field_index_unset
+  use lilac_constants  , only : field_index_unset, logunit
   use ctsm_LilacCouplingFields, only : a2l_fields, lilac_atm2lnd
   use ctsm_LilacCouplingFieldIndices
 
@@ -44,8 +35,8 @@ module lilac_atmaero
      integer :: field_index = field_index_unset
   end type field_mapping_type
 
-  public :: lilac_atmaero_init  ! initialize stream data type sdat
-  public :: lilac_atmaero_interp   ! interpolates between two years of ndep file data
+  public :: lilac_atmaero_init   ! initialize stream data type sdat
+  public :: lilac_atmaero_interp ! interpolates between two years of ndep file data
 
   ! module data
   type(shr_strdata_type) :: sdat  ! input data stream
@@ -63,7 +54,7 @@ module lilac_atmaero
 contains
 !==============================================================================
 
-  subroutine lilac_atmaero_init(atm2cpl_state, rc)
+  subroutine lilac_atmaero_init(atm2cpl_state, lilac_clock, rc)
 
     ! ----------------------------------------
     ! Initialize data stream information.
@@ -71,45 +62,35 @@ contains
 
     ! input/output variables
     type(ESMF_State) , intent(inout) :: atm2cpl_state
+    type(ESMF_Clock) , intent(inout) :: lilac_clock
     integer          , intent(out)   :: rc
 
     ! local variables
     type(ESMF_VM)          :: vm
-    type(ESMF_Mesh)        :: lmesh
+    type(ESMF_Mesh)        :: mesh
     type(ESMF_FieldBundle) :: lfieldbundle
     type(ESMF_Field)       :: lfield
-    type(mct_ggrid)        :: ggrid_atm                  ! domain information
-    type(mct_gsmap)        :: gsmap_atm                  ! decompositoin info
+    integer                :: mytask                       ! mpi task number
+    integer                :: mpicom                       ! mpi communicator
+    integer                :: n, nfld                      ! indices
+    integer                :: field_index                  ! field index
+    integer                :: nunit                        ! namelist input unit
+    integer                :: ierr                         ! namelist i/o error flag
+    character(len=cl)      :: stream_fldfilename           ! name of input stream datafile
+    character(len=cl)      :: stream_meshfile              ! name of input stream meshfile
+    character(len=CL)      :: mapalgo = 'bilinear'         ! type of 2d mapping
+    character(len=CS)      :: taxmode = 'extend'           ! time extrapolation
+    integer                :: stream_year_first            ! first year in stream to use
+    integer                :: stream_year_last             ! last year in stream to use
+    integer                :: model_year_align             ! align stream_year_first with model year
     type(field_mapping_type), allocatable :: all_fields(:) ! all fields that can possibly be read from data
-    integer                :: mytask                     ! mpi task number
-    integer                :: mpicom                     ! mpi communicator
-    integer                :: n                          ! index
-    integer                :: field_index
-    integer                :: lsize                      ! local size
-    integer                :: gsize                      ! global size
-    integer                :: nunit                      ! namelist input unit
-    integer                :: ierr                       ! namelist i/o error flag
-    character(len=cl)      :: stream_fldfilename ! name of input stream file
-    character(len=CL)      :: mapalgo = 'bilinear'       ! type of 2d mapping
-    character(len=CS)      :: taxmode = 'extend'         ! time extrapolation
-    character(len=CL)      :: fldlistFile                ! name of fields in input stream file
-    character(len=CL)      :: fldlistModel               ! name of fields in model
-    integer                :: stream_year_first  ! first year in stream to use
-    integer                :: stream_year_last   ! last year in stream to use
-    integer                :: model_year_align   ! align stream_year_first with model year
-    integer                :: spatialDim
-    integer                :: numOwnedElements
-    real(r8), pointer      :: ownedElemCoords(:)
-    real(r8), pointer      :: mesh_lons(:)
-    real(r8), pointer      :: mesh_lats(:)
-    real(r8), pointer      :: mesh_areas(:)
-    real(r8), pointer      :: rdata(:)
-    integer , pointer      :: idata(:)
+    character(len=CS), allocatable :: fldlistFile(:)   
+    character(len=CS), allocatable :: fldlistModel(:)   
     !-----------------------------------------------------------------------
 
     namelist /atmaero_stream/ &
          stream_year_first, stream_year_last, model_year_align,  &
-         stream_fldfilename
+         stream_fldfilename, stream_meshfile
 
     rc = ESMF_SUCCESS
 
@@ -129,29 +110,40 @@ contains
          field_mapping_type('DSTX04WD', lilac_a2l_Faxa_dstwet4), &
          field_mapping_type('DSTX04DD', lilac_a2l_Faxa_dstdry4)]
 
-    num_fields_to_read = 0
-    allocate(fields_to_read(size(all_fields)))
-    fldlistFile = ' '
-    fldlistModel = ' '
+    nfld = 0
     do n = 1, size(all_fields)
        field_index = all_fields(n)%field_index
        if (a2l_fields%is_needed_from_data(field_index)) then
-          num_fields_to_read = num_fields_to_read + 1
-          fields_to_read(num_fields_to_read) = all_fields(n)
-          call shr_string_listAppend(fldlistFile, fields_to_read(num_fields_to_read)%field_name)
-          call shr_string_listAppend(fldlistModel, a2l_fields%get_fieldname(field_index))
+          nfld = nfld + 1
        end if
     end do
+
+    num_fields_to_read = nfld
 
     if (num_fields_to_read == 0) then
        return
     end if
 
+    allocate(fields_to_read(num_fields_to_read))
+    allocate(fldlistFile(num_fields_to_read))
+    allocate(fldlistModel(num_fields_to_read))
+    nfld = 0
+    do n = 1, size(all_fields)
+       field_index = all_fields(n)%field_index
+       if (a2l_fields%is_needed_from_data(field_index)) then
+          nfld = nfld + 1
+          fields_to_read(nfld) = all_fields(n)
+          fldListFile(nfld) = trim(fields_to_read(nfld)%field_name)
+          fldListModel(nfld) = trim(a2l_fields%get_fieldname(field_index))
+       end if
+    end do
+          
     ! default values for namelist
     stream_year_first  = 1                ! first year in stream to use
     stream_year_last   = 1                ! last  year in stream to use
     model_year_align   = 1                ! align stream_year_first with this model year
     stream_fldFileName = ' '
+    stream_meshfile    = ' '
 
     ! get mytask and mpicom
     call ESMF_VMGetCurrent(vm, rc=rc)
@@ -177,107 +169,57 @@ contains
     call shr_mpi_bcast(stream_year_last  , mpicom)
     call shr_mpi_bcast(model_year_align  , mpicom)
     call shr_mpi_bcast(stream_fldfilename, mpicom)
+    call shr_mpi_bcast(stream_meshfile   , mpicom)
 
     if (mytask == 0) then
        print *, ' '
-       print *, 'atmaero stream settings:'
-       print *, '  stream_year_first  = ',stream_year_first
-       print *, '  stream_year_last   = ',stream_year_last
-       print *, '  model_year_align   = ',model_year_align
-       print *, '  stream_fldFileName = ',stream_fldFileName
+       write(logunit,'(a)') 'atmaero stream settings:'
+       write(logunit,'(a,i8)')'  stream_year_first  = ',stream_year_first
+       write(logunit,'(a,i8)')'  stream_year_last   = ',stream_year_last
+       write(logunit,'(a,i8)')'  model_year_align   = ',model_year_align
+       write(logunit,'(a)'   )'  stream_fldFileName = ',trim(stream_fldFileName)
+       write(logunit,'(a)'   )'  stream_meshfile    = ',trim(stream_meshfile)
        print *, ' '
     endif
 
     ! ------------------------------
-    ! create the mct gsmap
-    ! ------------------------------
-    lsize = size(gindex_atm)
-    gsize = ldomain%ni * ldomain%nj
-    call mct_gsmap_init( gsmap_atm, gindex_atm, mpicom, 1, lsize, gsize )
-
-    ! ------------------------------
-    ! obtain mesh lats, lons and areas
+    ! obtain atm mesh
     ! ------------------------------
 
     call ESMF_StateGet(atm2cpl_state, 'a2c_fb', lfieldbundle, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call lilac_methods_FB_getFieldN(lfieldbundle, fieldnum=1, field=lfield, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_FieldGet(lfield, mesh=lmesh, rc=rc)
+    call ESMF_FieldGet(lfield, mesh=mesh, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
-
-    call ESMF_MeshGet(lmesh, spatialDim=spatialDim, numOwnedElements=numOwnedElements, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    if (numOwnedElements /= lsize) then
-       call shr_sys_abort('ERROR: numOwnedElements is not equal to lsize')
-    end if
-    allocate(ownedElemCoords(spatialDim*numOwnedElements))
-
-    call ESMF_MeshGet(lmesh, ownedElemCoords=ownedElemCoords, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-    allocate(mesh_lons(numOwnedElements))
-    allocate(mesh_lats(numOwnedElements))
-    allocate(mesh_areas(numOwnedElements))
-    do n = 1,numOwnedElements
-       mesh_lons(n) = ownedElemCoords(2*n-1)
-       mesh_lats(n) = ownedElemCoords(2*n)
-       mesh_areas(n) = 1.e36 ! hard-wire for now for testing
-    end do
-
-    ! ------------------------------
-    ! create the mct ggrid
-    ! ------------------------------
-    call mct_ggrid_init( ggrid=ggrid_atm, CoordChars='lat:lon:hgt', OtherChars='area:aream:mask:frac', lsize=lsize)
-    call mct_gsmap_orderedpoints(gsmap_atm, mytask, idata)
-    call mct_gGrid_importIAttr(ggrid_atm,'GlobGridNum', idata, lsize)
-    call mct_gGrid_importRattr(ggrid_atm,"lon" , mesh_lons , lsize)
-    call mct_gGrid_importRattr(ggrid_atm,"lat" , mesh_lats , lsize)
-    call mct_gGrid_importRattr(ggrid_atm,"area", mesh_areas, lsize)
-    allocate(rdata(lsize))
-    rdata(:) = 1._R8
-    call mct_gGrid_importRattr(ggrid_atm,"mask", rdata, lsize)
-    deallocate(mesh_lons, mesh_lats, mesh_areas, rdata)
 
     ! ------------------------------
     ! create the stream data sdat
     ! ------------------------------
-    call shr_strdata_create(sdat,&
-         name          = "atmaero",                            &
-         pio_subsystem = pio_subsystem,                        &
-         pio_iotype    = shr_pio_getiotype(compid= 1),         &
-         mpicom        = mpicom,                               &
-         compid        = 1,                                    &
-         gsmap         = gsmap_atm,                            &
-         ggrid         = ggrid_atm,                            &
-         nxg           = ldomain%ni,                           &
-         nyg           = ldomain%nj,                           &
-         yearFirst     = stream_year_first,            &
-         yearLast      = stream_year_last,             &
-         yearAlign     = model_year_align,             &
-         offset        = 0,                                    &
-         domFilePath   = '',                                   &
-         domfilename   = trim(stream_fldfilename),     &
-         domTvarName   = 'time',                               &
-         domXvarName   = 'lon' ,                               &
-         domYvarName   = 'lat' ,                               &
-         domAreaName   = 'area',                               &
-         domMaskName   = 'mask',                               &
-         filePath      = '',                                   &
-         filename      = (/trim(stream_fldfilename)/), &
-         fldListFile   = trim(fldlistFile),                    &
-         fldListModel  = trim(fldlistModel),                   &
-         fillalgo      = 'none',                               &
-         mapalgo       = mapalgo,                              &
-         calendar      = get_calendar(),                       &
-         taxmode       = taxmode                               )
-
-    if (mytask == 0) then
-       call shr_strdata_print(sdat,'ATMAERO data')
-    endif
+    call shr_strdata_init_from_inline(sdat,                  &
+         my_task             = mytask,                       &
+         logunit             = logunit,                      &
+         compname            = 'LND',                        &
+         model_clock         = lilac_clock,                  &
+         model_mesh          = mesh,                         &
+         stream_meshfile     = trim(stream_meshfile),        &
+         stream_lev_dimname  = 'null',                       & 
+         stream_mapalgo      = trim(mapalgo),                &
+         stream_filenames    = (/trim(stream_fldfilename)/), &
+         stream_fldlistFile  = fldlistFile,                  &
+         stream_fldListModel = fldlistModel,                 &
+         stream_yearFirst    = stream_year_first,            &
+         stream_yearLast     = stream_year_last,             &
+         stream_yearAlign    = model_year_align,             &
+         stream_offset       = 0,                            &
+         stream_taxmode      = taxmode,                      &
+         stream_dtlimit      = 1.5_r8,                       &
+         stream_tintalgo     = 'linear',                     &
+         stream_name         = 'ATMAERO data ',              &  
+         rc                  = rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    end if
 
   end subroutine lilac_atmaero_init
 
@@ -290,13 +232,12 @@ contains
     integer, intent(out)   :: rc
 
     ! local variables
-    type(ESMF_VM)          :: vm
-    integer                :: mpicom ! mpi communicator
-    integer                :: mytask ! mpi task number
-    type(ESMF_FieldBundle) :: lfieldbundle
-    type(ESMF_Time)        :: currTime
-    integer                :: yy, mm, dd, sec, curr_ymd
-    integer                :: n
+    type(ESMF_Time)   :: currTime
+    integer           :: yy, mm, dd, sec, curr_ymd
+    integer           :: n
+    integer           :: field_index
+    character(len=CS) :: stream_varname
+    real(r8), pointer :: dataptr1d(:)
     character(len=*), parameter :: subname='lilac_atmaero: [lilac_atmaero_interp]'
     !-----------------------------------------------------------------------
 
@@ -306,43 +247,32 @@ contains
        return
     end if
 
-    ! get mytask and mpicom
-    call ESMF_VMGetCurrent(vm, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_VMGet(vm, localPet=mytask, mpiCommunicator=mpicom, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-
     ! get current time info
     call ESMF_ClockGet( clock, currTime=currTime, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
     call ESMF_TimeGet( currTime, yy=yy, mm=mm, dd=dd, s=sec, rc=rc )
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call shr_cal_ymd2date(yy,mm,dd,curr_ymd)
 
     ! advance the streams
-    call shr_strdata_advance(sdat, curr_ymd, sec, mpicom, 'atmaero')
+    call shr_strdata_advance(sdat, ymd=curr_ymd, tod=sec, logunit=logunit, istr='atmaero', rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+       call ESMF_Finalize(endflag=ESMF_END_ABORT)
+    end if
 
+    ! obtain the stream data
     do n = 1, num_fields_to_read
-       call set_field(n)
+       field_index = fields_to_read(n)%field_index
+       stream_varname = a2l_fields%get_fieldname(field_index)
+       write(6,*)'DEBUG: stream_varname = ',trim(stream_varname)
+       call dshr_fldbun_getFldPtr(sdat%pstrm(1)%fldbun_model, trim(stream_varname), fldptr1=dataptr1d, rc=rc)
+
+       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
+          call ESMF_Finalize(endflag=ESMF_END_ABORT)
+       end if
+       call lilac_atm2lnd(field_index, dataptr1d)
     end do
 
   end subroutine lilac_atmaero_interp
-
-  !==============================================================================
-
-  subroutine set_field(fieldnum)
-
-    ! input/output data
-    integer, intent(in) :: fieldnum  ! index into fields_to_read and sdat (which are assumed to have the same ordering)
-
-    ! local data
-    integer :: field_index ! index in a2l_fields
-    !-----------------------------------------------------------------------
-
-    field_index = fields_to_read(fieldnum)%field_index
-    call lilac_atm2lnd(field_index, sdat%avs(1)%rAttr(fieldnum,:))
-
-  end subroutine set_field
 
 end module lilac_atmaero

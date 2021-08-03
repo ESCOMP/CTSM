@@ -5,6 +5,8 @@ manage_externals.log
 /tools/PTCLM/
 /cime/
 /components/
+/libraries/
+/share/
 /doc/doc-builder/
 
 # ignore svn directories

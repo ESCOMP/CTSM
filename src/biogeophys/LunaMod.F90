@@ -12,9 +12,8 @@ module LunaMod
   use clm_varcon            , only : rgas, tfrz,spval
   use abortutils            , only : endrun
   use clm_varctl            , only : iulog
-  use clm_varcon            , only : namep 
   use clm_varpar            , only : nlevcan
-  use decompMod             , only : bounds_type
+  use decompMod             , only : bounds_type, subgrid_level_patch
   use pftconMod             , only : pftcon
   use FrictionvelocityMod   , only : frictionvel_type 
   use atm2lndType           , only : atm2lnd_type
@@ -383,11 +382,11 @@ module LunaMod
          !Implemented the nitrogen allocation model
          if(tlai(p) > 0.0_r8 .and. lnc(p) > 0._r8)then   
                 RadTop = par240d_z(p,1)/rabsorb
-                PARTop = RadTop*4.6    !conversion from w/m2 to umol/m2/s. PAR is still in umol photons, not electrons. Also the par240d_z is only for radiation at visible range. Hence 4.6 not 2.3 multiplier. 
+                PARTop = RadTop*4.6_r8    !conversion from w/m2 to umol/m2/s. PAR is still in umol photons, not electrons. Also the par240d_z is only for radiation at visible range. Hence 4.6 not 2.3 multiplier. 
                 !-------------------------------------------------------------
                 !the nitrogen allocation model, may need to be feed from the parameter file in CLM
                 if (nint(c3psn(ft)) == 1)then
-                   if(gpp_day(p)>0.0 )then   !only optimize if there is growth and it is C3 plants
+                   if(gpp_day(p)>0.0_r8 )then   !only optimize if there is growth and it is C3 plants
                       !-------------------------------------------------------------
                       do z = 1, nrad(p)
                          if(tlai_z(p,z)>0.0_r8)then
@@ -457,7 +456,7 @@ module LunaMod
 
                          PNlc_z(p, z)= PNlcopt
 
-                         if(enzs_z(p,z)<1.0) then
+                         if(enzs_z(p,z)<1.0_r8) then
                             enzs_z(p,z) = enzs_z(p,z)* (1.0_r8 + max_daily_pchg)
                          endif
                          !nitrogen allocastion model-end  
@@ -469,7 +468,7 @@ module LunaMod
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:',FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(sourcefile, __LINE__))
+                             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
                          endif
                          if(vcmx25_z(p, z)>1000._r8 .or. vcmx25_z(p, z)<0._r8)then
                              write(iulog, *) 'Warning: Vc,mx25 become unrealistic (>1000 or negative) for patch=', &
@@ -483,7 +482,7 @@ module LunaMod
                                   p, 'z=', z, "pft=", ft
                              write(iulog, *) 'LUNA env:', FNCa,forc_pbot10(p), relh10, CO2a10, O2a10, PARi10, PARimx10, rb10v, &
                                   hourpd, tair10, tleafd10, tleafn10
-                             call endrun(msg=errmsg(sourcefile, __LINE__))
+                             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
                          endif
                          if(jmx25_z(p, z)>2000._r8 .or.  jmx25_z(p, z)<0._r8)then
                              write(iulog, *) 'Warning: Jmx25 become unrealistic (>2000, or negative) for patch=', &
@@ -602,7 +601,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
       if(t_veg_day(p).ne.spval) then    !check whether it is the first day            
              !---------------------------------------------------------
              !calculate the 10 day running mean radiations
-             if(ndaysteps(p)>0.0) then
+             if(ndaysteps(p)>0.0_r8) then
                  par24d_z_i=par24d_z(p,:)/(dtime * ndaysteps(p))
              else
                  par24d_z_i = 0._r8
@@ -616,7 +615,7 @@ subroutine Acc240_Climate_LUNA(bounds, fn, filterp, oair, cair, &
              endif
              !-------------------------------------------------------
              !calculate the 10 day running mean daytime temperature
-             if(ndaysteps(p)>0.0)then
+             if(ndaysteps(p)>0.0_r8)then
                 t_veg_dayi    =  t_veg_day(p)   / ndaysteps(p)
              else
                 t_veg_dayi    =  t_veg_night(p) / nnightsteps(p)
@@ -919,7 +918,7 @@ subroutine NitrogenAllocation(FNCa,forc_pbot10, relh10, CO2a10,O2a10, PARi10,PAR
   Nresp = PNrespold * FNCa                            !proportion of respirational nitrogen in functional nitrogen
   Ncb = PNcbold * FNCa                                !proportion of carboxylation nitrogen in functional nitrogen
   if (Nlc > FNCa * 0.5_r8) Nlc = 0.5_r8 * FNCa
-  chg_per_step = 0.02* FNCa
+  chg_per_step = 0.02_r8* FNCa
   PNlc = PNlcold
   PNlcoldi = PNlcold  - 0.001_r8
   PARi10c = max(PARLowLim, PARi10)

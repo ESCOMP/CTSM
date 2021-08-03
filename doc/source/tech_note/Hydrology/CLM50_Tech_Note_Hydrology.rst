@@ -1197,7 +1197,7 @@ The saturated thickness is
    \Delta z_{sat} = z_{bedrock} - z_{\nabla}, 
 
 where the water table :math:`z_{\nabla}` is determined by finding the 
-irst soil layer above the bedrock depth (section :numref:`Depth to Bedrock`) 
+first soil layer above the bedrock depth (section :numref:`Depth to Bedrock`) 
 in which the volumetric water content drops below a specified threshold. 
 The default threshold is set to 0.9.
 

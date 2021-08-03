@@ -39,9 +39,24 @@ default_res="10x15"
 #----------------------------------------------------------------------
 # SET SOME DEFAULTS -- if not set via env variables outside
 
-if [ -z "$CSMDATA" ]; then
-   CSMDATA=/glade/p/cesm/cseg/inputdata
-fi
+case $hostname in
+
+  ##cheyenne
+  cheyenne* | r* )
+  if [ -z "$CSMDATA" ]; then
+     CSMDATA=/glade/p/cesm/cseg/inputdata
+  fi
+  ;;
+
+  ##hobart/izumi/thorodin
+  hobart* | izumi* | thorodin* )
+  if [ -z "$CSMDATA" ]; then
+     CSMDATA=/fs/cgd/csm/inputdata
+  fi
+  ;;
+
+esac
+
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -269,22 +284,13 @@ fi
 
 if [ "$phys" = "clm4_5" ]; then
     grids=(                    \
-           "0.5x0.5_AVHRR"     \
-           "0.25x0.25_MODIS"   \
-           "0.5x0.5_MODIS"     \
-           "3x3min_LandScan2004" \
-           "3x3min_MODIS-wCsp" \
-           "3x3min_USGS"       \
+           "0.5x0.5_nomask"     \
+           "0.25x0.25_nomask"   \
+           "0.125x0.125_nomask"   \
+           "3x3min_nomask" \
            "5x5min_nomask"     \
-           "5x5min_IGBP-GSDP"  \
-           "5x5min_ISRIC-WISE" \
-           "5x5min_ORNL-Soil" \
            "10x10min_nomask"   \
-           "10x10min_IGBPmergeICESatGIS" \
-           "3x3min_GLOBE-Gardner" \
-           "3x3min_GLOBE-Gardner-mergeGIS" \
-           "0.9x1.25_GRDC" \
-           "360x720cru_cruncep" \
+           "0.9x1.25_nomask" \
            "1km-merge-10min_HYDRO1K-merge-nomask" \
           )
 
@@ -294,7 +300,13 @@ else
 fi
 
 # Set timestamp for names below 
-CDATE="c"`date +%y%m%d`
+# The flag `-d "-0 days"` can serve as a time saver as follows:
+# If the script aborted without creating all of the map_ files and
+# the user resubmits to create the remaining files on the next day,
+# the user could change -0 to -1 to prevent the script from
+# duplicating files already generated the day before.
+# 
+CDATE="c"`date -d "-0 days" +%y%m%d`
 
 # Set name of each output mapping file
 # First determine the name of the input scrip grid file  
@@ -351,13 +363,12 @@ case $hostname in
   if [ interactive = "YES" ]; then
      REGRID_PROC=1
   fi
-  esmfvers=8.0.0
-  intelvers=19.0.5
+  esmfvers=8.2.0.b06
+  intelvers=19.1.1
   module purge
   module load intel/$intelvers
-  module load esmf_libs
-  module load esmf_libs/$esmfvers
-  module load ncl
+# module load esmf_libs
+# module load esmf_libs/$esmfvers
   module load nco
 
   if [[ $REGRID_PROC > 1 ]]; then
@@ -366,7 +377,9 @@ case $hostname in
   else
      mpi=uni
   fi
-  module load esmf-${esmfvers}-ncdfio-${mpi}-O
+# module load esmf-${esmfvers}-ncdfio-${mpi}-O
+  module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/$intelvers
+  module load esmf-${esmfvers}-ncdfio-mpt-g
   if [ -z "$ESMFBIN_PATH" ]; then
      ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
@@ -393,7 +406,6 @@ case $hostname in
     echo "Error doing module load: intel/$intelvers"
     exit 1
   fi
-  module load ncl
   module load nco
   module load netcdf
   module load ncarcompilers
@@ -549,14 +561,6 @@ until ((nfile>${#INGRID[*]})); do
       runcmd "ncatted -a history,global,a,c,"$history"  ${OUTFILE[nfile]}"
       runcmd "ncatted -a hostname,global,a,c,$HOST   -h ${OUTFILE[nfile]}"
       runcmd "ncatted -a logname,global,a,c,$LOGNAME -h ${OUTFILE[nfile]}"
-
-      # check for duplicate mapping weights
-      newfile="rmdups_${OUTFILE[nfile]}"
-      runcmd "rm -f $newfile"
-      runcmd "env MAPFILE=${OUTFILE[nfile]} NEWMAPFILE=$newfile ncl $dir/rmdups.ncl"
-      if [ -f "$newfile" ]; then
-         runcmd "mv $newfile ${OUTFILE[nfile]}"
-      fi
    fi
 
    nfile=nfile+1

@@ -13,7 +13,7 @@ module SurfaceWaterMod
   use clm_varpar                  , only : nlevsno, nlevmaxurbgrnd
   use clm_time_manager            , only : get_step_size_real
   use column_varcon               , only : icol_roof, icol_road_imperv, icol_sunwall, icol_shadewall, icol_road_perv
-  use decompMod                   , only : bounds_type
+  use decompMod                   , only : bounds_type, subgrid_level_column
   use ColumnType                  , only : col
   use NumericsMod                 , only : truncate_small_values
   use InfiltrationExcessRunoffMod , only : infiltration_excess_runoff_type
@@ -121,6 +121,7 @@ contains
        associate(w => water_inst%bulk_and_tracers(i))
        call CalcTracerFromBulk( &
             ! Inputs
+            subgrid_level = subgrid_level_column, &
             lb            = begc, &
             num_pts       = num_soilc, &
             filter_pts    = filter_soilc, &
@@ -211,19 +212,19 @@ contains
        
        if (h2osfc(c) > min_h2osfc) then
           ! a cutoff is needed for numerical reasons...(nonconvergence after 5 iterations)
-          d=0.0
+          d=0.0_r8
 
           sigma=1.0e3 * micro_sigma(c) ! convert to mm
           do l=1,10
-             fd = 0.5*d*(1.0_r8+erf(d/(sigma*sqrt(2.0)))) &
-                  +sigma/sqrt(2.0*shr_const_pi)*exp(-d**2/(2.0*sigma**2)) &
+             fd = 0.5_r8*d*(1.0_r8+erf(d/(sigma*sqrt(2.0_r8)))) &
+                  +sigma/sqrt(2.0_r8*shr_const_pi)*exp(-d**2/(2.0_r8*sigma**2)) &
                   -h2osfc(c)
-             dfdd = 0.5*(1.0_r8+erf(d/(sigma*sqrt(2.0))))
+             dfdd = 0.5_r8*(1.0_r8+erf(d/(sigma*sqrt(2.0_r8))))
 
              d = d - fd/dfdd
           enddo
           !--  update the submerged areal fraction using the new d value
-          frac_h2osfc(c) = 0.5*(1.0_r8+erf(d/(sigma*sqrt(2.0))))
+          frac_h2osfc(c) = 0.5_r8*(1.0_r8+erf(d/(sigma*sqrt(2.0_r8))))
 
           qflx_too_small_h2osfc_to_soil(c) = 0._r8
 
@@ -453,7 +454,7 @@ contains
        ! limit runoff to value of storage above S(pc)
        if(h2osfc(c) > h2osfc_thresh(c) .and. h2osfcflag/=0) then
           ! spatially variable k_wet
-          k_wet=1.0e-4_r8 * sin((rpi/180.) * topo_slope(c))
+          k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
 
           qflx_h2osfc_surf(c)=min(qflx_h2osfc_surf(c),(h2osfc(c) - h2osfc_thresh(c))/dtime)

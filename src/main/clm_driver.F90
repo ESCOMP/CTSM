@@ -110,7 +110,7 @@ contains
     ! !USES:
     use clm_time_manager     , only : get_curr_date
     use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
-    use SatellitePhenologyMod, only : lai_advance
+    use laiStreamMod         , only : lai_advance
     use FATESFireFactoryMod  , only : scalar_lightning
     !
     ! !ARGUMENTS:
@@ -1165,6 +1165,7 @@ contains
                water_inst%waterdiagnosticbulk_inst, water_inst%waterfluxbulk_inst,                 &
                soilbiogeochem_carbonflux_inst,                          &
                soilbiogeochem_nitrogenflux_inst, ch4_inst, lnd2atm_inst, &
+               clm_fates, &
                agnpp = agnpp_patch(bounds_clump%begp:bounds_clump%endp), &
                bgnpp = bgnpp_patch(bounds_clump%begp:bounds_clump%endp), &
                annsum_npp = annsum_npp_patch(bounds_clump%begp:bounds_clump%endp), &

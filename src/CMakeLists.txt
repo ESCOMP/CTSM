@@ -16,10 +16,10 @@ add_definitions(-DHIDE_MPI)
 # done first, so that in case of name collisions, the CLM versions take
 # precedence (when there are two files with the same name, the one added later
 # wins).
-add_subdirectory(${CIMEROOT}/src/share/util csm_share)
-add_subdirectory(${CIMEROOT}/src/share/unit_test_stubs/util csm_share_stubs)
-add_subdirectory(${CIMEROOT}/src/share/esmf_wrf_timemgr esmf_wrf_timemgr)
-add_subdirectory(${CIMEROOT}/src/drivers/mct/shr drv_share)
+add_subdirectory(${CLM_ROOT}/share/src csm_share)
+add_subdirectory(${CLM_ROOT}/share/unit_test_stubs/util csm_share_stubs)
+add_subdirectory(${CLM_ROOT}/share/src/esmf_wrf_timemgr esmf_wrf_timemgr)
+add_subdirectory(${CLM_ROOT}/components/cpl7/driver/shr drv_share)
 
 # Extract just the files we need from drv_share
 set (drv_sources_needed_base
@@ -83,12 +83,11 @@ add_dependencies(esmf_wrf_timemgr csm_share)
 add_dependencies(clm csm_share esmf_wrf_timemgr)
 
 # We need to look for header files here, in order to pick up shr_assert.h
-include_directories(${CIMEROOT}/src/share/include)
+include_directories(${CLM_ROOT}/share/include)
 
 # And we need to look for header files here, for some include files needed by
 # the esmf_wrf_timemgr code
-include_directories(${CIMEROOT}/src/share/esmf_wrf_timemgr)
-
+include_directories(${CLM_ROOT}/share/src/esmf_wrf_timemgr)
 # Tell cmake to look for libraries & mod files here, because this is where we built libraries
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 link_directories(${CMAKE_CURRENT_BINARY_DIR})
