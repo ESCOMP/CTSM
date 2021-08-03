@@ -491,7 +491,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- FATES default parameter file                                       -->
 <!-- ================================================================== -->
 
-<fates_paramfile>lnd/clm2/paramdata/fates_params_api.15.1.0_12pft_c210505.nc  </fates_paramfile>
+<fates_paramfile>lnd/clm2/paramdata/fates_params_api.16.1.0_12pft_c210630.nc  </fates_paramfile>
 
 <!-- ========================================================================================  -->
 <!-- clm 5.0 BGC nitrogen model                                                                -->
@@ -561,9 +561,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- CN Phenology -->
 <onset_thresh_depends_on_veg     use_cn=".true." phys="clm5_1" >.true.</onset_thresh_depends_on_veg>
-<min_crtical_dayl_depends_on_lat use_cn=".true." phys="clm5_1" >.true.</min_crtical_dayl_depends_on_lat>
+<min_crtical_dayl_method         use_cn=".true." phys="clm5_1" >DependsOnLat</min_crtical_dayl_method>
 <onset_thresh_depends_on_veg                                   >.false.</onset_thresh_depends_on_veg>
-<min_crtical_dayl_depends_on_lat                               >.false.</min_crtical_dayl_depends_on_lat>
+<min_crtical_dayl_method                                       >Constant</min_crtical_dayl_method>
 
 <!-- turnover time modifications    -->
 <decomp_depth_efolding phys="clm4_5" >0.5</decomp_depth_efolding>
@@ -1468,6 +1468,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_ndep phys="clm5_0"  hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 <stream_fldfilename_ndep phys="clm4_5"  hgrid="0.9x1.25" use_cn=".true." ssp_rcp="hist" >lnd/clm2/ndepdata/fndep_clm_hist_b.e21.BWHIST.f09_g17.CMIP6-historical-WACCM.ensmean_1849-2015_monthly_0.9x1.25_c180926.nc</stream_fldfilename_ndep>
 
+<stream_meshfile_ndep hgrid="1.9x2.5">share/meshes/fv1.9x2.5_141008_ESMFmesh_c20191001.nc</stream_meshfile_ndep>
+<stream_meshfile_ndep hgrid="0.9x1.25">share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc</stream_meshfile_ndep>
+
 <!-- Only the CMIP6 Tier I Nitogen deposition files are available -->
 <stream_fldfilename_ndep phys="clm5_1"  hgrid="0.9x1.25"   use_cn=".true."   ssp_rcp="SSP5-8.5"
 >lnd/clm2/ndepdata/fndep_clm_f09_g17.CMIP6-SSP5-8.5-WACCM_1849-2101_monthly_c191007.nc</stream_fldfilename_ndep>
@@ -1533,6 +1536,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <model_year_align_lai   >2001</model_year_align_lai>
 
 <stream_fldfilename_lai hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0.5_c140711.nc</stream_fldfilename_lai>
+<stream_meshfile_lai    hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0_ESMFmesh_cdf5_090621.nc</stream_meshfile_lai>
 
 <lai_mapalgo>bilinear</lai_mapalgo>
 
@@ -1567,7 +1571,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_year_last_lightng  >0001</stream_year_last_lightng>
 
 <stream_fldfilename_lightng hgrid="94x192"    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62.lnfm_Total_c140423.nc</stream_fldfilename_lightng>
+<stream_meshfile_lightng    hgrid="94x192"    >atm/datm7/NASA_LIS/clmforc.Li_2012_climo1995-2011.T62_ESMFmesh_cdf5_110621.nc</stream_meshfile_lightng>
 <stream_fldfilename_lightng hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720.lnfm_Total_c160825.nc</stream_fldfilename_lightng>
+<stream_meshfile_lightng    hgrid="360x720"   >atm/datm7/NASA_LIS/clmforc.Li_2016_climo1995-2013.360x720_ESMFmesh_cdf5_150621.nc</stream_meshfile_lightng>
 
 <lightngmapalgo >bilinear</lightngmapalgo>
 
@@ -1663,6 +1669,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <stream_fldfilename_popdens hgrid="0.5x0.5"   use_fates=".true." ssp_rcp="SSP5-3.4" >lnd/clm2/firedata/clmforc.Li_2018_SSP5_CMIP6_hdm_0.5x0.5_AVHRR_simyr1850-2100_c181205.nc
 </stream_fldfilename_popdens>
 
+<stream_meshfile_popdens    hgrid="0.5x0.5">lnd/clm2/firedata/clmforc.Li_2017_HYDEv3.2_CMIP6_hdm_0.5x0_ESMFmesh_cdf5_100621.nc</stream_meshfile_popdens>
+
 <popdensmapalgo use_cn=".true."                               >bilinear</popdensmapalgo>
 
 <popdensmapalgo use_cn=".true."   hgrid="1x1_brazil"          >nn</popdensmapalgo>
@@ -1714,12 +1722,18 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <stream_fldfilename_urbantv phys="clm5_1"  hgrid="0.9x1.25" 
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
+<stream_meshfile_urbantv    phys="clm5_1"  hgrid="0.9x1.25"
+>lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</stream_meshfile_urbantv>
 
 <stream_fldfilename_urbantv phys="clm5_0" hgrid="0.9x1.25" 
 >lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
+<stream_meshfile_urbantv    phys="clm5_0"  hgrid="0.9x1.25"
+>lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</stream_meshfile_urbantv>
 
 <stream_fldfilename_urbantv phys="clm4_5" hgrid="0.9x1.25" 
 >lnd/clm2/urbandata/CLM45_tbuildmax_Oleson_2016_0.9x1.25_simyr1849-2106_c160923.nc</stream_fldfilename_urbantv>
+<stream_meshfile_urbantv    phys="clm4_5"  hgrid="0.9x1.25"
+>lnd/clm2/urbandata/CLM50_tbuildmax_Oleson_2016_0.9x1_ESMFmesh_cdf5_100621.nc</stream_meshfile_urbantv>
 
 <urbantvmapalgo >nn</urbantvmapalgo>
 
@@ -2517,6 +2531,11 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
 <stream_fldfilename_ch4finundated finundation_method="ZWT_inversion" hgrid="0.9x1.25"
 >lnd/clm2/paramdata/finundated_inversiondata_0.9x1.25_c170706.nc</stream_fldfilename_ch4finundated>
+
+<stream_meshfile_ch4finundated finundation_method="TWS_inversion"
+>lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
+<stream_meshfile_ch4finundated finundation_method="ZWT_inversion"
+>lnd/clm2/paramdata/finundated_inversiondata_0.9x1_ESMFmesh_cdf5_130621.nc</stream_meshfile_ch4finundated>
 
 <!-- =========================================  -->
 <!-- Defaults for different BGC modes           -->

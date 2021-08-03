@@ -48,10 +48,10 @@ module CNPhenologyMod
   public :: CNPhenology          ! Update
 
   ! !PUBLIC for unit testing
-  public :: CNPhenologySetNML    ! Set the namelist setttings explicitly for unit tests
-  public :: CNPhenologySetParams ! Set the parameters explicitly for unit tests
-  public :: SeasonalDecidOnset   ! Logical function to determine is seasonal decidious onset should be triggered
-  public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious onset
+  public :: CNPhenologySetNML         ! Set the namelist setttings explicitly for unit tests
+  public :: CNPhenologySetParams      ! Set the parameters explicitly for unit tests
+  public :: SeasonalDecidOnset        ! Logical function to determine is seasonal decidious onset should be triggered
+  public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious offset
 
   ! !PRIVITE MEMBER FIUNCTIONS:
   private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
@@ -70,18 +70,20 @@ module CNPhenologyMod
   !
   ! !PRIVATE DATA MEMBERS:
   type, private :: params_type
-     real(r8) :: crit_dayl       ! critical day length for senescence
-     real(r8) :: ndays_on     	 ! number of days to complete leaf onset
-     real(r8) :: ndays_off	 ! number of days to complete leaf offset
-     real(r8) :: fstor2tran      ! fraction of storage to move to transfer for each onset
-     real(r8) :: crit_onset_fdd  ! critical number of freezing days to set gdd counter
-     real(r8) :: crit_onset_swi  ! critical number of days > soilpsi_on for onset
-     real(r8) :: soilpsi_on      ! critical soil water potential for leaf onset
-     real(r8) :: crit_offset_fdd ! critical number of freezing days to initiate offset
-     real(r8) :: crit_offset_swi ! critical number of water stress days to initiate offset
-     real(r8) :: soilpsi_off     ! critical soil water potential for leaf offset
-     real(r8) :: lwtop   	 ! live wood turnover proportion (annual fraction)
-     real(r8) :: phenology_soil_depth ! soil depth used for measuring states for phenology triggers
+     real(r8) :: crit_dayl             ! critical day length for senescence (sec)
+     real(r8) :: crit_dayl_at_high_lat ! critical day length for senescence at high latitudes (sec) (in Eitel 2019 this was 54000)
+     real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg) (Birch et. all 2021 it was 720)
+     real(r8) :: ndays_on              ! number of days to complete leaf onset
+     real(r8) :: ndays_off             ! number of days to complete leaf offset
+     real(r8) :: fstor2tran            ! fraction of storage to move to transfer for each onset
+     real(r8) :: crit_onset_fdd        ! critical number of freezing days to set gdd counter
+     real(r8) :: crit_onset_swi        ! critical number of days > soilpsi_on for onset
+     real(r8) :: soilpsi_on            ! critical soil water potential for leaf onset
+     real(r8) :: crit_offset_fdd       ! critical number of freezing days to initiate offset
+     real(r8) :: crit_offset_swi       ! critical number of water stress days to initiate offset
+     real(r8) :: soilpsi_off           ! critical soil water potential for leaf offset
+     real(r8) :: lwtop                 ! live wood turnover proportion (annual fraction)
+     real(r8) :: phenology_soil_depth  ! soil depth used for measuring states for phenology triggers
   end type params_type
 
   type(params_type) :: params_inst
@@ -117,11 +119,15 @@ module CNPhenologyMod
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
+
+  ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
-  integer,  public, parameter :: critical_daylight_constant       = 1
-  integer,  public, parameter :: critical_daylight_depends_on_lat = critical_daylight_constant + 1
-  integer,  public, parameter :: critical_daylight_depends_on_veg = critical_daylight_depends_on_lat + 1
+  integer,  public, parameter :: critical_daylight_constant           = 1
+  integer,  public, parameter :: critical_daylight_depends_on_lat     = critical_daylight_constant + 1
+  integer,  public, parameter :: critical_daylight_depends_on_veg     = critical_daylight_depends_on_lat + 1
+  integer,  public, parameter :: critical_daylight_depends_on_latnveg = critical_daylight_depends_on_veg + 1
   integer,  private :: critical_daylight_method = critical_daylight_constant
+  real(r8), parameter :: critical_offset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -149,12 +155,12 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    logical  :: min_crtical_dayl_depends_on_lat = .false. ! If critical day-length for onset depends on latitude
+    character(len=25) :: min_crtical_dayl_method   ! Method to determine critical day length for onset
     character(len=*), parameter :: subname = 'CNPhenologyReadNML'
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
-                           min_crtical_dayl_depends_on_lat
+                           min_crtical_dayl_method
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -175,14 +181,20 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (initial_seed_at_planting,        mpicom)
-    call shr_mpi_bcast (onset_thresh_depends_on_veg,     mpicom)
-    call shr_mpi_bcast (min_crtical_dayl_depends_on_lat, mpicom)
+    call shr_mpi_bcast (initial_seed_at_planting,    mpicom)
+    call shr_mpi_bcast (onset_thresh_depends_on_veg, mpicom)
+    call shr_mpi_bcast (min_crtical_dayl_method,     mpicom)
 
-    if ( min_crtical_dayl_depends_on_lat )then
+    if (      min_crtical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
-    else
+    else if ( min_crtical_dayl_method == "DependsOnVeg"       )then
+       critical_daylight_method = critical_daylight_depends_on_veg
+    else if ( min_crtical_dayl_method == "DependsOnLatAndVeg" )then
+       critical_daylight_method = critical_daylight_depends_on_latnveg
+    else if ( min_crtical_dayl_method == "Constant"           )then
        critical_daylight_method = critical_daylight_constant
+    else
+       call endrun(msg="ERROR min_crtical_dayl_method is NOT set to a valid value"//errmsg(sourcefile, __LINE__))
     end if
 
     if (masterproc) then
@@ -197,6 +209,7 @@ contains
     
   end subroutine CNPhenologyReadNML
 
+  !-----------------------------------------------------------------------
   subroutine CNPhenologySetNML( input_onset_thresh_depends_on_veg, input_critical_daylight_method )
     !
     ! !DESCRIPTION:
@@ -208,7 +221,7 @@ contains
     onset_thresh_depends_on_veg = input_onset_thresh_depends_on_veg
     critical_daylight_method = input_critical_daylight_method
     if ( (critical_daylight_method < critical_daylight_constant) .or. &
-         (critical_daylight_method > critical_daylight_depends_on_veg) )then
+         (critical_daylight_method > critical_daylight_depends_on_latnveg) )then
        call endrun(msg="ERROR critical_daylight_method "//errmsg(sourcefile, __LINE__))
     end if
   end subroutine CNPhenologySetNML
@@ -219,18 +232,20 @@ contains
     ! !DESCRIPTION:
     ! Set the parameters for unit-testing
     !
-    params_inst%crit_dayl        = 39200._r8
-    params_inst%ndays_on         = 15._r8
-    params_inst%ndays_off        = 30._r8
-    params_inst%fstor2tran       = 0.5
-    params_inst%crit_onset_fdd   = 15._r8
-    params_inst%crit_onset_swi   = 15._r8
-    params_inst%soilpsi_on       = -0.6_r8
-    params_inst%crit_offset_fdd  = 15._r8
-    params_inst%crit_offset_swi  = 15._r8
-    params_inst%soilpsi_off      = -0.8
-    params_inst%lwtop            = 0.7_r8
-    params_inst%phenology_soil_depth = 0.08_r8
+    params_inst%crit_dayl             = 39200._r8
+    params_inst%crit_dayl_at_high_lat = 54000._r8
+    params_inst%crit_dayl_lat_slope   = 720._r8
+    params_inst%ndays_on              = 15._r8
+    params_inst%ndays_off             = 30._r8
+    params_inst%fstor2tran            = 0.5
+    params_inst%crit_onset_fdd        = 15._r8
+    params_inst%crit_onset_swi        = 15._r8
+    params_inst%soilpsi_on            = -0.6_r8
+    params_inst%crit_offset_fdd       = 15._r8
+    params_inst%crit_offset_swi       = 15._r8
+    params_inst%soilpsi_off           = -0.8
+    params_inst%lwtop                 = 0.7_r8
+    params_inst%phenology_soil_depth  = 0.08_r8
   end subroutine CNPhenologySetParams
   
   !-----------------------------------------------------------------------
@@ -251,6 +266,8 @@ contains
     !-----------------------------------------------------------------------
 
     call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
+    call readNcdioScalar(ncid, 'crit_dayl_at_high_lat', subname, params_inst%crit_dayl_at_high_lat)
+    call readNcdioScalar(ncid, 'crit_dayl_lat_slope', subname, params_inst%crit_dayl_lat_slope)
     call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
     call readNcdioScalar(ncid, 'ndays_off', subname, params_inst%ndays_off)
     call readNcdioScalar(ncid, 'fstor2tran', subname, params_inst%fstor2tran)
@@ -262,6 +279,7 @@ contains
     call readNcdioScalar(ncid, 'soilpsi_off', subname, params_inst%soilpsi_off)
     call readNcdioScalar(ncid, 'lwtop_ann', subname, params_inst%lwtop)
     call readNcdioScalar(ncid, 'phenology_soil_depth', subname, params_inst%phenology_soil_depth)
+    
 
   end subroutine readParams
 
@@ -438,6 +456,31 @@ contains
     ! -----------------------------------------
 
     if ( use_crop ) call CropPhenologyInit(bounds)
+
+    ! Error checking for parameters
+    if ( (critical_daylight_method == critical_daylight_depends_on_lat) .or. &
+         (critical_daylight_method == critical_daylight_depends_on_veg) .or.  &
+         (critical_daylight_method == critical_daylight_depends_on_latnveg) )then
+        if ( params_inst%crit_dayl_at_high_lat < params_inst%crit_dayl )then
+            call endrun(msg="ERROR crit_dayl_at_high_lat should be higher than crit_dayl on paramsfile"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl_at_high_lat >= secspday )then
+            call endrun(msg="ERROR crit_dayl_at_high_lat can NOT be higher than seconds in a day"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl >= secspday )then
+            call endrun(msg="ERROR crit_dayl can NOT be higher than seconds in a day"//errmsg(sourcefile, __LINE__))
+        end if
+    end if
+    if ( (critical_daylight_method == critical_daylight_depends_on_lat) .or. &
+         (critical_daylight_method == critical_daylight_depends_on_latnveg) )then
+        if ( params_inst%crit_dayl_lat_slope <= 0.0_r8 )then
+            call endrun(msg="ERROR crit_dayl_lat_slope can not be negative or zero"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl_lat_slope >= (secspday - params_inst%crit_dayl_at_high_lat)/ &
+                                                 (90._r8 - critical_offset_high_lat) )then
+            call endrun(msg="ERROR crit_dayl_lat_slope can not higher than allowing a day at the poles"//errmsg(sourcefile, __LINE__))
+        end if
+    end if
 
   end subroutine CNPhenologyInit
 
@@ -991,86 +1034,118 @@ contains
  
   end subroutine CNSeasonDecidPhenology
 
-   function SeasonalCriticalDaylength( g, p ) result( crit_daylat )
-     integer, intent(IN) :: g ! Gridcell index
-     integer, intent(IN) :: p ! Patch index
-     real(r8) :: crit_daylat
-    ! arameters for critical day length, higher for high latitudes and shorter
-    ! for temperature regions
-    ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
-    ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
-    real(r8), parameter :: critical_onset_time_at_high_lat = 54000._r8  ! critical onset at high latitudes (min)
-    real(r8), parameter :: critical_onset_lat_slope        = 720._r8    ! Slope of time for critical onset with latitude (min/deg)
-    real(r8), parameter :: critical_onset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
+  !-----------------------------------------------------------------------
+  function SeasonalCriticalDaylength( g, p ) result( crit_daylat )
+    !
+    ! !DESCRIPTION:
+    ! Function to determine the critical day length needed for seasonal
+    ! decidious leaf offset. When depends on latitude it's higher for
+    ! high latitudes and lower for temperate regions.
+    !
+    ! !ARGUMENTS:
+    integer, intent(IN) :: g ! Gridcell index
+    integer, intent(IN) :: p ! Patch index
+    real(r8) :: crit_daylat  ! Return value
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
 
-     select case( critical_daylight_method )
-     case(critical_daylight_depends_on_veg)
+    select case( critical_daylight_method )
+    ! Critical day length depends on both vegetation type and latitude
+    case(critical_daylight_depends_on_latnveg)
+        ! Critical day length for offset is fixed for temperate type vegetation
+        if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
+           crit_daylat = crit_dayl
+        ! For Arctic vegetation -- critical daylength is higher at high latitudes and shorter
+        ! at midlatitudes
+        else
+           crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* \
+                       (critical_offset_high_lat-abs(grc%latdeg(g)))
+           if (crit_daylat < crit_dayl) then
+              crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
+           end if
+        end if
+    ! Critical day length depends just on vegetation type
+    case(critical_daylight_depends_on_veg)
         if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
            crit_daylat = crit_dayl
         else
-           crit_daylat=critical_onset_time_at_high_lat
+           crit_daylat=params_inst%crit_dayl_at_high_lat
         end if
-     case(critical_daylight_depends_on_lat)
+    ! Critical day length depends on latitude
+    case(critical_daylight_depends_on_lat)
         ! Critical daylength is higher at high latitudes and shorter
         ! for temperatre regions
-        crit_daylat=critical_onset_time_at_high_lat-critical_onset_lat_slope* \
-                    (critical_onset_high_lat-abs(grc%latdeg(g)))
+        crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* \
+                    (critical_offset_high_lat-abs(grc%latdeg(g)))
         if (crit_daylat < crit_dayl) then
            crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
         end if
-     case(critical_daylight_constant)
+    ! Critical day length is constant
+    case(critical_daylight_constant)
         crit_daylat = crit_dayl
-     case default
+    case default
         call endrun(msg="ERROR SeasonalCriticalDaylength crtical_daylight_method not implemented "//errmsg(sourcefile, __LINE__))
-     end select
+    end select
 
-   end function SeasonalCriticalDaylength
+  end function SeasonalCriticalDaylength
 
-  logical function SeasonalDecidOnset( onset_gdd, onset_gddflag, soilt, soila10, t_a5min, dayl, &
-                                          snow_5day, ws_flag, crit_onset_gdd, season_decid_temperate )
+  !-----------------------------------------------------------------------
+  function SeasonalDecidOnset( onset_gdd, onset_gddflag, soilt, soila10, t_a5min, dayl, &
+                               snow_5day, ws_flag, crit_onset_gdd, season_decid_temperate ) &
+                       result( do_onset )
 
+    !
+    ! !DESCRIPTION:
+    ! Function to determine if seasonal decicious leaf onset should happen.
+    !
+    ! !USES:
     use shr_const_mod   , only: SHR_CONST_TKFRZ
-    real(r8), intent(INOUT) :: onset_gdd
-    real(r8), intent(INOUT) :: onset_gddflag
+    ! !ARGUMENTS:
+    real(r8), intent(INOUT) :: onset_gdd      ! onset growing degree days 
+    real(r8), intent(INOUT) :: onset_gddflag  ! Onset freeze flag
     real(r8), intent(IN)    :: soilt          ! Soil temperture at specific level for this evaluation
-    real(r8), intent(IN)    :: soila10
-    real(r8), intent(IN)    :: t_a5min
-    real(r8), intent(IN)    :: dayl
-    real(r8), intent(IN)    :: snow_5day
-    real(r8), intent(IN)    :: ws_flag        !winter-summer solstice flag (0 or 1)
-    real(r8), intent(IN)    :: crit_onset_gdd !critical onset growing degree-day sum
-    real(r8), intent(IN)    :: season_decid_temperate
+    real(r8), intent(IN)    :: soila10        ! 10-day running mean of the 12cm soil layer temperature (K)
+    real(r8), intent(IN)    :: t_a5min        ! 5-day running mean of min 2-m temperature
+    real(r8), intent(IN)    :: dayl           ! Day length
+    real(r8), intent(IN)    :: snow_5day      ! 5-day average of snow
+    real(r8), intent(IN)    :: ws_flag        ! winter-summer solstice flag (0 or 1)
+    real(r8), intent(IN)    :: crit_onset_gdd ! critical onset growing degree-day sum
+    real(r8), intent(IN)    :: season_decid_temperate  ! If this is a temperate seasonal decidious type 
+    logical :: do_onset                       ! Flag if onset should happen (return value)
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8          ! 5-day snow depth threshold for onset
+    real(r8), parameter :: min_critial_daylength_onset    = 39300._r8/2._r8 !  Minimum daylength for onset to happen
+    !-----------------------------------------------------------------------
 
-    logical :: do_onset       ! Flag if onset should happen
-    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8 ! 5-day snow depth threshold for onset
+    do_onset = .false.
+    ! Test to turn on growing degree-day sum, if off.
+    ! switch on the growing degree day sum on the winter solstice
 
-     do_onset = .false.
-     ! Test to turn on growing degree-day sum, if off.
-     ! switch on the growing degree day sum on the winter solstice
-
-     if (onset_gddflag == 0._r8 .and. ws_flag == 1._r8) then
+    if (onset_gddflag == 0._r8 .and. ws_flag == 1._r8) then
         onset_gddflag = 1._r8
         onset_gdd = 0._r8
-     end if
+    end if
 
-     ! Test to turn off growing degree-day sum, if on.
-     ! This test resets the growing degree day sum if it gets past
-     ! the summer solstice without reaching the threshold value.
-     ! In that case, it will take until the next winter solstice
-     ! before the growing degree-day summation starts again.
+    ! Test to turn off growing degree-day sum, if on.
+    ! This test resets the growing degree day sum if it gets past
+    ! the summer solstice without reaching the threshold value.
+    ! In that case, it will take until the next winter solstice
+    ! before the growing degree-day summation starts again.
 
-     if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8) then
+    if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8) then
         onset_gddflag = 0._r8
         onset_gdd = 0._r8
-     end if
+    end if
 
-     ! if the gdd flag is set, and if the soil is above freezing
-     ! then accumulate growing degree days for onset trigger
+    ! if the gdd flag is set, and if the soil is above freezing
+    ! then accumulate growing degree days for onset trigger
 
-     if (onset_gddflag == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
+    if (onset_gddflag == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
         onset_gdd = onset_gdd + (soilt-SHR_CONST_TKFRZ)*fracday
-     end if
-     if ( onset_thresh_depends_on_veg) then
+    end if
+    if ( onset_thresh_depends_on_veg) then
        ! separate into non-arctic seasonally deciduous pfts
        ! (temperate broadleaf deciduous
        ! tree) and arctic/boreal seasonally deciduous pfts (boreal
@@ -1079,20 +1154,24 @@ contains
        ! shrub, C3 arctic grass)
        if (onset_gdd > crit_onset_gdd .and.  season_decid_temperate == 1) then
            do_onset = .true.
-        ! Note: The divide by 2 of crit_dayl is just to make sure
-        ! onset doesn't happen with less than 6 hours of daylight
+        ! Note: The min_critial_daylength_onset is because for some coastal
+        ! points the other triggers could allow onset in January/February
+        ! which isn't sustainable and is a degenerate case. To prevent this
+        ! condition was added, but now the other conditions aren't triggered
+        ! until much later so it's value just needs to be high enough to prevent
+        ! the degenerate case of happening too early, and low enough that it
+        ! doesn't restrict onset. As such the value of this parameter shouldn't
+        ! matter for reasonable values between the two degnerate cases.
         else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
                 soila10 > SHR_CONST_TKFRZ .and. &
                 t_a5min > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
-                dayl>(crit_dayl/2.0_r8) .and.  snow_5day<snow5d_thresh_for_onset) then
+                dayl>min_critial_daylength_onset .and.  snow_5day<snow5d_thresh_for_onset) then
            do_onset = .true.
         end if
-     else
+    else
        ! set onset_flag if critical growing degree-day sum is exceeded
        if (onset_gdd > crit_onset_gdd) do_onset = .true.
-     end if
-
-     SeasonalDecidOnset = do_onset
+    end if
 
   end function SeasonalDecidOnset
 
