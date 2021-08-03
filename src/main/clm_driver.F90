@@ -856,6 +856,8 @@ contains
 
        call t_startf('hydro_without_drainage')
 
+       write(iulog,*)  'clm_drv: pre-HydrNoDrain: sum tlai_patch', sum(canopystate_inst%tlai_patch)
+
        call HydrologyNoDrainage(bounds_clump,                                &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                      &
             filter(nc)%num_hydrologyc, filter(nc)%hydrologyc,                &
@@ -1061,6 +1063,8 @@ contains
        
        if ( use_fates) then
 
+            write(iulog,*)  'clm_drv: pre-EDBGCdynamics: sum tlai_patch', sum(canopystate_inst%tlai_patch)
+
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
                filter(nc)%num_soilp, filter(nc)%soilp,                                             &
@@ -1075,6 +1079,8 @@ contains
                active_layer_inst, atm2lnd_inst, water_inst%waterfluxbulk_inst,                     &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
 
+            write(iulog,*)  'clm_drv: pre-EDBGCSummary: sum tlai_patch', sum(canopystate_inst%tlai_patch)
+
           call EDBGCDynSummary(bounds_clump,                                             &
                 filter(nc)%num_soilc, filter(nc)%soilc,                                  &
                 filter(nc)%num_soilp, filter(nc)%soilp,                                  &
@@ -1083,6 +1089,8 @@ contains
                 c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                 clm_fates, nc)
+
+            write(iulog,*)  'clm_drv: pre-wrapupdatehifrq: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
@@ -1099,7 +1107,7 @@ contains
                 write(iulog,*)  'clm: calling FATES model ', get_nstep()
              end if
 
-            write(iulog,*)  'clm_drv: pre-dynamics: tlai_patch', canopystate_inst%tlai_patch
+            write(iulog,*)  'clm_drv: pre-dynamics: sum tlai_patch', sum(canopystate_inst%tlai_patch)
              
              call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                   atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
@@ -1107,7 +1115,7 @@ contains
                   water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
                   frictionvel_inst)
 
-             write(iulog,*)  'clm_drv: post-dynamics: tlai_patch', canopystate_inst%tlai_patch
+             write(iulog,*)  'clm_drv: post-dynamics: sum tlai_patch', sum(canopystate_inst%tlai_patch)
              
              ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
              ! call to reweight_wrapup, if it's needed at all.
@@ -1397,7 +1405,7 @@ contains
        ! Create history and write history tapes if appropriate
        call t_startf('clm_drv_io_htapes')
 
-       write(iulog,*)  'clm_drv: pre-hist_htapes_wrapup: tlai_patch', canopystate_inst%tlai_patch
+       write(iulog,*)  'clm_drv: pre-hist_htapes_wrapup: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        write(iulog,*) 'clm_drv: calling hist_htapes_wrapup'
        call hist_htapes_wrapup( rstwr, nlend, bounds_proc,                    &

@@ -634,7 +634,7 @@ module CLMFatesInterfaceMod
             this%fates(nc)%sites(s)%lat = grc%latdeg(g)
             this%fates(nc)%sites(s)%lon = grc%londeg(g)
 
-            !this%fates(nc)%bc_in(s)%pft_areafrac(:)=0._r8
+            this%fates(nc)%bc_in(s)%pft_areafrac(:)=0._r8
             ! initialize static layers for reduced complexity FATES versions from HLM
             ! maybe make this into a subroutine of it's own later.
             do m = natpft_lb,natpft_ub
