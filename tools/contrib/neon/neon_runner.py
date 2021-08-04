@@ -67,7 +67,7 @@ import re
 import subprocess
 import pandas as pd
 import glob 
-from datetime import date
+from datetime import datetime
 from getpass import getuser
  
 # Get the ctsm util tools and then the cime tools.
@@ -357,6 +357,13 @@ class NeonSite :
             case_path = case.get_value("CASEROOT")
         return case_path
 
+    def diff_month(self):
+        d1 = datetime(self.end_year,self.end_month, 1)
+        d2 = datetime(self.start_year, self.start_month, 1)
+        return (d1.year - d2.year) * 12 + d1.month - d2.month
+    
+
+    
     def run_case(self, base_case_root, run_type, run_length, overwrite=False):
         user_mods_dirs = [os.path.join(self.cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
         expect(os.path.isdir(base_case_root), "Error base case does not exist in {}".format(base_case_root))
@@ -392,6 +399,8 @@ class NeonSite :
                 
             if run_type == "transient":
                 self.set_ref_case(case)
+                case.set_value("STOP_OPTION","nmonths")
+                case.set_value("STOP_N", self.diff_month())
                 case.set_value("REST_N", "12")
                 case.set_value("DATM_YR_ALIGN",self.start_year)
                 case.set_value("DATM_YR_START",self.start_year)
@@ -420,15 +429,16 @@ class NeonSite :
         case_root = case.get_value("CASEROOT")
         if case_root.endswith(".postad"):
             ref_case_root = case_root.replace(".postad",".ad")
+            root = ".ad"
         else:
             ref_case_root = case_root.replace(".transient",".postad")
-            
+            root = ".postad"
         expect(os.path.isdir(ref_case_root), "ERROR: spinup must be completed first, could not find directory {}".format(ref_case_root))
         with Case(ref_case_root) as refcase:
             refrundir = refcase.get_value("RUNDIR")
         case.set_value("RUN_REFDIR", refrundir)
         case.set_value("RUN_REFCASE", os.path.basename(ref_case_root))
-        for reffile in glob.iglob(refrundir + "/{}.*.nc".format(self.name)):
+        for reffile in glob.iglob(refrundir + "/{}{}.*.nc".format(self.name, root)):
             m = re.search("(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
             if m:
                 refdate = m.group(1)
