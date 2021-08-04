@@ -226,7 +226,7 @@ contains
     use clm_time_manager   , only : get_step_size_real, get_prev_date,is_end_curr_day, is_near_local_noon
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, c_to_b
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
-    use clm_varcon         , only : c14ratio
+    use clm_varcon         , only : c14ratio, spval
     use clm_varcon         , only : c_water, c_dry_biomass, c_to_b
     use perf_mod           , only : t_startf, t_stopf
     use QSatMod            , only : QSat
