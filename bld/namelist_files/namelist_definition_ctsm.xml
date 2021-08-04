@@ -994,29 +994,22 @@ Turn the Fixation and Uptate of Nitrogen model version 2 (FUN2.0)
 Requires the CN model to work (either CN or CNDV).
 </entry>
 
-<entry id="use_nitrif_denitrif" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Nitrification/denitrification splits the prognostic mineral N pool into two 
-   mineral N pools: NO3 and NH4, and includes the transformations between them.
-Requires the CN model to work (either CN or CNDV).
-</entry>
-
 <entry id="denitrif_respiration_coefficient" type="real" category="bgc"
        group="nitrif_inparm" valid_values="" >
 Multiplier for heterotrophic respiration for max denitrification rates
-(ONLY used if use_nitrif_denitrif is enabled)
+(ONLY used if use_cn is enabled)
 </entry>
 
 <entry id="denitrif_respiration_exponent" type="real" category="bgc"
        group="nitrif_inparm" valid_values="" >
 Exponent power for heterotrophic respiration for max denitrification rates
-(ONLY used if use_nitrif_denitrif is enabled)
+(ONLY used if use_cn is enabled)
 </entry>
 
 <entry id="k_nitr_max" type="real" category="bgc"
        group="nitrif_inparm" valid_values="" >
 Maximum nitrification rate constant (1/s)
-(ONLY used if use_nitrif_denitrif is enabled)
+(ONLY used if use_cn is enabled)
 </entry>
 
 <entry id="use_vertsoilc" type="logical" category="bgc"

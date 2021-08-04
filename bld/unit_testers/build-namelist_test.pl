@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1732;
+my $ntests = 1730;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1182;
 }
@@ -701,11 +701,6 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "bgc=bgc and cn-only set"   =>{ options=>"-bgc bgc -envxml_dir .",
-                                     namelst=>"use_lch4=.false.,use_nitrif_denitrif=.false.,use_vertsoilc=.false.,use_century_decomp=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
      "use_cn=true bgc=sp"        =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_cn=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1036,23 +1031,18 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "funWOnitrif"               =>{ options=>"-envxml_dir .",
-                                     namelst=>"use_fun=.true., use_nitrif_denitrif=.false.",
+     "knitrmaxWSP"               =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"k_nitr_max=1.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "knitrmaxWOnitrif"          =>{ options=>"-envxml_dir . -bgc bgc",
-                                     namelst=>"use_nitrif_denitrif=.false., k_nitr_max=1.0",
+     "respcoefSP"                =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"denitrif_respiration_coefficient=1.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "respcoefWOnitrif"          =>{ options=>"-envxml_dir . -bgc bgc",
-                                     namelst=>"use_nitrif_denitrif=.false., denitrif_respiration_coefficient=1.0",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
-                                   },
-     "respexpWOnitrif"           =>{ options=>"-envxml_dir . -bgc bgc",
-                                     namelst=>"use_nitrif_denitrif=.false., denitrif_respiration_exponent=1.0",
+     "respexpWSbgc"                =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"denitrif_respiration_exponent=1.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
@@ -1498,7 +1488,7 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
      my @edoptions = ( "-use_case 2000_control", 
                        "-use_case 1850_control", 
                        "", 
-                       "-namelist \"&a use_lch4=.true.,use_nitrif_denitrif=.true./\"", 
+                       "-namelist \"&a use_lch4=.true./\"", 
                        "-clm_accelerated_spinup on" 
                      );
      foreach my $edop (@edoptions ) {
