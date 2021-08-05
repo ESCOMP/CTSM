@@ -1256,7 +1256,7 @@ contains
     call extract_accum_field ('T_VEG240', rbufslp, nstep)
     this%t_veg240_patch(begp:endp) = rbufslp(begp:endp)
 
-    call extract_accum_field ('T_REF2M_24', rbufslp, nstep)
+    call extract_accum_field ('T_REF2M_24', rbufslp, nstep) !marius
     this%t_ref2m_24_patch(begp:endp) = rbufslp(begp:endp)
 
     call extract_accum_field ('T10', rbufslp, nstep)
@@ -1362,8 +1362,8 @@ contains
     do p = begp,endp
        rbufslp(p) = this%t_ref2m_patch(p)
     end do
-    call update_accum_field  ('T_REF2M_24' , this%t_ref2m_24_patch , nstep) !Marius
-    call extract_accum_field ('T_REF2M_24' , rbufslp  , nstep)
+    call update_accum_field  ('T_REF2M_24' , rbufslp , nstep) !Marius
+    call extract_accum_field ('T_REF2M_24' , this%t_ref2m_24_patch , nstep)
 
     ! Accumulate and extract TREFAV - hourly average 2m air temperature
     ! Used to compute maximum and minimum of hourly averaged 2m reference
