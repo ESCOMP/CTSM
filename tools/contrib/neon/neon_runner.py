@@ -448,7 +448,10 @@ class NeonSite :
         if not os.path.isdir(os.path.join(rundir, "inputdata")) and os.path.isdir(os.path.join(refrundir,"inputdata")):
             symlink_force(os.path.join(refrundir,"inputdata"),os.path.join(rundir,"inputdata"))
         case.set_value("RUN_REFDATE", refdate)
-        case.set_value("RUN_STARTDATE", refdate)                
+        if case_root.endswith(".postad"):
+            case.set_value("RUN_STARTDATE", refdate)
+        else:
+            case.set_value("RUN_STARTDATE", "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month))
                 
         
     def modify_user_nl(self, case_root, run_type):
