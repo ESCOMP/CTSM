@@ -10,7 +10,7 @@ module EDBGCDynMod
   use perf_mod                        , only : t_startf, t_stopf
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use abortutils                      , only : endrun
-  use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif
+  use clm_varctl                      , only : use_century_decomp
   use CNVegCarbonStateType	      , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType	      , only : cnveg_carbonflux_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type

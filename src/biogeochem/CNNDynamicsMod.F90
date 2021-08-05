@@ -9,7 +9,7 @@ module CNNDynamicsMod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use decompMod                       , only : bounds_type
   use clm_varcon                      , only : dzsoi_decomp, zisoi
-  use clm_varctl                      , only : use_nitrif_denitrif, use_vertsoilc, nfix_timeconst
+  use clm_varctl                      , only : use_vertsoilc, nfix_timeconst
   use subgridAveMod                   , only : p2c
   use atm2lndType                     , only : atm2lnd_type
   use CNVegStateType                  , only : cnveg_state_type

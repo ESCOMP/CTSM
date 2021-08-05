@@ -271,7 +271,7 @@ contains
     namelist /clm_inparm/ use_SSRE
 
     namelist /clm_inparm/ &
-         use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
+         use_lch4, use_vertsoilc, use_extralakelayers, &
          use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, use_ozone, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
@@ -464,11 +464,7 @@ contains
        ! user specified it in the namelist, we leave it alone.
 
        if (nfix_timeconst == -1.2345_r8) then
-          if (use_nitrif_denitrif) then
-             nfix_timeconst = 10._r8
-          else
-             nfix_timeconst = 0._r8
-          end if
+          nfix_timeconst = 10._r8
        end if
 
        ! If nlevsno or h2osno_max are equal to their junk
@@ -616,7 +612,6 @@ contains
     call mpi_bcast (nsrest, 1, MPI_INTEGER, 0, mpicom, ier)
 
     call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_nitrif_denitrif, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vertsoilc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -748,7 +743,7 @@ contains
        call mpi_bcast (surfprof_exp,            1, MPI_REAL8,  0, mpicom, ier)
     end if
 
-    if (use_cn .and. use_nitrif_denitrif) then 
+    if (use_cn )then
        call mpi_bcast (no_frozen_nitrif_denitrif,  1, MPI_LOGICAL, 0, mpicom, ier)
     end if
 
@@ -859,7 +854,6 @@ contains
     write(iulog,*) '   hostname              = ',trim(hostname)
     write(iulog,*) 'process control parameters:'
     write(iulog,*) '    use_lch4 = ', use_lch4
-    write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
     write(iulog,*) '    use_vertsoilc = ', use_vertsoilc
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
@@ -933,7 +927,7 @@ contains
        write(iulog, *) '   surfprof_exp                                          : ', surfprof_exp
     end if
        
-    if (use_cn .and. .not. use_nitrif_denitrif) then
+    if (use_cn )then
        write(iulog, *) '   no_frozen_nitrif_denitrif                             : ', no_frozen_nitrif_denitrif
     end if
 

@@ -9,7 +9,7 @@ module CNNStateUpdate1Mod
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevdecomp
   use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif
+  use clm_varctl                      , only : iulog
   use clm_varcon                      , only : nitrif_n2o_loss_frac
   use pftconMod                       , only : npcropmin, pftcon
   use decompMod                          , only : bounds_type
