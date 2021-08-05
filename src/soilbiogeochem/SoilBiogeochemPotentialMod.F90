@@ -10,6 +10,7 @@ module SoilBiogeochemPotentialMod
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
+  use clm_varpar                         , only : i_cop_mic, i_oli_mic
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
@@ -110,6 +111,7 @@ contains
          initial_cn_ratio                 => decomp_cascade_con%initial_cn_ratio                                   , & ! Input:  [real(r8) (:)     ]  c:n ratio for initialization of pools             
 
          rf_decomp_cascade                => soilbiogeochem_state_inst%rf_decomp_cascade_col                       , & ! Input:  [real(r8) (:,:,:) ]  respired fraction in decomposition step (frac)
+         nue_decomp_cascade               => soilbiogeochem_state_inst%nue_decomp_cascade_col                      , & ! Input:  [real(r8) (:)     ]  N use efficiency for a given transition (TODO)
          pathfrac_decomp_cascade          => soilbiogeochem_state_inst%pathfrac_decomp_cascade_col                 , & ! Input:  [real(r8) (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
 
          decomp_npools_vr                 => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col                , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
@@ -119,7 +121,8 @@ contains
          potential_immob_vr               => soilbiogeochem_nitrogenflux_inst%potential_immob_vr_col               , & ! Output: [real(r8) (:,:)   ]                                                  
          gross_nmin_vr                    => soilbiogeochem_nitrogenflux_inst%gross_nmin_vr_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          
-         decomp_k                         => soilbiogeochem_carbonflux_inst%decomp_k_col                           , & ! Output: [real(r8) (:,:,:) ]  rate constant for decomposition (1./sec)      
+         cn_col                           => cnveg_carbonflux_inst%cn_col                                          , & ! Input: [real(r8) (:,:)   ]  cn ratio
+         decomp_k                         => soilbiogeochem_carbonflux_inst%decomp_k_col                           , & ! Input: [real(r8) (:,:,:) ]  decomposition rate coefficient (1./sec)
          phr_vr                           => soilbiogeochem_carbonflux_inst%phr_vr_col                               & ! Output: [real(r8) (:,:)   ]  potential HR (gC/m3/s)                           
          )
    
@@ -198,7 +201,6 @@ contains
                         ! donor) and p_decomp_npool_gain (receiver)
                         p_decomp_cpool_gain(c,j,k) = p_decomp_cpool_loss(c,j,k) * &
                                                      (1.0_r8 - rf_decomp_cascade(c,j,k))
-                        ! TODO slevis: nue = 0.85 for anything going into microbial biomass; else 1
                         p_decomp_npool_gain(c,j,k) = p_decomp_npool_loss(c,j,k) * &
                                                      nue_decomp_cascade(k)
                         p_decomp_npool_to_din(c,j,k) = p_decomp_npool_loss(c,j,k) - &
@@ -240,13 +242,11 @@ contains
                do k = 1, ndecomp_cascade_transitions
                   if (cascade_receiver_pool(k) == i_cop_mic .or.
                       cascade_receiver_pool(k) == i_oli_mic) then
-                     ! TODO slevis: CNmic is a function of a CN parameterization, modified by fMET
-                     ! https://github.com/wwieder/biogeochem_testbed_1.1/blob/Testbed_CN/SOURCE_CODE/mimics_cycle_CN.f90#L1613
                      ! if p_decomp_cn_diff < 0  N mineralization
                      !                     > 0  immobilization
                      p_decomp_cn_diff_ratio = &
                         (p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) - &
-                         CNmic(...)) / CNmic(...)
+                         cn_col(c,cascade_receiver_pool(k))) / cn_col(c,cascade_receiver_pool(k))
                      ! Actual amount of N that's mineralized or that would need to be immobilized
                      ! negative=mineralization: add to the DIN pool
                      ! positive=immobilizaiton: compete for N with plants to see how much we get

@@ -398,7 +398,7 @@ contains
  
    
      call t_startf('soilbiogeochemcompetition')
-     call SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstatebulk_inst, &
+     call SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, pmnf_decomp_cascade, waterstatebulk_inst, &
                                      waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,          &
                                      cnveg_carbonstate_inst               ,&
                                      cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &

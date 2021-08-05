@@ -334,6 +334,9 @@ module CNVegCarbonFluxType
      real(r8), pointer :: nbp_grc        (:) ! (gC/m2/s) net biome production, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for sink (same as net carbon exchange between land and atmosphere)
      real(r8), pointer :: nee_grc        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire and hrv_xsmrpool, excludes landuse and harvest flux, positive for source 
 
+     ! Lignin to N ratio
+     real(r8), pointer :: ligninNratioAvg_col(:)  ! Average of leaf, fine root, and CWD lignin to N ratio
+
      ! Dynamic landcover fluxnes
      real(r8), pointer :: landuseflux_grc(:) ! (gC/m2/s) dwt_conv_cflux+product_closs
      real(r8), pointer :: npp_Nactive_patch                         (:)     ! C used by mycorrhizal uptake    (gC/m2/s)
@@ -696,6 +699,8 @@ contains
     allocate(this%annsum_litfall_patch    (begp:endp)) ; this%annsum_litfall_patch    (:) = nan
     allocate(this%annsum_npp_col          (begc:endc)) ; this%annsum_npp_col          (:) = nan
     allocate(this%lag_npp_col             (begc:endc)) ; this%lag_npp_col             (:) = spval
+
+    allocate(this%ligninNratioAvg_col     (begc:endc)) ; this%ligninNratioAvg_col     (:) = nan
 
     allocate(this%nep_col                 (begc:endc)) ; this%nep_col                 (:) = nan
     allocate(this%nbp_grc                 (begg:endg)) ; this%nbp_grc                 (:) = nan
@@ -4025,6 +4030,11 @@ contains
     integer  :: fp,fc           ! lake filter indices
     real(r8) :: nfixlags, dtime ! temp variables for making lagged npp
     real(r8) :: maxdepth        ! depth to integrate soil variables
+    real(r8) :: ligninNratio_cwd  ! lignin to N ratio of CWD
+    real(r8) :: ligninNratio_leaf_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of leaves, patch level
+    real(r8) :: ligninNratio_froot_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of fine roots, patch level
+    real(r8) :: ligninNratio_leaf_col(bounds%begc:bounds%endc)  ! lignin to N ratio of leaves, column level
+    real(r8) :: ligninNratio_froot_col(bounds%begc:bounds%endc)  ! lignin to N ratio of fine roots, column level
     real(r8) :: nep_grc(bounds%begg:bounds%endg)        ! nep_col averaged to gridcell
     real(r8) :: fire_closs_grc(bounds%begg:bounds%endg) ! fire_closs_col averaged to gridcell
     real(r8) :: hrv_xsmrpool_to_atm_grc(bounds%begg:bounds%endg) ! hrv_xsmrpool_to_atm_col averaged to gridcell (gC/m2/s)
@@ -4398,8 +4408,7 @@ contains
 
        if (use_mimics_decomp) then
           ! Calculate ligninNratio for leaves and fine roots
-          ! TODO Declare ligninNratio vars wherever they need to be and
-          !      initialize if necessary for call p2c to work correctly
+          ! TODO init. ligninNratio vars if nec. for call p2c to work
           associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
             ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
                                          pftcon%lflitcn(ivt(p)) * &

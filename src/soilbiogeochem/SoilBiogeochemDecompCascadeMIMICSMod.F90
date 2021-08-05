@@ -10,7 +10,8 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
-  use clm_varpar                         , only : i_met_lit, i_litr_min, i_litr_max, i_cwd, i_cwdl2
+  use clm_varpar                         , only : i_met_lit, i_cop_mic, i_oli_mic, i_cwd
+  use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwdl2
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -221,7 +222,8 @@ contains
 
     associate(                                                                                     &
          rf_decomp_cascade              => soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Input:  [real(r8)          (:,:,:) ]  respired fraction in decomposition step (frac)       
-         pathfrac_decomp_cascade        => soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Input:  [real(r8)          (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
+         nue_decomp_cascade             => soilbiogeochem_state_inst%nue_decomp_cascade_col      , & ! Output: [real(r8)          (:)     ]  N use efficiency for a given transition (TODO)
+         pathfrac_decomp_cascade        => soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Output: [real(r8)          (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
 
          cellclay                       => soilstate_inst%cellclay_col                           , & ! Input:  [real(r8)          (:,:)   ]  column 3D clay
          
@@ -247,14 +249,15 @@ contains
       allocate(fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(p_scalar(bounds%begc:bounds%endc,1:nlevdecomp))
 
-      params_inst%p_scalar_p1 = 0.8_r8  ! TODO Move to the params files
-      params_inst%p_scalar_p2 = -3.0_r8
+      params_inst%p_scalar_p1 = 0.8_r8  ! TODO Move to the params files after
+      params_inst%p_scalar_p2 = -3.0_r8  ! ... reading TODOs in subr. readParams (above)
       params_inst%desorp_p1 = 1.5e-5_r8
       params_inst%desorp_p2 = -1.5_r8
       params_inst%fphys_r_p1 = 0.3_r8
       params_inst%fphys_r_p2 = 1.3_r8
       params_inst%fphys_k_p1 = 0.2_r8
       params_inst%fphys_k_p2 = 0.8_r8
+      params_inst%nue_into_mic = 0.85_r8
 
       !------- time-constant coefficients ---------- !
       ! set respiration fractions for fluxes between compartments
@@ -496,6 +499,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = rf_l1m1
       cascade_donor_pool(i_l1m1) = i_met_lit
       cascade_receiver_pool(i_l1m1) = i_cop_mic
+      nue_decomp_cascade(i_l1m1) = nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = 0.5_r8
 
       i_l1m2 = 2
@@ -503,6 +507,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = rf_l1m2
       cascade_donor_pool(i_l1m2) = i_met_lit
       cascade_receiver_pool(i_l1m2) = i_oli_mic
+      nue_decomp_cascade(i_l1m2) = nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = 0.5_r8
 
       i_l2m1 = 3
@@ -510,6 +515,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1) = rf_l2m1
       cascade_donor_pool(i_l2m1) = i_str_lit
       cascade_receiver_pool(i_l2m1) = i_cop_mic
+      nue_decomp_cascade(i_l2m1) = nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1)= 0.5_r8
 
       i_l2m2 = 4
@@ -517,6 +523,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2) = rf_l2m2
       cascade_donor_pool(i_l2m2) = i_str_lit
       cascade_receiver_pool(i_l2m2) = i_oli_mic
+      nue_decomp_cascade(i_l2m2) = nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2)= 0.5_r8
 
       i_s1m1 = 5
@@ -524,6 +531,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m1) = rf_s1m1
       cascade_donor_pool(i_s1m1) = i_avl_som
       cascade_receiver_pool(i_s1m1) = i_cop_mic
+      nue_decomp_cascade(i_s1m1) = nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m1) = 0.5_r8
 
       i_s1m2 = 6
@@ -531,6 +539,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m2) = rf_s1m2
       cascade_donor_pool(i_s1m2) = i_avl_som
       cascade_receiver_pool(i_s1m2) = i_oli_mic
+      nue_decomp_cascade(i_s1m2) = nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m2) = 0.5_r8
 
       i_s2s1 = 7
@@ -538,6 +547,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 0.0_r8
       cascade_donor_pool(i_s2s1) = i_chem_som
       cascade_receiver_pool(i_s2s1) = i_avl_som
+      nue_decomp_cascade(i_s2s1) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 1.0_r8
 
       i_s3s1 = 8
@@ -545,6 +555,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 0.0_r8
       cascade_donor_pool(i_s3s1) = i_phys_som
       cascade_receiver_pool(i_s3s1) = i_avl_som
+      nue_decomp_cascade(i_s3s1) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
 
       i_m1s1 = 9
@@ -552,6 +563,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = 0.0_r8
       cascade_donor_pool(i_m1s1) = i_cop_mic
       cascade_receiver_pool(i_m1s1) = i_avl_som
+      nue_decomp_cascade(i_m1s1) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = 0.5_r8 * (1.0_r8 - fphys_m1(bounds%begc:bounds%endc,1:nlevdecomp))
 
       i_m1s2 = 10
@@ -559,6 +571,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = 0.0_r8
       cascade_donor_pool(i_m1s2) = i_cop_mic
       cascade_receiver_pool(i_m1s2) = i_chem_som
+      nue_decomp_cascade(i_m1s2) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = 0.5_r8 * (1.0_r8 - fphys_m1(bounds%begc:bounds%endc,1:nlevdecomp))
 
       i_m1s3 = 11
@@ -566,6 +579,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = 0.0_r8
       cascade_donor_pool(i_m1s3) = i_cop_mic
       cascade_receiver_pool(i_m1s3) = i_phys_som
+      nue_decomp_cascade(i_m1s3) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = fphys_m1(bounds%begc:bounds%endc,1:nlevdecomp)
 
       i_m2s1 = 12
@@ -573,6 +587,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = 0.0_r8
       cascade_donor_pool(i_m2s1) = i_oli_mic
       cascade_receiver_pool(i_m2s1) = i_avl_som
+      nue_decomp_cascade(i_m2s1) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = 0.5_r8 * (1.0_r8 - fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp))
 
       i_m2s2 = 13
@@ -580,6 +595,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = 0.0_r8
       cascade_donor_pool(i_m2s2) = i_oli_mic
       cascade_receiver_pool(i_m2s2) = i_chem_som
+      nue_decomp_cascade(i_m2s2) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = 0.5_r8 * (1.0_r8 - fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp))
 
       i_m2s3 = 14
@@ -587,6 +603,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = 0.0_r8
       cascade_donor_pool(i_m2s3) = i_oli_mic
       cascade_receiver_pool(i_m2s3) = i_phys_som
+      nue_decomp_cascade(i_m2s3) = 1.0_r8
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp)
 
       if (.not. use_fates) then
@@ -595,6 +612,7 @@ contains
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_str_lit
+         nue_decomp_cascade(i_cwdl2) = 1.0_r8
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 1.0_r8
       end if
 
@@ -684,6 +702,7 @@ contains
          
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
+         cn_col         => cnveg_carbonflux_inst%cn_col                , & ! Output: [real(r8) (:,:)   ]  C:N ratio
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
@@ -900,7 +919,8 @@ contains
          end do
       end do
 
-      ! TODO Move to the params files
+      ! TODO Move to the params files after
+      ! ... reading TODOs in subr. readParams (above)
       fmet_p1 = 0.85_r8
       fmet_p2 = 0.85_r8
       fmet_p3 = 0.013_r8
@@ -909,9 +929,9 @@ contains
       fchem_r_p2 = -3.0_r8
       fchem_k_p1 = 0.3_r8
       fchem_k_p2 = -3.0_r8
-      tauMod_factor = 0.01_r8  ! was tauMod_denom = 100
-      tauMod_min = 0.8_r8
-      tauMod_max = 1.2_r8
+      tau_mod_factor = 0.01_r8  ! was tau_mod_denom = 100
+      tau_mod_min = 0.8_r8
+      tau_mod_max = 1.2_r8
       tau_r_p1 = 5.2e-4_r8
       tau_r_p2 = 0.3_r8  ! or 0.4?
       tau_k_p1 = 2.4e-4_r8
@@ -921,6 +941,9 @@ contains
       densdep = 1.0_r8
       desorpQ10 = 1.0_r8
       t_soi_ref = 25.0_r8  ! deg C
+      cn_mod_num = 1.0_r8  ! TODO slevis: I don't see values in the testbed
+      cn_r = 1.0_r8  ! ... or in the testbed's params file
+      cn_k = 1.0_r8  ! ... for these three
 
       ! calculate rates for all litter and som pools
       ! TODO Ok that I reversed order of do-loops?
@@ -928,9 +951,6 @@ contains
          c = filter_soilc(fc)
 
          ! Time-dependent params from Wieder et al. 2015 & testbed code
-         ! TODO STILL MISSING N-related stuff:
-         !      - DIN... in the testbed
-         !      - Need hooks to no3, nh4 terms. The nh4 fluxes are "nmin".
 
          ! Set limits on Lignin:N to keep fmet > 0.2
          ! Necessary for litter quality in boreal forests with high cwd flux
@@ -938,15 +958,23 @@ contains
          !      replace pool_to_litter terms with ann or other long term mean
          !      in CNVegCarbonFluxType.
          fmet = fmet_p1 * (fmet_p2 - fmet_p3 * min(fmet_p4, ligninNratioAvg(c)))
-         tauMod = min(tauMod_max, max(tauMod_min, &
-                                      sqrt(tauMod_factor * annsum_npp_col(c))))
+         tau_mod = min(tau_mod_max, max(tau_mod_min, &
+                                        sqrt(tau_mod_factor * &
+                                             annsum_npp_col(c))))
 
          ! tau_m1 is tauR and tau_m2 is tauK in Wieder et al. 2015
          ! tau ends up in units of per hour but is expected
          ! in units of per second, so convert here; alternatively
          ! place the conversion once in w_d_o_scalars
-         tau_m1 = tau_r_p1 * exp(tau_r_p2 * fmet) * tauMod * secsphr
-         tau_m2 = tau_k_p1 * exp(tau_k_p2 * fmet) * tauMod * secsphr
+         tau_m1 = tau_r_p1 * exp(tau_r_p2 * fmet) * tau_mod * secsphr
+         tau_m2 = tau_k_p1 * exp(tau_k_p2 * fmet) * tau_mod * secsphr
+
+         ! These two get used in SoilBiogeochemPotentialMod.F90
+         ! cn(c,i_cop_mic), cn(c,i_oli_mic) are CN_r, CN_k in the testbed code
+         ! cn_r, cn_k are CNr, CNk in the testbed code
+         ! https://github.com/wwieder/biogeochem_testbed_1.1/blob/Testbed_CN/SOURCE_CODE/mimics_cycle_CN.f90#L1613
+         cn_col(c,i_cop_mic) = cn_r * sqrt(cn_mod_num / fmet)
+         cn_col(c,i_oli_mic) = cn_k * sqrt(cn_mod_num / fmet)
 
          ! Used in the update of certain pathfrac terms that vary with time
          ! in the next loop
