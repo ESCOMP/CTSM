@@ -1038,11 +1038,11 @@ module CLMFatesInterfaceMod
      call t_startf('fates_wrap_update_hlmfates_dyn')
 
      associate(                                &
-         tlai => canopystate_inst%tlai_hist_patch , &
+         tlai => canopystate_inst%tlai_patch , &
          elai => canopystate_inst%elai_patch , &
-         tsai => canopystate_inst%tsai_hist_patch , &
+         tsai => canopystate_inst%tsai_patch , &
          esai => canopystate_inst%esai_patch , &
-         htop => canopystate_inst%htop_hist_patch , &
+         htop => canopystate_inst%htop_patch , &
          hbot => canopystate_inst%hbot_patch , &
          z0m  => canopystate_inst%z0m_patch  , & ! Output: [real(r8) (:)   ] momentum roughness length (m)
          displa => canopystate_inst%displa_patch, &
