@@ -242,7 +242,13 @@ contains
        !
        ! An alternative would be to set these values to spval over non-exposed patches:
        ! that way, averages would just be taken over exposed patches (as opposed to
-       ! averaging in 1 values for non-exposed patches).
+       ! averaging in 1 values for non-exposed patches). However, that would conflict with
+       ! the goals of https://github.com/ESCOMP/CTSM/projects/35 (specifically, having
+       ! frac fields that can be used to determine the appropriate weighting of each grid
+       ! cell in producing regional / global averages), so if we want to exclude
+       ! non-exposed patches from the gridcell average, we should probably come up with a
+       ! way to do so via a more explicit mechanism similar to l2g_scale_type (maybe with
+       ! a new p2c_scale_type that allows excluding non-exposed patches???).
        this%o3coefvsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='O3COEFPSNSHA', units='unitless', &
             avgflag='A', long_name='ozone coefficient for photosynthesis for shaded leaves', &
