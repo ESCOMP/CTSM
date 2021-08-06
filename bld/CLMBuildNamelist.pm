@@ -92,10 +92,10 @@ OPTIONS
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
                                         CENTURY decomposition
                                     This toggles on the namelist variables:
-                                          use_cn, use_lch4, use_vertsoilc, use_century_decomp
+                                          use_cn, use_lch4, use_century_decomp
                                 fates = FATES/Ecosystem Demography with below ground BGC
                                     This toggles on the namelist variables:
-                                          use_fates, use_vertsoilc, use_century_decomp
+                                          use_fates, use_century_decomp
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -754,7 +754,7 @@ sub setup_cmdl_fates_mode {
 
       # The following variables may be set by the user and are compatible with use_fates
       # no need to set defaults, covered in a different routine
-      my @list  = (  "use_vertsoilc", "use_lch4" );
+      my @list  = (  "use_lch4" );
       foreach my $var ( @list ) {
 	  if ( defined($nl->get_value($var))  ) {
 	      $nl_flags->{$var} = $nl->get_value($var);
@@ -846,35 +846,6 @@ sub setup_cmdl_bgc {
   }
   if ( defined($nl->get_value("use_fates")) && ($nl_flags->{'use_fates'} ne $nl->get_value("use_fates")) ) {
      $log->fatal_error("The namelist variable use_fates is inconsistent with the -bgc option");
-  }
-
-  {
-     # If the variable has already been set use it, if not set to the value defined by the bgc_mode
-     my @list  = (  "use_lch4", "use_vertsoilc" );
-     my $ndiff = 0;
-     my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
-     foreach my $var ( @list ) {
-        my $default_setting = $defaults->get_value($var, \%settings );
-        if ( ! defined($nl->get_value($var))  ) {
-           $nl_flags->{$var} = $default_setting;
-        } else {
-           if ( $nl->get_value($var) ne $default_setting ) {
-              $ndiff += 1;
-           }
-           $nl_flags->{$var} = $nl->get_value($var);
-        }
-        $val = $nl_flags->{$var};
-        my $group = $definition->get_group_name($var);
-        $nl->set_variable_value($group, $var, $val);
-        if (  ! $definition->is_valid_value( $var, $val ) ) {
-           my @valid_values   = $definition->get_valid_values( $var );
-           $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
-        }
-     }
-     # If all the variables are different report it as an error
-     if ( $ndiff == ($#list + 1) ) {
-        $log->fatal_error("You are contradicting the -bgc setting with the namelist variables: @list" );
-     }
   }
 
   # Now set use_cn and use_fates
@@ -2134,7 +2105,6 @@ sub setup_logic_demand {
   $settings{'use_cn'}              = $nl_flags->{'use_cn'};
   $settings{'use_cndv'}            = $nl_flags->{'use_cndv'};
   $settings{'use_lch4'}            = $nl_flags->{'use_lch4'};
-  $settings{'use_vertsoilc'}       = $nl_flags->{'use_vertsoilc'};
   $settings{'use_crop'}            = $nl_flags->{'use_crop'};
 
   my $demand = $nl->get_value('clm_demand');
@@ -2251,7 +2221,7 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
-                       "use_vertsoilc", "use_fates",
+                       "use_fates",
                        "lnd_tuning_mode", 
                      ) {
        $settings{$item}    = $nl_flags->{$item};
