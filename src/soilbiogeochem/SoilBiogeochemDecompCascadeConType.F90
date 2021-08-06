@@ -47,17 +47,19 @@ module SoilBiogeochemDecompCascadeConType
 contains
 
   !------------------------------------------------------------------------
-  subroutine init_decomp_cascade_constants( use_century_decomp )
+  subroutine init_decomp_cascade_constants( use_century_decomp, &
+                                            use_mimics_decomp )
     !
     ! !DESCRIPTION:
     ! Initialize decomposition cascade state
     !------------------------------------------------------------------------
     ! !ARGUMENTS:
     logical, intent(IN) :: use_century_decomp
+    logical, intent(in) :: use_mimics_decomp
     ! !LOGAL VARIABLES:
     integer :: ibeg    ! Beginning index for allocated arrays
 
-    if ( use_century_decomp ) then
+    if ( use_century_decomp .or. use_mimics_decomp ) then
        ibeg = 1
     else
        ibeg = i_atm

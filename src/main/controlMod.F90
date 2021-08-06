@@ -274,7 +274,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
          use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, use_ozone, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail
+         use_nguardrail, use_mimics_decomp
 
 
     ! ----------------------------------------------------------------------
@@ -621,6 +621,7 @@ contains
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_century_decomp, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_mimics_decomp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cndv, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nguardrail, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -865,6 +866,7 @@ contains
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
     write(iulog,*) '    use_century_decomp = ', use_century_decomp
+    write(iulog,*) '    use_mimics_decomp = ', use_mimics_decomp
     write(iulog,*) '    use_cn = ', use_cn
     write(iulog,*) '    use_cndv = ', use_cndv
     write(iulog,*) '    use_crop = ', use_crop

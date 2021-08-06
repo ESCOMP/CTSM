@@ -4006,7 +4006,7 @@ contains
     ! !USES:
     use clm_time_manager                   , only: get_step_size_real
     use clm_varcon                         , only: secspday
-    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
+    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt, use_mimics_decomp
     use subgridAveMod                      , only: p2c, c2g
     use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
     use CNSharedParamsMod                  , only: use_fun, CNParamsShareInst

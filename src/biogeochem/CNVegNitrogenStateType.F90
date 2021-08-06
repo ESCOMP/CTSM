@@ -4,17 +4,13 @@ module CNVegNitrogenStateType
 
   use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_infnan_mod                     , only : isnan => shr_infnan_isnan, nan => shr_infnan_nan, assignment(=)
-  use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools, nlevcan
-  use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
-  use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
+  use clm_varcon                         , only : spval
   use landunit_varcon                    , only : istcrop, istsoil 
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
-  use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump
+  use clm_varctl                         , only : iulog
   use clm_varctl                         , only : use_crop
   use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use pftconMod                          , only : npcropmin, noveg, pftcon
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use abortutils                         , only : endrun
   use spmdMod                            , only : masterproc 
   use LandunitType                       , only : lun                

@@ -12,6 +12,7 @@ module SoilBiogeochemNitrogenStateType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, nlevsoi
   use clm_varcon                         , only : spval, dzsoi_decomp, zisoi
   use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+  use clm_varctl                         , only : use_mimics_decomp
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump, spinup_state
   use landunit_varcon                    , only : istcrop, istsoil 
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
@@ -532,7 +533,7 @@ contains
     ! matches what the restart file was generated with.  
     ! add info about the SOM decomposition cascade
 
-    if (use_century_decomp) then
+    if (use_century_decomp .or. use_mimics_decomp) then
        decomp_cascade_state = 1
     else
        decomp_cascade_state = 0
