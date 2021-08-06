@@ -332,7 +332,7 @@ class NeonSite :
                 logger.info("---- creating a base case -------")
 
                 case.create(case_path, cesmroot, compset, res, mpilib="mpi-serial",
-                            run_unsupported=True, answer="r",walltime="08:00:00",
+                            run_unsupported=True, answer="r",
                             user_mods_dirs = user_mods_dirs, driver="nuopc")
 
                 logger.info("---- base case created ------")
