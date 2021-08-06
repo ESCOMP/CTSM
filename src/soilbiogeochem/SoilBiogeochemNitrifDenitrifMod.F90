@@ -12,7 +12,7 @@ module SoilBiogeochemNitrifDenitrifMod
   use clm_varpar                      , only : nlevdecomp
   use clm_varcon                      , only : rpi, grav
   use clm_varcon                      , only : d_con_g, d_con_w, secspday
-  use clm_varctl                      , only : use_lch4
+  use clm_varctl                      , only : use_lch4, use_fates
   use abortutils                      , only : endrun
   use decompMod                       , only : bounds_type
   use SoilStatetype                   , only : soilstate_type
@@ -305,7 +305,9 @@ contains
                ! otherwise diffusivity will be zeroed out here. EBK CDK 10/18/2011
                anaerobic_frac(c,j) = 0._r8
                diffus (c,j) = 0._r8
-               call endrun(msg=' ERROR: NITRIF_DENITRIF requires Methane model to be active'//errMsg(sourcefile, __LINE__) )
+               if ( .not. use_fates )then
+                  call endrun(msg=' ERROR: NITRIF_DENITRIF requires Methane model to be active'//errMsg(sourcefile, __LINE__) )
+               end if
             end if
 
 
