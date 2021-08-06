@@ -1,4 +1,101 @@
 ===============================================================
+Tag name:  ctsm5.1.dev051
+Originator(s): Stefanie Falk, Sunniva Indrehus, Bill Sacks
+Date:  Fri Aug  6 10:30:32 MDT 2021
+One-line Summary: New LUNA-specific ozone stress option
+
+Purpose and description of changes
+----------------------------------
+
+Add a new ozone stress option that modifies jmax; this stress option is
+specific to LUNA. See https://github.com/ESCOMP/CTSM/issues/1224 for a
+detailed description.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1224 (Add new feature: Ozone impact on Jmax in
+  LUNA (OzoneLUNA))
+
+Known bugs introduced in this tag (include issue #):
+- https://github.com/ESCOMP/CTSM/issues/1381 (Distinction between sunlit
+  vs. shaded leaves in Luna (e.g., for ozone stress))
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- use_ozone logical replaced by o3_veg_stress_method string
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Ozone tests reworked so that one covers this new option
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+  any other testing (give details below):
+  - Ran ERP_D_Ld5_P72x2.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-o3falk (passes)
+  - Ran the two old ozone tests that have been replaced; these passed
+    and were bit-for-bit (other than fieldlist diffs due to new ozone
+    diagnostic fields added in this tag)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, just roundoff-level for pgi
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: anything with LUNA
+    - what platforms/compilers: pgi
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     I verified that the answer changes just arise due to an extra
+     multiplication by 1 in LUNA, which must change order of operations
+     for pgi. (I compared with this one-off from master and was
+     bit-for-bit:
+     https://github.com/billsacks/ctsm/commit/011c79fc361a98c04a42824b74ca81209262da7c)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1232
+https://github.com/ESCOMP/CTSM/pull/1370
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev050
 Originator(s):  sacks (Bill Sacks)
 Date:  Mon Aug  2 17:17:10 MDT 2021
