@@ -27,11 +27,6 @@ module OzoneBaseMod
      real(r8), pointer, public :: o3coefgsun_patch(:)         ! ozone coefficient for conductance, sunlit leaves (0 - 1)
      real(r8), pointer, public :: o3coefjmaxsha_patch(:)  ! ozone coefficient for max electron transport rate, shaded leaves (0 - 1)
      real(r8), pointer, public :: o3coefjmaxsun_patch(:)  ! ozone coefficient for max electron transport rate, sunlit leaves (0 - 1)
-
-
-
-     
-     
    contains
      ! The following routines need to be implemented by all type extensions
      procedure(Init_interface)            , public, deferred :: Init
@@ -87,14 +82,18 @@ module OzoneBaseMod
        real(r8) , intent(in) :: tlai( bounds%begp: )      ! one-sided leaf area index, no burying by snow
      end subroutine CalcOzoneUptake_interface
 
-     subroutine CalcOzoneStress_interface(this, bounds, num_exposedvegp, filter_exposedvegp)
+     subroutine CalcOzoneStress_interface(this, bounds, &
+          num_exposedvegp, filter_exposedvegp, &
+          num_noexposedvegp, filter_noexposedvegp)
        use decompMod, only : bounds_type
        import :: ozone_base_type
 
        class(ozone_base_type) , intent(inout) :: this
        type(bounds_type)      , intent(in)    :: bounds
-       integer                , intent(in)    :: num_exposedvegp       ! number of points in filter_exposedvegp
-       integer                , intent(in)    :: filter_exposedvegp(:) ! patch filter for non-snow-covered veg
+       integer                , intent(in)    :: num_exposedvegp         ! number of points in filter_exposedvegp
+       integer                , intent(in)    :: filter_exposedvegp(:)   ! patch filter for non-snow-covered veg
+       integer                , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+       integer                , intent(in)    :: filter_noexposedvegp(:) ! patch filter for veg where frac_veg_nosno is 0
      end subroutine CalcOzoneStress_interface
   end interface
      

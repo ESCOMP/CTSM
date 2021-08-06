@@ -228,8 +228,22 @@ contains
          ptr_patch=this%o3uptakesha_patch)
 
     if (this%stress_method==stress_method_lombardozzi2015) then
-       ! --- For this and the following variables: how should we include leaf area in the patching averaging? 
-       this%o3coefvsha_patch(begp:endp) = spval  
+       ! For this and the following variables: how should we include leaf area in the
+       ! patch averaging?
+       !
+       ! Note that for now we need to reset these o3 coefficients over non-exposed veg
+       ! points each time step for the sake of these diagnostics - to avoid weirdness and
+       ! non-exact restarts due to coefficients over non-exposed patches "remembering"
+       ! their value from when they were last exposed. (This resetting to 1 is done below,
+       ! in the CalcOzoneStress* routines.) But if we could set the scaling so that the
+       ! coefficients are only averaged over currently-exposed veg patches, then we could
+       ! avoid needing to reset the coefficients to 1 each time step over non-exposed
+       ! patches.
+       !
+       ! An alternative would be to set these values to spval over non-exposed patches:
+       ! that way, averages would just be taken over exposed patches (as opposed to
+       ! averaging in 1 values for non-exposed patches).
+       this%o3coefvsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='O3COEFPSNSHA', units='unitless', &
             avgflag='A', long_name='ozone coefficient for photosynthesis for shaded leaves', &
             ptr_patch=this%o3coefvsha_patch, l2g_scale_type='veg')
@@ -491,7 +505,9 @@ contains
   end subroutine CalcOzoneUptakeOnePoint
 
   !-----------------------------------------------------------------------
-  subroutine CalcOzoneStress(this, bounds, num_exposedvegp, filter_exposedvegp)
+  subroutine CalcOzoneStress(this, bounds, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp)
     !
     ! !DESCRIPTION:
     ! Calculate ozone stress.
@@ -499,8 +515,10 @@ contains
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
-    integer  , intent(in) :: num_exposedvegp           ! number of points in filter_exposedvegp
-    integer  , intent(in) :: filter_exposedvegp(:)     ! patch filter for non-snow-covered veg
+    integer , intent(in) :: num_exposedvegp         ! number of points in filter_exposedvegp
+    integer , intent(in) :: filter_exposedvegp(:)   ! patch filter for non-snow-covered veg
+    integer , intent(in) :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer , intent(in) :: filter_noexposedvegp(:) ! patch filter for veg where frac_veg_nosno is 0
     !
     ! !LOCAL VARIABLES:
 
@@ -509,9 +527,13 @@ contains
 
     select case (this%stress_method)
     case (stress_method_lombardozzi2015)
-       call this%CalcOzoneStressLombardozzi2015(bounds, num_exposedvegp, filter_exposedvegp)
+       call this%CalcOzoneStressLombardozzi2015(bounds, &
+            num_exposedvegp, filter_exposedvegp, &
+            num_noexposedvegp, filter_noexposedvegp)
     case (stress_method_falk)
-       call this%CalcOzoneStressFalk(bounds, num_exposedvegp, filter_exposedvegp)
+       call this%CalcOzoneStressFalk(bounds, &
+            num_exposedvegp, filter_exposedvegp, &
+            num_noexposedvegp, filter_noexposedvegp)
     case default
        write(iulog,*) 'ERROR: unknown ozone stress method: ', this%stress_method
        call endrun('Unknown ozone stress method')
@@ -520,7 +542,9 @@ contains
   end subroutine CalcOzoneStress
 
   !-----------------------------------------------------------------------
-  subroutine CalcOzoneStressLombardozzi2015(this, bounds, num_exposedvegp, filter_exposedvegp)
+  subroutine CalcOzoneStressLombardozzi2015(this, bounds, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp)
     !
     ! !DESCRIPTION:
     ! Calculate ozone stress.
@@ -530,8 +554,10 @@ contains
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in) :: bounds
-    integer  , intent(in) :: num_exposedvegp           ! number of points in filter_exposedvegp
-    integer  , intent(in) :: filter_exposedvegp(:)     ! patch filter for non-snow-covered veg
+    integer , intent(in) :: num_exposedvegp         ! number of points in filter_exposedvegp
+    integer , intent(in) :: filter_exposedvegp(:)   ! patch filter for non-snow-covered veg
+    integer , intent(in) :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer , intent(in) :: filter_noexposedvegp(:) ! patch filter for veg where frac_veg_nosno is 0
     !
     ! !LOCAL VARIABLES:
     integer  :: fp             ! filter index
@@ -563,6 +589,16 @@ contains
               o3coefv=o3coefvsun(p), o3coefg=o3coefgsun(p))
       end do
 
+      do fp = 1, num_noexposedvegp
+         p = filter_noexposedvegp(fp)
+
+         ! See notes above in InitHistory about why these need to be set to 1 over
+         ! non-exposed veg points each time step.
+         o3coefvsha(p) = 1._r8
+         o3coefgsha(p) = 1._r8
+         o3coefvsun(p) = 1._r8
+         o3coefgsun(p) = 1._r8
+      end do
 
     end associate
 
@@ -630,7 +666,9 @@ contains
 
   
   !-----------------------------------------------------------------------
-  subroutine CalcOzoneStressFalk(this, bounds, num_exposedvegp, filter_exposedvegp)
+  subroutine CalcOzoneStressFalk(this, bounds, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp)
     !
     ! !DESCRIPTION:
     ! Calculate ozone stress.
@@ -643,8 +681,10 @@ contains
     ! !ARGUMENTS:
     class(ozone_type), intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
-    integer  , intent(in)            :: num_exposedvegp         ! number of points in filter_exposedvegp
-    integer  , intent(in)            :: filter_exposedvegp(:)   ! patch filter for non-snow-covered veg
+    integer , intent(in) :: num_exposedvegp         ! number of points in filter_exposedvegp
+    integer , intent(in) :: filter_exposedvegp(:)   ! patch filter for non-snow-covered veg
+    integer , intent(in) :: num_noexposedvegp       ! number of points in filter_noexposedvegp
+    integer , intent(in) :: filter_noexposedvegp(:) ! patch filter for veg where frac_veg_nosno is 0
     !
     ! !LOCAL VARIABLES:
     integer  :: fp             ! filter index
@@ -676,11 +716,19 @@ contains
             o3coefjmax=o3coefjmaxsun(p))
 
       end do
-      !
-      end associate
-      !
-   end if 
 
+      do fp = 1, num_noexposedvegp
+         p = filter_noexposedvegp(fp)
+
+         ! See notes above in InitHistory about why these need to be set to 1 over
+         ! non-exposed veg points each time step.
+         o3coefjmaxsha(p) = 1._r8
+         o3coefjmaxsun(p) = 1._r8
+      end do
+
+      end associate
+
+   end if 
 
   end subroutine CalcOzoneStressFalk
 

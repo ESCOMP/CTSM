@@ -122,12 +122,15 @@ contains
 
   end subroutine CalcOzoneUptake
 
-  subroutine CalcOzoneStress(this, bounds, num_exposedvegp, filter_exposedvegp)
+  subroutine CalcOzoneStress(this, bounds, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp)
     class(ozone_off_type), intent(inout) :: this
     type(bounds_type)    , intent(in) :: bounds
     integer              , intent(in) :: num_exposedvegp
     integer              , intent(in) :: filter_exposedvegp(:)
-
+    integer              , intent(in) :: num_noexposedvegp
+    integer              , intent(in) :: filter_noexposedvegp(:)
 
     ! Outputs (stress terms) are already fixed at 1 from cold start initialization
 
