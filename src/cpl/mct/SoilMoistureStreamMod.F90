@@ -21,7 +21,7 @@ module SoilMoistureStreamMod
   use shr_kind_mod              , only : r8 => shr_kind_r8
   use shr_kind_mod              , only : CL => shr_kind_CL, CXX => shr_kind_CXX
   use shr_log_mod               , only : errMsg => shr_log_errMsg
-  use decompMod                 , only : bounds_type
+  use decompMod                 , only : bounds_type, subgrid_level_column
   use abortutils                , only : endrun
   use clm_varctl                , only : iulog, use_soil_moisture_streams, inst_name
   use clm_varcon                , only : grlnd
@@ -380,7 +380,9 @@ contains
                      else
                         write(iulog,*) 'Input soil moisture dataset is not vegetated as expected: gridcell=', &
                                         g, ' active = ', col%active(c)
-                        call endrun(subname // ' ERROR:: The input soil moisture stream is NOT vegetated for one of the land points' )
+                        call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                             msg = subname // &
+                             ' ERROR:: The input soil moisture stream is NOT vegetated for one of the land points' )
                      end if
                   end if
 
@@ -402,7 +404,8 @@ contains
                   h2osoi_ice(c,j) = h2osoi_ice(c,j) + (soilm_ice_frac * moisture_increment * dz(c, j) * denice)
 
                else
-                  call endrun(subname // ':: ERROR h2osoil liquid plus ice is zero')
+                  call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                       msg = subname // ':: ERROR h2osoil liquid plus ice is zero')
                endif
             enddo
          endif

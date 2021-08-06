@@ -152,7 +152,7 @@ contains
     ! !USES:
     use shr_log_mod         , only : errMsg => shr_log_errMsg
     use shr_infnan_mod      , only : nan => shr_infnan_nan, assignment(=)
-    use decompMod           , only : bounds_type
+    use decompMod           , only : bounds_type, subgrid_level_gridcell
     use abortutils          , only : endrun
     use spmdMod             , only : masterproc
     use ncdio_pio           , only : file_desc_t, ncd_io, ncd_double, ncd_int, ncd_inqvdlen
@@ -324,14 +324,16 @@ contains
        g = patch%gridcell(p)
        if ( sand3d(g,1)+clay3d(g,1) == 0.0_r8 )then
           if ( any( sand3d(g,:)+clay3d(g,:) /= 0.0_r8 ) )then
-             call endrun(msg='found depth points that do NOT sum to zero when surface does'//&
+             call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                  msg='found depth points that do NOT sum to zero when surface does'//&
                   errMsg(sourcefile, __LINE__)) 
           end if
           sand3d(g,:) = 1.0_r8
           clay3d(g,:) = 1.0_r8
        end if
        if ( any( sand3d(g,:)+clay3d(g,:) == 0.0_r8 ) )then
-          call endrun(msg='after setting, found points sum to zero'//errMsg(sourcefile, __LINE__)) 
+          call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+               msg='after setting, found points sum to zero'//errMsg(sourcefile, __LINE__))
        end if
 
        soilstate_inst%sandfrac_patch(p) = sand3d(g,1)/100.0_r8

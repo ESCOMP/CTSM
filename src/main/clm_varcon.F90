@@ -190,7 +190,6 @@ module clm_varcon
   !------------------------------------------------------------------
 
   character(len=16), public, parameter :: grlnd  = 'lndgrid'      ! name of lndgrid
-  character(len=16), public, parameter :: namea  = 'gridcellatm'  ! name of atmgrid
   character(len=16), public, parameter :: nameg  = 'gridcell'     ! name of gridcells
   character(len=16), public, parameter :: namel  = 'landunit'     ! name of landunits
   character(len=16), public, parameter :: namec  = 'column'       ! name of columns
