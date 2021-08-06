@@ -370,17 +370,18 @@ contains
     integer                 :: scol_mask             ! single-column mask
     real(r8)                :: scol_spval            ! single-column special value to indicate it isn't set
     character(len=CL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
-    type(bounds_type)      :: bounds         ! bounds
+    type(bounds_type)      :: bounds                          ! bounds
     type(ESMF_Field)        :: lfield                         ! Land field read in
     character(CL) ,pointer  :: lfieldnamelist(:) => null()    ! Land field namelist item sent with land field
     integer                 :: fieldCount                     ! Number of fields on export state
     integer                 :: rank                           ! Rank of field (1D or 2D)
     real(r8), pointer       :: fldptr1d(:)                    ! 1D field pointer
     real(r8), pointer       :: fldptr2d(:,:)                  ! 2D field pointer
-    logical                 :: isPresent, isSet
-    character(len=CL)       :: model_version         ! Model version
-    character(len=CL)       :: hostname              ! hostname of machine running on
-    character(len=CL)       :: username              ! user running the model
+    logical                 :: isPresent                      ! If attribute is present
+    logical                 :: isSet                          ! If attribute is present and also set
+    character(len=CL)       :: model_version                  ! Model version
+    character(len=CL)       :: hostname                       ! hostname of machine running on
+    character(len=CL)       :: username                       ! user running the model
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
@@ -571,7 +572,6 @@ contains
     if (isPresent .and. isSet) then
        if (trim(cvalue) .eq. '.true.') write_restart_at_endofrun = .true.
     end if
-    print *,__FILE__,__LINE__,write_restart_at_endofrun
     ! ---------------------
     ! Initialize first phase of ctsm
     ! ---------------------
@@ -1016,7 +1016,7 @@ contains
 
        call ESMF_GridCompGet(gcomp, name=name, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call ESMF_LogWrite(subname//'setting alarms for' // trim(name), ESMF_LOGMSG_INFO)
+       call ESMF_LogWrite(subname//'setting alarms for ' // trim(name), ESMF_LOGMSG_INFO)
 
        !----------------
        ! Restart alarm
