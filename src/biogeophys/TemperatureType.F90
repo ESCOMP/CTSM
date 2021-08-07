@@ -1154,7 +1154,7 @@ contains
 
     !Marius
     this%t_ref2m_24_patch(bounds%begp:bounds%endp) = spval
-    call init_accum_field (name='T_REF2M_24', units='K', &    
+    call init_accum_field (name='T_REF24', units='K', &    
          desc='24 hour average of 2-m temperature', accum_type='timeavg', accum_period=-1, &
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
@@ -1256,7 +1256,7 @@ contains
     call extract_accum_field ('T_VEG240', rbufslp, nstep)
     this%t_veg240_patch(begp:endp) = rbufslp(begp:endp)
 
-    call extract_accum_field ('T_REF2M_24', rbufslp, nstep) !marius
+    call extract_accum_field ('T_REF24', rbufslp, nstep) !marius
     this%t_ref2m_24_patch(begp:endp) = rbufslp(begp:endp)
 
     call extract_accum_field ('T10', rbufslp, nstep)
@@ -1358,12 +1358,12 @@ contains
     call update_accum_field  ('T_VEG240', rbufslp             , nstep)
     call extract_accum_field ('T_VEG240', this%t_veg240_patch , nstep)
 
-    ! Accumulate and extract T_REF2M_24 Marius
+    ! Accumulate and extract T_REF24 Marius
     do p = begp,endp
        rbufslp(p) = this%t_ref2m_patch(p)
     end do
-    call update_accum_field  ('T_REF2M_24' , rbufslp , nstep) !Marius
-    call extract_accum_field ('T_REF2M_24' , this%t_ref2m_24_patch , nstep)
+    call update_accum_field  ('T_REF24' , rbufslp , nstep) !Marius
+    call extract_accum_field ('T_REF24' , this%t_ref2m_24_patch , nstep)
 
     ! Accumulate and extract TREFAV - hourly average 2m air temperature
     ! Used to compute maximum and minimum of hourly averaged 2m reference
