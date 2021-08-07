@@ -199,12 +199,12 @@ contains
                         ! Track N lost to DIN from messy eating, ie the
                         ! diff between p_decomp_npool_loss (pertains to
                         ! donor) and p_decomp_npool_gain (receiver)
-                        p_decomp_cpool_gain(c,j,k) = p_decomp_cpool_loss(c,j,k) * &
-                                                     (1.0_r8 - rf_decomp_cascade(c,j,k))
-                        p_decomp_npool_gain(c,j,k) = p_decomp_npool_loss(c,j,k) * &
-                                                     nue_decomp_cascade(k)
-                        p_decomp_npool_to_din(c,j,k) = p_decomp_npool_loss(c,j,k) - &
-                                                       p_decomp_npool_gain(c,j,k)
+                        p_decomp_cpool_gain(c,j,k) = &
+                           p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k))
+                        p_decomp_npool_gain(c,j,k) = &
+                           p_decomp_npool_loss(c,j,k) * nue_decomp_cascade(k)
+                        p_decomp_npool_to_din(c,j,k) = &
+                           p_decomp_npool_loss(c,j,k) - p_decomp_npool_gain(c,j,k)
                      end if
                   end if
                end if

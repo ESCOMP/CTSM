@@ -372,7 +372,6 @@ contains
             end do
          end do
 
-         ! TODO slevis: Add c_overflow_vr to the heterotrophic resp flux
          if (use_mimics) then
             do j = 1, nlevdecomp
                do fc=1,num_soilc
@@ -403,7 +402,6 @@ contains
                end do
             end do
          else  ! not use_mimics
-            c_overflow_vr(:,:,:) = 0.0_r8
             c_overflow_vr(:,:,:) = 0.0_r8
          end if
 

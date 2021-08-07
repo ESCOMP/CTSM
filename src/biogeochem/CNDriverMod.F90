@@ -1043,6 +1043,8 @@ contains
          soilbiogeochem_lithr_col=soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
          soilbiogeochem_decomp_cascade_ctransfer_col=&
          soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+         soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
          product_closs_grc=c_products_inst%product_loss_grc(begg:endg))
 
     if ( use_c13 ) then
@@ -1053,6 +1055,8 @@ contains
             soilbiogeochem_lithr_col=c13_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+            soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+            soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c13_products_inst%product_loss_grc(begg:endg))
     end if
 
@@ -1064,6 +1068,8 @@ contains
             soilbiogeochem_lithr_col=c14_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+            soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+            soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c14_products_inst%product_loss_grc(begg:endg))
     end if
 

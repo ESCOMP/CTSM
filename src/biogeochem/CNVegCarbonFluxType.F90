@@ -3998,6 +3998,7 @@ contains
        bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, isotope, &
        soilbiogeochem_hr_col, soilbiogeochem_cwdhr_col, soilbiogeochem_lithr_col, &
        soilbiogeochem_decomp_cascade_ctransfer_col, &
+       soilbiogeochem_cwdc_col, soilbiogeochem_cwdn_col, &
        product_closs_grc)
     !
     ! !DESCRIPTION:
@@ -4023,6 +4024,8 @@ contains
     real(r8)          , intent(in) :: soilbiogeochem_cwdhr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_lithr_col(bounds%begc:)
     real(r8)          , intent(in) :: soilbiogeochem_decomp_cascade_ctransfer_col(bounds%begc:,1:)
+    real(r8)          , intent(in) :: soilbiogeochem_cwdc_col(bounds%begc:)
+    real(r8)          , intent(in) :: soilbiogeochem_cwdn_col(bounds%begc:)
     real(r8)          , intent(in) :: product_closs_grc(bounds%begg:)
     !
     ! !LOCAL VARIABLES:
@@ -4035,6 +4038,8 @@ contains
     real(r8) :: ligninNratio_froot_patch(bounds%begp:bounds%endp)  ! lignin to N ratio of fine roots, patch level
     real(r8) :: ligninNratio_leaf_col(bounds%begc:bounds%endc)  ! lignin to N ratio of leaves, column level
     real(r8) :: ligninNratio_froot_col(bounds%begc:bounds%endc)  ! lignin to N ratio of fine roots, column level
+    real(r8) :: leafc_to_litter_col(bounds%begc:bounds%endc)  ! leaf C to litter C, column level
+    real(r8) :: frootc_to_litter_col(bounds%begc:bounds%endc)  ! fine root C to litter C, column level
     real(r8) :: nep_grc(bounds%begg:bounds%endg)        ! nep_col averaged to gridcell
     real(r8) :: fire_closs_grc(bounds%begg:bounds%endg) ! fire_closs_col averaged to gridcell
     real(r8) :: hrv_xsmrpool_to_atm_grc(bounds%begg:bounds%endg) ! hrv_xsmrpool_to_atm_col averaged to gridcell (gC/m2/s)
@@ -4481,14 +4486,14 @@ contains
           c = filter_soilc(fc)
           ! TODO Use cwd_flig in *CascadeBGC the same way for consistency?
           ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
-                             (this%cwdc_col(c) / this%cwdn_col(c)) * &
-                             this%decomp_cascade_ctransfer_col(c,i_cwdl2)
+                             (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
+                             soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
           this%ligninNratioAvg_col(c) = &
              (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
               ligninNratio_cwd) / &
               max(1.0e-3_r8, leafc_to_litter_col(c) + &
                              frootc_to_litter_col(c) + &
-                             this%decomp_cascade_ctransfer_col(c,i_cwdl2))
+                             soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2))
        end do
     end if
 
