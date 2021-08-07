@@ -12,7 +12,7 @@ module histFileMod
   use shr_sys_mod    , only : shr_sys_flush
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_vertsoilc, use_fates, compname
+  use clm_varctl     , only : iulog, use_fates, compname
   use clm_varcon     , only : spval, ispval
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index_array
@@ -3110,12 +3110,7 @@ contains
           call ncd_io(varname='levgrnd', data=zsoi, ncid=nfid(t), flag='write')
           call ncd_io(varname='levsoi', data=zsoi(1:nlevsoi), ncid=nfid(t), flag='write')
           call ncd_io(varname='levlak' , data=zlak, ncid=nfid(t), flag='write')
-          if (use_vertsoilc) then
-             call ncd_io(varname='levdcmp', data=zsoi, ncid=nfid(t), flag='write')
-          else
-             zsoi_1d(1) = 1._r8
-             call ncd_io(varname='levdcmp', data=zsoi_1d, ncid=nfid(t), flag='write')
-          end if
+          call ncd_io(varname='levdcmp', data=zsoi, ncid=nfid(t), flag='write')
           if(use_fates)then
              call ncd_io(varname='fates_scmap_levscag',data=fates_hdim_scmap_levscag, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_agmap_levscag',data=fates_hdim_agmap_levscag, ncid=nfid(t), flag='write')

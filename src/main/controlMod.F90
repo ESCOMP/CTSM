@@ -271,7 +271,7 @@ contains
     namelist /clm_inparm/ use_SSRE
 
     namelist /clm_inparm/ &
-         use_lch4, use_vertsoilc, use_extralakelayers, &
+         use_lch4, use_extralakelayers, &
          use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, use_ozone, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
@@ -418,7 +418,7 @@ contains
             errMsg(sourcefile, __LINE__))
        end if
        
-       if (use_lch4 .and. use_vertsoilc) then 
+       if (use_lch4 ) then 
           anoxia = .true.
        else
           anoxia = .false.
@@ -612,7 +612,6 @@ contains
     call mpi_bcast (nsrest, 1, MPI_INTEGER, 0, mpicom, ier)
 
     call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_vertsoilc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_century_decomp, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -734,7 +733,7 @@ contains
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    if (use_cn .and. use_vertsoilc) then
+    if (use_cn ) then
        ! vertical soil mixing variables
        call mpi_bcast (som_adv_flux, 1, MPI_REAL8,  0, mpicom, ier)
        call mpi_bcast (max_depth_cryoturb, 1, MPI_REAL8,  0, mpicom, ier)
@@ -854,7 +853,6 @@ contains
     write(iulog,*) '   hostname              = ',trim(hostname)
     write(iulog,*) 'process control parameters:'
     write(iulog,*) '    use_lch4 = ', use_lch4
-    write(iulog,*) '    use_vertsoilc = ', use_vertsoilc
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
     write(iulog,*) '    use_century_decomp = ', use_century_decomp
@@ -921,7 +919,7 @@ contains
        write(iulog,*) '   override_bgc_restart_mismatch_dump                     : ', override_bgc_restart_mismatch_dump
     end if
 
-    if (use_cn .and. use_vertsoilc) then
+    if (use_cn ) then
        write(iulog, *) '   som_adv_flux, the advection term in soil mixing (m/s) : ', som_adv_flux
        write(iulog, *) '   max_depth_cryoturb (m)                                : ', max_depth_cryoturb
        write(iulog, *) '   surfprof_exp                                          : ', surfprof_exp

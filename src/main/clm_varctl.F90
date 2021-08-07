@@ -367,9 +367,9 @@ module clm_varctl
   ! Migration of CPP variables
   !----------------------------------------------------------
 
-  logical, public :: use_lch4            = .false.
+  logical, public :: use_lch4            = .true.
   logical, public :: use_nitrif_denitrif = .true.
-  logical, public :: use_vertsoilc       = .false.
+  logical, public :: use_vertsoilc       = .true.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
   logical, public :: use_century_decomp  = .true.

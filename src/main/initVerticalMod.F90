@@ -16,7 +16,7 @@ module initVerticalMod
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb, nlevmaxurbgrnd
   use clm_varctl        , only : fsurdat, iulog
-  use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
+  use clm_varctl        , only : use_vancouver, use_mexicocity, use_extralakelayers
   use clm_varctl        , only : use_bedrock, rundef
   use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
   use clm_varctl        , only : use_fates
@@ -273,12 +273,8 @@ contains
     end if  ! calc_method is node-based or thickness-based
 
     ! define a vertical grid spacing such that it is the normal dzsoi if
-    ! nlevdecomp =nlevgrnd, or else 1 meter
-    if (use_vertsoilc) then
-       dzsoi_decomp = dzsoi            !thickness b/n two interfaces
-    else
-       dzsoi_decomp(1) = 1._r8
-    end if
+    ! nlevdecomp =nlevgrnd
+    dzsoi_decomp = dzsoi            !thickness b/n two interfaces
 
     if (masterproc) then
        write(iulog, *) 'zsoi', zsoi(:) 

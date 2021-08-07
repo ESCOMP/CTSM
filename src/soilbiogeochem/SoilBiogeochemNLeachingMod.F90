@@ -223,6 +223,7 @@ contains
                c = filter_soilc(fc)
 
                if (.not. use_vertsoilc) then
+                  call endrun( "ERROR:: use_vertsoilc is now hardcoded to be true" )
                   ! calculate the dissolved mineral N concentration (gN/kg water)
                   ! assumes that 10% of mineral nitrogen is soluble
                   disn_conc = 0._r8

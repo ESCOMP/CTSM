@@ -8,7 +8,7 @@ module clm_varpar
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_sys_mod  , only: shr_sys_abort
   use spmdMod      , only: masterproc
-  use clm_varctl   , only: use_extralakelayers, use_vertsoilc
+  use clm_varctl   , only: use_extralakelayers
   use clm_varctl   , only: use_century_decomp, use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, rundef
@@ -207,15 +207,10 @@ contains
        nlayert     =  nlayer + (nlevgrnd -nlevsoi)
     endif
 
-    ! here is a switch to set the number of soil levels for the biogeochemistry calculations.
-    ! currently it works on either a single level or on nlevsoi and nlevgrnd levels
-    if (use_vertsoilc) then
-       nlevdecomp      = nlevsoi
-       nlevdecomp_full = nlevgrnd
-    else
-       nlevdecomp      = 1
-       nlevdecomp_full = 1
-    end if
+    ! to set the number of soil levels for the biogeochemistry calculations.
+    ! currently it works on nlevsoi and nlevgrnd levels
+    nlevdecomp      = nlevsoi
+    nlevdecomp_full = nlevgrnd
 
     if (.not. use_extralakelayers) then
        nlevlak     =  10     ! number of lake layers

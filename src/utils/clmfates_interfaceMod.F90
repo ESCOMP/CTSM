@@ -328,11 +328,7 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_ch4',ival=pass_ch4)
         
-        if(use_vertsoilc) then
-           pass_vertsoilc = 1
-        else
-           pass_vertsoilc = 0
-        end if
+        pass_vertsoilc = 1
         call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
         
         if(use_fates_fixed_biogeog)then
@@ -593,11 +589,7 @@ module CLMFatesInterfaceMod
 
             this%fates(nc)%sites(s)%h_gid = c
             
-            if (use_vertsoilc) then
-               ndecomp = col%nbedrock(c)
-            else
-               ndecomp = 1
-            end if
+            ndecomp = col%nbedrock(c)
 
             call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
@@ -2604,9 +2596,7 @@ module CLMFatesInterfaceMod
              end if
           end do
        else
-          do j=1,nlevsoil
-             this%fates(nc)%bc_in(s)%decomp_id(j) = 1
-          end do
+          call endrun( "ERROR: use_vertsoilc is now hardcoded to true" )
        end if
 
     end do

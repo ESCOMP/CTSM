@@ -8,6 +8,7 @@ module CNRootDynMod
 ! !USES:
    use shr_kind_mod                    , only : r8 => shr_kind_r8
    use clm_time_manager                , only : get_step_size_real
+   use abortutils                      , only : endrun
    use clm_varpar                      , only : nlevsoi, nlevgrnd
    use clm_varctl                      , only : use_vertsoilc, use_bedrock
    use decompMod                       , only : bounds_type
@@ -189,6 +190,7 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
          if(use_vertsoilc) then !for vertical soil profile
             rsmn(p,j) = sminn_vr(c,j) 
          else ! need to calculate a profile, top 0.2m are constant, and decrease linearly
+            call endrun( "ERROR: use_vertsoilc is now hardcoded to true" )
             if(zi(c,j) <= 0.2_r8)then
                 rsmn(p,j) = dz(c,j)
             end if

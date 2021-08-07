@@ -6,7 +6,7 @@ module CNVegNitrogenFluxType
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_pools
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp, i_litr_min, i_litr_max
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_crop
+  use clm_varctl                         , only : use_nitrif_denitrif, use_crop
   use CNSharedParamsMod                  , only : use_fun
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
