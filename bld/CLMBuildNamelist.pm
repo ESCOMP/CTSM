@@ -848,6 +848,27 @@ sub setup_cmdl_bgc {
      $log->fatal_error("The namelist variable use_fates is inconsistent with the -bgc option");
   }
 
+  {
+     # If the variable has already been set use it, if not set to the value defined by the bgc_mode
+     my @list  = (  "use_lch4" );
+     my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
+     foreach my $var ( @list ) {
+        my $default_setting = $defaults->get_value($var, \%settings );
+        if ( ! defined($nl->get_value($var))  ) {
+           $nl_flags->{$var} = $default_setting;
+        } else {
+           $nl_flags->{$var} = $nl->get_value($var);
+        }
+        $val = $nl_flags->{$var};
+        my $group = $definition->get_group_name($var);
+        $nl->set_variable_value($group, $var, $val);
+        if (  ! $definition->is_valid_value( $var, $val ) ) {
+           my @valid_values   = $definition->get_valid_values( $var );
+           $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
+        }
+     }
+  }
+
   # Now set use_cn and use_fates
   foreach $var ( "use_cn", "use_fates" ) {
      $val = $nl_flags->{$var};
@@ -3105,6 +3126,14 @@ sub setup_logic_c_isotope {
   my $use_c13 = $nl->get_value('use_c13');
   my $use_c14 = $nl->get_value('use_c14');
   if ( $nl_flags->{'bgc_mode'} ne "sp" && $nl_flags->{'bgc_mode'} ne "fates" ) {
+    if ( $nl_flags->{'bgc_mode'} ne "bgc" ) {
+      if ( defined($use_c13) && &value_is_true($use_c13) ) {
+        $log->warning("use_c13 is ONLY scientifically validated with the bgc=BGC configuration" );
+      }
+      if ( defined($use_c14) && &value_is_true($use_c14) ) {
+        $log->warning("use_c14 is ONLY scientifically validated with the bgc=BGC configuration" );
+      }
+    }
     if ( defined($use_c14) ) {
       if ( &value_is_true($use_c14) ) {
         my $use_c14_bombspike = $nl->get_value('use_c14_bombspike');
