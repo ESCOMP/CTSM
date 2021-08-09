@@ -93,8 +93,7 @@ module subgridWeightsMod
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use abortutils   , only : endrun
   use clm_varctl   , only : iulog, all_active, run_zero_weight_urban, use_fates
-  use clm_varcon   , only : nameg, namel, namec, namep
-  use decompMod    , only : bounds_type
+  use decompMod    , only : bounds_type, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
   use GridcellType , only : grc                
   use LandunitType , only : lun                
   use ColumnType   , only : col                
@@ -157,7 +156,7 @@ contains
     use landunit_varcon, only : max_lunit
     use clm_varpar     , only : maxpatch_glc, natpft_size, cft_size
     use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-    use decompMod      , only : BOUNDS_LEVEL_PROC
+    use decompMod      , only : bounds_level_proc
     use histFileMod    , only : hist_addfld2d
     !
     ! !ARGUMENTS:
@@ -168,7 +167,7 @@ contains
     character(len=*), parameter :: subname = 'init_subgrid_weights_mod'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     ! ------------------------------------------------------------------------
     ! Allocate variables in subgrid_weights_diagnostics
@@ -278,7 +277,7 @@ contains
        if (col%active(c) .and. .not. lun%active(l)) then
           write(iulog,*) trim(subname),' ERROR: active column found on inactive landunit', &
                          'at c = ', c, ', l = ', l
-          call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -288,7 +287,7 @@ contains
        if (patch%active(p) .and. .not. col%active(c)) then
           write(iulog,*) trim(subname),' ERROR: active patch found on inactive column', &
                          'at p = ', p, ', c = ', c
-          call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -519,7 +518,7 @@ contains
     else if (weight > 0._r8) then
        write(iulog,*) subname//' ERROR: Attempt to assign non-zero weight to a non-existent landunit'
        write(iulog,*) 'g, l, ltype, weight = ', g, l, ltype, weight
-       call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
+       call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errMsg(sourcefile, __LINE__))
     end if
     
   end subroutine set_landunit_weight

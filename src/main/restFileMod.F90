@@ -8,7 +8,7 @@ module restFileMod
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use decompMod        , only : bounds_type, get_proc_clumps, get_clump_bounds
-  use decompMod        , only : BOUNDS_LEVEL_PROC
+  use decompMod        , only : bounds_level_proc
   use spmdMod          , only : masterproc, mpicom
   use abortutils       , only : endrun
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -182,7 +182,7 @@ contains
     ! The provided bounds need to be proc-level bounds. This is in part because of logic
     ! below that divides this into clump-level bounds for the sake of reweight_wrapup.
     ! But it *MAY* also be necessary to have proc-level bounds for these i/o routines.
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     ! Open file
 

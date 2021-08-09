@@ -86,7 +86,6 @@ Type of CO2 feedback.
     diagnostic = use the diagnostic value sent from the atmosphere
 </entry>
 
-
 <entry id="suplnitro" type="char*15" category="clm_physics"
        group="clm_inparm" valid_values="NONE,ALL" >
 Supplemental Nitrogen mode and for what type of vegetation it's turned on for. 
@@ -753,13 +752,14 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 If TRUE, write master field list to separate file for documentation purposes
 </entry>
 
-<entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
-       group="clm_inparm" valid_values="A,I,X,M" >
+<entry id="hist_avgflag_pertape" type="char*10(10)" category="history"
+       group="clm_inparm" valid_values="" >
 Per file averaging flag.
     'A' (average over history period)
     'I' (instantaneous)
     'X' (maximum over history period)
     'M' (minimum over history period)
+    'LXXXXX' (local solar time at XXXXX seconds of day)
 </entry>
 
 <entry id="hist_type1d_pertape" type="char*4(10)" category="history"
@@ -1086,6 +1086,15 @@ Initial seed Carbon to use at planting
 (only used when CN is on as well as crop)
 </entry>
 
+<entry id="o3_veg_stress_method" type="char*32" category="physics"
+       group="clm_inparm" valid_values="unset,stress_lombardozzi2015,stress_falk" value="unset">
+       Parameter to set the type of ozone vegetation stress method 
+       unset                  = (default) ozone stress vegetation method is off 
+       stress_lombardozzi2015 = ozone stress vegetation functions from Danica Lombardozzi 2015
+       stress_falk            = ozone stress vegetation functions from Stefanie Falk (issue #1224)
+<default>Default: "unset"</default>
+</entry>       
+       
 <entry id="onset_thresh_depends_on_veg" type="logical" category="physics"
        group="cnphenology">
 Phenology onset depends on the vegetation type
@@ -1096,11 +1105,6 @@ Phenology onset depends on the vegetation type
        group="cnphenology">
 The minimum critical day length for onset depends on latitude
 (only used when CN is on)
-</entry>
-
-<entry id="use_ozone" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on ozone stress
 </entry>
 
 <entry id="use_snicar_frc" type="logical" category="physics"
