@@ -29,7 +29,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: decomp_cascade_hr_col                     (:,:)   ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
-     real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate constant for decomposition (1./sec)
+     real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
      real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
      real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia
      real(r8), pointer :: w_scalar_col                              (:,:)   ! fraction by which decomposition is limited by moisture availability
@@ -121,7 +121,7 @@ contains
      allocate(this%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions))                      
      this%decomp_cascade_ctransfer_col(:,:)= nan
 
-     allocate(this%decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))                    
+     allocate(this%decomp_k_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
      this%decomp_k_col(:,:,:)= spval
 
      allocate(this%decomp_cpools_leached_col(begc:endc,1:ndecomp_pools))              
@@ -693,7 +693,6 @@ contains
              this%decomp_cascade_hr_vr_col(i,j,l)        = value_column
              this%decomp_cascade_ctransfer_col(i,l)      = value_column
              this%decomp_cascade_ctransfer_vr_col(i,j,l) = value_column
-             this%decomp_k_col(i,j,l)                    = value_column
           end do
        end do
     end do
@@ -708,6 +707,7 @@ contains
              i = filter_column(fi)
              this%decomp_cpools_transport_tendency_col(i,j,k) = value_column
              this%decomp_cpools_sourcesink_col(i,j,k)         = value_column  
+             this%decomp_k_col(i,j,k)                         = value_column
           end do
        end do
     end do
