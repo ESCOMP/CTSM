@@ -166,7 +166,7 @@ contains
 
   !-----------------------------------------------------------------------
    subroutine SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, &
-                                         pmnf_decomp_cascade, waterstatebulk_inst, &
+                                         p_decomp_cn_gain, pmnf_decomp_cascade, waterstatebulk_inst, &
                                          waterfluxbulk_inst, temperature_inst,soilstate_inst,                          &
                                          cnveg_state_inst,cnveg_carbonstate_inst,                                  &
                                          cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
@@ -176,6 +176,7 @@ contains
     !
     ! !USES:
     use clm_varctl       , only: cnallocate_carbon_only, iulog
+    use clm_varctl       , only: use_mimics_decomp
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varpar       , only: i_cop_mic, i_oli_mic
     use clm_varcon       , only: nitrif_n2o_loss_frac
@@ -183,6 +184,7 @@ contains
     use CNFUNMod         , only: CNFUN
     use subgridAveMod    , only: p2c
     use perf_mod         , only : t_startf, t_stopf
+    use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds
@@ -191,6 +193,7 @@ contains
     integer                                 , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                                 , intent(in)    :: filter_soilp(:)  ! filter for soil patches
     real(r8)                                , intent(in)    :: pmnf_decomp_cascade(bounds%begc:,1:,1:)  ! potential mineral N flux from one pool to another (gN/m3/s)
+    real(r8)                                , intent(in)    :: p_decomp_cn_gain(bounds%begc:,1:,1:)  ! C:N ratio of the flux gained by the receiver pool
     type(waterstatebulk_type)                   , intent(in)    :: waterstatebulk_inst
     type(waterfluxbulk_type)                    , intent(in)    :: waterfluxbulk_inst
     type(temperature_type)                  , intent(in)    :: temperature_inst
@@ -208,7 +211,7 @@ contains
 !
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,p,l,pi,j                                            ! indices
+    integer  :: c,p,l,pi,j,k                                          ! indices
     integer  :: fc                                                    ! filter column index
     logical :: local_use_fun                                          ! local version of use_fun
     real(r8) :: amnf_immob_vr                                         ! actual mineral N flux from immobilization (gN/m3/s)
@@ -372,7 +375,7 @@ contains
             end do
          end do
 
-         if (use_mimics) then
+         if (use_mimics_decomp) then
             do j = 1, nlevdecomp
                do fc=1,num_soilc
                   c = filter_soilc(fc)
@@ -390,8 +393,8 @@ contains
                                             sum_ndemand_vr(c,j))
                            n_deficit_vr = pmnf_decomp_cascade(c,j,k) - &
                                           amnf_immob_vr
-                           c_overflow_vr(c,j,k) = n_deficit_vr * &
-                                                  p_decomp_cn_gain(c,j,k)
+                           c_overflow_vr(c,j,k) = &
+                              n_deficit_vr * p_decomp_cn_gain(c,j,cascade_receiver_pool(k))
                         else
                            c_overflow_vr(c,j,k) = 0.0_r8
                         end if
@@ -401,7 +404,7 @@ contains
                   end do
                end do
             end do
-         else  ! not use_mimics
+         else  ! not use_mimics_decomp
             c_overflow_vr(:,:,:) = 0.0_r8
          end if
 

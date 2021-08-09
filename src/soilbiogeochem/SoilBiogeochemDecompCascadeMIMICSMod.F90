@@ -23,7 +23,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
   use SoilStateType                      , only : soilstate_type
   use TemperatureType                    , only : temperature_type 
-  use CNveg_CarbonFlux_Type              , only : cnveg_carbonflux_type
+  use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use ch4Mod                             , only : ch4_type
   use ColumnType                         , only : col                
   use GridcellType                       , only : grc
@@ -45,8 +45,6 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   integer, private :: i_chem_som  ! index of chemically protected SOM
   integer, private :: i_avl_som  ! index of available (aka active) SOM
   integer, private :: i_str_lit  ! index of structural litter pool
-  integer, private :: i_cop_mic  ! index of copiotrophic microbial pool
-  integer, private :: i_oli_mic  ! index of oligotrophic microbial pool
   integer, private :: i_l1m1  ! indices of pool transfers needed in whole module
   integer, private :: i_l1m2
   integer, private :: i_l2m1
@@ -249,15 +247,17 @@ contains
       allocate(fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(p_scalar(bounds%begc:bounds%endc,1:nlevdecomp))
 
-      params_inst%p_scalar_p1 = 0.8_r8  ! TODO Move to the params files after
-      params_inst%p_scalar_p2 = -3.0_r8  ! ... reading TODOs in subr. readParams (above)
-      params_inst%desorp_p1 = 1.5e-5_r8
-      params_inst%desorp_p2 = -1.5_r8
-      params_inst%fphys_r_p1 = 0.3_r8
-      params_inst%fphys_r_p2 = 1.3_r8
-      params_inst%fphys_k_p1 = 0.2_r8
-      params_inst%fphys_k_p2 = 0.8_r8
-      params_inst%nue_into_mic = 0.85_r8
+      ! TODO Prefix these parameters w params_inst% to move to params file(s).
+      ! First read TODOs in subr. readParams above.
+      p_scalar_p1 = 0.8_r8
+      p_scalar_p2 = -3.0_r8
+      desorp_p1 = 1.5e-5_r8
+      desorp_p2 = -1.5_r8
+      fphys_r_p1 = 0.3_r8
+      fphys_r_p2 = 1.3_r8
+      fphys_k_p1 = 0.2_r8
+      fphys_k_p2 = 0.8_r8
+      nue_into_mic = 0.85_r8
 
       !------- time-constant coefficients ---------- !
       ! set respiration fractions for fluxes between compartments
@@ -321,8 +321,8 @@ contains
                exp(fphys_r_p2 * cellclay(c,j))))
             fphys_m2(c,j) = min(1.0_r8, max(0.0_r8, fphys_k_p1 * &
                exp(fphys_k_p2 * cellclay(c,j))))
-            p_scalar(c,j) = 1.0_r8 / (params_inst%p_scalar_p1 * &
-                                      exp(params_inst%p_scalar_p2 * &
+            p_scalar(c,j) = 1.0_r8 / (p_scalar_p1 * &
+                                      exp(p_scalar_p2 * &
                                           sqrt(cellclay(c,j))))
          end do
       end do
@@ -702,7 +702,7 @@ contains
          
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
-         cn_col         => cnveg_carbonflux_inst%cn_col                , & ! Output: [real(r8) (:,:)   ]  C:N ratio
+         cn_col         => soilbiogeochem_state_inst%cn_col            , & ! Output: [real(r8) (:,:)   ]  C:N ratio
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )

@@ -334,7 +334,7 @@ module CNVegCarbonFluxType
      real(r8), pointer :: nbp_grc        (:) ! (gC/m2/s) net biome production, includes fire, landuse, harvest and hrv_xsmrpool flux, positive for sink (same as net carbon exchange between land and atmosphere)
      real(r8), pointer :: nee_grc        (:) ! (gC/m2/s) net ecosystem exchange of carbon, includes fire and hrv_xsmrpool, excludes landuse and harvest flux, positive for source 
 
-     ! Lignin to N ratio
+     ! Plant C to N ratios
      real(r8), pointer :: ligninNratioAvg_col(:)  ! Average of leaf, fine root, and CWD lignin to N ratio
 
      ! Dynamic landcover fluxnes
