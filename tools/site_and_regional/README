@@ -18,3 +18,24 @@ modify_singlept_site_neon.py
         After running subset_data.py overwrite some fields with site-specific 
         data for neon sites
 
+
+DEPRECATED SCRIPTS:
+
+Master perl scripts that call the other ncl scripts:
+
+mknoocnmap.pl 
+        Script to create unity mapping dataset for single-point
+        or regional studies over land-only (no ocean).
+
+getregional_datasets.pl 
+        Extract out regional datasets from global ones and put files in a location that
+        can be used by build-namelist.
+
+NCL Scripts available:
+
+mkunitymap.ncl
+        NCL script to create a unity map -- ran by above script (mknoocnmap.pl)
+
+getregional_datasets.ncl 
+        NCL script to extract out regional datasets.
+
