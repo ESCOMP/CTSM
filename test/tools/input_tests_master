@@ -41,8 +41,8 @@ bliT2 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP
 smia1 TSMscript_tools.sh contrib subset_data.py subset_data_YELL
 blia1 TSMscript_tools.sh contrib subset_data.py subset_data_YELL
 
-smia2 TSMscript_tools.sh contrib modify_singlept_site_neon.py modify_data_YELL
-blia2 TSMscript_tools.sh contrib modify_singlept_site_neon.py modify_data_YELL
+smia2 TSMscript_tools.sh contrib/neon modify_singlept_site_neon.py modify_data_YELL
+blia2 TSMscript_tools.sh contrib/neon modify_singlept_site_neon.py modify_data_YELL
 
 smi#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 bli#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
