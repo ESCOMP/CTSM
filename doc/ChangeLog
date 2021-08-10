@@ -1,4 +1,81 @@
 ===============================================================
+Tag name:  ctsm5.1.dev053
+Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date:  Tue Aug 10 16:22:24 MDT 2021
+One-line Summary: Adding history variables for use with Newton-Krylov
+
+Purpose and description of changes
+----------------------------------
+
+ Considering @klindsay28's Newton-Krylov spin-up method for BGC and MIMICS.
+ Newton-Krylov needs decomp_k and pathfrac_decomp_cascade on ctsm history
+ files.
+
+ decomp_k was already in place.
+ I have now also added pathfrac_decomp_cascade.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #): #1455
+
+Known bugs found since the previous tag (include issue #):
+ I did not open an issue for this: decomp_k was dimensioned wrong, and I
+ corrected it in this PR without affecting answers. In particular I changed the
+ size of the third dimension from ndecomp_pools to ndecomp_cascade_transitions.
+
+Notes of particular relevance for users
+---------------------------------------
+Substantial timing or memory changes:
+[For timing changes, you should at least check the PFS test in the test
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ This PR adds a variable to ctsm's history files; however, I have not updated
+ the corresponding master list in the documentation, yet.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- 
+    izumi ------- 
+  
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/CTSM/pull/1457
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev051
 Originator(s): Stefanie Falk, Sunniva Indrehus, Bill Sacks
 Date:  Fri Aug  6 10:30:32 MDT 2021

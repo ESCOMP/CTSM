@@ -34,7 +34,6 @@ module SoilBiogeochemStateType
      real(r8) , pointer :: fpi_col                     (:)     ! (no units) fraction of potential immobilization 
      real(r8),  pointer :: fpg_col                     (:)     ! (no units) fraction of potential gpp 
      real(r8) , pointer :: rf_decomp_cascade_col       (:,:,:) ! (frac) respired fraction in decomposition step 
-     real(r8) , pointer :: pathfrac_decomp_cascade_col (:,:,:) ! (frac) what fraction of C leaving a given pool passes through a given transition 
      real(r8) , pointer :: nfixation_prof_col          (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: ndep_prof_col               (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: som_adv_coef_col            (:,:)   ! (m2/s) SOM advective flux 
@@ -104,9 +103,6 @@ contains
 
     allocate(this%rf_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions)); 
     this%rf_decomp_cascade_col(:,:,:) = nan
-
-    allocate(this%pathfrac_decomp_cascade_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions));     
-    this%pathfrac_decomp_cascade_col(:,:,:) = nan
 
   end subroutine InitAllocate
 
