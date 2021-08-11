@@ -1,4 +1,116 @@
 ===============================================================
+Tag name:  ctsm5.1.dev052
+Originator(s):  negins/jedwards/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Wed Aug 11 14:33:48 MDT 2021
+One-line Summary: Wrapper script for running NEON sites, and some NEON updates
+
+Purpose and description of changes
+----------------------------------
+
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+  Fixes #1354
+  Fixes #1454
+  Fixes #1456
+  Fixes #1407
+  Fixes #1446
+  Fixes #1429
+
+Known bugs introduced in this tag (include issue #):
+  #1459 -- Change run_neon to run from any directory and add some additional options for testing
+
+Known bugs found since the previous tag (include issue #):
+  #1443 -- NEON site data requirements
+  #1442 -- Rename NEON files for CLM
+  #1433 -- Bring in eval data from NEON
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to the datasets (e.g., parameter, surface or initial files): Some NEON surface datasets updated
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing: tools testing modified
+
+
+Testing summary: regular and tools
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
+  (PTCLM is being deprecated, so we only expect this to be done on occasion)
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cism, cime, cmeps, cdeps
+   cism to cismwrap_2_1_87
+   cime to cime6.0.4
+   cmeps to cmeps0.13.23
+   cdeps to cdeps0.12.19
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #1444 -- Wrapper script for batch running NEON sites, and NEON fixes
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev051
 Originator(s): Stefanie Falk, Sunniva Indrehus, Bill Sacks
 Date:  Fri Aug  6 10:30:32 MDT 2021
