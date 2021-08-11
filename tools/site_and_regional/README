@@ -39,3 +39,8 @@ mkunitymap.ncl
 getregional_datasets.ncl 
         NCL script to extract out regional datasets.
 
+Input datafiles:
+
+sample_infile* --- Sample datafiles with list of files for getregional_datasets.pl to operate on
+sample_outfile* -- Sample datafiles with list of files for getregional_datasets.pl to create
+

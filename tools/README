@@ -1,7 +1,7 @@
 $CTSMROOT/tools/README					Jun/08/2018
 
-CLM tools for analysis of CLM history files -- or for creation or
-modification of CLM input files.
+CTSM tools for analysis of CTSM history files -- or for creation or
+modification of CTSM input files.
 	
 I.  General directory structure:
 
@@ -88,7 +88,7 @@ II. Notes on building/running for each of the above tools:
 
         run normally as above
 
-III. Process sequence to create input datasets needed to run CLM
+III. Process sequence to create input datasets needed to run CTSM
 
     1.) Create SCRIP grid files (if needed)
 
@@ -156,10 +156,10 @@ III. Process sequence to create input datasets needed to run CLM
     ./gen_maps.sh -focn <ocngrid> -fatm <atmgrid> -nocn <ocnname> -natm <atmname>
 
 
-    3.) Add SCRIP grid file(s) created in (1) into XML database in CLM (optional)
+    3.) Add SCRIP grid file(s) created in (1) into XML database in CTSM (optional)
 
         See the "Adding New Resolutions or New Files to the build-namelist Database" 
-        Chapter in the CLM User's Guide
+        Chapter in the CTSM User's Guide
 
   http://www.cesm.ucar.edu/models/cesm1.0/clm/models/lnd/clm/doc/UsersGuide/book1.html
 
@@ -178,7 +178,7 @@ III. Process sequence to create input datasets needed to run CLM
            cd mkmapdata
            ./mkmapdata.sh -r ne30np4
 
-    5.) Add mapping file(s) created in step (4) into XML database in CLM (optional)
+    5.) Add mapping file(s) created in step (4) into XML database in CTSM (optional)
 
        See notes on doing this in step (3) above. 
        Edit ../bld/namelist_files/namelist_defaults_clm.xml to incorporate new 
@@ -187,7 +187,7 @@ III. Process sequence to create input datasets needed to run CLM
        If you don't do this step, you'll need to specify the grid resolution name
        and file creation dates to mksurfdata_map in step (5) below.
 
-    6.) Convert map of ocean to atm for use by DATM and CLM with gen_domain
+    6.) Convert map of ocean to atm for use by DATM and CTSM with gen_domain
         (See $CIMEROOT/tools/mapping/README for more help on doing this)
 
        - gen_domain uses the map from step (2) (or previously created CESM maps)
@@ -203,9 +203,9 @@ III. Process sequence to create input datasets needed to run CLM
         setenv MAPFILE $CSMDATA/cpl/cpl6/map_${OCNGRIDNAME}_to_${ATMGRIDNAME}_aave_da_${CDATE}.nc
         ./gen_domain -m $MAPFILE -o $OCNGRIDNAME -l $ATMGRIDNAME
 
-        Normally for I compsets running CLM only you will discard the ocean domain 
+        Normally for I compsets running CTSM only you will discard the ocean domain 
         file, and only use the atmosphere domain file for datm and as the fatmlndfrc 
-        file for CLM. Output domain files will be named according to the input OCN/LND
+        file for CTSM. Output domain files will be named according to the input OCN/LND
         gridnames.
 
     7.) Create surface datasets with mksurfdata_map
@@ -256,25 +256,24 @@ IV. Example of creating single-point datasets without entering into XML database
        ./mkmapdata.sh -r $GRIDNAME -f $GRIDFILE -t regional
        cd ../..
     5.) skip
-    6.) Generate domain file for datm and CLM
+    6.) Generate domain file for datm and CTSM
         cd $CIMEROOT/tools/mapping/gen_domain_files/src
         gmake
         cd ..
         setenv OCNDOM domain.ocn_noocean.nc
         setenv ATMDOM domain.lnd.{$GRIDNAME}_noocean.nc
         ./gen_domain -m $MAPFILE -o $OCNDOM -l $ATMDOM
-    7.) Create surface dataset for CLM
+    7.) Create surface dataset for CTSM
        cd mksurfdata_map/src
        gmake
        cd ..
        ./mksurfdata.pl -r usrspec -usr_gname $GRIDNAME -usr_gdate $CDATE
     8.) skip
 
-V.  Notes on which input datasets are needed for CLM
+V.  Notes on which input datasets are needed for CTSM
 
        global or regional/single-point grids
          - need fsurdata and fatmlndfrc
 
       fsurdata ---- from mksurfdata_map in step (III.7)
       fatmlndfrc -- use the domain.lnd file from gen_domain in step (III.6)
-
