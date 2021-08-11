@@ -38,11 +38,14 @@ bliT4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_200
 smiT2 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 bliT2 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 
-smia1 TSMscript_tools.sh site_and_regional subset_data.py subset_data_YELL
-blia1 TSMscript_tools.sh site_and_regional subset_data.py subset_data_YELL
+sm0a1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_YELL
+bl0a1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_YELL
 
-smia2 TSMscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
-blia2 TSMscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
+smba1 TSMscript_tools.sh site_and_regional subset_data.py subset_data_YELL
+blba1 TSMscript_tools.sh site_and_regional subset_data.py subset_data_YELL
+
+smaa2 TSMscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
+blaa2 TSMscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
 
 smi#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 bli#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
