@@ -7,7 +7,6 @@ I.  General directory structure:
 
     $CTSMROOT/tools
 	mksurfdata_map --- Create surface datasets.
-        (NOTE: interpinic now longer included as now an online capability in CLM)
 
         mkmapgrids ------- Create regular lat/lon SCRIP grid files needed by mkmapdata 
         mkmapdata -------- Create SCRIP mapping data from SCRIP grid files (uses ESMF)
@@ -72,20 +71,16 @@ II. Notes on building/running for each of the above tools:
       so that you can use the debugger, and with bounds-checking, and float trapping on. 
       To speed up do the following...
 
-   gmake OPT=TRUE  (by default already on for interpinic and mksurfdata_map)
+   gmake OPT=TRUE  (by default already on for mksurfdata_map)
 
       Also some of the tools allow for OpenMP shared memory parallelism 
-      (such as interpinic and mksurfdata) with
+      (such as mksurfdata) with
 
    gmake SMP=TRUE
 
     To run a program with a namelist:
 
         ./program < namelist
-
-    To get help on running a program with command line options (e.g., interpinic):
-
-        ./program
 
     To run a program built with SMP=TRUE:
 
