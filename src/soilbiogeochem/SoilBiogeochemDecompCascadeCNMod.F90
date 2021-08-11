@@ -569,7 +569,7 @@ contains
           o2stress_unsat => ch4_inst%o2stress_unsat_col                 , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
           finundated     => ch4_inst%finundated_col                     , & ! Input:  [real(r8) (:)     ]  fractional inundated area (excluding dedicated wetland columns)
           
-          pathfrac_decomp_cascade => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col                                          , & ! Output: [real(r8) (:,:,:) ]  how much C from the donor pool passes through a given transition (frac)
+          pathfrac_decomp_cascade => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col                                          , & ! Output: [real(r8) (:,:,:) ]  what fraction of C passes from donor to receiver pool through a given transition (frac)
 
           t_scalar       => soilbiogeochem_carbonflux_inst%t_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil temperature scalar for decomp                     
           w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           

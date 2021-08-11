@@ -29,7 +29,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: decomp_cascade_hr_col                     (:,:)   ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
      real(r8), pointer :: decomp_cascade_ctransfer_col              (:,:)   ! vertically-integrated (diagnostic) C transferred along decomposition cascade (gC/m2/s)
-     real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) how much C from the donor pool passes through a given transition
+     real(r8), pointer :: pathfrac_decomp_cascade_col               (:,:,:) ! (frac) what fraction of C passes from donor to receiver pool through a given transition
      real(r8), pointer :: decomp_k_col                              (:,:,:) ! rate coefficient for decomposition (1./sec)
      real(r8), pointer :: hr_vr_col                                 (:,:)   ! (gC/m3/s) total vertically-resolved het. resp. from decomposing C pools 
      real(r8), pointer :: o_scalar_col                              (:,:)   ! fraction by which decomposition is limited by anoxia

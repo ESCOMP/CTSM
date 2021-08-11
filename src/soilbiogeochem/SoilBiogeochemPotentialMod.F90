@@ -110,7 +110,7 @@ contains
          initial_cn_ratio                 => decomp_cascade_con%initial_cn_ratio                                   , & ! Input:  [real(r8) (:)     ]  c:n ratio for initialization of pools             
 
          rf_decomp_cascade                => soilbiogeochem_state_inst%rf_decomp_cascade_col                       , & ! Input:  [real(r8) (:,:,:) ]  respired fraction in decomposition step (frac)
-         pathfrac_decomp_cascade          => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col            , & ! Input:  [real(r8) (:,:,:) ]  how much C from the donor pool passes through a given transition (frac)
+         pathfrac_decomp_cascade          => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col            , & ! Input:  [real(r8) (:,:,:) ]  what fraction of C passes from donor to receiver pool through a given transition (frac)
 
          decomp_npools_vr                 => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col                , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
 
