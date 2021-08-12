@@ -108,7 +108,7 @@ contains
     ! TODO Add new params here and in the params file.
     ! TODO Some may need _bgc or _mimics added/removed here and in the params
     !      file. Nicer to add as prefix instead of as suffix because params will
-    !      then appear grouped in the file. Need approval from Bill/Erik.
+    !      then appear grouped in the file. Requested approval from Erik.
     ! TODO Read MIMICS-specific params here & shared ones (eg *_bgc) as:
     !      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
     ! TODO When ready for all final params values, talk to @wwieder and,
@@ -641,6 +641,7 @@ contains
     ! !USES:
     use clm_time_manager , only : get_days_per_year
     use clm_varcon       , only : secspday, secsphr, tfrz
+    use clm_varcon       , only : g_to_mg, cm3_to_m3
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds          
@@ -702,7 +703,7 @@ contains
          
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
-         cn_col         => soilbiogeochem_state_inst%cn_col            , & ! Output: [real(r8) (:,:)   ]  C:N ratio
+         cn_col         => soilbiogeochem_carbonflux_inst%cn_col       , & ! Output: [real(r8) (:,:)   ]  C:N ratio
          decomp_k       => soilbiogeochem_carbonflux_inst%decomp_k_col , & ! Output: [real(r8) (:,:,:) ]  rate for decomposition (1./sec)
          spinup_factor  => decomp_cascade_con%spinup_factor              & ! Input:  [real(r8)          (:)     ]  factor for AD spinup associated with each pool           
          )
@@ -1024,8 +1025,6 @@ contains
 
             ! Microbial concentration with necessary unit conversions
             ! mgC/cm3 = gC/m3 * (1e3 mg/g) / (1e6 cm3/m3)
-            g_to_mg = 1.0e3_r8  ! put unit conversions in clm_varcon?
-            cm3_to_m3 = 1.0e-6_r8
             m1_conc = (decomp_cpools_vr(c,j,i_cop_mic) / col%dz(c,j)) * &
                       g_to_mg * cm3_to_m3
             m2_conc = (decomp_cpools_vr(c,j,i_oli_mic) / col%dz(c,j)) * &

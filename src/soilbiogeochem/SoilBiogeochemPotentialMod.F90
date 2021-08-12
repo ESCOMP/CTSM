@@ -131,7 +131,7 @@ contains
          potential_immob_vr               => soilbiogeochem_nitrogenflux_inst%potential_immob_vr_col               , & ! Output: [real(r8) (:,:)   ]                                                  
          gross_nmin_vr                    => soilbiogeochem_nitrogenflux_inst%gross_nmin_vr_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
          
-         cn_col                           => soilbiogeochem_state_inst%cn_col                                      , & ! Input: [real(r8) (:,:)   ]  C:N ratio
+         cn_col                           => soilbiogeochem_carbonflux_inst%cn_col                                 , & ! Input: [real(r8) (:,:)   ]  C:N ratio
          decomp_k                         => soilbiogeochem_carbonflux_inst%decomp_k_col                           , & ! Input: [real(r8) (:,:,:) ]  decomposition rate coefficient (1./sec)
          phr_vr                           => soilbiogeochem_carbonflux_inst%phr_vr_col                               & ! Output: [real(r8) (:,:)   ]  potential HR (gC/m3/s)                           
          )
