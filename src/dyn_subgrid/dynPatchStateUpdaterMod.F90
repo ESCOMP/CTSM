@@ -20,7 +20,7 @@ module dynPatchStateUpdaterMod
 #include "shr_assert.h"
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_infnan_mod       , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod            , only : bounds_type, BOUNDS_LEVEL_PROC
+  use decompMod            , only : bounds_type, bounds_level_proc
   use PatchType            , only : patch
   use ColumnType           , only : col
   use clm_varpar           , only : mxpft
@@ -110,7 +110,7 @@ contains
     character(len=*), parameter :: subname = 'constructor'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     begp = bounds%begp
     endp = bounds%endp

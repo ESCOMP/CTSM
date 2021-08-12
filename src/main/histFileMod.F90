@@ -14,9 +14,9 @@ module histFileMod
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog, use_vertsoilc, use_fates, compname
   use clm_varcon     , only : spval, ispval
-  use clm_varcon     , only : grlnd, nameg, namel, namec, namep, nameCohort
-  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type
-  use GetGlobalValuesMod , only : GetGlobalIndexArray
+  use clm_varcon     , only : grlnd, nameg, namel, namec, namep
+  use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index_array
+  use decompMod      , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column
   use GridcellType   , only : grc
   use LandunitType   , only : lun
   use ColumnType     , only : col
@@ -29,7 +29,7 @@ module histFileMod
   use FatesLitterMod    , only : ncwd
   use PRTGenericMod     , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
-  use ncdio_pio 
+  use ncdio_pio
 
   !
   implicit none
@@ -1287,7 +1287,7 @@ contains
     !
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
-    use decompMod       , only : BOUNDS_LEVEL_PROC
+    use decompMod       , only : bounds_level_proc
     use clm_varcon      , only : degpsec, isecspday
     use clm_time_manager, only : get_curr_date
     !
@@ -1331,7 +1331,7 @@ contains
 
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     avgflag        =  tape(t)%hlist(f)%avgflag
     nacs           => tape(t)%hlist(f)%nacs
@@ -1650,7 +1650,7 @@ contains
     !
     ! !USES:
     use subgridAveMod   , only : p2g, c2g, l2g, p2l, c2l, p2c
-    use decompMod       , only : BOUNDS_LEVEL_PROC
+    use decompMod       , only : bounds_level_proc
     use clm_varctl      , only : iulog
     use clm_varcon      , only : degpsec, isecspday
     use clm_time_manager, only : get_curr_date
@@ -1698,7 +1698,7 @@ contains
 
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_PROC, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_proc, sourcefile, __LINE__)
 
     avgflag             =  tape(t)%hlist(f)%avgflag
     nacs                => tape(t)%hlist(f)%nacs
@@ -1736,7 +1736,7 @@ contains
        call hist_set_snow_field_2d(field, clmptr_ra(hpindex)%ptr, no_snow_behavior, type1d, &
             beg1d, end1d)
     else
-   
+
        field => clmptr_ra(hpindex)%ptr(:,1:num2d)
        field_allocated = .false.
     end if
@@ -2058,7 +2058,7 @@ contains
     integer                :: weight       ! function result
     integer, intent(inout) :: local_secpl  ! seconds into current date in local time
     integer, intent(in)    :: tod          ! Desired local solar time of output in seconds
- 
+
     !
     ! !LOCAL VARIABLES:
 
@@ -2421,7 +2421,7 @@ contains
     call ncd_defdim(lnfid, 'string_length', hist_dim_name_length, strlen_dimid)
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
-    
+
 
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
@@ -3471,7 +3471,7 @@ contains
     integer :: k                         ! 1d index
     integer :: g,c,l,p                   ! indices
     integer :: ier                       ! errir status
-    integer :: gindex                    ! global gridcell index  
+    integer :: gindex                    ! global gridcell index
     real(r8), pointer :: rgarr(:)        ! temporary
     real(r8), pointer :: rcarr(:)        ! temporary
     real(r8), pointer :: rlarr(:)        ! temporary
@@ -3671,7 +3671,8 @@ contains
          ilarr(l) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='land1d_jxy'      , data=ilarr        , dim1name=namel, ncid=ncid, flag='write')
-       ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
+       ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='land1d_gi'       , data=ilarr, dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_wtgcell'  , data=lun%wtgcell , dim1name=namel, ncid=ncid, flag='write')
        call ncd_io(varname='land1d_ityplunit', data=lun%itype   , dim1name=namel, ncid=ncid, flag='write')
@@ -3697,9 +3698,11 @@ contains
          icarr(c) = (gindex-1)/ldomain%ni + 1
        enddo
        call ncd_io(varname='cols1d_jxy'    , data=icarr         ,dim1name=namec, ncid=ncid, flag='write')
-       icarr = GetGlobalIndexArray(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=nameg)
+       icarr = get_global_index_array(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='cols1d_gi'     , data=icarr, dim1name=namec, ncid=ncid, flag='write')
-       icarr = GetGlobalIndexArray(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=namel)
+       icarr = get_global_index_array(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+            subgrid_level=subgrid_level_landunit)
        call ncd_io(varname='cols1d_li', data=icarr            , dim1name=namec, ncid=ncid, flag='write')
 
        call ncd_io(varname='cols1d_wtgcell', data=col%wtgcell , dim1name=namec, ncid=ncid, flag='write')
@@ -3734,11 +3737,14 @@ contains
        enddo
        call ncd_io(varname='pfts1d_jxy'      , data=iparr        , dim1name=namep, ncid=ncid, flag='write')
 
-       iparr = GetGlobalIndexArray(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=nameg)
+       iparr = get_global_index_array(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_gridcell)
        call ncd_io(varname='pfts1d_gi'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
-       iparr = GetGlobalIndexArray(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namel)
+       iparr = get_global_index_array(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_landunit)
        call ncd_io(varname='pfts1d_li'       , data=iparr, dim1name=namep, ncid=ncid, flag='write')
-       iparr = GetGlobalIndexArray(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namec)
+       iparr = get_global_index_array(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+            subgrid_level=subgrid_level_column)
        call ncd_io(varname='pfts1d_ci'  , data=iparr              , dim1name=namep, ncid=ncid, flag='write')
 
        call ncd_io(varname='pfts1d_wtgcell'  , data=patch%wtgcell , dim1name=namep, ncid=ncid, flag='write')
@@ -5372,7 +5378,7 @@ contains
 
     ! History buffer pointer
     hpindex = pointer_index()
-   
+
 
     if (present(ptr_lnd)) then
        l_type1d = grlnd

@@ -12,10 +12,10 @@ module SnowSnicarMod
   use shr_sys_mod     , only : shr_sys_flush
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use clm_varctl      , only : iulog
-  use clm_varcon      , only : namec , tfrz
+  use clm_varcon      , only : tfrz
   use shr_const_mod   , only : SHR_CONST_RHOICE
   use abortutils      , only : endrun
-  use decompMod       , only : bounds_type
+  use decompMod       , only : bounds_type, subgrid_level_column
   use AerosolMod      , only : snw_rds_min
   use atm2lndType     , only : atm2lnd_type
   use WaterStateBulkType  , only : waterstatebulk_type
@@ -427,7 +427,7 @@ contains
                   write (iulog,*) "column: ", c_idx, " level: ", i, " snl(c)= ", snl_lcl
                   write (iulog,*) "lat= ", lat_coord, " lon= ", lon_coord
                   write (iulog,*) "h2osno_total(c)= ", h2osno_lcl
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                endif
             enddo
 
@@ -899,7 +899,7 @@ contains
                      write(iulog,*) "column index: ", c_idx
                      write(iulog,*) "landunit type", lun%itype(l_idx)
                      write(iulog,*) "frac_sno: ", frac_sno(c_idx)
-                     call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                     call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                   else
                      flg_dover = 0
                   endif
@@ -912,7 +912,7 @@ contains
                if (abs(energy_sum) > 0.00001_r8) then
                   write (iulog,"(a,e12.6,a,i6,a,i6)") "SNICAR ERROR: Energy conservation error of : ", energy_sum, &
                        " at timestep: ", nstep, " at column: ", c_idx
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                endif
 
                albout_lcl(bnd_idx) = albedo
@@ -946,7 +946,7 @@ contains
                   write (iulog,*) "SNICAR STATS: snw_rds(-1)= ", snw_rds(c_idx,-1)
                   write (iulog,*) "SNICAR STATS: snw_rds(0)= ", snw_rds(c_idx,0)
 
-                  call endrun(decomp_index=c_idx, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                  call endrun(subgrid_index=c_idx, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                endif
 
             enddo   ! loop over wvl bands
