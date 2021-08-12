@@ -1,12 +1,37 @@
 ===============================================================
 Tag name:  ctsm5.1.dev052
 Originator(s):  negins/jedwards/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Wed Aug 11 14:33:48 MDT 2021
+Date: Wed Aug 11 21:58:47 MDT 2021
 One-line Summary: Wrapper script for running NEON sites, and some NEON updates
 
 Purpose and description of changes
 ----------------------------------
 
+This is a wrapper script for running CTSM simulation for one or more neon sites using 
+CIME case objects.
+
+This script accomplishes the following:
+
+Downloads and parses neon listing file for the available neon data :
+https://neon-ncar.s3.data.neonscience.org/listing.csv
+
+Create a base generic case and clone other cases from this generic base case.
+
+Enable the user to run in AD, Post-AD, and transient mode.
+
+Currently, there is no case dependency or case status check in the code. Which means 
+that the user cannot run Post-AD +AD + transient all at the same time. If we add case 
+dependency, then the code that checks the status of a case (e.g. spinup) every 2
+seconds and once it is finished successfully submit the next phase (e.g. transient.)
+
+Externals are also updated to fix some NEON issues.
+
+New tools subdirectory site_and_regional and current scripts for handling single-point 
+moved underneath. Also README files and tools testing changed for this move. Also tools 
+test added for the new wrapper script talked about above. Fix an issue in subset_data.py
+where it couldn't be run from outside of a git directory because it checks for the git hash.
+
+Changes so that CTSM will write restarts as signaled at end of simulation by the CMEPS mediator.
 
 
 Significant changes to scientifically-supported configurations
@@ -29,12 +54,12 @@ Does this tag change answers significantly for any of the following physics conf
 Bugs fixed or introduced
 ------------------------
 Issues fixed (include CTSM Issue #):
-  Fixes #1354
-  Fixes #1454
-  Fixes #1456
-  Fixes #1407
-  Fixes #1446
-  Fixes #1429
+  Fixes #1354 Batch run single point sites
+  Fixes #1454 run_sys_test improve error for rerun option
+  Fixes #1456 Missing files for test tools
+  Fixes #1407 mkmapdata.sh failing for regional grid
+  Fixes #1446 modifiy_neon script changes dimension for zbedrock
+  Fixes #1429 Modified neon datasets have errors
 
 Known bugs introduced in this tag (include issue #):
   #1459 -- Change run_neon to run from any directory and add some additional options for testing
@@ -44,19 +69,9 @@ Known bugs found since the previous tag (include issue #):
   #1442 -- Rename NEON files for CLM
   #1433 -- Bring in eval data from NEON
 
-Notes of particular relevance for users
----------------------------------------
-
-Caveats for users (e.g., need to interpolate initial conditions):
-
-Changes to the datasets (e.g., parameter, surface or initial files): Some NEON surface datasets updated
-
 Notes of particular relevance for developers:
 ---------------------------------------------
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
-Changes to tests or testing: tools testing modified
-
+Changes to tests or testing: tools testing modified add a tools test for the run_neon script
 
 Testing summary: regular and tools
 ----------------
