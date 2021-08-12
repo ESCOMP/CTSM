@@ -204,8 +204,6 @@ contains
 
     need_glacier_initialization = is_first_step()
 
-    write(iulog,*)  'clm_drv: pre-dynsubgridwrapup: sum tlai_patch', sum(canopystate_inst%tlai_patch)
-
     if (need_glacier_initialization) then
        !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
        do nc = 1, nclumps
@@ -223,8 +221,6 @@ contains
     ! ============================================================================
     ! Specified phenology
     ! ============================================================================
-
-    write(iulog,*)  'clm_drv: pre-interpmonthly: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
     if (use_cn) then
        ! For dry-deposition need to call CLMSP so that mlaidiff is obtained
@@ -248,7 +244,6 @@ contains
        end if
 
     end if
-    write(iulog,*)  'clm_drv: post-interpmonthly: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
     ! ==================================================================================
     ! Determine decomp vertical profiles
@@ -339,7 +334,6 @@ contains
        call t_stopf('begwbal')
     end do
     !$OMP END PARALLEL DO
-    write(iulog,*)  'clm_drv: post-watergridcell: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
     ! ============================================================================
     ! Update subgrid weights with dynamic landcover (prescribed transient patches,
@@ -357,7 +351,6 @@ contains
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_carbonflux_inst, ch4_inst, &
          glc_behavior)
     call t_stopf('dyn_subgrid')
-    write(iulog,*)  'clm_drv: post-dynsubgriddriver: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
     ! ============================================================================
     ! If soil moisture is prescribed from data streams set it here
@@ -368,7 +361,6 @@ contains
        call PrescribedSoilMoistureAdvance( bounds_proc )
        call t_stopf('prescribed_sm')
     endif
-    write(iulog,*)  'clm_drv: post-prescribesoilmoist: sum tlai_patch', sum(canopystate_inst%tlai_patch)
     ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
@@ -402,7 +394,6 @@ contains
             use_aquifer_layer = use_aquifer_layer())
 
        call t_stopf('begwbal')
-       write(iulog,*)  'clm_drv: post-beginwatercolbal: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        call t_startf('begcnbal_col')
        if (use_cn) then
@@ -446,14 +437,13 @@ contains
     else if (fates_spitfire_mode > scalar_lightning) then
        call clm_fates%InterpFileInputs(bounds_proc)
     end if
-    write(iulog,*)  'clm_drv: post-fates%interpfileinputs: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
     ! Get time varying urban data
     call urbantv_inst%urbantv_interp(bounds_proc)
 
     ! When LAI streams are being used
     ! NOTE: This call needs to happen outside loops over nclumps (as streams are not threadsafe)
-    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then 
+    if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then
        call lai_advance( bounds_proc )
     endif
 
@@ -481,7 +471,6 @@ contains
             canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, &
             energyflux_inst)
-       write(iulog,*)  'clm_drv: post-clm_drv_init: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        call topo_inst%UpdateTopo(bounds_clump, &
             filter(nc)%num_icec, filter(nc)%icec, &
@@ -549,7 +538,6 @@ contains
             filter(nc)%num_nolakep, filter(nc)%nolakep, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
             patch, col, canopystate_inst, atm2lnd_inst, water_inst)
-       write(iulog,*)  'clm_drv: post-canopyintercept: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        call HandleNewSnow(bounds_clump, &
             filter(nc)%num_nolakec, filter(nc)%nolakec, &
@@ -591,7 +579,6 @@ contains
                                    atm2lnd_inst, surfalb_inst, canopystate_inst,    &
                                    solarabs_inst)
        end if
-       write(iulog,*)  'clm_drv: post-wrap_sunfrac: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
 
 
@@ -602,7 +589,6 @@ contains
             atm2lnd_inst, water_inst%waterdiagnosticbulk_inst, &
             canopystate_inst, surfalb_inst, &
             solarabs_inst, surfrad_inst)
-       write(iulog,*)  'clm_drv: post-surfaceradiation: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        ! Surface Radiation for only urban columns
 
@@ -633,7 +619,6 @@ contains
             soilstate_inst, temperature_inst, &
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterstatebulk_inst)
-       write(iulog,*)  'clm_drv: post-biogeophyspreflux: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        call ozone_inst%CalcOzoneStress(bounds_clump, filter(nc)%num_exposedvegp, filter(nc)%exposedvegp)
 
@@ -669,7 +654,6 @@ contains
             water_inst%waterdiagnosticbulk_inst, water_inst%wateratm2lndbulk_inst, &
             photosyns_inst, humanindex_inst)
        call t_stopf('bgflux')
-       write(iulog,*)  'clm_drv: post-baregroundfluxes: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        ! non-bareground fluxes for all patches except lakes and urban landunits
        ! Calculate canopy temperature, latent and sensible fluxes from the canopy,
@@ -711,7 +695,6 @@ contains
             croot_carbon = croot_carbon(bounds_clump%begp:bounds_clump%endp))
        deallocate(downreg_patch, leafn_patch, froot_carbon, croot_carbon)
        call t_stopf('canflux')
-       write(iulog,*)  'clm_drv: post-canopyfluxes: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        ! Fluxes for all urban landunits
 
@@ -872,8 +855,6 @@ contains
        ! LakeHydrology after the new snow filter is built
 
        call t_startf('hydro_without_drainage')
-
-       write(iulog,*)  'clm_drv: pre-HydrNoDrain: sum tlai_patch', sum(canopystate_inst%tlai_patch)
 
        call HydrologyNoDrainage(bounds_clump,                                &
             filter(nc)%num_nolakec, filter(nc)%nolakec,                      &
@@ -1077,10 +1058,8 @@ contains
        end if
 
 
-       
-       if ( use_fates) then
 
-            write(iulog,*)  'clm_drv: pre-EDBGCdynamics: sum tlai_patch', sum(canopystate_inst%tlai_patch)
+       if ( use_fates) then
 
           call EDBGCDyn(bounds_clump,                                                              &
                filter(nc)%num_soilc, filter(nc)%soilc,                                             &
@@ -1096,8 +1075,6 @@ contains
                active_layer_inst, atm2lnd_inst, water_inst%waterfluxbulk_inst,                     &
                canopystate_inst, soilstate_inst, temperature_inst, crop_inst, ch4_inst)
 
-            write(iulog,*)  'clm_drv: pre-EDBGCSummary: sum tlai_patch', sum(canopystate_inst%tlai_patch)
-
           call EDBGCDynSummary(bounds_clump,                                             &
                 filter(nc)%num_soilc, filter(nc)%soilc,                                  &
                 filter(nc)%num_soilp, filter(nc)%soilp,                                  &
@@ -1107,13 +1084,11 @@ contains
                 soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst,     &
                 clm_fates, nc)
 
-            write(iulog,*)  'clm_drv: pre-wrapupdatehifrq: sum tlai_patch', sum(canopystate_inst%tlai_patch)
-
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
                soilbiogeochem_carbonstate_inst)
 
-          
+
           if( is_beg_curr_day() ) then
 
              ! --------------------------------------------------------------------------
@@ -1124,22 +1099,18 @@ contains
                 write(iulog,*)  'clm: calling FATES model ', get_nstep()
              end if
 
-            write(iulog,*)  'clm_drv: pre-dynamics: sum tlai_patch', sum(canopystate_inst%tlai_patch)
-             
              call clm_fates%dynamics_driv( nc, bounds_clump,                        &
                   atm2lnd_inst, soilstate_inst, temperature_inst, active_layer_inst, &
                   water_inst%waterstatebulk_inst, water_inst%waterdiagnosticbulk_inst, &
                   water_inst%wateratm2lndbulk_inst, canopystate_inst, soilbiogeochem_carbonflux_inst, &
                   frictionvel_inst)
 
-             write(iulog,*)  'clm_drv: post-dynamics: sum tlai_patch', sum(canopystate_inst%tlai_patch)
-             
              ! TODO(wjs, 2016-04-01) I think this setFilters call should be replaced by a
              ! call to reweight_wrapup, if it's needed at all.
              call setFilters( bounds_clump, glc_behavior )
 
           end if
-             
+
        end if ! use_fates branch
 
        ! ============================================================================
@@ -1157,7 +1128,6 @@ contains
 
        if (use_cn) then
           call t_startf('cnbalchk')
-          write(iulog,*) 'clm_drv: pre-bgc_veg balance check'
           call bgc_vegetation_inst%BalanceCheck( &
                bounds_clump, filter(nc)%num_soilc, filter(nc)%soilc, &
                soilbiogeochem_carbonflux_inst, &
@@ -1319,7 +1289,6 @@ contains
             filter(nc)%num_lakec, filter(nc)%lakec, &
             water_inst, lakestate_inst, &
             use_aquifer_layer = use_aquifer_layer(), flag = 'endwb')
-       write(iulog,*) 'clm_drv: post water grid cell balance check'
        call BalanceCheck(bounds_clump, &
             filter(nc)%num_allc, filter(nc)%allc, &
             atm2lnd_inst, solarabs_inst, water_inst%waterfluxbulk_inst, &
@@ -1422,9 +1391,6 @@ contains
        ! Create history and write history tapes if appropriate
        call t_startf('clm_drv_io_htapes')
 
-       write(iulog,*)  'clm_drv: pre-hist_htapes_wrapup: sum tlai_patch', sum(canopystate_inst%tlai_patch)
-
-       write(iulog,*) 'clm_drv: calling hist_htapes_wrapup'
        call hist_htapes_wrapup( rstwr, nlend, bounds_proc,                    &
             soilstate_inst%watsat_col(bounds_proc%begc:bounds_proc%endc, 1:), &
             soilstate_inst%sucsat_col(bounds_proc%begc:bounds_proc%endc, 1:), &

@@ -1114,10 +1114,6 @@ module CLMFatesInterfaceMod
           htop(col%patchi(c):col%patchf(c)) = 0.0_r8
           hbot(col%patchi(c):col%patchf(c)) = 0.0_r8
 
-          write(iulog,*) 'wrap update 1: s, c: ', s, c
-          write(iulog,*) 'wrap update 1: col%patchi(c), col%patchf(c): ', col%patchi(c), col%patchf(c)
-          write(iulog,*) 'wrap update 1: tlai_hist_patch: ', tlai(col%patchi(c):col%patchf(c))
-
           ! FATES does not dictate bare-ground so turbulent
           ! variables are not over-written.
           z0m(col%patchi(c)+1:col%patchf(c)) = 0.0_r8
@@ -1157,20 +1153,12 @@ module CLMFatesInterfaceMod
              patch%wt_ed(p)  = this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
              areacheck = areacheck + patch%wt_ed(p)
 
-             write(iulog,*) 'wrap update 2: nc, s, ifp, p: ', nc, s, ifp, p
-             write(iulog,*) 'wrap update 2: tlai_hist_patch: ', tlai(p)
-             write(iulog,*) 'wrap update 2: tlai_pa: ', this%fates(nc)%bc_out(s)%tlai_pa(ifp)
-
              tlai(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
              elai(p) = this%fates(nc)%bc_out(s)%elai_pa(ifp)
              tsai(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
              esai(p) = this%fates(nc)%bc_out(s)%esai_pa(ifp)
              htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
              hbot(p) = this%fates(nc)%bc_out(s)%hbot_pa(ifp)
-
-             write(iulog,*) 'wrap update 3: nc, s, ifp, p: ', nc, s, ifp, p
-             write(iulog,*) 'wrap update 3: tlai_hist_patch: ', tlai(p)
-             write(iulog,*) 'wrap update 3: tlai_pa: ', this%fates(nc)%bc_out(s)%tlai_pa(ifp)
 
              if(use_fates_sp.and.abs(tlai(p)-this%fates(nc)%bc_out(s)%tlai_pa(ifp)).gt.1e-09)then
                write(iulog,*) 'fates lai not like hlm lai',tlai(p),this%fates(nc)%bc_out(s)%tlai_pa(ifp),ifp
