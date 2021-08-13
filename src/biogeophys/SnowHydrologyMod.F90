@@ -3282,7 +3282,7 @@ contains
 
     ! Always keep at least this fraction of the bottom snow layer when doing snow capping
     ! This needs to be slightly greater than 0 to avoid roundoff problems
-    real(r8), parameter :: min_snow_to_keep = 1.e-9_r8  ! fraction of bottom snow layer to keep with capping
+    real(r8), parameter :: min_snow_to_keep = 1.e-3_r8  ! fraction of bottom snow layer to keep with capping
 
     character(len=*), parameter :: subname = 'BulkFlux_SnowCappingFluxes'
     !-----------------------------------------------------------------------
