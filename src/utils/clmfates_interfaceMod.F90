@@ -1108,11 +1108,18 @@ module CLMFatesInterfaceMod
           ! Other modules may have AI's we only flush values
           ! that are on the naturally vegetated columns
           elai(col%patchi(c):col%patchf(c)) = 0.0_r8
-          tlai(col%patchi(c):col%patchf(c)) = 0.0_r8
           esai(col%patchi(c):col%patchf(c)) = 0.0_r8
-          tsai(col%patchi(c):col%patchf(c)) = 0.0_r8
-          htop(col%patchi(c):col%patchf(c)) = 0.0_r8
           hbot(col%patchi(c):col%patchf(c)) = 0.0_r8
+
+          if(use_fates_sp)then
+            canopystate_inst%tlai_hist_patch = 0.0_r8
+            canopystate_inst%tsai_hist_patch = 0.0_r8
+            canopystate_inst%htop_hist_patch = 0.0_r8
+          else
+            tlai(col%patchi(c):col%patchf(c)) = 0.0_r8
+            tsai(col%patchi(c):col%patchf(c)) = 0.0_r8
+            htop(col%patchi(c):col%patchf(c)) = 0.0_r8
+          endif
 
           ! FATES does not dictate bare-ground so turbulent
           ! variables are not over-written.
@@ -1153,14 +1160,22 @@ module CLMFatesInterfaceMod
              patch%wt_ed(p)  = this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
              areacheck = areacheck + patch%wt_ed(p)
 
-             tlai(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
              elai(p) = this%fates(nc)%bc_out(s)%elai_pa(ifp)
-             tsai(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
              esai(p) = this%fates(nc)%bc_out(s)%esai_pa(ifp)
-             htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
              hbot(p) = this%fates(nc)%bc_out(s)%hbot_pa(ifp)
 
-             if(use_fates_sp.and.abs(tlai(p)-this%fates(nc)%bc_out(s)%tlai_pa(ifp)).gt.1e-09)then
+             if(use_fates_sp)then
+               canopystate_inst%tlai_hist_patch = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
+               canopystate_inst%tsai_hist_patch = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
+               canopystate_inst%htop_hist_patch = this%fates(nc)%bc_out(s)%htop_pa(ifp)
+             else
+               tlai(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
+               tsai(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
+               htop(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
+             endif
+
+             if(use_fates_sp.and.abs(canopystate_inst%tlai_hist_patch(p) - &
+                                 this%fates(nc)%bc_out(s)%tlai_pa(ifp)).gt.1e-09)then
                write(iulog,*) 'fates lai not like hlm lai',tlai(p),this%fates(nc)%bc_out(s)%tlai_pa(ifp),ifp
              endif
 
