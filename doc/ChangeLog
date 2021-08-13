@@ -1,4 +1,71 @@
 ===============================================================
+Tag name:  ctsm5.1.dev053
+Originator(s):  sacks (Bill Sacks)
+Date:  Fri Aug 13 10:17:42 MDT 2021
+One-line Summary: Add Antarctica compset and change min_snow_to_keep
+
+Purpose and description of changes
+----------------------------------
+
+(1) Add a compset for running CISM with Antarctica
+
+(2) Change min_snow_to_keep (see
+    https://github.com/ESCOMP/CTSM/issues/1425 for details)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1425 (Need to increase min_snow_to_keep)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but very limited circumstances
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: rarely, when have large snow capping flux
+    - what platforms/compilers: all (potentially)
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      slightly larger than roundoff when it occurs
+
+    Changes only appear if removing the entire bottom layer of the snow
+    pack in one time step due to snow capping. The only test in the test
+    suite that changes answers is:
+
+    ERS_D.f10_f10_mg37.I1850Clm50BgcCrop.cheyenne_intel.clm-reseedresetsnow
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev052
 Originator(s):  negins/jedwards/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Wed Aug 11 21:58:47 MDT 2021
