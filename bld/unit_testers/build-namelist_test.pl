@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1730;
+my $ntests = 1731;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1182;
 }
@@ -512,6 +512,11 @@ my %failtest = (
                                    },
      "clm50CNDVwtransient"       =>{ options=>" -envxml_dir . -use_case 20thC_transient -dynamic_vegetation -res 10x15 -ignore_warnings",
                                      namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "decomp_without_cn"         =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"soil_decomp_method='CENTURYKoven2013'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
