@@ -405,7 +405,6 @@ contains
        if (n_drydep > 0 .and. drydep_method == DD_XLND) then
           ! Must do this also when drydeposition is used so that estimates of monthly
           ! differences in LAI can be computed
-          write(iulog,*)'initialize2: SatellitePhenologyInit() with use_cn'
           call SatellitePhenologyInit(bounds_proc)
        end if
        if ( use_c14 .and. use_c14_bombspike ) then
@@ -415,13 +414,11 @@ contains
           call C13_init_TimeSeries()
        end if
     else
-       write(iulog,*)'initialize2: SatellitePhenInit() no use_cn'
        call SatellitePhenologyInit(bounds_proc)
 
        ! fates_spitfire_mode is assigned an integer value in the namelist
        ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
        if (fates_spitfire_mode > scalar_lightning) then
-          write(iulog,*)'initialize2: clm_fates%Init2()'
           call clm_fates%Init2(bounds_proc, NLFilename)
        end if
     end if
@@ -565,7 +562,6 @@ contains
     ! Initialize variables that are associated with accumulated fields.
     ! The following is called for both initial and restart runs and must
     ! must be called after the restart file is read
-    write(iulog,*)'initialize2: initAccVars'
     call atm2lnd_inst%initAccVars(bounds_proc)
     call temperature_inst%initAccVars(bounds_proc)
     call water_inst%initAccVars(bounds_proc)
@@ -592,8 +588,7 @@ contains
        end if
     ! If fates has satellite phenology enabled, get the monthly veg values
     ! prior to the first call to SatellitePhenology()
-    elseif ( use_fates_sp ) then 
-          write(iulog,*)'initialize2: interpMonthlyVeg'
+    elseif ( use_fates_sp ) then
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
 
@@ -625,12 +620,10 @@ contains
     deallocate(wt_nat_patch)
 
     ! Initialise the fates model state structure
-    write(iulog,*)'initialize2: init_coldstart()'
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
        ! If fates is using satellite phenology mode, make sure to call the SatellitePhenology
        ! procedure prior to init_coldstart which will eventually call leaf_area_profile
        if ( use_fates_sp ) then
-          write(iulog,*)'initialize2: pre-init_coldstart SatellitePhenology()'
           !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
           do nc = 1,nclumps
              call get_clump_bounds(nc, bounds_clump)
