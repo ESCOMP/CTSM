@@ -29,7 +29,7 @@ module histFileMod
   use FatesLitterMod    , only : ncwd
   use PRTGenericMod     , only : num_elements_fates  => num_elements
   use FatesInterfaceTypesMod , only : numpft_fates => numpft
-  use ncdio_pio 
+  use ncdio_pio
 
   !
   implicit none
@@ -1652,7 +1652,7 @@ contains
        call hist_set_snow_field_2d(field, clmptr_ra(hpindex)%ptr, no_snow_behavior, type1d, &
             beg1d, end1d)
     else
-   
+
        field => clmptr_ra(hpindex)%ptr(:,1:num2d)
        field_allocated = .false.
     end if
@@ -2246,7 +2246,7 @@ contains
     call ncd_defdim(lnfid, 'string_length', hist_dim_name_length, strlen_dimid)
     call ncd_defdim(lnfid, 'scale_type_string_length', scale_type_strlen, dimid)
     call ncd_defdim( lnfid, 'levdcmp', nlevdecomp_full, dimid)
-    
+
 
     if(use_fates)then
        call ncd_defdim(lnfid, 'fates_levscag', nlevsclass * nlevage, dimid)
@@ -3236,7 +3236,7 @@ contains
           end if
 
        else if (mode == 'write') then
-       
+
           ! Determine output buffer
 
           histo => tape(t)%hlist(f)%hbuf
@@ -3721,7 +3721,6 @@ contains
              end if
 
              ! Define model field variables
-             write(iulog,*) ' hfields_write: define'
              call hfields_write(t, mode='define')
 
              ! Exit define model
@@ -3755,7 +3754,6 @@ contains
           call t_stopf('hist_htapes_wrapup_tconst')
 
           ! Write history time samples
-          write(iulog,*) ' hfields_write: write'
           call t_startf('hist_htapes_wrapup_write')
           call hfields_write(t, mode='write')
           call t_stopf('hist_htapes_wrapup_write')
@@ -5188,7 +5186,7 @@ contains
 
     ! History buffer pointer
     hpindex = pointer_index()
-   
+
 
     if (present(ptr_lnd)) then
        l_type1d = grlnd
