@@ -41,6 +41,8 @@ module SoilBiogeochemDecompCascadeConType
   end type decomp_cascade_type
 
   integer, public, parameter :: i_atm = 0                              ! for terminal pools (i.e. 100% respiration) (only used for CN not for BGC)
+  integer, public, parameter :: century_decomp = 1                     ! CENTURY decomposition method type
+  integer, public            :: decomp_method = century_decomp         ! Type of decomposition to use
   type(decomp_cascade_type), public :: decomp_cascade_con
   !------------------------------------------------------------------------
 
@@ -82,9 +84,15 @@ contains
           call endrun('trouble finding '//nmlname//' namelist')
        end if
        close(nu_nml)
+       select case( soil_decomp_method )
+       case( 'CENTURYKoven2013' ) 
+          decomp_method = century_decomp
+       case default
+          call endrun('Bad soil_decomp_method = '//soil_decomp_method )
+       end select
     endif
     ! Broadcast namelist items to all processors
-    call shr_mpi_bcast(soil_decomp_method, mpicom)
+    call shr_mpi_bcast(decomp_method, mpicom)
 
     if ( use_century_decomp ) then
        ibeg = 1
