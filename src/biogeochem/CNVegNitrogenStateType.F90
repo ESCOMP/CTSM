@@ -8,7 +8,7 @@ module CNVegNitrogenStateType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
   use landunit_varcon                    , only : istcrop, istsoil 
-  use clm_varctl                         , only : use_vertsoilc, use_century_decomp
+  use clm_varctl                         , only : use_vertsoilc
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump
   use clm_varctl                         , only : use_crop
   use CNSharedParamsMod                  , only : use_fun

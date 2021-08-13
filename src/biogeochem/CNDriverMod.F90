@@ -10,7 +10,7 @@ module CNDriverMod
   use dynSubgridControlMod            , only : get_do_harvest
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
-  use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
+  use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
   use SoilBiogeochemDecompCascadeConType, only : century_decomp, decomp_method
   use clm_varctl                      , only : use_crop
   use CNSharedParamsMod               , only : use_fun

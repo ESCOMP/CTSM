@@ -14,7 +14,8 @@ module SoilBiogeochemDecompCascadeConType
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: init_decomp_cascade_constants
+  public :: decomp_cascade_par_init          ! Initialize the parameters
+  public :: init_decomp_cascade_constants    ! Initialize the constants
   !
   type, public :: decomp_cascade_type
      !-- properties of each pathway along decomposition cascade 
@@ -49,20 +50,15 @@ module SoilBiogeochemDecompCascadeConType
 contains
 
   !------------------------------------------------------------------------
-  subroutine init_decomp_cascade_constants( NLFilename, use_century_decomp )
-    !
-    ! !DESCRIPTION:
-    ! Initialize decomposition cascade state
-    !------------------------------------------------------------------------
-    ! !USES:
+  subroutine decomp_cascade_par_init( NLFilename )
+    use clm_varctl         , only : use_fates
+    use clm_varpar         , only : ndecomp_pools_max
     use spmdMod            , only : masterproc, mpicom
     use clm_nlUtilsMod     , only : find_nlgroup_name
     use shr_mpi_mod        , only : shr_mpi_bcast
     ! !ARGUMENTS:
     character(len=*), intent(in) :: NLFilename ! Namelist filename
-    logical,          intent(IN) :: use_century_decomp
     ! !LOGAL VARIABLES:
-    integer           :: ibeg                ! Beginning index for allocated arrays
     integer           :: nu_nml              ! unit for namelist file
     integer           :: nml_error           ! namelist i/o error flag
     character(len=20) :: soil_decomp_method  ! String description of soil decomposition method to use
@@ -93,11 +89,47 @@ contains
     endif
     ! Broadcast namelist items to all processors
     call shr_mpi_bcast(decomp_method, mpicom)
-
-    if ( use_century_decomp ) then
-       ibeg = 1
+    ! We hardwire these parameters here because we use them
+    ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
+    ! init_decompcascade_bgc where they might have otherwise been derived on the
+    ! fly. For reference, if they were determined in init_decompcascade_bgc:
+    ! ndecomp_pools would get the value of i_pas_som or i_cwd and
+    ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
+    ! depending on how use_fates is set.
+    if ( use_fates ) then
+       if (decomp_method == century_decomp) then
+          ndecomp_pools = 6
+          ndecomp_cascade_transitions = 8
+       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
+          ndecomp_pools = 7
+          ndecomp_cascade_transitions = 7
+       end if
     else
-       call endrun( 'ERROR:: use_century_decomp now can only be .true.' )
+       if (decomp_method == century_decomp) then
+          ndecomp_pools = 7
+          ndecomp_cascade_transitions = 10
+       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
+          ndecomp_pools = 8
+          ndecomp_cascade_transitions = 9
+       end if
+    endif
+    ! The next param also appears as a dimension in the params files dated
+    ! c210418.nc and later
+    ndecomp_pools_max = 8  ! largest ndecomp_pools value above
+
+  end subroutine decomp_cascade_par_init
+
+  !------------------------------------------------------------------------
+  subroutine init_decomp_cascade_constants( )
+    !
+    ! !DESCRIPTION:
+    ! Initialize decomposition cascade state
+    !------------------------------------------------------------------------
+    ! !LOGAL VARIABLES:
+    integer           :: ibeg                ! Beginning index for allocated arrays
+
+    if ( decomp_method == century_decomp ) then
+       ibeg = 1
     end if
 
     !-- properties of each pathway along decomposition cascade 

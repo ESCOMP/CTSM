@@ -9,7 +9,7 @@ module clm_varpar
   use shr_sys_mod  , only: shr_sys_abort
   use spmdMod      , only: masterproc
   use clm_varctl   , only: use_extralakelayers
-  use clm_varctl   , only: use_century_decomp, use_c13, use_c14
+  use clm_varctl   , only: use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, rundef
   use clm_varctl   , only: soil_layerstruct_predefined
@@ -227,34 +227,6 @@ contains
        write(iulog, '(a, i3)') '    nlevlak = ', nlevlak
        write(iulog, *)
     end if
-
-    ! We hardwire these parameters here because we use them
-    ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
-    ! init_decompcascade_bgc where they might have otherwise been derived on the
-    ! fly. For reference, if they were determined in init_decompcascade_bgc:
-    ! ndecomp_pools would get the value of i_pas_som or i_cwd and
-    ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
-    ! depending on how use_fates is set.
-    if ( use_fates ) then
-       if (use_century_decomp) then
-          ndecomp_pools = 6
-          ndecomp_cascade_transitions = 8
-       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
-          ndecomp_pools = 7
-          ndecomp_cascade_transitions = 7
-       end if
-    else
-       if (use_century_decomp) then
-          ndecomp_pools = 7
-          ndecomp_cascade_transitions = 10
-       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
-          ndecomp_pools = 8
-          ndecomp_cascade_transitions = 9
-       end if
-    endif
-    ! The next param also appears as a dimension in the params files dated
-    ! c210418.nc and later
-    ndecomp_pools_max = 8  ! largest ndecomp_pools value above
 
   end subroutine clm_varpar_init
 

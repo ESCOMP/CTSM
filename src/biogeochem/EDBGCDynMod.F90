@@ -10,7 +10,7 @@ module EDBGCDynMod
   use perf_mod                        , only : t_startf, t_stopf
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use abortutils                      , only : endrun
-  use clm_varctl                      , only : use_century_decomp
+  use SoilBiogeochemDecompCascadeConType , only : century_decomp, decomp_method
   use CNVegCarbonStateType	      , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType	      , only : cnveg_carbonflux_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
@@ -177,7 +177,7 @@ contains
     ! Soil Biogeochemistry
     !--------------------------------------------
 
-    if (use_century_decomp) then
+    if (decomp_method == century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     end if
