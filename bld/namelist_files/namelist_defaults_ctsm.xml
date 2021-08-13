@@ -2544,13 +2544,11 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- Defaults for different BGC modes           -->
 <!-- =========================================  -->
 
-<use_lch4            bgc_mode="sp"  >.false.</use_lch4>
-
-<use_lch4            bgc_mode="cn"  >.false.</use_lch4>
-
-<use_lch4            bgc_mode="bgc" >.true.</use_lch4>
-
-<use_lch4            bgc_mode="fates"  >.false.</use_lch4>
+<use_lch4           bgc_mode="sp"     >.false.</use_lch4>
+<use_lch4           bgc_mode="bgc"    >.true.</use_lch4>
+<use_lch4           bgc_mode="fates"  >.false.</use_lch4>
+<soil_decomp_method use_cn=".true."   >CENTURYKoven2013</soil_decomp_method>
+<soil_decomp_method use_fates=".true.">CENTURYKoven2013</soil_decomp_method>
 
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>

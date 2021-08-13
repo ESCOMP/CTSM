@@ -2152,6 +2152,9 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
        group="soilbgc_decomp" valid_values="CENTURYKoven2013" >
 Soil decomposition method
   CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
+
+Requires the CN or FATES model to work (either CN or CNDV).
+(ONLY used if use_cn or use_fates is enabled)
 </entry>
 
 <!-- General CN flags -->
