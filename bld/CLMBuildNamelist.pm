@@ -4011,6 +4011,7 @@ sub write_output_files {
   push @groups, "nitrif_inparm";
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
+  push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";

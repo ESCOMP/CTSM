@@ -47,21 +47,51 @@ module SoilBiogeochemDecompCascadeConType
 contains
 
   !------------------------------------------------------------------------
-  subroutine init_decomp_cascade_constants( use_century_decomp )
+  subroutine init_decomp_cascade_constants( NLFilename, use_century_decomp )
     !
     ! !DESCRIPTION:
     ! Initialize decomposition cascade state
     !------------------------------------------------------------------------
+    ! !USES:
+    use spmdMod            , only : masterproc, mpicom
+    use clm_nlUtilsMod     , only : find_nlgroup_name
+    use shr_mpi_mod        , only : shr_mpi_bcast
     ! !ARGUMENTS:
-    logical, intent(IN) :: use_century_decomp
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    logical,          intent(IN) :: use_century_decomp
     ! !LOGAL VARIABLES:
-    integer :: ibeg    ! Beginning index for allocated arrays
+    integer           :: ibeg                ! Beginning index for allocated arrays
+    integer           :: nu_nml              ! unit for namelist file
+    integer           :: nml_error           ! namelist i/o error flag
+    character(len=20) :: soil_decomp_method  ! String description of soil decomposition method to use
+    character(len=*), parameter :: nmlname = 'soilbgc_decomp'
+    namelist/soilbgc_decomp/ soil_decomp_method
+
+    ! Default value
+    soil_decomp_method = 'CENTURYKoven2013'
+    ! Read in soil BGC decomposition namelist
+    if (masterproc) then
+       open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+       call find_nlgroup_name(nu_nml, nmlname, status=nml_error)
+       if (nml_error == 0) then
+          read(nu_nml, nml=soilbgc_decomp,iostat=nml_error)
+          if (nml_error /= 0) then
+             call endrun('trouble reading '//nmlname//' namelist')
+          end if
+       else
+          call endrun('trouble finding '//nmlname//' namelist')
+       end if
+       close(nu_nml)
+    endif
+    ! Broadcast namelist items to all processors
+    call shr_mpi_bcast(soil_decomp_method, mpicom)
 
     if ( use_century_decomp ) then
        ibeg = 1
     else
        call endrun( 'ERROR:: use_century_decomp now can only be .true.' )
     end if
+
     !-- properties of each pathway along decomposition cascade 
     allocate(decomp_cascade_con%cascade_step_name(1:ndecomp_cascade_transitions))
     allocate(decomp_cascade_con%cascade_donor_pool(1:ndecomp_cascade_transitions))

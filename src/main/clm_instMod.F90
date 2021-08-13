@@ -378,7 +378,7 @@ contains
        ! Note that init_decompcascade_bgc need 
        ! soilbiogeochem_state_inst to be initialized
 
-       call init_decomp_cascade_constants( use_century_decomp )
+       call init_decomp_cascade_constants( NLFilename, use_century_decomp )
        if (use_century_decomp) then
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
