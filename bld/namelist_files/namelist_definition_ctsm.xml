@@ -1011,12 +1011,6 @@ Maximum nitrification rate constant (1/s)
 (ONLY used if use_cn is enabled)
 </entry>
 
-<entry id="use_century_decomp" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".true.">
-Use parameters for decomposition from the CENTURY Carbon model
-Requires the CN or FATES model to work (either CN or CNDV).
-</entry>
-
 <entry id="use_extralakelayers" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to use 25 lake layers instead of 10
@@ -2151,6 +2145,13 @@ If true, no denitrification or nitrification in frozen soil layers.
 <entry id="nfix_timeconst" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 Number of days over which to use exponential relaxation of NPP in N fixation calculation
+</entry>
+
+<!-- Soil decomposition options  -->
+<entry id="soil_decomp_method" type="char*20" category="clm_physics"
+       group="soilbgc_decomp" valid_values="CENTURYKoven2013" >
+Soil decomposition method
+  CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
 </entry>
 
 <!-- General CN flags -->

@@ -92,10 +92,10 @@ OPTIONS
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
                                         CENTURY decomposition
                                     This toggles on the namelist variables:
-                                          use_cn, use_lch4, use_century_decomp
+                                          use_cn, use_lch4
                                 fates = FATES/Ecosystem Demography with below ground BGC
                                     This toggles on the namelist variables:
-                                          use_fates, use_century_decomp
+                                          use_fates
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
