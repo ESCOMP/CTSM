@@ -890,13 +890,19 @@ sub setup_cmdl_bgc {
         $log->fatal_error("$var can NOT on if use_cn is not");
      }
   }
-  # Soil decomposition method for BGC or FATES
+  #
+  # Determine Soil decomposition method
+  #
   my $var = "soil_decomp_method";
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+              'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+
   if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
-  } elsif ( defined($nl->get_value($var) ) ) {
-     $log->fatal_error("$var can NOT be set if use_cn or use_fates are not");
+     if ( remove_leading_and_trailing_quotes( $nl->get_value($var)) eq "None" ) {
+        $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
+     }
+  } elsif ( remove_leading_and_trailing_quotes($nl->get_value($var)) ne "None" ) {
+     $log->fatal_error("$var must be None if use_cn or use_fates are not");
   }
 } # end bgc
 

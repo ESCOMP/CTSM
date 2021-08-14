@@ -2149,12 +2149,13 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
 
 <!-- Soil decomposition options  -->
 <entry id="soil_decomp_method" type="char*20" category="clm_physics"
-       group="soilbgc_decomp" valid_values="CENTURYKoven2013" >
+       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013" >
 Soil decomposition method
+  None --  No soil decomposition is done
   CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
 
-Requires the CN or FATES model to work (either CN or CNDV).
-(ONLY used if use_cn or use_fates is enabled)
+An active soil decomposition method requires the BGC or FATES model to work 
+And both BGC and FATES models require an active soil decomposition model
 </entry>
 
 <!-- General CN flags -->

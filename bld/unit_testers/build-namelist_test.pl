@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1731;
+my $ntests = 1732;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1182;
 }
@@ -517,6 +517,11 @@ my %failtest = (
                                    },
      "decomp_without_cn"         =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"soil_decomp_method='CENTURYKoven2013'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "bgc_with_no_decomp"        =>{ options=>" -envxml_dir . -bgc bgc",
+                                     namelst=>"soil_decomp_method='None'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
