@@ -2946,6 +2946,7 @@ contains
     ! !DESCRIPTION:
     ! Write time constant values to primary history tape.
     use clm_time_manager, only : get_step_size
+    use SoilBiogeochemDecompCascadeConType, only : decomp_method, no_soil_decomp
     ! Issue the required netcdf wrapper calls to define the history file
     ! contents.
     !
@@ -3110,7 +3111,12 @@ contains
           call ncd_io(varname='levgrnd', data=zsoi, ncid=nfid(t), flag='write')
           call ncd_io(varname='levsoi', data=zsoi(1:nlevsoi), ncid=nfid(t), flag='write')
           call ncd_io(varname='levlak' , data=zlak, ncid=nfid(t), flag='write')
-          call ncd_io(varname='levdcmp', data=zsoi, ncid=nfid(t), flag='write')
+          if ( decomp_method /= no_soil_decomp )then
+             call ncd_io(varname='levdcmp', data=zsoi, ncid=nfid(t), flag='write')
+          else
+             zsoi_1d(1) = 1._r8
+             call ncd_io(varname='levdcmp', data=zsoi_1d, ncid=nfid(t), flag='write')
+          end if
           if(use_fates)then
              call ncd_io(varname='fates_scmap_levscag',data=fates_hdim_scmap_levscag, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_agmap_levscag',data=fates_hdim_agmap_levscag, ncid=nfid(t), flag='write')
