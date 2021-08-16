@@ -15,7 +15,9 @@ module CNSharedParamsMod
   type, public  :: CNParamsShareType
       real(r8) :: Q10                   ! temperature dependence
       real(r8) :: minpsi                ! minimum soil water potential for heterotrophic resp	  
-      real(r8) :: cwd_fcel              ! cellulose fraction of coarse woody debris
+      real(r8) :: maxpsi                ! maximum soil water potential for heterotrophic resp
+      real(r8) :: rf_cwdl2              ! respiration fraction in CWD to litter2 transition (frac)
+      real(r8) :: tau_cwd               ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
       real(r8) :: cwd_flig              ! lignin fraction of coarse woody debris
       real(r8) :: froz_q10              ! separate q10 for frozen soil respiration rates
       real(r8) :: decomp_depth_efolding ! e-folding depth for reduction in decomposition (m) 
@@ -96,10 +98,20 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%minpsi=tempr 
 
-    tString='cwd_fcel'
+    tString='maxpsi_hr'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    CNParamsShareInst%cwd_fcel=tempr
+    CNParamsShareInst%maxpsi=tempr
+
+    tString='rf_cwdl2'  ! TODO slevis: rm suffix in params file(s)
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    CNParamsShareInst%rf_cwdl2=tempr
+
+    tString='tau_cwd'  ! TODO slevis: rm suffix in params file(s)
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    CNParamsShareInst%tau_cwd=tempr
 
     tString='cwd_flig'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)

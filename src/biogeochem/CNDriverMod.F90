@@ -317,7 +317,8 @@ contains
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     else if (use_mimics_decomp) then
        call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
-            soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+            soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
+            soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     else  ! deprecated
        call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)

@@ -61,7 +61,6 @@ module SoilBiogeochemDecompCascadeBGCMod
      real(r8):: rf_s2s3_bgc    
      real(r8):: rf_s3s1_bgc    
 
-     real(r8):: rf_cwdl2_bgc 
      real(r8):: rf_cwdl3_bgc
 
      real(r8):: tau_l1_bgc    ! 1/turnover time of  litter 1 from Century (l/18.5) (1/yr)
@@ -69,13 +68,8 @@ module SoilBiogeochemDecompCascadeBGCMod
      real(r8):: tau_s1_bgc    ! 1/turnover time of  SOM 1 from Century (1/7.3) (1/yr)
      real(r8):: tau_s2_bgc    ! 1/turnover time of  SOM 2 from Century (1/0.2) (1/yr)
      real(r8):: tau_s3_bgc    ! 1/turnover time of  SOM 3 from Century (1/0.0045) (1/yr)
-     real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
 
      real(r8) :: cwd_fcel_bgc !cellulose fraction for CWD
-     real(r8) :: cwd_flig
-
-     real(r8) :: minpsi_bgc   !minimum soil water potential for heterotrophic resp
-     real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
 
      real(r8), allocatable :: initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
      real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
@@ -111,111 +105,86 @@ contains
     !-----------------------------------------------------------------------
 
     ! Read off of netcdf file
-    tString='tau_l1'
+    tString='bgc_tau_l1'  ! TODO slevis: rename in params file(s) and code...
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_l1_bgc=tempr
 
-    tString='tau_l2_l3'
+    tString='bgc_tau_l2_l3'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_l2_l3_bgc=tempr
 
-    tString='tau_s1'
+    tString='bgc_tau_s1'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_s1_bgc=tempr
 
-    tString='tau_s2'
+    tString='bgc_tau_s2'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_s2_bgc=tempr
 
-    tString='tau_s3'
+    tString='bgc_tau_s3'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_s3_bgc=tempr
 
-    tString='tau_cwd_bgc'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_cwd_bgc=tempr
-
-    tString='cn_s1_bgc'
+    tString='bgc_cn_s1'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cn_s1_bgc=tempr
 
-    tString='cn_s2_bgc'
+    tString='bgc_cn_s2'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cn_s2_bgc=tempr
 
-    tString='cn_s3_bgc'
+    tString='bgc_cn_s3'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cn_s3_bgc=tempr
 
-    tString='rf_l1s1_bgc'
+    tString='bgc_rf_l1s1'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_l1s1_bgc=tempr
 
-    tString='rf_l2s1_bgc'
+    tString='bgc_rf_l2s1'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_l2s1_bgc=tempr
 
-    tString='rf_l3s2_bgc'
+    tString='bgc_rf_l3s2'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_l3s2_bgc=tempr   
 
-    tString='rf_s2s1_bgc'
+    tString='bgc_rf_s2s1'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_s2s1_bgc=tempr
 
-    tString='rf_s2s3_bgc'
+    tString='bgc_rf_s2s3'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_s2s3_bgc=tempr
 
-    tString='rf_s3s1_bgc'
+    tString='bgc_rf_s3s1'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_s3s1_bgc=tempr
 
-    tString='rf_cwdl2_bgc'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_cwdl2_bgc=tempr
-
-    tString='rf_cwdl3_bgc'
+    tString='bgc_rf_cwdl3'  ! TODO slevis: rename in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_cwdl3_bgc=tempr
 
-    tString='cwd_fcel'
+    tString='bgc_cwd_fcel'  ! TODO slevis: rename in params file(s) & code...
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cwd_fcel_bgc=tempr
 
-    tString='minpsi_hr'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%minpsi_bgc=tempr 
-
-    tString='maxpsi_hr'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%maxpsi_bgc=tempr 
-
-    tString='cwd_flig'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%cwd_flig=tempr
-    
     allocate(params_inst%initial_Cstocks(ndecomp_pools_max))
     tString='initial_Cstocks_bgc'
     call ncd_io(trim(tString), params_inst%initial_Cstocks(:), 'read', ncid, readvar=readv)
@@ -254,10 +223,8 @@ contains
     real(r8) :: rf_s2s1
     real(r8) :: rf_s2s3
     real(r8) :: rf_s3s1
-    real(r8) :: rf_cwdl2
     real(r8) :: rf_cwdl3
     real(r8) :: cwd_fcel
-    real(r8) :: cwd_flig
     real(r8) :: cn_s1
     real(r8) :: cn_s2
     real(r8) :: cn_s3
@@ -285,6 +252,8 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                                     &
+         cwd_flig                       => CNParamsShareInst%cwd_flig                            , & ! Input:  [real(r8)                  ]  lignin fraction of coarse woody debris (frac)
+         rf_cwdl2                       => CNParamsShareInst%rf_cwdl2                            , & ! Input:  [real(r8)                  ]  respiration fraction in CWD to litter2 transition (frac)
          rf_decomp_cascade              => soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Input:  [real(r8)          (:,:,:) ]  respired fraction in decomposition step (frac)       
          pathfrac_decomp_cascade        => soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Input:  [real(r8)          (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
 
@@ -325,12 +294,10 @@ contains
       rf_s2s3 = params_inst%rf_s2s3_bgc
       rf_s3s1 = params_inst%rf_s3s1_bgc
 
-      rf_cwdl2 = params_inst%rf_cwdl2_bgc
       rf_cwdl3 = params_inst%rf_cwdl3_bgc
 
       ! set the cellulose and lignin fractions for coarse woody debris
       cwd_fcel = params_inst%cwd_fcel_bgc
-      cwd_flig = params_inst%cwd_flig
 
       ! set path fractions
       f_s2s1 = 0.42_r8/(0.45_r8)
@@ -477,7 +444,7 @@ contains
       spinup_factor(i_lig_lit) = 1._r8
       !CWD
       if (.not. use_fates) then
-         spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
+         spinup_factor(i_cwd) = max(1._r8, (speedup_fac * CNParamsShareInst%tau_cwd / 2._r8 ))
       end if
       !som1
       spinup_factor(i_act_som) = 1._r8
@@ -630,8 +597,8 @@ contains
     catanf(t1) = 11.75_r8 +(29.7_r8 / SHR_CONST_PI) * atan( SHR_CONST_PI * 0.031_r8  * ( t1 - 15.4_r8 ))
 
     associate(                                                           &
-         minpsi         => params_inst%minpsi_bgc                      , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
-         maxpsi         => params_inst%maxpsi_bgc                      , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
+         minpsi         => CNParamsShareInst%minpsi                    , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
+         maxpsi         => CNParamsShareInst%maxpsi                    , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
          soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
 
          t_soisno       => temperature_inst%t_soisno_col               , & ! Input:  [real(r8) (:,:)   ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
@@ -671,7 +638,7 @@ contains
       k_s1 = 1._r8    / (secspday * days_per_year * params_inst%tau_s1_bgc)
       k_s2 = 1._r8    / (secspday * days_per_year * params_inst%tau_s2_bgc)
       k_s3 = 1._r8    / (secspday * days_per_year * params_inst%tau_s3_bgc)
-      k_frag = 1._r8  / (secspday * days_per_year * params_inst%tau_cwd_bgc)
+      k_frag = 1._r8  / (secspday * days_per_year * CNParamsShareInst%tau_cwd)
 
      ! calc ref rate
       catanf_30 = catanf(30._r8)

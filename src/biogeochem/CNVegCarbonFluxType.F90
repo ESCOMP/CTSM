@@ -4484,7 +4484,6 @@ contains
        ! Calculate ligninNratioAve
        do fc = 1,num_soilc
           c = filter_soilc(fc)
-          ! TODO Use cwd_flig in *CascadeBGC the same way for consistency?
           ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
                              (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
                              soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)

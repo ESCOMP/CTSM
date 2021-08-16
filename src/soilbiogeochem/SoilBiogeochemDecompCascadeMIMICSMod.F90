@@ -21,6 +21,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
+  use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use SoilStateType                      , only : soilstate_type
   use TemperatureType                    , only : temperature_type 
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
@@ -41,6 +42,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   ! !PUBLIC DATA MEMBERS 
   !
   ! !PRIVATE DATA MEMBERS 
+  real(r8), allocatable :: desorp(:,:)
   integer, private :: i_phys_som  ! index of physically protected Soil Organic Matter (SOM)
   integer, private :: i_chem_som  ! index of chemically protected SOM
   integer, private :: i_avl_som  ! index of available (aka active) SOM
@@ -57,23 +59,47 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   integer, private :: i_m2s2
 
   type, private :: params_type
-     ! Respiration fraction cwd --> structural litter (keep comment sep for dif)
-     real(r8):: rf_cwdl2_bgc 
-     real(r8):: tau_cwd_bgc   ! corrected fragmentation rate constant CWD, century leaves wood decomposition rates open, within range of 0 - 0.5 yr^-1 (1/0.3) (1/yr)
-     real(r8) :: minpsi_bgc   !minimum soil water potential for heterotrophic resp
-     real(r8) :: maxpsi_bgc   !maximum soil water potential for heterotrophic resp
-
-     ! TODO Need for spin-ups?
      real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
      real(r8), allocatable :: initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
-     real(r8), allocatable :: mge(:)  ! Microbial growth efficiency (mg/mg)
-     real(r8), allocatable :: vmod(:)  ! 
-     real(r8), allocatable :: vslope(:)  ! 
-     real(r8), allocatable :: vint(:)  ! 
-     real(r8), allocatable :: kmod(:)  ! 
-     real(r8), allocatable :: kslope(:)  ! 
-     real(r8), allocatable :: kint(:)  ! 
-     
+     real(r8), allocatable :: mimics_mge(:)  ! Microbial growth efficiency (mg/mg)
+     real(r8), allocatable :: mimics_vmod(:)  ! 
+     real(r8), allocatable :: mimics_vint(:)  ! 
+     real(r8), allocatable :: mimics_vslope(:)  ! 
+     real(r8), allocatable :: mimics_kmod(:)  ! 
+     real(r8), allocatable :: mimics_kint(:)  ! 
+     real(r8), allocatable :: mimics_kslope(:)  ! 
+     real(r8) :: mimics_nue_into_mic
+     real(r8) :: mimics_p_scalar_p1
+     real(r8) :: mimics_p_scalar_p2
+     real(r8) :: mimics_fphys_r_p1
+     real(r8) :: mimics_fphys_r_p2
+     real(r8) :: mimics_fphys_k_p1
+     real(r8) :: mimics_fphys_k_p2
+     real(r8) :: mimics_fchem_r_p1
+     real(r8) :: mimics_fchem_r_p2
+     real(r8) :: mimics_fchem_k_p1
+     real(r8) :: mimics_fchem_k_p2
+     real(r8) :: mimics_desorp_p1
+     real(r8) :: mimics_desorp_p2
+     real(r8) :: mimics_desorpQ10
+     real(r8) :: mimics_densdep
+     real(r8) :: mimics_fmet_p1
+     real(r8) :: mimics_fmet_p2
+     real(r8) :: mimics_fmet_p3
+     real(r8) :: mimics_fmet_p4
+     real(r8) :: mimics_tau_mod_factor
+     real(r8) :: mimics_tau_mod_min
+     real(r8) :: mimics_tau_mod_max
+     real(r8) :: mimics_tau_r_p1
+     real(r8) :: mimics_tau_r_p2
+     real(r8) :: mimics_tau_k_p1
+     real(r8) :: mimics_tau_k_p2
+     real(r8) :: mimics_ko_r
+     real(r8) :: mimics_ko_k
+     real(r8) :: mimics_cn_r
+     real(r8) :: mimics_cn_k
+     real(r8) :: mimics_cn_mod_num
+     real(r8) :: mimics_t_soi_ref
   end type params_type
   !
   type(params_type), private :: params_inst
@@ -105,35 +131,13 @@ contains
     !-----------------------------------------------------------------------
 
     ! Read off of netcdf file
-    ! TODO Add new params here and in the params file.
-    ! TODO Some may need _bgc or _mimics added/removed here and in the params
-    !      file. Nicer to add as prefix instead of as suffix because params will
-    !      then appear grouped in the file. Requested approval from Erik.
-    ! TODO Read MIMICS-specific params here & shared ones (eg *_bgc) as:
-    !      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
-    ! TODO When ready for all final params values, talk to @wwieder and,
-    !      if values differ from the BGC values, make separate _mimics params.
-    tString='tau_cwd_bgc'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%tau_cwd_bgc=tempr
-
-    ! MIMICS value = 0 (same as BGC value)
-    tString='rf_cwdl2_bgc'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%rf_cwdl2_bgc=tempr
-
-    tString='minpsi_hr'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%minpsi_bgc=tempr 
-
-    tString='maxpsi_hr'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%maxpsi_bgc=tempr 
-
+    ! TODO Add new mimics_ params here and in the params file(s)
+    ! TODO Add shared ones in CNParamsShareInst & in the file(s)
+    ! TODO When ready for final params values, talk to @wwieder
+    ! TODO Need next one for spin-ups? If so, then add prefixes
+    ! mimics here and bgc in BGCMod if these two will differ or
+    ! move reading the parameter to CNSharedParamsMod if they
+    ! will not differ. Similar for both initial_Cstocks params.
     tString='initial_Cstocks_depth_bgc'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -144,39 +148,199 @@ contains
     call ncd_io(trim(tString), params_inst%initial_Cstocks(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mge(ndecomp_pools_max))
-    tString='mge_mimics'
-    call ncd_io(trim(tString), params_inst%mge(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%mimics_mge(ndecomp_pools_max))
+    tString='mimics_mge'  ! TODO rename in params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_mge(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%vmod(ndecomp_pools_max))
-    tString='vmod_mimics'
-    call ncd_io(trim(tString), params_inst%vmod(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%mimics_vmod(ndecomp_pools_max))
+    tString='mimics_vmod'  ! TODO rename in params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_vmod(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%vslope(ndecomp_pools_max))
-    tString='vslope_mimics'
-    call ncd_io(trim(tString), params_inst%vslope(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%mimics_vslope(ndecomp_pools_max))
+    tString='mimics_vslope'  ! TODO rename in params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_vslope(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%vint(ndecomp_pools_max))
-    tString='vint_mimics'
-    call ncd_io(trim(tString), params_inst%vint(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%mimics_vint(ndecomp_pools_max))
+    tString='mimics_vint'  ! TODO rename in params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_vint(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%kmod(ndecomp_pools_max))
-    tString='kmod_mimics'
-    call ncd_io(trim(tString), params_inst%kmod(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%mimics_kmod(ndecomp_pools_max))
+    tString='mimics_kmod'  ! TODO rename in params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_kmod(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%kslope(ndecomp_pools_max))
-    tString='kslope_mimics'
-    call ncd_io(trim(tString), params_inst%kslope(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%mimics_kslope(ndecomp_pools_max))
+    tString='mimics_kslope'  ! TODO rename in params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_kslope(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%kint(ndecomp_pools_max))
-    tString='kint_mimics'
-    call ncd_io(trim(tString), params_inst%kint(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%mimics_kint(ndecomp_pools_max))
+    tString='mimics_kint'  ! TODO rename in params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_kint(:), 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_p_scalar_p1)
+    tString='mimics_p_scalar_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_p_scalar_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_p_scalar_p2)
+    tString='mimics_p_scalar_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_p_scalar_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_desorp_p1)
+    tString='mimics_desorp_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_desorp_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_desorp_p2)
+    tString='mimics_desorp_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_desorp_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fphys_r_p1)
+    tString='mimics_fphys_r_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fphys_r_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fphys_r_p2)
+    tString='mimics_fphys_r_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fphys_r_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fphys_k_p1)
+    tString='mimics_fphys_k_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fphys_k_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fphys_k_p2)
+    tString='mimics_fphys_k_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fphys_k_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_nue_into_mic)
+    tString='mimics_nue_into_mic'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_nue_into_mic, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fmet_p1)
+    tString='mimics_fmet_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fmet_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fmet_p2)
+    tString='mimics_fmet_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fmet_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fmet_p3)
+    tString='mimics_fmet_p3'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fmet_p3, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fmet_p4)
+    tString='mimics_fmet_p4'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fmet_p4, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fchem_r_p1)
+    tString='mimics_fchem_r_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fchem_r_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fchem_r_p2)
+    tString='mimics_fchem_r_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fchem_r_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fchem_k_p1)
+    tString='mimics_fchem_k_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fchem_k_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_fchem_k_p2)
+    tString='mimics_fchem_k_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_fchem_k_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_tau_mod_factor)
+    tString='mimics_tau_mod_factor'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_tau_mod_factor, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_tau_mod_min)
+    tString='mimics_tau_mod_min'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_tau_mod_min, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_tau_mod_max)
+    tString='mimics_tau_mod_max'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_tau_mod_max, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_tau_r_p1)
+    tString='mimics_tau_r_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_tau_r_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_tau_r_p2)
+    tString='mimics_tau_r_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_tau_r_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_tau_k_p1)
+    tString='mimics_tau_k_p1'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_tau_k_p1, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_tau_k_p2)
+    tString='mimics_tau_k_p2'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_tau_k_p2, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_ko_r)
+    tString='mimics_ko_r'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_ko_r, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_ko_k)
+    tString='mimics_ko_k'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_ko_k, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_densdep)
+    tString='mimics_densdep'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_densdep, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_desorpQ10)
+    tString='mimics_desorpQ10'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_desorpQ10, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_t_soi_ref)
+    tString='mimics_t_soi_ref'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_t_soi_ref, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_cn_mod_num)
+    tString='mimics_cn_mod_num'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_cn_mod_num, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_cn_r)
+    tString='mimics_cn_r'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_cn_r, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+
+    allocate(params_inst%mimics_cn_k)
+    tString='mimics_cn_k'  ! TODO add to params file(s)
+    call ncd_io(trim(tString), params_inst%mimics_cn_k, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
   end subroutine readParams
@@ -197,14 +361,21 @@ contains
     !
     ! !LOCAL VARIABLES
     !-- properties of each decomposing pool
+    real(r8) :: mimics_nue_into_mic
+    real(r8) :: mimics_p_scalar_p1
+    real(r8) :: mimics_p_scalar_p2
+    real(r8) :: mimics_fphys_r_p1
+    real(r8) :: mimics_fphys_r_p2
+    real(r8) :: mimics_fphys_k_p1
+    real(r8) :: mimics_fphys_k_p2
+    real(r8) :: mimics_desorp_p1
+    real(r8) :: mimics_desorp_p2
     real(r8) :: rf_l1m1
     real(r8) :: rf_l1m2
     real(r8) :: rf_l2m1
     real(r8) :: rf_l2m2
     real(r8) :: rf_s1m1
     real(r8) :: rf_s1m2
-    real(r8) :: rf_cwdl2
-    real(r8), allocatable :: desorp(:,:)
     real(r8), allocatable :: fphys_m1(:,:)
     real(r8), allocatable :: fphys_m2(:,:)
     real(r8), allocatable :: p_scalar(:,:)
@@ -219,6 +390,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                                     &
+         rf_cwdl2                       => CNParamsShareInst%rf_cwdl2                            , & ! Input:  [real(r8)                  ]  respiration fraction in CWD to litter2 transition (frac)
          rf_decomp_cascade              => soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Input:  [real(r8)          (:,:,:) ]  respired fraction in decomposition step (frac)       
          nue_decomp_cascade             => soilbiogeochem_state_inst%nue_decomp_cascade_col      , & ! Output: [real(r8)          (:)     ]  N use efficiency for a given transition (TODO)
          pathfrac_decomp_cascade        => soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Output: [real(r8)          (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
@@ -247,68 +419,64 @@ contains
       allocate(fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp))
       allocate(p_scalar(bounds%begc:bounds%endc,1:nlevdecomp))
 
-      ! TODO Prefix these parameters w params_inst% to move to params file(s).
-      ! First read TODOs in subr. readParams above.
-      p_scalar_p1 = 0.8_r8
-      p_scalar_p2 = -3.0_r8
-      desorp_p1 = 1.5e-5_r8
-      desorp_p2 = -1.5_r8
-      fphys_r_p1 = 0.3_r8
-      fphys_r_p2 = 1.3_r8
-      fphys_k_p1 = 0.2_r8
-      fphys_k_p2 = 0.8_r8
-      nue_into_mic = 0.85_r8
-
       !------- time-constant coefficients ---------- !
-      ! set respiration fractions for fluxes between compartments
-      rf_l1m1 = 1.0_r8 - params_inst%mge(1)
-      rf_l2m1 = 1.0_r8 - params_inst%mge(2)
-      rf_s1m1 = 1.0_r8 - params_inst%mge(3)
-      rf_l1m2 = 1.0_r8 - params_inst%mge(4)
-      rf_l2m2 = 1.0_r8 - params_inst%mge(5)
-      rf_s1m2 = 1.0_r8 - params_inst%mge(6)
+      mimics_nue_into_mic = params_inst%mimics_nue_into_mic  ! = 0.85_r8
+      mimics_p_scalar_p1 = params_inst%mimics_p_scalar_p1  ! = 0.8_r8
+      mimics_p_scalar_p2 = params_inst%mimics_p_scalar_p2  ! = -3.0_r8
+      mimics_fphys_r_p1 = params_inst%mimics_fphys_r_p1  ! = 0.3_r8
+      mimics_fphys_r_p2 = params_inst%mimics_fphys_r_p2  ! = 1.3_r8
+      mimics_fphys_k_p1 = params_inst%mimics_fphys_k_p1  ! = 0.2_r8
+      mimics_fphys_k_p2 = params_inst%mimics_fphys_k_p2  ! = 0.8_r8
+      mimics_desorp_p1 = params_inst%mimics_desorp_p1  ! = 1.5e-5_r8
+      mimics_desorp_p2 = params_inst%mimics_desorp_p2  ! = -1.5_r8
 
-      rf_cwdl2 = params_inst%rf_cwdl2_bgc
+      ! set respiration fractions for fluxes between compartments
+      rf_l1m1 = 1.0_r8 - params_inst%mimics_mge(1)
+      rf_l2m1 = 1.0_r8 - params_inst%mimics_mge(2)
+      rf_s1m1 = 1.0_r8 - params_inst%mimics_mge(3)
+      rf_l1m2 = 1.0_r8 - params_inst%mimics_mge(4)
+      rf_l2m2 = 1.0_r8 - params_inst%mimics_mge(5)
+      rf_s1m2 = 1.0_r8 - params_inst%mimics_mge(6)
 
       ! vmod = "old" vmod * av  AND  kmod = ak / "old" kmod
       ! Table B1 Wieder et al. (2015) and MIMICS params file give diff
       ! ak and av values. I used the params file values.
-      vmod_l1_m1 = params_inst%vmod(1)
-      vmod_l2_m1 = params_inst%vmod(2)
-      vmod_s1_m1 = params_inst%vmod(3)
-      vmod_l1_m2 = params_inst%vmod(4)
-      vmod_l2_m2 = params_inst%vmod(5)
-      vmod_s1_m2 = params_inst%vmod(6)
-      kmod_l1_m1 = params_inst%kmod(1)
-      kmod_l2_m1 = params_inst%kmod(2)
-      kmod_s1_m1 = params_inst%kmod(3)
-      kmod_l1_m2 = params_inst%kmod(4)
-      kmod_l2_m2 = params_inst%kmod(5)
-      kmod_s1_m2 = params_inst%kmod(6)
-      vslope_l1_m1 = params_inst%vslope(1)
-      vslope_l2_m1 = params_inst%vslope(2)
-      vslope_s1_m1 = params_inst%vslope(3)
-      vslope_l1_m2 = params_inst%vslope(4)
-      vslope_l2_m2 = params_inst%vslope(5)
-      vslope_s1_m2 = params_inst%vslope(6)
-      kslope_l1_m1 = params_inst%kslope(1)
-      kslope_l2_m1 = params_inst%kslope(2)
-      kslope_s1_m1 = params_inst%kslope(3)
-      kslope_l1_m2 = params_inst%kslope(4)
-      kslope_l2_m2 = params_inst%kslope(5)
-      kslope_s1_m2 = params_inst%kslope(6)
-      vint_l1_m1 = params_inst%vint(1)
-      vint_l2_m1 = params_inst%vint(2)
-      vint_s1_m1 = params_inst%vint(3)
-      vint_l1_m2 = params_inst%vint(4)
-      vint_l2_m2 = params_inst%vint(5)
-      vint_s1_m2 = params_inst%vint(6)
-      kint_l1_m1 = params_inst%kint(1)
-      kint_l2_m1 = params_inst%kint(2)
-      kint_s1_m1 = params_inst%kint(3)
-      kint_l1_m2 = params_inst%kint(4)
-      kint_l2_m2 = params_inst%kint(5)
-      kint_s1_m2 = params_inst%kint(6)
+      vmod_l1_m1 = params_inst%mimics_vmod(1)
+      vmod_l2_m1 = params_inst%mimics_vmod(2)
+      vmod_s1_m1 = params_inst%mimics_vmod(3)
+      vmod_l1_m2 = params_inst%mimics_vmod(4)
+      vmod_l2_m2 = params_inst%mimics_vmod(5)
+      vmod_s1_m2 = params_inst%mimics_vmod(6)
+      kmod_l1_m1 = params_inst%mimics_kmod(1)
+      kmod_l2_m1 = params_inst%mimics_kmod(2)
+      kmod_s1_m1 = params_inst%mimics_kmod(3)
+      kmod_l1_m2 = params_inst%mimics_kmod(4)
+      kmod_l2_m2 = params_inst%mimics_kmod(5)
+      kmod_s1_m2 = params_inst%mimics_kmod(6)
+      vslope_l1_m1 = params_inst%mimics_vslope(1)
+      vslope_l2_m1 = params_inst%mimics_vslope(2)
+      vslope_s1_m1 = params_inst%mimics_vslope(3)
+      vslope_l1_m2 = params_inst%mimics_vslope(4)
+      vslope_l2_m2 = params_inst%mimics_vslope(5)
+      vslope_s1_m2 = params_inst%mimics_vslope(6)
+      kslope_l1_m1 = params_inst%mimics_kslope(1)
+      kslope_l2_m1 = params_inst%mimics_kslope(2)
+      kslope_s1_m1 = params_inst%mimics_kslope(3)
+      kslope_l1_m2 = params_inst%mimics_kslope(4)
+      kslope_l2_m2 = params_inst%mimics_kslope(5)
+      kslope_s1_m2 = params_inst%mimics_kslope(6)
+      vint_l1_m1 = params_inst%mimics_vint(1)
+      vint_l2_m1 = params_inst%mimics_vint(2)
+      vint_s1_m1 = params_inst%mimics_vint(3)
+      vint_l1_m2 = params_inst%mimics_vint(4)
+      vint_l2_m2 = params_inst%mimics_vint(5)
+      vint_s1_m2 = params_inst%mimics_vint(6)
+      kint_l1_m1 = params_inst%mimics_kint(1)
+      kint_l2_m1 = params_inst%mimics_kint(2)
+      kint_s1_m1 = params_inst%mimics_kint(3)
+      kint_l1_m2 = params_inst%mimics_kint(4)
+      kint_l2_m2 = params_inst%mimics_kint(5)
+      kint_s1_m2 = params_inst%mimics_kint(6)
 
       ! some of these are dependent on the soil texture properties
       ! One-time initializations here.
@@ -316,13 +484,15 @@ contains
 
       do c = bounds%begc, bounds%endc
          do j = 1, nlevdecomp
-            desorp(c,j) = desorp_p1 * exp(desorp_p2 * cellclay(c,j))
-            fphys_m1(c,j) = min(1.0_r8, max(0.0_r8, fphys_r_p1 * &
-               exp(fphys_r_p2 * cellclay(c,j))))
-            fphys_m2(c,j) = min(1.0_r8, max(0.0_r8, fphys_k_p1 * &
-               exp(fphys_k_p2 * cellclay(c,j))))
-            p_scalar(c,j) = 1.0_r8 / (p_scalar_p1 * &
-                                      exp(p_scalar_p2 * &
+            desorp(c,j) = mimics_desorp_p1 * &
+                          exp(mimics_desorp_p2 * cellclay(c,j))
+            fphys_m1(c,j) = min(1.0_r8, max(0.0_r8, mimics_fphys_r_p1 * &
+               exp(mimics_fphys_r_p2 * cellclay(c,j))))
+            fphys_m2(c,j) = min(1.0_r8, max(0.0_r8, mimics_fphys_k_p1 * &
+               exp(mimics_fphys_k_p2 * cellclay(c,j))))
+            ! TODO slevis: Oups, where was p_scalar supposed to be used?
+            p_scalar(c,j) = 1.0_r8 / (mimics_p_scalar_p1 * &
+                                      exp(mimics_p_scalar_p2 * &
                                           sqrt(cellclay(c,j))))
          end do
       end do
@@ -478,7 +648,7 @@ contains
       spinup_factor(i_str_lit) = 1._r8
       !CWD
       if (.not. use_fates) then
-         spinup_factor(i_cwd) = max(1._r8, (speedup_fac * params_inst%tau_cwd_bgc / 2._r8 ))
+         spinup_factor(i_cwd) = max(1._r8, (speedup_fac * CNParamsShareInst%tau_cwd * 0.5_r8 ))
       end if
       !som1,2,3
       spinup_factor(i_avl_som) = 1._r8
@@ -499,7 +669,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = rf_l1m1
       cascade_donor_pool(i_l1m1) = i_met_lit
       cascade_receiver_pool(i_l1m1) = i_cop_mic
-      nue_decomp_cascade(i_l1m1) = nue_into_mic
+      nue_decomp_cascade(i_l1m1) = mimics_nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = 0.5_r8
 
       i_l1m2 = 2
@@ -507,7 +677,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = rf_l1m2
       cascade_donor_pool(i_l1m2) = i_met_lit
       cascade_receiver_pool(i_l1m2) = i_oli_mic
-      nue_decomp_cascade(i_l1m2) = nue_into_mic
+      nue_decomp_cascade(i_l1m2) = mimics_nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = 0.5_r8
 
       i_l2m1 = 3
@@ -515,7 +685,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1) = rf_l2m1
       cascade_donor_pool(i_l2m1) = i_str_lit
       cascade_receiver_pool(i_l2m1) = i_cop_mic
-      nue_decomp_cascade(i_l2m1) = nue_into_mic
+      nue_decomp_cascade(i_l2m1) = mimics_nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1)= 0.5_r8
 
       i_l2m2 = 4
@@ -523,7 +693,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2) = rf_l2m2
       cascade_donor_pool(i_l2m2) = i_str_lit
       cascade_receiver_pool(i_l2m2) = i_oli_mic
-      nue_decomp_cascade(i_l2m2) = nue_into_mic
+      nue_decomp_cascade(i_l2m2) = mimics_nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2)= 0.5_r8
 
       i_s1m1 = 5
@@ -531,7 +701,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m1) = rf_s1m1
       cascade_donor_pool(i_s1m1) = i_avl_som
       cascade_receiver_pool(i_s1m1) = i_cop_mic
-      nue_decomp_cascade(i_s1m1) = nue_into_mic
+      nue_decomp_cascade(i_s1m1) = mimics_nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m1) = 0.5_r8
 
       i_s1m2 = 6
@@ -539,7 +709,7 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m2) = rf_s1m2
       cascade_donor_pool(i_s1m2) = i_avl_som
       cascade_receiver_pool(i_s1m2) = i_oli_mic
-      nue_decomp_cascade(i_s1m2) = nue_into_mic
+      nue_decomp_cascade(i_s1m2) = mimics_nue_into_mic
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m2) = 0.5_r8
 
       i_s2s1 = 7
@@ -616,13 +786,13 @@ contains
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 1.0_r8
       end if
 
-      deallocate(params_inst%mge)
-      deallocate(params_inst%vmod)
-      deallocate(params_inst%vslope)
-      deallocate(params_inst%vint)
-      deallocate(params_inst%kmod)
-      deallocate(params_inst%kslope)
-      deallocate(params_inst%kint)
+      deallocate(params_inst%mimics_mge)
+      deallocate(params_inst%mimics_vmod)
+      deallocate(params_inst%mimics_vint)
+      deallocate(params_inst%mimics_vslope)
+      deallocate(params_inst%mimics_kmod)
+      deallocate(params_inst%mimics_kint)
+      deallocate(params_inst%mimics_kslope)
       deallocate(params_inst%initial_Cstocks)
 
     end associate
@@ -632,7 +802,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
        soilstate_inst, temperature_inst, cnveg_carbonflux_inst, &
-       ch4_inst, soilbiogeochem_carbonflux_inst)
+       ch4_inst, soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
     !
     ! !DESCRIPTION:
     ! Calculate rates and decomposition pathways for the MIMICS
@@ -652,32 +822,104 @@ contains
     type(cnveg_carbonflux_type)          , intent(in)    :: cnveg_carbonflux_inst
     type(ch4_type)                       , intent(in)    :: ch4_inst
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
     real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
     real(r8), allocatable:: fr(:,:)         ! column-level rooting fraction by soil depth
     real(r8):: psi                          ! temporary soilpsi for water scalar
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
+    real(r8):: fmet
+    real(r8):: favl
+    real(r8):: fchem_m1
+    real(r8):: fchem_m2
+    real(r8):: desorption
     real(r8):: vmax_l1_m1  !
     real(r8):: vmax_l2_m1  !
     real(r8):: vmax_s1_m1  !
     real(r8):: vmax_l1_m2  !
     real(r8):: vmax_l2_m2  !
     real(r8):: vmax_s1_m2  !
+    real(r8):: vmod_l1_m1  !
+    real(r8):: vmod_l2_m1  !
+    real(r8):: vmod_s1_m1  !
+    real(r8):: vmod_l1_m2  !
+    real(r8):: vmod_l2_m2  !
+    real(r8):: vmod_s1_m2  !
+    real(r8):: vint_l1_m1  !
+    real(r8):: vint_l2_m1  !
+    real(r8):: vint_s1_m1  !
+    real(r8):: vint_l1_m2  !
+    real(r8):: vint_l2_m2  !
+    real(r8):: vint_s1_m2  !
+    real(r8):: vslope_l1_m1  !
+    real(r8):: vslope_l2_m1  !
+    real(r8):: vslope_s1_m1  !
+    real(r8):: vslope_l1_m2  !
+    real(r8):: vslope_l2_m2  !
+    real(r8):: vslope_s1_m2  !
     real(r8):: km_l1_m1  !
     real(r8):: km_l2_m1  !
     real(r8):: km_s1_m1  !
     real(r8):: km_l1_m2  !
     real(r8):: km_l2_m2  !
     real(r8):: km_s1_m2  !
+    real(r8):: kmod_l1_m1  !
+    real(r8):: kmod_l2_m1  !
+    real(r8):: kmod_s1_m1  !
+    real(r8):: kmod_l1_m2  !
+    real(r8):: kmod_l2_m2  !
+    real(r8):: kmod_s1_m2  !
+    real(r8):: kint_l1_m1  !
+    real(r8):: kint_l2_m1  !
+    real(r8):: kint_s1_m1  !
+    real(r8):: kint_l1_m2  !
+    real(r8):: kint_l2_m2  !
+    real(r8):: kint_s1_m2  !
+    real(r8):: kslope_l1_m1  !
+    real(r8):: kslope_l2_m1  !
+    real(r8):: kslope_s1_m1  !
+    real(r8):: kslope_l1_m2  !
+    real(r8):: kslope_l2_m2  !
+    real(r8):: kslope_s1_m2  !
     real(r8):: tau_m1  !
     real(r8):: tau_m2  !
-    real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
+    real(r8):: tau_mod
+    real(r8):: m1_conc  !
+    real(r8):: m2_conc  !
+    real(r8):: term_1  !
+    real(r8):: term_2  !
+    real(r8):: t_soi_degC
+!   real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
     integer :: c, fc, j, k, l
     real(r8):: days_per_year                ! days per year
     real(r8):: depth_scalar(bounds%begc:bounds%endc,1:nlevdecomp) 
     real(r8):: w_d_o_scalars  ! product of w_scalar * depth_scalar * o_scalar
     real(r8):: mino2lim                     !minimum anaerobic decomposition rate
+    real(r8):: mimics_fmet_p1
+    real(r8):: mimics_fmet_p2
+    real(r8):: mimics_fmet_p3
+    real(r8):: mimics_fmet_p4
+    real(r8):: mimics_fchem_r_p1
+    real(r8):: mimics_fchem_r_p2
+    real(r8):: mimics_fchem_k_p1
+    real(r8):: mimics_fchem_k_p2
+    real(r8):: mimics_tau_mod_min
+    real(r8):: mimics_tau_mod_max
+    real(r8):: mimics_tau_mod_factor
+    real(r8):: mimics_tau_r_p1
+    real(r8):: mimics_tau_r_p2
+    real(r8):: mimics_tau_k_p1
+    real(r8):: mimics_tau_k_p2
+    real(r8):: mimics_ko_r
+    real(r8):: mimics_ko_k
+    real(r8):: mimics_densdep
+    real(r8):: mimics_desorpQ10
+    real(r8):: mimics_t_soi_ref
+    real(r8):: mimics_cn_mod_num
+    real(r8):: mimics_cn_r
+    real(r8):: mimics_cn_k
+
     real(r8):: spinup_geogterm_l1(bounds%begc:bounds%endc) ! geographically-varying spinup term for l1
     real(r8):: spinup_geogterm_l2(bounds%begc:bounds%endc)  ! geographically-varying spinup term for l2
     real(r8):: spinup_geogterm_cwd(bounds%begc:bounds%endc) ! geographically-varying spinup term for cwd
@@ -690,17 +932,18 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                           &
-         annsum_npp_col => cnveg_carbonflux_inst%annsum_npp_col        , & ! Input:  [real(r8) (:)     ]  annual sum of NPP at the column level (gC/m2/yr)
          ligninNratioAvg => cnveg_carbonflux_inst%ligninNratioAvg_col  , & ! Input:  [real(r8) (:)     ]  column-level lignin to nitrogen ratio
+         annsum_npp_col => cnveg_carbonflux_inst%annsum_npp_col        , & ! Input:  [real(r8) (:)     ]  annual sum of NPP at the column level (gC/m2/yr)
 
-         minpsi         => params_inst%minpsi_bgc                      , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
-         maxpsi         => params_inst%maxpsi_bgc                      , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
+         minpsi         => CNParamsShareInst%minpsi                    , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
+         maxpsi         => CNParamsShareInst%maxpsi                    , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
          soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
          t_soisno       => temperature_inst%t_soisno_col               , & ! Input:  [real(r8) (:,:)   ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)       
          o2stress_sat   => ch4_inst%o2stress_sat_col                   , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          o2stress_unsat => ch4_inst%o2stress_unsat_col                 , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          finundated     => ch4_inst%finundated_col                     , & ! Input:  [real(r8) (:)     ]  fractional inundated area                                
          
+         decomp_cpools_vr => soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col , &  ! Input: [real(r8) (:,:,:) ] (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) C pools
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
          cn_col         => soilbiogeochem_carbonflux_inst%cn_col       , & ! Output: [real(r8) (:,:)   ]  C:N ratio
@@ -712,11 +955,11 @@ contains
 
       days_per_year = get_days_per_year()
 
-      ! Set "decomp_depth_efolding" parameter
-      decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
+!     ! Set "decomp_depth_efolding" parameter
+!     decomp_depth_efolding = CNParamsShareInst%decomp_depth_efolding
 
       ! translate to per-second time constant
-      k_frag = 1._r8 / (secspday * days_per_year * params_inst%tau_cwd_bgc)
+      k_frag = 1._r8 / (secspday * days_per_year * CNParamsShareInst%tau_cwd)
 
      ! calc ref rate
       if ( spinup_state >= 1 ) then
@@ -920,31 +1163,29 @@ contains
          end do
       end do
 
-      ! TODO Move to the params files after
-      ! ... reading TODOs in subr. readParams (above)
-      fmet_p1 = 0.85_r8
-      fmet_p2 = 0.85_r8
-      fmet_p3 = 0.013_r8
-      fmet_p4 = 40.0_r8
-      fchem_r_p1 = 0.1_r8
-      fchem_r_p2 = -3.0_r8
-      fchem_k_p1 = 0.3_r8
-      fchem_k_p2 = -3.0_r8
-      tau_mod_factor = 0.01_r8  ! was tau_mod_denom = 100
-      tau_mod_min = 0.8_r8
-      tau_mod_max = 1.2_r8
-      tau_r_p1 = 5.2e-4_r8
-      tau_r_p2 = 0.3_r8  ! or 0.4?
-      tau_k_p1 = 2.4e-4_r8
-      tau_k_p2 = 0.1_r8
-      ko_r = 4.0_r8
-      ko_k = 4.0_r8
-      densdep = 1.0_r8
-      desorpQ10 = 1.0_r8
-      t_soi_ref = 25.0_r8  ! deg C
-      cn_mod_num = 1.0_r8  ! TODO slevis: I don't see values in the testbed
-      cn_r = 1.0_r8  ! ... or in the testbed's params file
-      cn_k = 1.0_r8  ! ... for these three
+      mimics_fmet_p1 = params_inst%mimics_fmet_p1  ! = 0.85_r8
+      mimics_fmet_p2 = params_inst%mimics_fmet_p2  ! = 0.85_r8
+      mimics_fmet_p3 = params_inst%mimics_fmet_p3  ! = 0.013_r8
+      mimics_fmet_p4 = params_inst%mimics_fmet_p4  ! = 40.0_r8
+      mimics_fchem_r_p1 = params_inst%mimics_fchem_r_p1  ! = 0.1_r8
+      mimics_fchem_r_p2 = params_inst%mimics_fchem_r_p2  ! = -3.0_r8
+      mimics_fchem_k_p1 = params_inst%mimics_fchem_k_p1  ! = 0.3_r8
+      mimics_fchem_k_p2 = params_inst%mimics_fchem_k_p2  ! = -3.0_r8
+      mimics_tau_mod_min = params_inst%mimics_tau_mod_min  ! = 0.8_r8
+      mimics_tau_mod_max = params_inst%mimics_tau_mod_max  ! = 1.2_r8
+      mimics_tau_mod_factor = params_inst%mimics_tau_mod_factor  ! = 0.01_r8  ! was tau_mod_denom = 100
+      mimics_tau_r_p1 = params_inst%mimics_tau_r_p1  ! = 5.2e-4_r8
+      mimics_tau_r_p2 = params_inst%mimics_tau_r_p2  ! = 0.3_r8  ! or 0.4?
+      mimics_tau_k_p1 = params_inst%mimics_tau_k_p1  ! = 2.4e-4_r8
+      mimics_tau_k_p2 = params_inst%mimics_tau_k_p2  ! = 0.1_r8
+      mimics_ko_r = params_inst%mimics_ko_r  ! = 4.0_r8
+      mimics_ko_k = params_inst%mimics_ko_k  ! = 4.0_r8
+      mimics_densdep = params_inst%mimics_densdep  ! = 1.0_r8
+      mimics_desorpQ10 = params_inst%mimics_desorpQ10  ! = 1.0_r8
+      mimics_t_soi_ref = params_inst%mimics_t_soi_ref  ! = 25.0_r8  ! deg C
+      mimics_cn_mod_num = params_inst%mimics_cn_mod_num  ! = 1.0_r8  ! TODO slevis: I don't see values in the testbed or
+      mimics_cn_r = params_inst%mimics_cn_r  ! = 1.0_r8  ! ... in the testbed's
+      mimics_cn_k = params_inst%mimics_cn_k  ! = 1.0_r8  ! ... params file for these 3
 
       ! calculate rates for all litter and som pools
       ! TODO Ok that I reversed order of do-loops?
@@ -958,29 +1199,33 @@ contains
          ! TODO Check for high-freq variations in ligninNratioAvg. To avoid,
          !      replace pool_to_litter terms with ann or other long term mean
          !      in CNVegCarbonFluxType.
-         fmet = fmet_p1 * (fmet_p2 - fmet_p3 * min(fmet_p4, ligninNratioAvg(c)))
-         tau_mod = min(tau_mod_max, max(tau_mod_min, &
-                                        sqrt(tau_mod_factor * &
-                                             annsum_npp_col(c))))
+         fmet = mimics_fmet_p1 * (mimics_fmet_p2 - mimics_fmet_p3 * min(mimics_fmet_p4, ligninNratioAvg(c)))
+         tau_mod = min(mimics_tau_mod_max, max(mimics_tau_mod_min, &
+                                               sqrt(mimics_tau_mod_factor * &
+                                                    annsum_npp_col(c))))
 
          ! tau_m1 is tauR and tau_m2 is tauK in Wieder et al. 2015
          ! tau ends up in units of per hour but is expected
          ! in units of per second, so convert here; alternatively
          ! place the conversion once in w_d_o_scalars
-         tau_m1 = tau_r_p1 * exp(tau_r_p2 * fmet) * tau_mod * secsphr
-         tau_m2 = tau_k_p1 * exp(tau_k_p2 * fmet) * tau_mod * secsphr
+         tau_m1 = mimics_tau_r_p1 * exp(mimics_tau_r_p2 * fmet) * tau_mod * &
+                  secsphr
+         tau_m2 = mimics_tau_k_p1 * exp(mimics_tau_k_p2 * fmet) * tau_mod * &
+                  secsphr
 
          ! These two get used in SoilBiogeochemPotentialMod.F90
          ! cn(c,i_cop_mic), cn(c,i_oli_mic) are CN_r, CN_k in the testbed code
          ! cn_r, cn_k are CNr, CNk in the testbed code
          ! https://github.com/wwieder/biogeochem_testbed_1.1/blob/Testbed_CN/SOURCE_CODE/mimics_cycle_CN.f90#L1613
-         cn_col(c,i_cop_mic) = cn_r * sqrt(cn_mod_num / fmet)
-         cn_col(c,i_oli_mic) = cn_k * sqrt(cn_mod_num / fmet)
+         cn_col(c,i_cop_mic) = mimics_cn_r * sqrt(mimics_cn_mod_num / fmet)
+         cn_col(c,i_oli_mic) = mimics_cn_k * sqrt(mimics_cn_mod_num / fmet)
 
          ! Used in the update of certain pathfrac terms that vary with time
          ! in the next loop
-         fchem_m1 = min(1.0_r8, max(0.0_r8, fchem_r_p1 * exp(fchem_r_p2 * fmet)))
-         fchem_m2 = min(1.0_r8, max(0.0_r8, fchem_k_p1 * exp(fchem_k_p2 * fmet)))
+         fchem_m1 = min(1.0_r8, max(0.0_r8, mimics_fchem_r_p1 * &
+                                            exp(mimics_fchem_r_p2 * fmet)))
+         fchem_m2 = min(1.0_r8, max(0.0_r8, mimics_fchem_k_p1 * &
+                                            exp(mimics_fchem_k_p2 * fmet)))
 
          do j = 1,nlevdecomp
             ! vmax ends up in units of per hour but is expected
@@ -1020,8 +1265,8 @@ contains
             ! Q10 = 1.1 w/ reference temperature of 25C.
             ! Expected in units of per second, so convert; alternatively
             ! place the conversion once in w_d_o_scalars
-            desorption = desorp(c,j) * desorpQ10 * secsphr * &
-                         exp((t_soi_degC - t_soi_ref) / 10.0_r8)
+            desorption = desorp(c,j) * mimics_desorpQ10 * secsphr * &
+                         exp((t_soi_degC - mimics_t_soi_ref) / 10.0_r8)
 
             ! Microbial concentration with necessary unit conversions
             ! mgC/cm3 = gC/m3 * (1e3 mg/g) / (1e6 cm3/m3)
@@ -1056,19 +1301,19 @@ contains
 
             decomp_k(c,j,i_phys_som) = desorption * depth_scalar(c,j)
 
-            term_1 = vmax_l2_m1 * m1_conc / (ko_r * km_l2_m1 + m1_conc)
-            term_2 = vmax_l2_m2 * m2_conc / (ko_k * km_l2_m2 + m2_conc)
+            term_1 = vmax_l2_m1 * m1_conc / (mimics_ko_r * km_l2_m1 + m1_conc)
+            term_2 = vmax_l2_m2 * m2_conc / (mimics_ko_k * km_l2_m2 + m2_conc)
             ! The right hand side is OXIDAT in the testbed (line 1145)
             decomp_k(c,j,i_chem_som) = (term_1 + term_2) * w_d_o_scalars
 
             decomp_k(c,j,i_cop_mic) = tau_m1 * &
-                   m1_conc**(densdep - 1.0_r8) * w_d_o_scalars
+                   m1_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m1(c,j) - fchem_m1))
             pathfrac_decomp_cascade(c,j,i_m1s1) = favl
             pathfrac_decomp_cascade(c,j,i_m1s2) = fchem_m1
 
             decomp_k(c,j,i_oli_mic) = tau_m2 * &
-                   m2_conc**(densdep - 1.0_r8) * w_d_o_scalars
+                   m2_conc**(mimics_densdep - 1.0_r8) * w_d_o_scalars
             favl = min(1.0_r8, max(0.0_r8, 1.0_r8 - fphys_m2(c,j) - fchem_m2))
             pathfrac_decomp_cascade(c,j,i_m2s1) = favl
             pathfrac_decomp_cascade(c,j,i_m2s2) = fchem_m2
