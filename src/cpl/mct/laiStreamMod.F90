@@ -53,8 +53,8 @@ contains
     use ndepStreamMod    , only : clm_domain_mct
     use histFileMod      , only : hist_addfld1d
     use domainMod        , only : ldomain
-    use decompMod        , only : gsmap_lnd_gdc2glo
     use controlMod       , only : NLFilename
+    use lnd_set_decomp_and_domain , only : gsmap_global
     !
     ! !ARGUMENTS:
     implicit none
@@ -131,7 +131,7 @@ contains
          pio_subsystem=pio_subsystem,                  &
          pio_iotype=shr_pio_getiotype(inst_name),      &
          mpicom=mpicom, compid=comp_id,                &
-         gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,       &
+         gsmap=gsmap_global, ggrid=dom_clm,            &
          nxg=ldomain%ni, nyg=ldomain%nj,               &
          yearFirst=stream_year_first_lai,              &
          yearLast=stream_year_last_lai,                &

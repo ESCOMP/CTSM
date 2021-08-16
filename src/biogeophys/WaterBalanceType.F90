@@ -10,7 +10,7 @@ module WaterBalanceType
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_gridcell
   use clm_varcon     , only : spval
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
@@ -95,51 +95,51 @@ contains
 
     call AllocateVar1d(var = this%h2osno_old_col, name = 'h2osno_old_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%liq1_grc, name = 'liq1_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
     call AllocateVar1d(var = this%liq2_grc, name = 'liq2_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
     call AllocateVar1d(var = this%ice1_grc, name = 'ice1_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
     call AllocateVar1d(var = this%ice2_grc, name = 'ice2_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
 
     call AllocateVar1d(var = this%snow_sources_col, name = 'snow_sources_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%snow_sinks_col, name = 'snow_sinks_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%wa_reset_nonconservation_gain_col, name = 'wa_reset_nonconservation_gain_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
     call AllocateVar1d(var = this%begwb_grc, name = 'begwb_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
     call AllocateVar1d(var = this%endwb_grc, name = 'endwb_grc', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_GRIDCELL)
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
     call AllocateVar1d(var = this%begwb_col, name = 'begwb_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%endwb_col, name = 'endwb_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%errh2o_patch, name = 'errh2o_patch', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_PATCH)
+         bounds = bounds, subgrid_level = subgrid_level_patch)
     call AllocateVar1d(var = this%errh2o_col, name = 'errh2o_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
     call AllocateVar1d(var = this%errh2osno_col, name = 'errh2osno_col', &
          container = tracer_vars, &
-         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+         bounds = bounds, subgrid_level = subgrid_level_column)
 
   end subroutine InitAllocate
 

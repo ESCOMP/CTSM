@@ -2,9 +2,9 @@
 
 .. include:: ../substitutions.rst
 
-*********************
-Trouble Shooting 
-*********************
+***************
+Troubleshooting
+***************
 
 In this chapter we give some guidance on what to do when you encounter some of the most common problems.
 
@@ -25,55 +25,90 @@ The model has been run for thousands and thousands of simulation years in many d
 It is important to examine all of the component log files in the run directory for errors. An error in the land model may not appear in the lnd log file, it may show up in the cesm log. In a land-only simulation, errors associated with the data atmosphere model may show up in the atm log or the cesm log, or both. The two logs together may contain useful information about the error.  Frequently, the error output in the log files will include a **traceback** of code where the error occurred. Identifying the specific line of code where the error occurred is the first step in diagnosing the error and developing a solution. If a traceback doesn't appear in the log files, then try running in debug mode as noted in the CIME troubleshooting guide. An example of a traceback in the cesm log is given below
 ::
 
-> 398: ERROR: Carbon or Nitrogen patch negative =   -60.0630620423182
-> 398:  -1.49270707132601
-> 398: ERROR: limits =   -60.0000000000000       -6.00000000000000
-> 398: ENDRUN:
-> 398: ERROR:
-> 398: ERROR: carbon or nitrogen state critically negative ERROR in CNPrecisionControl
-> 398: Mod.F90 at line 209
-> 398:Image              PC                Routine            Line        Source
-> 398:cesm.exe           000000000383B3EA  Unknown               Unknown  Unknown
-> 398:cesm.exe           0000000002F1E5D0  shr_abort_mod_mp_         114  shr_abort_mod.F90
-> 398:cesm.exe           0000000001AF22BF  abortutils_mp_end          50  abortutils.F90
-> 398:cesm.exe           0000000001D02677  cnprecisioncontro         693  CNPrecisionControlMod.F90
-> 398:cesm.exe           0000000001CFCC58  cnprecisioncontro         207  CNPrecisionControlMod.F90
-> 398:cesm.exe           00000000021FB4F5  cndrivermod_mp_cn         575  CNDriverMod.F90
-> 398:cesm.exe           0000000001D0F5C7  cnvegetationfacad         866  CNVegetationFacade.F90
-> 398:cesm.exe           0000000001AFEC96  clm_driver_mp_clm         925  clm_driver.F90
-> 398:cesm.exe           0000000001AE744B  lnd_comp_mct_mp_l         458  lnd_comp_mct.F90
-> 398:cesm.exe           0000000000429414  component_mod_mp_         737  component_mod.F90
-> 398:cesm.exe           000000000040AE4B  cime_comp_mod_mp_        2622  cime_comp_mod.F90
-> 398:cesm.exe           000000000042904C  MAIN__                    133  cime_driver.F90
-> 398:cesm.exe           0000000000408D22  Unknown               Unknown  Unknown
-> 398:libc.so.6          00002B8B95D306E5  __libc_start_main     Unknown  Unknown
-> 398:cesm.exe           0000000000408C29  Unknown               Unknown  Unknown
+   398: ERROR: Carbon or Nitrogen patch negative =   -60.0630620423182
+   398:  -1.49270707132601
+   398: ERROR: limits =   -60.0000000000000       -6.00000000000000
+   398: iam = 362: local  patch    index = 482
+   398: iam = 362: global patch    index = 163723
+   398: iam = 362: global column   index = 104283
+   398: iam = 362: global landunit index = 32348
+   398: iam = 362: global gridcell index = 13723
+   398: iam = 362: gridcell longitude    =  120.0000000
+   398: iam = 362: gridcell latitude     =  -70.0000000
+   398: iam = 362: pft      type         = 10
+   398: iam = 362: column   type         = 1
+   398: iam = 362: landunit type         = 1   
+   398: ENDRUN:
+   398: ERROR:
+   398: ERROR: carbon or nitrogen state critically negative ERROR in CNPrecisionControl
+   398: Mod.F90 at line 209
+   398:Image              PC                Routine            Line        Source
+   398:cesm.exe           000000000383B3EA  Unknown               Unknown  Unknown
+   398:cesm.exe           0000000002F1E5D0  shr_abort_mod_mp_         114  shr_abort_mod.F90
+   398:cesm.exe           0000000001AF22BF  abortutils_mp_end          50  abortutils.F90
+   398:cesm.exe           0000000001D02677  cnprecisioncontro         693  CNPrecisionControlMod.F90
+   398:cesm.exe           0000000001CFCC58  cnprecisioncontro         207  CNPrecisionControlMod.F90
+   398:cesm.exe           00000000021FB4F5  cndrivermod_mp_cn         575  CNDriverMod.F90
+   398:cesm.exe           0000000001D0F5C7  cnvegetationfacad         866  CNVegetationFacade.F90
+   398:cesm.exe           0000000001AFEC96  clm_driver_mp_clm         925  clm_driver.F90
+   398:cesm.exe           0000000001AE744B  lnd_comp_mct_mp_l         458  lnd_comp_mct.F90
+   398:cesm.exe           0000000000429414  component_mod_mp_         737  component_mod.F90
+   398:cesm.exe           000000000040AE4B  cime_comp_mod_mp_        2622  cime_comp_mod.F90
+   398:cesm.exe           000000000042904C  MAIN__                    133  cime_driver.F90
+   398:cesm.exe           0000000000408D22  Unknown               Unknown  Unknown
+   398:libc.so.6          00002B8B95D306E5  __libc_start_main     Unknown  Unknown
+   398:cesm.exe           0000000000408C29  Unknown               Unknown  Unknown
 
-Here, the output is identifying the sequence of fortran statements involved in the error, starting with line 133 in cime_driver.F90 and ending with line 114 in shr_abort_mod.F90.  In this case the run is triggering an error check in the model related to negative carbon/nitrogen at line 693 of CNPrecisionControlMod.F90. In addition, there is additional information related to the error indicating the carbon or nitrogen state is critically negative at line 209 in CNPrecisionControlMod.F90, which is
+Here, the output is identifying the sequence of Fortran statements involved in the error, starting with line 133 in cime_driver.F90 and ending with line 114 in shr_abort_mod.F90.  In this case the run is triggering an error check in the model related to negative carbon/nitrogen at line 693 of CNPrecisionControlMod.F90. In addition, there is additional information related to the error indicating the carbon or nitrogen state is critically negative at line 209 in CNPrecisionControlMod.F90, which is
 ::
 
-> call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_patch(bounds%begp:bounds%endp), &
->                           ns%leafn_patch(bounds%begp:bounds%endp), &
->                           pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
->                           num_truncatep, filter_truncatep)
+   call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_patch(bounds%begp:bounds%endp), &
+                             ns%leafn_patch(bounds%begp:bounds%endp), &
+                             pc(bounds%begp:), pn(bounds%begp:), __LINE__, &
+                             num_truncatep, filter_truncatep)
 
 So here we know that it is either leaf nitrogen (leafn) or leaf carbon (leafc) that has triggered the error.  Furthermore, from the information above and looking at the code, we see that it is leaf carbon that is triggering the error, as the value is -60.0630620423182 and the limit is -60.
 
-At this point it is useful as a next step to identify the particular pft index and perhaps the pft type that is triggering the error.  This can be done by inserting the following code before the **endrun** that is called in CNPrecisionControlMod.F90 at line 693.
-::
+At this point it is useful as a next step to identify the particular patch index and perhaps the pft type that is triggering the error. In this case, the endrun call is already written to provide this information: the patch index and pft type causing the error, along with some other information, are printed in the lines beginning with ``iam``. The ``iam`` value gives the CTSM processor number (this can be obtained in the code via the ``iam`` variable defined in ``spmdMod``). The local patch index is the value of ``p`` in the current patch loop; "local" implies that it refers to this processor's indexing. However, this same value of ``p`` may appear on other processors, since the local indexing on each processor starts with 1. So, to get the unique patch causing the problem, you either need to use the processor's ``iam`` index (there is only one patch with local index 482 on processor 362), or use the global indices printed below the local index. The "global" term here refers to the global index space across all processors (there is only one patch with a global index of 163723 across all processors). See below for how to use the ``get_global_index`` function to translate from local to global indices.
 
-> if (abs(carbon_patch(p)) < ccrit) then 
->    write(iulog,*)'p: ',p
->    write(iulog,*)'itype(p): ',patch%itype(p)
-> end if
+If you are writing your own ``endrun`` call, you can get this additional information by specifying the ``subgrid_index`` and ``subgrid_level`` arguments; for example::
 
-The pft index and the pft type will appear in either the cesm or lnd log file. In this case, the pft index is 163723 and the pft type is 10. From there, one can use this pft index to write out variables that are used in updating leafc, for example, leafc is updated a number of times in CNCStateUpdate1Mod.F90.
-::
+  call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
 
-> if (p .eq. 163723) then
->    write(iulog,*)'CNCStateUpdate1Mod leafc: ',cs_veg%leafc_patch(p)
->    write(iulog,*)'CNCStateUpdate1Mod +leafc_xfer_to_leafc: ',cf_veg%leafc_xfer_to_leafc_patch(p)*dt
-> end if
+(The ``subgrid_level_patch`` constant, and similar constants for the other subgrid levels, are defined in ``decompMod``, so can be accessed via ``use decompMod, only : subgrid_level_patch``.)
+
+You can get this same information without aborting the run via a call to ``write_point_context``, which is also defined in the ``abortutils`` module; e.g.::
+
+   if (abs(carbon_patch(p)) < ccrit) then 
+      call write_point_context(subgrid_index=p, subgrid_level=subgrid_level_patch)
+   end if
+
+Or, if all you want is the global index of ``p`` for the sake of writing extra diagnostic prints like the example below, then you can use the ``get_global_index`` function defined in ``decompMod``, like::
+
+   if (abs(carbon_patch(p)) < ccrit) then
+      write(iulog,*) 'carbon patch significantly negative at local, global p = ', &
+           p, get_global_index(subgrid_index=p, subgrid_level=subgrid_level_patch)
+   end if
+
+In all of these cases, the output will appear in either the cesm or lnd log file. In the above example, we see that the local patch index is 482 on processor 362 and the global patch index is 163723. From there, one can use this patch index to write out variables that are used in updating leafc, for example, leafc is updated a number of times in CNCStateUpdate1Mod.F90.
+
+There are two equivalent methods to write a conditional statement to provide more output for the problem patch within a loop over all patches. The first method is to translate the local index to a global index::
+
+   use decompMod, only : get_global_index, subgrid_level_patch
+   ...
+   if (get_global_index(p, subgrid_level_patch) == 163723) then
+      write(iulog,*)'CNCStateUpdate1Mod leafc: ',cs_veg%leafc_patch(p)
+      write(iulog,*)'CNCStateUpdate1Mod +leafc_xfer_to_leafc: ',cf_veg%leafc_xfer_to_leafc_patch(p)*dt
+   end if
+
+The second method is to use the local index along with the processor number::
+
+   use spmdMod, only : iam
+   ...
+   if (p == 482 .and. iam == 362) then
+      write(iulog,*)'CNCStateUpdate1Mod leafc: ',cs_veg%leafc_patch(p)
+      write(iulog,*)'CNCStateUpdate1Mod +leafc_xfer_to_leafc: ',cf_veg%leafc_xfer_to_leafc_patch(p)*dt
+   end if
 
 By placing these write statements in the code, one can get a sense of how leafc is evolving toward a negative state and why.
 This is a very complex example of troubleshooting.  To make a long story short, as described `here <https://github.com/ESCOMP/CTSM/issues/1163>`_, the error turned out to be caused by a few lines in the phenology code that weren't handling a 20 minute time step properly, thus an actual bug in the code.  This was also a good example of where a much less computationally expensive land-only simulation was able to be used for debugging instead of the orginal expensive fully-coupled simulation.
@@ -96,18 +131,18 @@ To use it
 The example function in **point_of_interest.F90** is **poi_c**. It finds columns with a given landunit type (in this case, the natural vegetated landunit). That function can be used in a column-level loop to find columns with that landunit within the grid cell of interest. Its typical use in CTSM code is
 ::
 
-   > do fc = 1, num_nolakec
-   >    c = filter_nolakec(fc)
-   >    ! Various code here, maybe setting foo and bar variables
-   >    if (poi_c(c)) then
-   >       write(iulog,*) 'DEBUG: foo, bar = ', foo(c), bar(c)
-   >    end if
-   > end do
+   do fc = 1, num_nolakec
+      c = filter_nolakec(fc)
+      ! Various code here, maybe setting foo and bar variables
+      if (poi_c(c)) then
+         write(iulog,*) 'DEBUG: foo, bar = ', foo(c), bar(c)
+      end if
+   end do
 
 You will also need a **use** statement in the module from which you are calling poi_c
 ::
 
-> use point_of_interest, only : poi_c
+   use point_of_interest, only : poi_c
 
 Here are some other suggestions on how to track down a problem encountered while running. These involve setting up and running simpler cases.  In general if the problem still occurs for a simpler case, it will be easier to track down. However, we note that most errors are specific to the case being run.
 

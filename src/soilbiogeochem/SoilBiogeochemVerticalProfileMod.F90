@@ -43,7 +43,7 @@ contains
     ! 
     ! !USES:
     use shr_log_mod             , only : errMsg => shr_log_errMsg
-    use decompMod               , only : bounds_type
+    use decompMod               , only : bounds_type, subgrid_level_column, subgrid_level_patch
     use abortutils              , only : endrun
     use clm_varcon              , only : zsoi, dzsoi, zisoi, dzsoi_decomp, zmin_bedrock
     use clm_varpar              , only : nlevdecomp, nlevgrnd, nlevdecomp_full, maxsoil_patches
@@ -247,7 +247,8 @@ contains
                write(iulog, *) 'p, itype(p), wtcol(p): ', p, patch%itype(p), patch%wtcol(p)
                write(iulog, *) 'cinput_rootfr(p,:): ', cinput_rootfr(p,:)
             end do
-            call endrun(msg=" ERROR: _prof_sum-1>delta"//errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=" ERROR: _prof_sum-1>delta"//errMsg(sourcefile, __LINE__))
          endif
       end do
 
@@ -266,7 +267,7 @@ contains
          if ( ( abs(froot_prof_sum - 1._r8) > delta ) .or.  ( abs(croot_prof_sum - 1._r8) > delta ) .or. &
               ( abs(stem_prof_sum - 1._r8) > delta ) .or.  ( abs(leaf_prof_sum - 1._r8) > delta ) ) then
             write(iulog, *) 'profile sums: ', froot_prof_sum, croot_prof_sum, leaf_prof_sum, stem_prof_sum
-            call endrun(msg=' ERROR: sum-1 > delta'//errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=' ERROR: sum-1 > delta'//errMsg(sourcefile, __LINE__))
          endif
       end do
 

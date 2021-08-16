@@ -14,14 +14,12 @@ module ndepStreamMod
   use spmdMod     , only: mpicom, masterproc, comp_id, iam
   use clm_varctl  , only: iulog, inst_name
   use abortutils  , only: endrun
-  use fileutils   , only: getavu, relavu
-  use decompMod   , only: bounds_type, ldecomp
+  use decompMod   , only: bounds_type
   use domainMod   , only: ldomain
 
   ! !PUBLIC TYPES:
   implicit none
   private
-  save
 
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: ndep_init      ! position datasets for dynamic ndep
@@ -58,7 +56,7 @@ contains
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
-   use decompMod        , only : gsmap_lnd_gdc2glo
+   use lnd_set_decomp_and_domain , only : gsMap_lnd2Dsoi_gdc2glo, gsmap_global
    !
    ! arguments
    implicit none
@@ -96,8 +94,7 @@ contains
 
    ! Read ndepdyn_nml namelist
    if (masterproc) then
-      nu_nml = getavu()
-      open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+      open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
       call shr_nl_find_group_name(nu_nml, 'ndepdyn_nml', status=nml_error)
       if (nml_error == 0) then
          read(nu_nml, nml=ndepdyn_nml,iostat=nml_error)
@@ -108,7 +105,6 @@ contains
          call endrun(msg=' ERROR finding ndepdyn_nml namelist'//errMsg(sourcefile, __LINE__))
       end if
       close(nu_nml)
-      call relavu( nu_nml )
    endif
 
    call shr_mpi_bcast(stream_year_first_ndep , mpicom)
@@ -141,7 +137,7 @@ contains
         pio_subsystem=pio_subsystem,               &
         pio_iotype=shr_pio_getiotype(inst_name),   &
         mpicom=mpicom, compid=comp_id,             &
-        gsmap=gsmap_lnd_gdc2glo, ggrid=dom_clm,    &
+        gsmap=gsmap_global, ggrid=dom_clm,         &
         nxg=ldomain%ni, nyg=ldomain%nj,            &
         yearFirst=stream_year_first_ndep,          &
         yearLast=stream_year_last_ndep,            &
@@ -268,13 +264,12 @@ contains
 
     !-------------------------------------------------------------------
     ! Set domain data type for internal clm grid
-    use clm_varcon  , only : re
-    use domainMod   , only : ldomain
-    use mct_mod     , only : mct_ggrid, mct_gsMap_lsize, mct_gGrid_init
-    use mct_mod     , only : mct_gsMap_orderedPoints, mct_gGrid_importIAttr
-    use mct_mod     , only : mct_gGrid_importRAttr
-    use mct_mod     , only : mct_gsMap
-    use decompMod   , only : gsmap_lnd_gdc2glo, gsMap_lnd2Dsoi_gdc2glo
+    use clm_varcon                , only : re
+    use domainMod                 , only : ldomain
+    use mct_mod                   , only : mct_ggrid, mct_gsMap_lsize, mct_gGrid_init
+    use mct_mod                   , only : mct_gsMap_orderedPoints, mct_gGrid_importIAttr
+    use mct_mod                   , only : mct_gGrid_importRAttr, mct_gsMap
+    use lnd_set_decomp_and_domain , only : gsMap_lnd2Dsoi_gdc2glo, gsmap_global
     implicit none
     !
     ! arguments
@@ -294,7 +289,7 @@ contains
     nlevs = 1
     if ( present(nlevels) ) nlevs = nlevels
     if ( nlevs == 1 ) then
-       gsmap => gsmap_lnd_gdc2glo
+       gsmap => gsmap_global
     else
        gsmap => gsMap_lnd2Dsoi_gdc2glo
     end if
