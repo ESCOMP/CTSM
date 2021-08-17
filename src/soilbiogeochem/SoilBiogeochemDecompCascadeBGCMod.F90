@@ -48,6 +48,24 @@ module SoilBiogeochemDecompCascadeBGCMod
   integer, private :: i_cel_lit  ! index of cellulose litter pool
   integer, private :: i_lig_lit  ! index of lignin litter pool
 
+  real(r8), private :: cwd_fcel
+  real(r8), private :: cwd_flig
+  real(r8), private, allocatable :: f_s1s2(:,:)
+  real(r8), private, allocatable :: f_s1s3(:,:)
+  real(r8), private :: f_s2s1
+  real(r8), private :: f_s2s3
+
+  integer, private :: i_l1s1
+  integer, private :: i_l2s1
+  integer, private :: i_l3s2
+  integer, private :: i_s1s2
+  integer, private :: i_s1s3
+  integer, private :: i_s2s1
+  integer, private :: i_s2s3
+  integer, private :: i_s3s1
+  integer, private :: i_cwdl2
+  integer, private :: i_cwdl3
+
   type, private :: params_type
      real(r8):: cn_s1_bgc     !C:N for SOM 1
      real(r8):: cn_s2_bgc     !C:N for SOM 2
@@ -228,23 +246,6 @@ contains
     real(r8) :: cn_s1
     real(r8) :: cn_s2
     real(r8) :: cn_s3
-    !real(r8) :: f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
-    !real(r8) :: f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8), allocatable :: f_s1s2(:,:)
-    real(r8), allocatable :: f_s1s3(:,:)
-    real(r8) :: f_s2s1
-    real(r8) :: f_s2s3
-
-    integer :: i_l1s1
-    integer :: i_l2s1
-    integer :: i_l3s2
-    integer :: i_s1s2
-    integer :: i_s1s3
-    integer :: i_s2s1
-    integer :: i_s2s3
-    integer :: i_s3s1
-    integer :: i_cwdl2
-    integer :: i_cwdl3
     real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
 
     integer  :: c, j    ! indices
@@ -255,7 +256,6 @@ contains
          cwd_flig                       => CNParamsShareInst%cwd_flig                            , & ! Input:  [real(r8)                  ]  lignin fraction of coarse woody debris (frac)
          rf_cwdl2                       => CNParamsShareInst%rf_cwdl2                            , & ! Input:  [real(r8)                  ]  respiration fraction in CWD to litter2 transition (frac)
          rf_decomp_cascade              => soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Input:  [real(r8)          (:,:,:) ]  respired fraction in decomposition step (frac)       
-         pathfrac_decomp_cascade        => soilbiogeochem_state_inst%pathfrac_decomp_cascade_col , & ! Input:  [real(r8)          (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
 
          cellsand                       => soilstate_inst%cellsand_col                           , & ! Input:  [real(r8)          (:,:)   ]  column 3D sand                                         
          
@@ -463,56 +463,48 @@ contains
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = rf_l1s1
       cascade_donor_pool(i_l1s1) = i_met_lit
       cascade_receiver_pool(i_l1s1) = i_act_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
 
       i_l2s1 = 2
       decomp_cascade_con%cascade_step_name(i_l2s1) = 'L2S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1) = rf_l2s1
       cascade_donor_pool(i_l2s1) = i_cel_lit
       cascade_receiver_pool(i_l2s1) = i_act_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)= 1.0_r8
 
       i_l3s2 = 3
       decomp_cascade_con%cascade_step_name(i_l3s2) = 'L3S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = rf_l3s2
       cascade_donor_pool(i_l3s2) = i_lig_lit
       cascade_receiver_pool(i_l3s2) = i_slo_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 1.0_r8
 
       i_s1s2 = 4
       decomp_cascade_con%cascade_step_name(i_s1s2) = 'S1S2'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = rf_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
       cascade_donor_pool(i_s1s2) = i_act_som
       cascade_receiver_pool(i_s1s2) = i_slo_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
 
       i_s1s3 = 5
       decomp_cascade_con%cascade_step_name(i_s1s3) = 'S1S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = rf_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
       cascade_donor_pool(i_s1s3) = i_act_som
       cascade_receiver_pool(i_s1s3) = i_pas_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
 
       i_s2s1 = 6
       decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = rf_s2s1
       cascade_donor_pool(i_s2s1) = i_slo_som
       cascade_receiver_pool(i_s2s1) = i_act_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
 
       i_s2s3 = 7 
       decomp_cascade_con%cascade_step_name(i_s2s3) = 'S2S3'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = rf_s2s3
       cascade_donor_pool(i_s2s3) = i_slo_som
       cascade_receiver_pool(i_s2s3) = i_pas_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
 
       i_s3s1 = 8
       decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
       rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = rf_s3s1
       cascade_donor_pool(i_s3s1) = i_pas_som
       cascade_receiver_pool(i_s3s1) = i_act_som
-      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
 
       if (.not. use_fates) then
          i_cwdl2 = 9
@@ -520,20 +512,16 @@ contains
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_cel_lit
-         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
          
          i_cwdl3 = 10
          decomp_cascade_con%cascade_step_name(i_cwdl3) = 'CWDL3'
          rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = rf_cwdl3
          cascade_donor_pool(i_cwdl3) = i_cwd
          cascade_receiver_pool(i_cwdl3) = i_lig_lit
-         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
       end if
 
       deallocate(rf_s1s2)
       deallocate(rf_s1s3)
-      deallocate(f_s1s2)
-      deallocate(f_s1s3)
       deallocate(params_inst%initial_Cstocks)
 
     end associate
@@ -607,6 +595,7 @@ contains
          o2stress_unsat => ch4_inst%o2stress_unsat_col                 , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          finundated     => ch4_inst%finundated_col                     , & ! Input:  [real(r8) (:)     ]  fractional inundated area                                
          
+         pathfrac_decomp_cascade => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col                                          , & ! Output: [real(r8) (:,:,:) ]  what fraction of C passes from donor to receiver pool through a given transition (frac)
          t_scalar       => soilbiogeochem_carbonflux_inst%t_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil temperature scalar for decomp                     
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
@@ -926,6 +915,18 @@ contains
             end if
          end do
       end do
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1s1) = 1.0_r8
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2s1)= 1.0_r8
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l3s2) = 1.0_r8
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s2) = f_s1s2(bounds%begc:bounds%endc,1:nlevdecomp)
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1s3) = f_s1s3(bounds%begc:bounds%endc,1:nlevdecomp)
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = f_s2s1
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s3) = f_s2s3
+      pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 1.0_r8
+      if (.not. use_fates) then
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = cwd_fcel
+         pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl3) = cwd_flig
+      end if
 
     end associate
 

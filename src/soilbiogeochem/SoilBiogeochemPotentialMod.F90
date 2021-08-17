@@ -122,7 +122,7 @@ contains
 
          rf_decomp_cascade                => soilbiogeochem_state_inst%rf_decomp_cascade_col                       , & ! Input:  [real(r8) (:,:,:) ]  respired fraction in decomposition step (frac)
          nue_decomp_cascade               => soilbiogeochem_state_inst%nue_decomp_cascade_col                      , & ! Input:  [real(r8) (:)     ]  N use efficiency for a given transition (TODO)
-         pathfrac_decomp_cascade          => soilbiogeochem_state_inst%pathfrac_decomp_cascade_col                 , & ! Input:  [real(r8) (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
+         pathfrac_decomp_cascade          => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col            , & ! Input:  [real(r8) (:,:,:) ]  what fraction of C passes from donor to receiver pool through a given transition (frac)
 
          decomp_npools_vr                 => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col                , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
 
