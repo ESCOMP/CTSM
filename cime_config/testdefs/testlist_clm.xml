@@ -1972,7 +1972,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDefReducedComplexFixedBiogeo">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>   
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1982,7 +1982,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDefLogging">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>   
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1992,7 +1992,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdDefSizeAgeMort">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="hobart" compiler="nag" category="aux_clm"/>    
+      <machine name="hobart" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2161,7 +2161,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">Exact restart debug test to provide for some CLM coverage during fates suite tests.</option>
     </options>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
+  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2172,7 +2172,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
     </options>
   </test>
-  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefHydro">
+  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2182,7 +2182,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefHydro">
+  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefHydro">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2248,7 +2248,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
-      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>      
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2268,7 +2268,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="hobart" compiler="nag" category="fates"/>
-      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>      
+      <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2285,7 +2285,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment"  >Run a short non-Fates test (without land-ice model) in the fates test list, to make sure fates changes do not mess up the standard model</option>
     </options>
   </test>
-  <test name="SMS_Lm13" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
+  <test name="SMS_Lm13" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
@@ -2295,7 +2295,7 @@ for ERS test as otherwise it won't work for a sub-day test (no need to run this 
       <option name="comment">13 month single site FATES smoke test.</option>
     </options>
   </test>
-  <test name="ERS_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCru" testmods="clm/FatesFireLightningPopDens">
+  <test name="ERS_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesFireLightningPopDens">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
     </machines>
