@@ -2,6 +2,388 @@
 
 <?xml-stylesheet type="text/xsl" href="namelist_defaults.xsl"?>
 
+<namelist_defaults>
+
+
+<!--
+Values to use by default for creation of CLM model namelists.
+The element names are the same as the corresponding namelist
+variables.  Values that depend on the model configuration use
+attributes to express the dependency.  The recognized attributes
+are: hgrid, defaults, mask, ic_ymd, ic_tod, sim_year and all configuration
+attributes from the config_cache.xml file (with keys converted to upper-case).
+-->
+
+<!-- SCRIP grid data files -->
+
+<!-- Set default values for grid attributes -->
+<scripgriddata_lrgfile_needed>none</scripgriddata_lrgfile_needed>
+<scripgriddata_type>SCRIP</scripgriddata_type>
+
+<!-- Finite-Volume grids -->
+<scripgriddata hgrid="0.23x0.31" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.23x0.31_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="0.47x0.63" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.47x0.63_nomask_c170914.nc</scripgriddata>
+<scripgriddata hgrid="0.9x1.25"  lmask="nomask" >lnd/clm2/mappingdata/grids/0.9x1.25_c110307.nc</scripgriddata>
+<scripgriddata hgrid="1.9x2.5"   lmask="nomask" >lnd/clm2/mappingdata/grids/1.9x2.5_c110308.nc</scripgriddata>
+<scripgriddata hgrid="2.5x3.33"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_2.5x3.33_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="4x5"       lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_4x5_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="10x15"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_10x15_nomask_c110308.nc</scripgriddata>
+
+<!-- Spectral Eulerian grids -->
+<scripgriddata hgrid="512x1024"  lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_512x1024_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="128x256"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_128x256_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="94x192"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_94x192_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="64x128"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_64x128_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="48x96"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_48x96_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="32x64"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_32x64_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="8x16"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_8x16_nomask_c110308.nc</scripgriddata>
+
+<!-- FV3 grids -->
+<scripgriddata hgrid="C384" lmask="nomask" >atm/cam/coords/C384_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C192" lmask="nomask" >atm/cam/coords/C192_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C96"  lmask="nomask" >atm/cam/coords/C96_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C48"  lmask="nomask" >atm/cam/coords/C48_SCRIP_desc.181018.nc</scripgriddata>
+<scripgriddata hgrid="C24"  lmask="nomask" >atm/cam/coords/C24_SCRIP_desc.181018.nc</scripgriddata>
+
+<!-- HOMME grids -->
+<scripgriddata hgrid="ne240np4"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne240np4_nomask_c091227.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4"     lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne120np4_nomask_c101123.nc</scripgriddata>
+<scripgriddata hgrid="ne60np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne60np4_nomask_c100408.nc</scripgriddata>
+<scripgriddata hgrid="ne30np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne30np4_nomask_c101123.nc</scripgriddata>
+<scripgriddata hgrid="ne16np4"      lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_ne16np4_nomask_c110512.nc</scripgriddata>
+<!-- HOMME SE dycore Physics grids -->
+<scripgriddata hgrid="ne30np4.pg2"  lmask="nomask" >atm/cam/coords/ne30pg2_scrip_c170608.nc</scripgriddata>
+<scripgriddata hgrid="ne30np4.pg3"  lmask="nomask" >atm/cam/coords/ne30pg3_scrip_170604.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4.pg2" lmask="nomask" >atm/cam/coords/ne120pg2_scrip_c170629.nc</scripgriddata>
+<scripgriddata hgrid="ne120np4.pg3" lmask="nomask" >atm/cam/coords/ne120pg3_scrip_c170628.nc</scripgriddata>
+
+<!-- Refined mesh grids -->
+<scripgriddata hgrid="ne0np4CONUS.ne30x8"      lmask="nomask" >atm/cam/coords/ne0CONUSne30x8_scrip_c200107.nc</scripgriddata>
+<scripgriddata hgrid="ne0np4ARCTICGRIS.ne30x8" lmask="nomask" >atm/cam/coords/ne0ARCTICGRISne30x8_scrip_c191209.nc</scripgriddata>
+<scripgriddata hgrid="ne0np4ARCTIC.ne30x4"     lmask="nomask" >atm/cam/coords/ne0ARCTICne30x4_scrip_c191212.nc</scripgriddata>
+
+<!-- Regular lat/lon grids -->
+<scripgriddata hgrid="0.125x0.125" lmask="nomask"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125x0.125_nomask_c140702.nc</scripgriddata>
+<scripgriddata hgrid="0.33x0.33" lmask="navy"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
+<scripgriddata hgrid="0.1x0.1"   lmask="nomask"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.1x0.1_nomask_c110712.nc</scripgriddata>
+<scripgriddata hgrid="0.5x0.5"   lmask="nomask"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="0.25x0.25" lmask="nomask"     
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.25x0.25_nomask_c200309.nc</scripgriddata>
+<scripgriddata hgrid="5x5min"    lmask="nomask"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5min_nomask_c200309.nc</scripgriddata>
+<scripgriddata hgrid="10x10min" lmask="nomask"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_10x10min_nomask_c110228.nc</scripgriddata>
+<scripgriddata hgrid="3x3min"    lmask="nomask"    
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_3x3min_nomask_c200309.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="3x3min" lmask="nomask">64bit_offset</scripgriddata_lrgfile_needed>
+<!--scripgriddata hgrid="0.9x1.25"  lmask="nomask"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.9x1.25_nomask_c191014.nc</scripgriddata-->
+
+<!-- Other raw data grids -->
+<!-- Note that the following is a UGRID file rather than a SCRIP grid file -->
+<scripgriddata hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
+   >lnd/clm2/mappingdata/grids/UGRID_1km-merge-10min_HYDRO1K-merge-nomask_c130402.nc</scripgriddata>
+<scripgriddata_lrgfile_needed hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">netcdf4</scripgriddata_lrgfile_needed>
+<scripgriddata_type hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">UGRID</scripgriddata_type>
+<scripgriddata_meshname hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask">landmesh</scripgriddata_meshname>
+
+<!-- Single-point / Regional grids -->
+<scripgriddata hgrid="0.125nldas2"         lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125nldas2_nomask_c190328.nc</scripgriddata>
+<scripgriddata hgrid="1x1_asphaltjungleNJ" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_brazil"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_brazil_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_camdenNJ"        lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_mexicocityMEX"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_mexicocityMEX_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_numaIA"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_numaIA_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_smallvilleIA"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_smallvilleIA_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_urbanc_alpha"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_urbanc_alpha_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="1x1_vancouverCAN"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_vancouverCAN_nomask_c110308.nc</scripgriddata>
+<scripgriddata hgrid="5x5_amazon"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5pt_amazon_nomask_c110308.nc</scripgriddata>
+
+<!-- Ocean grids -->
+<scripgriddata hgrid="0.33x0.33"  lmask="0.33x0.33" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
+<scripgriddata hgrid="5x5_amazon" lmask="navy"      >lnd/clm2/mappingdata/grids/SCRIPgrid_5x5_amazon_navy_c111207.nc</scripgriddata>
+<scripgriddata hgrid="gx1v6"      lmask="gx1v6"     >/glade/proj3/cseg/mapping/grids/gx1v6_090205.nc</scripgriddata>
+<scripgriddata hgrid="gx3v7"      lmask="gx3v7"     >/glade/proj3/cseg/mapping/grids/gx3v7_090903.nc</scripgriddata>
+<scripgriddata hgrid="tx1v1"      lmask="tx1v1"     >/glade/proj3/cseg/mapping/grids/tx1v1_090122.nc</scripgriddata>
+<scripgriddata hgrid="tx0.1v2"    lmask="tx0.1v2"   >/glade/proj3/cseg/mapping/grids/tx0.1v2_090127.nc</scripgriddata>
+
+<!-- UNSTRUCT grid data files -->
+<!--scripgriddata frm_hgrid="0.5x0.5"   lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.5x0.5_nomask_c200129.nc</scripgriddata>
+<scripgriddata_type frm_hgrid="0.5x0.5" lmask="nomask">UNSTRUCT</scripgriddata_type>
+<scripgriddata frm_hgrid="0.25x0.25" lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.25x0.25_nomask_c200129.nc</scripgriddata>
+<scripgriddata_type frm_hgrid="0.25x0.25" lmask="nomask">UNSTRUCT</scripgriddata_type>
+<scripgriddata frm_hgrid="0.125x0.125" lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.125x0.125_nomask_c200129.nc</scripgriddata>
+<scripgriddata_type frm_hgrid="0.125x0.125" lmask="nomask">UNSTRUCT</scripgriddata_type>
+<scripgriddata frm_hgrid="10x10min" lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_10x10min_nomask_c200129.nc</scripgriddata>
+<scripgriddata_type frm_hgrid="10x10min" lmask="nomask">UNSTRUCT</scripgriddata_type>
+<scripgriddata frm_hgrid="5x5min"    lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_5x5min_nomask_c200129.nc</scripgriddata>
+<scripgriddata_type frm_hgrid="5x5min" lmask="nomask">UNSTRUCT</scripgriddata_type>
+<scripgriddata frm_hgrid="3x3min"    lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_3x3min_nomask_c200129.nc</scripgriddata>
+<scripgriddata_type frm_hgrid="3x3min" lmask="nomask">UNSTRUCT</scripgriddata_type>
+<scripgriddata frm_hgrid="0.9x1.25"  lmask="nomask"
+   >lnd/clm2/mappingdata/grids/UNSTRUCTgrid_0.9x1.25_nomask_c200129.nc</scripgriddata>
+<scripgriddata_type frm_hgrid="0.9x1.25" lmask="nomask">UNSTRUCT</scripgriddata_type-->
+
+<!-- land masks for different types of mksurfdata_map input files -->
+<lmask type="lak"              >nomask</lmask>
+<lmask type="wet"              >nomask</lmask>
+<lmask type="voc"              >nomask</lmask>
+<lmask type="lai"              >nomask</lmask>
+<lmask type="lai" hirespft="on">nomask</lmask>
+<lmask type="veg"              >nomask</lmask>
+<lmask type="veg" hirespft="on">nomask</lmask>
+<lmask type="hrv"              >nomask</lmask>
+<lmask type="urb"              >nomask</lmask>
+<lmask type="col"              >nomask</lmask>
+<lmask type="col" hirespft="on">nomask</lmask>
+<lmask type="org"              >nomask</lmask>
+<lmask type="glc"              >nomask</lmask>
+<lmask type="glc" mergeGIS="on">nomask</lmask>
+<lmask type="glcregion"        >nomask</lmask>
+<lmask type="fmx"              >nomask</lmask>
+<lmask type="irr"              >nomask</lmask>
+<lmask type="utp"              >nomask</lmask>
+<lmask type="tex"              >nomask</lmask>
+<lmask type="gdp"              >nomask</lmask>
+<lmask type="peat"             >nomask</lmask>
+<lmask type="soildepth"        >nomask</lmask>
+<lmask type="abm"              >nomask</lmask>
+<lmask type="topostats"        >HYDRO1K-merge-nomask</lmask>
+<lmask type="vic"              >nomask</lmask>
+<lmask type="ch4"              >nomask</lmask>
+
+<!-- Grid resolutions for different types of mksurfdata_map input files -->
+<hgrid type="lak"              >3x3min</hgrid>
+<hgrid type="wet"              >0.5x0.5</hgrid>
+<hgrid type="voc"              >0.5x0.5</hgrid>
+<hgrid type="lai"              >0.25x0.25</hgrid>
+<hgrid type="lai" hirespft="on">3x3min</hgrid>
+<hgrid type="veg"              >0.25x0.25</hgrid>
+<hgrid type="veg" hirespft="on">3x3min</hgrid>
+<hgrid type="hrv"              >0.25x0.25</hgrid>
+<hgrid type="urb"              >3x3min</hgrid>
+<hgrid type="col"              >0.25x0.25</hgrid>
+<hgrid type="col" hirespft="on">3x3min</hgrid>
+<hgrid type="org"              >5x5min</hgrid>
+<hgrid type="glc"              >3x3min</hgrid>
+<hgrid type="glcregion"        >10x10min</hgrid>
+<hgrid type="fmx"              >0.125x0.125</hgrid>
+<hgrid type="irr"              >5x5min</hgrid>
+<hgrid type="utp"              >10x10min</hgrid>
+<hgrid type="tex"              >5x5min</hgrid>
+<hgrid type="gdp"              >0.5x0.5</hgrid>
+<hgrid type="peat"             >0.5x0.5</hgrid>
+<hgrid type="soildepth"        >5x5min</hgrid>
+<hgrid type="abm"              >0.5x0.5</hgrid>
+<hgrid type="topostats"        >1km-merge-10min</hgrid>
+<hgrid type="vic"              >0.9x1.25</hgrid>
+<hgrid type="ch4"              >0.5x0.5</hgrid>
+
+<!-- namelist filenames for different types of mksurfdata_map input files -->
+<mksrf_filename type="lak" >mksrf_flakwat</mksrf_filename>
+<mksrf_filename type="wet" >mksrf_fwetlnd</mksrf_filename>
+<mksrf_filename type="voc" >mksrf_fvocef</mksrf_filename>
+<mksrf_filename type="lai" >mksrf_flai</mksrf_filename>
+<mksrf_filename type="veg" >mksrf_fvegtyp</mksrf_filename>
+<mksrf_filename type="hrv" >mksrf_fvegtyp</mksrf_filename>
+<mksrf_filename type="urb" >mksrf_furban</mksrf_filename>
+<mksrf_filename type="col" >mksrf_fsoicol</mksrf_filename>
+<mksrf_filename type="org" >mksrf_forganic</mksrf_filename>
+<mksrf_filename type="glc" >mksrf_fglacier</mksrf_filename>
+<mksrf_filename type="glcregion">mksrf_fglacierregion</mksrf_filename>
+<mksrf_filename type="fmx" >mksrf_fmax</mksrf_filename>
+<mksrf_filename type="utp" >mksrf_furbtopo</mksrf_filename>
+<mksrf_filename type="tex" >mksrf_fsoitex</mksrf_filename>
+<mksrf_filename type="gdp" >mksrf_fgdp</mksrf_filename>
+<mksrf_filename type="peat">mksrf_fpeat</mksrf_filename>
+<mksrf_filename type="soildepth">mksrf_fsoildepth</mksrf_filename>
+<mksrf_filename type="abm" >mksrf_fabm</mksrf_filename>
+<mksrf_filename type="topostats">mksrf_ftopostats</mksrf_filename>
+<mksrf_filename type="vic" >mksrf_fvic</mksrf_filename>
+<mksrf_filename type="ch4" >mksrf_fch4</mksrf_filename>
+
+<!-- mksrf_navyoro Orography -->
+<mksrf_fnavyoro hgrid="0.33x0.33" mask="navy" >lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc</mksrf_fnavyoro>
+
+<!-- mksrf_lai -->
+
+<mksrf_flai hgrid="3x3min" lmask="nomask"
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_lai_histclm52deg005_earthstatmirca_2005.c190119.nc
+</mksrf_flai>
+  
+<mksrf_flai hgrid="0.25x0.25" lmask="nomask"
+>lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc
+</mksrf_flai>
+
+<!-- soil properties: forganic, fmax, soil-texture and soil color-->
+<mksrf_firrig   hgrid="5x5min"   lmask="nomask"
+>lnd/clm2/rawdata/mksrf_irrig_2160x4320_simyr2000.c110527.nc</mksrf_firrig>
+
+<mksrf_fsoitex  hgrid="5x5min"   lmask="nomask"
+>lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc</mksrf_fsoitex>
+
+<mksrf_fsoicol  hgrid="3x3min"  lmask="nomask"
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_soilcolor_histclm52deg005_earthstatmirca_2005.c190116.nc
+</mksrf_fsoicol>
+ 
+<mksrf_fsoicol  hgrid="0.25x0.25"  lmask="nomask"
+>lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc</mksrf_fsoicol>
+
+<mksrf_forganic hgrid="5x5min"  lmask="nomask"
+>lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc</mksrf_forganic>
+
+<mksrf_fmax     hgrid="0.125x0.125"   lmask="nomask"
+>lnd/clm2/rawdata/mksrf_fmax_0.125x0.125_c200220.nc</mksrf_fmax>
+
+<!-- Lake and wetlands -->
+<mksrf_flakwat  hgrid="3x3min"   lmask="nomask"
+>lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc</mksrf_flakwat>
+
+<mksrf_fwetlnd  hgrid="0.5x0.5"  lmask="nomask"
+>lnd/clm2/rawdata/mksrf_lanwat.050425.nc</mksrf_fwetlnd>
+
+<!-- VOC emission factors -->
+<mksrf_fvocef   hgrid="0.5x0.5"  lmask="nomask"
+>lnd/clm2/rawdata/mksrf_vocef_0.5x0.5_simyr2000.c110531.nc</mksrf_fvocef>
+
+<!-- urban -->
+<mksrf_furban   hgrid="3x3min"   lmask="nomask"
+>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc</mksrf_furban>
+
+<mksrf_furban   hgrid="3x3min"   lmask="nomask" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_urban_0.05x0.05_zerourbanpct.c181014.nc</mksrf_furban>
+
+<!-- mksrf_fglacier % glacier land-unit -->
+<!-- WJS (9-26-12): 
+     There are two versions of this dataset: the "standard" version uses
+     data from Gardner globally. The "mergeGreenland" version uses data from Gardner
+     outside of Greenland, merged with data from a CISM input file over Greenland. The
+     rationale is that, if you're not running with CISM, then it's probably best to use
+     the Gardner data globally. But if you are running with CISM, then it's probably best
+     to use the merged data, since CLM will then be more consistent with CISM. 
+
+     In the longer-term, once we have dynamic landunits, I plan to make CLM adjust its
+     initial conditions to match CISM. At that point, the need for the "mergeGreenland"
+     version of the raw dataset will probably go away.
+-->
+<mksrf_fglacier hgrid="3x3min"   lmask="nomask"
+>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c120926.nc</mksrf_fglacier>
+<mksrf_fglacier hgrid="3x3min"   lmask="nomask" mergeGIS="on"
+>lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000_mergeGreenland.c120921.nc</mksrf_fglacier>
+
+<!-- Glacier region ID -->
+<mksrf_fglacierregion hgrid="10x10min" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_nomask_c191120.nc</mksrf_fglacierregion>
+
+<!-- mksrf_furbtopo - topography for urban threshold -->
+<mksrf_furbtopo hgrid="10x10min" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_topo.10min.c191120.nc</mksrf_furbtopo>
+
+<!-- fire-related datasets -->
+<mksrf_fgdp hgrid="0.5x0.5" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fgdp>
+<mksrf_fgdp hgrid="0.5x0.5" lmask="nomask" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_gdp_0.5x0_zerogdp.c200413.nc</mksrf_fgdp>
+
+<mksrf_fpeat hgrid="0.5x0.5" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc</mksrf_fpeat>
+
+<mksrf_fsoildepth hgrid="5x5min" lmask="nomask"
+>lnd/clm2/rawdata/mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc</mksrf_fsoildepth>
+
+<mksrf_fabm hgrid="0.5x0.5" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc</mksrf_fabm>
+<mksrf_fabm hgrid="0.5x0.5" lmask="nomask" sim_year="PtVg"
+>lnd/clm2/rawdata/mksrf_abm_0.5x0.5_missingabm.c200413.nc</mksrf_fabm>
+
+
+<mksrf_ftopostats hgrid="1km-merge-10min" lmask="HYDRO1K-merge-nomask"
+>lnd/clm2/rawdata/mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc</mksrf_ftopostats>
+
+<mksrf_fvic hgrid="0.9x1.25" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc</mksrf_fvic>
+
+<mksrf_fch4 hgrid="0.5x0.5" lmask="nomask"
+>lnd/clm2/rawdata/mksrf_ch4inversion_0.5x0.5_cruncep_simyr2000.c191112.nc</mksrf_fch4>
+
+<!-- mksrf_fvegtyp -->
+
+<!-- High resolution -->
+<mksrf_fvegtyp hgrid="3x3min" ssp_rcp="hist" sim_year="1850" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_landuse_clm52deg005_histLUH2_1850.c190119.nc
+</mksrf_fvegtyp>
+<mksrf_fvegtyp hgrid="3x3min" ssp_rcp="hist" sim_year="2005" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_landuse_clm52deg005_histLUH2_2005.c190119.nc
+</mksrf_fvegtyp>
+
+
+<!-- Last millenium Historical period from 0850 to 1849 -->
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="850" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_850.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="851" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_851.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="852" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_852.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="853" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_853.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="854" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_854.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="855" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_855.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="856" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_856.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="857" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_857.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="858" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_858.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="859" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_859.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="860" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_860.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="861" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_861.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="862" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_862.c171012.nc
+</mksrf_fvegtyp>
+
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="863" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_863.c171012.nc
+</mksrf_fvegtyp>
+
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="864" crop="on"
 >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr0850-1849.c171012/mksrf_landuse_histclm50_LUH2_864.c171012.nc
 </mksrf_fvegtyp>
