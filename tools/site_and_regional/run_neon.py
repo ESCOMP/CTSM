@@ -67,7 +67,7 @@ import re
 import subprocess
 import pandas as pd
 import glob 
-from datetime import datetime
+import datetime
 from getpass import getuser
  
 # Get the ctsm util tools and then the cime tools.
@@ -106,18 +106,6 @@ def get_parser(args, description, valid_neon_sites):
                 default=["OSBS"],
                 nargs='+')
 
-# not used
-#    parser.add_argument('--surf-dir',
-#                help='''
-#                Directory of single point surface dataset.
-#                [default: %(default)s]
-#                ''', 
-#                action="store", 
-#                dest="surf_dir",
-#                type =str,
-#                required=False,
-#                default="/glade/scratch/"+myname+"/single_point/")
-
     parser.add_argument('--base-case',
                 help='''
                 Root Directory of base case build
@@ -150,99 +138,44 @@ def get_parser(args, description, valid_neon_sites):
                 required = False,
                 default = False)
 
-    subparsers = parser.add_subparsers (
-                        dest='run_type',
-                        help='Four different ways to run this script.')
+    parser.add_argument('--run-type',
+                        help='''
+                        Type of run to do
+                        [default: %(default)s]
+                        ''',
+                        choices = ["ad", "postad", "transient", "sasu"],
+                        default = "transient")
 
-    ad_parser = subparsers.add_parser ('ad',
-                help=''' AD spin-up options ''') 
-
-    pad_parser = subparsers.add_parser ('postad',
-                help=''' Post-AD spin-up options ''')
-
-    tr_parser = subparsers.add_parser ('transient',
-                help=''' Transient spin-up options ''')
-
-    sasu_parser = subparsers.add_parser ('sasu',
-                help=''' Sasu spin-up options --not in CTSM yet''')
-
-    ad_parser.add_argument ('--ad-length',
+    parser.add_argument ('--run-length',
                 help='''
-                How many years to run AD spin-up
+                How long to run (modified ISO 8601 duration)
                 [default: %(default)s]
                 ''', 
                 required = False,
-                type = int, 
-                default = 200)
+                type = str, 
+                default = '200Y')
 
-    pad_parser.add_argument ('--postad-length',
-                help='''
-                How many years to run in post-AD mode
-                [default: %(default)s]
-                ''', 
-                required = False,
-                type = int, 
-                default = 100)
-
-    tr_parser.add_argument('--start-year',
+    parser.add_argument('--start-date',
                 help='''           
-                Start year for running CTSM simulation.
+                Start date for running CTSM simulation in ISO format.
                 [default: %(default)s]
                 ''',               
                 action="store", 
-                dest="start_year",                                                                                                                                                 
+                dest="start_date",                                                                                     
                 required = False,
-                type = int,        
-                default = 2018)
+                type = datetime.date.fromisoformat,
+                default = datetime.datetime.strptime("2018-01-01",'%Y-%m-%d'))
 
-    tr_parser.add_argument('--end-year',
+    parser.add_argument('--end-date',
                 help='''
-                End year for running CTSM simulation.
+                End date for running CTSM simulation in ISO format.
                 [default: %(default)s]
                 ''', 
                 action="store",
-                dest="end_year",
+                dest="end_date",
                 required = False,
-                type = int,
-                default = 2020)
-
-    #parser.add_argument('--spinup',
-    #            help='''
-    #            AD spin-up
-    #            [default: %(default)s]
-    #            ''', 
-    #            action="store_true",
-    #            dest="ad_flag",
-    #            required = False,
-    #            default = True)
-    #parser.add_argument('--postad',
-    #            help='''
-    #            Post-AD spin-up
-    #            [default: %(default)s]
-    #            ''', 
-    #            action="store_true",
-    #            dest="postad_flag",
-    #            required = False,
-    #            default = True)
-    #parser.add_argument('--transient',
-    #            help='''
-    #            Transient
-    #            [default: %(default)s]
-    #            ''', 
-    #            action="store_true",
-    #            dest="transient_flag",
-    #            required = False,
-    #            default = True)
-
-    #parser.add_argument('--sasu','--matrix',
-    #            help='''
-    #            Matrix (SASU) spin-up
-    #            [default: %(default)s]
-    #            ''', 
-    #            action="store_true",
-    #            dest="sasu_flag",
-    #            required = False,
-    #            default = False)
+                type = datetime.date.fromisoformat,
+                default = datetime.datetime.strptime("2020-01-01",'%Y-%m-%d'))
 
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
@@ -256,18 +189,34 @@ def get_parser(args, description, valid_neon_sites):
 
     if "CIME_OUTPUT_ROOT" in args.case_root:
         args.case_root = None
-    if args.run_type:
-        run_type = args.run_type
-    else:
-        run_type = "ad"
-    if run_type == "ad":
-        run_length = int(args.ad_length)
-    elif run_type == "postad":
-        run_length = int(args.postad_length)
-    else:
-        run_length = 0
 
-    return neon_sites, args.case_root, run_type, args.overwrite, run_length, args.base_case_root
+
+    run_length = parse_isoduration(args.run_length)
+    
+    return neon_sites, args.case_root, args.run_type, args.overwrite, run_length, args.base_case_root
+
+def get_isosplit(s, split):
+    if split in s:
+        n, s = s.split(split)
+    else:
+        n = 0
+    return n, s
+
+def parse_isoduration(s):
+    '''
+    simple ISO 8601 duration parser, does not account for leap years and assumes 30 day months
+    '''
+    # Remove prefix
+    s = s.split('P')[-1]
+    
+    # Step through letter dividers
+    years, s = get_isosplit(s, 'Y')
+    months, s = get_isosplit(s, 'M')
+    days, s = get_isosplit(s, 'D')
+    
+    # Convert all to timedelta
+    dt = datetime.timedelta(days=int(days)+365*int(years)+30*int(months))
+    return int(dt.total_seconds()/86400)
 
 class NeonSite :
     """
@@ -314,11 +263,9 @@ class NeonSite :
         logger.info("---- building a base case -------")
         self.base_case_root = case_root
         user_mods_dirs = [os.path.join(cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
-        if case_root:
-            case_path = os.path.join(case_root,self.name)
-            logger.info ('case_root      : {}'.format(case_root))
-        else:
-            case_path = self.name
+        if not case_root:
+            case_root = os.getcwd()
+        case_path = os.path.join(case_root,self.name)
             
         logger.info ('base_case_name : {}'.format(self.name))
         logger.info ('user_mods_dir  : {}'.format(user_mods_dirs[0]))
@@ -332,7 +279,7 @@ class NeonSite :
                 logger.info("---- creating a base case -------")
 
                 case.create(case_path, cesmroot, compset, res, mpilib="mpi-serial",
-                            run_unsupported=True, answer="r",
+                            run_unsupported=True, answer="r",output_root=case_root,
                             user_mods_dirs = user_mods_dirs, driver="nuopc")
 
                 logger.info("---- base case created ------")
@@ -379,7 +326,7 @@ class NeonSite :
 
 
         with Case(case_root, read_only=False) as case:
-            case.set_value("STOP_OPTION", "nyears")
+            case.set_value("STOP_OPTION", "ndays")
             case.set_value("STOP_N", run_length)
             case.set_value("REST_N", 100)
             case.set_value("CONTINUE_RUN", False)
@@ -389,6 +336,7 @@ class NeonSite :
                 case.set_value("CLM_ACCELERATED_SPINUP","on")
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")                
+                case.set_value("JOB_WALLCLOCK_TIME", "12:00:00", subgroup="case.run")
             else:
                 case.set_value("CLM_FORCE_COLDSTART","off")
                 case.set_value("CLM_ACCELERATED_SPINUP","off")
@@ -580,11 +528,10 @@ def main(description):
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
 
     site_list, case_root, run_type, overwrite, run_length, base_case_root = get_parser(sys.argv, description, valid_neon_sites)
-
-    logger.debug ("case_root : "+ case_root)
-
-    if not os.path.exists(case_root):
-        os.makedirs(case_root)
+    if case_root:
+        logger.debug ("case_root : "+ case_root)
+        if not os.path.exists(case_root):
+            os.makedirs(case_root)
 
     #-- check neon listing file for available data: 
     available_list = check_neon_listing(valid_neon_sites)
