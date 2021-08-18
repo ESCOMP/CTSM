@@ -114,7 +114,6 @@ contains
     integer  :: fp,p,c                            ! indices
     real(r8) :: ol                                ! thickness of canopy layer covered by snow (m)
     real(r8) :: fb                                ! fraction of canopy layer covered by snow
-    integer  :: nploop
     !-----------------------------------------------------------------------
 
     associate(                                                           &
@@ -133,23 +132,9 @@ contains
          call lai_interp(bounds, canopystate_inst)
       endif
 
-
-      !if(use_fates_sp)then
-        ! when we use FATES SP mode, the inactive points are not in the nolakep filter
-        ! thus we need to force a loop around all patches to get at the SP inputs the
-        ! are indexed in the HLM 'P' space.
-      !  nploop = bounds%endp-bounds%begp+1
-      !else
-        nploop=num_nolakep
-      !endif
-      do fp = 1, nploop
-         !if(use_fates_sp)then
-         ! p = fp + bounds%begp -1
-        !else
-          p = filter_nolakep(fp)
-        !endif
+      do fp = 1, num_nolakep
+         p = filter_nolakep(fp)
          c = patch%column(p)
-
 
          ! need to update elai and esai only every albedo time step so do not
          ! have any inconsistency in lai and sai between SurfaceAlbedo calls (i.e.,
