@@ -103,7 +103,6 @@ module CLMFatesInterfaceMod
    use shr_log_mod       , only : errMsg => shr_log_errMsg
    use clm_varcon        , only : dzsoi_decomp
    use FuncPedotransferMod, only: get_ipedof
-   !use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
 !   use SoilWaterPlantSinkMod, only : Compute_EffecRootFrac_And_VertTranSink_Default
 
    ! Used FATES Modules
@@ -769,7 +768,6 @@ module CLMFatesInterfaceMod
       integer  :: g                        ! grid-cell index (HLM)
       integer  :: c                        ! column index (HLM)
       integer  :: ifp                      ! patch index ft
-      integer  :: icp                      ! patch index
       integer  :: p                        ! HLM patch index
       integer  :: nlevsoil                 ! number of soil layers at the site
       integer  :: nld_si                   ! site specific number of decomposition layers
@@ -1028,7 +1026,6 @@ module CLMFatesInterfaceMod
      logical                 , intent(in)           :: is_initing_from_restart
 
      integer :: npatch  ! number of patches in each site
-     integer  :: icp     ! counter for FATES patches
      integer :: ifp     ! index FATES patch
      integer :: p       ! HLM patch index
      integer :: s       ! site index
