@@ -4625,6 +4625,10 @@
 >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2020.c210808/mksrf_landuse_clm52_trendy2021_2019.c210808.nc
 </mksrf_fvegtyp>
 
+<mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="2020" crop="on"
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2020.c210808/mksrf_landuse_clm52_trendy2021_2020.c210808.nc
+</mksrf_fvegtyp>
+
 <!-- Potential Vegetation dataset -->
 <mksrf_fvegtyp hgrid="0.25x0.25" sim_year="PtVg" crop="on"
 >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.simyrPtVg.c181106/mksrf_landuse_potvegclm50_LUH2.c181106.nc
