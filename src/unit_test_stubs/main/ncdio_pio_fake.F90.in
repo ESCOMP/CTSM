@@ -8,9 +8,9 @@ module ncdio_pio
 
   use shr_kind_mod, only : r8 => shr_kind_r8, i4=>shr_kind_i4
   use shr_assert_mod , only : shr_assert
+  use shr_sys_mod, only : shr_sys_abort
   use ncdio_var, only : ncdio_var_type
   use ncdio_dim, only : ncdio_dim_type
-  use abortutils,only : endrun
 
   ! !PUBLIC TYPES:
   implicit none
@@ -314,7 +314,7 @@ contains
     !-----------------------------------------------------------------------
 
     if (is_dim) then
-       call endrun(subname//': is_dim=.true. not yet implemented')
+       call shr_sys_abort(subname//': is_dim=.true. not yet implemented')
     else
        call check_var(ncid, name, exists, print_err=.false.)
     end if
@@ -421,7 +421,7 @@ contains
     integer            , intent(in), optional :: nvalid_range(2)  ! attribute for int
 
     ! Do nothing
-    call endrun( 'ncd_defvar_bynf should not be actually called for unit tests' )
+    call shr_sys_abort( 'ncd_defvar_bynf should not be actually called for unit tests' )
 
   end subroutine ncd_defvar_bynf
 
@@ -458,7 +458,7 @@ contains
     integer            , intent(in), optional :: nvalid_range(2)  ! attribute for int
 
     ! Do nothing
-    call endrun( 'ncd_defvar_bygrid should not be actually called for unit tests' )
+    call shr_sys_abort( 'ncd_defvar_bygrid should not be actually called for unit tests' )
 
   end subroutine ncd_defvar_bygrid
 

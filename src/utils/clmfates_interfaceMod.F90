@@ -35,7 +35,7 @@ module CLMFatesInterfaceMod
 #include "shr_assert.h"
    use PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
-   use decompMod         , only : bounds_type
+   use decompMod         , only : bounds_type, subgrid_level_column
    use WaterStateBulkType    , only : waterstatebulk_type
    use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
    use WaterFluxBulkType     , only : waterfluxbulk_type
@@ -699,13 +699,15 @@ module CLMFatesInterfaceMod
             
             write(iulog,*) 'INACTIVE COLUMN WITH ACTIVE FATES SITE'
             write(iulog,*) 'c = ',c
-            call endrun(msg=errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=errMsg(sourcefile, __LINE__))
 
          elseif (this%f2hmap(nc)%hsites(c)==0 .and. col%active(c)) then
             
             write(iulog,*) 'ACTIVE COLUMN WITH INACTIVE FATES SITE'
             write(iulog,*) 'c = ',c
-            call endrun(msg=errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=errMsg(sourcefile, __LINE__))
          end if
       end do
 
@@ -925,6 +927,17 @@ module CLMFatesInterfaceMod
 
          soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si) = &
               this%fates(nc)%bc_out(s)%litt_flux_lig_c_si(1:nld_si)
+
+         ! Copy last 3 variables to an array of litter pools for use in do loops
+         ! and repeat copy in soilbiogeochem/SoilBiogeochemCarbonFluxType.F90.
+         ! Keep the three originals to avoid backwards compatibility issues with
+         ! restart files.
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,1) = &
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lab_c_col(c,1:nld_si)
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,2) = &
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_cel_c_col(c,1:nld_si)
+         soilbiogeochem_carbonflux_inst%FATES_c_to_litr_c_col(c,1:nld_si,3) = &
+            soilbiogeochem_carbonflux_inst%FATES_c_to_litr_lig_c_col(c,1:nld_si)
 
       end do
 
@@ -2201,7 +2214,7 @@ module CLMFatesInterfaceMod
 
     end associate
 
-    call t_stopf('fates_wrap_hifrq_hist')
+    call t_stopf('fates_update_hifrq_hist')
 
   end subroutine wrap_update_hifrq_hist
 

@@ -47,17 +47,17 @@ Stomatal resistance
 -----------------------
 
 CLM5 calculates stomatal conductance using the Medlyn stomatal conductance model (:ref:`Medlyn et al. 2011<Medlynetal2011>`).
-Previous versions of CLM calculated leaf stomatal resistance is using the Ball-Berry conductance
+Previous versions of CLM calculated leaf stomatal resistance using the Ball-Berry conductance
 model as described by :ref:`Collatz et al. (1991)<Collatzetal1991>` and implemented in global
 climate models (:ref:`Sellers et al. 1996<Sellersetal1996>`). The Medlyn model 
 calculates stomatal conductance (i.e., the inverse of resistance) based on net leaf
-photosynthesis, the vapor pressure deficit, and the CO\ :sub:`2` concentration at the leaf surface. 
+photosynthesis, the leaf-to-air vapor pressure difference, and the CO\ :sub:`2` concentration at the leaf surface. 
 Leaf stomatal resistance is:
 
 .. math::
    :label: 9.1 
 
-   \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } } 
+   \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D_{s}}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right. \kern-\nulldelimiterspace} P_{atm} } } 
 
 where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2`
 :math:`\mu`\ mol\ :sup:`-1`), :math:`g_{o}` is the minimum stomatal conductance
@@ -65,7 +65,9 @@ where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2`
 photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2`
 s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial
 pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric
-pressure (Pa), and :math:`D` is the vapor pressure deficit at the leaf surface (kPa).
+pressure (Pa), and :math:`D_{s}=(e_{i}-e{_s})/1000` is the leaf-to-air vapor pressure difference at the leaf surface (kPa)
+where :math:`e_{i}`  is the saturation vapor pressure (Pa) evaluated at the leaf temperature
+:math:`T_{v}` , and :math:`e_{s}` is the vapor pressure at the leaf surface (Pa).
 :math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`)
 and are the same as those used in the CABLE model (:ref:`de Kauwe et al. 2015 <deKauwe2015>`).
 
@@ -153,7 +155,7 @@ describe the implementation, modified here. In its simplest form, leaf
 net photosynthesis after accounting for respiration (:math:`R_{d}` ) is
 
 .. math::
-   :label: 9.3
+   :label: 9.2
 
    A_{n} =\min \left(A_{c} ,A_{j} ,A_{p} \right)-R_{d} .
 
@@ -162,7 +164,7 @@ The RuBP carboxylase (Rubisco) limited rate of carboxylation
 s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.4
+   :label: 9.3
 
    A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{\*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right. \kern-\nulldelimiterspace} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
@@ -171,7 +173,7 @@ RuBP (i.e., the light-limited rate) :math:`A_{j}`  (:math:`\mu` \ mol
 CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.5
+   :label: 9.4
 
    A_{j} =\left\{\begin{array}{l} {\frac{J_{x}\left(c_{i} -\Gamma _{\*} \right)}{4c_{i} +8\Gamma _{\*} } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\alpha (4.6\phi )\qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{\*} \ge 0.
 
@@ -181,7 +183,7 @@ C\ :sub:`4` plants :math:`A_{p}`  (:math:`\mu` \ mol
 CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.6 
+   :label: 9.5 
 
    A_{p} =\left\{\begin{array}{l} {3T_{p\qquad } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {k_{p} \frac{c_{i} }{P_{atm} } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}.
 
@@ -212,7 +214,7 @@ photosynthetically active radiation absorbed by the leaf. A common
 expression is the smaller of the two roots of the equation
 
 .. math::
-   :label: 9.7
+   :label: 9.6
 
    \Theta _{PSII} J_{x}^{2} -\left(I_{PSII} +J_{\max } \right)J_{x}+I_{PSII} J_{\max } =0
 
@@ -227,7 +229,7 @@ with 4.6 :math:`\mu`\ mol J\ :sup:`-1`, the light utilized in
 electron transport is
 
 .. math::
-   :label: 9.8
+   :label: 9.7
 
    I_{PSII} =0.5\Phi _{PSII} (4.6\phi )
 
@@ -244,7 +246,7 @@ The model uses co-limitation as described by :ref:`Collatz et al. (1991, 1992)
 smaller root of the equations
 
 .. math::
-   :label: 9.9
+   :label: 9.8
 
    \begin{array}{rcl} {\Theta _{cj} A_{i}^{2} -\left(A_{c} +A_{j} \right)A_{i} +A_{c} A_{j} } & {=} & {0} \\ {\Theta _{ip} A^{2} -\left(A_{i} +A_{p} \right)A+A_{i} A_{p} } & {=} & {0} \end{array} .
 
@@ -282,19 +284,19 @@ The parameters :math:`V_{c\max 25}`,
 :math:`T_{v}` (K), as:
 
 .. math::
-   :label: 9.10
+   :label: 9.9
 
    \begin{array}{rcl} {V_{c\max } } & {=} & {V_{c\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {J_{\max } } & {=} & {J_{\max 25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {T_{p} } & {=} & {T_{p25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {R_{d} } & {=} & {R_{d25} \; f\left(T_{v} \right)f_{H} \left(T_{v} \right)} \\ {K_{c} } & {=} & {K_{c25} \; f\left(T_{v} \right)} \\ {K_{o} } & {=} & {K_{o25} \; f\left(T_{v} \right)} \\ {\Gamma } & {=} & {\Gamma _{25} \; f\left(T_{v} \right)} \end{array}
 
 .. math::
-   :label: 9.11
+   :label: 9.10
 
    f\left(T_{v} \right)=\; \exp \left[\frac{\Delta H_{a} }{298.15\times 0.001R_{gas} } \left(1-\frac{298.15}{T_{v} } \right)\right]
 
 and
 
 .. math::
-   :label: 9.12
+   :label: 9.11
 
    f_{H} \left(T_{v} \right)=\frac{1+\exp \left(\frac{298.15\Delta S-\Delta H_{d} }{298.15\times 0.001R_{gas} } \right)}{1+\exp \left(\frac{\Delta ST_{v} -\Delta H_{d} }{0.001R_{gas} T_{v} } \right)}  .
 
@@ -310,7 +312,7 @@ Because :math:`T_{p}`  as implemented here varies with
 :math:`V_{c\max}` . For C\ :sub:`4` plants,
 
 .. math::
-   :label: 9.13
+   :label: 9.12
 
    \begin{array}{l} {V_{c\max } =V_{c\max 25} \left[\frac{Q_{10} ^{(T_{v} -298.15)/10} }{f_{H} \left(T_{v} \right)f_{L} \left(T_{v} \right)} \right]} \\ {f_{H} \left(T_{v} \right)=1+\exp \left[s_{1} \left(T_{v} -s_{2} \right)\right]} \\ {f_{L} \left(T_{v} \right)=1+\exp \left[s_{3} \left(s_{4} -T_{v} \right)\right]} \end{array}
 
@@ -321,7 +323,7 @@ with :math:`Q_{10} =2`,
 Additionally,
 
 .. math::
-   :label: 9.14
+   :label: 9.13
 
    R_{d} =R_{d25} \left\{\frac{Q_{10} ^{(T_{v} -298.15)/10} }{1+\exp \left[s_{5} \left(T_{v} -s_{6} \right)\right]} \right\}
 
@@ -329,7 +331,7 @@ with :math:`Q_{10} =2`, :math:`s_{5} =1.3`
 K\ :sup:`-1` and :math:`s_{6} =328.15`\ K, and
 
 .. math::
-   :label: 9.15
+   :label: 9.14
 
    k_{p} =k_{p25} \, Q_{10} ^{(T_{v} -298.15)/10}
 
@@ -364,7 +366,7 @@ achieved by allowing :math:`\Delta S`\  to vary with growth temperature
 according to
 
 .. math::
-   :label: 9.16
+   :label: 9.15
 
    \begin{array}{l} {\Delta S=668.39-1.07(T_{10} -T_{f} )\qquad \qquad {\rm for\; }V_{c\max } } \\ {\Delta S=659.70-0.75(T_{10} -T_{f} )\qquad \qquad {\rm for\; }J_{\max } } \end{array}
 
@@ -374,7 +376,7 @@ Additionally, the
 ratio :math:`J_{\max 25} /V_{c\max 25}`  at 25 :sup:`o`\ C decreases with growth temperature as
 
 .. math::
-   :label: 9.17
+   :label: 9.16
 
    J_{\max 25} /V_{c\max 25} =2.59-0.035(T_{10} -T_{f} ).
 
@@ -394,7 +396,7 @@ When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded
 
 
 .. math::
-   :label: 9.18
+   :label: 9.17
 
    \begin{array}{rcl} 
    {V_{c\max 25 sha}} & {=} & {V_{c\max 25 sha} \frac{i_{v,sha}}{i_{v,sun}}}  \\ 
@@ -404,7 +406,7 @@ When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded
 Where :math:`i_{v,sun}` and :math:`i_{v,sha}` are the leaf-to-canopy scaling coefficients of the twostream radiation model, calculated as 
 
 .. math::
-   :label: 9.19
+   :label: 9.18
 
    i_{v,sun} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e)} / (k_{n,ext}+k_{b,ext})}{f_{sun}*lai_e}\\
    i_{v,sha} = \frac{(1 - e^{-(k_{n,ext}+k_{b,ext})*lai_e)} / (k_{n,ext}+k_{b,ext})}{(1 - f_{sun})*lai_e}
@@ -427,14 +429,14 @@ are calculated assuming there is negligible capacity to store
 CO\ :sub:`2` and water vapor at the leaf surface so that
 
 .. math::
-   :label: 9.31 
+   :label: 9.19
 
    A_{n} =\frac{c_{a} -c_{i} }{\left(1.4r_{b} +1.6r_{s} \right)P_{atm} } =\frac{c_{a} -c_{s} }{1.4r_{b} P_{atm} } =\frac{c_{s} -c_{i} }{1.6r_{s} P_{atm} }
 
 and the transpiration fluxes are related as
 
 .. math::
-   :label: 9.32 
+   :label: 9.20 
 
    \frac{e_{a} -e_{i} }{r_{b} +r_{s} } =\frac{e_{a} -e_{s} }{r_{b} } =\frac{e_{s} -e_{i} }{r_{s} }
 
@@ -444,21 +446,20 @@ terms 1.4 and 1.6 are the ratios of diffusivity of CO\ :sub:`2` to
 H\ :sub:`2`\ O for the leaf boundary layer resistance and stomatal
 resistance,
 :math:`c_{a} ={\rm CO}_{{\rm 2}} \left({\rm mol\; mol}^{{\rm -1}} \right)`, :math:`P_{atm}` 
-is the atmospheric CO\ :sub:`2` partial pressure (Pa) calculated
-from CO\ :sub:`2` concentration (ppmv), :math:`e_{i}`  is the
+is the atmospheric pressure (Pa), :math:`e_{i}`  is the
 saturation vapor pressure (Pa) evaluated at the leaf temperature
 :math:`T_{v}` , and :math:`e_{a}`  is the vapor pressure of air (Pa).
 The vapor pressure of air in the plant canopy :math:`e_{a}`  (Pa) is
 determined from
 
 .. math::
-   :label: 9.33
+   :label: 9.21
 
    e_{a} =\frac{P_{atm} q_{s} }{0.622}
 
 where :math:`q_{s}`  is the specific humidity of canopy air (kg
 kg\ :sup:`-1`, section :numref:`Sensible and Latent Heat Fluxes and Temperature for Vegetated Surfaces`). 
-Equations and are solved for
+Equations :eq:`9.19` and :eq:`9.20` are solved for
 :math:`c_{s}`  and :math:`e_{s}` 
 
 .. math::
@@ -471,40 +472,51 @@ Equations and are solved for
 
    e_{s} =\frac{e_{a} r_{s} +e_{i} r_{b} }{r_{b} +r_{s} }
 
-Substitution of equation :eq:`9.35` into equation :eq:`9.1` gives an expression for stomatal
-resistance (:math:`r_{s}` ) as a function of photosynthesis
-(:math:`A_{n}` ), given here in terms of conductance with
-:math:`g_{s} =1/r_{s}`  and :math:`g_{b} =1/r_{b}` 
+In terms of conductance with 
+:math:`g_{s} =1/r_{s}`  and :math:`g_{b} =1/r_{b}`
 
 .. math::
    :label: 9.36
 
-   g_{s}^{2} + bg_{s} + c = 0
+   e_{s} =\frac{e_{a} g_{b} +e_{i} g_{s} }{g_{b} +g_{s} } .
 
-where
+
+Substitution of equation :eq:`9.36` into equation :eq:`9.1` gives an expression for the stomatal
+resistance
+(:math:`r_{s}`) as a function of photosynthesis
+(:math:`A_{n}` )
 
 .. math::
    :label: 9.37
 
-   b = 2(g_{o} * 10^{-6} + d) + \frac{(g_{1}d)^{2}}{g_{b}*10^{-6}D}
+   ag_{s}^{2} + bg_{s} + c = 0
 
-   c = (g_{o}*10^{-6})^{2} + [2g_{o}*10^{-6} + d \frac{1-g_{1}^{2}} {D}]d
-
-and
+where
 
 .. math::
    :label: 9.38
 
+   \begin{array}{l}  a = 1 \\
+
+   b = -[2(g_{o} * 10^{-6} + d) + \frac{(g_{1}d)^{2}}{g_{b}*10^{-6}D_{l}}] \\
+
+   c = (g_{o}*10^{-6})^{2} + [2g_{o}*10^{-6} + d (1-\frac{g_{1}^{2}} {D_{l}})]d \end{array}
+
+and
+
+.. math::
+   :label: 9.39
+
    d = \frac {1.6 A_{n}} {c_{s} / P_{atm} * 10^{6}}
 
-   D = \frac {e_{i} - e_{a}} {1000}
+   D_{l} = \frac {max(e_{i} - e_{a},50)} {1000}
 
 
 Stomatal conductance, as solved by equation :eq:`9.36` (mol m :sup:`-2` s :sup:`-1`), is the larger of the two roots that satisfy the
 quadratic equation. Values for :math:`c_{i}`  are given by
 
 .. math::
-   :label: 9.39
+   :label: 9.40
 
    c_{i} =c_{a} -\left(1.4r_{b} +1.6r_{s} \right)P_{atm} A{}_{n}
 

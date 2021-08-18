@@ -110,7 +110,7 @@ contains
     ! !USES:
     use clm_time_manager     , only : get_curr_date
     use clm_varctl           , only : use_lai_streams, fates_spitfire_mode
-    use SatellitePhenologyMod, only : lai_advance
+    use laiStreamMod         , only : lai_advance
     use FATESFireFactoryMod  , only : scalar_lightning
     !
     ! !ARGUMENTS:
@@ -620,7 +620,9 @@ contains
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterstatebulk_inst)
 
-       call ozone_inst%CalcOzoneStress(bounds_clump, filter(nc)%num_exposedvegp, filter(nc)%exposedvegp)
+       call ozone_inst%CalcOzoneStress(bounds_clump, &
+            filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
+            filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp)
 
        ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
        ! LakeFluxes... I'll probably leave it in place there.

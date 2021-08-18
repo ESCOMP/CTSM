@@ -86,7 +86,6 @@ Type of CO2 feedback.
     diagnostic = use the diagnostic value sent from the atmosphere
 </entry>
 
-
 <entry id="suplnitro" type="char*15" category="clm_physics"
        group="clm_inparm" valid_values="NONE,ALL" >
 Supplemental Nitrogen mode and for what type of vegetation it's turned on for. 
@@ -304,16 +303,6 @@ Critical threshold of negative Nitrogen to die (abort when Nitrogen states are b
 <entry id="cnegcrit" type="real" category="clm_physics"
        group="cnprecision_inparm" >
 Critical threshold of negative Carbon to die (abort when Carbon states are below this value)
-</entry>
-
-<entry id="initial_Cstocks" type="real(3)" category="clm_physics"
-       group="century_soilbgcdecompcascade" >
-Initial stocks of Carbon to use in soil organic matter pools for CENTURY decomposition
-</entry>
-
-<entry id="initial_Cstocks_depth" type="real(3)" category="clm_physics"
-       group="century_soilbgcdecompcascade" >
-Soil depth to place initial stocks of Carbon in soil organic matter pools for CENTURY decomposition
 </entry>
 
 <entry id="freelivfix_slope_wET" type="real" category="clm_physics"
@@ -763,13 +752,14 @@ SNICAR (SNow, ICe, and Aerosol Radiative model) snow aging data file name
 If TRUE, write master field list to separate file for documentation purposes
 </entry>
 
-<entry id="hist_avgflag_pertape" type="char*1(10)" category="history"
-       group="clm_inparm" valid_values="A,I,X,M" >
+<entry id="hist_avgflag_pertape" type="char*10(10)" category="history"
+       group="clm_inparm" valid_values="" >
 Per file averaging flag.
     'A' (average over history period)
     'I' (instantaneous)
     'X' (maximum over history period)
     'M' (minimum over history period)
+    'LXXXXX' (local solar time at XXXXX seconds of day)
 </entry>
 
 <entry id="hist_type1d_pertape" type="char*4(10)" category="history"
@@ -1096,6 +1086,15 @@ Initial seed Carbon to use at planting
 (only used when CN is on as well as crop)
 </entry>
 
+<entry id="o3_veg_stress_method" type="char*32" category="physics"
+       group="clm_inparm" valid_values="unset,stress_lombardozzi2015,stress_falk" value="unset">
+       Parameter to set the type of ozone vegetation stress method 
+       unset                  = (default) ozone stress vegetation method is off 
+       stress_lombardozzi2015 = ozone stress vegetation functions from Danica Lombardozzi 2015
+       stress_falk            = ozone stress vegetation functions from Stefanie Falk (issue #1224)
+<default>Default: "unset"</default>
+</entry>       
+       
 <entry id="onset_thresh_depends_on_veg" type="logical" category="physics"
        group="cnphenology">
 Phenology onset depends on the vegetation type
@@ -1106,11 +1105,6 @@ Phenology onset depends on the vegetation type
        group="cnphenology">
 The minimum critical day length for onset depends on latitude
 (only used when CN is on)
-</entry>
-
-<entry id="use_ozone" type="logical" category="physics"
-       group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on ozone stress
 </entry>
 
 <entry id="use_snicar_frc" type="logical" category="physics"
@@ -1636,6 +1630,11 @@ Simulation year that aligns with stream_year_first_ndep value
 Filename of input stream data for Nitrogen Deposition
 </entry>
 
+<entry id="stream_meshfile_ndep" type="char*256" category="datasets"
+       input_pathname="abs" group="ndepdyn_nml" valid_values="" >
+Stream meshfile for Nitrogen Deposition data
+</entry>
+
 <entry id="ndep_taxmode" type="char*80" category="datasets"
        group="ndepdyn_nml" valid_values="cycle,extend,limit" >
 Time interpolation mode to determine how to handle data before and after the times in the file
@@ -1673,6 +1672,12 @@ Mapping method from Nitrogen deposition input file to the model resolution
 <entry id="stream_fldfilename_ch4finundated" type="char*256" category="datasets"
        input_pathname="abs" group="ch4finundated" valid_values="" >
 Filename of input stream data for finundated inversion of observed (from Prigent dataset) 
+to hydrologic variables (either TWS or ZWT)
+</entry>
+
+<entry id="stream_meshfile_ch4finundated" type="char*256" category="datasets"
+       input_pathname="abs" group="ch4finundated" valid_values="" >
+mesh filename of input stream data for finundated inversion of observed (from Prigent dataset) 
 to hydrologic variables (either TWS or ZWT)
 </entry>
 
@@ -1751,6 +1756,11 @@ Simulation year that aligns with stream_year_first_lai value
 Filename of input stream data for LAI
 </entry>
 
+<entry id="stream_meshfile_lai" type="char*256" category="datasets"
+       input_pathname="abs" group="lai_streams" valid_values="" >
+Filename of input stream data for LAI
+</entry>
+
 <entry id="lai_tintalgo" type="char*80" category="datasets"
        group="lai_streams" valid_values="linear,nearest,lower,upper" >
 Time interpolation method to use with LAI streams
@@ -1790,6 +1800,11 @@ Simulation year that aligns with stream_year_first_lightng value
 <entry id="stream_fldfilename_lightng" type="char*256" category="datasets"
        input_pathname="abs" group="light_streams" valid_values="" >
 Filename of input stream data for Lightning
+</entry>
+
+<entry id="stream_meshfile_lightng" type="char*256" category="datasets"
+       input_pathname="abs" group="light_streams" valid_values="" >
+Stream meshfile for Nitrogen Deposition data
 </entry>
 
 <entry id="lightng_tintalgo" type="char*80" category="datasets"
@@ -1834,6 +1849,11 @@ Simulation year that aligns with stream_year_first_popdens value
 Filename of input stream data for human population density
 </entry>
 
+<entry id="stream_meshfile_popdens" type="char*256" category="datasets"
+       input_pathname="abs" group="popd_streams" valid_values="" >
+mesh file for input stream data for human population density
+</entry>
+
 <entry id="popdens_tintalgo" type="char*80" category="datasets"
        group="popd_streams" valid_values="linear,nearest,lower,upper" >
 Time interpolation method to use with human population density streams
@@ -1874,6 +1894,11 @@ Simulation year that aligns with stream_year_first_urbantv value
 <entry id="stream_fldfilename_urbantv" type="char*256" category="datasets"
        input_pathname="abs" group="urbantv_streams" valid_values="" >
 Filename of input stream data for urban time varying
+</entry>
+
+<entry id="stream_meshfile_urbantv" type="char*256" category="datasets"
+       input_pathname="abs" group="urbantv_streams" valid_values="" >
+mesh filename of input stream data for urban time varying
 </entry>
 
 <entry id="urbantv_tintalgo" type="char*80" category="datasets"

@@ -181,22 +181,19 @@ contains
     type(bounds_type)  :: bounds_clump    ! clump bounds
     integer            :: nclumps         ! number of clumps on this processor
     integer            :: nc              ! clump index
-    logical            :: lexist
     logical            :: reset_dynbal_baselines_all_columns
     logical            :: reset_dynbal_baselines_lake_columns
     integer            :: begg, endg
-    integer            :: begp, endp
-    integer            :: begc, endc
-    integer            :: begl, endl
     real(r8), pointer  :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
-    character(len=32) :: subname = 'initialize2' ! subroutine name
+    character(len=32)  :: subname = 'initialize2' ! subroutine name
     !-----------------------------------------------------------------------
 
     call t_startf('clm_init2')
 
-    ! Get processor bounds
-    call get_proc_bounds(begg, endg)
-
+    ! Get processor bounds for gridcells
+    call get_proc_bounds(bounds_proc)
+    begg = bounds_proc%begg; endg = bounds_proc%endg
+    
     ! Initialize glc behavior
     call glc_behavior%Init(begg, endg, NLFilename)
 
@@ -255,7 +252,13 @@ contains
 
     ! Build hierarchy and topological info for derived types
     ! This is needed here for the following call to decompInit_glcp
-    call initGridCells(glc_behavior)
+    nclumps = get_proc_clumps()
+    !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+    do nc = 1, nclumps
+       call get_clump_bounds(nc, bounds_clump)
+       call initGridCells(bounds_clump, glc_behavior)
+    end do
+    !$OMP END PARALLEL DO
 
     ! Set global seg maps for gridcells, landlunits, columns and patches
     call decompInit_glcp(ni, nj, glc_behavior)
@@ -263,7 +266,6 @@ contains
     ! Set filters
     call allocFilters()
 
-    nclumps = get_proc_clumps()
     !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
     do nc = 1, nclumps
        call get_clump_bounds(nc, bounds_clump)

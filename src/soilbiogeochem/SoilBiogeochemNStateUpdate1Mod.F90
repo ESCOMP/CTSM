@@ -7,9 +7,9 @@ module SoilBiogeochemNStateUpdate1Mod
   ! !USES:
   use shr_kind_mod                       , only: r8 => shr_kind_r8
   use clm_time_manager                   , only : get_step_size_real
-  use clm_varpar                         , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
+  use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions
   use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop
-  use clm_varcon                         , only : nitrif_n2o_loss_frac, dzsoi_decomp
+  use clm_varcon                         , only : nitrif_n2o_loss_frac
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemNitrogenStateType    , only : soilbiogeochem_nitrogenstate_type
   use SoilBiogeochemNitrogenfluxType     , only : soilbiogeochem_nitrogenflux_type
@@ -43,7 +43,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c,p,j,l,k ! indices
-    integer :: fp,fc     ! lake filter indices
+    integer :: fc        ! lake filter indices
     real(r8):: dt        ! radiation time step (seconds)
 
     !-----------------------------------------------------------------------
