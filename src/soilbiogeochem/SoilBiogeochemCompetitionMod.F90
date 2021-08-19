@@ -285,8 +285,6 @@ contains
 
       if (.not. use_nitrif_denitrif) then
 
-         call endrun( "ERROR:: use_nitrif_denitrif is now hardcoded to be true" )
-
          ! init sminn_tot
          do fc=1,num_soilc
             c = filter_soilc(fc)

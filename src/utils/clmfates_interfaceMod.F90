@@ -59,6 +59,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_inventory_init
    use clm_varctl        , only : use_fates_fixed_biogeog
    use clm_varctl        , only : fates_inventory_ctrl_filename
+   use clm_varctl        , only : use_nitrif_denitrif
    use clm_varctl        , only : use_lch4
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval 
@@ -302,7 +303,11 @@ module CLMFatesInterfaceMod
         ! FATES also checks that if NO3 is cycled in ELM, then
         ! any plant affinity parameters are checked.
 
-        call set_fates_ctrlparms('nitrogen_spec',ival=1)
+        if(use_nitrif_denitrif) then
+           call set_fates_ctrlparms('nitrogen_spec',ival=1)
+        else
+           call set_fates_ctrlparms('nitrogen_spec',ival=2)
+        end if
 
         ! Phosphorus is not tracked in CLM
         call set_fates_ctrlparms('phosphorus_spec',ival=0)

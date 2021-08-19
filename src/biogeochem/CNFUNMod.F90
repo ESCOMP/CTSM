@@ -25,7 +25,7 @@ module CNFUNMod
   use ColumnType                      , only : col
   use pftconMod                       , only : pftcon, npcropmin
   use decompMod                       , only : bounds_type
-  use clm_varctl                      , only : use_flexiblecn
+  use clm_varctl                      , only : use_nitrif_denitrif,use_flexiblecn
   use abortutils                      , only : endrun
   use CNVegstateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -213,6 +213,7 @@ module CNFUNMod
    use clm_time_manager, only : get_step_size_real, get_curr_date, get_days_per_year 
    use clm_varpar      , only : nlevdecomp
    use clm_varcon      , only : secspday, smallValue, fun_period, tfrz, dzsoi_decomp, spval
+   use clm_varctl      , only : use_nitrif_denitrif
    use PatchType       , only : patch
    use subgridAveMod   , only : p2c
    use pftconMod       , only : npcropmin
@@ -473,6 +474,7 @@ module CNFUNMod
   real(r8) :: total_c_accounted_retrans
 
   
+  !------end of not_use_nitrif_denitrif------!
   !--------------------------------------------------------------------
   !------------
   ! Local Integer variables

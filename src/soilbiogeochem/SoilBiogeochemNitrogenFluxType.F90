@@ -442,7 +442,6 @@ contains
     end do
 
     if (.not. use_nitrif_denitrif) then
-       call endrun( "ERROR: use_nitrif_denitrif is now hardcoded to be true" )
        do l = 1, ndecomp_cascade_transitions
           !-- denitrification fluxes (none from CWD)
           if ( .not. decomp_cascade_con%is_cwd(decomp_cascade_con%cascade_donor_pool(l)) ) then

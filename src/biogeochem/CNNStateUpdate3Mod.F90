@@ -9,7 +9,7 @@ module CNNStateUpdate3Mod
   use shr_kind_mod                    , only: r8 => shr_kind_r8
   use clm_varpar                      , only: nlevdecomp, ndecomp_pools
   use clm_time_manager                , only : get_step_size_real
-  use clm_varctl                      , only : iulog
+  use clm_varctl                      , only : iulog, use_nitrif_denitrif
   use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
@@ -67,12 +67,16 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
 
-            ! mineral N loss due to leaching and runoff from
-            ! nitrification/denitrificationm
-            ns_soil%smin_no3_vr_col(c,j) = max( ns_soil%smin_no3_vr_col(c,j) - &
-                 ( nf_soil%smin_no3_leached_vr_col(c,j) + nf_soil%smin_no3_runoff_vr_col(c,j) ) * dt, 0._r8)
+            if (.not. use_nitrif_denitrif) then
+               ! mineral N loss due to leaching
+               ns_soil%sminn_vr_col(c,j) = ns_soil%sminn_vr_col(c,j) - nf_soil%sminn_leached_vr_col(c,j) * dt
+            else
+               ! mineral N loss due to leaching and runoff
+               ns_soil%smin_no3_vr_col(c,j) = max( ns_soil%smin_no3_vr_col(c,j) - &
+                    ( nf_soil%smin_no3_leached_vr_col(c,j) + nf_soil%smin_no3_runoff_vr_col(c,j) ) * dt, 0._r8)
 
-            ns_soil%sminn_vr_col(c,j) = ns_soil%smin_no3_vr_col(c,j) + ns_soil%smin_nh4_vr_col(c,j)
+               ns_soil%sminn_vr_col(c,j) = ns_soil%smin_no3_vr_col(c,j) + ns_soil%smin_nh4_vr_col(c,j)
+            end if
 
             ! column level nitrogen fluxes from fire
             ! patch-level wood to column-level CWD (uncombusted wood)

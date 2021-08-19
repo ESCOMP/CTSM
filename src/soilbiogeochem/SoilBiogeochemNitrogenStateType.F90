@@ -263,7 +263,6 @@ contains
                ptr_col=this%smin_nh4_col)
        endif
     else
-       call endrun( "ERROR:: use_nitrif_denitrif is now hardcoded to be true" )
        if ( nlevdecomp_full > 1 ) then
           data2dptr => this%sminn_vr_col(begc:endc,1:nlevsoi) 
           call hist_addfld_decomp (fname='SMINN'//trim(vr_suffix), units='gN/m^3', type2d='levsoi', &

@@ -16,7 +16,6 @@ module SoilBiogeochemNStateUpdate1Mod
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use CNSharedParamsMod                  , only : use_fun
   use ColumnType                         , only : col 
-  use abortutils                         , only : endrun
   !
   implicit none
   private
@@ -158,7 +157,6 @@ contains
       end do
 
       if (.not. use_nitrif_denitrif) then
-         call endrun( "ERROR:: use_nitrif_denitrif is now hardcoded to true" )
 
          !--------------------------------------------------------
          !-------------    NITRIF_DENITRIF OFF -------------------

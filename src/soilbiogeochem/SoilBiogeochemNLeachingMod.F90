@@ -15,7 +15,6 @@ module SoilBiogeochemNLeachingMod
   use WaterStateBulkType                  , only : waterstatebulk_type
   use WaterFluxBulkType                   , only : waterfluxbulk_type
   use ColumnType                      , only : col                
-  use abortutils                      , only : endrun
   !
   implicit none
   private
@@ -164,7 +163,6 @@ contains
 
 
       if (.not. use_nitrif_denitrif) then
-         call endrun( "ERROR:: use_nitrif_denitrif is now hardcoded to be true" )
 
          !----------------------------------------
          ! --------- NITRIF_NITRIF OFF------------
