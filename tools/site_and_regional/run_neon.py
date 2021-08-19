@@ -285,7 +285,7 @@ class NeonSite :
             if not os.path.isdir(case_path):
                 logger.info("---- creating a base case -------")
 
-                case.create(case_path, cesmroot, compset, res, mpilib="mpi-serial",
+                case.create(case_path, cesmroot, compset, res, 
                             run_unsupported=True, answer="r",output_root=case_root,
                             user_mods_dirs = user_mods_dirs, driver="nuopc")
 
