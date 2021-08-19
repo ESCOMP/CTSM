@@ -2696,7 +2696,7 @@ sub setup_logic_bgc_shared {
 sub setup_logic_cnphenology {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  my @list  = (  "onset_thresh_depends_on_veg", "min_crtical_dayl_method" );
+  my @list  = (  "onset_thresh_depends_on_veg", "min_critical_dayl_method" );
   foreach my $var ( @list ) {
     if (  &value_is_true($nl_flags->{'use_cn'}) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 

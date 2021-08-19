@@ -563,10 +563,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <initial_seed_at_planting use_crop=".true." phys="clm4_5" >1.d00</initial_seed_at_planting>
 
 <!-- CN Phenology -->
-<onset_thresh_depends_on_veg     use_cn=".true." phys="clm5_1" >.true.</onset_thresh_depends_on_veg>
-<min_crtical_dayl_method         use_cn=".true." phys="clm5_1" >DependsOnLat</min_crtical_dayl_method>
-<onset_thresh_depends_on_veg                                   >.false.</onset_thresh_depends_on_veg>
-<min_crtical_dayl_method                                       >Constant</min_crtical_dayl_method>
+<onset_thresh_depends_on_veg     use_cn=".true." phys="clm5_1"  >.true.</onset_thresh_depends_on_veg>
+<min_critical_dayl_method         use_cn=".true." phys="clm5_1" >DependsOnLat</min_critical_dayl_method>
+<onset_thresh_depends_on_veg                                    >.false.</onset_thresh_depends_on_veg>
+<min_critical_dayl_method                                       >Constant</min_critical_dayl_method>
 
 <!-- turnover time modifications    -->
 <decomp_depth_efolding phys="clm4_5" >0.5</decomp_depth_efolding>

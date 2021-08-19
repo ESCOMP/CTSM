@@ -155,12 +155,12 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    character(len=25) :: min_crtical_dayl_method   ! Method to determine critical day length for onset
+    character(len=25) :: min_critical_dayl_method   ! Method to determine critical day length for onset
     character(len=*), parameter :: subname = 'CNPhenologyReadNML'
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
-                           min_crtical_dayl_method
+                           min_critical_dayl_method
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -183,18 +183,18 @@ contains
 
     call shr_mpi_bcast (initial_seed_at_planting,    mpicom)
     call shr_mpi_bcast (onset_thresh_depends_on_veg, mpicom)
-    call shr_mpi_bcast (min_crtical_dayl_method,     mpicom)
+    call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
 
-    if (      min_crtical_dayl_method == "DependsOnLat"       )then
+    if (      min_critical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
-    else if ( min_crtical_dayl_method == "DependsOnVeg"       )then
+    else if ( min_critical_dayl_method == "DependsOnVeg"       )then
        critical_daylight_method = critical_daylight_depends_on_veg
-    else if ( min_crtical_dayl_method == "DependsOnLatAndVeg" )then
+    else if ( min_critical_dayl_method == "DependsOnLatAndVeg" )then
        critical_daylight_method = critical_daylight_depends_on_latnveg
-    else if ( min_crtical_dayl_method == "Constant"           )then
+    else if ( min_critical_dayl_method == "Constant"           )then
        critical_daylight_method = critical_daylight_constant
     else
-       call endrun(msg="ERROR min_crtical_dayl_method is NOT set to a valid value"//errmsg(sourcefile, __LINE__))
+       call endrun(msg="ERROR min_critical_dayl_method is NOT set to a valid value"//errmsg(sourcefile, __LINE__))
     end if
 
     if (masterproc) then
@@ -1085,7 +1085,7 @@ contains
     case(critical_daylight_constant)
         crit_daylat = crit_dayl
     case default
-        call endrun(msg="ERROR SeasonalCriticalDaylength crtical_daylight_method not implemented "//errmsg(sourcefile, __LINE__))
+        call endrun(msg="ERROR SeasonalCriticalDaylength critical_daylight_method not implemented "//errmsg(sourcefile, __LINE__))
     end select
 
   end function SeasonalCriticalDaylength
