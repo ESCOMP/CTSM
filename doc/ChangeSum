@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev053   slevis 08/10/2021 Adding history variables for use with Newton-Krylov
+    ctsm5.1.dev054   slevis 08/19/2021 Adding history variables for use with Newton-Krylov
     ctsm5.1.dev051 multiple 08/06/2021 New LUNA-specific ozone stress option
     ctsm5.1.dev050    sacks 08/02/2021 Improve and document method for getting diagnostics on a problem point
     ctsm5.1.dev049 jedwards 07/26/2021 Update externals, NEON updates, fix stop_option=date, move neon niwo test to match user_mods, local time option
