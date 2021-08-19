@@ -51,13 +51,6 @@
     </phase>
   </test>
 
-  <test name="SMS_P48x1_D_Ld5.f10_f10_mg37.I2000Clm50Cn.izumi_nag.clm-default">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#1356</issue>
-    </phase>
-  </test>
-
   <!-- fates test suite failures -->
 
   <test name="ERS_Ld60.f45_f45_mg37.I2000Clm45Fates.hobart_nag.clm-Fates">
