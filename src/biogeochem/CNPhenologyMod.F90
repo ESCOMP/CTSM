@@ -127,6 +127,7 @@ module CNPhenologyMod
   integer,  public, parameter :: critical_daylight_depends_on_veg     = critical_daylight_depends_on_lat + 1
   integer,  public, parameter :: critical_daylight_depends_on_latnveg = critical_daylight_depends_on_veg + 1
   integer,  private :: critical_daylight_method = critical_daylight_constant
+  ! For determining leaf offset latitude that's considered high latitude
   real(r8), parameter :: critical_offset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
   character(len=*), parameter, private :: sourcefile = &
@@ -232,20 +233,20 @@ contains
     ! !DESCRIPTION:
     ! Set the parameters for unit-testing
     !
-    params_inst%crit_dayl             = 39200._r8
-    params_inst%crit_dayl_at_high_lat = 54000._r8
-    params_inst%crit_dayl_lat_slope   = 720._r8
-    params_inst%ndays_on              = 15._r8
-    params_inst%ndays_off             = 30._r8
-    params_inst%fstor2tran            = 0.5
-    params_inst%crit_onset_fdd        = 15._r8
-    params_inst%crit_onset_swi        = 15._r8
-    params_inst%soilpsi_on            = -0.6_r8
-    params_inst%crit_offset_fdd       = 15._r8
-    params_inst%crit_offset_swi       = 15._r8
-    params_inst%soilpsi_off           = -0.8
-    params_inst%lwtop                 = 0.7_r8
-    params_inst%phenology_soil_depth  = 0.08_r8
+    params_inst%crit_dayl             = 39200._r8     ! Seconds
+    params_inst%crit_dayl_at_high_lat = 54000._r8     ! Seconds
+    params_inst%crit_dayl_lat_slope   = 720._r8       ! Seconds / degree
+    params_inst%ndays_on              = 15._r8        ! Days
+    params_inst%ndays_off             = 30._r8        ! Days
+    params_inst%fstor2tran            = 0.5           ! Fraction
+    params_inst%crit_onset_fdd        = 15._r8        ! Days
+    params_inst%crit_onset_swi        = 15._r8        ! Days
+    params_inst%soilpsi_on            = -0.6_r8       ! MPa
+    params_inst%crit_offset_fdd       = 15._r8        ! Days
+    params_inst%crit_offset_swi       = 15._r8        ! Days
+    params_inst%soilpsi_off           = -0.8          ! MPa
+    params_inst%lwtop                 = 0.7_r8        ! Fraction
+    params_inst%phenology_soil_depth  = 0.08_r8       ! m
   end subroutine CNPhenologySetParams
   
   !-----------------------------------------------------------------------
@@ -478,7 +479,7 @@ contains
         end if
         if ( params_inst%crit_dayl_lat_slope >= (secspday - params_inst%crit_dayl_at_high_lat)/ &
                                                  (90._r8 - critical_offset_high_lat) )then
-            call endrun(msg="ERROR crit_dayl_lat_slope can not higher than allowing a day at the poles"//errmsg(sourcefile, __LINE__))
+            call endrun(msg="ERROR crit_dayl_lat_slope cannot allow crit_dayl longer than a day"//errmsg(sourcefile, __LINE__))
         end if
     end if
 
@@ -1056,7 +1057,7 @@ contains
         ! Critical day length for offset is fixed for temperate type vegetation
         if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
            crit_daylat = crit_dayl
-        ! For Arctic vegetation -- critical daylength is higher at high latitudes and shorter
+        ! For Arctic vegetation -- critical daylength is longer at high latitudes and shorter
         ! at midlatitudes
         else
            crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* \
@@ -1097,14 +1098,14 @@ contains
 
     !
     ! !DESCRIPTION:
-    ! Function to determine if seasonal decicious leaf onset should happen.
+    ! Function to determine if seasonal deciduous leaf onset should happen.
     !
     ! !USES:
     use shr_const_mod   , only: SHR_CONST_TKFRZ
     ! !ARGUMENTS:
     real(r8), intent(INOUT) :: onset_gdd      ! onset growing degree days 
     real(r8), intent(INOUT) :: onset_gddflag  ! Onset freeze flag
-    real(r8), intent(IN)    :: soilt          ! Soil temperture at specific level for this evaluation
+    real(r8), intent(IN)    :: soilt          ! Soil temperature at specific level for this evaluation
     real(r8), intent(IN)    :: soila10        ! 10-day running mean of the 12cm soil layer temperature (K)
     real(r8), intent(IN)    :: t_a5min        ! 5-day running mean of min 2-m temperature
     real(r8), intent(IN)    :: dayl           ! Day length
@@ -1115,8 +1116,11 @@ contains
     logical :: do_onset                       ! Flag if onset should happen (return value)
     !
     ! !LOCAL VARIABLES:
-    real(r8), parameter :: snow5d_thresh_for_onset        = 0.1_r8          ! 5-day snow depth threshold for onset
-    real(r8), parameter :: min_critial_daylength_onset    = 39300._r8/2._r8 !  Minimum daylength for onset to happen
+    real(r8), parameter :: snow5d_thresh_for_onset      = 0.1_r8          ! 5-day snow depth threshold for leaf onset
+    real(r8), parameter :: min_critical_daylength_onset = 39300._r8/2._r8 ! Minimum daylength for onset to happen
+                                                                          ! NOTE above: The 39300/2 value is what we've
+                                                                          ! tested with changing it might change answers.
+                                                                          ! See notes on this! parameter below.
     !-----------------------------------------------------------------------
 
     do_onset = .false.
@@ -1154,22 +1158,23 @@ contains
        ! shrub, C3 arctic grass)
        if (onset_gdd > crit_onset_gdd .and.  season_decid_temperate == 1) then
            do_onset = .true.
-        ! Note: The min_critial_daylength_onset is because for some coastal
+        ! Note: The check "dayl>min_critical_daylength_onset" in the if
+        ! statement was added because for some coastal
         ! points the other triggers could allow onset in January/February
         ! which isn't sustainable and is a degenerate case. To prevent this
         ! condition was added, but now the other conditions aren't triggered
         ! until much later so it's value just needs to be high enough to prevent
         ! the degenerate case of happening too early, and low enough that it
         ! doesn't restrict onset. As such the value of this parameter shouldn't
-        ! matter for reasonable values between the two degnerate cases.
+        ! matter for reasonable values between the two degenerate cases.
         else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
                 soila10 > SHR_CONST_TKFRZ .and. &
                 t_a5min > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
-                dayl>min_critial_daylength_onset .and.  snow_5day<snow5d_thresh_for_onset) then
+                dayl>min_critical_daylength_onset .and.  snow_5day<snow5d_thresh_for_onset) then
            do_onset = .true.
         end if
     else
-       ! set onset_flag if critical growing degree-day sum is exceeded
+       ! set do_onset if critical growing degree-day sum is exceeded
        if (onset_gdd > crit_onset_gdd) do_onset = .true.
     end if
 
