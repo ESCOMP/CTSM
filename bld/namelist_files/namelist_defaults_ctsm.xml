@@ -858,6 +858,7 @@ p
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101" sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_CRUv7"
@@ -865,6 +866,7 @@ p
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101" sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm4_5_cam6.0"
@@ -873,6 +875,7 @@ p
 
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101"  sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1"
@@ -881,6 +884,7 @@ p
 
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101" sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_0_GSWP3v1"
@@ -889,6 +893,7 @@ p
 
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101" sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_0_CRUv7"
@@ -897,6 +902,7 @@ p
 
 
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101" sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -904,6 +910,7 @@ p
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101"  sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
@@ -912,12 +919,14 @@ p
 
 <!-- CTSM5_1 -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101"  sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_1_GSWP3v1"
 >lnd/clm2/initdata_map/clmi.I1850Clm50Sp.0181-01-01.0.9x1.25_gx1v7_simyr1850_c200806.nc
 </finidat>
 <finidat hgrid="0.9x1.25"  maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="18500101" sim_year="1850"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".false."
          lnd_tuning_mode="clm5_1_GSWP3v1"
@@ -931,6 +940,7 @@ p
 
 <!-- Present day crop spinup at 2-degree with irrigation on -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="20110101" sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm4_5_GSWP3v1"
@@ -939,6 +949,7 @@ p
 
 <!-- This is the same file as above but, for a different tuning mode -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="20110101" sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm4_5_CRUv7"
@@ -947,12 +958,14 @@ p
 
 <!-- This is the same file as above but, for a different tuning mode -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="20110101" sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_GSWP3v1"
 >lnd/clm2/initdata_map/clmi.I2000Clm50BgcCrop.2011-01-01.1.9x2.5_gx1v7_gl4_simyr2000_c190312.nc
 </finidat>
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="20110101" sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_1_GSWP3v1"
@@ -962,6 +975,7 @@ p
 
 <!-- This is the same file as above but, for a different tuning mode -->
 <finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="20110101" sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_CRUv7"
@@ -970,6 +984,7 @@ p
 
 <!-- Present day no crop spinup f09/f19 grid with irrigation on -->
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="19790101"  sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm4_5_cam6.0"
@@ -977,6 +992,7 @@ p
 </finidat>
 
 <finidat hgrid="0.9x1.25"  maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="19790101"  sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -984,6 +1000,7 @@ p
 </finidat>
 
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="19790101"  sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -992,6 +1009,7 @@ p
 
 <!-- Present day no crop spinup ARCTIC grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTIC.ne30x4"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="19790101"  sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -1000,6 +1018,7 @@ p
 
 <!-- Present day no crop spinup ARCTICGRIS grid with irrigation on -->
 <finidat hgrid="ne0np4.ARCTICGRIS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="19790101"  sim_year="1979"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -1008,6 +1027,7 @@ p
 
 <!-- Present day crop spinup at 1/4-degree for high resolution with irrigation on -->
 <finidat hgrid="ne120np4.pg3"    maxpft="79"  mask="tx0.1v3" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="2000101" sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -1016,6 +1036,7 @@ p
 
 <!-- Present day for coupled cases at low resolution -->
 <finidat hgrid="0.9x1.25"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="20000101" sim_year="2000"
          ic_tod="0" glc_nec="10" use_crop=".true." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -1024,6 +1045,7 @@ p
 
 <!-- 2003 -->
 <finidat hgrid="1.9x2.5"   maxpft="17"  mask="gx1v7" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="20030101"  sim_year="2003"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -1033,6 +1055,7 @@ p
 
 <!-- 2013 -->
 <finidat hgrid="ne0np4CONUS.ne30x8"    maxpft="17"  mask="tx0.1v2" use_cn=".false." use_cndv=".false." use_fates=".false."
+d
          ic_ymd="20130101"  sim_year="2013"
          ic_tod="0" glc_nec="10" use_crop=".false." irrigate=".true."
          lnd_tuning_mode="clm5_0_cam6.0"
@@ -1409,8 +1432,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
  use_crop=".false."   >lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_10x15_SSP5-3.4_16pfts_Irrig_CMIP6_simyr1850-2100_c190228.nc</flanduse_timeseries>
 
 <!-- Fixation and Uptake of Nitrogen Model (FUN2.0) -->
-<use_fun phys="clm5_1"  use_cn=".true.">.true.</use_fun>
-<use_fun phys="clm5_0"  use_cn=".true.">.true.</use_fun>
+<use_fun phys="clm5_1"  use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
+<use_fun phys="clm5_0"  use_cn=".true." use_nitrif_denitrif=".true.">.true.</use_fun>
 <use_fun                                                            >.false.</use_fun>
 
 <freelivfix_intercept use_fun=".true." use_cn=".true.">0.0117d00</freelivfix_intercept>
@@ -2550,6 +2573,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <soil_decomp_method use_cn=".true."   >CENTURYKoven2013</soil_decomp_method>
 <soil_decomp_method use_fates=".true.">CENTURYKoven2013</soil_decomp_method>
 <soil_decomp_method                   >None</soil_decomp_method>
+<use_nitrif_denitrif                  >.true.</use_nitrif_denitrif>
+<use_nitrif_denitrif bgc_mode="fates" >.false.</use_nitrif_denitrif>
 
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>

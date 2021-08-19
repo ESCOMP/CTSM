@@ -92,7 +92,7 @@ OPTIONS
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
                                         CENTURY decomposition
                                     This toggles on the namelist variables:
-                                          use_cn, use_lch4
+                                          use_cn, use_lch4, use_nitrif_denitrif
                                 fates = FATES/Ecosystem Demography with below ground BGC
                                     This toggles on the namelist variables:
                                           use_fates
@@ -850,7 +850,7 @@ sub setup_cmdl_bgc {
 
   {
      # If the variable has already been set use it, if not set to the value defined by the bgc_mode
-     my @list  = (  "use_lch4" );
+     my @list  = (  "use_lch4", "use_nitrif_denitrif" );
      my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
      foreach my $var ( @list ) {
         my $default_setting = $defaults->get_value($var, \%settings );
@@ -883,12 +883,11 @@ sub setup_cmdl_bgc {
   my $var = "use_fun";
   if ( ! defined($nl->get_value($var)) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'} );
+                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
+                 'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'} );
   }
-  if ( ! &value_is_true($nl->get_value('use_cn')) ) {
-     if ( &value_is_true($nl->get_value('use_fun')) ) {
-        $log->fatal_error("$var can NOT on if use_cn is not");
-     }
+  if ( (! &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
+     $log->fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!");
   }
   #
   # Determine Soil decomposition method
@@ -2141,6 +2140,7 @@ sub setup_logic_demand {
   $settings{'use_cn'}              = $nl_flags->{'use_cn'};
   $settings{'use_cndv'}            = $nl_flags->{'use_cndv'};
   $settings{'use_lch4'}            = $nl_flags->{'use_lch4'};
+  $settings{'use_nitrif_denitrif'} = $nl_flags->{'use_nitrif_denitrif'};
   $settings{'use_crop'}            = $nl_flags->{'use_crop'};
 
   my $demand = $nl->get_value('clm_demand');
@@ -2257,7 +2257,7 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
-                       "use_fates",
+                       "use_fates", "use_nitrif_denitrif",
                        "lnd_tuning_mode", 
                      ) {
        $settings{$item}    = $nl_flags->{$item};
@@ -2825,11 +2825,11 @@ sub setup_logic_nitrif_params {
   #
   my ($nl_flags, $definition, $defaults, $nl) = @_;
 
-  if ( !  &value_is_true($nl_flags->{'use_cn'}) ) {
+  if ( !  &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) {
     my @vars = ( "k_nitr_max", "denitrif_respiration_coefficient", "denitrif_respiration_exponent");
     foreach my $var ( @vars ) {
        if ( defined($nl->get_value( $var ) ) ) {
-         $log->fatal_error("$var is only used when use_cn is turned on");
+         $log->fatal_error("$var is only used when use_nitrif_denitrif is turned on");
        }
     }
   }
@@ -3054,7 +3054,8 @@ sub setup_logic_luna {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_luna',
-              'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+              'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'},
+              'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'} );
 
   if ( &value_is_true( $nl_flags->{'use_cn'} ) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_nguardrail',
