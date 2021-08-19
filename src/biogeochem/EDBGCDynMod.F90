@@ -72,6 +72,7 @@ contains
     use CNNStateUpdate1Mod                , only: NStateUpdate1
     use CNNStateUpdate2Mod                , only: NStateUpdate2, NStateUpdate2h
     use CNGapMortalityMod                 , only: CNGapMortality
+    use SoilBiogeochemDecompCascadeMIMICSMod, only: decomp_rates_mimics
     use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
     use SoilBiogeochemDecompCascadeCNMod  , only: decomp_rate_constants_cn
     use SoilBiogeochemDecompMod           , only: SoilBiogeochemDecomp

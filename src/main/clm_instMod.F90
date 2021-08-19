@@ -188,6 +188,7 @@ contains
     use clm_varpar                         , only : nlevsno
     use controlMod                         , only : nlfilename, fsurdat
     use domainMod                          , only : ldomain
+    use SoilBiogeochemDecompCascadeMIMICSMod, only : init_decompcascade_mimics
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
     use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
