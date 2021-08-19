@@ -153,7 +153,7 @@ def get_parser(args, description, valid_neon_sites):
                 ''', 
                 required = False,
                 type = str, 
-                default = '200Y')
+                default = '0Y')
 
     parser.add_argument('--start-date',
                 help='''           
@@ -190,8 +190,15 @@ def get_parser(args, description, valid_neon_sites):
     if "CIME_OUTPUT_ROOT" in args.case_root:
         args.case_root = None
 
+    if args.run_length == '0Y':
+        if args.run_type == 'ad':
+            run_length = '200Y'
+        elif args.run_type == 'postad':
+            run_length = '50Y'
+        else:
+            run_length = '4Y'
 
-    run_length = parse_isoduration(args.run_length)
+    run_length = parse_isoduration(run_length)
     
     return neon_sites, args.case_root, args.run_type, args.overwrite, run_length, args.base_case_root
 
@@ -315,15 +322,25 @@ class NeonSite :
         user_mods_dirs = [os.path.join(self.cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
         expect(os.path.isdir(base_case_root), "Error base case does not exist in {}".format(base_case_root))
         case_root = os.path.abspath(os.path.join(base_case_root,"..", self.name+"."+run_type))
-        if os.path.isdir(case_root) and overwrite:
-            logger.info("---- removing the existing case -------")
-            shutil.rmtree(case_root)
+        if os.path.isdir(case_root):
+            if overwrite:
+                logger.info("---- removing the existing case -------")
+                shutil.rmtree(case_root)
+            else:
+                logger.warning("Case already exists in {}, not overwritting.".format(case_root))
+                return
+
+        if run_type == "postad":
+            adcase_root = case_root.replace('.postad','.ad')
+            if not os.path.isdir(adcase_root):
+                logger.warning("postad requested but no ad case found in {}".format(adcase_root))
+                return
+
         if not os.path.isdir(case_root):
             # read_only = False should not be required here
             with Case(base_case_root, read_only=False) as basecase:
                 logger.info("---- cloning the base case in {}".format(case_root))
                 basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
-
 
         with Case(case_root, read_only=False) as case:
             case.set_value("STOP_OPTION", "ndays")
@@ -386,15 +403,23 @@ class NeonSite :
             refrundir = refcase.get_value("RUNDIR")
         case.set_value("RUN_REFDIR", refrundir)
         case.set_value("RUN_REFCASE", os.path.basename(ref_case_root))
+        refdate = None
         for reffile in glob.iglob(refrundir + "/{}{}.*.nc".format(self.name, root)):
             m = re.search("(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
             if m:
                 refdate = m.group(1)
             symlink_force(reffile, os.path.join(rundir,os.path.basename(reffile)))
+
+        if not refdate:
+            logger.warning("Could not find refcase for {}".format(case_root))
+            return
+
         for rpfile in glob.iglob(refrundir + "/rpointer*"):
             safe_copy(rpfile, rundir)
         if not os.path.isdir(os.path.join(rundir, "inputdata")) and os.path.isdir(os.path.join(refrundir,"inputdata")):
             symlink_force(os.path.join(refrundir,"inputdata"),os.path.join(rundir,"inputdata"))
+
+
         case.set_value("RUN_REFDATE", refdate)
         if case_root.endswith(".postad"):
             case.set_value("RUN_STARTDATE", refdate)
