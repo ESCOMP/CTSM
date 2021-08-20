@@ -19,7 +19,7 @@ This script will do the following:
     2) Make the case for the specific neon site(s).
     3) Make changes to the case, for:
         a. AD spinup
-	    b. post-AD spinup
+	b. post-AD spinup
         c. transient
     	#---------------
     	d. SASU or Matrix spinup
@@ -117,13 +117,13 @@ def get_parser(args, description, valid_neon_sites):
                 required=False,
                 default=None)
 
-    parser.add_argument('--case-root',
+    parser.add_argument('--output-root',
                 help='''
-                Root Directory of cases
+                Root output directory of cases
                 [default: %(default)s] 
                 ''',
                 action="store", 
-                dest="case_root",
+                dest="output_root",
                 type =str,
                 required=False,
                 default="CIME_OUTPUT_ROOT as defined in cime")
@@ -187,8 +187,8 @@ def get_parser(args, description, valid_neon_sites):
             if site not in valid_neon_sites:
                 raise ValueError("Invalid site name {}".format(site))
 
-    if "CIME_OUTPUT_ROOT" in args.case_root:
-        args.case_root = None
+    if "CIME_OUTPUT_ROOT" in args.output_root:
+        args.output_root = None
 
     if args.run_length == '0Y':
         if args.run_type == 'ad':
@@ -199,8 +199,10 @@ def get_parser(args, description, valid_neon_sites):
             run_length = '4Y'
 
     run_length = parse_isoduration(run_length)
-    
-    return neon_sites, args.case_root, args.run_type, args.overwrite, run_length, args.base_case_root
+    if args.base_case_root:
+        base_case_root = os.path.abspath(args.base_case_root)
+
+    return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root
 
 def get_isosplit(s, split):
     if split in s:
@@ -249,7 +251,7 @@ class NeonSite :
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' 
                     for item in (self.__dict__)))
 
-    def build_base_case(self, cesmroot, case_root, res, compset, overwrite):
+    def build_base_case(self, cesmroot, output_root, res, compset, overwrite):
         """
         Function for building a base_case to clone.
         To spend less time on building ctsm for the neon cases,
@@ -268,11 +270,11 @@ class NeonSite :
             Flag to overwrite the case if exists
         """
         logger.info("---- building a base case -------")
-        self.base_case_root = case_root
+        self.base_case_root = output_root
         user_mods_dirs = [os.path.join(cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
-        if not case_root:
-            case_root = os.getcwd()
-        case_path = os.path.join(case_root,self.name)
+        if not output_root:
+            output_root = os.getcwd()
+        case_path = os.path.join(output_root,self.name)
             
         logger.info ('base_case_name : {}'.format(self.name))
         logger.info ('user_mods_dir  : {}'.format(user_mods_dirs[0]))
@@ -286,7 +288,7 @@ class NeonSite :
                 logger.info("---- creating a base case -------")
 
                 case.create(case_path, cesmroot, compset, res, 
-                            run_unsupported=True, answer="r",output_root=case_root,
+                            run_unsupported=True, answer="r",output_root=output_root,
                             user_mods_dirs = user_mods_dirs, driver="nuopc")
 
                 logger.info("---- base case created ------")
@@ -312,8 +314,8 @@ class NeonSite :
         return case_path
 
     def diff_month(self):
-        d1 = datetime(self.end_year,self.end_month, 1)
-        d2 = datetime(self.start_year, self.start_month, 1)
+        d1 = datetime.datetime(self.end_year,self.end_month, 1)
+        d2 = datetime.datetime(self.start_year, self.start_month, 1)
         return (d1.year - d2.year) * 12 + d1.month - d2.month
     
 
@@ -361,12 +363,14 @@ class NeonSite :
                 
             if run_type == "postad":
                 self.set_ref_case(case)
+                case.set_value("REST_OPTION","nmonths")
+                case.set_value("REST_N", 12)
                 
             if run_type == "transient":
                 self.set_ref_case(case)
                 case.set_value("STOP_OPTION","nmonths")
                 case.set_value("STOP_N", self.diff_month())
-                case.set_value("REST_N", "12")
+                case.set_value("REST_OPTION", "end")
                 case.set_value("DATM_YR_ALIGN",self.start_year)
                 case.set_value("DATM_YR_START",self.start_year)
                 case.set_value("DATM_YR_END",self.end_year)
@@ -404,12 +408,12 @@ class NeonSite :
         case.set_value("RUN_REFDIR", refrundir)
         case.set_value("RUN_REFCASE", os.path.basename(ref_case_root))
         refdate = None
-        for reffile in glob.iglob(refrundir + "/{}{}.*.nc".format(self.name, root)):
+        for reffile in glob.iglob(refrundir + "/{}{}.clm2.r.*.nc".format(self.name, root)):
             m = re.search("(\d\d\d\d-\d\d-\d\d)-\d\d\d\d\d.nc", reffile)
             if m:
                 refdate = m.group(1)
             symlink_force(reffile, os.path.join(rundir,os.path.basename(reffile)))
-
+        print("Found refdate of {}".format(refdate))
         if not refdate:
             logger.warning("Could not find refcase for {}".format(case_root))
             return
@@ -552,11 +556,11 @@ def main(description):
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
 
-    site_list, case_root, run_type, overwrite, run_length, base_case_root = get_parser(sys.argv, description, valid_neon_sites)
-    if case_root:
-        logger.debug ("case_root : "+ case_root)
-        if not os.path.exists(case_root):
-            os.makedirs(case_root)
+    site_list, output_root, run_type, overwrite, run_length, base_case_root = get_parser(sys.argv, description, valid_neon_sites)
+    if output_root:
+        logger.debug ("output_root : "+ output_root)
+        if not os.path.exists(output_root):
+            os.makedirs(output_root)
 
     #-- check neon listing file for available data: 
     available_list = check_neon_listing(valid_neon_sites)
@@ -573,7 +577,7 @@ def main(description):
     for neon_site in available_list: 
         if neon_site.name in site_list:
             if not base_case_root:
-                base_case_root = neon_site.build_base_case(cesmroot, case_root, res,
+                base_case_root = neon_site.build_base_case(cesmroot, output_root, res,
                                                       compset, overwrite)
             logger.info ("-----------------------------------")
             logger.info ("Running CTSM for neon site : {}".format(neon_site.name))
