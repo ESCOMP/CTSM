@@ -88,9 +88,9 @@ from datetime import date
 from getpass import getuser
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-from base_case import BaseCase
-from single_point_case import SinglePointCase
-from regional_case import RegionalCase
+from ctsm.base_case import BaseCase
+from ctsm.single_point_case import SinglePointCase
+from ctsm.regional_case import RegionalCase
 
 myname = getuser()
 
@@ -373,9 +373,9 @@ def plon_type(x):
     """
     x = float(x)
     if (-180 < x) and (x < 0):
-        print ("lon is :", lon)
+        print ("lon is :", x)
         x= x%360
-        print ("after modulo lon is :", lon)
+        print ("after modulo lon is :", x)
     if (x < 0) or (x > 360):
         raise argparse.ArgumentTypeError("ERROR: Latitude of single point should be between 0 and 360 or -180 and 180.")
     return x

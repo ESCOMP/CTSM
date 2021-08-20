@@ -1,4 +1,4 @@
-from base_case import BaseCase
+from ctsm.base_case import BaseCase
 
 import numpy as np
 import xarray as xr
