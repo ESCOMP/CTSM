@@ -222,7 +222,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_flai>
   
 <mksrf_flai hgrid="0.25x0.25" lmask="nomask"
->lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_lai_78pfts_simyr2005.c170413.nc
+>lnd/clm2/rawdata/lai_and_soilcolor/mksrf_lai_histclm52deg025_earthstatmirca_2005.c210808.nc
 </mksrf_flai>
 
 <!-- soil properties: forganic, fmax, soil-texture and soil color-->
@@ -237,7 +237,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fsoicol>
  
 <mksrf_fsoicol  hgrid="0.25x0.25"  lmask="nomask"
->lnd/clm2/rawdata/pftcftlandusedynharv.0.25x0.25.MODIS.simyr1850-2015.c170412/mksrf_soilcolor_CMIP6_simyr2005.c170623.nc</mksrf_fsoicol>
+>lnd/clm2/rawdata/lai_and_soilcolor/mksrf_soilcolor_histclm52deg025_earthstatmirca_2005.c210808.nc
+</mksrf_fsoicol>
 
 <mksrf_forganic hgrid="5x5min"  lmask="nomask"
 >lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc</mksrf_forganic>
@@ -4338,6 +4339,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1852" crop="on"
 >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2018.c190806/mksrf_landuse_clm52_trendy2019_1852.c190806.nc
+</mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1853" crop="on"
 >lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2020.c210808/mksrf_landuse_clm52_trendy2021_1853.c210808.nc
