@@ -886,6 +886,9 @@ sub setup_cmdl_bgc {
                  'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
                  'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'} );
   }
+  if ( (! &value_is_true($nl_flags->{'use_cn'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
+     $log->fatal_error("When FUN is on, use_cn MUST also be on!");
+  }
   if ( (! &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
      $log->fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!");
   }
@@ -2257,7 +2260,7 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
-                       "use_fates", "use_nitrif_denitrif",
+                       "use_fates",
                        "lnd_tuning_mode", 
                      ) {
        $settings{$item}    = $nl_flags->{$item};
