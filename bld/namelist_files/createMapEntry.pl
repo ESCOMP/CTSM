@@ -59,7 +59,7 @@ EOF
       #~# write out lines for namelist_defaults_ctsm.xml nomask" files
       my $from_mask = $tokens[2];
       if ( $from_mask =~ /nomask/ ) {
-         if ( $tokens[5] eq "nomask" ) {
+         if ( $tokens[5] eq "nomask" && $tokens[4] eq $grid ) {
             print "<map frm_hgrid=\"$tokens[1]\"    frm_lmask=\"$from_mask\"  to_hgrid=\"$tokens[4]\"   to_lmask=\"$tokens[5]\" \n";
             print ">$partialPath/$foo</map>\n";
          }
