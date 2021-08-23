@@ -56,9 +56,14 @@ EOF
    foreach my $foo ( @list ) {
       next if ($foo =~ m/^\./);  #~# skip anything in the directory with a leading or stand alone 'dot'
       my @tokens = split(/_/, $foo); #~# split foo name by the underscore
-      #~# write out lines for namelist_defaults_ctsm.xml
-      print "<map frm_hgrid=\"$tokens[1]\"    frm_lmask=\"$tokens[2]\"  to_hgrid=\"$tokens[4]\"   to_lmask=\"$tokens[5]\" \n";
-      print ">$partialPath/$foo</map>\n";
+      #~# write out lines for namelist_defaults_ctsm.xml nomask" files
+      my $from_mask = $tokens[2];
+      if ( $from_mask =~ /nomask/ ) {
+         if ( $tokens[5] eq "nomask" ) {
+            print "<map frm_hgrid=\"$tokens[1]\"    frm_lmask=\"$from_mask\"  to_hgrid=\"$tokens[4]\"   to_lmask=\"$tokens[5]\" \n";
+            print ">$partialPath/$foo</map>\n";
+         }
+      }
    }
 
    #~# print a unique end string in the XML comments 
