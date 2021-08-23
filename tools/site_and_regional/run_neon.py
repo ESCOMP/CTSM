@@ -177,6 +177,14 @@ def get_parser(args, description, valid_neon_sites):
                 type = datetime.date.fromisoformat,
                 default = datetime.datetime.strptime("2020-01-01",'%Y-%m-%d'))
 
+    parser.add_argument('--run-from-postad',
+                        help='''
+                        For transient runs only - should we start from the postad spinup or finidat?
+                        ''',
+                        action="store_true",
+                        required = False,
+                        default = False)
+
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
     if 'all' in args.neon_sites:
@@ -202,7 +210,7 @@ def get_parser(args, description, valid_neon_sites):
     if args.base_case_root:
         base_case_root = os.path.abspath(args.base_case_root)
 
-    return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root
+    return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root, args.run_from_postad
 
 def get_isosplit(s, split):
     if split in s:
@@ -239,13 +247,14 @@ class NeonSite :
     Methods
     -------
     """
-    def __init__(self, name, start_year, end_year, start_month, end_month):
+    def __init__(self, name, start_year, end_year, start_month, end_month, finidat):
         self.name = name
         self.start_year= int(start_year)
         self.end_year = int(end_year)
         self.start_month = int(start_month)
         self.end_month = int(end_month)
         self.cesmroot = path_to_ctsm_root()
+        self.finidat = finidat
         
     def __str__(self):
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' 
@@ -367,7 +376,10 @@ class NeonSite :
                 case.set_value("REST_N", 12)
                 
             if run_type == "transient":
-                self.set_ref_case(case)
+                if self.finidat:
+                    case.set_value("RUN_TYPE","startup")
+                else:
+                    self.set_ref_case(case)
                 case.set_value("STOP_OPTION","nmonths")
                 case.set_value("STOP_N", self.diff_month())
                 case.set_value("REST_OPTION", "end")
@@ -388,7 +400,7 @@ class NeonSite :
                     case.set_value("DATM_YR_END",self.end_year-1)
 
                     
-                self.modify_user_nl(case_root, run_type)
+            self.modify_user_nl(case_root, run_type, case.get_value("RUNDIR"))
                 
             case.create_namelists()
             case.submit()
@@ -431,10 +443,13 @@ class NeonSite :
             case.set_value("RUN_STARTDATE", "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month))
                 
         
-    def modify_user_nl(self, case_root, run_type):
+    def modify_user_nl(self, case_root, run_type, rundir):
         user_nl_fname = os.path.join(case_root, "user_nl_clm")
-
-        if run_type != "transient":
+        user_nl_lines = None
+        if run_type == "transient":
+            if self.finidat:
+                user_nl_lines = ["finidat = '{}/inputdata/lnd/ctsm/initdata/{}'".format(rundir,self.finidat)]
+        else:
             user_nl_lines = [
                 "hist_fincl2 = ''",
                 "hist_mfilt = 20",
@@ -442,9 +457,10 @@ class NeonSite :
                 "hist_empty_htapes = .true.",
                 "hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC', 'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO'"]
                         
-        with open(user_nl_fname, "a") as fd:
-            for line in user_nl_lines:
-                fd.write("{}\n".format(line))
+        if user_nl_lines:
+            with open(user_nl_fname, "a") as fd:
+                for line in user_nl_lines:
+                    fd.write("{}\n".format(line))
 
         
 
@@ -480,8 +496,9 @@ def parse_neon_listing(listing_file, valid_neon_sites):
  
     df = pd.read_csv(listing_file)
  
-    #-- TODO: do we want to check for v2 in future?
- 
+    # check for finidat files for transient run
+    finidatlist = df[df['object'].str.contains("lnd/ctsm")]
+
     #-- filter lines with atm/cdep
     df = df[df['object'].str.contains("atm/cdeps/")]
 
@@ -521,8 +538,12 @@ def parse_neon_listing(listing_file, valid_neon_sites):
             logger.debug ('end_year={}'.format(end_year))
             logger.debug ('start_month={}'.format(start_month))
             logger.debug ('end_month={}'.format(end_month))
- 
-            neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month)
+            finidat = None
+            for line in finidatlist['object']:
+                if site_name in line:
+                    finidat = line.split(',')[0].split('/')[-1]
+                
+            neon_site = NeonSite(site_name, start_year, end_year, start_month, end_month, finidat)
             logger.debug (neon_site)
             available_list.append(neon_site)
  
@@ -556,7 +577,7 @@ def main(description):
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
 
-    site_list, output_root, run_type, overwrite, run_length, base_case_root = get_parser(sys.argv, description, valid_neon_sites)
+    site_list, output_root, run_type, overwrite, run_length, base_case_root, run_from_postad = get_parser(sys.argv, description, valid_neon_sites)
     if output_root:
         logger.debug ("output_root : "+ output_root)
         if not os.path.exists(output_root):
@@ -576,6 +597,8 @@ def main(description):
 
     for neon_site in available_list: 
         if neon_site.name in site_list:
+            if run_from_postad:
+                neon_site.finidat = None
             if not base_case_root:
                 base_case_root = neon_site.build_base_case(cesmroot, output_root, res,
                                                       compset, overwrite)
