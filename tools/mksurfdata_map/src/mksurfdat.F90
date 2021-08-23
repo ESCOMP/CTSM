@@ -173,7 +173,6 @@ program mksurfdat
          mksrf_fabm,               &
          mksrf_ftopostats,         &
          mksrf_fvic,               &
-         mksrf_fch4,               &
          nglcec,                   &
          numpft,                   &
          soil_color,               &
@@ -205,7 +204,6 @@ program mksurfdat
          map_fabm,                 &
          map_ftopostats,           &
          map_fvic,                 &
-         map_fch4,                 &
          gitdescribe,              &
          outnc_large_files,        &
          outnc_double,             &
@@ -249,7 +247,6 @@ program mksurfdat
     !    mksrf_fabm ----- Agricultural fire peak month dataset
     !    mksrf_ftopostats Topography statistics dataset
     !    mksrf_fvic ----- VIC parameters dataset
-    !    mksrf_fch4 ----- inversion-derived CH4 parameters dataset
     ! ======================================
     ! Must specify mapping file for the different datafiles above
     ! ======================================
@@ -273,7 +270,6 @@ program mksurfdat
     !    map_fabm -------- Mapping for mksrf_fabm
     !    map_ftopostats -- Mapping for mksrf_ftopostats
     !    map_fvic -------- Mapping for mksrf_fvic
-    !    map_fch4 -------- Mapping for mksrf_fch4
     ! ======================================
     ! Optionally specify setting for:
     ! ======================================
@@ -532,7 +528,6 @@ program mksurfdat
     write(ndiag,*) 'abm from:                    ',trim(mksrf_fabm)
     write(ndiag,*) 'topography statistics from:  ',trim(mksrf_ftopostats)
     write(ndiag,*) 'VIC parameters from:         ',trim(mksrf_fvic)
-    write(ndiag,*) 'CH4 parameters from:         ',trim(mksrf_fch4)
     write(ndiag,*)' mapping for pft              ',trim(map_fpft)
     write(ndiag,*)' mapping for lake water       ',trim(map_flakwat)
     write(ndiag,*)' mapping for wetland          ',trim(map_fwetlnd)
@@ -553,7 +548,6 @@ program mksurfdat
     write(ndiag,*)' mapping for ag fire pk month ',trim(map_fabm)
     write(ndiag,*)' mapping for topography stats ',trim(map_ftopostats)
     write(ndiag,*)' mapping for VIC parameters   ',trim(map_fvic)
-    write(ndiag,*)' mapping for CH4 parameters   ',trim(map_fch4)
 
     if (mksrf_fdynuse /= ' ') then
        write(6,*)'mksrf_fdynuse = ',trim(mksrf_fdynuse)
