@@ -21,16 +21,16 @@ n is the configuration type:
 7 -- unused
 8 -- unused
 9 -- unused
-0 -- unused
-a -- unused
-b -- unused
-c -- mkprocdata_map clm5.0
-d -- mkmapgrids     clm5.0
-e -- gen_domain     clm5.0
-f -- PTCLM          clm5.0
-g -- mksurfdata_map clm5.0
-h -- interpinic     clm5.0
-i -- tools scripts  clm5.0
+0 -- run_neon
+a -- modify_data
+b -- subset_data
+c -- mkprocdata_map
+d -- mkmapgrids
+e -- gen_domain
+f -- PTCLM
+g -- mksurfdata_map
+h -- unused
+i -- tools scripts
 
 m is the resolution
 

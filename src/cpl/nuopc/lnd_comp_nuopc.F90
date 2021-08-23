@@ -88,6 +88,8 @@ module lnd_comp_nuopc
   character(len=*) , parameter :: continue_run = 'continue'
   character(len=*) , parameter :: branch_run   = 'branch'
 
+  logical :: write_restart_at_endofrun = .false.
+
   character(len=*) , parameter :: u_FILE_u = &
        __FILE__
 
@@ -356,7 +358,6 @@ contains
     integer                 :: nsrest                ! ctsm restart type
     integer                 :: lbnum                 ! input to memory diagnostic
     integer                 :: shrlogunit            ! original log unit
-    type(bounds_type)       :: bounds                ! bounds
     integer                 :: n, ni, nj             ! Indices
     character(len=CL)       :: cvalue                ! config data
     character(len=CL)       :: meshfile_mask         ! filename of mesh file with land mask
@@ -369,15 +370,18 @@ contains
     integer                 :: scol_mask             ! single-column mask
     real(r8)                :: scol_spval            ! single-column special value to indicate it isn't set
     character(len=CL)       :: single_column_lnd_domainfile   ! domain filename to use for single-column mode (i.e. SCAM)
+    type(bounds_type)      :: bounds                          ! bounds
     type(ESMF_Field)        :: lfield                         ! Land field read in
     character(CL) ,pointer  :: lfieldnamelist(:) => null()    ! Land field namelist item sent with land field
     integer                 :: fieldCount                     ! Number of fields on export state
     integer                 :: rank                           ! Rank of field (1D or 2D)
     real(r8), pointer       :: fldptr1d(:)                    ! 1D field pointer
     real(r8), pointer       :: fldptr2d(:,:)                  ! 2D field pointer
-    character(len=CL)       :: model_version         ! Model version
-    character(len=CL)       :: hostname              ! hostname of machine running on
-    character(len=CL)       :: username              ! user running the model
+    logical                 :: isPresent                      ! If attribute is present
+    logical                 :: isSet                          ! If attribute is present and also set
+    character(len=CL)       :: model_version                  ! Model version
+    character(len=CL)       :: hostname                       ! hostname of machine running on
+    character(len=CL)       :: username                       ! user running the model
     character(len=*),parameter :: subname=trim(modName)//':(InitializeRealize) '
     !-------------------------------------------------------------------------------
 
@@ -563,6 +567,11 @@ contains
     ! Set model clock in lnd_comp_shr
     model_clock = clock
 
+    call NUOPC_CompAttributeGet(gcomp, name="write_restart_at_endofrun", value=cvalue, isPresent=isPresent, isSet=isSet, rc=rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+    if (isPresent .and. isSet) then
+       if (trim(cvalue) .eq. '.true.') write_restart_at_endofrun = .true.
+    end if
     ! ---------------------
     ! Initialize first phase of ctsm
     ! ---------------------
@@ -815,22 +824,6 @@ contains
        call update_rad_dtime(doalb)
 
        !--------------------------------
-       ! Determine if time to write restart
-       !--------------------------------
-
-       call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-          rstwr = .true.
-          call ESMF_AlarmRingerOff( alarm, rc=rc )
-          if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       else
-          rstwr = .false.
-       endif
-
-       !--------------------------------
        ! Determine if time to stop
        !--------------------------------
 
@@ -845,6 +838,25 @@ contains
        else
           nlend = .false.
        endif
+
+       !--------------------------------
+       ! Determine if time to write restart
+       !--------------------------------
+       rstwr = .false.
+       if (nlend .and. write_restart_at_endofrun) then
+          rstwr = .true.
+       else 
+          call ESMF_ClockGetAlarm(clock, alarmname='alarm_restart', alarm=alarm, rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+          if (ESMF_AlarmIsCreated(alarm, rc=rc)) then
+             if (ESMF_AlarmIsRinging(alarm, rc=rc)) then
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+                rstwr = .true.
+                call ESMF_AlarmRingerOff( alarm, rc=rc )
+                if (ChkErr(rc,__LINE__,u_FILE_u)) return
+             endif
+          endif
+       end if
 
        !--------------------------------
        ! Run CTSM
@@ -966,7 +978,6 @@ contains
     character(len=256)       :: stop_option    ! Stop option units
     integer                  :: stop_n         ! Number until stop interval
     integer                  :: stop_ymd       ! Stop date (YYYYMMDD)
-    integer                  :: stop_tod       ! Stop time of day (seconds)
     type(ESMF_ALARM)         :: stop_alarm
     character(len=128)       :: name
     integer                  :: alarmcount
@@ -1045,17 +1056,10 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        read(cvalue,*) stop_ymd
 
-       call NUOPC_CompAttributeGet(gcomp, name="stop_tod", value=cvalue, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       read(cvalue,*) stop_tod
-
-       call alarmInit(mclock,           &
-            alarm = stop_alarm,         &
-            option = stop_option,       &
+       call alarmInit(mclock, stop_alarm, stop_option, &
             opt_n   = stop_n,           &
             opt_ymd = stop_ymd,         &
-            opt_tod = stop_tod,         &
-            RefTime = mcurrTime,        &
+            RefTime = mcurrTime,           &
             alarmname = 'alarm_stop', rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
