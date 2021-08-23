@@ -67,9 +67,13 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125x0.125_nomask_c140702.nc</scripgriddata>
 <scripgriddata hgrid="0.33x0.33" lmask="navy"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
-<scripgriddata hgrid="0.1x0.1"   lmask="nomask"    
+<scripgriddata hgrid="0.1x0.1"   lmask="nomask"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.1x0.1_nomask_c110712.nc</scripgriddata>
-<scripgriddata hgrid="0.5x0.5"   lmask="nomask"    
+<!-- The 360x720cru grid is on 0-360 longitude grid and is important for running the model -->
+<scripgriddata hgrid="360x720cru" lmask="nomask"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>
+<!-- The half degree grid is on -180-180 longitude and is important for mksurfdata_map grids -->
+<scripgriddata hgrid="0.5x0.5"   lmask="nomask"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="0.25x0.25" lmask="nomask"     
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.25x0.25_nomask_c200309.nc</scripgriddata>
