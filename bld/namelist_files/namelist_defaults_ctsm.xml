@@ -2009,12 +2009,14 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- These ones are needed since this grid is with longitude on 0 to 360 verses -180 to 180 for the 0.5x0.5 grid -->
 <!-- Created by lnd/clm/bld/namelist_files/createMapEntry.pl--> 
 
+<map frm_hgrid="0.125x0.125" frm_lmask="nomask" to_hgrid="360x720cru" to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_0.125x0.125_nomask_to_0.5x0.5_nomask_aave_da_c200206.nc</map>
 <map frm_hgrid="0.5x0.5"    frm_lmask="nomask"  to_hgrid="360x720cru"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/360x720/map_0.5x0.5_nomask_to_360x720_nomask_aave_da_c120830.nc</map>
-<map frm_hgrid="0.1x0.1"    frm_lmask="nomask"  to_hgrid="360x720cru"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/360x720/map_0.1x0.1_nomask_to_360x720_nomask_aave_da_c130104.nc</map>
-<map frm_hgrid="360x720"    frm_lmask="nomask"  to_hgrid="0.5x0.5cru"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/360x720/map_360x720_nomask_to_0.5x0.5_nomask_aave_da_c120830.nc</map>
+<map frm_hgrid="0.25x0.25"  frm_lmask="nomask"  to_hgrid="360x720cru"   to_lmask="nomask" 
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_0.25x0.25_nomask_to_0.5x0.5_nomask_aave_da_c200309.nc</map>
+<map frm_hgrid="3x3min"   frm_lmask="nomask"      to_hgrid="360x720cru"   to_lmask="nomask"
+>lnd/clm2/mappingdata/maps/0.5x0.5/map_3x3min_nomask_to_0.5x0.5_nomask_aave_da_c200309.nc</map>
 <map frm_hgrid="10x10min"    frm_lmask="nomask"  to_hgrid="360x720cru"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/360x720/map_10x10min_nomask_to_360x720_nomask_aave_da_c120830.nc</map>
 <map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="360x720cru"   to_lmask="nomask" 
