@@ -1220,7 +1220,7 @@ Output of "git describe" to give the tag/commit the version being used correspon
 
 <entry id="mksrf_filename" type="char*256" category="mksurfdata"
        group="default_settings" 
-       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic,mksrf_fch4" >
+       valid_values="mksrf_fsoitex,mksrf_forganic,mksrf_flakwat,mksrf_fwetlnd,mksrf_fmax,mksrf_fmax,mksrf_fglacier,mksrf_fglacierregion,mksrf_fvocef,mksrf_furbtopo,firrig,mksrf_furban,mksrf_fvegtyp,mksrf_fhrvtyp,mksrf_fsoicol,mksrf_flai,mksrf_fgdp,mksrf_fpeat,mksrf_fsoildepth,mksrf_fabm,mksrf_ftopostats,mksrf_fvic" >
 Filename for mksurfdata_map to remap raw data into the output surface dataset
 </entry>
 
@@ -1356,11 +1356,6 @@ Topography statistics dataset for mksurfdata
 <entry id="mksrf_fvic" type="char*256" category="mksurfdata"
        input_pathname="abs" group="clmexp" valid_values="" >
 VIC parameters dataset for mksurfdata
-</entry>
-
-<entry id="mksrf_fch4" type="char*256" category="mksurfdata"
-       input_pathname="abs" group="clmexp" valid_values="" >
-Inversion-derived CH4 parameters dataset for mksurfdata
 </entry>
 
 <entry id="outnc_double" type="logical" category="mksurfdata"
