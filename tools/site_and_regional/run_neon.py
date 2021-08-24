@@ -138,6 +138,26 @@ def get_parser(args, description, valid_neon_sites):
                 required = False,
                 default = False)
 
+    parser.add_argument('--setup-only',
+                help='''
+                Only setup the requested cases, do not build or run
+                [default: %(default)s]
+                ''', 
+                action="store_true",
+                dest="setup_only",
+                required = False,
+                default = False)
+
+    parser.add_argument('--no-batch',
+                help='''
+                Run locally, do not use batch queueing system (if defined for Machine)
+                [default: %(default)s]
+                ''', 
+                action="store_true",
+                dest="no_batch",
+                required = False,
+                default = False)
+
     parser.add_argument('--run-type',
                         help='''
                         Type of run to do
@@ -204,6 +224,8 @@ def get_parser(args, description, valid_neon_sites):
         elif args.run_type == 'postad':
             run_length = '50Y'
         else:
+            # The transient run length is set by cdeps atm buildnml to the last date of the available tower data
+            # this value is not used
             run_length = '4Y'
 
     run_length = parse_isoduration(run_length)
@@ -211,7 +233,7 @@ def get_parser(args, description, valid_neon_sites):
     if args.base_case_root:
         base_case_root = os.path.abspath(args.base_case_root)
 
-    return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root, args.run_from_postad
+    return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root, args.run_from_postad, args.setup_only, args.no_batch
 
 def get_isosplit(s, split):
     if split in s:
@@ -261,7 +283,7 @@ class NeonSite :
         return  str(self.__class__) + '\n' + '\n'.join((str(item) + ' = ' 
                     for item in (self.__dict__)))
 
-    def build_base_case(self, cesmroot, output_root, res, compset, overwrite):
+    def build_base_case(self, cesmroot, output_root, res, compset, overwrite=False, setup_only=False):
         """
         Function for building a base_case to clone.
         To spend less time on building ctsm for the neon cases,
@@ -311,6 +333,10 @@ class NeonSite :
                 case.case_setup()
             else:
                 case.case_setup(reset=True)
+            case_path = case.get_value("CASEROOT")
+
+            if setup_only:
+                return case_path
 
             logger.info("---- base case build ------")
             # always walk through the build process to make sure it's up to date. 
@@ -320,7 +346,6 @@ class NeonSite :
             total = t1-t0
             logger.info ("Time required to building the base case: {} s.".format(total))
             # update case_path to be the full path to the base case
-            case_path = case.get_value("CASEROOT")
         return case_path
 
     def diff_month(self):
@@ -330,7 +355,7 @@ class NeonSite :
     
 
     
-    def run_case(self, base_case_root, run_type, run_length, overwrite=False):
+    def run_case(self, base_case_root, run_type, run_length, overwrite=False, setup_only=False, no_batch=False):
         user_mods_dirs = [os.path.join(self.cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
         expect(os.path.isdir(base_case_root), "Error base case does not exist in {}".format(base_case_root))
         case_root = os.path.abspath(os.path.join(base_case_root,"..", self.name+"."+run_type))
@@ -401,7 +426,8 @@ class NeonSite :
             self.modify_user_nl(case_root, run_type, case.get_value("RUNDIR"))
                 
             case.create_namelists()
-            case.submit()
+            if not setup_only:
+                case.submit(no_batch=no_batch)
 
     def set_ref_case(self, case):
         rundir = case.get_value("RUNDIR")
@@ -575,7 +601,7 @@ def main(description):
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
 
-    site_list, output_root, run_type, overwrite, run_length, base_case_root, run_from_postad = get_parser(sys.argv, description, valid_neon_sites)
+    site_list, output_root, run_type, overwrite, run_length, base_case_root, run_from_postad, setup_only, no_batch = get_parser(sys.argv, description, valid_neon_sites)
     if output_root:
         logger.debug ("output_root : "+ output_root)
         if not os.path.exists(output_root):
@@ -599,10 +625,10 @@ def main(description):
                 neon_site.finidat = None
             if not base_case_root:
                 base_case_root = neon_site.build_base_case(cesmroot, output_root, res,
-                                                      compset, overwrite)
+                                                           compset, overwrite, setup_only)
             logger.info ("-----------------------------------")
             logger.info ("Running CTSM for neon site : {}".format(neon_site.name))
-            neon_site.run_case(base_case_root, run_type, run_length, overwrite)
+            neon_site.run_case(base_case_root, run_type, run_length, overwrite, setup_only, no_batch)
 
 if __name__ == "__main__":                                                                                                                                  
         main(__doc__) 
