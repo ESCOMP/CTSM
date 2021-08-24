@@ -67,8 +67,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125x0.125_nomask_c140702.nc</scripgriddata>
 <scripgriddata hgrid="0.33x0.33" lmask="navy"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
-<scripgriddata hgrid="0.1x0.1"   lmask="nomask"
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.1x0.1_nomask_c110712.nc</scripgriddata>
 <!-- The 360x720cru grid is on 0-360 longitude grid and is important for running the model -->
 <scripgriddata hgrid="360x720cru" lmask="nomask"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>

@@ -1183,7 +1183,6 @@ foreach my $res ( @resolutions ) {
    # Resolutions for mksurfdata mapping
    } elsif ( $res eq "0.5x0.5"     ||
              $res eq "0.25x0.25"   ||
-             $res eq "0.1x0.1"     ||
              $res eq "3x3min"      ||
              $res eq "5x5min"      ||
              $res eq "10x10min"    ||

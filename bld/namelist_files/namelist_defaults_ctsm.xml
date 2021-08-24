@@ -1792,26 +1792,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- =========================================  -->
 
 
-<!-- mapping files for 0.1x0.1 START added on Wed Jul 25 17:01:27 2012--> 
-
-<map frm_hgrid="0.125x0.125" frm_lmask="nomask" to_hgrid="0.1x0.1"   to_lmask="nomask"
->lnd/clm2/mappingdata/maps/0.1x0.1/map_0.125x0.125_nomask_to_0.1x0.1_nomask_aave_da_c200206.nc</map>
-<map frm_hgrid="0.5x0.5"    frm_lmask="nomask"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.1x0.1/map_0.5x0.5_nomask_to_0.1x0.1_nomask_aave_da_c200206.nc</map>
-<map frm_hgrid="0.25x0.25"  frm_lmask="nomask"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.1x0.1/map_0.25x0.25_nomask_to_0.1x0.1_nomask_aave_da_c200309.nc</map>
-<map frm_hgrid="3x3min"    frm_lmask="nomask"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.1x0.1/map_3x3min_nomask_to_0.1x0.1_nomask_aave_da_c200309.nc</map>
-<map frm_hgrid="10x10min"    frm_lmask="nomask"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.1x0.1/map_10x10min_nomask_to_0.1x0.1_nomask_aave_da_c200206.nc</map>
-<map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.1x0.1/map_5x5min_nomask_to_0.1x0.1_nomask_aave_da_c200309.nc</map>
-<map frm_hgrid="0.9x1.25"    frm_lmask="nomask"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.1x0.1/map_0.9x1.25_nomask_to_0.1x0.1_nomask_aave_da_c200206.nc</map>
-<map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="0.1x0.1"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.1x0.1/map_1km-merge-10min_HYDRO1K-merge-nomask_to_0.1x0.1_nomask_aave_da_c130405.nc</map>
-<!-- mapping files for 0.1x0.1 END --> 
-
 <!-- mapping files for 1x1_asphaltjungleNJ START added on Thu Jul 19 13:06:18 2012--> 
 <map frm_hgrid="0.125x0.125" frm_lmask="nomask" to_hgrid="1x1_asphaltjungleNJ" to_lmask="nomask"
 >lnd/clm2/mappingdata/maps/1x1_asphaltjungleNJ/map_0.125x0.125_nomask_to_1x1_asphaltjungleNJ_nomask_aave_da_c200206.nc</map>
@@ -2195,8 +2175,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 >lnd/clm2/mappingdata/maps/0.5x0.5/map_3x3min_nomask_to_0.5x0.5_nomask_aave_da_c200309.nc</map>
 <map frm_hgrid="5x5min"    frm_lmask="nomask"  to_hgrid="0.5x0.5"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.5x0.5/map_5x5min_nomask_to_0.5x0.5_nomask_aave_da_c200309.nc</map>
-<map frm_hgrid="0.1x0.1"    frm_lmask="nomask"  to_hgrid="0.5x0.5"   to_lmask="nomask" 
->lnd/clm2/mappingdata/maps/0.5x0.5/map_0.1x0.1_nomask_to_0.5x0.5_nomask_aave_da_c200206.nc</map>
 <map frm_hgrid="0.9x1.25"    frm_lmask="nomask"  to_hgrid="0.5x0.5"   to_lmask="nomask" 
 >lnd/clm2/mappingdata/maps/0.5x0.5/map_0.9x1.25_nomask_to_0.5x0.5_nomask_aave_da_c200206.nc</map>
 <map frm_hgrid="1km-merge-10min"    frm_lmask="HYDRO1K-merge-nomask"  to_hgrid="0.5x0.5"   to_lmask="nomask" 
