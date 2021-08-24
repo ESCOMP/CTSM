@@ -214,7 +214,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_filename type="abm" >mksrf_fabm</mksrf_filename>
 <mksrf_filename type="topostats">mksrf_ftopostats</mksrf_filename>
 <mksrf_filename type="vic" >mksrf_fvic</mksrf_filename>
-<mksrf_filename type="ch4" >mksrf_fch4</mksrf_filename>
 
 <!-- mksrf_navyoro Orography -->
 <mksrf_fnavyoro hgrid="0.33x0.33" mask="navy" >lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc</mksrf_fnavyoro>
@@ -317,9 +316,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <mksrf_fvic hgrid="0.9x1.25" lmask="nomask"
 >lnd/clm2/rawdata/mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc</mksrf_fvic>
-
-<mksrf_fch4 hgrid="0.5x0.5" lmask="nomask"
->lnd/clm2/rawdata/mksrf_ch4inversion_0.5x0.5_cruncep_simyr2000.c191112.nc</mksrf_fch4>
 
 <!-- mksrf_fvegtyp -->
 
