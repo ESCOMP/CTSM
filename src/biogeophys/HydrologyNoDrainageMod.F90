@@ -554,10 +554,10 @@ contains
          ! t_grnd is weighted average of exposed soil and snow
          if (snl(c) < 0) then
             t_grnd(c) = frac_sno_eff(c) * t_soisno(c,snl(c)+1) &
-                 + (1 - frac_sno_eff(c)- frac_h2osfc(c)) * t_soisno(c,1) &
+                 + (1.0_r8 - frac_sno_eff(c)- frac_h2osfc(c)) * t_soisno(c,1) &
                  + frac_h2osfc(c) * t_h2osfc(c)
          else
-            t_grnd(c) = (1 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
+            t_grnd(c) = (1.0_r8 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
          endif
 
          if (lun%urbpoi(l)) then
