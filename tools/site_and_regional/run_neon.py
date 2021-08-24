@@ -207,6 +207,7 @@ def get_parser(args, description, valid_neon_sites):
             run_length = '4Y'
 
     run_length = parse_isoduration(run_length)
+    base_case_root = None
     if args.base_case_root:
         base_case_root = os.path.abspath(args.base_case_root)
 
