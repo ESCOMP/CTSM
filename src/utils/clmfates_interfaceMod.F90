@@ -1110,9 +1110,9 @@ module CLMFatesInterfaceMod
           hbot(col%patchi(c):col%patchf(c)) = 0.0_r8
 
           if(use_fates_sp)then
-            canopystate_inst%tlai_hist_patch = 0.0_r8
-            canopystate_inst%tsai_hist_patch = 0.0_r8
-            canopystate_inst%htop_hist_patch = 0.0_r8
+            canopystate_inst%tlai_hist_patch(col%patchi(c):col%patchf(c)) = 0.0_r8
+            canopystate_inst%tsai_hist_patch(col%patchi(c):col%patchf(c)) = 0.0_r8
+            canopystate_inst%htop_hist_patch(col%patchi(c):col%patchf(c)) = 0.0_r8
           else
             tlai(col%patchi(c):col%patchf(c)) = 0.0_r8
             tsai(col%patchi(c):col%patchf(c)) = 0.0_r8
@@ -1163,9 +1163,9 @@ module CLMFatesInterfaceMod
              hbot(p) = this%fates(nc)%bc_out(s)%hbot_pa(ifp)
 
              if(use_fates_sp)then
-               canopystate_inst%tlai_hist_patch = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
-               canopystate_inst%tsai_hist_patch = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
-               canopystate_inst%htop_hist_patch = this%fates(nc)%bc_out(s)%htop_pa(ifp)
+               canopystate_inst%tlai_hist_patch(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
+               canopystate_inst%tsai_hist_patch(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
+               canopystate_inst%htop_hist_patch(p) = this%fates(nc)%bc_out(s)%htop_pa(ifp)
              else
                tlai(p) = this%fates(nc)%bc_out(s)%tlai_pa(ifp)
                tsai(p) = this%fates(nc)%bc_out(s)%tsai_pa(ifp)
