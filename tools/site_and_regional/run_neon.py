@@ -409,6 +409,7 @@ class NeonSite :
                 case.set_value("DATM_YR_ALIGN",self.start_year)
                 case.set_value("DATM_YR_START",self.start_year)
                 case.set_value("DATM_YR_END",self.end_year)
+                case.set_value("CALENDAR","GREGORIAN")
             else:
                 # for the spinup we want the start and end on year boundaries
                 if self.start_month == 1:

@@ -63,6 +63,25 @@ def get_parser(args, description, valid_neon_sites):
                         default = datetime.datetime.strptime("0268-01-01",'%Y-%m-%d'))
 
 
+    parser.add_argument('--upload-finidat',
+                        help='''
+                        Upload the final restart files from the end of the postad run for each site.
+                        ''',
+                        action="store_true",
+                        dest="upload_finidat",
+                        required = False,
+                        default = False)
+
+    parser.add_argument('--upload-history',
+                        help='''
+                        Upload the transient run h1 history files for each site.
+                        ''',
+                        action="store_true",
+                        dest="upload_history",
+                        required = False,
+                        default = False)
+
+
 
     args = CIME.utils.parse_args_and_handle_standard_logging_options(args, parser)
 
@@ -74,7 +93,9 @@ def get_parser(args, description, valid_neon_sites):
             if site not in valid_neon_sites:
                 raise ValueError("Invalid site name {}".format(site))
 
-    return neon_sites, args.output_root, args.file_date
+    expect(args.upload_finidat or args.upload_history,"Must specify at least one of --upload-finidat or --upload-history")
+
+    return neon_sites, args.output_root, args.file_date, args.upload_finidat, args.upload_history
 
 def upload_file(file_name, bucket, object_name=None):
     """Upload a file to an S3 bucket
@@ -92,6 +113,7 @@ def upload_file(file_name, bucket, object_name=None):
     # Upload the file
     s3_client = boto3.client('s3')
     try:
+        logger.info("Uploading file {} to {}".format(file_name, object_name))
         response = s3_client.upload_file(file_name, bucket, object_name)
     except ClientError as e:
         logger.error(e)
@@ -112,21 +134,37 @@ def main(description):
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
     valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
     filedatestamp = datetime.datetime.now().date()
-    site_list, output_root, file_date = get_parser(sys.argv, description, valid_neon_sites)
+    site_list, output_root, file_date, upload_finidat, upload_history = get_parser(sys.argv, description, valid_neon_sites)
     for site in site_list:
         rundir = None
-        case_path = os.path.join(output_root, site+".postad")
-        if os.path.isdir(case_path):
-            with Case(case_path) as case:
-                rundir = case.get_value("RUNDIR")
-                basefile = site+".postad.clm2.r.{}-00000.nc".format(file_date.strftime("%4Y-%m-%d"))
-                finidat_file = os.path.join(rundir,basefile)
-                if not os.path.isfile(finidat_file):
-                    logger.warning("Could not find file {}".format(finidat_file))
-                    continue
-                newfile = basefile.replace(".postad.",".{}.".format(filedatestamp))
+        if upload_finidat:
+            logger.info("Upload finidat for {}".format(site))
+            case_path = os.path.join(output_root, site+".postad")
+            if os.path.isdir(case_path):
+                with Case(case_path) as case:
+                    rundir = case.get_value("RUNDIR")
+                    basefile = site+".postad.clm2.r.{}-00000.nc".format(file_date.strftime("%4Y-%m-%d"))
+                    finidat_file = os.path.join(rundir,basefile)
+                    if not os.path.isfile(finidat_file):
+                        logger.warning("Could not find file {}".format(finidat_file))
+                        continue
+                    newfile = basefile.replace(".postad.",".{}.".format(filedatestamp))
                 
-                upload_file(finidat_file, 'neon-ncar-transfer', newfile)
+                    upload_file(finidat_file, 'neon-ncar-transfer', os.path.join("NEON","lnd","ctsm","initdata",newfile))
+        if upload_history:
+            logger.info("Upload history for {}".format(site))
+            case_path = os.path.join(output_root, site+".transient")
+            if not os.path.isdir(case_path):
+                logger.warning("No case found in {}".format(case_path))
+                continue
+            with Case(case_path) as case:
+                archive_dir = os.path.join(case.get_value("DOUT_S_ROOT"),"lnd","hist")
+                for histfile in glob.iglob(archive_dir + "/*.h1.*"):
+                    newfile = os.path.basename(histfile)
+                    upload_file(histfile, 'neon-ncar-transfer', os.path.join("NEON","archive",site,"lnd","hist",newfile))
+                        
+                
+
 
 
 
