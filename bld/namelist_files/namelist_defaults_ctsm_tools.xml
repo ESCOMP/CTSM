@@ -164,7 +164,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="abm"              >nomask</lmask>
 <lmask type="topostats"        >HYDRO1K-merge-nomask</lmask>
 <lmask type="vic"              >nomask</lmask>
-<lmask type="ch4"              >nomask</lmask>
 
 <!-- Grid resolutions for different types of mksurfdata_map input files -->
 <hgrid type="lak"              >3x3min</hgrid>
@@ -191,7 +190,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hgrid type="abm"              >0.5x0.5</hgrid>
 <hgrid type="topostats"        >1km-merge-10min</hgrid>
 <hgrid type="vic"              >0.9x1.25</hgrid>
-<hgrid type="ch4"              >0.5x0.5</hgrid>
 
 <!-- namelist filenames for different types of mksurfdata_map input files -->
 <mksrf_filename type="lak" >mksrf_flakwat</mksrf_filename>
