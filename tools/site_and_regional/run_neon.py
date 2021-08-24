@@ -175,7 +175,7 @@ def get_parser(args, description, valid_neon_sites):
                 dest="end_date",
                 required = False,
                 type = datetime.date.fromisoformat,
-                default = datetime.datetime.strptime("2020-01-01",'%Y-%m-%d'))
+                default = datetime.datetime.strptime("2021-01-01",'%Y-%m-%d'))
 
     parser.add_argument('--run-from-postad',
                         help='''
@@ -356,7 +356,7 @@ class NeonSite :
         with Case(case_root, read_only=False) as case:
             case.set_value("STOP_OPTION", "ndays")
             case.set_value("STOP_N", run_length)
-            case.set_value("REST_N", 100)
+            case.set_value("REST_OPTION","end")
             case.set_value("CONTINUE_RUN", False)
             
             if run_type == "ad":
@@ -372,8 +372,6 @@ class NeonSite :
                 
             if run_type == "postad":
                 self.set_ref_case(case)
-                case.set_value("REST_OPTION","nmonths")
-                case.set_value("REST_N", 12)
                 
             if run_type == "transient":
                 if self.finidat:
@@ -382,7 +380,6 @@ class NeonSite :
                     self.set_ref_case(case)
                 case.set_value("STOP_OPTION","nmonths")
                 case.set_value("STOP_N", self.diff_month())
-                case.set_value("REST_OPTION", "end")
                 case.set_value("DATM_YR_ALIGN",self.start_year)
                 case.set_value("DATM_YR_START",self.start_year)
                 case.set_value("DATM_YR_END",self.end_year)
