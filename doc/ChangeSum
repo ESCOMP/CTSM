@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev054   slevis 08/10/2021 Adding history variables for use with Newton-Krylov
+    ctsm5.1.dev054   slevis 08/19/2021 Adding history variables for use with Newton-Krylov
     ctsm5.1.dev053    sacks 08/13/2021 Add Antarctica compset and change min_snow_to_keep
     ctsm5.1.dev052   negins 08/11/2021 Wrapper script for running NEON sites, and some NEON updates
     ctsm5.1.dev051 multiple 08/06/2021 New LUNA-specific ozone stress option

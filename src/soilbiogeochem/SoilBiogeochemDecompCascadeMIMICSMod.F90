@@ -63,42 +63,48 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   integer, private :: i_s3s1
   integer, private :: i_m1s3
   integer, private :: i_m2s3
-  real(r8) :: vint_l1_m1  !
-  real(r8) :: vint_l2_m1  !
-  real(r8) :: vint_s1_m1  !
-  real(r8) :: vint_l1_m2  !
-  real(r8) :: vint_l2_m2  !
-  real(r8) :: vint_s1_m2  !
-  real(r8) :: kint_l1_m1  !
-  real(r8) :: kint_l2_m1  !
-  real(r8) :: kint_s1_m1  !
-  real(r8) :: kint_l1_m2  !
-  real(r8) :: kint_l2_m2  !
-  real(r8) :: kint_s1_m2  !
-  real(r8) :: vmod_l1_m1  !
-  real(r8) :: vmod_l2_m1  !
-  real(r8) :: vmod_s1_m1  !
-  real(r8) :: vmod_l1_m2  !
-  real(r8) :: vmod_l2_m2  !
-  real(r8) :: vmod_s1_m2  !
-  real(r8) :: kmod_l1_m1  !
-  real(r8) :: kmod_l2_m1  !
-  real(r8) :: kmod_s1_m1  !
-  real(r8) :: kmod_l1_m2  !
-  real(r8) :: kmod_l2_m2  !
-  real(r8) :: kmod_s1_m2  !
-  real(r8) :: vslope_l1_m1  !
-  real(r8) :: vslope_l2_m1  !
-  real(r8) :: vslope_s1_m1  !
-  real(r8) :: vslope_l1_m2  !
-  real(r8) :: vslope_l2_m2  !
-  real(r8) :: vslope_s1_m2  !
-  real(r8) :: kslope_l1_m1  !
-  real(r8) :: kslope_l2_m1  !
-  real(r8) :: kslope_s1_m1  !
-  real(r8) :: kslope_l1_m2  !
-  real(r8) :: kslope_l2_m2  !
-  real(r8) :: kslope_s1_m2  !
+  real(r8), private :: rf_l1m1
+  real(r8), private :: rf_l1m2
+  real(r8), private :: rf_l2m1
+  real(r8), private :: rf_l2m2
+  real(r8), private :: rf_s1m1
+  real(r8), private :: rf_s1m2
+  real(r8), private :: vint_l1_m1  !
+  real(r8), private :: vint_l2_m1  !
+  real(r8), private :: vint_s1_m1  !
+  real(r8), private :: vint_l1_m2  !
+  real(r8), private :: vint_l2_m2  !
+  real(r8), private :: vint_s1_m2  !
+  real(r8), private :: kint_l1_m1  !
+  real(r8), private :: kint_l2_m1  !
+  real(r8), private :: kint_s1_m1  !
+  real(r8), private :: kint_l1_m2  !
+  real(r8), private :: kint_l2_m2  !
+  real(r8), private :: kint_s1_m2  !
+  real(r8), private :: vmod_l1_m1  !
+  real(r8), private :: vmod_l2_m1  !
+  real(r8), private :: vmod_s1_m1  !
+  real(r8), private :: vmod_l1_m2  !
+  real(r8), private :: vmod_l2_m2  !
+  real(r8), private :: vmod_s1_m2  !
+  real(r8), private :: kmod_l1_m1  !
+  real(r8), private :: kmod_l2_m1  !
+  real(r8), private :: kmod_s1_m1  !
+  real(r8), private :: kmod_l1_m2  !
+  real(r8), private :: kmod_l2_m2  !
+  real(r8), private :: kmod_s1_m2  !
+  real(r8), private :: vslope_l1_m1  !
+  real(r8), private :: vslope_l2_m1  !
+  real(r8), private :: vslope_s1_m1  !
+  real(r8), private :: vslope_l1_m2  !
+  real(r8), private :: vslope_l2_m2  !
+  real(r8), private :: vslope_s1_m2  !
+  real(r8), private :: kslope_l1_m1  !
+  real(r8), private :: kslope_l2_m1  !
+  real(r8), private :: kslope_s1_m1  !
+  real(r8), private :: kslope_l1_m2  !
+  real(r8), private :: kslope_l2_m2  !
+  real(r8), private :: kslope_s1_m2  !
 
   type, private :: params_type
      real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
@@ -412,12 +418,6 @@ contains
     real(r8) :: mimics_fphys_k_p2
     real(r8) :: mimics_desorp_p1
     real(r8) :: mimics_desorp_p2
-    real(r8) :: rf_l1m1
-    real(r8) :: rf_l1m2
-    real(r8) :: rf_l2m1
-    real(r8) :: rf_l2m2
-    real(r8) :: rf_s1m1
-    real(r8) :: rf_s1m2
     real(r8), allocatable :: p_scalar(:,:)
 
     real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
@@ -426,8 +426,6 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                                     &
-         rf_cwdl2                       => CNParamsShareInst%rf_cwdl2                            , & ! Input:  [real(r8)                  ]  respiration fraction in CWD to litter2 transition (frac)
-         rf_decomp_cascade              => soilbiogeochem_state_inst%rf_decomp_cascade_col       , & ! Input:  [real(r8)          (:,:,:) ]  respired fraction in decomposition step (frac)       
          nue_decomp_cascade             => soilbiogeochem_state_inst%nue_decomp_cascade_col      , & ! Output: [real(r8)          (:)     ]  N use efficiency for a given transition (TODO)
 
          cellclay                       => soilstate_inst%cellclay_col                           , & ! Input:  [real(r8)          (:,:)   ]  column 3D clay
@@ -701,98 +699,84 @@ contains
       !----------------  list of transitions and their time-independent coefficients  ---------------!
       i_l1m1 = 1
       decomp_cascade_con%cascade_step_name(i_l1m1) = 'L1M1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = rf_l1m1
       cascade_donor_pool(i_l1m1) = i_met_lit
       cascade_receiver_pool(i_l1m1) = i_cop_mic
       nue_decomp_cascade(i_l1m1) = mimics_nue_into_mic
 
       i_l1m2 = 2
       decomp_cascade_con%cascade_step_name(i_l1m2) = 'L1M2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = rf_l1m2
       cascade_donor_pool(i_l1m2) = i_met_lit
       cascade_receiver_pool(i_l1m2) = i_oli_mic
       nue_decomp_cascade(i_l1m2) = mimics_nue_into_mic
 
       i_l2m1 = 3
       decomp_cascade_con%cascade_step_name(i_l2m1) = 'L2M1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1) = rf_l2m1
       cascade_donor_pool(i_l2m1) = i_str_lit
       cascade_receiver_pool(i_l2m1) = i_cop_mic
       nue_decomp_cascade(i_l2m1) = mimics_nue_into_mic
 
       i_l2m2 = 4
       decomp_cascade_con%cascade_step_name(i_l2m2) = 'L2M2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2) = rf_l2m2
       cascade_donor_pool(i_l2m2) = i_str_lit
       cascade_receiver_pool(i_l2m2) = i_oli_mic
       nue_decomp_cascade(i_l2m2) = mimics_nue_into_mic
 
       i_s1m1 = 5
       decomp_cascade_con%cascade_step_name(i_s1m1) = 'S1M1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m1) = rf_s1m1
       cascade_donor_pool(i_s1m1) = i_avl_som
       cascade_receiver_pool(i_s1m1) = i_cop_mic
       nue_decomp_cascade(i_s1m1) = mimics_nue_into_mic
 
       i_s1m2 = 6
       decomp_cascade_con%cascade_step_name(i_s1m2) = 'S1M2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m2) = rf_s1m2
       cascade_donor_pool(i_s1m2) = i_avl_som
       cascade_receiver_pool(i_s1m2) = i_oli_mic
       nue_decomp_cascade(i_s1m2) = mimics_nue_into_mic
 
       i_s2s1 = 7
       decomp_cascade_con%cascade_step_name(i_s2s1) = 'S2S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 0.0_r8
       cascade_donor_pool(i_s2s1) = i_chem_som
       cascade_receiver_pool(i_s2s1) = i_avl_som
       nue_decomp_cascade(i_s2s1) = 1.0_r8
 
       i_s3s1 = 8
       decomp_cascade_con%cascade_step_name(i_s3s1) = 'S3S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 0.0_r8
       cascade_donor_pool(i_s3s1) = i_phys_som
       cascade_receiver_pool(i_s3s1) = i_avl_som
       nue_decomp_cascade(i_s3s1) = 1.0_r8
 
       i_m1s1 = 9
       decomp_cascade_con%cascade_step_name(i_m1s1) = 'M1S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = 0.0_r8
       cascade_donor_pool(i_m1s1) = i_cop_mic
       cascade_receiver_pool(i_m1s1) = i_avl_som
       nue_decomp_cascade(i_m1s1) = 1.0_r8
 
       i_m1s2 = 10
       decomp_cascade_con%cascade_step_name(i_m1s2) = 'M1S2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = 0.0_r8
       cascade_donor_pool(i_m1s2) = i_cop_mic
       cascade_receiver_pool(i_m1s2) = i_chem_som
       nue_decomp_cascade(i_m1s2) = 1.0_r8
 
       i_m1s3 = 11
       decomp_cascade_con%cascade_step_name(i_m1s3) = 'M1S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = 0.0_r8
       cascade_donor_pool(i_m1s3) = i_cop_mic
       cascade_receiver_pool(i_m1s3) = i_phys_som
       nue_decomp_cascade(i_m1s3) = 1.0_r8
 
       i_m2s1 = 12
       decomp_cascade_con%cascade_step_name(i_m2s1) = 'M2S1'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = 0.0_r8
       cascade_donor_pool(i_m2s1) = i_oli_mic
       cascade_receiver_pool(i_m2s1) = i_avl_som
       nue_decomp_cascade(i_m2s1) = 1.0_r8
 
       i_m2s2 = 13
       decomp_cascade_con%cascade_step_name(i_m2s2) = 'M2S2'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = 0.0_r8
       cascade_donor_pool(i_m2s2) = i_oli_mic
       cascade_receiver_pool(i_m2s2) = i_chem_som
       nue_decomp_cascade(i_m2s2) = 1.0_r8
 
       i_m2s3 = 14
       decomp_cascade_con%cascade_step_name(i_m2s3) = 'M2S3'
-      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = 0.0_r8
       cascade_donor_pool(i_m2s3) = i_oli_mic
       cascade_receiver_pool(i_m2s3) = i_phys_som
       nue_decomp_cascade(i_m2s3) = 1.0_r8
@@ -800,7 +784,6 @@ contains
       if (.not. use_fates) then
          i_cwdl2 = 15
          decomp_cascade_con%cascade_step_name(i_cwdl2) = 'CWDL2'
-         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
          cascade_donor_pool(i_cwdl2) = i_cwd
          cascade_receiver_pool(i_cwdl2) = i_str_lit
          nue_decomp_cascade(i_cwdl2) = 1.0_r8
@@ -919,6 +902,7 @@ contains
          ligninNratioAvg => cnveg_carbonflux_inst%ligninNratioAvg_col  , & ! Input:  [real(r8) (:)     ]  column-level lignin to nitrogen ratio
          annsum_npp_col => cnveg_carbonflux_inst%annsum_npp_col        , & ! Input:  [real(r8) (:)     ]  annual sum of NPP at the column level (gC/m2/yr)
 
+         rf_cwdl2       => CNParamsShareInst%rf_cwdl2                  , & ! Input:  [real(r8)         ]  respiration fraction in CWD to litter2 transition (frac)
          minpsi         => CNParamsShareInst%minpsi                    , & ! Input:  [real(r8)         ]  minimum soil suction (mm)
          maxpsi         => CNParamsShareInst%maxpsi                    , & ! Input:  [real(r8)         ]  maximum soil suction (mm)
          soilpsi        => soilstate_inst%soilpsi_col                  , & ! Input:  [real(r8) (:,:)   ]  soil water potential in each soil layer (MPa)          
@@ -926,9 +910,9 @@ contains
          o2stress_sat   => ch4_inst%o2stress_sat_col                   , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          o2stress_unsat => ch4_inst%o2stress_unsat_col                 , & ! Input:  [real(r8) (:,:)   ]  Ratio of oxygen available to that demanded by roots, aerobes, & methanotrophs (nlevsoi)
          finundated     => ch4_inst%finundated_col                     , & ! Input:  [real(r8) (:)     ]  fractional inundated area                                
-         
          decomp_cpools_vr => soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col , &  ! Input: [real(r8) (:,:,:) ] (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) C pools
-         pathfrac_decomp_cascade => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col , &  ! Output: [real(r8) (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
+         pathfrac_decomp_cascade => soilbiogeochem_carbonflux_inst%pathfrac_decomp_cascade_col                                                                    , &  ! Output: [real(r8) (:,:,:) ]  what fraction of C leaving a given pool passes through a given transition (frac)
+         rf_decomp_cascade       => soilbiogeochem_carbonflux_inst%rf_decomp_cascade_col                                                                          , & ! Input:  [real(r8)          (:,:,:) ]  respired fraction in decomposition step (frac)
          w_scalar       => soilbiogeochem_carbonflux_inst%w_scalar_col , & ! Output: [real(r8) (:,:)   ]  soil water scalar for decomp                           
          o_scalar       => soilbiogeochem_carbonflux_inst%o_scalar_col , & ! Output: [real(r8) (:,:)   ]  fraction by which decomposition is limited by anoxia   
          cn_col         => soilbiogeochem_carbonflux_inst%cn_col       , & ! Output: [real(r8) (:,:)   ]  C:N ratio
@@ -1319,7 +1303,22 @@ contains
       pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = fphys_m2(bounds%begc:bounds%endc,1:nlevdecomp)
       if (.not. use_fates) then
          pathfrac_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = 1.0_r8
+         rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_cwdl2) = rf_cwdl2
       end if
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m1) = rf_l1m1
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l1m2) = rf_l1m2
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m1) = rf_l2m1
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_l2m2) = rf_l2m2
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m1) = rf_s1m1
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s1m2) = rf_s1m2
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s2s1) = 0.0_r8
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_s3s1) = 0.0_r8
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s1) = 0.0_r8
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s2) = 0.0_r8
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m1s3) = 0.0_r8
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s1) = 0.0_r8
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s2) = 0.0_r8
+      rf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,i_m2s3) = 0.0_r8
 
     end associate
 
