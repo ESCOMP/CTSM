@@ -901,6 +901,12 @@ bioms:   do f = 1, fn
             z0mv(p) = htop(p) * (1._r8 - displa(p) / htop(p)) * exp(-vkc * U_ustar + &
                       log(z0v_cw(patch%itype(p))) - 1._r8 + z0v_cw(patch%itype(p))**(-1._r8))
 
+            ! --> Use this for CLM-Ya08
+            !lt = min(elai(p)+esai(p), tlsai_crit)
+            !egvf =(1._r8 - alpha_aero * exp(-lt)) / (1._r8 - alpha_aero * exp(-tlsai_crit))
+            !displa(p) = egvf * displa(p)
+            !z0mv(p)   = exp(egvf * log(z0mv(p)) + (1._r8 - egvf) * log(z0mg(c)))
+
           case default
             write(iulog,*) 'ERROR: unknown z0para_method: ', z0param_method
             call endrun(msg = 'unknown z0param_method', additional_msg = errMsg(sourcefile, __LINE__))

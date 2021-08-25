@@ -339,8 +339,14 @@ contains
             select case (z0param_method)
             case ('MeierXXXX') 
                z0mg(p) = params_inst%zglc
+
+               ! --> Use this for CLM-VEG and CLM-Ya08
+               !z0mg(p) = z0frzlake
+
                z0hg(p) = 70._r8 * 1.5e-5_r8 / ust_lake(c) ! For initial guess assume tstar = 0
-               !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
+
+               ! --> Use this for CLM-VEG and CLM-Z0M 
+               !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
  
             case ('ZengWang2007')
                z0mg(p) = z0frzlake
@@ -352,11 +358,16 @@ contains
             case ('MeierXXXX') 
                if(use_z0m_snowmelt) then
                   z0mg(p) = exp(1.4_r8 * (atan((log10(snomelt_accum(c))+0.23_r8)/0.08_r8))-0.31_r8) / 1000._r8 
+
+                  
                else
                   z0mg(p) = params_inst%zsno
+
+                  ! --> Use this for CLM-VEG and CLM-Ya08 
+                  !z0mg(p) = 0.0024_r8
+                  
                end if                       
                z0hg(p) = 70._r8 * 1.5e-5_r8 / ust_lake(c) ! For initial guess assume tstar = 0 
-               !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ust_lake(c) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
 
             case ('ZengWang2007')
                if(use_z0m_snowmelt) then
@@ -585,9 +596,15 @@ contains
                select case (z0param_method)
                case ('MeierXXXX') 
                   z0mg(p) = params_inst%zglc
+
+                  ! --> Use this for CLM-VEG and CLM-Ya08 
+                  !z0mg(p) = z0frzlake
+                  
                   z0hg(p) = 70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes 
-                  !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
- 
+                 
+                  ! --> Use this for CLM-VEG and CLM-Z0M                   
+                  !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
+                  
                case ('ZengWang2007')
                   z0mg(p) = z0frzlake
                   z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
@@ -601,7 +618,9 @@ contains
                select case (z0param_method)
                case ('MeierXXXX')
                   z0hg(p) =  70._r8 * 1.5e-5_r8 / ustar(p) * exp( -7.2_r8 * ustar(p)**(0.5_r8) * (abs(tstar))**(0.25_r8)) ! Consistent with BareGroundFluxes 
-                  !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! This is for z0 only
+
+                  ! --> Use this for CLM-VEG and CLM-Z0M 
+                  !z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
  
                case ('ZengWang2007')
                   z0hg(p) = z0mg(p) / exp(params_inst%a_coef * (ustar(p) * z0mg(p) / 1.5e-5_r8)**params_inst%a_exp) ! Consistent with BareGroundFluxes
