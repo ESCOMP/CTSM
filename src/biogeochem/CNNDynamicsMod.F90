@@ -125,7 +125,7 @@ contains
     ! directly into the canopy and mineral N entering the soil pool.
     !
     ! !USES:
-    use CNSharedParamsMod    , only: use_fun
+    !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds  
     type(atm2lnd_type)       , intent(in)    :: atm2lnd_inst
@@ -218,7 +218,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
-         cannsum_npp    => cnveg_carbonflux_inst%annsum_npp_col ,             & ! Input:  [real(r8) (:)]  nitrogen deposition rate (gN/m2/s)                
+         cannsum_npp    => cnveg_carbonflux_inst%annsum_npp_col ,             & ! Input: [real(r8) (:)]  (gC/m2/yr) annual sum of NPP, averaged from patch-level
          col_lag_npp    => cnveg_carbonflux_inst%lag_npp_col    ,             & ! Input: [real(r8) (:)]  (gC/m2/s) lagged net primary production           
 
          nfix_to_sminn  => soilbiogeochem_nitrogenflux_inst%nfix_to_sminn_col & ! Output: [real(r8) (:)]  symbiotic/asymbiotic N fixation to soil mineral N (gN/m2/s)

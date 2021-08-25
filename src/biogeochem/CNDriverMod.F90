@@ -11,7 +11,7 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
-  use clm_varctl                      , only : use_crop
+  use clm_varctl                      , only : use_mimics_decomp, use_crop
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -128,6 +128,7 @@ contains
     use CNGapMortalityMod                 , only: CNGapMortality
     use CNSharedParamsMod                 , only: use_fun
     use dynHarvestMod                     , only: CNHarvest
+    use SoilBiogeochemDecompCascadeMIMICSMod, only: decomp_rates_mimics
     use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
     use SoilBiogeochemDecompCascadeCNMod  , only: decomp_rate_constants_cn
     use SoilBiogeochemCompetitionMod      , only: SoilBiogeochemCompetition
@@ -200,6 +201,7 @@ contains
     real(r8):: cn_decomp_pools(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_pools)
     real(r8):: p_decomp_cpool_loss(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential C loss from one pool to another
     real(r8):: pmnf_decomp_cascade(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions) !potential mineral N flux, from one pool to another
+    real(r8):: p_decomp_cn_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! C:N ratio of the flux gained by the receiver pool
     real(r8):: arepr(bounds%begp:bounds%endp) ! reproduction allocation coefficient (only used for use_crop)
     real(r8):: aroot(bounds%begp:bounds%endp) ! root allocation coefficient (only used for use_crop)
     integer :: begp,endp
@@ -314,7 +316,11 @@ contains
     if (use_century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
-    else
+    else if (use_mimics_decomp) then
+       call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
+            soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
+            soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
+    else  ! deprecated
        call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     end if
@@ -325,6 +331,7 @@ contains
          soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst,                                         &
          cn_decomp_pools=cn_decomp_pools(begc:endc,1:nlevdecomp,1:ndecomp_pools), & 
          p_decomp_cpool_loss=p_decomp_cpool_loss(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
+         p_decomp_cn_gain=p_decomp_cn_gain(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions), &
          pmnf_decomp_cascade=pmnf_decomp_cascade(begc:endc,1:nlevdecomp,1:ndecomp_cascade_transitions)) 
 
     ! calculate vertical profiles for distributing soil and litter C and N (previously subroutine decomp_vertprofiles called from CNDecompAlloc)
@@ -398,7 +405,8 @@ contains
  
    
      call t_startf('soilbiogeochemcompetition')
-     call SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, waterstatebulk_inst, &
+     call SoilBiogeochemCompetition (bounds, num_soilc, filter_soilc,num_soilp, filter_soilp, &
+                                     p_decomp_cn_gain, pmnf_decomp_cascade, waterstatebulk_inst, &
                                      waterfluxbulk_inst,temperature_inst,soilstate_inst,cnveg_state_inst,          &
                                      cnveg_carbonstate_inst               ,&
                                      cnveg_carbonflux_inst,cnveg_nitrogenstate_inst,cnveg_nitrogenflux_inst,   &
@@ -978,6 +986,10 @@ contains
        soilbiogeochem_carbonflux_inst, &
        c13_soilbiogeochem_carbonflux_inst, &
        c14_soilbiogeochem_carbonflux_inst, &
+       soilbiogeochem_carbonstate_inst, &
+       c13_soilbiogeochem_carbonstate_inst, &
+       c14_soilbiogeochem_carbonstate_inst, &
+       soilbiogeochem_nitrogenstate_inst, &
        soilbiogeochem_nitrogenflux_inst)
     !
     ! !DESCRIPTION:
@@ -1002,6 +1014,10 @@ contains
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c13_soilbiogeochem_carbonflux_inst
     type(soilbiogeochem_carbonflux_type)    , intent(inout) :: c14_soilbiogeochem_carbonflux_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(in)    :: soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(in)    :: c13_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_carbonstate_type)   , intent(in)    :: c14_soilbiogeochem_carbonstate_inst
+    type(soilbiogeochem_nitrogenstate_type) , intent(in)    :: soilbiogeochem_nitrogenstate_inst
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
@@ -1040,6 +1056,8 @@ contains
          soilbiogeochem_lithr_col=soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
          soilbiogeochem_decomp_cascade_ctransfer_col=&
          soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+         soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+         soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
          product_closs_grc=c_products_inst%product_loss_grc(begg:endg))
 
     if ( use_c13 ) then
@@ -1050,6 +1068,8 @@ contains
             soilbiogeochem_lithr_col=c13_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c13_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+            soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+            soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c13_products_inst%product_loss_grc(begg:endg))
     end if
 
@@ -1061,6 +1081,8 @@ contains
             soilbiogeochem_lithr_col=c14_soilbiogeochem_carbonflux_inst%lithr_col(begc:endc), &  
             soilbiogeochem_decomp_cascade_ctransfer_col=&
             c14_soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_col(begc:endc,1:ndecomp_cascade_transitions), &
+            soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
+            soilbiogeochem_cwdn_col=soilbiogeochem_nitrogenstate_inst%cwdn_col(begc:endc), &
             product_closs_grc=c14_products_inst%product_loss_grc(begg:endg))
     end if
 

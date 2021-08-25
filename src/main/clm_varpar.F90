@@ -9,7 +9,8 @@ module clm_varpar
   use shr_sys_mod  , only: shr_sys_abort
   use spmdMod      , only: masterproc
   use clm_varctl   , only: use_extralakelayers, use_vertsoilc
-  use clm_varctl   , only: use_century_decomp, use_c13, use_c14
+  use clm_varctl   , only: use_century_decomp, use_mimics_decomp
+  use clm_varctl   , only: use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, rundef
   use clm_varctl   , only: soil_layerstruct_predefined
@@ -71,7 +72,11 @@ module clm_varpar
   integer, public :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_met_lit = -9  ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_cop_mic = -9  ! index of copiotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_oli_mic = -9  ! index of oligotrophic microbial pool; overwritten in SoilBiogeochemDecompCascade*Mod
   integer, public :: i_cwd      = -9  ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  ! TODO Not necessary but cleaner to use this copy of i_cwdl2 in *CascadeBGC?
+  integer, public :: i_cwdl2 = -9  ! index of cwd to l2 transition; overwritten in SoilBiogeochemDecompCascade*Mod
 
   integer, public :: ndecomp_pools_max
   integer, public :: ndecomp_pools
@@ -239,12 +244,18 @@ contains
     ! fly. For reference, if they were determined in init_decompcascade_bgc:
     ! ndecomp_pools would get the value of i_pas_som or i_cwd and
     ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
-    ! depending on how use_fates is set.
+    ! If they were determined in init_decompcascade_mimics:
+    ! ndecomp_pools would get the value of i_oli_mic or i_cwd and
+    ! ndecomp_cascade_transitions would get the value of i_m2s3 or i_cwdl2
+    ! (...always depending on how use_fates is set)
     if ( use_fates ) then
        if (use_century_decomp) then
           ndecomp_pools = 6
           ndecomp_cascade_transitions = 8
-       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
+       else if (use_mimics_decomp) then
+          ndecomp_pools = 7
+          ndecomp_cascade_transitions = 14
+       else  ! TODO slevis: Currently for CN (deprecated)
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 7
        end if
@@ -252,7 +263,10 @@ contains
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
-       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
+       else if (use_mimics_decomp) then
+          ndecomp_pools = 8
+          ndecomp_cascade_transitions = 15
+       else  ! TODO slevis: Currently for CN (deprecated)
           ndecomp_pools = 8
           ndecomp_cascade_transitions = 9
        end if

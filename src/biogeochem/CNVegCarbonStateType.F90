@@ -1077,8 +1077,6 @@ contains
     integer            :: idata
     logical            :: exit_spinup  = .false.
     logical            :: enter_spinup = .false.
-    ! flags for comparing the model and restart decomposition cascades
-    integer            :: decomp_cascade_state, restart_file_decomp_cascade_state 
     ! spinup state as read from restart file, for determining whether to enter or exit spinup mode.
     integer            :: restart_file_spinup_state
     integer            :: total_num_reseed_patch      ! Total number of patches to reseed across all processors

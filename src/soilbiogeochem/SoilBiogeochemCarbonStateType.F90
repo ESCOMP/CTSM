@@ -510,8 +510,6 @@ contains
     integer  :: idata
     logical  :: exit_spinup  = .false.
     logical  :: enter_spinup = .false.
-    ! flags for comparing the model and restart decomposition cascades
-    integer  :: decomp_cascade_state, restart_file_decomp_cascade_state 
     !------------------------------------------------------------------------
 
     if (carbon_type == 'c12') then
