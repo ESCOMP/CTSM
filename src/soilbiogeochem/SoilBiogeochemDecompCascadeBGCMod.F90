@@ -131,82 +131,82 @@ contains
     !-----------------------------------------------------------------------
 
     ! Read off of netcdf file
-    tString='bgc_tau_l1'  ! TODO slevis: rename in params file(s) and code...
+    tString='tau_l1'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_l1_bgc=tempr
 
-    tString='bgc_tau_l2_l3'  ! TODO slevis: rename in params file(s) and code
+    tString='tau_l2_l3'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_l2_l3_bgc=tempr
 
-    tString='bgc_tau_s1'  ! TODO slevis: rename in params file(s) and code
+    tString='tau_s1'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_s1_bgc=tempr
 
-    tString='bgc_tau_s2'  ! TODO slevis: rename in params file(s) and code
+    tString='tau_s2'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_s2_bgc=tempr
 
-    tString='bgc_tau_s3'  ! TODO slevis: rename in params file(s) and code
+    tString='tau_s3'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%tau_s3_bgc=tempr
 
-    tString='bgc_cn_s1'  ! TODO slevis: rename in params file(s) and code
+    tString='cn_s1_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cn_s1_bgc=tempr
 
-    tString='bgc_cn_s2'  ! TODO slevis: rename in params file(s) and code
+    tString='cn_s2_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cn_s2_bgc=tempr
 
-    tString='bgc_cn_s3'  ! TODO slevis: rename in params file(s) and code
+    tString='cn_s3_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cn_s3_bgc=tempr
 
-    tString='bgc_rf_l1s1'  ! TODO slevis: rename in params file(s) and code
+    tString='rf_l1s1_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_l1s1_bgc=tempr
 
-    tString='bgc_rf_l2s1'  ! TODO slevis: rename in params file(s) and code
+    tString='rf_l2s1_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_l2s1_bgc=tempr
 
-    tString='bgc_rf_l3s2'  ! TODO slevis: rename in params file(s) and code
+    tString='rf_l3s2_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_l3s2_bgc=tempr   
 
-    tString='bgc_rf_s2s1'  ! TODO slevis: rename in params file(s) and code
+    tString='rf_s2s1_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_s2s1_bgc=tempr
 
-    tString='bgc_rf_s2s3'  ! TODO slevis: rename in params file(s) and code
+    tString='rf_s2s3_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_s2s3_bgc=tempr
 
-    tString='bgc_rf_s3s1'  ! TODO slevis: rename in params file(s) and code
+    tString='rf_s3s1_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_s3s1_bgc=tempr
 
-    tString='bgc_rf_cwdl3'  ! TODO slevis: rename in params file(s) and code
+    tString='rf_cwdl3_bgc'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%rf_cwdl3_bgc=tempr
 
-    tString='bgc_cwd_fcel'  ! TODO slevis: rename in params file(s) & code...
+    tString='cwd_fcel'  ! TODO slevis: bgc_ prefix in params file(s) and code
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cwd_fcel_bgc=tempr
