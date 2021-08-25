@@ -997,7 +997,8 @@ Requires the CN model to work (either CN or CNDV).
        group="clm_inparm" valid_values="" value=".false.">
 Nitrification/denitrification splits the prognostic mineral N pool into two 
    mineral N pools: NO3 and NH4, and includes the transformations between them.
-Requires the CN model to work (either CN or CNDV).
+Turned on for BGC
+FATES currently allows it to be true or false, but will be hardwired to true later
 </entry>
 
 <entry id="denitrif_respiration_coefficient" type="real" category="bgc"

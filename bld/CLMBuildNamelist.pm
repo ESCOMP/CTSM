@@ -867,6 +867,13 @@ sub setup_cmdl_bgc {
            $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
         }
      }
+     # nitrif_denitrif can only be .false. if fates is on
+     if ( ! &value_is_true($nl_flags->{'use_fates'}) ) {
+        $var = "use_nitrif_denitrif";
+        if ( ! &value_is_true($nl_flags->{$var}) ) {
+           $log->fatal_error("$var can only be FALSE if FATES is on" );
+        }
+     }
   }
 
   # Now set use_cn and use_fates
