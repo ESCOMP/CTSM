@@ -600,7 +600,7 @@ def main(description):
     cesmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
-    valid_neon_sites = [v.split('/')[-1] for v in valid_neon_sites]
+    valid_neon_sites = sorted([v.split('/')[-1] for v in valid_neon_sites])
 
     site_list, output_root, run_type, overwrite, run_length, base_case_root, run_from_postad, setup_only, no_batch = get_parser(sys.argv, description, valid_neon_sites)
     if output_root:
