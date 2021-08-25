@@ -213,13 +213,7 @@ contains
 
       else
 
-         ! for one layer decomposition model, set profiles to unity
-         leaf_prof(begp:endp, :) = 1._r8
-         froot_prof(begp:endp, :) = 1._r8
-         croot_prof(begp:endp, :) = 1._r8
-         stem_prof(begp:endp, :) = 1._r8
-         nfixation_prof(begc:endc, :) = 1._r8
-         ndep_prof(begc:endc, :) = 1._r8
+         call endrun( "ERROR: use_vertsoilc is now hardcoded to true" )
 
       end if
 

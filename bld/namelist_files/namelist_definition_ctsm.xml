@@ -323,6 +323,7 @@ If TRUE use the undercanopy stability term used with CLM4.5 (Sakaguchi&amp;Zeng,
 <entry id="use_biomass_heat_storage" type="logical" category="clm_physics"
        group="canopyfluxes_inparm" valid_values="" >
 If TRUE, include biomass heat storage in canopy energy balance.
+</entry>
 
 <entry id="itmax_canopy_fluxes" type="integer" category="clm_physics"
        group="canopyfluxes_inparm">
@@ -950,11 +951,6 @@ Human heat stress indices:
     NONE = No indices will be calculated
 </entry>
 
-<entry id="wrtdia" type="logical" category="history"
-       group="clm_inparm" valid_values="" >
-If TRUE, write diagnostic of global radiative temperature written to CLM log file.
-</entry>
-
 <entry id="use_subgrid_fluxes" type="logical" category="clm_physics"
        group="clm_inparm" >
 Whether to use subgrid fluxes for snow
@@ -1020,18 +1016,6 @@ Exponent power for heterotrophic respiration for max denitrification rates
        group="nitrif_inparm" valid_values="" >
 Maximum nitrification rate constant (1/s)
 (ONLY used if use_nitrif_denitrif is enabled)
-</entry>
-
-<entry id="use_vertsoilc" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Turn on vertical soil carbon.
-Requires the CN or FATES model to work (either CN or CNDV).
-</entry>
-
-<entry id="use_century_decomp" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Use parameters for decomposition from the CENTURY Carbon model
-Requires the CN or FATES model to work (either CN or CNDV).
 </entry>
 
 <entry id="use_extralakelayers" type="logical" category="physics"
@@ -1101,9 +1085,14 @@ Phenology onset depends on the vegetation type
 (only used when CN is on)
 </entry>
 
-<entry id="min_crtical_dayl_depends_on_lat" type="logical" category="physics"
-       group="cnphenology">
-The minimum critical day length for onset depends on latitude
+<entry id="min_critical_dayl_method" type="char*25" category="physics"
+       group="cnphenology" valid_values="Constant,DependsOnLat,DependsOnVeg,DependsOnLatAndVeg">
+Method for determining what the minimum critical day length for seasonal decidious leaf offset depends on
+Constant ----------- constant value of crit_dayl from parameter file (value from White 2001)
+DependsOnLat ------- Higher values at high latitudes down to value from parameter file for temperate and equatorial regions
+                     (L. Birch et. al, GMD 2021)
+DependsOnVeg ------- Arctic vegetation with higher value and temperate vegetation with crit_dayl from parameter file
+DependsOnLatAndVeg - Arctic vegetation depends on latitude as above, but temperate vegetation fixed at crit_dayl value from parameter file
 (only used when CN is on)
 </entry>
 
@@ -1957,7 +1946,7 @@ Horizontal grid resolutions for mksurfdata input files
 <!-- ========================================================================================  -->
 
 <entry id="finundation_res" type="char*10" category="default_settings"
-       group="default_settings" valid_values="none,1.9x2.5" >
+       group="default_settings" valid_values="none,0.9x1.25" >
 Resolution of finundated inversion streams dataset (stream_fldfilename_ch4finundated)
 to use for methane model
 (only applies when CN and methane model are turned on)
@@ -1992,7 +1981,7 @@ CLM run type.
 
 <entry id="res" type="char*30" category="default_settings"
        group="default_settings"  
-       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384">
+       valid_values="512x1024,360x720cru,128x256,64x128,48x96,94x192,0.23x0.31,0.47x0.63,0.9x1.25,1.9x2.5,2.5x3.33,4x5,10x15,0.125nldas2,5x5_amazon,1x1_vancouverCAN,1x1_mexicocityMEX,1x1_asphaltjungleNJ,1x1_brazil,1x1_urbanc_alpha,1x1_numaIA,1x1_smallvilleIA,0.1x0.1,0.25x0.25,0.5x0.5,3x3min,5x5min,10x10min,0.33x0.33,0.125x0.125,ne4np4,ne16np4,ne30np4.pg2,ne30np4.pg3,ne30np4,ne60np4,ne120np4,ne120np4.pg2,ne120np4.pg3,ne0np4CONUS.ne30x8,ne0np4.ARCTIC.ne30x4,ne0np4.ARCTICGRIS.ne30x8,ne240np4,1km-merge-10min,C24,C48,C96,C192,C384">
 Horizontal resolutions
 Note: 0.1x0.1, 0.25x0.25, 0.5x0.5, 5x5min, 10x10min, 3x3min, 1km-merge-10min and 0.33x0.33 are only used for CLM toolsI
 </entry> 
@@ -2163,6 +2152,17 @@ If true, no denitrification or nitrification in frozen soil layers.
 <entry id="nfix_timeconst" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 Number of days over which to use exponential relaxation of NPP in N fixation calculation
+</entry>
+
+<!-- Soil decomposition options  -->
+<entry id="soil_decomp_method" type="char*20" category="clm_physics"
+       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013" >
+Soil decomposition method
+  None --  No soil decomposition is done
+  CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
+
+An active soil decomposition method requires the BGC or FATES model to work 
+And both BGC and FATES models require an active soil decomposition model
 </entry>
 
 <!-- General CN flags -->
@@ -2664,11 +2664,6 @@ Upper Limit on Destructive Metamorphism Compaction [kg/m3]
        group="clm_snowhydrology_inparm"   >
 Snow compaction overburden exponential factor (1/K)
 Not used for snow_overburden_compaction_method=Vionnet2012
-</entry>
-
-<entry id="min_wind_snowcompact" type="real" category="clm_physics"
-       group="clm_snowhydrology_inparm"   >
-Minimum wind speed tht results in compaction (m/s)
 </entry>
 
 <entry id="fresh_snw_rds_max" type="real" category="clm_physics"

@@ -230,7 +230,7 @@ crop-global-SSP5-8.5 : FORCE
 urban : urban-present urban-alpha
 
 urban-present : FORCE
-	$(MKSURFDATA) -y 2000 -no-crop -glc_nec 10 -r 1x1_camdenNJ,1x1_vancouverCAN,1x1_mexicocityMEX $(BACKGROUND)
+	$(MKSURFDATA) -y 2000 -no-crop -glc_nec 10 -r 1x1_vancouverCAN,1x1_mexicocityMEX $(BACKGROUND)
 
 # NOTE(bja, 2015-01) skip abort on invalid data necessary as of 2015-01. See
 # /glade/p/cesm/cseg/inputdata/lnd/clm2/surfdata_map/README_c141219

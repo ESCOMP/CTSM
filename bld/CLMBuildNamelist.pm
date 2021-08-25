@@ -84,20 +84,18 @@ REQUIRED OPTIONS
      -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
      -driver "value"          mct or nuopc
-     -bgc "value"             Build CLM with BGC package [ sp | cn | bgc | fates ]
+     -bgc "value"             Build CLM with BGC package [ sp | bgc | fates ]
                               (default is sp).
                                 CLM Biogeochemistry mode
                                 sp    = Satellite Phenology (SP)
                                     This toggles off the namelist variable: use_cn
-                                cn    = Carbon Nitrogen model (CN)
-                                    This toggles on the namelist variable: use_cn
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
                                         CENTURY decomposition
                                     This toggles on the namelist variables:
-                                          use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+                                          use_cn, use_lch4, use_nitrif_denitrif
                                 fates = FATES/Ecosystem Demography with below ground BGC
                                     This toggles on the namelist variables:
-                                          use_fates, use_vertsoilc, use_century_decomp
+                                          use_fates
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -160,7 +158,7 @@ OPTIONS
                               Default: -no-drydep
                               (Note: buildnml copies the file for use by the driver)
      -dynamic_vegetation      Toggle for dynamic vegetation model. (default is off)
-                              (can ONLY be turned on when BGC type is 'cn' or 'bgc')
+                              (can ONLY be turned on when BGC type is 'bgc')
                               This turns on the namelist variable: use_cndv
                               (Deprecated, this will be removed)
      -fire_emis               Produce a fire_emis_nl namelist that will go into the
@@ -756,7 +754,7 @@ sub setup_cmdl_fates_mode {
 
       # The following variables may be set by the user and are compatible with use_fates
       # no need to set defaults, covered in a different routine
-      my @list  = (  "use_vertsoilc", "use_century_decomp", "use_lch4" );
+      my @list  = (  "use_lch4" );
       foreach my $var ( @list ) {
 	  if ( defined($nl->get_value($var))  ) {
 	      $nl_flags->{$var} = $nl->get_value($var);
@@ -833,10 +831,7 @@ sub setup_cmdl_bgc {
   $log->verbose_message("Using $nl_flags->{$var} for bgc.");
 
   # now set the actual name list variables based on the bgc alias
-  if ($nl_flags->{$var} eq "cn" ) {
-     $nl_flags->{'use_cn'} = ".true.";
-     $nl_flags->{'use_fates'} = ".false.";
-  } elsif ($nl_flags->{$var} eq "bgc" ) {
+  if ($nl_flags->{$var} eq "bgc" ) {
      $nl_flags->{'use_cn'} = ".true.";
      $nl_flags->{'use_fates'} = ".false.";
   } elsif ($nl_flags->{$var} eq "fates" ) {
@@ -855,17 +850,13 @@ sub setup_cmdl_bgc {
 
   {
      # If the variable has already been set use it, if not set to the value defined by the bgc_mode
-     my @list  = (  "use_lch4", "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp" );
-     my $ndiff = 0;
+     my @list  = (  "use_lch4", "use_nitrif_denitrif" );
      my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
      foreach my $var ( @list ) {
         my $default_setting = $defaults->get_value($var, \%settings );
         if ( ! defined($nl->get_value($var))  ) {
            $nl_flags->{$var} = $default_setting;
         } else {
-           if ( $nl->get_value($var) ne $default_setting ) {
-              $ndiff += 1;
-           }
            $nl_flags->{$var} = $nl->get_value($var);
         }
         $val = $nl_flags->{$var};
@@ -875,10 +866,6 @@ sub setup_cmdl_bgc {
            my @valid_values   = $definition->get_valid_values( $var );
            $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
         }
-     }
-     # If all the variables are different report it as an error
-     if ( $ndiff == ($#list + 1) ) {
-        $log->fatal_error("You are contradicting the -bgc setting with the namelist variables: @list" );
      }
   }
 
@@ -899,8 +886,25 @@ sub setup_cmdl_bgc {
                  'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
                  'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'} );
   }
+  if ( (! &value_is_true($nl_flags->{'use_cn'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
+     $log->fatal_error("When FUN is on, use_cn MUST also be on!");
+  }
   if ( (! &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
      $log->fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!");
+  }
+  #
+  # Determine Soil decomposition method
+  #
+  my $var = "soil_decomp_method";
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+              'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+
+  if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
+     if ( remove_leading_and_trailing_quotes( $nl->get_value($var)) eq "None" ) {
+        $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
+     }
+  } elsif ( remove_leading_and_trailing_quotes($nl->get_value($var)) ne "None" ) {
+     $log->fatal_error("$var must be None if use_cn or use_fates are not");
   }
 } # end bgc
 
@@ -986,8 +990,8 @@ sub setup_cmdl_crop {
   if ( ($nl_flags->{'crop'} eq 1 ) && ($nl_flags->{'bgc_mode'} eq "sp") ) {
      $log->fatal_error("** Cannot turn crop mode on mode bgc=sp\n" .
                        "**\n" .
-                       "** Set the bgc mode to 'cn' or 'bgc' by the following means from highest to lowest precedence:\n" .
-                       "** * by the command-line options -bgc cn\n" .
+                       "** Set the bgc mode to 'bgc' by the following means from highest to lowest precedence:\n" .
+                       "** * by the command-line options -bgc bgc\n" .
                        "** * by a default configuration file, specified by -defaults");
   }
 
@@ -1235,8 +1239,8 @@ sub setup_cmdl_dynamic_vegetation {
   if ( ($nl_flags->{'dynamic_vegetation'} eq 1 ) && ($nl_flags->{'bgc_mode'} eq "sp") ) {
      $log->fatal_error("** Cannot turn dynamic_vegetation mode on with bgc=sp.\n" .
                        "**\n" .
-                       "** Set the bgc mode to 'cn' or 'bgc' by the following means from highest to lowest precedence:" .
-                       "** * by the command-line options -bgc cn\n");
+                       "** Set the bgc mode to 'bgc' by the following means from highest to lowest precedence:" .
+                       "** * by the command-line options -bgc bgc\n");
   }
 
   $var = "use_cndv";
@@ -2140,8 +2144,6 @@ sub setup_logic_demand {
   $settings{'use_cndv'}            = $nl_flags->{'use_cndv'};
   $settings{'use_lch4'}            = $nl_flags->{'use_lch4'};
   $settings{'use_nitrif_denitrif'} = $nl_flags->{'use_nitrif_denitrif'};
-  $settings{'use_vertsoilc'}       = $nl_flags->{'use_vertsoilc'};
-  $settings{'use_century_decomp'}  = $nl_flags->{'use_century_decomp'};
   $settings{'use_crop'}            = $nl_flags->{'use_crop'};
 
   my $demand = $nl->get_value('clm_demand');
@@ -2258,7 +2260,7 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
-                       "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates",
+                       "use_fates",
                        "lnd_tuning_mode", 
                      ) {
        $settings{$item}    = $nl_flags->{$item};
@@ -2689,12 +2691,7 @@ sub setup_logic_bgc_shared {
   if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'constrain_stress_deciduous_onset', 'phys'=>$physv->as_string() );
   }
-  # FIXME(bja, 201606) the logic around fates / bgc_mode /
-  # use_century_decomp is confusing and messed up. This is a hack
-  # workaround.
-  if ( &value_is_true($nl_flags->{'use_century_decomp'}) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
-  }
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
 }
 
 #-------------------------------------------------------------------------------
@@ -2702,7 +2699,7 @@ sub setup_logic_bgc_shared {
 sub setup_logic_cnphenology {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
-  my @list  = (  "onset_thresh_depends_on_veg", "min_crtical_dayl_depends_on_lat" );
+  my @list  = (  "onset_thresh_depends_on_veg", "min_critical_dayl_method" );
   foreach my $var ( @list ) {
     if (  &value_is_true($nl_flags->{'use_cn'}) ) {
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
@@ -2988,6 +2985,9 @@ sub setup_logic_dynamic_plant_nitrogen_alloc {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_flexibleCN',
                 'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'} );
     $nl_flags->{'use_flexibleCN'} = $nl->get_value('use_flexibleCN');
+    if ( &value_is_true($nl->get_value('use_fun') ) && not &value_is_true( $nl_flags->{'use_flexibleCN'}) ) {
+       $log->warning("FUN has NOT been extensively tested without use_flexibleCN on, so could result in failures or unexpected results" );
+    }
 
     if ( &value_is_true($nl_flags->{'use_flexibleCN'}) ) {
       # TODO(bja, 2015-04) make this depend on > clm 5.0 and bgc mode at some point.
@@ -3147,7 +3147,7 @@ sub setup_logic_dynamic_roots {
   my $use_dynroot = $nl->get_value('use_dynroot');
   if ( &value_is_true($use_dynroot) && ($nl_flags->{'bgc_mode'} eq "sp") ) {
      $log->fatal_error("Cannot turn dynroot mode on mode bgc=sp\n" .
-                       "Set the bgc mode to 'cn' or 'bgc'.");
+                       "Set the bgc mode to 'bgc'.");
   }
   if ( &value_is_true( $use_dynroot ) && &value_is_true( $nl_flags->{'use_hydrstress'} ) ) {
      $log->fatal_error("Cannot turn use_dynroot on when use_hydrstress is on" );
@@ -3233,7 +3233,7 @@ sub setup_logic_nitrogen_deposition {
   #
   # Nitrogen deposition for bgc=CN
   #
-  if ( $nl_flags->{'bgc_mode'} =~/cn|bgc/ ) {
+  if ( $nl_flags->{'bgc_mode'} =~/bgc/ ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
                 'clm_accelerated_spinup'=>$nl_flags->{'clm_accelerated_spinup'} );
@@ -4018,9 +4018,6 @@ sub write_output_files {
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);
   # Eventually only list namelists that are actually used when CN on
-  #if ( $nl_flags->{'bgc_mode'}  eq "cn" ) {
-  #  push @groups, qw(ndepdyn_nml popd_streams light_streams);
-  #}
   if ( &value_is_true($nl_flags->{'use_lch4'}) ) {
      push @groups, "ch4par_in";
   }
@@ -4032,6 +4029,7 @@ sub write_output_files {
   push @groups, "nitrif_inparm";
   push @groups, "lifire_inparm";
   push @groups, "ch4finundated";
+  push @groups, "soilbgc_decomp";
   push @groups, "clm_canopy_inparm";
   if (remove_leading_and_trailing_quotes($nl->get_value('snow_cover_fraction_method')) eq 'SwensonLawrence2012') {
      push @groups, "scf_swenson_lawrence_2012_inparm";

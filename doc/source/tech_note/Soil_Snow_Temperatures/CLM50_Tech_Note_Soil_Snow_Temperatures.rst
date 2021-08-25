@@ -43,7 +43,7 @@ one-dimensional form
 
 This equation is solved numerically to calculate the soil, snow, and
 surface water temperatures for a fifteen-layer soil column with up to
-five overlying layers of snow and a single surface water layer with the
+twelve overlying layers of snow and a single surface water layer with the
 boundary conditions of :math:`h` as the heat flux into the top soil,
 snow, and surface water layers from the overlying atmosphere (section
 :numref:`Numerical Solution Temperature`) and zero heat flux at the bottom 

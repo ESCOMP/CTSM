@@ -485,19 +485,7 @@ contains
 
          else
 
-            !! for single level case, no transport; just update the fluxes calculated in the StateUpdate1 subroutines
-            do l = 1, ndecomp_pools
-               do j = 1,nlevdecomp
-                  do fc = 1, num_soilc
-                     c = filter_soilc (fc)
-
-                     conc_ptr(c,j,l) = conc_ptr(c,j,l) + source(c,j,l)
-
-                     trcr_tendency_ptr(c,j,l) = 0._r8
-
-                  end do
-               end do
-            end do
+            call endrun( "ERROR: use_vertsoilc is now hardcoded to true" )
 
          endif
 

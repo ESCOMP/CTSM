@@ -16,7 +16,7 @@ module initVerticalMod
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb, nlevmaxurbgrnd
   use clm_varctl        , only : fsurdat, iulog
-  use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
+  use clm_varctl        , only : use_vancouver, use_mexicocity, use_extralakelayers
   use clm_varctl        , only : use_bedrock, rundef
   use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
   use clm_varctl        , only : use_fates
@@ -39,9 +39,15 @@ module initVerticalMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
   public :: find_soil_layer_containing_depth
+  public :: readParams
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hasBedrock  ! true if the given column type includes bedrock layers
+  type, private :: params_type
+     real(r8) :: slopebeta      ! exponent for microtopography pdf sigma (unitless)
+     real(r8) :: slopemax       ! max topographic slope for microtopography pdf sigma (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
   !
 
   character(len=*), parameter, private :: sourcefile = &
@@ -51,6 +57,28 @@ module initVerticalMod
   !------------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_initVertical'
+    !--------------------------------------------------------------------
+
+    ! Exponent for microtopography pdf sigma (unitless)
+    call readNcdioScalar(ncid, 'slopebeta', subname, params_inst%slopebeta)
+    ! Max topographic slope for microtopography pdf sigma (unitless) 
+    call readNcdioScalar(ncid, 'slopemax', subname, params_inst%slopemax)
+
+  end subroutine readParams
 
   !------------------------------------------------------------------------
   subroutine initVertical(bounds, glc_behavior, thick_wall, thick_roof)
@@ -71,8 +99,6 @@ contains
     real(r8) ,pointer     :: std (:)           ! read in - topo_std 
     real(r8) ,pointer     :: tslope (:)        ! read in - topo_slope 
     real(r8)              :: slope0            ! temporary
-    real(r8)              :: slopebeta         ! temporary
-    real(r8)              :: slopemax          ! temporary
     integer               :: ier               ! error status
     real(r8)              :: scalez = 0.025_r8 ! Soil layer thickness discretization (m)
     real(r8)              :: thick_equal = 0.2
@@ -247,12 +273,8 @@ contains
     end if  ! calc_method is node-based or thickness-based
 
     ! define a vertical grid spacing such that it is the normal dzsoi if
-    ! nlevdecomp =nlevgrnd, or else 1 meter
-    if (use_vertsoilc) then
-       dzsoi_decomp = dzsoi            !thickness b/n two interfaces
-    else
-       dzsoi_decomp(1) = 1._r8
-    end if
+    ! nlevdecomp =nlevgrnd
+    dzsoi_decomp = dzsoi            !thickness b/n two interfaces
 
     if (masterproc) then
        write(iulog, *) 'zsoi', zsoi(:) 
@@ -684,10 +706,8 @@ contains
 
     do c = begc,endc
        ! microtopographic parameter, units are meters (try smooth function of slope)
-       slopebeta = 3._r8
-       slopemax = 0.4_r8
-       slope0 = slopemax**(-1._r8/slopebeta)
-       col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(-slopebeta)
+       slope0 = params_inst%slopemax**(1._r8/params_inst%slopebeta)
+       col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)
     end do
 
     call ncd_pio_closefile(ncid)

@@ -1,2 +1,3 @@
 add_subdirectory(Species_test)
 add_subdirectory(CNVegComputeSeed_test)
+add_subdirectory(CNPhenology_test)

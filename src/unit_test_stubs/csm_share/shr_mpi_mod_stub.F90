@@ -20,6 +20,7 @@ Module shr_mpi_mod
 
    public :: shr_mpi_chkerr
    public :: shr_mpi_bcast
+   public :: shr_mpi_sum
    public :: shr_mpi_commsize
    public :: shr_mpi_commrank
    public :: shr_mpi_initialized
@@ -308,6 +309,23 @@ SUBROUTINE shr_mpi_bcastr3(arr,comm,string,pebcast)
 END SUBROUTINE shr_mpi_bcastr3
 
 !===============================================================================
+
+SUBROUTINE shr_mpi_sum(lvec,gvec,comm,string,all)
+
+   IMPLICIT none
+
+   !----- arguments ---
+   integer(SHR_KIND_IN), intent(in) :: lvec     ! in/out local values
+   integer(SHR_KIND_IN), intent(out):: gvec     ! in/out global values
+   integer(SHR_KIND_IN), intent(in) :: comm     ! mpi communicator
+   character(*),optional,intent(in) :: string   ! message
+   logical,     optional,intent(in) :: all      ! allreduce if true
+   !----- local -----
+   character(*),parameter             :: subName = '(shr_mpi_sumi0) '
+
+!===============================================================================
+END SUBROUTINE shr_mpi_sum
+
 !===============================================================================
 
 SUBROUTINE shr_mpi_commsize(comm,size,string)

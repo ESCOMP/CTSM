@@ -55,7 +55,6 @@ determine default values for namelists.
 <res sitespf_pt="none"               >1.9x2.5</res>
 <res sitespf_pt="1x1_brazil"         >1x1_brazil</res>
 <res sitespf_pt="5x5_amazon"         >5x5_amazon</res>
-<res sitespf_pt="1x1_camdenNJ"       >1x1_camdenNJ</res>
 <res sitespf_pt="1x1_vancouverCAN"   >1x1_vancouverCAN</res>
 <res sitespf_pt="1x1_mexicocityMEX"  >1x1_mexicocityMEX</res>
 <res sitespf_pt="1x1_asphaltjungleNJ">1x1_asphaltjungleNJ</res>
@@ -103,7 +102,6 @@ determine default values for namelists.
 
 <mask hgrid="0.125nldas2"         >nldas2</mask>
 <mask hgrid="5x5_amazon"          >navy</mask>
-<mask hgrid="1x1_camdenNJ"        >navy</mask>
 <mask hgrid="1x1_vancouverCAN"    >navy</mask>
 <mask hgrid="1x1_mexicocityMEX"   >navy</mask>
 <mask hgrid="1x1_asphaltjungleNJ" >navy</mask>
