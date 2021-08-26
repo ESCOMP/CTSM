@@ -200,6 +200,7 @@ def get_parser(args, description, valid_neon_sites):
     parser.add_argument('--run-from-postad',
                         help='''
                         For transient runs only - should we start from the postad spinup or finidat?
+                        By default start from finidat, if this flag is used the postad run must be available.
                         ''',
                         action="store_true",
                         required = False,
@@ -380,6 +381,7 @@ class NeonSite :
                 basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
 
         with Case(case_root, read_only=False) as case:
+            # in order to avoid the complication of leap years we always set the run_length in units of days.
             case.set_value("STOP_OPTION", "ndays")
             case.set_value("STOP_N", run_length)
             case.set_value("REST_OPTION","end")
