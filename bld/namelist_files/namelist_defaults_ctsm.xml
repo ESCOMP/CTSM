@@ -2551,6 +2551,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <soil_decomp_method use_fates=".true.">CENTURYKoven2013</soil_decomp_method>
 <soil_decomp_method                   >None</soil_decomp_method>
 <use_nitrif_denitrif                  >.true.</use_nitrif_denitrif>
+<use_nitrif_denitrif bgc_mode="sp"    >.false.</use_nitrif_denitrif>
 <use_nitrif_denitrif bgc_mode="fates" >.false.</use_nitrif_denitrif>
 
 <!-- ===== FATES DEFAULTS =========== -->

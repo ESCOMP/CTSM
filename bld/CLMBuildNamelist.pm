@@ -868,7 +868,7 @@ sub setup_cmdl_bgc {
         }
      }
      # nitrif_denitrif can only be .false. if fates is on
-     if ( ! &value_is_true($nl_flags->{'use_fates'}) ) {
+     if ( (! &value_is_true($nl_flags->{'use_fates'})) && &value_is_true($nl_flags->{'use_cn'}) ) {
         $var = "use_nitrif_denitrif";
         if ( ! &value_is_true($nl_flags->{$var}) ) {
            $log->warning("$var normally use_nitrif_denitrif should only be FALSE if FATES is on, it has NOT been validated for being off for BGC mode" );
@@ -2976,6 +2976,10 @@ sub setup_logic_methane {
       if ( defined($nl->get_value($var)) ) {
         $log->fatal_error("$var set without methane model configuration on (use_lch4)");
       }
+    }
+    my $var = "use_nitrif_denitrif";
+    if ( (! &value_is_true( $nl_flags->{'use_fates'} ) ) && &value_is_true($nl->get_value($var)) ) {
+       $log->warning("methane is off (use_lch4=FALSE), but $var is TRUE, both need to be on, unless FATES is also on" );
     }
   }
 } # end methane
