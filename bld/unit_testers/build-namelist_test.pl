@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1734;
+my $ntests = 1736;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1182;
 }
@@ -711,11 +711,6 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "bgc=bgc WO nitrif_denit"   =>{ options=>"-bgc bgc -envxml_dir .",
-                                     namelst=>"use_nitrif_denitrif=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
      "use_cn=true bgc=sp"        =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_cn=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1116,6 +1111,11 @@ my %warntest = (
                                      namelst=>"suplnitro='ALL'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
+                                   },
+     "bgc=bgc WO nitrif_denit"   =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_nitrif_denitrif=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm4_5",
                                    },
      "soilm_stream w transient"  =>{ options=>"-res 0.9x1.25 -envxml_dir . -use_case 20thC_transient",
                                      namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",

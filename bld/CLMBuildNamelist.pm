@@ -871,7 +871,7 @@ sub setup_cmdl_bgc {
      if ( ! &value_is_true($nl_flags->{'use_fates'}) ) {
         $var = "use_nitrif_denitrif";
         if ( ! &value_is_true($nl_flags->{$var}) ) {
-           $log->fatal_error("$var can only be FALSE if FATES is on" );
+           $log->warning("$var normally use_nitrif_denitrif should only be FALSE if FATES is on, it has NOT been validated for being off for BGC mode" );
         }
      }
   }
