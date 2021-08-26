@@ -7,6 +7,7 @@ module SoilBiogeochemNLeachingMod
   !
   ! !USES:
   use shr_kind_mod                    , only : r8 => shr_kind_r8
+  use abortutils                      , only : endrun
   use decompMod                       , only : bounds_type
   use clm_varcon                      , only : dzsoi_decomp, zisoi
   use clm_varctl                      , only : use_nitrif_denitrif, use_vertsoilc
@@ -45,7 +46,6 @@ contains
     !
     ! !USES:
     use ncdio_pio   , only : file_desc_t,ncd_io
-    use abortutils  , only : endrun
     use shr_log_mod , only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:

@@ -305,9 +305,7 @@ contains
                ! otherwise diffusivity will be zeroed out here. EBK CDK 10/18/2011
                anaerobic_frac(c,j) = 0._r8
                diffus (c,j) = 0._r8
-               if ( .not. use_fates )then
-                  call endrun(msg=' ERROR: NITRIF_DENITRIF requires Methane model to be active'//errMsg(sourcefile, __LINE__) )
-               end if
+               !call endrun(msg=' ERROR: NITRIF_DENITRIF requires Methane model to be active'//errMsg(sourcefile, __LINE__) )
             end if
 
 
