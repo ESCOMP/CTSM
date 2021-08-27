@@ -379,7 +379,7 @@ contains
        ! Open master_list_file
        master_list_file = getavu()  ! get next available file unit number
        open(unit = master_list_file, file = 'master_list_file.rst',  &
-            status = 'new', action = 'write', form = 'formatted')
+            status = 'replace', action = 'write', form = 'formatted')
 
        ! File title
        fmt_txt = '(a)'
