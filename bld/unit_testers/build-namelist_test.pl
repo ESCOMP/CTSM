@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1739;
+my $ntests = 1740;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1182;
 }
@@ -1043,6 +1043,11 @@ my %failtest = (
                                    },
      "funWOnitrif"               =>{ options=>"-envxml_dir .",
                                      namelst=>"use_fun=.true., use_nitrif_denitrif=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "SPModeWNitrifNMethane"     =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"use_lch4=.true., use_nitrif_denitrif=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
