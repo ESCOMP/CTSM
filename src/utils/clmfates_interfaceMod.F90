@@ -47,7 +47,6 @@ module CLMFatesInterfaceMod
 
    use SoilStateType     , only : soilstate_type 
    use clm_varctl        , only : iulog
-   use clm_varctl        , only : use_vertsoilc
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
@@ -2586,23 +2585,19 @@ module CLMFatesInterfaceMod
        this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp) = &
              dzsoi_decomp(1:nlevdecomp)
 
-       if (use_vertsoilc) then
-          do j=1,nlevsoil
-             this%fates(nc)%bc_in(s)%decomp_id(j) = j
-             ! Check to make sure that dz = dz_decomp_sisl when vertical soil dynamics
-             ! are active
-             if(abs(this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)-this%fates(nc)%bc_in(s)%dz_sisl(j))>1.e-10_r8)then
-                write(iulog,*) 'when vertical soil decomp dynamics are on'
-                write(iulog,*) 'fates assumes that the decomposition depths equal the soil depths'
-                write(iulog,*) 'layer: ',j
-                write(iulog,*) 'dz_decomp_sisl(j): ',this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)
-                write(iulog,*) 'dz_sisl(j): ',this%fates(nc)%bc_in(s)%dz_sisl(j)
-                call endrun(msg=errMsg(sourcefile, __LINE__))
-             end if
-          end do
-       else
-          call endrun( "ERROR: use_vertsoilc is now hardcoded to true" )
-       end if
+       do j=1,nlevsoil
+          this%fates(nc)%bc_in(s)%decomp_id(j) = j
+          ! Check to make sure that dz = dz_decomp_sisl when vertical soil dynamics
+          ! are active
+          if(abs(this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)-this%fates(nc)%bc_in(s)%dz_sisl(j))>1.e-10_r8)then
+             write(iulog,*) 'when vertical soil decomp dynamics are on'
+             write(iulog,*) 'fates assumes that the decomposition depths equal the soil depths'
+             write(iulog,*) 'layer: ',j
+             write(iulog,*) 'dz_decomp_sisl(j): ',this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)
+             write(iulog,*) 'dz_sisl(j): ',this%fates(nc)%bc_in(s)%dz_sisl(j)
+             call endrun(msg=errMsg(sourcefile, __LINE__))
+          end if
+       end do
 
     end do
 
