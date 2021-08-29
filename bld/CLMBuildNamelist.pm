@@ -848,33 +848,6 @@ sub setup_cmdl_bgc {
      $log->fatal_error("The namelist variable use_fates is inconsistent with the -bgc option");
   }
 
-  {
-     # If the variable has already been set use it, if not set to the value defined by the bgc_mode
-     my @list  = (  "use_lch4", "use_nitrif_denitrif" );
-     my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
-     foreach my $var ( @list ) {
-        my $default_setting = $defaults->get_value($var, \%settings );
-        if ( ! defined($nl->get_value($var))  ) {
-           $nl_flags->{$var} = $default_setting;
-        } else {
-           $nl_flags->{$var} = $nl->get_value($var);
-        }
-        $val = $nl_flags->{$var};
-        my $group = $definition->get_group_name($var);
-        $nl->set_variable_value($group, $var, $val);
-        if (  ! $definition->is_valid_value( $var, $val ) ) {
-           my @valid_values   = $definition->get_valid_values( $var );
-           $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
-        }
-     }
-     # nitrif_denitrif can only be .false. if fates is on
-     if ( (! &value_is_true($nl_flags->{'use_fates'})) && &value_is_true($nl_flags->{'use_cn'}) ) {
-        $var = "use_nitrif_denitrif";
-        if ( ! &value_is_true($nl_flags->{$var}) ) {
-           $log->warning("$var normally use_nitrif_denitrif should only be FALSE if FATES is on, it has NOT been validated for being off for BGC mode" );
-        }
-     }
-  }
 
   # Now set use_cn and use_fates
   foreach $var ( "use_cn", "use_fates" ) {
@@ -885,19 +858,6 @@ sub setup_cmdl_bgc {
         my @valid_values   = $definition->get_valid_values( $var );
         $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
      }
-  }
-
-  my $var = "use_fun";
-  if ( ! defined($nl->get_value($var)) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
-                 'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'} );
-  }
-  if ( (! &value_is_true($nl_flags->{'use_cn'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
-     $log->fatal_error("When FUN is on, use_cn MUST also be on!");
-  }
-  if ( (! &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
-     $log->fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!");
   }
   #
   # Determine Soil decomposition method
@@ -912,6 +872,46 @@ sub setup_cmdl_bgc {
      }
   } elsif ( remove_leading_and_trailing_quotes($nl->get_value($var)) ne "None" ) {
      $log->fatal_error("$var must be None if use_cn or use_fates are not");
+  }
+  #
+  # Soil decomposition control variables, methane and Nitrification-Denitrification
+  #
+  my @list  = (  "use_lch4", "use_nitrif_denitrif" );
+  my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
+  foreach my $var ( @list ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+     $nl_flags->{$var} = $nl->get_value($var);
+  }
+  if ( remove_leading_and_trailing_quotes( $nl->get_value($var)) eq "None" ) {
+     foreach my $var ( @list ) {
+        if ( &value_is_true($nl_flags->{$var}) ) {
+           $log->fatal_error("When soil_decomp_method is NONE $var can NOT be TRUE");
+        }
+     }
+  } else {
+     # nitrif_denitrif can only be .false. if fates is on
+     if ( (! &value_is_true($nl_flags->{'use_fates'})) && &value_is_true($nl_flags->{'use_cn'}) ) {
+        $var = "use_nitrif_denitrif";
+        if ( ! &value_is_true($nl_flags->{$var}) ) {
+           $log->warning("$var normally use_nitrif_denitrif should only be FALSE if FATES is on, it has NOT been validated for being off for BGC mode" );
+        }
+     }
+  }
+  #
+  # Set FUN for BGC
+  #
+  my $var = "use_fun";
+  if ( ! defined($nl->get_value($var)) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'},
+                 'use_nitrif_denitrif'=>$nl_flags->{'use_nitrif_denitrif'} );
+  }
+  if ( (! &value_is_true($nl_flags->{'use_cn'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
+     $log->fatal_error("When FUN is on, use_cn MUST also be on!");
+  }
+  if ( (! &value_is_true($nl_flags->{'use_nitrif_denitrif'}) ) && &value_is_true($nl->get_value('use_fun')) ) {
+     $log->fatal_error("When FUN is on, use_nitrif_denitrif MUST also be on!");
   }
 } # end bgc
 
