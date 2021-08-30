@@ -70,9 +70,13 @@ module CNPhenologyMod
   !
   ! !PRIVATE DATA MEMBERS:
   type, private :: params_type
-     real(r8) :: crit_dayl             ! critical day length for senescence (sec)
-     real(r8) :: crit_dayl_at_high_lat ! critical day length for senescence at high latitudes (sec) (in Eitel 2019 this was 54000)
-     real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg) (Birch et. all 2021 it was 720)
+     real(r8) :: crit_dayl             ! critical day length for senescence (sec) 
+                                       ! (11 hrs [39,600 sec] from White 2001)
+     real(r8) :: crit_dayl_at_high_lat ! critical day length for senescence at high latitudes (sec) 
+                                       ! (in Eitel 2019 this was 54000 [15 hrs])
+     real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg) 
+                                       ! (Birch et. all 2021 it was 720 see line below)
+                                       ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude (Birch et. al 2021)
      real(r8) :: ndays_on              ! number of days to complete leaf onset
      real(r8) :: ndays_off             ! number of days to complete leaf offset
      real(r8) :: fstor2tran            ! fraction of storage to move to transfer for each onset
@@ -127,7 +131,7 @@ module CNPhenologyMod
   integer,  public, parameter :: critical_daylight_depends_on_veg     = critical_daylight_depends_on_lat + 1
   integer,  public, parameter :: critical_daylight_depends_on_latnveg = critical_daylight_depends_on_veg + 1
   integer,  private :: critical_daylight_method = critical_daylight_constant
-  ! For determining leaf offset latitude that's considered high latitude
+  ! For determining leaf offset latitude that's considered high latitude (see Eitel 2019)
   real(r8), parameter :: critical_offset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
   character(len=*), parameter, private :: sourcefile = &
