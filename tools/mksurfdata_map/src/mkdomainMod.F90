@@ -49,6 +49,7 @@ module mkdomainMod
   public domain_read_map
   public domain_write         
   public domain_checksame
+  public is_domain_0to360_longs  ! Does this domain have longitude on a 0 to 360 degree range
   public for_test_create_domain  ! For unit testing create a simple domain
 !
 !
@@ -892,6 +893,35 @@ end subroutine domain_check
         end if
      end do
   end subroutine domain_checksame
+
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: is_domain_0to360_longs
+!
+! !INTERFACE:
+  logical function is_domain_0to360_longs( domain )
+!
+! !DESCRIPTION:
+! Check that the input domains agree with the input map
+!
+! USES:
+    use mkgridmapMod, only : gridmap_type, gridmap_setptrs
+! !ARGUMENTS:
+    implicit none
+    type(domain_type), intent(in) :: domain ! input domain
+!
+! !REVISION HISTORY:
+!
+!EOP
+!-----------------------------------------------------------------------
+     if ( any(domain%lonc < 0.0_r8) )then
+        is_domain_0to360_longs = .false.
+     else
+        is_domain_0to360_longs = .true.
+     end if
+  end function is_domain_0to360_longs
 
 !-----------------------------------------------------------------------
 !BOP
