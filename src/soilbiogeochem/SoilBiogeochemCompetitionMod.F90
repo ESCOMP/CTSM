@@ -383,7 +383,7 @@ contains
                   fpi_vr(c,j) = 0.0_r8
 
                   do k = 1, ndecomp_cascade_transitions
-                     ! TODO slevis: correct to identify as receiver pools?
+                     ! TODO slevis: ok to identify as receiver pools?
                      if (cascade_receiver_pool(k) == i_cop_mic .or. &
                          cascade_receiver_pool(k) == i_oli_mic) then
                         if (pmnf_decomp_cascade(c,j,k) > 0.0_r8 .and. &

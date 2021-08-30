@@ -1032,6 +1032,13 @@ Requires the CN or FATES model to work (either CN or CNDV).
        group="clm_inparm" valid_values="" value=".false.">
 Use parameters for decomposition from the CENTURY Carbon model
 Requires the CN or FATES model to work (either CN or CNDV).
+Requires bgc_mode set to bgc or fates and decomp_mode set to century.
+</entry>
+
+<entry id="use_mimics_decomp" type="logical" category="bgc"
+       group="clm_inparm" valid_values="" value=".false.">
+Use MIMICS below-ground decomposition.
+Requires bgc_mode set to bgc or fates and decomp_mode set to mimics.
 </entry>
 
 <entry id="use_extralakelayers" type="logical" category="physics"
@@ -2095,6 +2102,12 @@ Command line arguement for biogeochemistry mode for CLM4.5
    fates = FATES/ED ecosystem demography model with below ground BGC:
 </entry>
 
+<entry id="decomp_mode" type="char*7" category="default_settings"
+       group="default_settings" valid_values="century,mimics" >
+Command line arguement for below-ground decomposition mode available when
+bgc_mode is set to bgc or fates.
+</entry>
+
 <!-- ========================================================================================  -->
 <!-- namelist elements associated with the vertical CN model                                   -->
 <!-- ========================================================================================  -->
@@ -2123,12 +2136,6 @@ Base advective flux (downwards) for SOM.
 <entry id="max_depth_cryoturb" type="real" category="clm_vertcn"
        group="clm_inparm" valid_values="" >
 Maximum depth to mix soils to by croturbation, in permafrost soils.
-</entry>
-
-<!-- turnover time modifications    -->
-<entry id="decomp_depth_efolding" type="real" category="clm_vertcn"
-       group="bgc_shared" valid_values="" >
-E-folding depth over which decomposition is slowed with depth in all soils.
 </entry>
 
 <entry id="anoxia" type="logical" category="clm_vertcn"

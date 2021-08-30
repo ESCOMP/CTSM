@@ -118,6 +118,11 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%cwd_flig=tempr 
 
+    tString='decomp_depth_efolding'
+    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    CNParamsShareInst%decomp_depth_efolding=tempr
+
     tString='froz_q10'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -161,7 +166,6 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
-    real(r8) :: decomp_depth_efolding = 0.0_r8
     logical  :: constrain_stress_deciduous_onset = .false.
 
     character(len=32) :: subroutine_name = 'CNParamsReadNamelist'
@@ -174,7 +178,6 @@ contains
     ! ----------------------------------------------------------------------
 
     namelist /bgc_shared/ &
-         decomp_depth_efolding,       &
          constrain_stress_deciduous_onset
 
 
@@ -201,18 +204,15 @@ contains
     end if ! masterproc
 
     ! Broadcast the parameters from master
-    call shr_mpi_bcast ( decomp_depth_efolding, mpicom )
     call shr_mpi_bcast ( constrain_stress_deciduous_onset, mpicom )
 
     ! Save the parameter to the instance
-    CNParamsShareInst%decomp_depth_efolding = decomp_depth_efolding
     CNParamsShareInst%constrain_stress_deciduous_onset = constrain_stress_deciduous_onset
 
     ! Output read parameters to the lnd.log
     if (masterproc) then
        write(iulog,*) 'CN/BGC shared namelist parameters:'
        write(iulog,*)' '
-       write(iulog,*)'  decomp_depth_efolding = ', decomp_depth_efolding
        write(iulog,*)'  constrain_stress_deciduous_onset = ',constrain_stress_deciduous_onset
 
        write(iulog,*)

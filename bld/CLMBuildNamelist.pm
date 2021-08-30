@@ -84,6 +84,9 @@ REQUIRED OPTIONS
      -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
      -driver "value"          mct or nuopc
+     -decomp "value"          Build with below-ground decomposition package [ century | mimics ]
+                              (default is NONE).
+                              Below-ground decomposition modes other than NONE require -bgc set to bgc/fates.
      -bgc "value"             Build CLM with BGC package [ sp | cn | bgc | fates ]
                               (default is sp).
                                 CLM Biogeochemistry mode
@@ -92,12 +95,12 @@ OPTIONS
                                 cn    = Carbon Nitrogen model (CN)
                                     This toggles on the namelist variable: use_cn
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
-                                        CENTURY decomposition
+                                        CENTURY or MIMICS decomposition
                                     This toggles on the namelist variables:
-                                          use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, use_century_decomp
+                                          use_cn, use_lch4, use_nitrif_denitrif, use_vertsoilc, and (use_century_decomp or use_mimics_decomp)
                                 fates = FATES/Ecosystem Demography with below ground BGC
                                     This toggles on the namelist variables:
-                                          use_fates, use_vertsoilc, use_century_decomp
+                                          use_fates, use_vertsoilc, and (use_century_decomp or use_mimics_decomp)
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -756,7 +759,7 @@ sub setup_cmdl_fates_mode {
 
       # The following variables may be set by the user and are compatible with use_fates
       # no need to set defaults, covered in a different routine
-      my @list  = (  "use_vertsoilc", "use_century_decomp", "use_lch4" );
+      my @list  = (  "use_vertsoilc", "use_lch4" );
       foreach my $var ( @list ) {
 	  if ( defined($nl->get_value($var))  ) {
 	      $nl_flags->{$var} = $nl->get_value($var);
@@ -836,15 +839,47 @@ sub setup_cmdl_bgc {
   if ($nl_flags->{$var} eq "cn" ) {
      $nl_flags->{'use_cn'} = ".true.";
      $nl_flags->{'use_fates'} = ".false.";
+     $nl_flags->{'use_century_decomp'} = ".false.";
+     $nl_flags->{'use_mimics_decomp'} = ".false.";
+     $log->warning("Ignoring decomp_mode and overwriting any values of use_century_decomp and use_mimics_decomp to .false. because bgc_mode = cn.");
   } elsif ($nl_flags->{$var} eq "bgc" ) {
      $nl_flags->{'use_cn'} = ".true.";
      $nl_flags->{'use_fates'} = ".false.";
+     $nl_flags->{'use_century_decomp'} = ".true.";
+#    Previous line to be replaced by this if-block
+#    if ($nl_flags->{'decomp_mode'} eq "century" ) {
+#      $nl_flags->{'use_century_decomp'} = ".true.";
+#      $nl_flags->{'use_mimics_decomp'} = ".false.";
+#      $log->warning("Overwriting any values of use_century_decomp to .true. and of use_mimics_decomp to .false. because decomp_mode = century.");
+#    } elsif ($nl_flags->{'decomp_mode'} eq "mimics" ) {
+#      $nl_flags->{'use_century_decomp'} = ".false.";
+#      $nl_flags->{'use_mimics_decomp'} = ".true.";
+#      $log->warning("Overwriting any values of use_century_decomp to .false. and of use_mimics_decomp to .true. because decomp_mode = mimics.");
+#    } else {
+#      $log->fatal_error("The namelist variable decomp_mode should equal either 'century' or 'mimics' and currently it's neither");
+#    }
   } elsif ($nl_flags->{$var} eq "fates" ) {
      $nl_flags->{'use_cn'} = ".false.";
      $nl_flags->{'use_fates'} = ".true.";
+     $nl_flags->{'use_century_decomp'} = ".true.";
+#    Previous line to be replaced by this if-block
+#    if ($nl_flags->{'decomp_mode'} eq "century" ) {
+#      $nl_flags->{'use_century_decomp'} = ".true.";
+#      $nl_flags->{'use_mimics_decomp'} = ".false.";
+#      $log->warning("Overwriting any values of use_century_decomp to .true. and of use_mimics_decomp to .false. because decomp_mode = century.");
+#    } elsif ($nl_flags->{'decomp_mode'} eq "mimics" ) {
+#      $nl_flags->{'use_century_decomp'} = ".false.";
+#      $nl_flags->{'use_mimics_decomp'} = ".true.";
+#      $log->warning("Overwriting any values of use_century_decomp to .false. and of use_mimics_decomp to .true. because decomp_mode = mimics.");
+#    } else {
+#      $log->fatal_error("The namelist variable decomp_mode should equal either 'century' or 'mimics' and currently it's neither");
+#    }
   } else {
      $nl_flags->{'use_cn'} = ".false.";
      $nl_flags->{'use_fates'} = ".false.";
+     $nl_flags->{'use_century_decomp'} = ".false.";
+     $nl_flags->{'use_mimics_decomp'} = ".false.";
+     $log->warning("Ignoring decomp_mode and overwriting any values of use_century_decomp and use_mimics_decomp to .false. because bgc_mode not equal to bgc nor fates.");
   }
   if ( defined($nl->get_value("use_cn")) && ($nl_flags->{'use_cn'} ne $nl->get_value("use_cn")) ) {
      $log->fatal_error("The namelist variable use_cn is inconsistent with the -bgc option");
@@ -855,7 +890,7 @@ sub setup_cmdl_bgc {
 
   {
      # If the variable has already been set use it, if not set to the value defined by the bgc_mode
-     my @list  = (  "use_lch4", "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp" );
+     my @list  = (  "use_lch4", "use_nitrif_denitrif", "use_vertsoilc" );
      my $ndiff = 0;
      my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
      foreach my $var ( @list ) {
@@ -882,8 +917,8 @@ sub setup_cmdl_bgc {
      }
   }
 
-  # Now set use_cn and use_fates
-  foreach $var ( "use_cn", "use_fates" ) {
+  # Now set use_cn, use_fates, use_century_decomp, use_mimics_decomp
+  foreach $var ( "use_cn", "use_fates", "use_century_decomp", "use_mimics_decomp" ) {
      $val = $nl_flags->{$var};
      $group = $definition->get_group_name($var);
      $nl->set_variable_value($group, $var, $val);
@@ -2142,6 +2177,7 @@ sub setup_logic_demand {
   $settings{'use_nitrif_denitrif'} = $nl_flags->{'use_nitrif_denitrif'};
   $settings{'use_vertsoilc'}       = $nl_flags->{'use_vertsoilc'};
   $settings{'use_century_decomp'}  = $nl_flags->{'use_century_decomp'};
+  $settings{'use_mimics_decomp'}   = $nl_flags->{'use_mimics_decomp'};
   $settings{'use_crop'}            = $nl_flags->{'use_crop'};
 
   my $demand = $nl->get_value('clm_demand');
@@ -2258,8 +2294,8 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv", 
-                       "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_fates",
-                       "lnd_tuning_mode", 
+                       "use_nitrif_denitrif", "use_vertsoilc", "use_century_decomp", "use_mimics_decomp",
+                       "use_fates", "lnd_tuning_mode",
                      ) {
        $settings{$item}    = $nl_flags->{$item};
     }
@@ -2688,12 +2724,6 @@ sub setup_logic_bgc_shared {
 
   if ( $nl_flags->{'bgc_mode'} ne "sp" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'constrain_stress_deciduous_onset', 'phys'=>$physv->as_string() );
-  }
-  # FIXME(bja, 201606) the logic around fates / bgc_mode /
-  # use_century_decomp is confusing and messed up. This is a hack
-  # workaround.
-  if ( &value_is_true($nl_flags->{'use_century_decomp'}) ) {
-     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'decomp_depth_efolding', 'phys'=>$physv->as_string() );
   }
 }
 
@@ -4007,7 +4037,7 @@ sub write_output_files {
                soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks 
-               clm_initinterp_inparm century_soilbgcdecompcascade
+               clm_initinterp_inparm soilbgcdecompcascade
                soilhydrology_inparm luna friction_velocity mineral_nitrogen_dynamics
                soilwater_movement_inparm rooting_profile_inparm
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol

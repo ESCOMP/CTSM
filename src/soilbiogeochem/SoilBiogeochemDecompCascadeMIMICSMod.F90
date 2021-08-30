@@ -721,6 +721,7 @@ contains
          nue_decomp_cascade(i_cwdl2) = 1.0_r8
       end if
 
+      ! TODO Add rest of new params here unless used after init.
       deallocate(params_inst%mimics_mge)
       deallocate(params_inst%mimics_vmod)
       deallocate(params_inst%mimics_vint)
