@@ -36,11 +36,11 @@ program mksurfdat
     use mkvarctl
     use nanMod             , only : nan, bigint
     use mkncdio            , only : check_ret, ncd_put_time_slice
-    use mkdomainMod        , only : domain_type, domain_read_map, domain_read, &
-                                    domain_write
+    use mkdomainMod        , only : domain_type, domain_read_map, domain_read
+    use mkdomainMod        , only : domain_write, is_domain_0to360_longs
     use mkgdpMod           , only : mkgdp
     use mkpeatMod          , only : mkpeat
-    use mksoildepthMod          , only : mksoildepth
+    use mksoildepthMod     , only : mksoildepth
     use mkagfirepkmonthMod , only : mkagfirepkmon
     use mktopostatsMod     , only : mktopostats
     use mkVICparamsMod     , only : mkVICparams
@@ -422,6 +422,11 @@ program mksurfdat
        write(6,*)'output file will be 1d'
     end if
 
+    ! Make sure ldomain is on a 0 to 360 grid as that's a requirement for CESM
+    if ( .not. is_domain_0to360_longs( ldomain ) )then
+       write(6,*)' Output domain must be on a 0 to 360 longitude grid rather than a -180 to 180 grid as it is required for CESM'
+       stop
+    end if
     ! ----------------------------------------------------------------------
     ! Allocate and initialize dynamic memory
     ! ----------------------------------------------------------------------
