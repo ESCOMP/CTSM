@@ -1,0 +1,37 @@
+module test_mkdomain
+  
+  ! Tests of mkdomainMod
+
+  use pfunit_mod
+
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use mkdomainMod
+
+  implicit none
+  save
+
+  @TestCase
+  type, extends(TestCase) :: TestMkDomain
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+  end type TestMkDomain
+
+contains
+
+  subroutine setUp(this)
+    class(TestMkDomain), intent(inout) :: this
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    class(TestMkDomain), intent(inout) :: this
+
+  end subroutine tearDown
+
+  @Test
+  subroutine test_runmkdomain(this)
+    class(TestMkDomain), intent(inout) :: this
+
+  end subroutine test_runmkdomain
+
+end module test_mkdomain
