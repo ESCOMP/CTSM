@@ -904,7 +904,8 @@ end subroutine domain_check
   logical function is_domain_0to360_longs( domain )
 !
 ! !DESCRIPTION:
-! Check that the input domains agree with the input map
+! Check if the domain has longitudes on a -180 to 180 grid or a 0 to 360 grid.
+! CESM requires the later right now.
 !
 ! USES:
     use mkgridmapMod, only : gridmap_type, gridmap_setptrs
