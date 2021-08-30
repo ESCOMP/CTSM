@@ -332,6 +332,7 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_ch4',ival=pass_ch4)
         
+        ! use_vertsoilc: Carbon soil layer profile is assumed to be on all the time now
         pass_vertsoilc = 1
         call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
         
