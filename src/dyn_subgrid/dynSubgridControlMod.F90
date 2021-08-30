@@ -269,7 +269,7 @@ contains
     ! areas in this respect.
     if (dyn_subgrid_control_inst%do_transient_pfts .or. &
          dyn_subgrid_control_inst%do_transient_crops .or. &
-         dyn_subgrid_control_inst%do_transient_lakes) .or. &
+         dyn_subgrid_control_inst%do_transient_lakes .or. &
          dyn_subgrid_control_inst%do_transient_urban) then
          then
        if (collapse_urban) then
