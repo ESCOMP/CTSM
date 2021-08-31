@@ -237,8 +237,7 @@ def find_soil_structure (surf_file):
     #TODO: What if not cheyenne? Self-contained depth info.
 
     print ('------------')
-    print (surf_file)
-    print (type(surf_file))
+    print ("surf_file : ", surf_file)
     f1 = xr.open_dataset(surf_file)
     print ('------------')
     #print (f1.attrs["Soil_texture_raw_data_file_name"])
@@ -457,6 +456,7 @@ def main():
     parent_dir = os.path.dirname(current_dir) 
     clone_dir = os.path.abspath(os.path.join(__file__ ,"../../.."))
     neon_dir = os.path.join(clone_dir,"neon_surffiles")
+
     print("Present Directory", current_dir) 
 
     #--  download neon data if needed
@@ -466,7 +466,6 @@ def main():
     df = pd.read_csv (neon_file)
 
     # -- Read surface dataset files
-    print (type(surf_file))
     print ("surf_file:", surf_file)
     f1 = xr.open_dataset(surf_file)
 
@@ -521,6 +520,7 @@ def main():
                 "{0:.2f}".format(soil_bot[b]),
                 "-------------")
     '''
+
     #-- update fields with neon
     f2= f1
     soil_levels = f2['PCT_CLAY'].size
@@ -530,27 +530,27 @@ def main():
         print (df['clayTotal'][bin_index[soil_lev]])
         f2['PCT_CLAY'][soil_lev] = df['clayTotal'][bin_index[soil_lev]]
         f2['PCT_SAND'][soil_lev] = df['sandTotal'][bin_index[soil_lev]]
+
         bulk_den = df['bulkDensExclCoarseFrag'][bin_index[soil_lev]]
         carbon_tot = df['carbonTot'][bin_index[soil_lev]]
         estimated_oc = df['estimatedOC'][bin_index[soil_lev]]
 
+        # -- estimated_oc in neon data is rounded to the nearest integer.
+        # -- Check to make sure the rounded oc is not higher than carbon_tot.
+        # -- Use carbon_tot if estimated_oc is bigger than carbon_tot.
         if (estimated_oc > carbon_tot):
             estimated_oc = carbon_tot
- 
-        #print ("carbon_tot:", carbon_tot)
-        layer_depth = df['biogeoBottomDepth'][bin_index[soil_lev]] - df['biogeoTopDepth'][bin_index[soil_lev]]
-        #f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58
-        f2['ORGANIC'][soil_lev] = estimated_oc *  bulk_den / 0.58
-        print ("bin_index:", bin_index[soil_lev])
-        print ("layer_depth:", layer_depth)
-        print ("carbon_tot:",carbon_tot)
-        print ("organic carbon :", estimated_oc)
-        print ("bulk_den:",bulk_den)
-        print ("organic=carbon_tot*bulk_den*0.1/layer_depth * 100/0.58 ")
-        print ("organic:", f2['ORGANIC'][soil_lev].values)
-        #if f2['ORGANIC'][soil_lev].values == nan:
-        #    f2['ORGANIC'][soil_lev].values == 
 
+        layer_depth = df['biogeoBottomDepth'][bin_index[soil_lev]] - df['biogeoTopDepth'][bin_index[soil_lev]]
+
+        f2['ORGANIC'][soil_lev] = estimated_oc *  bulk_den / 0.58
+
+        print ("bin_index    : ", bin_index[soil_lev])
+        print ("layer_depth  : ", layer_depth)
+        print ("carbon_tot   : ",carbon_tot)
+        print ("estimated_oc : ", estimated_oc)
+        print ("bulk_den     : ",bulk_den)
+        print ("organic      :", f2['ORGANIC'][soil_lev].values)
         print ("--------------------------")
 
 
@@ -561,44 +561,6 @@ def main():
 
 
     # -- Interpolate?
-
-
-    """
-    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print (f2['ORGANIC'].values)
-    temp = pd.DataFrame (f2['ORGANIC'].values.ravel())
-    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    #temp = temp.interpolate(method ='linear', limit_direction ='backward')
-    temp = temp.interpolate(method ='spline', order = 2, limit_direction ='both')
-    print (temp.shape)
-    #print (temp.bfill(inplace='True'))
-
-    temp = temp.to_numpy()
-    print ("temp:")
-    print (temp)
-    #temp = pd.DataFrame (f2['ORGANIC'].values.ravel())
-    #temp = temp.interpolate(method='spline', order=2)
-    #print ("temp:")
-    #print (temp)
-    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-
-    for soil_lev in range(soil_levels):
-        print ("......")
-        print ("soil_lev:", soil_lev)
-        print (temp[soil_lev])
-
-        f2['ORGANIC'][soil_lev] = temp[soil_lev].reshape(1,1)
-        print (temp[soil_lev].reshape(1,1))
-        print (f2['ORGANIC'][soil_lev].values)
-
-    print (f2['ORGANIC'].values)
-    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    print (f2['PCT_CLAY'])
-    print (f2['PCT_SAND'])
-
-    """
 
     #TODO : max depth for neon sites from WW (zbedrock)
     # Update zbedrock if neon observation don't make it down to 2m depth
@@ -612,10 +574,6 @@ def main():
         print ('zbedrock is updated.')
         f2['zbedrock'].values[:,:]=obs_bot.iloc[-1]
         zb_flag = True
-
-
-    #if (f2['zbedrock']<rock_thresh):
-    #    f2['zbedrock']=200
 
     sort_print_soil_layers(obs_bot, soil_bot)
 
