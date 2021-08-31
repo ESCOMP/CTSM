@@ -1064,7 +1064,7 @@ contains
         ! For Arctic vegetation -- critical daylength is longer at high latitudes and shorter
         ! at midlatitudes
         else
-           crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* \
+           crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* &
                        (critical_offset_high_lat-abs(grc%latdeg(g)))
            if (crit_daylat < crit_dayl) then
               crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
@@ -1081,7 +1081,7 @@ contains
     case(critical_daylight_depends_on_lat)
         ! Critical daylength is higher at high latitudes and shorter
         ! for temperatre regions
-        crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* \
+        crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* &
                     (critical_offset_high_lat-abs(grc%latdeg(g)))
         if (crit_daylat < crit_dayl) then
            crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
