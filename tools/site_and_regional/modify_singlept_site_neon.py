@@ -12,8 +12,8 @@ overwrite some fields with site-specific data for neon sites.
 
 This script will do the following:
 - Download neon data for the specified site if it does not exist 
-    in the specified directory.
-- Modify surface dataset with downloaded data (neon-specific).
+    in the specified directory : (i.e. ../../../neon_surffiles).
+- Modify surface dataset with downloaded data.
 
 -------------------------------------------------------------------
 Instructions for running on Cheyenne/Casper:
@@ -28,13 +28,14 @@ To remove NPL from your environment on Cheyenne/Casper:
 To see the available options:
     ./modify_singlept_site_neon.py --help
 -------------------------------------------------------------------
+Example:
+    ./modify_singlept_site_neon.py --neon_site PUUM --debug
+-------------------------------------------------------------------
 """
 # TODO (NS)
-# --[] If file not found run subset_data.py
-# --[] Clean up imports for both codes...
+# --[] If subset file not found run subset_data.py
 # --[] Check against a list of valid names.
 # --[] List of valid neon sites for all scripts come from one place.
-# --[] zbedrock
 
 #  Import libraries
 from __future__ import print_function
@@ -168,7 +169,7 @@ def get_parser():
 
 def get_neon(neon_dir, site_name):
     """
-    Function for finding neon data file
+    Function for finding neon data files
     and download from neon server if the
     file does not exits.
 
@@ -234,6 +235,7 @@ def find_surffile(surf_dir, site_name):
     """
     Function for finding and choosing surface file for
     a neon site.
+    These files are created using ./subset_data.py script.
     In case multiple files exist for the neon site, it
     will choose the file created the latest.
 
@@ -352,10 +354,8 @@ def update_metadata(nc, surf_file, neon_file, zb_flag):
     nc.attrs["Updated_using"] = neon_file
     if zb_flag:
         nc.attrs["Updated_fields"] = "PCT_CLAY, PCT_SAND, ORGANIC, zbedrock"
-        # nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC','zbedrock']
     else:
         nc.attrs["Updated_fields"] = "PCT_CLAY, PCT_SAND, ORGANIC"
-    #    nc.attrs['Updated_fields'] = ['PCT_CLAY','PCT_SAND','ORGANIC']
 
     return nc
 
@@ -410,7 +410,7 @@ def sort_print_soil_layers(obs_bot, soil_bot):
     space = " "
     print("================================", "================================")
 
-    print("  Neon data soil structure:    ", " Surface data soil structure:  ")
+    print("  Neon data soil structure:     ", "  Surface data soil structure:  ")
 
     print("================================", "================================")
 
@@ -430,6 +430,10 @@ def sort_print_soil_layers(obs_bot, soil_bot):
 def check_neon_time():
     """
     A function to download and parse neon listing file.
+
+    Returns:
+        dict_out (str) : 
+            dictionary of *_surfaceData.csv files with the last modified
     """
     listing_file = "listing.csv"
     url = "https://neon-ncar.s3.data.neonscience.org/listing.csv"
@@ -443,7 +447,6 @@ def check_neon_time():
     print(dict_out)
     # df_out = df[['object','6','last_modified']]
     # print (df['last_modified'])
-    # print (df_out)
     # print (df['last_modified'].to_datetime())
     return dict_out
 
@@ -476,17 +479,15 @@ def fill_interpolate(f2, var, method):
     """
     print("=====================================")
     print("Filling in ", var, "with interpolation (method =" + method + ").")
+
     print("Variable before filling : ")
     print(f2[var])
 
     tmp_df = pd.DataFrame(f2[var].values.ravel())
 
-    # -- tested a few of these and these two gave the best answers:
     tmp_df = tmp_df.interpolate(method=method, limit_direction="both")
-    # tmp_df = tmp_df.interpolate(method ='spline',order = 5,   limit_direction ='both')
-    # --
-    ###tmp_df = tmp_df.interpolate(method="pad", limit=5, limit_direction = 'forward')
-    ###tmp_df = tmp_df.interpolate(method ='spline',order=2,  limit_direction ='backward')
+    # tmp_df = tmp_df.interpolate(method ='spline',order = 2,   limit_direction ='both')
+    # tmp_df = tmp_df.interpolate(method="pad", limit=5, limit_direction = 'forward')
 
     tmp = tmp_df.to_numpy()
 
@@ -620,17 +621,14 @@ def main():
         print("organic      :", f2["ORGANIC"][soil_lev].values)
         print("--------------------------")
 
+    # -- Interpolate missing values
     method = "linear"
     fill_interpolate(f2, "PCT_CLAY", method)
     fill_interpolate(f2, "PCT_SAND", method)
     fill_interpolate(f2, "ORGANIC", method)
 
-    # -- Interpolate?
 
-    # TODO : max depth for neon sites from WW (zbedrock)
-    # Update zbedrock if neon observation don't make it down to 2m depth
-    # zbedrock = neon depth if neon does not make to 2m depth
-
+    # -- Update zbedrock if neon observation does not make it down to 2m depth
     rock_thresh = 2
 
     zb_flag = False
