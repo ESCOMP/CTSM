@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1744;
+my $ntests = 1809;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1185;
+   $ntests += 1233;
 }
 plan( tests=>$ntests );
 
@@ -315,38 +315,43 @@ print "\n=======================================================================
 print "Test configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case\n";
 print "=================================================================================\n";
 
-# configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-configuration nwp",
-                      "-structure fast",
-                      "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
-                      "-use_case 1850_control",
-                      "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
-                      "-envxml_dir . -infile myuser_nl_clm", 
-                      "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
-                      "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
-                      "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
-                     ) {
-   my $file = $startfile;
-   &make_env_run();
-   eval{ system( "$bldnml -res 0.9x1.25 -envxml_dir . $options > $tempfile 2>&1 " ); };
-   is( $@, '', "options: $options" );
-   $cfiles->checkfilesexist( "$options", $mode );
-   $cfiles->shownmldiff( "default", $mode );
-   my $finidat = `grep finidat lnd_in`;
-   if ( $options =~ /myuser_nl_clm/ ) {
-      my $fsurdat =  `grep fsurdat lnd_in`;
-      like( $fsurdat, "/MYDINLOCROOT/lnd/clm2/PTCLMmydatafiles/1x1pt_US-UMB/surfdata_1x1pt_US-UMB_simyr2000_clm4_5_c131122.nc/", "$options" );
+foreach my $driver ( "mct", "nuopc" ) {
+   print "   For $driver driver\n\n";
+   # configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
+   foreach my $options ( "-configuration nwp",
+                         "-structure fast",
+                         "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
+                         "-namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
+                         "-use_case 1850_control",
+                         "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
+                         "-envxml_dir . -infile myuser_nl_clm", 
+                         "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
+                         "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
+                         "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
+                        ) {
+      my $file = $startfile;
+      &make_env_run();
+      my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
+      eval{ system( "$bldnml $base_options $options > $tempfile 2>&1 " ); };
+      is( $@, '', "options: $base_options $options" );
+      $cfiles->checkfilesexist( "$base_options $options", $mode );
+      $cfiles->shownmldiff( "default", $mode );
+      my $finidat = `grep finidat lnd_in`;
+      if ( $options =~ /myuser_nl_clm/ ) {
+         my $fsurdat =  `grep fsurdat lnd_in`;
+         like( $fsurdat, "/MYDINLOCROOT/lnd/clm2/PTCLMmydatafiles/1x1pt_US-UMB/surfdata_1x1pt_US-UMB_simyr2000_clm4_5_c131122.nc/", "$options" );
+      }
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$base_options $options", $mode );
+         $cfiles->dodiffonfile( "$real_par_file", "$base_options $options", $mode );
+         $cfiles->comparefiles( "$base_options $options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$base_options $options", $mode );
+      }
+      &cleanup();
    }
-   if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
-      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
-   }
-   if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$options", $mode );
-   }
-   &cleanup();
 }
 print "\n===============================================================================\n";
 print "Test the NEON sites\n";

@@ -83,7 +83,7 @@ REQUIRED OPTIONS
                               (default 2000)
      -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
-     -driver "value"          mct or nuopc
+     -driver "value"          CESM driver type you will run with [ mct | nuopc ]
      -bgc "value"             Build CLM with BGC package [ sp | bgc | fates ]
                               (default is sp).
                                 CLM Biogeochemistry mode
