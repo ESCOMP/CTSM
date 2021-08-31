@@ -835,51 +835,66 @@ sub setup_cmdl_bgc {
   }
   $log->verbose_message("Using $nl_flags->{$var} for bgc.");
 
+  my $var1 = "decomp_mode";
+  my $val1 = $nl->get_value($var1);
+
   # now set the actual name list variables based on the bgc alias
   if ($nl_flags->{$var} eq "cn" ) {
      $nl_flags->{'use_cn'} = ".true.";
      $nl_flags->{'use_fates'} = ".false.";
      $nl_flags->{'use_century_decomp'} = ".false.";
      $nl_flags->{'use_mimics_decomp'} = ".false.";
-     $log->warning("Ignoring decomp_mode and overwriting any values of use_century_decomp and use_mimics_decomp to .false. because bgc_mode = cn.");
+     if ($val1 eq "'century'" || $val1 eq "'mimics'") {
+       $log->warning("Ignoring decomp_mode and overwriting any values of use_century_decomp and use_mimics_decomp to .false. because bgc_mode = cn. To get past this warning, use -ignore_warnings or set decomp_mode to NONE.");
+    }
   } elsif ($nl_flags->{$var} eq "bgc" ) {
      $nl_flags->{'use_cn'} = ".true.";
      $nl_flags->{'use_fates'} = ".false.";
-     $nl_flags->{'use_century_decomp'} = ".true.";
-#    Previous line to be replaced by this if-block
-#    if ($nl_flags->{'decomp_mode'} eq "century" ) {
-#      $nl_flags->{'use_century_decomp'} = ".true.";
-#      $nl_flags->{'use_mimics_decomp'} = ".false.";
-#      $log->warning("Overwriting any values of use_century_decomp to .true. and of use_mimics_decomp to .false. because decomp_mode = century.");
-#    } elsif ($nl_flags->{'decomp_mode'} eq "mimics" ) {
-#      $nl_flags->{'use_century_decomp'} = ".false.";
-#      $nl_flags->{'use_mimics_decomp'} = ".true.";
-#      $log->warning("Overwriting any values of use_century_decomp to .false. and of use_mimics_decomp to .true. because decomp_mode = mimics.");
-#    } else {
-#      $log->fatal_error("The namelist variable decomp_mode should equal either 'century' or 'mimics' and currently it's neither");
-#    }
+     if ($val1 eq "'century'" ) {
+       if (! &value_is_true($nl_flags->{'use_century_decomp'}) ||
+           &value_is_true($nl_flags->{'use_mimics_decomp'}) ) {
+         $log->verbose_message("Overwriting any values of use_century_decomp to .true. and of use_mimics_decomp to .false. because decomp_mode = century.");
+       }
+       $nl_flags->{'use_century_decomp'} = ".true.";
+       $nl_flags->{'use_mimics_decomp'} = ".false.";
+     } elsif ($val1 eq "'mimics'" ) {
+       if (&value_is_true($nl_flags->{'use_century_decomp'}) ||
+           ! &value_is_true($nl_flags->{'use_mimics_decomp'}) ) {
+         $log->verbose_message("Overwriting any values of use_century_decomp to .false. and of use_mimics_decomp to .true. because decomp_mode = mimics.");
+       }
+       $nl_flags->{'use_century_decomp'} = ".false.";
+       $nl_flags->{'use_mimics_decomp'} = ".true.";
+     } else {
+       $log->fatal_error("The namelist variable decomp_mode should equal either 'century' or 'mimics' and currently it's neither");
+     }
   } elsif ($nl_flags->{$var} eq "fates" ) {
      $nl_flags->{'use_cn'} = ".false.";
      $nl_flags->{'use_fates'} = ".true.";
-     $nl_flags->{'use_century_decomp'} = ".true.";
-#    Previous line to be replaced by this if-block
-#    if ($nl_flags->{'decomp_mode'} eq "century" ) {
-#      $nl_flags->{'use_century_decomp'} = ".true.";
-#      $nl_flags->{'use_mimics_decomp'} = ".false.";
-#      $log->warning("Overwriting any values of use_century_decomp to .true. and of use_mimics_decomp to .false. because decomp_mode = century.");
-#    } elsif ($nl_flags->{'decomp_mode'} eq "mimics" ) {
-#      $nl_flags->{'use_century_decomp'} = ".false.";
-#      $nl_flags->{'use_mimics_decomp'} = ".true.";
-#      $log->warning("Overwriting any values of use_century_decomp to .false. and of use_mimics_decomp to .true. because decomp_mode = mimics.");
-#    } else {
-#      $log->fatal_error("The namelist variable decomp_mode should equal either 'century' or 'mimics' and currently it's neither");
-#    }
+     if ($val1 eq "'century'" ) {
+       if (! &value_is_true($nl_flags->{'use_century_decomp'}) ||
+           &value_is_true($nl_flags->{'use_mimics_decomp'}) ) {
+         $log->verbose_message("Overwriting any values of use_century_decomp to .true. and of use_mimics_decomp to .false. because decomp_mode = century.");
+       }
+       $nl_flags->{'use_century_decomp'} = ".true.";
+       $nl_flags->{'use_mimics_decomp'} = ".false.";
+     } elsif ($val1 eq "'mimics'" ) {
+       if (&value_is_true($nl_flags->{'use_century_decomp'}) ||
+           ! &value_is_true($nl_flags->{'use_mimics_decomp'}) ) {
+         $log->verbose_message("Overwriting any values of use_century_decomp to .false. and of use_mimics_decomp to .true. because decomp_mode = mimics.");
+       }
+       $nl_flags->{'use_century_decomp'} = ".false.";
+       $nl_flags->{'use_mimics_decomp'} = ".true.";
+     } else {
+       $log->fatal_error("The namelist variable decomp_mode should equal either 'century' or 'mimics' and currently it's neither");
+     }
   } else {
      $nl_flags->{'use_cn'} = ".false.";
      $nl_flags->{'use_fates'} = ".false.";
      $nl_flags->{'use_century_decomp'} = ".false.";
      $nl_flags->{'use_mimics_decomp'} = ".false.";
-     $log->warning("Ignoring decomp_mode and overwriting any values of use_century_decomp and use_mimics_decomp to .false. because bgc_mode not equal to bgc nor fates.");
+     if ($val1 eq "'century'" || $val1 eq "'mimics'") {
+       $log->warning("Ignoring decomp_mode and overwriting any values of use_century_decomp and use_mimics_decomp to .false. because bgc_mode /= bgc and /= fates. To get past this warning, use -ignore_warnings or set decomp_mode to NONE.");
+    }
   }
   if ( defined($nl->get_value("use_cn")) && ($nl_flags->{'use_cn'} ne $nl->get_value("use_cn")) ) {
      $log->fatal_error("The namelist variable use_cn is inconsistent with the -bgc option");

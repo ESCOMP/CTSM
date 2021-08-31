@@ -2581,20 +2581,18 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <use_nitrif_denitrif bgc_mode="cn"  >.false.</use_nitrif_denitrif>
 
 <use_vertsoilc       bgc_mode="bgc" >.true.</use_vertsoilc>
-<use_century_decomp  bgc_mode="bgc" >.true.</use_century_decomp>
-<!-- Previous line to be replaced by the next two
 <use_century_decomp  bgc_mode="bgc" decomp_mode="century" >.true.</use_century_decomp>
+<use_century_decomp  bgc_mode="bgc" decomp_mode="mimics" >.false.</use_century_decomp>
 <use_mimics_decomp   bgc_mode="bgc" decomp_mode="mimics" >.true.</use_mimics_decomp>
--->
+<use_mimics_decomp   bgc_mode="bgc" decomp_mode="century" >.false.</use_mimics_decomp>
 <use_lch4            bgc_mode="bgc" >.true.</use_lch4>
 <use_nitrif_denitrif bgc_mode="bgc" >.true.</use_nitrif_denitrif>
 
 <use_vertsoilc       bgc_mode="fates"  >.true.</use_vertsoilc>
-<use_century_decomp  bgc_mode="fates"  >.true.</use_century_decomp>
-<!-- Previous line to be replaced by the next two
 <use_century_decomp  bgc_mode="fates" decomp_mode="century" >.true.</use_century_decomp>
+<use_century_decomp  bgc_mode="fates" decomp_mode="mimics" >.false.</use_century_decomp>
 <use_mimics_decomp   bgc_mode="fates" decomp_mode="mimics" >.true.</use_mimics_decomp>
--->
+<use_mimics_decomp   bgc_mode="fates" decomp_mode="century" >.false.</use_mimics_decomp>
 <use_lch4            bgc_mode="fates"  >.false.</use_lch4>
 <use_nitrif_denitrif bgc_mode="fates"  >.false.</use_nitrif_denitrif>
 
