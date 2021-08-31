@@ -271,7 +271,6 @@ contains
          dyn_subgrid_control_inst%do_transient_crops .or. &
          dyn_subgrid_control_inst%do_transient_lakes .or. &
          dyn_subgrid_control_inst%do_transient_urban) then
-         then
        if (collapse_urban) then
           write(iulog,*) 'ERROR: do_transient_pfts, do_transient_crops, do_transient_lakes and&
                           do_transient_urban are incompatible with collapse_urban = .true.'
