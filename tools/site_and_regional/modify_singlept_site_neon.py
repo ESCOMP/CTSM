@@ -45,6 +45,7 @@ import glob
 import argparse
 import requests
 
+import logging
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -405,6 +406,34 @@ def download_file(url, fname):
         print('File '+fname+'was not available on the neon server:'+ url)
 
 
+def fill_interpolate (f2, var, method):
+    """
+    Function to interpolate a variable in a
+    xarray dataset a specific method
+    """
+    print ("=====================================")
+    print ("Filling in ", var, "with interpolation (method ="+method+").")
+    print ("Variable before filling : ")
+    print (f2[var])
+
+    tmp_df = pd.DataFrame (f2[var].values.ravel())
+
+    # -- tested a few of these and these two gave the best answers:
+    tmp_df = tmp_df.interpolate(method = method,  limit_direction ='both')
+    #tmp_df = tmp_df.interpolate(method ='spline',order = 5,   limit_direction ='both')
+    #--
+    ###tmp_df = tmp_df.interpolate(method="pad", limit=5, limit_direction = 'forward')
+    ###tmp_df = tmp_df.interpolate(method ='spline',order=2,  limit_direction ='backward')
+
+    tmp = tmp_df.to_numpy()
+
+    soil_levels = f2[var].size
+    for soil_lev in range(soil_levels):
+        f2[var][soil_lev] = tmp[soil_lev].reshape(1,1)
+
+    print ("Variable after filling : ")
+    print (f2[var])
+    print ("=====================================")
 
 def main():
 
@@ -503,16 +532,73 @@ def main():
         f2['PCT_SAND'][soil_lev] = df['sandTotal'][bin_index[soil_lev]]
         bulk_den = df['bulkDensExclCoarseFrag'][bin_index[soil_lev]]
         carbon_tot = df['carbonTot'][bin_index[soil_lev]]
+        estimated_oc = df['estimatedOC'][bin_index[soil_lev]]
+
+        if (estimated_oc > carbon_tot):
+            estimated_oc = carbon_tot
+ 
         #print ("carbon_tot:", carbon_tot)
         layer_depth = df['biogeoBottomDepth'][bin_index[soil_lev]] - df['biogeoTopDepth'][bin_index[soil_lev]]
-        f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58
+        #f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58
+        f2['ORGANIC'][soil_lev] = estimated_oc *  bulk_den / 0.58
         print ("bin_index:", bin_index[soil_lev])
         print ("layer_depth:", layer_depth)
         print ("carbon_tot:",carbon_tot)
+        print ("organic carbon :", estimated_oc)
         print ("bulk_den:",bulk_den)
         print ("organic=carbon_tot*bulk_den*0.1/layer_depth * 100/0.58 ")
         print ("organic:", f2['ORGANIC'][soil_lev].values)
+        #if f2['ORGANIC'][soil_lev].values == nan:
+        #    f2['ORGANIC'][soil_lev].values == 
+
         print ("--------------------------")
+
+
+    method = 'linear'
+    fill_interpolate (f2, 'PCT_CLAY', method)
+    fill_interpolate (f2, 'PCT_SAND', method)
+    fill_interpolate (f2, 'ORGANIC', method)
+
+
+    # -- Interpolate?
+
+
+    """
+    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print (f2['ORGANIC'].values)
+    temp = pd.DataFrame (f2['ORGANIC'].values.ravel())
+    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    #temp = temp.interpolate(method ='linear', limit_direction ='backward')
+    temp = temp.interpolate(method ='spline', order = 2, limit_direction ='both')
+    print (temp.shape)
+    #print (temp.bfill(inplace='True'))
+
+    temp = temp.to_numpy()
+    print ("temp:")
+    print (temp)
+    #temp = pd.DataFrame (f2['ORGANIC'].values.ravel())
+    #temp = temp.interpolate(method='spline', order=2)
+    #print ("temp:")
+    #print (temp)
+    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
+    for soil_lev in range(soil_levels):
+        print ("......")
+        print ("soil_lev:", soil_lev)
+        print (temp[soil_lev])
+
+        f2['ORGANIC'][soil_lev] = temp[soil_lev].reshape(1,1)
+        print (temp[soil_lev].reshape(1,1))
+        print (f2['ORGANIC'][soil_lev].values)
+
+    print (f2['ORGANIC'].values)
+    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print (f2['PCT_CLAY'])
+    print (f2['PCT_SAND'])
+
+    """
 
     #TODO : max depth for neon sites from WW (zbedrock)
     # Update zbedrock if neon observation don't make it down to 2m depth
