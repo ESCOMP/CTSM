@@ -167,7 +167,6 @@ def buildnml(cime_path, rundir):
     config = ConfigParser()
     config.read(ctsm_cfg_path)
 
-    lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', ctsm_cfg_path)
     fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', ctsm_cfg_path)
     finidat = get_config_value(config, 'buildnml_input', 'finidat', ctsm_cfg_path)
 
@@ -251,7 +250,6 @@ def buildnml(cime_path, rundir):
                '-clm_start_type', 'default',
                '-configuration', configuration,
                '-structure', structure,
-               '-lnd_frac', lnd_domain_file,
                '-glc_nec', str(10),
                '-co2_ppmv', co2_ppmv,
                '-co2_type', 'constant',
