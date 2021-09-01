@@ -1124,7 +1124,7 @@ contains
     real(r8), parameter :: min_critical_daylength_onset = 39300._r8/2._r8 ! Minimum daylength for onset to happen
                                                                           ! NOTE above: The 39300/2 value is what we've
                                                                           ! tested with changing it might change answers.
-                                                                          ! See notes on this! parameter below.
+                                                                          ! See notes on this parameter below.
     !-----------------------------------------------------------------------
 
     do_onset = .false.
