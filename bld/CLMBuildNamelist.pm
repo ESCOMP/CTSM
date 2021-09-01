@@ -1799,21 +1799,41 @@ sub setup_logic_lnd_frac {
 
   my ($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref) = @_;
 
+  #
+  # fatmlndfrc is required for the MCT driver (or LILAC), but uneeded for NUOPC
+  #
   my $var = "lnd_frac";
-  if ( defined($opts->{$var}) ) {
-    if ( defined($nl->get_value('fatmlndfrc')) ) {
-      $log->fatal_error("Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE " .
-                  "env variables) AND fatmlndfrac on namelist");
-    }
-    my $lnd_frac = SetupTools::expand_xml_var( $opts->{$var}, $envxml_ref);
-    add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fatmlndfrc','val'=>$lnd_frac );
-  }
-
-  # Get the fraction file
-  if (defined $nl->get_value('fatmlndfrc')) {
-    # do nothing - use value provided by config_grid.xml and clm.cpl7.template
+  if ( $opts->{'driver'} eq "mct" || ($opts->{'res'} eq "lilac") ) {
+     if ( defined($opts->{$var}) ) {
+       if ( defined($nl->get_value('fatmlndfrc')) ) {
+         $log->fatal_error("Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE " .
+                     "env variables) AND fatmlndfrac on namelist");
+       }
+       if ( $opts->{$var} =~ /UNSET/ ) {
+          $log->fatal_error("-lnd_frac was set as UNSET in the CTSM build-namelist set it with the env variables: LND_DOMAIN_PATH/LND_DOMAIN_FILE.");
+       }
+       my $lnd_frac = SetupTools::expand_xml_var( $opts->{$var}, $envxml_ref);
+       add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fatmlndfrc','val'=>$lnd_frac );
+     }
+   
+     # Get the fraction file
+     if (defined $nl->get_value('fatmlndfrc')) {
+       # do nothing - use value provided by config_grid.xml and clm.cpl7.template
+     } else {
+       $log->fatal_error("fatmlndfrc was NOT sent into CLM build-namelist.");
+     }
+  #
+  # For the NUOPC driver neither lnd_frac nor fatmlndfrc need to be set
+  #
   } else {
-    $log->fatal_error("fatmlndfrc was NOT sent into CLM build-namelist.");
+     if ( defined($opts->{$var}) ) {
+       if ( $opts->{$var} !~ /UNSET/ ) {
+          $log->warning("$var does NOT need to be set for the NUOPC driver as it is unused" );
+       }
+     }
+     if ( defined($nl->get_value('fatmlndfrc')) ) {
+       $log->fatal_error("fatmlndfrac should NOT be set in the namelist for the NUOPC driver as it is unused" );
+     }
   }
 }
 
