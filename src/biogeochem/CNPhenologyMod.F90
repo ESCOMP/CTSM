@@ -1122,9 +1122,11 @@ contains
     ! !LOCAL VARIABLES:
     real(r8), parameter :: snow5d_thresh_for_onset      = 0.1_r8          ! 5-day snow depth threshold for leaf onset
     real(r8), parameter :: min_critical_daylength_onset = 39300._r8/2._r8 ! Minimum daylength for onset to happen
-                                                                          ! NOTE above: The 39300/2 value is what we've
-                                                                          ! tested with changing it might change answers.
-                                                                          ! See notes on this parameter below.
+                                                                          ! NOTE above: The 39300/2(19650) value is what we've
+                                                                          ! tested with, we are concerned that changing 
+                                                                          ! it might change answers. This trigger was just
+                                                                          ! added to make sure that onset doesn't happen in Jan/Feb.
+                                                                          ! See more notes on this parameter below.
     !-----------------------------------------------------------------------
 
     do_onset = .false.
