@@ -71,7 +71,7 @@ REQUIRED OPTIONS
                               (if read they allow user_nl_clm and CLM_BLDNML_OPTS to expand
                                variables [for example to use \$DIN_LOC_ROOT])
                               (default current directory)
-     -lnd_frac "domainfile"   Land fraction file (the input domain file)
+     -lnd_frac "domainfile"   Land fraction file (the input domain file) (needed for MCT driver and LILAC)
      -res "resolution"        Specify horizontal grid.  Use nlatxnlon for spectral grids;
                               dlatxdlon for fv grids (dlat and dlon are the grid cell size
                               in degrees for latitude and longitude respectively)
@@ -169,6 +169,8 @@ OPTIONS
      -glc_use_antarctica      Set defaults appropriate for runs that include Antarctica
      -help [or -h]            Print usage to STDOUT.
      -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
+     -lilac                   If CTSM is being run through LILAC (normally not used)
+                              (LILAC is the Lightweight Infrastructure for Land-Atmosphere Coupling)
      -ignore_ic_date          Ignore the date on the initial condition files
                               when determining what input initial condition file to use.
      -ignore_ic_year          Ignore just the year part of the date on the initial condition files
@@ -266,6 +268,7 @@ sub process_commandline {
                chk_res               => undef,
                note                  => undef,
                drydep                => 0,
+               lilac                 => 0,
                output_reals_filename => undef,
                fire_emis             => 0,
                megan                 => "default",
@@ -294,6 +297,7 @@ sub process_commandline {
              "clm_usr_name=s"            => \$opts{'clm_usr_name'},
              "envxml_dir=s"              => \$opts{'envxml_dir'},
              "drydep!"                   => \$opts{'drydep'},
+             "lilac!"                    => \$opts{'lilac'},
              "fire_emis!"                => \$opts{'fire_emis'},
              "ignore_warnings!"          => \$opts{'ignore_warnings'},
              "chk_res!"                  => \$opts{'chk_res'},
@@ -1803,7 +1807,7 @@ sub setup_logic_lnd_frac {
   # fatmlndfrc is required for the MCT driver (or LILAC), but uneeded for NUOPC
   #
   my $var = "lnd_frac";
-  if ( $opts->{'driver'} eq "mct" ) {
+  if ( ($opts->{'driver'} eq "mct") || $opts->{'lilac'} ) {
      if ( defined($opts->{$var}) ) {
        if ( defined($nl->get_value('fatmlndfrc')) ) {
          $log->fatal_error("Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE " .
