@@ -522,12 +522,13 @@ contains
              ptr2d => this%decomp_cpools_vr_col(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='', fill_value=spval, &
+                  long_name='',  units='g/m3', fill_value=spval, &
+                  scale_by_thickness=.false., &
                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
           else
              ptr1d => this%decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
              call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
-                  dim1name='column', long_name='',  units='', fill_value=spval, &
+                  dim1name='column', long_name='',  units='g/m3', fill_value=spval, &
                   interpinic_flag='interp' , readvar=readvar, data=ptr1d)
           end if
           if (flag=='read' .and. .not. readvar) then
@@ -540,12 +541,13 @@ contains
           ptr2d => this%ctrunc_vr_col
           call restartvar(ncid=ncid, flag=flag, varname='col_ctrunc_vr', xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='',  units='', fill_value=spval, &
+               long_name='',  units='gC/m3', fill_value=spval, &
+               scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)
        else
           ptr1d => this%ctrunc_vr_col(:,1) ! nlevdecomp = 1; so treat as 1D variable
           call restartvar(ncid=ncid, flag=flag, varname='col_ctrunc', xtype=ncd_double,  &
-               dim1name='column', long_name='',  units='', fill_value=spval, &
+               dim1name='column', long_name='',  units='gC/m3', fill_value=spval, &
                interpinic_flag='interp' , readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
@@ -567,12 +569,13 @@ contains
              ptr2d => this%decomp_cpools_vr_col(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='', fill_value=spval, &
+                  long_name='',  units='g/m3', fill_value=spval, &
+                  scale_by_thickness=.false., &
                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
           else
              ptr1d => this%decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
              call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
-                  dim1name='column', long_name='',  units='', fill_value=spval, &
+                  dim1name='column', long_name='',  units='g/m3', fill_value=spval, &
                   interpinic_flag='interp' , readvar=readvar, data=ptr1d)
           end if
           if (flag=='read' .and. .not. readvar) then
@@ -592,12 +595,13 @@ contains
           ptr2d => this%ctrunc_vr_col
           call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c13_vr", xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='',  units='', fill_value=spval, &
+               long_name='',  units='gC/m3', fill_value=spval, &
+               scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)
        else
           ptr1d => this%ctrunc_vr_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c13", xtype=ncd_double,  &
-               dim1name='column', long_name='',  units='', fill_value=spval, &
+               dim1name='column', long_name='',  units='gC/m3', fill_value=spval, &
                interpinic_flag='interp' , readvar=readvar, data=ptr1d)
        end if
     end if
@@ -614,13 +618,14 @@ contains
              ptr2d => this%decomp_cpools_vr_col(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double,  &
                   dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                  long_name='',  units='', fill_value=spval, &
+                  long_name='',  units='g/m3', fill_value=spval, &
+                  scale_by_thickness=.false., &
                   interpinic_flag='interp', readvar=readvar, data=ptr2d)
           else
              ptr1d => this%decomp_cpools_vr_col(:,1,k) ! nlevdecomp = 1; so treat as 1D variable
              call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
                   dim1name='column', &
-                  long_name='',  units='', fill_value=spval, &
+                  long_name='',  units='g/m3', fill_value=spval, &
                   interpinic_flag='interp' , readvar=readvar, data=ptr1d)
           end if
           if (flag=='read' .and. .not. readvar) then
@@ -640,12 +645,13 @@ contains
           ptr2d => this%ctrunc_vr_col
           call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c14_vr", xtype=ncd_double,  &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='',  units='', fill_value=spval, &
+               long_name='',  units='gC/m3', fill_value=spval, &
+               scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)
        else
           ptr1d => this%ctrunc_vr_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname="col_ctrunc_c14", xtype=ncd_double,  &
-               dim1name='column', long_name='',  units='', fill_value=spval, &
+               dim1name='column', long_name='',  units='gC/m3', fill_value=spval, &
                interpinic_flag='interp' , readvar=readvar, data=ptr1d)
        end if
 

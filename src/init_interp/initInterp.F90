@@ -22,7 +22,7 @@ module initInterpMod
   use clm_varctl     , only: iulog
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
-  use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
+  use restUtilMod    , only: iflag_copy, iflag_skip, iflag_area
   use IssueFixedMetadataHandler, only : copy_issue_fixed_metadata
   use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
@@ -665,7 +665,7 @@ contains
           call interp_2d_double(var2d_i, var2d_o, &
                begi, endi, bego, endo, &
                sgridindex, &
-               interp_multilevel_container)
+               interp_multilevel_container, ncido)
 
        else
 
@@ -1099,12 +1099,13 @@ contains
 
   subroutine interp_2d_double (var2di, var2do, &
        begi, endi, bego, endo, sgridindex, &
-       interp_multilevel_container)
+       interp_multilevel_container, ncido)
 
     ! --------------------------------------------------------------------
     ! arguments
     class(interp_2dvar_type), intent(inout) :: var2di  ! variable on input file
     class(interp_2dvar_type), intent(inout) :: var2do  ! variable on output file
+    type(file_desc_t)       , intent(inout) :: ncido
     integer           , intent(in)    :: begi, endi
     integer           , intent(in)    :: bego, endo
     integer           , intent(in)    :: sgridindex(bego:)
@@ -1112,12 +1113,16 @@ contains
     !
     ! local variables
     class(interp_multilevel_type), pointer :: multilevel_interpolator
+    type(Var_desc_t)    :: vardesc              ! pio variable descriptor
     integer             :: no                   ! index
     integer             :: level                ! level index
     integer             :: nlevi                ! number of input levels
     real(r8), pointer   :: rbuf2do(:,:)         ! output array
     real(r8), pointer   :: rbuf1di(:)           ! one level of input array
     real(r8), pointer   :: rbuf2do_levelsi(:,:) ! array on output horiz grid, but input levels
+    logical             :: scale_by_thickness   ! true/false flag to scale vertically interpolated variable by soil thickness or not
+    integer             :: iflag_scale_by_thickness  ! 1=true/0=false flag
+    integer             :: status               ! return code
     ! --------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(sgridindex) == (/endo/)), sourcefile, __LINE__)
@@ -1163,6 +1168,16 @@ contains
 
     ! Now do the vertical interpolation
 
+    ! For vertical interpolation, first get scale_by_thickness flag
+    ! from the output file
+    scale_by_thickness = .false.  ! default value
+    status = pio_inq_varid (ncido, trim(var2do%get_varname()), vardesc)
+    status = pio_get_att(ncido, vardesc, 'scale_by_thickness_flag', &
+                         iflag_scale_by_thickness)
+    if (iflag_scale_by_thickness == 1) then
+       scale_by_thickness = .true.
+    end if
+
     ! COMPILER_BUG(wjs, 2015-11-25, cray8.4.0) The cray compiler has trouble
     ! resolving the generic reference here, giving the message: 'No specific
     ! match can be found for the generic subprogram call "READVAR"'. So we
@@ -1175,7 +1190,8 @@ contains
           call multilevel_interpolator%interp_multilevel( &
                data_dest    = rbuf2do(no,:), &
                data_source  = rbuf2do_levelsi(no,:), &
-               index_dest   = no - bego + 1)
+               index_dest   = no - bego + 1, &
+               scale_by_thickness = scale_by_thickness)
        end if
     end do
 

@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=OAES
+./xmlchange PTS_LON=260.93956000000003
+./xmlchange PTS_LAT=35.41062

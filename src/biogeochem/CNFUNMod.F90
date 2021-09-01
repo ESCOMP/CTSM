@@ -1233,13 +1233,13 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                      ! C used for uptake is reduced if the cost of N is very high
                      frac_ideal_C_use = max(0.0_r8,1.0_r8 - (total_N_resistance-fun_cn_flex_a(ivt(p)))/fun_cn_flex_b(ivt(p)) )
                      ! then, if the plant is very much in need of N, the C used for uptake is increased accordingly.
-                     if(delta_CN.lt.0.0)then
+                     if(delta_CN.lt.0.0_r8)then
                        frac_ideal_C_use = frac_ideal_C_use + (1.0_r8-frac_ideal_C_use)*min(1.0_r8, delta_CN/fun_cn_flex_c(ivt(p)))
                      end if
                      ! If we have too much N (e.g. from free N retranslocation) then make frac_ideal_c_use even lower.
                      ! For a CN delta of fun_cn_flex_c, then we reduce C expendiure to the minimum of 0.5.
                      ! This seems a little intense?
-                     if(delta_CN .gt.0.and. frac_ideal_C_use.lt.1.0)then
+                     if(delta_CN .gt.0._r8 .and. frac_ideal_C_use.lt.1.0_r8)then
                        frac_ideal_C_use = frac_ideal_C_use + 0.5_r8*(1.0_r8*delta_CN/fun_cn_flex_c(ivt(p)))
                      end if
                      ! don't let this go above 1 or below an arbitrary minimum (to prevent zero N uptake).

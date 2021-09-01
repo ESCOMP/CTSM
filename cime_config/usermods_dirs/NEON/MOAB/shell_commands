@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=MOAB
+./xmlchange PTS_LON=250.61118
+./xmlchange PTS_LAT=38.25136

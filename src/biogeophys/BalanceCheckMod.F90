@@ -604,8 +604,8 @@ contains
           l = col%landunit(c)       
 
           if (col%itype(c) == icol_sunwall .or.  col%itype(c) == icol_shadewall) then
-             forc_rain_col(c) = 0.
-             forc_snow_col(c) = 0.
+             forc_rain_col(c) = 0._r8
+             forc_snow_col(c) = 0._r8
           else
              forc_rain_col(c) = forc_rain(c)
              forc_snow_col(c) = forc_snow(c)
