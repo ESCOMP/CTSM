@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1809;
+my $ntests = 1825;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1233;
+   $ntests += 1245;
 }
 plan( tests=>$ntests );
 
@@ -324,6 +324,8 @@ foreach my $driver ( "mct", "nuopc" ) {
                          "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
                          "-namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
                          "-use_case 1850_control",
+                         "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
+                         "-res 1x1_brazil",
                          "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                          "-envxml_dir . -infile myuser_nl_clm", 
                          "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
@@ -333,6 +335,9 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $file = $startfile;
       &make_env_run();
       my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
+      if ( $driver eq "nuopc" ) {
+         $base_options = "$base_options -lnd_frac UNSET";
+      }
       eval{ system( "$bldnml $base_options $options > $tempfile 2>&1 " ); };
       is( $@, '', "options: $base_options $options" );
       $cfiles->checkfilesexist( "$base_options $options", $mode );
