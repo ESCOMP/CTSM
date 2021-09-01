@@ -1828,7 +1828,7 @@ sub setup_logic_lnd_frac {
   } else {
      if ( defined($opts->{$var}) ) {
        if ( $opts->{$var} !~ /UNSET/ ) {
-          $log->warning("$var does NOT need to be set for the NUOPC driver as it is unused" );
+          $log->fatal_error("$var should NOT be set for the NUOPC driver as it is unused" );
        }
      }
      if ( defined($nl->get_value('fatmlndfrc')) ) {
