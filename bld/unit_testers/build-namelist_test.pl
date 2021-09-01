@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1829;
+my $ntests = 1828;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1245;
 }
@@ -899,11 +899,6 @@ my %failtest = (
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_1",
-                                   },
-     "lnd_frac NOT set but lilac"=>{ options=>"-driver nuopc -res lilac -envxml_dir . -lnd_frac UNSET",
-                                     namelst=>"fsurdat='surfdata.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },

@@ -1803,7 +1803,7 @@ sub setup_logic_lnd_frac {
   # fatmlndfrc is required for the MCT driver (or LILAC), but uneeded for NUOPC
   #
   my $var = "lnd_frac";
-  if ( $opts->{'driver'} eq "mct" || ($opts->{'res'} eq "lilac") ) {
+  if ( $opts->{'driver'} eq "mct" ) {
      if ( defined($opts->{$var}) ) {
        if ( defined($nl->get_value('fatmlndfrc')) ) {
          $log->fatal_error("Can NOT set both -lnd_frac option (set via LND_DOMAIN_PATH/LND_DOMAIN_FILE " .
