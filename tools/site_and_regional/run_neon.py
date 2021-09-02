@@ -148,6 +148,16 @@ def get_parser(args, description, valid_neon_sites):
                 required = False,
                 default = False)
 
+    parser.add_argument('--rerun',
+                help='''
+                If the case exists but does not appear to be complete, restart it. 
+                [default: %(default)s]
+                ''', 
+                action="store_true",
+                dest="rerun",
+                required = False,
+                default = False)
+
     parser.add_argument('--no-batch',
                 help='''
                 Run locally, do not use batch queueing system (if defined for Machine)
@@ -234,7 +244,7 @@ def get_parser(args, description, valid_neon_sites):
     if args.base_case_root:
         base_case_root = os.path.abspath(args.base_case_root)
 
-    return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root, args.run_from_postad, args.setup_only, args.no_batch
+    return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root, args.run_from_postad, args.setup_only, args.no_batch, args.rerun
 
 def get_isosplit(s, split):
     if split in s:
@@ -356,17 +366,26 @@ class NeonSite :
     
 
     
-    def run_case(self, base_case_root, run_type, run_length, overwrite=False, setup_only=False, no_batch=False):
+    def run_case(self, base_case_root, run_type, run_length, overwrite=False, setup_only=False, no_batch=False, rerun=False):
         user_mods_dirs = [os.path.join(self.cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
         expect(os.path.isdir(base_case_root), "Error base case does not exist in {}".format(base_case_root))
         case_root = os.path.abspath(os.path.join(base_case_root,"..", self.name+"."+run_type))
+        rundir = None
         if os.path.isdir(case_root):
-            if overwrite:
-                logger.info("---- removing the existing case -------")
-                shutil.rmtree(case_root)
-            else:
-                logger.warning("Case already exists in {}, not overwritting.".format(case_root))
-                return
+            with Case(case_root, read_only=False) as case:
+                rundir = case.get_value("RUNDIR")
+                if overwrite:
+                    logger.info("---- removing the existing case -------")
+                    shutil.rmtree(case_root)
+                elif rerun:
+                    if os.path.isfile(os.path.join(rundir,"ESMF_Profile.summary")):
+                        logger.info("Case {} appears to be complete, not rerunning.".format(case_root))
+                    elif not setup_only:
+                        logger.info("Resubmitting case {}".format(case_root))
+                        case.submit(no_batch=no_batch)
+                else:
+                    logger.warning("Case already exists in {}, not overwritting.".format(case_root))
+            return
 
         if run_type == "postad":
             adcase_root = case_root.replace('.postad','.ad')
@@ -392,7 +411,6 @@ class NeonSite :
                 case.set_value("CLM_ACCELERATED_SPINUP","on")
                 case.set_value("RUN_REFDATE", "0018-01-01")
                 case.set_value("RUN_STARTDATE", "0018-01-01")                
-                case.set_value("JOB_WALLCLOCK_TIME", "12:00:00", subgroup="case.run")
             else:
                 case.set_value("CLM_FORCE_COLDSTART","off")
                 case.set_value("CLM_ACCELERATED_SPINUP","off")
@@ -405,7 +423,8 @@ class NeonSite :
                 if self.finidat:
                     case.set_value("RUN_TYPE","startup")
                 else:
-                    self.set_ref_case(case)
+                    if not self.set_ref_case(case):
+                        return
                 case.set_value("STOP_OPTION","nmonths")
                 case.set_value("STOP_N", self.diff_month())
                 case.set_value("DATM_YR_ALIGN",self.start_year)
@@ -425,8 +444,10 @@ class NeonSite :
                 else:
                     case.set_value("DATM_YR_END",self.end_year-1)
 
-                    
-            self.modify_user_nl(case_root, run_type, case.get_value("RUNDIR"))
+            if not rundir:
+                rundir = case.get_value("RUNDIR")
+
+            self.modify_user_nl(case_root, run_type, rundir)
                 
             case.create_namelists()
             if not setup_only:
@@ -441,7 +462,10 @@ class NeonSite :
         else:
             ref_case_root = case_root.replace(".transient",".postad")
             root = ".postad"
-        expect(os.path.isdir(ref_case_root), "ERROR: spinup must be completed first, could not find directory {}".format(ref_case_root))
+        if not os.path.isdir(ref_case_root):
+            logger.warning("ERROR: spinup must be completed first, could not find directory {}".format(ref_case_root))
+            return False
+  
         with Case(ref_case_root) as refcase:
             refrundir = refcase.get_value("RUNDIR")
         case.set_value("RUN_REFDIR", refrundir)
@@ -452,10 +476,10 @@ class NeonSite :
             if m:
                 refdate = m.group(1)
             symlink_force(reffile, os.path.join(rundir,os.path.basename(reffile)))
-        print("Found refdate of {}".format(refdate))
+        logger.info("Found refdate of {}".format(refdate))
         if not refdate:
             logger.warning("Could not find refcase for {}".format(case_root))
-            return
+            return False
 
         for rpfile in glob.iglob(refrundir + "/rpointer*"):
             safe_copy(rpfile, rundir)
@@ -468,7 +492,7 @@ class NeonSite :
             case.set_value("RUN_STARTDATE", refdate)
         else:
             case.set_value("RUN_STARTDATE", "{yr:04d}-{mo:02d}-01".format(yr=self.start_year, mo=self.start_month))
-                
+        return True
         
     def modify_user_nl(self, case_root, run_type, rundir):
         user_nl_fname = os.path.join(case_root, "user_nl_clm")
@@ -604,7 +628,7 @@ def main(description):
     valid_neon_sites = glob.glob(os.path.join(cesmroot,"cime_config","usermods_dirs","NEON","[!d]*"))
     valid_neon_sites = sorted([v.split('/')[-1] for v in valid_neon_sites])
 
-    site_list, output_root, run_type, overwrite, run_length, base_case_root, run_from_postad, setup_only, no_batch = get_parser(sys.argv, description, valid_neon_sites)
+    site_list, output_root, run_type, overwrite, run_length, base_case_root, run_from_postad, setup_only, no_batch, rerun = get_parser(sys.argv, description, valid_neon_sites)
     if output_root:
         logger.debug ("output_root : "+ output_root)
         if not os.path.exists(output_root):
@@ -631,7 +655,7 @@ def main(description):
                                                            compset, overwrite, setup_only)
             logger.info ("-----------------------------------")
             logger.info ("Running CTSM for neon site : {}".format(neon_site.name))
-            neon_site.run_case(base_case_root, run_type, run_length, overwrite, setup_only, no_batch)
+            neon_site.run_case(base_case_root, run_type, run_length, overwrite, setup_only, no_batch, rerun)
 
 if __name__ == "__main__":                                                                                                                                  
         main(__doc__) 
