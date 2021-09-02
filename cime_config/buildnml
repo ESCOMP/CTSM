@@ -166,11 +166,11 @@ def buildnml(case, caseroot, compname):
 
     inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")
 
-    if ( driver == "nuopc" ):
-       lndfrac_setting = " "
+    if driver == "nuopc":
+        lndfrac_setting = " "
     else:
-       lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
-       lndfrac_setting = "-lnd_frac "+lndfrac_file
+        lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
+        lndfrac_setting = "-lnd_frac "+lndfrac_file
 
     config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
 
@@ -269,7 +269,8 @@ def _main_func():
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
         compname = case.get_value("COMP_LND")
-        logger.warning( "WARNING: buildnml is being called a s program rather than a subroutine as it is expected to be in the CESM context" )
+        logger.warning( "WARNING: buildnml is being called a s program rather than a subroutine " +
+                        "as it is expected to be in the CESM context" )
         buildnml(case, caseroot, compname)
 
 if __name__ == "__main__":
