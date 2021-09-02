@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev054
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date:  Wed Sep  1 17:57:48 MDT 2021
+Date: Thu Sep  2 01:18:31 MDT 2021
 One-line Summary: New parameters on paramsfile, many bit-for-bit changes, new history fields for IWUELN,VPD_2M, allow Medlyn Photosynthesis for non-PHS cases, fixes to HumanStressIndex
 
 Purpose and description of changes
@@ -49,7 +49,6 @@ Bugs fixed or introduced
 Issues fixed (include CTSM Issue #):
 
   Fixes #1472 - hist_master_list_file dies if master_list_file.rst already exists
-  Fixes #1471 - Add support for using "black" as a python formatter to our python coding process
   Fixes #1469 - Remove unused 0.1x0.1 grid
   Fixes #1468 - Remove vestiges of ch4 0.9x1.25 grid in mksurfdata_map/mkmapdata
   Fixes #1427 - Division of critical day length by 2 is incorrect
@@ -78,10 +77,14 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
+  Vertical soil carbon is now hardcoded to on. This means that if you had run a simulation
+  with it turned off -- you won't be able to use it's restart files in this versions and after.
+  Likewise with CENTURY-BGC.
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
   Removed namelist options: wrtdia, use_vertsoilc, use_century_decomp, min_wind_snowcompact
   Added namelist options:   min_critical_dayl_method, soil_decomp_method
+    New options for min_critical_dayl_method, DependsOnVeg and DependsOnLatAndVeg
 
   Remove 1x1_camdenNJ and 1x1_asphaltjungleNJ grid options
   Remove some uneeded grids and files, correct 360x720cru grid for mksurfdata_map
@@ -97,6 +100,8 @@ Notes of particular relevance for developers:
 ---------------------------------------------
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   After we turn on methane and nitrfication-dentrification for all configurations we
+   can remove the use_lch4 and use_nitrif_denitrif options
 
 Changes to tests or testing:
     Removed CN and 1x1_camdenNJ tests as well as NoVSNoNI
@@ -141,6 +146,7 @@ Changes answers relative to baseline: No bit-for-bit (except diagnostic fields w
     - what platforms/compilers: All
     - nature of change: Small (only to diagnostic fields)
          Also now can't run with use_vertsoilc off
+	 anoxia tests are different from rootlit tests as use_vertsoilc is now hardcoded on
 
 Other details
 -------------
