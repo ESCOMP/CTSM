@@ -315,6 +315,7 @@ contains
     begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
+
     this%t_h2osfc_col(begc:endc) = spval
     call hist_addfld1d (fname='TH2OSFC',  units='K',  &
          avgflag='A', long_name='surface water temperature', &
@@ -1156,7 +1157,7 @@ contains
     this%t_ref2m_24_patch(bounds%begp:bounds%endp) = spval
     call init_accum_field (name='T_REF24', units='K', &    
          desc='24 hour average of 2-m temperature', accum_type='timeavg', accum_period=-1, &
-         subgrid_type='pft', numlev=1, init_value=0._r8)
+         subgrid_type='pft', numlev=1, init_value=0.0_r8)
 
     call init_accum_field(name='TREFAV', units='K', &
          desc='average over an hour of 2-m temperature', accum_type='timeavg', accum_period=nint(3600._r8/dtime), &
@@ -1534,7 +1535,6 @@ contains
     end if
 
     deallocate(rbufslp)
-
   end subroutine UpdateAccVars
 
 end module TemperatureType

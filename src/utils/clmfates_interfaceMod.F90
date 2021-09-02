@@ -820,6 +820,9 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%t_ref2m_max_si = &
                temperature_inst%t_ref2m_max_patch(col%patchi(c)) ! ! Marius
 
+         this%fates(nc)%bc_in(s)%dayl_si = grc%dayl(col%gridcell(c))  ! ! Marius 
+         this%fates(nc)%bc_in(s)%prev_dayl_si = grc%prev_dayl(col%gridcell(c))  ! ! Marius 
+
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
                min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
 
