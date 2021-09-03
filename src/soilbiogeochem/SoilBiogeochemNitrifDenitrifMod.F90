@@ -255,7 +255,7 @@ contains
 
       organic_max = CNParamsShareInst%organic_max
 
-      pH(bounds%begc:bounds%endc) = 6.5  !!! set all soils with the same pH as placeholder here
+      pH(bounds%begc:bounds%endc) = 6.5_r8  !!! set all soils with the same pH as placeholder here
       co2diff_con(1) =   0.1325_r8
       co2diff_con(2) =   0.0009_r8
 
@@ -316,7 +316,7 @@ contains
             k_nitr_t_vr(c,j) = min(t_scalar(c,j), 1._r8)
 
             ! ph function from Parton et al., (2001, 1996)
-            k_nitr_ph_vr(c,j) = 0.56 + atan(rpi * 0.45 * (-5.+ pH(c)))/rpi
+            k_nitr_ph_vr(c,j) = 0.56_r8 + atan(rpi * 0.45_r8 * (-5._r8+ pH(c)))/rpi
 
             ! moisture function-- assume the same moisture function as limits heterotrophic respiration
             ! Parton et al. base their nitrification- soil moisture rate constants based on heterotrophic rates-- can we do the same?
@@ -389,7 +389,7 @@ contains
             fr_WFPS(c,j) = max(0.1_r8, 0.015_r8 * wfps_vr(c,j) - 0.32_r8)
 
             ! final ratio expression 
-            n2_n2o_ratio_denit_vr(c,j) = max(0.16*ratio_k1(c,j), ratio_k1(c,j)*exp(-0.8 * ratio_no3_co2(c,j))) * fr_WFPS(c,j)
+            n2_n2o_ratio_denit_vr(c,j) = max(0.16_r8*ratio_k1(c,j), ratio_k1(c,j)*exp(-0.8_r8 * ratio_no3_co2(c,j))) * fr_WFPS(c,j)
 
          end do
 

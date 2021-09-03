@@ -8,7 +8,6 @@ module SoilBiogeochemNStateUpdate1Mod
   use shr_kind_mod                       , only: r8 => shr_kind_r8
   use clm_time_manager                   , only : get_step_size_real
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
   use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop
   use clm_varctl                         , only : use_soil_matrixcn
   use clm_varcon                         , only : nitrif_n2o_loss_frac, dzsoi_decomp

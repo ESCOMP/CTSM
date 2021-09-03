@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=TEAK
+./xmlchange PTS_LON=240.99424199999999
+./xmlchange PTS_LAT=37.006472

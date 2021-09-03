@@ -1,0 +1,3 @@
+./xmlchange NEONSITE=GUAN
+./xmlchange PTS_LON=293.13112
+./xmlchange PTS_LAT=17.96882

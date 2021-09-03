@@ -172,7 +172,7 @@ contains
     use clm_varcon          , only : secspday, denh2o, denice, grlnd
     use clm_varctl          , only : use_cn, use_lch4, use_fates
     use clm_varctl          , only : iulog, fsurdat, paramfile, soil_layerstruct_predefined
-    use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice_mec
+    use landunit_varcon     , only : istdlak, istwet, istsoil, istcrop, istice
     use column_varcon       , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv 
     use fileutils           , only : getfil
     use organicFileMod      , only : organicrd 
@@ -402,9 +402,9 @@ contains
        g = col%gridcell(c)
        l = col%landunit(c)
 
-       ! istwet and istice_mec and
+       ! istwet and istice and
        ! urban roof, sunwall, shadewall properties set to special value
-       if (lun%itype(l)==istwet .or. lun%itype(l)==istice_mec .or. &
+       if (lun%itype(l)==istwet .or. lun%itype(l)==istice .or. &
            (lun%urbpoi(l) .and. col%itype(c) /= icol_road_perv .and. &
                                 col%itype(c) /= icol_road_imperv)) then
 
@@ -649,7 +649,7 @@ contains
              soilstate_inst%sucsat_col(c,lev) = params_inst%sucsat_sf * ( (1._r8-om_frac) * &
                    soilstate_inst%sucsat_col(c,lev) + om_sucsat_lake * om_frac )
 
-             xksat = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
+             xksat = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
 
              ! perc_frac is zero unless perf_frac greater than percolation threshold
              if (om_frac > pc_lake) then
@@ -664,7 +664,7 @@ contains
 
              ! uncon_hksat is series addition of mineral/organic conductivites
              if (om_frac < 1._r8) then
-                xksat = 0.0070556 *( 10.**(-0.884+0.0153*sand) ) ! mm/s
+                xksat = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
                 uncon_hksat = uncon_frac/((1._r8-om_frac)/xksat + ((1._r8-perc_frac)*om_frac)/om_hksat_lake)
              else
                 uncon_hksat = 0._r8

@@ -300,7 +300,7 @@ contains
          ! allocation as specified in the pft-physiology file.  The value is also used
          ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
          if (stem_leaf(ivt(p)) == -1._r8) then
-            f3 = (2.7/(1.0+exp(-0.004*(annsum_npp(p) - 300.0)))) - 0.4
+            f3 = (2.7_r8/(1.0_r8+exp(-0.004_r8*(annsum_npp(p) - 300.0_r8)))) - 0.4_r8
          else
             f3 = stem_leaf(ivt(p))
          end if
@@ -922,7 +922,7 @@ contains
          ! as a trigger here: -1.0 means to use the dynamic allocation (trees).
 
          if (stem_leaf(ivt(p)) == -1._r8) then
-            f3 = (2.7/(1.0+exp(-0.004*(annsum_npp(p) - 300.0)))) - 0.4
+            f3 = (2.7_r8/(1.0_r8+exp(-0.004_r8*(annsum_npp(p) - 300.0_r8)))) - 0.4_r8
          else
             f3 = stem_leaf(ivt(p))
          end if
