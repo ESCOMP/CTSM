@@ -18,7 +18,7 @@ module lnd_import_export
   use glc2lndMod              , only : glc2lnd_type
   use domainMod               , only : ldomain
   use spmdMod                 , only : masterproc
-  use seq_drydep_mod          , only : seq_drydep_readnl, n_drydep
+  use seq_drydep_mod          , only : seq_drydep_readnl, n_drydep, NPatch, NLUse
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
@@ -127,6 +127,9 @@ module lnd_import_export
   character(*), parameter :: Sl_soilw       = 'Sl_soilw'
   character(*), parameter :: Fall_fco2_lnd  = 'Fall_fco2_lnd'
   character(*), parameter :: Sl_ddvel       = 'Sl_ddvel'
+  character(*), parameter :: Sl_lwtgcell    = 'Sl_lwtgcell'
+  character(*), parameter :: Sl_pwtgcell    = 'Sl_pwtgcell'
+  character(*), parameter :: Sl_lai         = 'Sl_lai'
   character(*), parameter :: Fall_voc       = 'Fall_voc'
   character(*), parameter :: Fall_fire      = 'Fall_fire'
   character(*), parameter :: Sl_fztop       = 'Sl_fztop'
@@ -272,6 +275,13 @@ contains
        end if
        if (drydep_nflds > 0) then
           call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_ddvel, ungridded_lbound=1, ungridded_ubound=drydep_nflds)
+       end if
+       if (NLUse > 0) then
+          call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_lwtgcell, ungridded_lbound=1, ungridded_ubound=NLUse)
+       end if
+       if (NPatch > 0) then
+          call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_pwtgcell, ungridded_lbound=1, ungridded_ubound=NPatch)
+          call fldlist_add(fldsFrLnd_num, fldsFrLnd, Sl_lai, ungridded_lbound=1, ungridded_ubound=NPatch)
        end if
        if (shr_megan_mechcomps_n > 0) then
           call fldlist_add(fldsFrLnd_num, fldsFrLnd, Fall_voc, ungridded_lbound=1, ungridded_ubound=megan_nflds)
@@ -797,6 +807,18 @@ contains
        end if
        if (fldchk(exportState, Sl_ddvel)) then ! dry dep velocities
           call state_setexport_2d(exportState, Sl_ddvel, lnd2atm_inst%ddvel_grc(begg:,1:drydep_nflds), rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+       if (fldchk(exportState, Sl_lwtgcell)) then ! landunit weights
+          call state_setexport_2d(exportState, Sl_lwtgcell, lnd2atm_inst%lwtgcell_grc(begg:,1:NLUse), rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+       if (fldchk(exportState, Sl_pwtgcell)) then ! patch weights
+          call state_setexport_2d(exportState, Sl_pwtgcell, lnd2atm_inst%pwtgcell_grc(begg:,1:NPatch), rc=rc)
+          if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       end if
+       if (fldchk(exportState, Sl_lai)) then ! leaf area indices
+          call state_setexport_2d(exportState, Sl_lai, lnd2atm_inst%lai_grc(begg:,1:NPatch), rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Fall_voc)) then ! megan voc emis fluxes
