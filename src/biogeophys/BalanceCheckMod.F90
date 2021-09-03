@@ -11,6 +11,7 @@ module BalanceCheckMod
   use decompMod          , only : bounds_type
   use abortutils         , only : endrun
   use clm_varctl         , only : iulog
+  use clm_varctl         , only : use_fates_planthydro
   use clm_varcon         , only : namep, namec, nameg
   use clm_varpar         , only : nlevsoi
   use GetGlobalValuesMod , only : GetGlobalIndex
@@ -32,7 +33,7 @@ module BalanceCheckMod
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
   use PatchType          , only : patch                
-  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice_mec
+  use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use clm_varctl         , only : use_hillslope
@@ -605,8 +606,8 @@ contains
           l = col%landunit(c)       
 
           if (col%itype(c) == icol_sunwall .or.  col%itype(c) == icol_shadewall) then
-             forc_rain_col(c) = 0.
-             forc_snow_col(c) = 0.
+             forc_rain_col(c) = 0._r8
+             forc_snow_col(c) = 0._r8
           else
              forc_rain_col(c) = forc_rain(c)
              forc_snow_col(c) = forc_snow(c)
@@ -652,7 +653,7 @@ contains
              ' local indexc= ',indexc,&
            ! ' global indexc= ',GetGlobalIndex(decomp_index=indexc, clmlevel=namec), &
              ' errh2o= ',errh2o_col(indexc)
-         if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
+           if ((errh2o_max_val > error_thresh) .and. (DAnstep > skip_steps)) then
               
               write(iulog,*)'CTSM is stopping because errh2o > ', error_thresh, ' mm'
               write(iulog,*)'nstep                     = ',nstep
@@ -724,8 +725,9 @@ contains
 
        errh2o_max_val = maxval(abs(errh2o_grc(bounds%begg:bounds%endg)))
 
-       if (errh2o_max_val > h2o_warning_thresh) then
-
+       ! BUG(rgk, 2021-04-13, ESCOMP/CTSM#1314) Temporarily bypassing gridcell-level check with use_fates_planthydro until issue 1314 is resolved
+       
+       if (errh2o_max_val > h2o_warning_thresh .and. .not.use_fates_planthydro) then
           indexg = maxloc( abs(errh2o_grc(bounds%begg:bounds%endg)), 1 ) + bounds%begg - 1
           write(iulog,*)'WARNING:  grid cell-level water balance error ',&
              ' nstep= ',nstep, &
@@ -797,9 +799,10 @@ contains
                         + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
                 endif
 
-                if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
-                     lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
-                      lun%itype(l) == istice_mec) then
+                 if (col%itype(c) == icol_road_perv .or. lun%itype(l) == istsoil .or. &
+                      lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
+                      lun%itype(l) == istice) then
+
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
                           + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
                           + qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) &

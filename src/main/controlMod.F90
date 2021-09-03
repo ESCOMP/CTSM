@@ -17,9 +17,9 @@ module controlMod
   use abortutils                       , only: endrun
   use spmdMod                          , only: masterproc, mpicom
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
-  use decompMod                        , only: clump_pproc
+  use decompInitMod                    , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
-  use clm_varpar                       , only: maxpatch_glcmec, numrad, nlevsno
+  use clm_varpar                       , only: maxpatch_glc, numrad, nlevsno
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen 
   use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape 
@@ -119,7 +119,6 @@ contains
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
-    use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
     !
@@ -190,7 +189,7 @@ contains
 
     ! Glacier_mec info
     namelist /clm_inparm/ &    
-         maxpatch_glcmec, glc_do_dynglacier, &
+         maxpatch_glc, glc_do_dynglacier, &
          glc_snow_persistence_max_days, &
          nlevsno, h2osno_max
 
@@ -352,8 +351,8 @@ contains
           call apply_use_init_interp(finidat_interp_dest, finidat, finidat_interp_source)
        end if
 
-       if (maxpatch_glcmec <= 0) then
-          call endrun(msg=' ERROR: maxpatch_glcmec must be at least 1 ' // &
+       if (maxpatch_glc <= 0) then
+          call endrun(msg=' ERROR: maxpatch_glc must be at least 1 ' // &
                errMsg(sourcefile, __LINE__))
        end if
 
@@ -446,11 +445,6 @@ contains
                    errMsg(sourcefile, __LINE__))
           end if
           
-          if( use_lch4 ) then
-             call endrun(msg=' ERROR: use_lch4 (methane) and use_fates cannot both be set to true.'//&
-                   errMsg(sourcefile, __LINE__))
-          end if
-
           if ( n_drydep > 0 .and. drydep_method /= DD_XLND ) then
              call endrun(msg=' ERROR: dry deposition via ML Welsey is not compatible with FATES.'//&
                    errMsg(sourcefile, __LINE__))
@@ -538,9 +532,6 @@ contains
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
        call CNPhenologyReadNML       ( NLFilename )
-    end if
-    if ( use_century_decomp ) then
-       call DecompCascadeBGCreadNML( NLFilename )
     end if
 
     ! ----------------------------------------------------------------------
@@ -803,7 +794,7 @@ contains
     call mpi_bcast (h2osno_max, 1, MPI_REAL8, 0, mpicom, ier)
 
     ! glacier_mec variables
-    call mpi_bcast (maxpatch_glcmec, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (maxpatch_glc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (glc_do_dynglacier, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glcmec_downscale_longwave, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (glc_snow_persistence_max_days, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -976,12 +967,8 @@ contains
     write(iulog,*) '   Number of snow layers =', nlevsno
     write(iulog,*) '   Max snow depth (mm) =', h2osno_max
 
-    write(iulog,*) '   glc number of elevation classes =', maxpatch_glcmec
-       if (glcmec_downscale_longwave) then
-          write(iulog,*) '   Longwave radiation will be downscaled'
-       else
-          write(iulog,*) '   Longwave radiation will NOT be downscaled'
-       endif
+    write(iulog,*) '   glc number of elevation classes =', maxpatch_glc
+
     if (glc_do_dynglacier) then
        write(iulog,*) '   glc CLM glacier areas and topography WILL evolve dynamically'
     else

@@ -58,5 +58,5 @@ smiS8 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional_ndep
 bliS8 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional_ndep
 smiS9 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional_T62
 bliS9 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional_T62
-smiS0 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional_0.5popd
-bliS0 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional_0.5popd
+smiS0 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional_05popd
+bliS0 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional_05popd

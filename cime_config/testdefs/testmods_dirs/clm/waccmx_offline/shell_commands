@@ -1,4 +1,5 @@
 ./xmlchange USE_ESMF_LIB=TRUE,ATM_NCPL=288,CALENDAR=GREGORIAN,ROF_NCPL='$ATM_NCPL',LND_TUNING_MODE="clm5_0_cam6.0"
 ./xmlchange CLM_BLDNML_OPTS="-megan -drydep" --append
 ./xmlchange RUN_STARTDATE=1979-01-01
+./xmlchange ROF_NCPL='$ATM_NCPL'
 

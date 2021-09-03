@@ -473,8 +473,8 @@ def _check_and_transform_os(os_type):
                   'cnl': 'CNL'}
     try:
         os_type_transformed = transforms[os_type]
-    except KeyError:
-        raise ValueError("Unknown OS: {}".format(os_type))
+    except KeyError as exc:
+        raise ValueError("Unknown OS: {}".format(os_type)) from exc
     return os_type_transformed
 
 def _get_case_dir(build_dir):
@@ -658,12 +658,18 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
     pio_stride = _xmlquery('MAX_MPITASKS_PER_NODE', build_dir)
     if no_pnetcdf:
         pio_typename = 'netcdf'
+        # pio_rearranger = 1 is generally more efficient with netcdf (see
+        # https://github.com/ESMCI/cime/pull/3732#discussion_r508954806 and the following
+        # discussion)
+        pio_rearranger = 1
     else:
         pio_typename = 'pnetcdf'
+        pio_rearranger = 2
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES, 'lnd_modelio_template.nml'),
         path_to_final=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, 'lnd_modelio.nml'),
-        substitutions={'PIO_STRIDE':pio_stride,
+        substitutions={'PIO_REARRANGER':pio_rearranger,
+                       'PIO_STRIDE':pio_stride,
                        'PIO_TYPENAME':pio_typename})
 
     shutil.copyfile(

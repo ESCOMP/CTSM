@@ -83,6 +83,7 @@ REQUIRED OPTIONS
                               (default 2000)
      -structure "structure"   The overall structure being used [ standard | fast ]
 OPTIONS
+     -driver "value"          mct or nuopc
      -bgc "value"             Build CLM with BGC package [ sp | cn | bgc | fates ]
                               (default is sp).
                                 CLM Biogeochemistry mode
@@ -167,6 +168,7 @@ OPTIONS
                               (Note: buildnml copies the file for use by the driver)
      -glc_nec <name>          Glacier number of elevation classes [0 | 3 | 5 | 10 | 36]
                               (default is 0) (standard option with land-ice model is 10)
+     -glc_use_antarctica      Set defaults appropriate for runs that include Antarctica
      -help [or -h]            Print usage to STDOUT.
      -light_res <value>       Resolution of lightning dataset to use for CN fire (360x720 or 94x192)
      -ignore_ic_date          Ignore the date on the initial condition files
@@ -241,7 +243,7 @@ sub process_commandline {
   # Save the command line arguments to the script. NOTE: this must be
   # before GetOptions() is called because items are removed from from
   # the array!
-  $nl_flags->{'cmdline'} = "@ARGV";
+  $nl_flags->{'cmdline'} = "@ARGV\n";
 
   my %opts = ( cimeroot              => undef,
                config                => "config_cache.xml",
@@ -251,8 +253,10 @@ sub process_commandline {
                co2_type              => undef,
                co2_ppmv              => undef,
                clm_demand            => "null",
+               driver                => "mct",
                help                  => 0,
                glc_nec               => "default",
+               glc_use_antarctica    => 0,
                light_res             => "default",
                lnd_tuning_mode       => "default",
                lnd_frac              => undef,
@@ -282,6 +286,7 @@ sub process_commandline {
 
   GetOptions(
              "cimeroot=s"                => \$opts{'cimeroot'},
+             "driver=s"                  => \$opts{'driver'},
              "clm_demand=s"              => \$opts{'clm_demand'},
              "co2_ppmv=f"                => \$opts{'co2_ppmv'},
              "co2_type=s"                => \$opts{'co2_type'},
@@ -297,6 +302,7 @@ sub process_commandline {
              "note!"                     => \$opts{'note'},
              "megan!"                    => \$opts{'megan'},
              "glc_nec=i"                 => \$opts{'glc_nec'},
+             "glc_use_antarctica!"       => \$opts{'glc_use_antarctica'},
              "light_res=s"               => \$opts{'light_res'},
              "d:s"                       => \$opts{'dir'},
              "h|help"                    => \$opts{'help'},
@@ -1102,6 +1108,12 @@ sub setup_cmdl_spinup {
        $nl_flags->{'bgc_spinup'} = "off";
        $val = $defaults->get_value($var);
     }
+    # For AD spinup mode by default reseed dead plants
+    if ( $nl_flags->{$var} ne "off" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition,
+                    $defaults, $nl, "reseed_dead_plants", clm_accelerated_spinup=>$nl_flags->{$var},
+                    use_cn=>$nl_flags->{'use_cn'} );
+    }
   } else {
     if ( defined($nl->get_value("spinup_state")) ) {
        $log->fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of CN or BGC," .
@@ -1196,7 +1208,7 @@ sub setup_cmdl_run_type {
     if ($opts->{$var} eq "default" ) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
                   'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
-                  'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, 
+                  'sim_year'=>$st_year, 'sim_year_range'=>$nl_flags->{'sim_year_range'},
                   'bgc_spinup'=>$nl_flags->{'bgc_spinup'} );
     } else {
       my $group = $definition->get_group_name($var);
@@ -1617,6 +1629,11 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_bgc_shared($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
 
+  ##################################
+  # namelist group: cnphenology
+  ##################################
+  setup_logic_cnphenology($opts,  $nl_flags, $definition, $defaults, $nl, $physv);
+
   #############################################
   # namelist group: soilwater_movement_inparm #
   #############################################
@@ -1631,11 +1648,6 @@ sub process_namelist_inline_logic {
   # namelist group: friction_velocity         #
   #############################################
   setup_logic_friction_vel($opts,  $nl_flags, $definition, $defaults, $nl);
-
-  ################################################
-  # namelist group: century_soilbgcdecompcascade #
-  ################################################
-  setup_logic_century_soilbgcdecompcascade($opts,  $nl_flags, $definition, $defaults, $nl);
 
   #############################
   # namelist group: cngeneral #
@@ -1903,7 +1915,7 @@ sub setup_logic_glacier {
      $log->fatal_error("glc_do_dynglacier can only be set via the env variable $clm_upvar: it can NOT be set in user_nl_clm");
   }
 
-  my $var = "maxpatch_glcmec";
+  my $var = "maxpatch_glc";
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'val'=>$nl_flags->{'glc_nec'} );
 
   my $val = $nl->get_value($var);
@@ -1918,7 +1930,8 @@ sub setup_logic_glacier {
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glc_snow_persistence_max_days');
 
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'albice');
-  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior');
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_behavior',
+              'glc_use_antarctica'=>$opts->{'glc_use_antarctica'});
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_melt_behavior');
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_ice_runoff_behavior');
 }
@@ -2686,6 +2699,24 @@ sub setup_logic_bgc_shared {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_cnphenology {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+  my @list  = (  "onset_thresh_depends_on_veg", "min_crtical_dayl_depends_on_lat" );
+  foreach my $var ( @list ) {
+    if (  &value_is_true($nl_flags->{'use_cn'}) ) {
+       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 
+                   'phys'=>$physv->as_string(), 'use_cn'=>$nl_flags->{'use_cn'} );
+    } else {
+       if ( defined($nl->get_value($var)) ) {
+          $log->fatal_error("$var should only be set if use_cn is on");
+       }
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_supplemental_nitrogen {
   #
   # Supplemental Nitrogen for prognostic crop cases
@@ -2893,15 +2924,13 @@ sub setup_logic_methane {
   if ( &value_is_true($nl_flags->{'use_lch4'}) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'finundation_method',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
-    #
-    # Get resolution to read streams file for
-    #
     my $finundation_method = remove_leading_and_trailing_quotes($nl->get_value('finundation_method' ));
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'finundation_res', 
-             'finundation_method'=>$finundation_method );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ch4finundated', 
-             'finundation_method'=>$finundation_method,
-             'finundation_res'=>$nl->get_value('finundation_res') );
+             'finundation_method'=>$finundation_method);
+    if ($opts->{'driver'} eq "nuopc" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ch4finundated', 
+                    'finundation_method'=>$finundation_method);
+    }
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_aereoxid_prog',
                 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
     #
@@ -3195,7 +3224,6 @@ sub setup_logic_nitrogen_deposition {
   #
   # Nitrogen deposition for bgc=CN
   #
-
   if ( $nl_flags->{'bgc_mode'} =~/cn|bgc/ ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ndepmapalgo', 'phys'=>$nl_flags->{'phys'},
                 'use_cn'=>$nl_flags->{'use_cn'}, 'hgrid'=>$nl_flags->{'res'},
@@ -3221,17 +3249,32 @@ sub setup_logic_nitrogen_deposition {
                 'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                 'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
     if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
-       # Also check at f19 resolution
-       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
-                   'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
-                   'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
-       # If not found report an error
-       if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
-          $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
-                        "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
-                        "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
-                        "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
-       }
+        # Also check at f19 resolution
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_ndep', 'phys'=>$nl_flags->{'phys'},
+                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                    'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+        # If not found report an error
+        if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+            $log->warning("Did NOT find the Nitrogen-deposition forcing file (stream_fldfilename_ndep) for this ssp_rcp\n" .
+                          "One way to get around this is to point to a file for another existing ssp_rcp in your user_nl_clm file.\n" .
+                          "If you are running with CAM and WACCM chemistry Nitrogen deposition will come through the coupler.\n" .
+                          "This file won't be used, so it doesn't matter what it points to -- but it's required to point to something.\n" )
+        }
+    }
+    if ($opts->{'driver'} eq "nuopc" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep', 'phys'=>$nl_flags->{'phys'},
+                    'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                    'hgrid'=>"0.9x1.25", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+        if ( ! defined($nl->get_value('stream_fldfilename_ndep') ) ) {
+            # Also check at f19 resolution
+            add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_ndep', 'phys'=>$nl_flags->{'phys'},
+                        'use_cn'=>$nl_flags->{'use_cn'}, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
+                        'hgrid'=>"1.9x2.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'nofail'=>1 );
+            # If not found report an error
+            if ( ! defined($nl->get_value('stream_meshfile_ndep') ) ) {
+                $log->warning("Did NOT find the Nitrogen-deposition meshfile file (stream_meshfilee_ndep) for this ssp_rcp. \n")
+            }
+        }
     }
   } else {
     # If bgc is NOT CN/CNDV then make sure none of the ndep settings are set!
@@ -3342,6 +3385,29 @@ sub setup_logic_popd_streams {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_popdens', 'phys'=>$nl_flags->{'phys'},
                  'cnfireson'=>$nl_flags->{'cnfireson'}, 'hgrid'=>"0.5x0.5", 'ssp_rcp'=>$nl_flags->{'ssp_rcp'} );
+     # 
+     # TODO (mvertens, 2021-06-22) the following is needed for MCT since a use case enforces this  - so for now stream_meshfile_popdens will be added to the mct 
+     # stream namelist but simply not used
+    if ($opts->{'driver'} eq "nuopc" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_popdens', 'hgrid'=>"0.5x0.5");  
+        my $inputdata_rootdir = $nl_flags->{'inputdata_rootdir'};
+        my $default_value = $nl->get_value('stream_meshfile_popdens');
+        my $none_filename = $inputdata_rootdir . '/none';
+        my $none_filename = &quote_string($none_filename);
+        if ($default_value eq $none_filename) {
+            my $var = 'stream_meshfile_popdens'; 
+            my $group = $definition->get_group_name($var);
+            my $val = "none";
+            $val = &quote_string( $val );
+            $nl->set_variable_value($group, $var, $val);
+        }
+    } else {
+        my $var = 'stream_meshfile_popdens'; 
+        my $group = $definition->get_group_name($var);
+        my $val = "none";
+        $val = &quote_string( $val );
+        $nl->set_variable_value($group, $var, $val);
+    }
   } else {
      # If bgc is NOT CN/CNDV or fire_method==nofire then make sure none of the popdens settings are set
      if ( defined($nl->get_value('stream_year_first_popdens')) ||
@@ -3378,6 +3444,10 @@ sub setup_logic_urbantv_streams {
   }
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_urbantv', 'phys'=>$nl_flags->{'phys'},
               'hgrid'=>"0.9x1.25" );
+  if ($opts->{'driver'} eq "nuopc" ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_urbantv', 'phys'=>$nl_flags->{'phys'},
+                  'hgrid'=>"0.9x1.25" );
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -3404,6 +3474,10 @@ sub setup_logic_lightning_streams {
      }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lightng', 
                  'hgrid'=>$nl_flags->{'light_res'} );
+      if ($opts->{'driver'} eq "nuopc" ) {
+          add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lightng', 
+                      'hgrid'=>$nl_flags->{'light_res'} );
+      }
   } else {
      # If bgc is NOT CN/CNDV then make sure none of the Lightng settings are set
      if ( defined($nl->get_value('stream_year_first_lightng')) ||
@@ -3561,6 +3635,10 @@ sub setup_logic_lai_streams {
        }
        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_lai',
                    'hgrid'=>"360x720cru" );
+       if ($opts->{'driver'} eq "nuopc" ) {
+           add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_lai',
+                       'hgrid'=>"360x720cru" );
+       }
      }
   } else {
      # If bgc is CN/CNDV then make sure none of the LAI settings are set
@@ -3598,23 +3676,6 @@ sub setup_logic_soilwater_movement {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'inexpensive' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'flux_calculation' );
 }
-#-------------------------------------------------------------------------------
-
-sub setup_logic_century_soilbgcdecompcascade {
-  #
-  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
-
-  if ( (&value_is_true($nl->get_value('use_cn')) || &value_is_true($nl->get_value('use_fates'))) &&
-       &value_is_true($nl->get_value('use_century_decomp')) ) {
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks',
-                'use_cn' => $nl->get_value('use_cn'), 'use_fates' => $nl->get_value('use_fates'),
-                'use_century_decomp' => $nl->get_value('use_century_decomp') );
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'initial_Cstocks_depth', 
-                'use_cn' => $nl->get_value('use_cn'), 'use_fates' => $nl->get_value('use_fates'),
-                'use_century_decomp' => $nl->get_value('use_century_decomp') ); 
-  }
-}
-
 #-------------------------------------------------------------------------------
 
 sub setup_logic_cnvegcarbonstate {
@@ -4110,7 +4171,7 @@ sub add_default {
       } else {
         if ($is_input_pathname eq 'abs') {
           $val = set_abs_filepath($val, $inputdata_rootdir);
-          if ( $test_files and ($val !~ /null/) and (! -f "$val") ) {
+          if ( $test_files and ($val !~ /null|none/) and (! -f "$val") ) {
             $log->fatal_error("file not found: $var = $val");
           }
         }

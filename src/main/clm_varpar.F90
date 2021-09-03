@@ -63,11 +63,17 @@ module clm_varpar
 
   ! constants for decomposition cascade
 
-  integer, public, parameter :: i_met_lit  = 1
-  integer, public, parameter :: i_cel_lit  = i_met_lit + 1
-  integer, public, parameter :: i_lig_lit  = i_cel_lit + 1
-  integer, public    :: i_cwd
+  integer, public, parameter :: i_litr1 = 1   ! TEMPORARY FOR CascadeCN TO BUILD
+  integer, public            :: i_litr2 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
+  integer, public            :: i_litr3 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
+  ! The code currently expects i_litr_min = i_met_lit = 1 and
+  !                            i_litr_max = 2 or 3
+  integer, public :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_met_lit = -9  ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_cwd      = -9  ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
 
+  integer, public :: ndecomp_pools_max
   integer, public :: ndecomp_pools
   integer, public :: ndecomp_cascade_transitions
 
@@ -86,7 +92,7 @@ module clm_varpar
   integer, public :: cft_ub             ! In arrays of PFTs, upper bound of PFTs on the crop landunit
   integer, public :: cft_size           ! Number of PFTs on crop landunit in arrays of PFTs
 
-  integer, public :: maxpatch_glcmec    ! max number of elevation classes
+  integer, public :: maxpatch_glc    ! max number of elevation classes
   integer, public :: max_patch_per_col
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -227,25 +233,33 @@ contains
        write(iulog, *)
     end if
 
+    ! We hardwire these parameters here because we use them
+    ! in InitAllocate (in SoilBiogeochemStateType) which is called earlier than
+    ! init_decompcascade_bgc where they might have otherwise been derived on the
+    ! fly. For reference, if they were determined in init_decompcascade_bgc:
+    ! ndecomp_pools would get the value of i_pas_som or i_cwd and
+    ! ndecomp_cascade_transitions would get the value of i_s3s1 or i_cwdl3
+    ! depending on how use_fates is set.
     if ( use_fates ) then
-       i_cwd = 0
        if (use_century_decomp) then
           ndecomp_pools = 6
           ndecomp_cascade_transitions = 8
-       else
+       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 7
        end if
     else
-       i_cwd = 4
        if (use_century_decomp) then
           ndecomp_pools = 7
           ndecomp_cascade_transitions = 10
-       else
+       else  ! TODO slevis: Currently for CN. MIMICS will get its own.
           ndecomp_pools = 8
           ndecomp_cascade_transitions = 9
        end if
     endif
+    ! The next param also appears as a dimension in the params files dated
+    ! c210418.nc and later
+    ndecomp_pools_max = 8  ! largest ndecomp_pools value above
 
   end subroutine clm_varpar_init
 

@@ -40,7 +40,6 @@ module mkindexmapMod
 ! !PUBLIC MEMBER FUNCTIONS:
    public :: get_dominant_indices  ! make output map based on dominant type in each grid cell
    public :: get_max_indices       ! make output map based on maximum type in each grid cell
-   public :: filter_same           ! build a filter of overlaps where src_val == dst_val
    public :: lookup_2d             ! create map based on a 2-d lookup table
    public :: lookup_2d_netcdf      ! wrapper to lookup_2d; first read table from netcdf file
    public :: which_max             ! get index of the maximum value in an array
@@ -59,7 +58,7 @@ contains
 ! !IROUTINE: get_dominant_indices
 !
 ! !INTERFACE:
-subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, filter)
+subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, nodata, filter, mask_src)
 !
 ! !DESCRIPTION:
 ! Fills an output array on the destination grid (dst_array) whose values are equal to the
@@ -85,6 +84,7 @@ subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, n
    integer           , intent(in) :: minval        ! minimum valid value in src_array
    integer           , intent(in) :: maxval        ! maximum valid value in src_array
    integer           , intent(in) :: nodata        ! value to assign to dst_array where there are no valid source points
+   integer           , intent(in) :: mask_src(:)
 
    logical, intent(in), optional :: filter(:)  ! only consider overlaps where filter is .true.; length gridmap%ns
 !
@@ -118,6 +118,12 @@ subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, n
       write(6,*) 'gridmap%nb      = ', gridmap%nb
       call abort()
    end if
+   if (size(mask_src) /= size(src_array)) then
+      write(6,*) subname//' ERROR: incorrect size of mask_src'
+      write(6,*) 'size(mask_src) = ', size(mask_src)
+      write(6,*) 'size(src_array) = ', size(src_array)
+      call abort()
+   end if
 
    allocate(lfilter(gridmap%ns))
 
@@ -145,7 +151,7 @@ subroutine get_dominant_indices(gridmap, src_array, dst_array, minval, maxval, n
       if (lfilter(n)) then
          ni = gridmap%src_indx(n)
          no = gridmap%dst_indx(n)
-         wt = gridmap%wovr(n)
+         wt = gridmap%wovr(n) * mask_src(ni)
          k = src_array(ni)
          if (k >= minval .and. k <= maxval) then
             ! Note: if we were doing something like weighted sums, I think we would
@@ -181,7 +187,7 @@ end subroutine get_dominant_indices
 !------------------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-subroutine get_max_indices(gridmap, src_array, dst_array, nodata)
+subroutine get_max_indices(gridmap, src_array, dst_array, nodata, mask_src)
   !
   ! !DESCRIPTION:
   ! Fills an output array on the destination grid (dst_array) whose values are equal to
@@ -199,6 +205,7 @@ subroutine get_max_indices(gridmap, src_array, dst_array, nodata)
   integer            , intent(in)  :: src_array(:) ! input values; length gridmap%na
   integer            , intent(out) :: dst_array(:) ! output values; length gridmap%nb
   integer            , intent(in)  :: nodata       ! value to assign to dst_array where there are no valid source points
+  integer            , intent(in)  :: mask_src(:)  ! mask at the source resolution
   !
   ! !LOCAL VARIABLES:
   logical, allocatable  :: hasdata(:)    ! true if an output cell has any valid data;
@@ -220,15 +227,21 @@ subroutine get_max_indices(gridmap, src_array, dst_array, nodata)
       write(6,*) 'gridmap%nb      = ', gridmap%nb
       call abort()
    end if
+   if (size(mask_src) /= size(src_array)) then
+      write(6,*) subname//' ERROR: incorrect size of mask_src'
+      write(6,*) 'size(mask_src) = ', size(mask_src)
+      write(6,*) 'size(src_array) = ', size(src_array)
+      call abort()
+   end if
 
    ! Initialize local variables
    allocate(hasdata(gridmap%nb))
    hasdata(:) = .false.
 
    do n = 1, gridmap%ns
-      wt = gridmap%wovr(n)
+      ni = gridmap%src_indx(n)
+      wt = gridmap%wovr(n) * mask_src(ni)
       if (wt > 0._r8) then
-         ni = gridmap%src_indx(n)
          no = gridmap%dst_indx(n)
          src_val = src_array(ni)
          if (.not. hasdata(no)) then
@@ -248,84 +261,6 @@ subroutine get_max_indices(gridmap, src_array, dst_array, nodata)
 
 end subroutine get_max_indices
 
-
-!------------------------------------------------------------------------------
-!BOP
-!
-! !IROUTINE: filter_same
-!
-! !INTERFACE:
-subroutine filter_same(gridmap, filter, src_array, dst_array, nodata)
-!
-! !DESCRIPTION:
-! Creates a filter of overlaps where src_array == dst_array.
-!
-! More specifically: given a src_array (of size gridmap%na) and an already-created
-! dst_array (of size gridmap%nb):
-!
-! Creates a logical filter array, of size gridmap%ns (i.e., number of overlaps),
-! according to the following rules:
-! (1) anywhere where filter was already .false., it will remain .false.
-! (2) if nodata is present: for any overlap where the value in dst_array is nodata,
-!     filter will be .false.
-! (3) for any overlap where the value in the given src_array differs from the value
-!     in the given dst_array, filter will be .false.
-! (4) anywhere else, filter will be .true.
-!
-! !ARGUMENTS:
-   implicit none
-   type(gridmap_type), intent(in)   :: gridmap      ! provides mapping from src -> dst
-   logical           , intent(inout):: filter(:)    ! length gridmap%ns
-   integer           , intent(in)   :: src_array(:) ! length gridmap%na
-   integer           , intent(in)   :: dst_array(:) ! length gridmap%nb
-
-   integer, intent(in), optional :: nodata  ! wherever dst_array == nodata, filter will be false
-!
-! !REVISION HISTORY:
-! Author: Bill Sacks
-!
-!
-! !LOCAL VARIABLES:
-!EOP
-   integer :: n, ni, no
-
-   character(len=*), parameter :: subname = "make_filter"
-!-----------------------------------------------------------------------
-   
-   ! Error check inputs
-   
-   if (size(filter) /= gridmap%ns .or. &
-        size(src_array) /= gridmap%na .or. &
-        size(dst_array) /= gridmap%nb) then
-      write(6,*) subname//' ERROR: incorrect array sizes'
-      write(6,*) 'size(src_array) = ', size(src_array)
-      write(6,*) 'gridmap%na      = ', gridmap%na
-      write(6,*) 'size(dst_array) = ', size(dst_array)
-      write(6,*) 'gridmap%nb      = ', gridmap%nb
-      write(6,*) 'size(filter)    = ', size(filter)
-      write(6,*) 'gridmap%ns      = ', gridmap%ns
-      call abort()
-   end if
-
-   ! Create the filter
-
-   do n = 1, gridmap%ns
-      ni = gridmap%src_indx(n)
-      no = gridmap%dst_indx(n)
-
-      if (present(nodata)) then
-         if (dst_array(no) == nodata) then
-            filter(n) = .false.
-         end if
-      end if
-
-      if (dst_array(no) /= src_array(ni)) then
-         filter(n) = .false.
-      end if
-   end do
-
-end subroutine filter_same
-!------------------------------------------------------------------------------
 
 !------------------------------------------------------------------------------
 !BOP

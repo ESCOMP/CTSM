@@ -866,6 +866,7 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
   integer  :: ier                             ! error status
   integer, allocatable :: ind1D(:)            ! Index of 1D harvest fields
   integer, allocatable :: ind2D(:)            ! Index of 2D harvest fields
+  real(r8), allocatable :: frac_dst(:)        ! output fractions
   real(r8), pointer :: data1D_i(:)            ! 1D input data
   real(r8), pointer :: data2D_i(:,:)          ! 2D output data
   real(r8), pointer :: data1D_o(:)            ! 1D output data
@@ -896,6 +897,8 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
      call domain_read(tdomain,datfname)
      ns_i = tdomain%ns
      ns_o = ldomain%ns
+     allocate(frac_dst(ns_o), stat=ier)
+     if (ier /= 0) call abort()
 
      write (6,*) 'Open harvest file: ', trim(datfname)
      call check_ret(nf_open(datfname, 0, ncid), subname)
@@ -931,20 +934,23 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
      
      call domain_checksame( tdomain, ldomain, tgridmap )
 
+     ! Obtain frac_dst
+     call gridmap_calc_frac_dst(tgridmap, tdomain%mask, frac_dst)
+
      ! Determine data* on output grid
 
      do k = 1, harvdata%num1Dfields()
         ifld = ind1D(k)
         data1D_i => harvdata%get1DFieldPtr( ifld )
         data1D_o => harvdata%get1DFieldPtr( ifld, output=.true. )
-        call gridmap_areaave(tgridmap, data1D_i, data1D_o, nodata=0._r8)
+        call gridmap_areaave_srcmask(tgridmap, data1D_i, data1D_o, nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
      end do
      do k = 1, harvdata%num2Dfields()
         ifld = ind2D(k)
         data2D_i => harvdata%get2DFieldPtr( ifld )
         data2D_o => harvdata%get2DFieldPtr( ifld, output=.true. )
         do m = lbound(data2D_i(:,:),dim=2), ubound(data2D_i(:,:),dim=2)
-           call gridmap_areaave(tgridmap, data2D_i(:,m), data2D_o(:,m), nodata=0._r8)
+           call gridmap_areaave_srcmask(tgridmap, data2D_i(:,m), data2D_o(:,m), nodata=0._r8, mask_src=tdomain%mask, frac_dst=frac_dst)
         end do
      end do
 
@@ -961,7 +967,7 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
            m = ind1D(k)
            data1D_i => harvdata%get1DFieldPtr( m )
            gharv_i(m) = gharv_i(m) + data1D_i(ni)*tgridmap%area_src(ni)* &
-                                                tgridmap%frac_src(ni)*re**2
+                                                tdomain%mask(ni)*re**2
         end do
      end do
 
@@ -973,7 +979,7 @@ subroutine mkharvest(ldomain, mapfname, datfname, ndiag, harvdata)
            m = ind1D(k)
            data1D_o => harvdata%get1DFieldPtr( m, output=.true. )
            gharv_o(m) = gharv_o(m) + data1D_o(no)*tgridmap%area_dst(no)* &
-                                                tgridmap%frac_dst(no)*re**2
+                                                frac_dst(no)*re**2
         end do
      end do
 

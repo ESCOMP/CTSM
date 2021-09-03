@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 build ctsm library
@@ -132,6 +132,9 @@ def _main_func():
                 # If we want to build with a real river model (e.g., MOSART), we'll need
                 # to use its directories in place of stub_rof
                 paths.append(os.path.join(lnd_root,"lilac","stub_rof"))
+
+            if (driver == 'lilac' or driver == 'nuopc'):
+                paths.append(os.path.join(lnd_root,"src","cpl","share_esmf"))
 
             with open(filepath_file, "w") as filepath:
                 filepath.write("\n".join(paths))

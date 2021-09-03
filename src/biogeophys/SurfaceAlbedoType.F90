@@ -335,56 +335,67 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='albd', xtype=ncd_double,  & 
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='surface albedo (direct) (0 to 1)', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%albd_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='albi', xtype=ncd_double,  & 
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='surface albedo (diffuse) (0 to 1)', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%albi_patch)
     if (use_SSRE) then
        call restartvar(ncid=ncid, flag=flag, varname='albdSF', xtype=ncd_double,  & 
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='diagnostic snow-free surface albedo (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albdSF_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='albiSF', xtype=ncd_double,  & 
             dim1name='pft', dim2name='numrad', switchdim=.true., &
             long_name='diagnostic snow-free surface albedo (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albiSF_patch)
     end if
     call restartvar(ncid=ncid, flag=flag, varname='albgrd', xtype=ncd_double,  &
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='ground albedo (direct) (0 to 1)', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%albgrd_col) 
 
     call restartvar(ncid=ncid, flag=flag, varname='albgri', xtype=ncd_double,  &
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='ground albedo (indirect) (0 to 1)', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%albgri_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='albsod', xtype=ncd_double,  &
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='soil albedo (direct) (0 to 1)', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%albsod_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='albsoi', xtype=ncd_double,  &
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='soil albedo (indirect) (0 to 1)', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%albsoi_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='albsnd_hst', xtype=ncd_double,  &
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='snow albedo (direct) (0 to 1)', units='proportion', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%albsnd_hst_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='albsni_hst', xtype=ncd_double,  &
          dim1name='column', dim2name='numrad', switchdim=.true., &
          long_name='snow albedo (diffuse) (0 to 1)', units='proportion', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%albsni_hst_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='tlai_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='tlai increment for canopy layer', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%tlai_z_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) then
@@ -399,6 +410,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='tsai_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='tsai increment for canopy layer', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%tsai_z_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) then
@@ -431,6 +443,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fsun_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='sunlit fraction for canopy layer', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fsun_z_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fsun_z in restart (or initial) file..."
@@ -463,6 +476,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='albgrd_bc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without BC (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp',readvar=readvar, data=this%albgrd_bc_col)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_bc in initial file..."
@@ -473,6 +487,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='albgri_bc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without BC (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albgri_bc_col)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgri_bc in initial file..."
@@ -483,6 +498,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='albgrd_pur', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='pure snow ground albedo (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albgrd_pur_col)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_pur in initial file..."
@@ -493,6 +509,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='albgri_pur', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='pure snow ground albedo (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albgri_pur_col)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgri_pur in initial file..."
@@ -503,6 +520,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='albgrd_oc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without OC (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albgrd_oc_col)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_oc in initial file..."
@@ -513,6 +531,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='albgri_oc', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without OC (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albgri_oc_col)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgri_oc in restart (or initial) file..."
@@ -523,6 +542,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='albgrd_dst', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without dust (direct) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albgrd_dst_col)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgrd_dst in initial file..."
@@ -533,6 +553,7 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='albgri_dst', xtype=ncd_double,  &
             dim1name='column', dim2name='numrad', switchdim=.true., &
             long_name='ground albedo without dust (diffuse) (0 to 1)', units='', &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=this%albgri_dst_col)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "SNICAR: can't find albgri_dst in initial file..."
@@ -546,16 +567,19 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fabd', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='flux absorbed by veg per unit direct flux', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabd_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='fabi', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='flux absorbed by veg per unit diffuse flux', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabi_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='fabd_sun', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='flux absorbed by sunlit leaf per unit direct flux', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabd_sun_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fabd_sun in restart (or initial) file..."
@@ -566,6 +590,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fabd_sha', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='flux absorbed by shaded leaf per unit direct flux', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabd_sha_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fabd_sha in restart (or initial) file..."
@@ -576,6 +601,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fabi_sun', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='flux absorbed by sunlit leaf per unit diffuse flux', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabi_sun_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fabi_sun in restart (or initial) file..."
@@ -586,6 +612,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fabi_sha', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='flux absorbed by shaded leaf per unit diffuse flux', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabi_sha_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fabi_sha in restart (or initial) file..."
@@ -596,6 +623,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fabd_sun_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='absorbed sunlit leaf direct PAR (per unit lai+sai) for canopy layer', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabd_sun_z_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fabd_sun_z in restart (or initial) file..."
@@ -608,6 +636,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fabd_sha_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='absorbed shaded leaf direct PAR (per unit lai+sai) for canopy layer', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabd_sha_z_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fabd_sha_z in restart (or initial) file..."
@@ -620,6 +649,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fabi_sun_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='absorbed sunlit leaf diffuse PAR (per unit lai+sai) for canopy layer', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabi_sun_z_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fabi_sun_z in restart (or initial) file..."
@@ -632,6 +662,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='fabi_sha_z', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
          long_name='absorbed shaded leaf diffuse PAR (per unit lai+sai) for canopy layer', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%fabi_sha_z_patch)
     if (flag=='read' .and. .not. readvar) then
        if (masterproc) write(iulog,*) "can't find fabi_sha_z in restart (or initial) file..."
@@ -645,16 +676,19 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='ftdd', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='down direct flux below veg per unit direct flux', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%ftdd_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='ftid', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='down diffuse flux below veg per unit direct flux', units='', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%ftid_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='ftii', xtype=ncd_double,  &
          dim1name='pft', dim2name='numrad', switchdim=.true., &
          long_name='down diffuse flux below veg per unit diffuse flux', units='', &      
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%ftii_patch)
 
     !--------------------------------
@@ -664,21 +698,25 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='flx_absdv', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno1', switchdim=.true., lowerb2=-nlevsno+1, upperb2=1, &
          long_name='snow layer flux absorption factors (direct, VIS)', units='fraction', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%flx_absdv_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='flx_absdn', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno1', switchdim=.true., lowerb2=-nlevsno+1, upperb2=1, &
          long_name='snow layer flux absorption factors (direct, NIR)', units='fraction', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%flx_absdn_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='flx_absiv', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno1', switchdim=.true., lowerb2=-nlevsno+1, upperb2=1, &
          long_name='snow layer flux absorption factors (diffuse, VIS)', units='fraction', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%flx_absiv_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='flx_absin', xtype=ncd_double,  &
          dim1name='column', dim2name='levsno1', switchdim=.true., lowerb2=-nlevsno+1, upperb2=1, &
          long_name='snow layer flux absorption factors (diffuse, NIR)', units='fraction', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%flx_absin_col)
 
   end subroutine Restart

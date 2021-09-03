@@ -12,7 +12,7 @@ module GlacierSurfaceMassBalanceMod
   use clm_varpar     , only : nlevgrnd
   use clm_varctl     , only : glc_snow_persistence_max_days
   use clm_time_manager, only : get_step_size_real
-  use landunit_varcon, only : istice_mec
+  use landunit_varcon, only : istice
   use ColumnType     , only : col                
   use LandunitType   , only : lun
   use glc2lndMod     , only : glc2lnd_type
@@ -127,7 +127,7 @@ contains
           c = filter_do_smb_c(fc)
           l = col%landunit(c)
 
-          if (lun%itype(l) == istice_mec) then
+          if (lun%itype(l) == istice) then
              if (h2osoi_liq(c,j) > 0._r8) then   ! ice layer with meltwater
                 qflx_glcice_melt(c) = qflx_glcice_melt(c) + h2osoi_liq(c,j)/dtime
                 
@@ -135,7 +135,7 @@ contains
                 h2osoi_ice(c,j) = h2osoi_ice(c,j) + h2osoi_liq(c,j)
                 h2osoi_liq(c,j) = 0._r8
              end if  ! liquid water is present
-          end if  ! istice_mec
+          end if  ! istice
        end do
     end do
 
@@ -205,7 +205,7 @@ contains
        g = col%gridcell(c)
        ! In the following, we convert glc_snow_persistence_max_days to r8 to avoid overflow
        if ( (snow_persistence(c) >= (real(glc_snow_persistence_max_days, r8) * secspday)) &
-            .or. lun%itype(l) == istice_mec) then
+            .or. lun%itype(l) == istice) then
           qflx_glcice_frz(c) = qflx_snwcp_ice(c)
        else
           qflx_glcice_frz(c) = 0._r8
