@@ -850,7 +850,10 @@ sub setup_cmdl_bgc {
   } elsif ($nl_flags->{$var} eq "bgc" ) {
      $nl_flags->{'use_cn'} = ".true.";
      $nl_flags->{'use_fates'} = ".false.";
-     if ($val1 eq "'century'" ) {
+     # TODO Remove when not needed anymore:
+     # The .or. part of this if-statment satisfies backwards compatibility
+     # while decomp_mode is not, yet, set in baseline tests (slevis 2021/9/1)
+     if ($val1 eq "'century'" || $val1 eq "" ) {
        if (! &value_is_true($nl_flags->{'use_century_decomp'}) ||
            &value_is_true($nl_flags->{'use_mimics_decomp'}) ) {
          $log->verbose_message("Overwriting any values of use_century_decomp to .true. and of use_mimics_decomp to .false. because decomp_mode = century.");
@@ -870,7 +873,10 @@ sub setup_cmdl_bgc {
   } elsif ($nl_flags->{$var} eq "fates" ) {
      $nl_flags->{'use_cn'} = ".false.";
      $nl_flags->{'use_fates'} = ".true.";
-     if ($val1 eq "'century'" ) {
+     # TODO Remove when not needed anymore:
+     # The .or. part of this if-statment satisfies backwards compatibility
+     # while decomp_mode is not, yet, set in baseline tests (slevis 2021/9/1)
+     if ($val1 eq "'century'" || $val1 eq "" ) {
        if (! &value_is_true($nl_flags->{'use_century_decomp'}) ||
            &value_is_true($nl_flags->{'use_mimics_decomp'}) ) {
          $log->verbose_message("Overwriting any values of use_century_decomp to .true. and of use_mimics_decomp to .false. because decomp_mode = century.");

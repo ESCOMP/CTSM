@@ -42,9 +42,10 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   ! !PUBLIC DATA MEMBERS 
   !
   ! !PRIVATE DATA MEMBERS 
-  real(r8), allocatable :: desorp(:,:)
-  real(r8), allocatable :: fphys_m1(:,:)
-  real(r8), allocatable :: fphys_m2(:,:)
+  real(r8), private, allocatable :: desorp(:,:)
+  real(r8), private, allocatable :: fphys_m1(:,:)
+  real(r8), private, allocatable :: fphys_m2(:,:)
+  real(r8), private, allocatable :: p_scalar(:,:)
   integer, private :: i_phys_som  ! index of physically protected Soil Organic Matter (SOM)
   integer, private :: i_chem_som  ! index of chemically protected SOM
   integer, private :: i_avl_som  ! index of available (aka active) SOM
@@ -107,8 +108,23 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   real(r8), private :: kslope_s1_m2  !
 
   type, private :: params_type
+     real(r8) :: mimics_nue_into_mic
+     real(r8) :: mimics_desorpQ10
+     real(r8) :: mimics_densdep
+     real(r8) :: mimics_tau_mod_factor
+     real(r8) :: mimics_tau_mod_min
+     real(r8) :: mimics_tau_mod_max
+     real(r8) :: mimics_ko_r
+     real(r8) :: mimics_ko_k
+     real(r8) :: mimics_cn_r
+     real(r8) :: mimics_cn_k
+     real(r8) :: mimics_cn_mod_num
+     real(r8) :: mimics_t_soi_ref
      real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
      real(r8), allocatable :: initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
+     ! The next few vectors are dimensioned by the number of decomposition
+     ! transitions making use of the corresponding parameters. The transitions
+     ! are represented in this order: l1m1 l2m1 s1m1 l1m2 l2m2 s1m2
      real(r8), allocatable :: mimics_mge(:)  ! Microbial growth efficiency (mg/mg)
      real(r8), allocatable :: mimics_vmod(:)  ! 
      real(r8), allocatable :: mimics_vint(:)  ! 
@@ -116,27 +132,19 @@ module SoilBiogeochemDecompCascadeMIMICSMod
      real(r8), allocatable :: mimics_kmod(:)  ! 
      real(r8), allocatable :: mimics_kint(:)  ! 
      real(r8), allocatable :: mimics_kslope(:)  ! 
-     real(r8), allocatable :: mimics_nue_into_mic
+     ! The next few vectors are dimensioned by the number of
+     ! parameters with the same name used in the same formula.
+     ! In the formulas themselves, we use scalar copies of each parameter
+     ! with suffixes _p1, p2, p3, ... to distinguish among them.
+     real(r8), allocatable :: mimics_fmet(:)
      real(r8), allocatable :: mimics_p_scalar(:)
      real(r8), allocatable :: mimics_fphys_r(:)
      real(r8), allocatable :: mimics_fphys_k(:)
      real(r8), allocatable :: mimics_fchem_r(:)
      real(r8), allocatable :: mimics_fchem_k(:)
      real(r8), allocatable :: mimics_desorp(:)
-     real(r8), allocatable :: mimics_desorpQ10
-     real(r8), allocatable :: mimics_densdep
-     real(r8), allocatable :: mimics_fmet(:)
-     real(r8), allocatable :: mimics_tau_mod_factor
-     real(r8), allocatable :: mimics_tau_mod_min
-     real(r8), allocatable :: mimics_tau_mod_max
      real(r8), allocatable :: mimics_tau_r(:)
      real(r8), allocatable :: mimics_tau_k(:)
-     real(r8), allocatable :: mimics_ko_r
-     real(r8), allocatable :: mimics_ko_k
-     real(r8), allocatable :: mimics_cn_r
-     real(r8), allocatable :: mimics_cn_k
-     real(r8), allocatable :: mimics_cn_mod_num
-     real(r8), allocatable :: mimics_t_soi_ref
   end type params_type
   !
   type(params_type), private :: params_inst
@@ -160,7 +168,7 @@ contains
     type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
     !
     ! !LOCAL VARIABLES:
-    character(len=32)  :: subname = 'readParams'
+    character(len=32)  :: subname = 'readMimicsParams'
     character(len=100) :: errCode = 'Error reading MIMICS params '
     logical            :: readv   ! has variable been read in or not
     real(r8)           :: tempr   ! temporary to read in constant
@@ -174,7 +182,7 @@ contains
     ! move reading the parameter to CNSharedParamsMod if they
     ! will not differ. Similar for both initial_Cstocks params.
     tString='initial_Cstocks_depth_bgc'
-    call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%initial_Cstocks_depth=tempr
 
@@ -220,108 +228,108 @@ contains
 
     allocate(params_inst%mimics_p_scalar(2))
     tString='mimics_p_scalar'
-    call ncd_io(trim(tString), params_inst%mimics_p_scalar, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_p_scalar(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_desorp(2))
     tString='mimics_desorp'
-    call ncd_io(trim(tString), params_inst%mimics_desorp, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_desorp(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_fphys_r(2))
     tString='mimics_fphys_r'
-    call ncd_io(trim(tString), params_inst%mimics_fphys_r, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_fphys_r(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_fphys_k(2))
     tString='mimics_fphys_k'
-    call ncd_io(trim(tString), params_inst%mimics_fphys_k, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-
-    allocate(params_inst%mimics_nue_into_mic)
-    tString='mimics_nue_into_mic'
-    call ncd_io(trim(tString), params_inst%mimics_nue_into_mic, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_fphys_k(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_fmet(4))
     tString='mimics_fmet'
-    call ncd_io(trim(tString), params_inst%mimics_fmet, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_fmet(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_fchem_r(2))
     tString='mimics_fchem_r'
-    call ncd_io(trim(tString), params_inst%mimics_fchem_r, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_fchem_r(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_fchem_k(2))
     tString='mimics_fchem_k'
-    call ncd_io(trim(tString), params_inst%mimics_fchem_k, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-
-    allocate(params_inst%mimics_tau_mod_factor)
-    tString='mimics_tau_mod_factor'
-    call ncd_io(trim(tString), params_inst%mimics_tau_mod_factor, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-
-    allocate(params_inst%mimics_tau_mod_min)
-    tString='mimics_tau_mod_min'
-    call ncd_io(trim(tString), params_inst%mimics_tau_mod_min, 'read', ncid, readvar=readv)
-    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-
-    allocate(params_inst%mimics_tau_mod_max)
-    tString='mimics_tau_mod_max'
-    call ncd_io(trim(tString), params_inst%mimics_tau_mod_max, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_fchem_k(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_tau_r(2))
     tString='mimics_tau_r'
-    call ncd_io(trim(tString), params_inst%mimics_tau_r, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_tau_r(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_tau_k(2))
     tString='mimics_tau_k'
-    call ncd_io(trim(tString), params_inst%mimics_tau_k, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), params_inst%mimics_tau_k(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_ko_r)
+    tString='mimics_nue_into_mic'
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_nue_into_mic = tempr
+
+    tString='mimics_tau_mod_factor'
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_tau_mod_factor = tempr
+
+    tString='mimics_tau_mod_min'
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_tau_mod_min = tempr
+
+    tString='mimics_tau_mod_max'
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
+    if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_tau_mod_max = tempr
+
     tString='mimics_ko_r'
-    call ncd_io(trim(tString), params_inst%mimics_ko_r, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_ko_r = tempr
 
-    allocate(params_inst%mimics_ko_k)
     tString='mimics_ko_k'
-    call ncd_io(trim(tString), params_inst%mimics_ko_k, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_ko_k = tempr
 
-    allocate(params_inst%mimics_densdep)
     tString='mimics_densdep'
-    call ncd_io(trim(tString), params_inst%mimics_densdep, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_densdep = tempr
 
-    allocate(params_inst%mimics_desorpQ10)
     tString='mimics_desorpQ10'
-    call ncd_io(trim(tString), params_inst%mimics_desorpQ10, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_desorpQ10 = tempr
 
-    allocate(params_inst%mimics_t_soi_ref)
     tString='mimics_t_soi_ref'
-    call ncd_io(trim(tString), params_inst%mimics_t_soi_ref, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_t_soi_ref = tempr
 
-    allocate(params_inst%mimics_cn_mod_num)
     tString='mimics_cn_mod_num'
-    call ncd_io(trim(tString), params_inst%mimics_cn_mod_num, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_cn_mod_num = tempr
 
-    allocate(params_inst%mimics_cn_r)
     tString='mimics_cn_r'
-    call ncd_io(trim(tString), params_inst%mimics_cn_r, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_cn_r = tempr
 
-    allocate(params_inst%mimics_cn_k)
     tString='mimics_cn_k'
-    call ncd_io(trim(tString), params_inst%mimics_cn_k, 'read', ncid, readvar=readv)
+    call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+    params_inst%mimics_cn_k = tempr
 
   end subroutine readParams
 
@@ -350,10 +358,10 @@ contains
     real(r8) :: mimics_fphys_k_p2
     real(r8) :: mimics_desorp_p1
     real(r8) :: mimics_desorp_p2
-    real(r8), allocatable :: p_scalar(:,:)
 
     real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
 
+    real(r8) :: clay  ! local copy of cellclay
     integer  :: c, j    ! indices
     !-----------------------------------------------------------------------
 
@@ -449,16 +457,19 @@ contains
 
       do c = bounds%begc, bounds%endc
          do j = 1, nlevdecomp
-            desorp(c,j) = mimics_desorp_p1 * &
-                          exp(mimics_desorp_p2 * cellclay(c,j))
-            fphys_m1(c,j) = min(1.0_r8, max(0.0_r8, mimics_fphys_r_p1 * &
-               exp(mimics_fphys_r_p2 * cellclay(c,j))))
-            fphys_m2(c,j) = min(1.0_r8, max(0.0_r8, mimics_fphys_k_p1 * &
-               exp(mimics_fphys_k_p2 * cellclay(c,j))))
-            ! TODO slevis: Oups, where was p_scalar supposed to be used?
+            ! The parameter values currently in the params files always lead to
+            ! positive values for the expressions below, so we do not
+            ! need to use the max function to limit these expressions.
+            ! We apply the min function on cellclay because we are looping over
+            ! some non-soil columns here that contain cellclay = 1e36.
+            clay = dmin1(100.0_r8, cellclay(c,j))
+            desorp(c,j) = mimics_desorp_p1 * dexp(mimics_desorp_p2 * clay)
+            fphys_m1(c,j) = dmin1(1.0_r8, mimics_fphys_r_p1 * &
+                                          dexp(mimics_fphys_r_p2 * clay))
+            fphys_m2(c,j) = dmin1(1.0_r8, mimics_fphys_k_p1 * &
+                                          dexp(mimics_fphys_k_p2 * clay))
             p_scalar(c,j) = 1.0_r8 / (mimics_p_scalar_p1 * &
-                                      exp(mimics_p_scalar_p2 * &
-                                          sqrt(cellclay(c,j))))
+                                      dexp(mimics_p_scalar_p2 * dsqrt(clay)))
          end do
       end do
       initial_stock_soildepth = params_inst%initial_Cstocks_depth
@@ -721,7 +732,6 @@ contains
          nue_decomp_cascade(i_cwdl2) = 1.0_r8
       end if
 
-      ! TODO Add rest of new params here unless used after init.
       deallocate(params_inst%mimics_mge)
       deallocate(params_inst%mimics_vmod)
       deallocate(params_inst%mimics_vint)
@@ -729,6 +739,10 @@ contains
       deallocate(params_inst%mimics_kmod)
       deallocate(params_inst%mimics_kint)
       deallocate(params_inst%mimics_kslope)
+      deallocate(params_inst%mimics_p_scalar)
+      deallocate(params_inst%mimics_desorp)
+      deallocate(params_inst%mimics_fphys_r)
+      deallocate(params_inst%mimics_fphys_k)
       deallocate(params_inst%initial_Cstocks)
 
     end associate
@@ -1159,9 +1173,9 @@ contains
             km_l2_m2 = exp(kslope_l2_m2 * t_soi_degC + kint_l2_m2) * &
                        kmod_l2_m2
             km_s1_m1 = exp(kslope_s1_m1 * t_soi_degC + kint_s1_m1) * &
-                       kmod_s1_m1
+                       kmod_s1_m1 * p_scalar(c,j)
             km_s1_m2 = exp(kslope_s1_m2 * t_soi_degC + kint_s1_m2) * &
-                       kmod_s1_m2
+                       kmod_s1_m2 * p_scalar(c,j)
 
             ! Desorption a function of soil temperature and
             ! Q10 = 1.1 w/ reference temperature of 25C.

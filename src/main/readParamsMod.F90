@@ -8,6 +8,7 @@ module readParamsMod
   !
   ! ! USES:
   use clm_varctl , only : paramfile, iulog, use_fates, use_cn
+  use clm_varctl , only : use_century_decomp, use_mimics_decomp
   use spmdMod    , only : masterproc
   use fileutils  , only : getfil
   use ncdio_pio  , only : ncd_pio_closefile, ncd_pio_openfile
@@ -37,6 +38,7 @@ contains
     use SoilBiogeochemLittVertTranspMod   , only : readSoilBiogeochemLittVertTranspParams => readParams
     use SoilBiogeochemPotentialMod        , only : readSoilBiogeochemPotentialParams      => readParams
     use SoilBiogeochemDecompMod           , only : readSoilBiogeochemDecompParams         => readParams
+    use SoilBiogeochemDecompCascadeMIMICSMod, only : readSoilBiogeochemDecompMimicsParams => readParams
     use SoilBiogeochemDecompCascadeBGCMod , only : readSoilBiogeochemDecompBgcParams      => readParams
     use SoilBiogeochemDecompCascadeCNMod  , only : readSoilBiogeochemDecompCnParams       => readParams
     use ch4Mod                            , only : readCH4Params                          => readParams
@@ -95,8 +97,13 @@ contains
     !
     if (use_cn .or. use_fates) then
        call readSoilBiogeochemCompetitionParams(ncid)
-       call readSoilBiogeochemDecompBgcParams(ncid)
-       call readSoilBiogeochemDecompCnParams(ncid)
+       if (use_mimics_decomp) then
+          call readSoilBiogeochemDecompMimicsParams(ncid)
+       else if (use_century_decomp) then
+          call readSoilBiogeochemDecompBgcParams(ncid)
+       else  ! *DecompCN is deprecated
+          call readSoilBiogeochemDecompCnParams(ncid)
+       end if
        call readSoilBiogeochemDecompParams(ncid)
        call readSoilBiogeochemLittVertTranspParams(ncid)
        call readSoilBiogeochemNitrifDenitrifParams(ncid)
