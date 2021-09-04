@@ -2478,7 +2478,6 @@ contains
                                                           'PCT_SAND ', &
                                                           'PCT_CLAY '  &
                                                       /)
-                                                          /)
     ! Scale type for subgrid averaging of landunits to grid cells, for lake fields
     character(len=scale_type_strlen) :: l2g_scale_typel(nfldsl) = [ &
          'lake', &  ! ZLAKE
