@@ -608,6 +608,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_hillslope                               >.false.</use_hillslope>
 <use_hillslope phys="clm4_5"                 >.false.</use_hillslope>
 <use_hillslope phys="clm5_0"                 >.false.</use_hillslope>
+<use_hillslope_routing                       >.false.</use_hillslope_routing>
 
 <downscale_hillslope_meteorology use_hillslope=".false.">.false.</downscale_hillslope_meteorology>
 <downscale_hillslope_meteorology use_hillslope=".true." >.true.</downscale_hillslope_meteorology>

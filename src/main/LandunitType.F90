@@ -53,6 +53,12 @@ module LandunitType
      real(r8), pointer :: z_0_town     (:) ! urban landunit momentum roughness length (m)
      real(r8), pointer :: z_d_town     (:) ! urban landunit displacement height (m)
 
+     ! hillslope variables
+     real(r8), pointer :: stream_channel_depth   (:) ! stream channel bankfull depth (m)
+     real(r8), pointer :: stream_channel_width   (:) ! stream channel bankfull width (m)
+     real(r8), pointer :: stream_channel_length  (:) ! stream channel length (m)
+     real(r8), pointer :: stream_channel_slope   (:) ! stream channel slope (m/m)
+
    contains
 
      procedure, public :: Init    ! Allocate and initialize
@@ -104,6 +110,12 @@ contains
     allocate(this%z_0_town     (begl:endl)); this%z_0_town     (:) = nan
     allocate(this%z_d_town     (begl:endl)); this%z_d_town     (:) = nan
 
+    ! Hillslope variables initialized in HillslopeHydrologyMod
+    allocate(this%stream_channel_depth(begl:endl));  this%stream_channel_depth   (:) = nan
+    allocate(this%stream_channel_width(begl:endl));  this%stream_channel_width   (:) = nan
+    allocate(this%stream_channel_length(begl:endl)); this%stream_channel_length  (:) = nan
+    allocate(this%stream_channel_slope(begl:endl));  this%stream_channel_slope   (:) = nan
+
   end subroutine Init
 
   !------------------------------------------------------------------------
@@ -137,7 +149,10 @@ contains
     deallocate(this%wtlunit_roof )
     deallocate(this%z_0_town     )
     deallocate(this%z_d_town     )
-
+    deallocate(this%stream_channel_depth)
+    deallocate(this%stream_channel_width)
+    deallocate(this%stream_channel_length)
+    deallocate(this%stream_channel_slope)
   end subroutine Clean
 
 end module LandunitType

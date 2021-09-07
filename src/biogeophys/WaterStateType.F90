@@ -12,9 +12,9 @@ module WaterStateType
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use abortutils     , only : endrun
   use decompMod      , only : bounds_type
-  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_GRIDCELL
+  use decompMod      , only : BOUNDS_SUBGRID_PATCH, BOUNDS_SUBGRID_COLUMN, BOUNDS_SUBGRID_LANDUNIT, BOUNDS_SUBGRID_GRIDCELL
   use clm_varctl     , only : use_bedrock, iulog
-  use clm_varctl     , only : use_fates_planthydro
+  use clm_varctl     , only : use_fates_planthydro, use_hillslope
   use clm_varpar     , only : nlevgrnd, nlevsoi, nlevurb, nlevmaxurbgrnd, nlevsno   
   use clm_varcon     , only : spval, namec
   use LandunitType   , only : lun                
@@ -50,6 +50,10 @@ module WaterStateType
      real(r8), pointer :: dynbal_baseline_ice_col(:)   ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
 
      real(r8) :: aquifer_water_baseline                ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
+
+     ! Hillslope stream variables
+     real(r8), pointer :: stream_water_lun       (:)   ! landunit volume of water in the streams (m3)
+     real(r8), pointer :: stream_water_depth_lun (:)   ! landunit depth of water in the streams (m3)
 
    contains
 
@@ -150,6 +154,12 @@ contains
     call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = BOUNDS_SUBGRID_COLUMN)
+    call AllocateVar1d(var = this%stream_water_lun, name = 'stream_water_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_LANDUNIT)
+    call AllocateVar1d(var = this%stream_water_depth_lun, name = 'stream_water_depth_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = BOUNDS_SUBGRID_LANDUNIT)
 
   end subroutine InitAllocate
 
@@ -162,6 +172,8 @@ contains
     ! !USES:
     use histFileMod    , only : hist_addfld1d, hist_addfld2d, no_snow_normal
     use clm_varctl     , only : use_soil_moisture_streams
+    use GridcellType   , only : grc  
+
     !
     ! !ARGUMENTS:
     class(waterstate_type), intent(in) :: this
@@ -171,12 +183,14 @@ contains
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
+    integer           :: begl, endl
     integer           :: begg, endg
     real(r8), pointer :: data2dptr(:,:), data1dptr(:) ! temp. pointers for slicing larger arrays
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
+    begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
     data2dptr => this%h2osoi_liq_col(:,-nlevsno+1:0)
@@ -268,6 +282,21 @@ contains
             ptr_col=this%wa_col, l2g_scale_type='veg')
     end if
 
+    if (use_hillslope) then
+       this%stream_water_lun(begl:endl) = spval
+       call hist_addfld1d (fname=this%info%fname('STREAM_WATER_VOLUME'),  units='m3',  &
+            avgflag='A', &
+            long_name=this%info%lname('volume of water in stream channel (hillslope hydrology only)'), &
+            ptr_lunit=this%stream_water_lun, l2g_scale_type='veg',  default='inactive')
+
+       this%stream_water_depth_lun(begl:endl) = spval
+       call hist_addfld1d (fname=this%info%fname('STREAM_WATER_DEPTH'),  units='m',  &
+            avgflag='A', &
+            long_name=this%info%lname('depth of water in stream channel (hillslope hydrology only)'), &
+            ptr_lunit=this%stream_water_depth_lun, l2g_scale_type='veg',  default='inactive')
+       
+    end if
+
     ! (rgk 02-02-2017) There is intentionally no entry  here for stored plant water
     !                  I think that since the value is zero in all cases except
     !                  for FATES plant hydraulics, it will be confusing for users
@@ -318,7 +347,7 @@ contains
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
-
+      this%stream_water_lun(bounds%begl:bounds%endl) = 0._r8
 
       !--------------------------------------------
       ! Set soil water
@@ -630,6 +659,18 @@ contains
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
 
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('STREAM_WATER_VOLUME'), &
+         xtype=ncd_double,  &
+         dim1name='landunit', &
+         long_name=this%info%lname('water in stream channel'), &
+         units='m3', &
+         interpinic_flag='interp', readvar=readvar, data=this%stream_water_lun)
+
+    if (flag == 'read' .and. .not. is_restart()) then
+       this%stream_water_lun(bounds%begl:bounds%endl) = 0._r8
+    end if
+    
     ! Determine volumetric soil water (for read only)
     if (flag == 'read' ) then
        do c = bounds%begc, bounds%endc

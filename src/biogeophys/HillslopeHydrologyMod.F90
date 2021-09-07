@@ -11,6 +11,7 @@ module HillslopeHydrologyMod
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog
+  use clm_varctl     , only : use_hillslope_routing
   use decompMod      , only : bounds_type
   use clm_varcon     , only : rpi
 
@@ -26,13 +27,16 @@ module HillslopeHydrologyMod
   public HillslopeDominantPft
   public HillslopeDominantLowlandPft
   public HillslopePftFromFile
+  public HillslopeStreamOutflow
+  public HillslopeUpdateStreamWater
+
+  integer, public, parameter :: streamflow_manning = 0 
 
   ! PRIVATE 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   integer, private, parameter :: soil_profile_set_lowland_upland    = 0 
   integer, private, parameter :: soil_profile_linear                = 1
-
 
   !-----------------------------------------------------------------------
 
@@ -76,6 +80,7 @@ contains
     real(r8), allocatable :: hill_width(:,:)    ! hillslope width  [m]
     real(r8), allocatable :: hill_height(:,:)   ! hillslope height [m]
     real(r8), allocatable :: hill_bedrock(:,:)  ! hillslope bedrock depth [m]
+    real(r8), pointer     :: fstream_in(:)      ! read in - 1D - float
 
     type(file_desc_t)     :: ncid                 ! netcdf id
     logical               :: readvar              ! check whether variable on file    
@@ -83,11 +88,11 @@ contains
     integer               :: ierr                 ! error code
     integer               :: c, l, g, i, j, ci, nh       ! indices
 
-    real(r8)              :: ncol_per_hillslope(nhillslope) ! number of columns per hillslope
+    real(r8)              :: ncol_per_hillslope(nhillslope) ! number of columns per hillslope        
     real(r8)              :: hillslope_area(nhillslope)     ! area of hillslope
     real(r8)              :: nhill_per_landunit(nhillslope) ! total number of each representative hillslope per landunit
     real(r8)              :: check_weight
-
+    
     character(len=*), parameter :: subname = 'InitHillslope'
 
     !-----------------------------------------------------------------------
@@ -267,6 +272,42 @@ contains
 
     deallocate(ihillslope_in)
 
+    if (use_hillslope_routing) then 
+       allocate(fstream_in(bounds%begg:bounds%endg))
+       call ncd_io(ncid=ncid, varname='h_stream_depth', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
+       if (readvar) then
+          if (masterproc) then
+             write(iulog,*) 'h_stream_depth found on surface data set'
+          end if
+          do l = bounds%begl,bounds%endl
+             g = lun%gridcell(l)
+             lun%stream_channel_depth(l) = fstream_in(g)
+          enddo
+       endif
+       call ncd_io(ncid=ncid, varname='h_stream_width', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
+       if (readvar) then
+          if (masterproc) then
+             write(iulog,*) 'h_stream_width found on surface data set'
+          end if
+          do l = bounds%begl,bounds%endl
+             g = lun%gridcell(l)
+             lun%stream_channel_width(l) = fstream_in(g)
+          enddo
+       end if
+       call ncd_io(ncid=ncid, varname='h_stream_slope', flag='read', data=fstream_in, dim1name=grlnd, readvar=readvar)
+       if (readvar) then
+          if (masterproc) then
+             write(iulog,*) 'h_stream_slope found on surface data set'
+          end if
+          do l = bounds%begl,bounds%endl
+             g = lun%gridcell(l)
+             lun%stream_channel_slope(l) = fstream_in(g)
+          enddo
+       end if
+
+       deallocate(fstream_in)
+    endif
+       
     !  Set hillslope hydrology column level variables
     !  This needs to match how columns set up in subgridMod
     do l = bounds%begl,bounds%endl
@@ -337,7 +378,7 @@ contains
 
           enddo
 
-          ! Calculate total area of each hillslope in landunit and
+          ! Calculate total hillslope area on landunit and
           ! number of columns in each hillslope
           ncol_per_hillslope(:)= 0._r8
           hillslope_area(:)    = 0._r8
@@ -353,6 +394,35 @@ contains
           ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
           ! Number of representative hillslopes per landunit
           ! is the total area divided by individual area
+=======
+             endif
+          enddo
+
+          ! Total area occupied by each hillslope (m2) is
+          ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
+          ! Number of representative hillslopes per landunit
+          ! is the total area divided by individual area
+          
+          do nh = 1, nhillslope
+             if(hillslope_area(nh) > 0._r8) then
+                nhill_per_landunit(nh) = grc%area(g)*1.e6_r8*lun%wtgcell(l) &
+                     *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
+             endif
+          enddo
+             
+          ! Calculate steam channel length
+          ! Total length of stream banks is individual widths
+          ! times number of hillslopes per landunit divided
+          ! by 2 to convert from bank length to channel length
+
+          lun%stream_channel_length(l) = 0._r8
+          do c = lun%coli(l), lun%colf(l)
+             if(col%cold(c) == ispval) then
+                lun%stream_channel_length(l) = lun%stream_channel_length(l) &
+                     + col%hill_width(c) * nhill_per_landunit(col%hillslope_ndx(c))
+             endif
+          enddo
+          lun%stream_channel_length(l) = 0.5_r8 * lun%stream_channel_length(l)
           
           do nh = 1, nhillslope
              if(hillslope_area(nh) > 0._r8) then
@@ -364,21 +434,18 @@ contains
           ! if missing hillslope information on surface dataset, fill data
           ! and recalculate hillslope_area
           if (sum(hillslope_area) == 0._r8) then
-             write(iulog,*) 'hillslope area zero at ',grc%londeg(g),grc%latdeg(g)
              do c = lun%coli(l), lun%colf(l)
                 nh = col%hillslope_ndx(c)
-                if (nh > 0) then
-                   col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6_r8 ! km2 to m2
-                   col%hill_distance(c) = sqrt(col%hill_area(c)) &
-                        *((c-lun%coli(l))/ncol_per_hillslope(nh))
-                   col%hill_width(c)    = sqrt(col%hill_area(c))
-                   col%hill_elev(c)     = col%topo_std(c) &
-                        *((c-lun%coli(l))/ncol_per_hillslope(nh))
-                   col%hill_slope(c)    = tan((rpi/180.)*col%topo_slope(c))
-                   col%hill_aspect(c)   = (rpi/2.) ! east (arbitrarily chosen)
-                   nh = col%hillslope_ndx(c)
-                   pct_hillslope(l,nh)  = 100/nhillslope
-                endif
+                col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6_r8 ! km2 to m2
+                col%hill_distance(c) = sqrt(col%hill_area(c)) &
+                     *((c-lun%coli(l))/ncol_per_hillslope(nh))
+                col%hill_width(c)    = sqrt(col%hill_area(c))
+                col%hill_elev(c)     = col%topo_std(c) &
+                     *((c-lun%coli(l))/ncol_per_hillslope(nh))
+                col%hill_slope(c)    = tan((rpi/180.)*col%topo_slope(c))
+                col%hill_aspect(c)   = (rpi/2.) ! east (arbitrarily chosen)
+                nh = col%hillslope_ndx(c)
+                pct_hillslope(l,nh)  = 100/nhillslope
              enddo
           endif
           
@@ -866,4 +933,178 @@ contains
 
   end subroutine HillslopePftFromFile
 
+  !-----------------------------------------------------------------------
+  subroutine HillslopeStreamOutflow(bounds, &
+       waterstatebulk_inst, waterfluxbulk_inst,streamflow_method)
+    !
+    ! !DESCRIPTION:
+    ! Calculate discharge from stream channel
+    !
+    ! !USES:
+    use LandunitType    , only : lun                
+    use GridcellType    , only : grc                
+    use ColumnType      , only : col                
+    use WaterFluxBulkType   , only : waterfluxbulk_type
+    use WaterStateBulkType  , only : waterstatebulk_type
+    use spmdMod         , only : masterproc
+    use clm_varcon      , only : spval, ispval, grlnd 
+    use landunit_varcon , only : istsoil
+    use ncdio_pio
+    use clm_time_manager , only : get_step_size_real
+     
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    integer,  intent(in)  :: streamflow_method
+    type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+    type(waterfluxbulk_type),  intent(inout) :: waterfluxbulk_inst
+
+    integer               :: c, l, g, i, j
+    integer               :: nstep
+    real(r8) :: dtime                                   ! land model time step (sec)
+    real(r8)              :: cross_sectional_area
+    real(r8)              :: stream_depth
+    real(r8)              :: hydraulic_radius
+    real(r8)              :: flow_velocity
+    real(r8)              :: overbank_area
+!    real(r8), parameter   :: manning_roughness = 0.05
+    real(r8), parameter   :: manning_roughness = 0.03
+    real(r8), parameter   :: manning_exponent  = 0.667
+
+    character(len=*), parameter :: subname = 'HillslopeStreamOutflow'
+
+    !-----------------------------------------------------------------------
+    associate(                                                            & 
+         stream_water_volume     =>    waterstatebulk_inst%stream_water_lun            , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
+         qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun               &  ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+         )
+
+      ! Get time step
+      dtime = get_step_size_real()
+
+      do l = bounds%begl,bounds%endl
+         if(lun%itype(l) == istsoil) then          
+            ! Streamflow calculated from Manning equation
+            if(streamflow_method == streamflow_manning) then
+               cross_sectional_area = stream_water_volume(l) &
+                    /lun%stream_channel_length(l)
+               stream_depth =  cross_sectional_area &
+                    /lun%stream_channel_width(l)
+               hydraulic_radius = cross_sectional_area &
+                    /(lun%stream_channel_width(l) + 2*stream_depth)
+
+               if(hydraulic_radius <= 0._r8) then
+                  qstreamflow(l) = 0._r8
+               else
+                  flow_velocity = (hydraulic_radius)**manning_exponent &
+                       * sqrt(lun%stream_channel_slope(l)) &
+                       / manning_roughness
+                  ! overbank flow
+                  if (stream_depth > lun%stream_channel_depth(l)) then
+                     ! try increasing flow area cross section
+!                     overbank_area = (stream_depth -lun%stream_channel_depth(l)) * 30._r8 * lun%stream_channel_width(l)
+                     !                     qstreamflow(l) = (cross_sectional_area + overbank_area) * flow_velocity
+
+                     ! try increasing dynamic slope
+                     qstreamflow(l) = cross_sectional_area * flow_velocity &
+                          *(stream_depth/lun%stream_channel_depth(l))
+
+                     ! try removing all overbank flow instantly
+!!$                     qstreamflow(l) = cross_sectional_area * flow_velocity &
+!!$                          + (stream_depth-lun%stream_channel_depth(l)) &
+!!$                          *lun%stream_channel_width(l)*lun%stream_channel_length(l)/dtime
+                  else
+                     qstreamflow(l) = cross_sectional_area * flow_velocity
+                  endif
+                  qstreamflow(l) = max(0._r8,min(qstreamflow(l),stream_water_volume(l)/dtime))
+               end if
+          endif
+       endif ! end of istsoil
+    enddo    ! end of loop over landunits
+
+  end associate
+
+  end subroutine HillslopeStreamOutflow
+  
+  !-----------------------------------------------------------------------
+  subroutine HillslopeUpdateStreamWater(bounds, waterstatebulk_inst, &
+       waterfluxbulk_inst,wateratm2lndbulk_inst)
+    !
+    ! !DESCRIPTION:
+    ! Calculate discharge from stream channel
+    !
+    ! !USES:
+    use LandunitType    , only : lun                
+    use GridcellType    , only : grc                
+    use ColumnType      , only : col                
+    use WaterFluxBulkType   , only : waterfluxbulk_type
+    use WaterStateBulkType  , only : waterstatebulk_type
+    use Wateratm2lndBulkType, only : wateratm2lndbulk_type
+    use spmdMod         , only : masterproc
+    use clm_varcon      , only : spval, ispval, grlnd 
+    use landunit_varcon , only : istsoil
+    use clm_time_manager, only : get_step_size_real
+
+    !
+    ! !ARGUMENTS:
+    type(bounds_type), intent(in) :: bounds
+    type(waterstatebulk_type), intent(inout) :: waterstatebulk_inst
+    type(waterfluxbulk_type),  intent(inout) :: waterfluxbulk_inst
+    type(wateratm2lndbulk_type), intent(inout) :: wateratm2lndbulk_inst
+
+    integer               :: c, l, g, i, j
+    real(r8) :: qflx_surf_vol                           ! volumetric surface runoff (m3/s)
+    real(r8) :: qflx_drain_perched_vol                  ! volumetric perched water table runoff (m3/s)
+    real(r8) :: dtime                                   ! land model time step (sec)
+
+    character(len=*), parameter :: subname = 'HillslopeUpdateStreamWater'
+
+    !-----------------------------------------------------------------------
+    associate(                                                            & 
+         stream_water_volume     =>    waterstatebulk_inst%stream_water_lun    , & ! Input/Output:  [real(r8) (:)   ] stream water volume (m3)
+         qstreamflow             =>    waterfluxbulk_inst%qstreamflow_lun      , & ! Input:  [real(r8) (:)   ] stream water discharge (m3/s)
+         qdischarge              =>    waterfluxbulk_inst%qdischarge_col       , & ! Input: [real(r8) (:)   ]  discharge from columns (m3/s)
+         qflx_drain_perched      =>    waterfluxbulk_inst%qflx_drain_perched_col, & ! Input:  [real(r8) (:)   ]  column level sub-surface runoff (mm H2O /s)
+         qflx_surf               =>    waterfluxbulk_inst%qflx_surf_col        , & ! Input: [real(r8) (:)   ]  total surface runoff (mm H2O /s)
+         stream_water_depth      =>    waterstatebulk_inst%stream_water_depth_lun & ! Output:  [real(r8) (:)   ] stream water depth (m)
+         )
+
+       ! Get time step
+       dtime = get_step_size_real()
+
+       do l = bounds%begl,bounds%endl
+          g = lun%gridcell(l)
+          
+          if(lun%itype(l) == istsoil) then            
+             do c = lun%coli(l), lun%colf(l)
+                qflx_surf_vol = qflx_surf(c)*1.e-3_r8 &
+                     *(grc%area(g)*1.e6_r8*col%wtgcell(c))
+                qflx_drain_perched_vol = qflx_drain_perched(c)*1.e-3_r8 &
+                     *(grc%area(g)*1.e6_r8*col%wtgcell(c))
+                stream_water_volume(l) = stream_water_volume(l) &
+                     + (qdischarge(c) + qflx_drain_perched_vol &
+                     + qflx_surf_vol) * dtime
+             enddo
+             stream_water_volume(l) = stream_water_volume(l) &
+                  - qstreamflow(l) * dtime
+             
+             stream_water_depth(l) = stream_water_volume(l) &
+                  /lun%stream_channel_length(l) &
+                  /lun%stream_channel_width(l)
+
+             if (1==2) then
+                write(iulog,*) 'checktdepth2: ',g,l,stream_water_volume(l),stream_water_volume(l)*(1.e3/(grc%area(g)*1.e6_r8))
+                write(iulog,*) 'checktdepth3: ',g,l,qstreamflow(l),&
+                     qstreamflow(l)*(1.e3/(grc%area(g)*1.e6_r8))*dtime
+                write(iulog,*) 'checktdepth4: ',lun%stream_channel_length(l), &
+                     lun%stream_channel_width(l),lun%stream_channel_depth(l)
+                write(iulog,*) ' '
+             endif
+          endif
+       enddo
+      
+    end associate
+
+  end subroutine HillslopeUpdateStreamWater
+  
 end module HillslopeHydrologyMod

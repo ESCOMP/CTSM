@@ -10,7 +10,6 @@ module lnd_import_export
   use Waterlnd2atmBulkType , only: waterlnd2atmbulk_type
   use Wateratm2lndBulkType , only: wateratm2lndbulk_type
   use clm_cpl_indices
-!scs
   use GridcellType      , only : grc
   !
   implicit none
@@ -91,8 +90,6 @@ contains
 
        wateratm2lndbulk_inst%volr_grc(g)   = x2l(index_x2l_Flrr_volr,i) * (ldomain%area(g) * 1.e6_r8)
        wateratm2lndbulk_inst%volrmch_grc(g)= x2l(index_x2l_Flrr_volrmch,i) * (ldomain%area(g) * 1.e6_r8)
-       wateratm2lndbulk_inst%tdepth_grc(g)    = x2l(index_x2l_Sr_tdepth,i)
-       wateratm2lndbulk_inst%tdepthmax_grc(g) = x2l(index_x2l_Sr_tdepth_max,i)
 
        ! Determine required receive fields
 

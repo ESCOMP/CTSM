@@ -216,6 +216,7 @@ contains
     !
     ! !USES:
     use subgridAveMod, only: c2g
+    use LandunitType , only : lun                
     !
     ! !ARGUMENTS:
     type(bounds_type)          , intent(in)    :: bounds
@@ -232,8 +233,8 @@ contains
     character(len=5)           , intent(in)    :: flag  ! specifies begwb or endwb
     !
     ! !LOCAL VARIABLES:
-    integer :: g  ! indices
-    integer :: begc, endc, begg, endg  ! bounds
+    integer :: g, l  ! indices
+    integer :: begc, endc, begl, endl, begg, endg  ! bounds
     real(r8) :: wb_col(bounds%begc:bounds%endc)  ! temporary column-level water mass
     real(r8) :: wb_grc(bounds%begg:bounds%endg)  ! temporary grid cell-level water mass
     real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux
@@ -251,6 +252,8 @@ contains
 
     begc = bounds%begc
     endc = bounds%endc
+    begl = bounds%begl
+    endl = bounds%endl
     begg = bounds%begg
     endg = bounds%endg
 
@@ -267,6 +270,13 @@ contains
     call c2g(bounds, wb_col(begc:endc), wb_grc(begg:endg), &
              c2l_scale_type='urbanf', l2g_scale_type='unity')
 
+    ! add landunit level state variable, convert from (m3) to (kg m-2)
+    do l = begl, endl
+       g = lun%gridcell(l)
+       wb_grc(g) = wb_grc(g) +  waterstate_inst%stream_water_lun(l) &
+            *1e3_r8/(grc%area(g)*1.e6_r8)
+    enddo
+    
     ! Call the beginning or ending version of the subroutine according
     ! to flag value
     if (flag == 'begwb') then
@@ -714,14 +724,21 @@ contains
                + qflx_sfc_irrig_grc(g)  &
                + qflx_glcice_dyn_water_flux_grc(g)  &
                - qflx_evap_tot_grc(g)  &
-               - qflx_surf_grc(g)  &
+!               - qflx_surf_grc(g)  &
                - qflx_qrgwl_grc(g)  &
-               - qflx_drain_grc(g)  &
-               - qflx_drain_perched_grc(g)  &
+!               - qflx_drain_grc(g)  &
+!               - qflx_drain_perched_grc(g)  &
                - qflx_ice_runoff_grc(g)  &
                - qflx_snwcp_discarded_liq_grc(g)  &
                - qflx_snwcp_discarded_ice_grc(g)) * dtime
        end do
+
+       ! add landunit level flux variable, convert from (m3/s) to (kg m-2 s-1)
+       do l = bounds%begl, bounds%endl
+          g = lun%gridcell(l)
+          errh2o_grc(g) = errh2o_grc(g) +  waterflux_inst%qstreamflow_lun(l) &
+               *1e3_r8/(grc%area(g)*1.e6_r8) * dtime
+       enddo
 
        errh2o_max_val = maxval(abs(errh2o_grc(bounds%begg:bounds%endg)))
 
