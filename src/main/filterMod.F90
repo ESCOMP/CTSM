@@ -37,6 +37,9 @@ module filterMod
      integer, pointer :: soilnopcropp(:) ! soil w/o prog. crops (pfts)
      integer :: num_soilnopcropp         ! number of pfts in soil w/o prog crops
 
+     integer, pointer :: all_soil_patches(:) ! all soil or crop patches. Used for updating FATES SP drivers 
+     integer :: num_all_soil_patches         ! number of pfts in all_soil_patches filter
+
      integer, pointer :: lakep(:)        ! lake filter (pfts)
      integer :: num_lakep                ! number of pfts in lake filter
      integer, pointer :: nolakep(:)      ! non-lake filter (pfts)
@@ -195,6 +198,7 @@ contains
        allocate(this_filter(nc)%lakep(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%nolakep(bounds%endp-bounds%begp+1))
        allocate(this_filter(nc)%nolakeurbanp(bounds%endp-bounds%begp+1))
+       allocate(this_filter(nc)%all_soil_patches(bounds%endp-bounds%begp+1))
 
        allocate(this_filter(nc)%lakec(bounds%endc-bounds%begc+1))
        allocate(this_filter(nc)%nolakec(bounds%endc-bounds%begc+1))
@@ -304,6 +308,7 @@ contains
     integer :: fnl,fnlu    ! non-lake filter index
     integer :: fs          ! soil filter index
     integer :: f, fn       ! general indices
+    integer :: f_asp       ! all soil patches index
     integer :: g           !gridcell index
     !------------------------------------------------------------------------
 
@@ -425,6 +430,28 @@ contains
           end if
        end if
     end do
+
+   ! thise filter will include all soil P's irrespective of whether or not they are active. 
+   ! its purpose is to allow the TLAI, TSAI and HTOP drivers to be interpolated when in 
+   ! FATES-SP mode. 
+   ! e.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 
+   ! would be mapped inot the host land model as
+   ! 1, 1, 1, 0, 0, 0, 0
+   ! thus the 'active' filter will only use the first three points. 
+   ! this filter will stay on for all the 
+   f_asp = 0
+   do p = bounds%begp,bounds%endp
+      l =patch%landunit(p)
+      if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+         f_asp = f_asp +1
+         this_filter(nc)%all_soil_patches(f_asp) = p
+      end if
+   enddo
+   this_filter(nc)%num_all_soil_patches = f_asp
+   write(*,*) 'fallpfts',f_asp
+
+
+
     this_filter(nc)%num_pcropp   = fl
     this_filter(nc)%num_soilnopcropp = fnl   ! This wasn't being set before...
 

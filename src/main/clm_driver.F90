@@ -1013,6 +1013,13 @@ contains
           call t_stopf('SatellitePhenology')
        end if
 
+       if (use_fates_sp.and.doalb) then
+          call t_startf('SatellitePhenology')
+          call SatellitePhenology(bounds_clump, filter(nc)%num_all_soil_patches, filter(nc)%all_soil_patches, &
+               water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+          call t_stopf('SatellitePhenology')
+       end if
+
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
 
        call t_startf('depvel')
