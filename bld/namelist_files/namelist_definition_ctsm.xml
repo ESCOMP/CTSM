@@ -721,7 +721,12 @@ LUNA: Leaf Utilization of Nitrogen for Assimilation
 
 <entry id="use_hillslope" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
-Toggle to turn on the hillslope hydrology model
+Toggle to turn on the hillslope model
+</entry>
+
+<entry id="downscale_hillslope_meteorology" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on meteorological downscaling in hillslope model
 </entry>
 
 <entry id="use_hydrstress" type="logical" category="physics"

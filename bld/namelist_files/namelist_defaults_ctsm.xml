@@ -593,6 +593,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_hillslope phys="clm4_5"                 >.false.</use_hillslope>
 <use_hillslope phys="clm5_0"                 >.false.</use_hillslope>
 
+<downscale_hillslope_meteorology use_hillslope=".false.">.false.</downscale_hillslope_meteorology>
+<downscale_hillslope_meteorology use_hillslope=".true." >.true.</downscale_hillslope_meteorology>
+
 <!-- Plant hydraulic stress -->
 <use_hydrstress                                                       >.false.</use_hydrstress>
 <use_hydrstress phys="clm5_0"  use_fates=".false." configuration="clm">.true.</use_hydrstress>

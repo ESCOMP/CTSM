@@ -3043,11 +3043,12 @@ sub setup_logic_luna {
 
 sub setup_logic_hillslope {
   #
-  # Hillslope hydrology model
+  # Hillslope model
   #
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope' );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'downscale_hillslope_meteorology' );
 }
 
 #-------------------------------------------------------------------------------
