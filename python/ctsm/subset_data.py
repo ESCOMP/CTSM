@@ -23,7 +23,8 @@ at either a single point or a region using the global dataset.
 
 After creating a case using a global compset, run preview_namelist.  
 From the resulting lnd_in file in the run directory, find the name 
-of the domain file, and the surface data file.  
+of the domain file, and the surface data file.
+
 From the datm streams files (e.g. datm.streams.txt.CLMGSWP3v1.Precip)
 find the name of the datm forcing data domain file and forcing files.  
 Use these file names as the sources for the single point/regional
@@ -55,18 +56,20 @@ The case for the single point simulation should have river routing
 and land ice models turned off (i.e. the compset should use stub 
 models SROF and SGLC)
 
+By default, it only extracts surface dataset and for extracting other
+files, the appropriate flags should be used.
 -------------------------------------------------------------------
 To run the script for a single point:
-    ./subset_data.py point
+    ./subset_data.py point --help
  
 To run the script for a region:
-    ./subset_data.py reg 
+    ./subset_data.py reg --help 
 
 To remove NPL from your environment on Cheyenne/Casper:
     deactivate
 -------------------------------------------------------------------
-
 """
+
 # TODO
 # Automatic downloading of missing files if they are missing
 # default 78 pft vs 16 pft
@@ -86,13 +89,14 @@ import xarray as xr
 
 from datetime import date
 from getpass import getuser
+from logging.handlers import RotatingFileHandler
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 # -- add python/ctsm  to path
 _CTSM_PYTHON = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
             )
-# print (_CTSM_PYTHON)
+
 sys.path.insert(1, _CTSM_PYTHON)
 
 
