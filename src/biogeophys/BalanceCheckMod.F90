@@ -724,10 +724,10 @@ contains
                + qflx_sfc_irrig_grc(g)  &
                + qflx_glcice_dyn_water_flux_grc(g)  &
                - qflx_evap_tot_grc(g)  &
-!               - qflx_surf_grc(g)  &
+               - qflx_surf_grc(g)  &
                - qflx_qrgwl_grc(g)  &
-!               - qflx_drain_grc(g)  &
-!               - qflx_drain_perched_grc(g)  &
+               - qflx_drain_grc(g)  &
+               - qflx_drain_perched_grc(g)  &
                - qflx_ice_runoff_grc(g)  &
                - qflx_snwcp_discarded_liq_grc(g)  &
                - qflx_snwcp_discarded_ice_grc(g)) * dtime

@@ -308,6 +308,7 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical, public :: use_hillslope = .false. ! true => use multi-column hillslope hydrology
+  logical, public :: downscale_hillslope_meteorology = .false. ! true => downscale meteorological forcing in hillslope model
   logical, public :: use_hillslope_routing = .false. ! true => use surface water routing in hillslope hydrology
 
   !----------------------------------------------------------

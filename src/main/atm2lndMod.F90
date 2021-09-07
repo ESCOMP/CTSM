@@ -116,7 +116,7 @@ contains
     !
     ! !USES:
     use clm_varcon      , only : rair, cpair, grav
-    use clm_varctl      , only : use_hillslope
+    use clm_varctl      , only : use_hillslope,downscale_hillslope_meteorology
     use QsatMod         , only : Qsat
     !
     ! !ARGUMENTS:
@@ -265,7 +265,7 @@ contains
       end do
 
       ! adjust hillslope precpitation before repartitioning rain/snow
-      if(use_hillslope) then
+      if(use_hillslope .and. downscale_hillslope_meteorology) then
          call downscale_hillslope_solar(bounds, atm2lnd_inst, surfalb_inst)
          call downscale_hillslope_precipitation(bounds, topo_inst, atm2lnd_inst, wateratm2lndbulk_inst)
       endif

@@ -1804,6 +1804,7 @@ contains
      !
      ! !USES:
      use clm_varcon       , only : pondmx, tfrz, watmin,rpi, secspday, nlvic
+     use clm_varctl       , only : use_hillslope_routing
      use LandunitType     , only : lun                
      use landunit_varcon  , only : istsoil
      !
@@ -1831,6 +1832,7 @@ contains
      real(r8) :: q_perch
      real(r8) :: q_perch_max
      real(r8) :: stream_water_depth               ! depth of water in stream channel
+     real(r8) :: stream_channel_depth             ! depth of stream channel
 
      character(len=32) :: transmissivity_method = 'layersum'
 !     character(len=32) :: baseflow_method = 'kinematic'
@@ -1856,6 +1858,8 @@ contains
           frost_table        =>    soilhydrology_inst%frost_table_col    , & ! Input:  [real(r8) (:)   ] frost table depth (m)                             
           zwt                =>    soilhydrology_inst%zwt_col            , & ! Input:  [real(r8) (:)   ] water table depth (m)                             
           zwt_perched        =>    soilhydrology_inst%zwt_perched_col    , & ! Input:  [real(r8) (:)   ] perched water table depth (m)                     
+          tdepth             =>    wateratm2lndbulk_inst%tdepth_grc      , & ! Input:  [real(r8) (:)   ]  depth of water in tributary channels (m)
+          tdepth_bankfull    =>    wateratm2lndbulk_inst%tdepthmax_grc   , & ! Input:  [real(r8) (:)   ]  bankfull depth of tributary channels (m)
           stream_water_volume =>    waterstatebulk_inst%stream_water_lun , & ! Input:  [real(r8) (:)   ] stream water volume (m3)
 
 
@@ -1893,6 +1897,7 @@ contains
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           l = col%landunit(c)
+          g = col%gridcell(c)
           qflx_drain_perched(c)     = 0._r8
           qflx_drain_perched_out(c) = 0._r8
           qflx_drain_perched_vol(c) = 0._r8
@@ -1914,14 +1919,20 @@ contains
                            - (col%hill_elev(col%cold(c))-zwt_perched(col%cold(c)))
                       dgrad = dgrad / (col%hill_distance(c) - col%hill_distance(col%cold(c)))
                    else
-                      stream_water_depth = stream_water_volume(l) &
-                           /lun%stream_channel_length(l)/lun%stream_channel_width(l)
+                      if(use_hillslope_routing) then
+                         stream_water_depth = stream_water_volume(l) &
+                              /lun%stream_channel_length(l)/lun%stream_channel_width(l)
+                         stream_channel_depth = lun%stream_channel_depth(l)
+                      else
+                         stream_water_depth = tdepth(g)
+                         stream_channel_depth = tdepth_bankfull(g)
+                      endif
 
                       ! flow between channel and lowest column
                       ! bankfull height is defined to be zero
                       dgrad = (col%hill_elev(c)-zwt_perched(c)) &
                            ! ignore overbankfull storage
-                           - min(max((stream_water_depth - lun%stream_channel_depth(l)), &
+                           - min(max((stream_water_depth - stream_channel_depth), &
                            (col%hill_elev(c)-frost_table(c))),0._r8)
 
                       dgrad = dgrad / (col%hill_distance(c))
@@ -2772,7 +2783,7 @@ contains
                  1.e3_r8*qflx_latflow_out_vol(c)/col%hill_area(col%cold(c))
          endif
       enddo
-      
+
       ! recalculate average flux for no-lateral flow case
       if(no_lateral_flow) then
          if (baseflow_method /= 'kinematic') then

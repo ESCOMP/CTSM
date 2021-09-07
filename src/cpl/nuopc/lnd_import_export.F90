@@ -863,7 +863,7 @@ contains
        ! subsurface runoff is the sum of qflx_drain and qflx_perched_drain
        do g = begg, endg
           data1d(g) = waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(g) + &
-                      waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
+               waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(g)
        end do
        call state_setexport_1d(exportState, Flrl_rofsub, data1d(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
@@ -1135,6 +1135,7 @@ contains
           fldptr1d(g) = ctsmdata(g)
        end do
     end if
+
     call check_for_nans(ctsmdata, trim(fldname), 1)
 
   end subroutine state_setexport_1d

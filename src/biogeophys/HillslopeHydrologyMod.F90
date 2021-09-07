@@ -394,14 +394,6 @@ contains
           ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
           ! Number of representative hillslopes per landunit
           ! is the total area divided by individual area
-=======
-             endif
-          enddo
-
-          ! Total area occupied by each hillslope (m2) is
-          ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
-          ! Number of representative hillslopes per landunit
-          ! is the total area divided by individual area
           
           do nh = 1, nhillslope
              if(hillslope_area(nh) > 0._r8) then
@@ -1092,14 +1084,6 @@ contains
                   /lun%stream_channel_length(l) &
                   /lun%stream_channel_width(l)
 
-             if (1==2) then
-                write(iulog,*) 'checktdepth2: ',g,l,stream_water_volume(l),stream_water_volume(l)*(1.e3/(grc%area(g)*1.e6_r8))
-                write(iulog,*) 'checktdepth3: ',g,l,qstreamflow(l),&
-                     qstreamflow(l)*(1.e3/(grc%area(g)*1.e6_r8))*dtime
-                write(iulog,*) 'checktdepth4: ',lun%stream_channel_length(l), &
-                     lun%stream_channel_width(l),lun%stream_channel_depth(l)
-                write(iulog,*) ' '
-             endif
           endif
        enddo
       
