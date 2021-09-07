@@ -88,9 +88,17 @@ from datetime import date
 from getpass import getuser
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-from base_case import BaseCase
-from single_point_case import SinglePointCase
-from regional_case import RegionalCase
+# -- add python/ctsm  to path
+_CTSM_PYTHON = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+            )
+# print (_CTSM_PYTHON)
+sys.path.insert(1, _CTSM_PYTHON)
+
+
+from ctsm.site_and_regional.base_case import BaseCase
+from ctsm.site_and_regional.single_point_case import SinglePointCase
+from ctsm.site_and_regional.regional_case import RegionalCase
 
 myname = getuser()
 
@@ -532,6 +540,7 @@ def main ():
 
 
         print (single_point)
+        #output_to_logger (single_point)
 
         if crop_flag:
             num_pft      = "78"
