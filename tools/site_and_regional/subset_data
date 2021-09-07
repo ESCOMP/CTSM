@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 """
+This is a just top-level skeleton script that calls
+subset_data.py.
+The original code (subset_data.py) is located under
+python/ctsm folder.
+For full instructions on how to run the code and different options,
+please check python/ctsm/subset_data.py file.
 """
 
 import os
 import sys
 
-_CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            os.pardir,
-                            os.pardir,
-                            'python')
-#print (_CTSM_PYTHON)
+# -- add python/ctsm  to path
+_CTSM_PYTHON = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
+)
+# print (_CTSM_PYTHON)
 sys.path.insert(1, _CTSM_PYTHON)
-
 
 from ctsm.subset_data import main
 
