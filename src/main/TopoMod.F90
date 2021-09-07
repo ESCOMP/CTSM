@@ -13,7 +13,7 @@ module TopoMod
   use LandunitType   , only : lun
   use glc2lndMod     , only : glc2lnd_type
   use glcBehaviorMod , only : glc_behavior_type
-  use landunit_varcon, only : istice_mec, istsoil
+  use landunit_varcon, only : istice, istsoil
   use filterColMod   , only : filter_col_type, col_filter_from_logical_array_active_only
   use clm_varctl     , only : use_hillslope
   !
@@ -113,7 +113,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine InitCold(this, bounds)
     ! !USES:
-    use column_varcon    , only: col_itype_to_icemec_class
+    use column_varcon    , only: col_itype_to_ice_class
     use clm_instur, only : topo_glc_mec
     ! !ARGUMENTS:
     class(topo_type), intent(inout) :: this
@@ -121,7 +121,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: c, l, g
-    integer :: icemec_class            ! current icemec class (1..maxpatch_glcmec)
+    integer :: ice_class            ! current ice class (1..maxpatch_glc)
 
     character(len=*), parameter :: subname = 'InitCold'
     !-----------------------------------------------------------------------
@@ -130,11 +130,11 @@ contains
        l = col%landunit(c)
        g = col%gridcell(c)
 
-       if (lun%itype(l) == istice_mec) then
-          ! For ice_mec landunits, initialize topo_col based on surface dataset; this
+       if (lun%itype(l) == istice) then
+          ! For ice landunits, initialize topo_col based on surface dataset; this
           ! will get overwritten in the run loop by values sent from CISM
-          icemec_class = col_itype_to_icemec_class(col%itype(c))
-          this%topo_col(c) = topo_glc_mec(g, icemec_class)
+          ice_class = col_itype_to_ice_class(col%itype(c))
+          this%topo_col(c) = topo_glc_mec(g, ice_class)
           this%needs_downscaling_col(c) = .true.
        else
           ! For other landunits, arbitrarily initialize topo_col to 0 m; for landunits
@@ -203,7 +203,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine UpdateTopo(this, bounds, num_icemecc, filter_icemecc, &
+  subroutine UpdateTopo(this, bounds, num_icec, filter_icec, &
        glc2lnd_inst, glc_behavior, atm_topo)
     !
     ! !DESCRIPTION:
@@ -217,8 +217,8 @@ contains
     ! !ARGUMENTS:
     class(topo_type)        , intent(inout) :: this
     type(bounds_type)       , intent(in)    :: bounds
-    integer                 , intent(in)    :: num_icemecc       ! number of points in filter_icemecc
-    integer                 , intent(in)    :: filter_icemecc(:) ! col filter for ice_mec
+    integer                 , intent(in)    :: num_icec       ! number of points in filter_icec
+    integer                 , intent(in)    :: filter_icec(:) ! col filter for ice
     type(glc2lnd_type)      , intent(in)    :: glc2lnd_inst
     type(glc_behavior_type) , intent(in)    :: glc_behavior
     real(r8)                , intent(in)    :: atm_topo( bounds%begg: ) ! atmosphere topographic height [m]
@@ -240,7 +240,7 @@ contains
     ! than trying to figure out where it does and does not need to be reset.
     this%needs_downscaling_col(begc:endc) = .false.
 
-    call glc_behavior%icemec_cols_need_downscaling(bounds, num_icemecc, filter_icemecc, &
+    call glc_behavior%ice_cols_need_downscaling(bounds, num_icec, filter_icec, &
          this%needs_downscaling_col(begc:endc))
 
     ! In addition to updating topo_col, this also sets some additional elements of
@@ -303,7 +303,7 @@ contains
     !
     ! The main reason it's important to have this filter (as opposed to just doing the
     ! downscaling for all columns) is because of downscaled fields that are normalized
-    ! (like longwave radiation): Consider a gridcell with a glc_mec column and a
+    ! (like longwave radiation): Consider a gridcell with a glacier column and a
     ! vegetated column (outside of the icemask, so the vegetated column doesn't have its
     ! topographic height explicitly set). If we called the downscaling code for all
     ! columns, the longwave radiation would get adjusted over the vegetated column. This

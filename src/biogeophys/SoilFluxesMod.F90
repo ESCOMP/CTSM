@@ -74,17 +74,12 @@ contains
     integer  :: p,c,g,j,pi,l                                       ! indices
     integer  :: fc,fp                                              ! lake filtered column and pft indices
     real(r8) :: dtime                                              ! land model time step (sec)
-    real(r8) :: egsmax(bounds%begc:bounds%endc)                    ! max. evaporation which soil can provide at one time step
-    real(r8) :: egirat(bounds%begc:bounds%endc)                    ! ratio of topsoil_evap_tot : egsmax
     real(r8) :: tinc(bounds%begc:bounds%endc)                      ! temperature difference of two time step
-    real(r8) :: sumwt(bounds%begc:bounds%endc)                     ! temporary
-    real(r8) :: evaprat(bounds%begp:bounds%endp)                   ! ratio of qflx_evap_soi/topsoil_evap_tot
-    real(r8) :: save_qflx_evap_soi                                 ! temporary storage for qflx_evap_soi
-    real(r8) :: topsoil_evap_tot(bounds%begc:bounds%endc)          ! column-level total evaporation from top soil layer
     real(r8) :: eflx_lwrad_del(bounds%begp:bounds%endp)            ! update due to eflx_lwrad
     real(r8) :: t_grnd0(bounds%begc:bounds%endc)                   ! t_grnd of previous time step
     real(r8) :: lw_grnd
-    real(r8) :: fsno_eff
+    real(r8) :: evaporation_limit                                  ! top layer moisture available for evaporation
+    real(r8) :: evaporation_demand                                   ! evaporative demand 
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
@@ -186,23 +181,8 @@ contains
 
          tinc(c) = t_grnd(c) - t_grnd0(c)
 
-         ! Determine ratio of topsoil_evap_tot
-
-         egsmax(c) = (h2osoi_ice(c,j)+h2osoi_liq(c,j)) / dtime
-
-         ! added to trap very small negative soil water,ice
-
-         if (egsmax(c) < 0._r8) then
-            egsmax(c) = 0._r8
-         end if
       end do
 
-      ! A preliminary pft loop to determine if corrections are required for
-      ! excess evaporation from the top soil layer... Includes new logic
-      ! to distribute the corrections between patches on the basis of their
-      ! evaporative demands.
-      ! egirat holds the ratio of demand to availability if demand is
-      ! greater than availability, or 1.0 otherwise.
       ! Correct fluxes to present soil temperature
 
       do fp = 1,num_nolakep
@@ -224,39 +204,45 @@ contains
          endif
       end do
 
-      ! Set the column-average qflx_evap_soi as the weighted average over all patches
-      ! but only count the patches that are evaporating
-
-      do fc = 1,num_nolakec
-         c = filter_nolakec(fc)
-         topsoil_evap_tot(c) = 0._r8
-         sumwt(c) = 0._r8
-      end do
-
-      do pi = 1,max_patch_per_col
-         do fc = 1,num_nolakec
-            c = filter_nolakec(fc)
-            if ( pi <= col%npatches(c) ) then
-               p = col%patchi(c) + pi - 1
-               if (patch%active(p)) then
-                  topsoil_evap_tot(c) = topsoil_evap_tot(c) + qflx_evap_soi(p) * patch%wtcol(p)
-               end if
-            end if
-         end do
-      end do
+      ! Constrain evaporation from snow to be <= available moisture
+      do fp = 1,num_nolakep
+         p = filter_nolakep(fp)
+         c = patch%column(p)
+         j = col%snl(c)+1
+         ! snow layers; assumes for j < 1 that frac_sno_eff > 0
+         if (j < 1) then
+            ! Defining the limitation uniformly for all patches is more 
+            ! strict than absolutely necessary.  This definition assumes 
+            ! each patch is spatially distinct and may remove all the snow
+            ! on its patch, but may not remove snow from adjacent patches. 
+            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno_eff(c)*dtime)
+            if (qflx_ev_snow(p) > evaporation_limit) then
+               evaporation_demand = qflx_ev_snow(p)
+               qflx_ev_snow(p)    = evaporation_limit
+               qflx_evap_soi(p)   = qflx_evap_soi(p) - frac_sno_eff(c)*(evaporation_demand - evaporation_limit)
+               ! conserve total energy flux
+               eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_eff(c)*(evaporation_demand - evaporation_limit)*htvp(c)
+            endif
+         endif
+         
+         ! top soil layer for urban columns (excluding pervious road, which 
+         ! shouldn't be limited here b/c it uses the uses the soilwater
+         ! equations, while the other urban columns do not)
+         if (lun%urbpoi(patch%landunit(p)) .and. (col%itype(c)/=icol_road_perv) .and. (j == 1)) then
+            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/dtime
+            if (qflx_evap_soi(p) > evaporation_limit) then
+               evaporation_demand = qflx_evap_soi(p)
+               qflx_evap_soi(p)   = evaporation_limit
+               qflx_ev_snow(p)    = qflx_evap_soi(p)
+               ! conserve total energy flux
+               eflx_sh_grnd(p) = eflx_sh_grnd(p) +(evaporation_demand -evaporation_limit)*htvp(c)
+            endif
+         endif
+         
+      enddo
+      
       call t_stopf('bgp2_loop_1')
       call t_startf('bgp2_loop_2')
-
-      ! Calculate ratio for rescaling patch-level fluxes to meet availability
-
-      do fc = 1,num_nolakec
-         c = filter_nolakec(fc)
-         if (topsoil_evap_tot(c) > egsmax(c)) then
-            egirat(c) = (egsmax(c)/topsoil_evap_tot(c))
-         else
-            egirat(c) = 1.0_r8
-         end if
-      end do
 
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
@@ -264,23 +250,6 @@ contains
          l = patch%landunit(p)
          g = patch%gridcell(p)
          j = col%snl(c)+1
-
-         ! Correct soil fluxes for possible evaporation in excess of top layer water
-         ! excess energy is added to the sensible heat flux from soil
-
-         if (egirat(c) < 1.0_r8) then
-            save_qflx_evap_soi = qflx_evap_soi(p)
-            qflx_evap_soi(p) = qflx_evap_soi(p) * egirat(c)
-            eflx_sh_grnd(p) = eflx_sh_grnd(p) + (save_qflx_evap_soi - qflx_evap_soi(p))*htvp(c)
-            qflx_ev_snow(p) = qflx_ev_snow(p) * egirat(c)
-            qflx_ev_soil(p) = qflx_ev_soil(p) * egirat(c)
-            qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) * egirat(c)
-         end if
-
-         ! Update ev_snow for urban landunits here
-         if (lun%urbpoi(l)) then
-            qflx_ev_snow(p) = qflx_evap_soi(p)
-         end if
 
          ! Ground heat flux
          
@@ -318,6 +287,7 @@ contains
          eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_grnd(p)
          if (.not. lun%urbpoi(l)) eflx_sh_tot(p) = eflx_sh_tot(p) + eflx_sh_stem(p)
          qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
+
          eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             eflx_lh_tot_r(p)= eflx_lh_tot(p)
@@ -385,6 +355,20 @@ contains
             end if
 
          end if
+
+         ! limit only solid evaporation (sublimation) from top soil layer
+         ! (liquid evaporation from soil should not be limited)
+         if (j==1 .and. frac_h2osfc(c) < 1._r8) then
+            evaporation_limit = h2osoi_ice(c,j)/(dtime*(1._r8 - frac_h2osfc(c)))
+            if (qflx_solidevap_from_top_layer(p) >= evaporation_limit) then
+               evaporation_demand = qflx_solidevap_from_top_layer(p)
+               qflx_solidevap_from_top_layer(p) &
+                    = evaporation_limit
+               qflx_liqevap_from_top_layer(p)  &
+                    = qflx_liqevap_from_top_layer(p)  &
+                    + (evaporation_demand - evaporation_limit)
+            endif
+         endif
 
          ! Variables needed by history tape
 

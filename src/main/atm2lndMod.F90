@@ -22,7 +22,7 @@ module atm2lndMod
   use filterColMod   , only : filter_col_type
   use LandunitType   , only : lun                
   use ColumnType     , only : col
-  use landunit_varcon, only : istice_mec, istsoil
+  use landunit_varcon, only : istice, istsoil
   use WaterType      , only : water_type
   use Wateratm2lndBulkType, only : wateratm2lndbulk_type
 
@@ -364,7 +364,7 @@ contains
              l = col%landunit(c)
              rain_orig = forc_rain_c(c)
              snow_orig = forc_snow_c(c)
-             if (lun%itype(l) == istice_mec) then
+             if (lun%itype(l) == istice) then
                 all_snow_t = atm2lnd_inst%params%precip_repartition_glc_all_snow_t
                 frac_rain_slope = atm2lnd_inst%params%precip_repartition_glc_frac_rain_slope
              else
@@ -545,7 +545,7 @@ contains
             ! Keep track of the gridcell-level weighted sum for later normalization.
             !
             ! This gridcell-level weighted sum just includes points for which we do the
-            ! downscaling (e.g., glc_mec points). Thus the contributing weights
+            ! downscaling (e.g., glacier points). Thus the contributing weights
             ! generally do not add to 1. So to do the normalization properly, we also
             ! need to keep track of the weights that have contributed to this sum.
             sum_lwrad_g(g) = sum_lwrad_g(g) + col%wtgcell(c)*forc_lwrad_c(c)
@@ -757,7 +757,7 @@ contains
     integer  :: c,l,g,n      ! indices
     real(r8) :: norm(numrad)
     real(r8) :: sum_solar(bounds%begg:bounds%endg,numrad)
-    real(r8) :: sum_wt(bounds%begg:bounds%endg)
+    real(r8) :: sum_wtlunit(bounds%begg:bounds%endg)
 
     character(len=*), parameter :: subname = 'downscale_hillslope_solar'
     !-----------------------------------------------------------------------
@@ -776,7 +776,7 @@ contains
       
       ! Initialize column forcing
       sum_solar(bounds%begg:bounds%endg,1:numrad) = 0._r8
-      sum_wt(bounds%begg:bounds%endg) = 0._r8
+      sum_wtlunit(bounds%begg:bounds%endg) = 0._r8
       do c = bounds%begc,bounds%endc
          g = col%gridcell(c)
          forc_solad_col(c,1:numrad)  = forc_solad_grc(g,1:numrad)
@@ -787,7 +787,7 @@ contains
             endif
             
             sum_solar(g,1:numrad) = sum_solar(g,1:numrad) + col%wtlunit(c)*forc_solad_col(c,1:numrad)
-            sum_wt(g) = sum_wt(g) + col%wtlunit(c)
+            sum_wtlunit(g) = sum_wtlunit(g) + col%wtlunit(c)
          end if
       end do
       ! Normalize column level solar
@@ -796,10 +796,13 @@ contains
          if (lun%itype(col%landunit(c)) == istsoil) then
             g = col%gridcell(c)
             do n = 1,numrad
-               norm(n) = (sum_solar(g,n)/sum_wt(g))
-               if(norm(n) > 0._r8) then
-                  forc_solad_col(c,n)  = forc_solad_col(c,n)*(forc_solad_grc(g,n)/norm(n))
+               ! absorbed energy is solar flux x area landunit (sum_wtlunit)
+               if(sum_solar(g,n) > 0._r8) then
+                  norm(n) = sum_wtlunit(g)*forc_solad_grc(g,n)/sum_solar(g,n)
+               else
+                  norm(n) = 0._r8
                endif
+               forc_solad_col(c,n)  = forc_solad_col(c,n)*norm(n)
             enddo
          end if
          forc_solar_col(c) = sum(forc_solad_col(c,1:numrad))+sum(forc_solai_grc(g,1:numrad))

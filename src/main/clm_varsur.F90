@@ -50,7 +50,7 @@ module clm_instur
   logical , pointer :: haslake(:)
 
   ! subgrid hillslope hydrology constituents
-  integer, pointer :: ncol_per_hillslope(:) 
+  integer, pointer :: ncolumns_hillslope(:) 
   !-----------------------------------------------------------------------
 
 end module clm_instur

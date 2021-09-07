@@ -49,7 +49,7 @@ contains
     use LandunitType    , only : lun                
     use GridcellType    , only : grc                
     use ColumnType      , only : col                
-    use clm_varctl      , only : nhillslope, nmax_col_per_hill
+    use clm_varctl      , only : nhillslope, max_columns_hillslope
     use clm_varcon      , only : zmin_bedrock, zisoi
     use clm_varpar      , only : nlevsoi
     use spmdMod         , only : masterproc
@@ -99,15 +99,15 @@ contains
     
     allocate( &
          pct_hillslope(bounds%begl:bounds%endl,nhillslope),  &
-         hill_ndx     (bounds%begl:bounds%endl,nmax_col_per_hill), &
-         col_ndx      (bounds%begl:bounds%endl,nmax_col_per_hill), &
-         col_dndx     (bounds%begl:bounds%endl,nmax_col_per_hill), &
-         hill_slope   (bounds%begl:bounds%endl,nmax_col_per_hill), &
-         hill_aspect  (bounds%begl:bounds%endl,nmax_col_per_hill), &
-         hill_area    (bounds%begl:bounds%endl,nmax_col_per_hill), &
-         hill_length  (bounds%begl:bounds%endl,nmax_col_per_hill), &
-         hill_width   (bounds%begl:bounds%endl,nmax_col_per_hill), &
-         hill_height  (bounds%begl:bounds%endl,nmax_col_per_hill), &
+         hill_ndx     (bounds%begl:bounds%endl,max_columns_hillslope), &
+         col_ndx      (bounds%begl:bounds%endl,max_columns_hillslope), &
+         col_dndx     (bounds%begl:bounds%endl,max_columns_hillslope), &
+         hill_slope   (bounds%begl:bounds%endl,max_columns_hillslope), &
+         hill_aspect  (bounds%begl:bounds%endl,max_columns_hillslope), &
+         hill_area    (bounds%begl:bounds%endl,max_columns_hillslope), &
+         hill_length  (bounds%begl:bounds%endl,max_columns_hillslope), &
+         hill_width   (bounds%begl:bounds%endl,max_columns_hillslope), &
+         hill_height  (bounds%begl:bounds%endl,max_columns_hillslope), &
          stat=ierr)
     
     allocate(fhillslope_in(bounds%begg:bounds%endg,nhillslope))
@@ -124,7 +124,7 @@ contains
     enddo
     deallocate(fhillslope_in)
     
-    allocate(ihillslope_in(bounds%begg:bounds%endg,nmax_col_per_hill))
+    allocate(ihillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
     
     call ncd_io(ncid=ncid, varname='hillslope_index', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
@@ -157,10 +157,19 @@ contains
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        col_dndx(l,:) = ihillslope_in(g,:)
+!scs
+!!$       do c=1,max_columns_hillslope
+!!$          if (abs(col_dndx(l,c)-col_ndx(l,c)) > 16 .and. col_dndx(l,c) > -999) then
+!!$             write(iulog,*) 'colndx  ',c,col_ndx(l,c),col_dndx(l,c)
+!!$             write(iulog,*) 'colndx2 ',grc%londeg(g),grc%latdeg(g)
+!!$             write(iulog,*) 'ihill ',ihillslope_in(g,:)
+!!$          endif
+!!$       enddo
+          
     enddo
     deallocate(ihillslope_in)
     
-    allocate(fhillslope_in(bounds%begg:bounds%endg,nmax_col_per_hill))
+    allocate(fhillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
     call ncd_io(ncid=ncid, varname='h_slope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
        if (masterproc) then
@@ -231,7 +240,7 @@ contains
 
     call ncd_io(ncid=ncid, varname='h_bedrock', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
     if (readvar) then
-       allocate(hill_bedrock (bounds%begl:bounds%endl,nmax_col_per_hill), stat=ierr)
+       allocate(hill_bedrock (bounds%begl:bounds%endl,max_columns_hillslope), stat=ierr)
        if (masterproc) then
           write(iulog,*) 'h_bedrock found on surface data set'
        end if
@@ -243,10 +252,10 @@ contains
 
     deallocate(fhillslope_in)
     
-    allocate(ihillslope_in(bounds%begg:bounds%endg,nmax_col_per_hill))
+    allocate(ihillslope_in(bounds%begg:bounds%endg,max_columns_hillslope))
     call ncd_io(ncid=ncid, varname='h_pftndx', flag='read', data=ihillslope_in, dim1name=grlnd, readvar=readvar)
     if (readvar) then
-       allocate(hill_pftndx (bounds%begl:bounds%endl,nmax_col_per_hill), stat=ierr)
+       allocate(hill_pftndx (bounds%begl:bounds%endl,max_columns_hillslope), stat=ierr)
        if (masterproc) then
           write(iulog,*) 'h_pftndx found on surface data set'
        end if
@@ -263,6 +272,7 @@ contains
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        if(lun%itype(l) == istsoil) then
+
           ! map external column index to internal column index
           do c = lun%coli(l), lun%colf(l)
              ! ci should span [1:nhillcolumns(l)]
@@ -275,7 +285,6 @@ contains
                 ! relative separation should be the same
                 col%cold(c) = c + (col_dndx(l,ci) - col_ndx(l,ci))
              endif
-
           enddo
           
           do c = lun%coli(l), lun%colf(l)
@@ -306,12 +315,22 @@ contains
              ! pft index of column
              if ( allocated(hill_bedrock) ) then
                 do j = 1,nlevsoi
+
                    if(zisoi(j-1) > zmin_bedrock) then
                       if (zisoi(j-1) < hill_bedrock(l,ci) .and. zisoi(j) >= hill_bedrock(l,ci)) then
                          col%nbedrock(c) = j
                       end if
                    endif
                 enddo
+                ! from initVertical:
+                ! integer, parameter :: LEVGRND_CLASS_STANDARD        = 1
+                ! integer, parameter :: LEVGRND_CLASS_DEEP_BEDROCK    = 2
+                ! just hardcoding for now...
+                col%levgrnd_class(c, 1:col%nbedrock(c)) = 1
+                if (col%nbedrock(c) < nlevsoi) then
+                   col%levgrnd_class(c, (col%nbedrock(c) + 1) : nlevsoi) = 2
+                end if
+                
              endif
              if ( allocated(hill_pftndx) ) &
                   col%hill_pftndx(c) = hill_pftndx(l,ci)
@@ -345,18 +364,21 @@ contains
           ! if missing hillslope information on surface dataset, fill data
           ! and recalculate hillslope_area
           if (sum(hillslope_area) == 0._r8) then
+             write(iulog,*) 'hillslope area zero at ',grc%londeg(g),grc%latdeg(g)
              do c = lun%coli(l), lun%colf(l)
                 nh = col%hillslope_ndx(c)
-                col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6_r8 ! km2 to m2
-                col%hill_distance(c) = sqrt(col%hill_area(c)) &
-                     *((c-lun%coli(l))/ncol_per_hillslope(nh))
-                col%hill_width(c)    = sqrt(col%hill_area(c))
-                col%hill_elev(c)     = col%topo_std(c) &
-                     *((c-lun%coli(l))/ncol_per_hillslope(nh))
-                col%hill_slope(c)    = tan((rpi/180.)*col%topo_slope(c))
-                col%hill_aspect(c)   = (rpi/2.) ! east (arbitrarily chosen)
-                nh = col%hillslope_ndx(c)
-                pct_hillslope(l,nh)  = 100/nhillslope
+                if (nh > 0) then
+                   col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6_r8 ! km2 to m2
+                   col%hill_distance(c) = sqrt(col%hill_area(c)) &
+                        *((c-lun%coli(l))/ncol_per_hillslope(nh))
+                   col%hill_width(c)    = sqrt(col%hill_area(c))
+                   col%hill_elev(c)     = col%topo_std(c) &
+                        *((c-lun%coli(l))/ncol_per_hillslope(nh))
+                   col%hill_slope(c)    = tan((rpi/180.)*col%topo_slope(c))
+                   col%hill_aspect(c)   = (rpi/2.) ! east (arbitrarily chosen)
+                   nh = col%hillslope_ndx(c)
+                   pct_hillslope(l,nh)  = 100/nhillslope
+                endif
              enddo
           endif
           
@@ -396,6 +418,7 @@ contains
     if ( allocated(hill_pftndx) ) then
        deallocate(hill_pftndx)
        call HillslopePftFromFile()
+
     else
        ! Modify pft distributions
        ! this may require modifying subgridMod/natveg_patch_exists

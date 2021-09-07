@@ -359,9 +359,9 @@ contains
       end if
 
       if (use_aquifer_layer()) then
-         call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
+         call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
               soilhydrology_inst, soilstate_inst, temperature_inst, b_waterstate_inst, &
-              b_waterdiagnostic_inst, b_waterflux_inst)
+              b_waterflux_inst)
       else
 
          call PerchedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -372,12 +372,12 @@ contains
               num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
               b_waterstate_inst, b_waterflux_inst) 
 
-         call RenewCondensation(bounds, num_hydrologyc, filter_hydrologyc, &
-              num_urbanc, filter_urbanc,&
-              soilhydrology_inst, soilstate_inst, &
-              b_waterstate_inst, b_waterdiagnostic_inst, b_waterflux_inst)
-         
-      endif
+      end if
+
+      call RenewCondensation(bounds, num_hydrologyc, filter_hydrologyc, &
+           num_urbanc, filter_urbanc,&
+           soilhydrology_inst, soilstate_inst, &
+           b_waterstate_inst, b_waterdiagnostic_inst, b_waterflux_inst)
 
       ! BUG(wjs, 2019-09-16, ESCOMP/ctsm#762) This is needed so that we can test the
       ! tracerization of the following snow stuff without having tracerized everything

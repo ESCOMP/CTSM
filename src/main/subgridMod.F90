@@ -141,7 +141,7 @@ contains
     !
     ! !USES
     use clm_varpar, only : natpft_lb, natpft_ub
-    use clm_instur, only : ncol_per_hillslope
+    use clm_instur, only : ncolumns_hillslope
     use clm_varctl, only : use_hillslope
     !
     ! !ARGUMENTS:
@@ -168,7 +168,7 @@ contains
        nlunits = 1
        if(use_hillslope) then 
           ! ensure ncols is > 0
-          ncols = max(ncol_per_hillslope(gi),1)
+          ncols = max(ncolumns_hillslope(gi),1)
        else
           ncols = 1
        endif
@@ -478,7 +478,7 @@ contains
     character(len=*), parameter :: subname = 'subgrid_get_info_glacier_mec'
     !-----------------------------------------------------------------------
 
-    call glc_behavior%get_num_glc_mec_subgrid(gi, atm_topo, npatches, ncols, nlunits)
+    call glc_behavior%get_num_glc_subgrid(gi, atm_topo, npatches, ncols, nlunits)
 
   end subroutine subgrid_get_info_glacier_mec
 

@@ -73,7 +73,7 @@ contains
 
     interpolator = create_interpolator(num_snow_layers_source = 2)
 
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected(1:2) = 0._r8
     data_dest_expected(3:5) = data_source(:)
@@ -91,7 +91,7 @@ contains
     real(r8) :: data_source(5) = [ (i, i=11,15) ]
 
     interpolator = create_interpolator(num_snow_layers_source = 3)
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected(:) = data_source(:)
     @assertEqual(data_dest_expected, data_dest)
@@ -109,7 +109,7 @@ contains
     real(r8) :: data_source(9) = [ (i, i=11,19) ]
 
     interpolator = create_interpolator(num_snow_layers_source = 3)
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected(:) = data_source(5:9)
     @assertEqual(data_dest_expected, data_dest)
@@ -127,7 +127,7 @@ contains
     real(r8) :: data_source(9) = [ (i, i=11,19) ]
 
     interpolator = create_interpolator(num_snow_layers_source = 5)
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected(:) = data_source(5:9)
     @assertEqual(data_dest_expected, data_dest)
@@ -145,7 +145,7 @@ contains
     real(r8) :: data_source(9) = [ (i, i=11,19) ]
 
     interpolator = create_interpolator(num_snow_layers_source = 7)
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     ! Note that the top level of source where snow exists is level 3
     data_dest_expected(:) = data_source(3:7)
@@ -163,7 +163,7 @@ contains
     real(r8) :: data_source(9) = [ (i, i=11,19) ]
 
     interpolator = create_interpolator(num_snow_layers_source = 9)
-    call interpolator%interp_multilevel(data_dest, data_source, index_dest)
+    call interpolator%interp_multilevel(data_dest, data_source, index_dest, scale_by_thickness=.false.)
 
     data_dest_expected(:) = data_source(1:5)
     @assertEqual(data_dest_expected, data_dest)

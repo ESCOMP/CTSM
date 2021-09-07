@@ -9,7 +9,7 @@ module LandunitType
   !   1  => (istsoil)    soil (vegetated or bare soil landunit)
   !   2  => (istcrop)    crop (only for crop configuration)
   !   3  => (UNUSED)     (formerly non-multiple elevation class land ice; currently unused)
-  !   4  => (istice_mec) land ice (multiple elevation classes) 
+  !   4  => (istice)     land ice
   !   5  => (istdlak)    deep lake
   !   6  => (istwet)     wetland
   !   7  => (isturb_tbd) urban tbd
@@ -42,7 +42,7 @@ module LandunitType
      logical , pointer :: ifspecial    (:) ! true=>landunit is not vegetated
      logical , pointer :: lakpoi       (:) ! true=>lake point
      logical , pointer :: urbpoi       (:) ! true=>urban point
-     logical , pointer :: glcmecpoi    (:) ! true=>glacier_mec point
+     logical , pointer :: glcpoi       (:) ! true=>glacier point
      logical , pointer :: active       (:) ! true=>do computations on this landunit 
 
      ! urban properties
@@ -91,7 +91,7 @@ contains
     allocate(this%ifspecial    (begl:endl)); this%ifspecial (:) = .false.
     allocate(this%lakpoi       (begl:endl)); this%lakpoi    (:) = .false.
     allocate(this%urbpoi       (begl:endl)); this%urbpoi    (:) = .false.
-    allocate(this%glcmecpoi    (begl:endl)); this%glcmecpoi (:) = .false.
+    allocate(this%glcpoi       (begl:endl)); this%glcpoi    (:) = .false.
 
     ! The following is initialized in routine setActive in module reweightMod
     allocate(this%active       (begl:endl))
@@ -129,7 +129,7 @@ contains
     deallocate(this%ifspecial    )
     deallocate(this%lakpoi       )
     deallocate(this%urbpoi       )
-    deallocate(this%glcmecpoi    )
+    deallocate(this%glcpoi       )
     deallocate(this%active       )
     deallocate(this%canyon_hwr   )
     deallocate(this%wtroad_perv  )
