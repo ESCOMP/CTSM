@@ -108,9 +108,9 @@ myname = getuser()
 
 
 def get_parser():
-    """Get parser object for this script."""
-    # parser = ArgumentParser(description=__doc__,
-    #                       formatter_class=ArgumentDefaultsHelpFormatter)
+    """
+    Get parser object for this script.
+    """
     parser = ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -432,6 +432,16 @@ def plat_type(x):
     Function to define lat type for the parser
     and
     raise error if latitude is not between -90 and 90.
+
+    Args:
+        x(str): latitude
+
+    Raises:
+        Error when x (latitude) is not between -90 and 90.
+
+    Returns:
+        x (float): latitude in float
+
     """
     x = float(x)
     if (x < -90) or (x > 90):
@@ -446,12 +456,21 @@ def plon_type(x):
     Function to define lon type for the parser and
     convert negative longitudes and
     raise error if lon is not between -180 and 360.
+
+    Args:
+        x (str): longitude
+
+    Raises:
+        Error: when latitude is <-180 and >360.
+
+    Returns:
+        x(float): converted longitude between 0 and 360
     """
     x = float(x)
     if (-180 < x) and (x < 0):
-        print("lon is :", lon)
+        print("lon is :", x)
         x = x % 360
-        print("after modulo lon is :", lon)
+        print("after modulo lon is :", x)
     if (x < 0) or (x > 360):
         raise argparse.ArgumentTypeError(
             "ERROR: Latitude of single point should be between 0 and 360 or -180 and 180."
