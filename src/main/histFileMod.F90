@@ -388,6 +388,10 @@ contains
        write(master_list_file,fmt_txt) '==================='
        write(master_list_file,*)
 
+       ! A warning message
+       write(master_list_file,fmt_txt) 'CAUTION: Not all variables are relevant / present for all CTSM cases.'
+       write(master_list_file,*)
+
        ! Table header
        ! Concatenate strings needed in format statement
        do i = 1, ncol
