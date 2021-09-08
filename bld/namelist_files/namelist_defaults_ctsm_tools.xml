@@ -4326,15 +4326,15 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1850" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2018.c190806/mksrf_landuse_clm52_trendy2019_1850.c190806.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2020.c210808/mksrf_landuse_clm52_trendy2021_1850.c210808.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1851" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2018.c190806/mksrf_landuse_clm52_trendy2019_1851.c190806.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2020.c210808/mksrf_landuse_clm52_trendy2021_1851.c210808.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1852" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2018.c190806/mksrf_landuse_clm52_trendy2019_1852.c190806.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2020.c210808/mksrf_landuse_clm52_trendy2021_1852.c210808.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1853" crop="on"
@@ -4346,7 +4346,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1855" crop="on"
->lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2018.c190806/mksrf_landuse_clm52_trendy2019_1855.c190806.nc
+>lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.TRENDY.histsimyr1700-2020.c210808/mksrf_landuse_clm52_trendy2021_1855.c210808.nc
 </mksrf_fvegtyp>
 
 <mksrf_fvegtyp hgrid="0.25x0.25" ssp_rcp="hist" sim_year="1856" crop="on"
