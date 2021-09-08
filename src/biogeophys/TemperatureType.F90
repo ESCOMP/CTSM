@@ -56,7 +56,7 @@ module TemperatureType
      real(r8), pointer :: thv_col                  (:)   ! col virtual potential temperature (kelvin)
      real(r8), pointer :: thm_patch                (:)   ! patch intermediate variable (forc_t+0.0098*forc_hgt_t_patch)
      real(r8), pointer :: t_a10_patch              (:)   ! patch 10-day running mean of the 2 m temperature (K)
-     real(r8), pointer :: soila10_patch            (:)   ! patch 10-day running mean of the soil layer 3 temperature (K)
+     real(r8), pointer :: soila10_col              (:)   ! col 10-day running mean of the 12cm soil layer temperature (K)
      real(r8), pointer :: t_a10min_patch           (:)   ! patch 10-day running mean of min 2-m temperature
      real(r8), pointer :: t_a5min_patch            (:)   ! patch 5-day running mean of min 2-m temperature
 
@@ -231,7 +231,7 @@ contains
     allocate(this%thv_col                  (begc:endc))                      ; this%thv_col                  (:)   = nan
     allocate(this%thm_patch                (begp:endp))                      ; this%thm_patch                (:)   = nan
     allocate(this%t_a10_patch              (begp:endp))                      ; this%t_a10_patch              (:)   = nan
-    allocate(this%soila10_patch            (begp:endp))                      ; this%soila10_patch            (:)   = nan
+    allocate(this%soila10_col              (begc:endc))                      ; this%soila10_col              (:)   = nan
     allocate(this%t_a10min_patch           (begp:endp))                      ; this%t_a10min_patch           (:)   = nan
     allocate(this%t_a5min_patch            (begp:endp))                      ; this%t_a5min_patch            (:)   = nan
 
@@ -465,10 +465,10 @@ contains
          avgflag='A', long_name='10-day running mean of 2-m temperature', &
          ptr_patch=this%t_a10_patch, default='inactive')
     
-    this%soila10_patch(begp:endp) = spval
+    this%soila10_col(begc:endc) = spval
     call hist_addfld1d (fname='SOIL10', units='K',  &
          avgflag='A', long_name='10-day running mean of 12cm layer soil', &
-         ptr_patch=this%soila10_patch, default='inactive')
+         ptr_col=this%soila10_col, default='inactive')
     
     this%t_a5min_patch(begp:endp) = spval
     call hist_addfld1d (fname='A5TMIN', units='K',  &
@@ -1187,7 +1187,7 @@ contains
          subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
     call init_accum_field (name='SOIL10', units='K', &
          desc='10-day running mean of 3rd layer soil temp.', accum_type='runmean', accum_period=-10, &
-         subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ)
+         subgrid_type='column', numlev=1,init_value=SHR_CONST_TKFRZ)
     call init_accum_field (name='TDM5', units='K', &
          desc='5-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-5, &
          subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
@@ -1247,18 +1247,28 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: begp, endp
+    integer  :: begc, endc
     integer  :: nstep
     integer  :: ier
-    real(r8), pointer :: rbufslp(:)  ! temporary
+    real(r8), pointer :: rbufslp(:)  ! temporary for patch
+    real(r8), pointer :: rbufslc(:)  ! temporary for columns
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     ! Allocate needed dynamic memory for single level pft field
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)' in '
        call endrun(msg="extract_accum_hist allocation error for rbufslp"//&
+            errMsg(sourcefile, __LINE__))
+    endif
+    ! Allocate needed dynamic memory for single level column field
+    allocate(rbufslc(begc:endc), stat=ier)
+    if (ier/=0) then
+       write(iulog,*)' in '
+       call endrun(msg="extract_accum_hist allocation error for rbufslc"//&
             errMsg(sourcefile, __LINE__))
     endif
 
@@ -1274,8 +1284,8 @@ contains
     call extract_accum_field ('T10', rbufslp, nstep)
     this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
     
-    call extract_accum_field ('SOIL10', rbufslp, nstep)
-    this%soila10_patch(begp:endp) = rbufslp(begp:endp)
+    call extract_accum_field ('SOIL10', rbufslc, nstep)
+    this%soila10_col(begc:endc) = rbufslc(begc:endc)
 
     call extract_accum_field ('TDM5', rbufslp, nstep)
     this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)
@@ -1321,6 +1331,7 @@ contains
     end if
 
     deallocate(rbufslp)
+    deallocate(rbufslc)
 
   end subroutine InitAccVars
 
@@ -1349,10 +1360,13 @@ contains
     integer :: secs                      ! seconds into current date for nstep
     logical :: end_cd                    ! temporary for is_end_curr_day() value
     integer :: begp, endp
+    integer :: begc, endc
     real(r8), pointer :: rbufslp(:)      ! temporary single level - pft level
+    real(r8), pointer :: rbufslc(:)      ! temporary single level - column level
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     dtime = get_step_size()
     nstep = get_nstep()
@@ -1363,6 +1377,14 @@ contains
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    endif
+
+    ! Allocate needed dynamic memory for single level column field
+
+    allocate(rbufslc(begc:endc), stat=ier)
+    if (ier/=0) then
+       write(iulog,*)'update_accum_hist allocation error for rbuf1dc'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
@@ -1466,12 +1488,11 @@ contains
     ! Accumulate and extract SOIL10, for a sepcific soil layer
     !(acumulates SOIL10 as 10-day running mean)
 
-    do p = begp,endp    
-       c = patch%column(p)  
-       rbufslp(p) = this%t_soisno_col(c,upper_soil_layer)
+    do c = begc,endc    
+       rbufslc(c) = this%t_soisno_col(c,upper_soil_layer)
     end do
-    call update_accum_field  ('SOIL10', rbufslp, nstep)
-    call extract_accum_field ('SOIL10', this%soila10_patch, nstep)
+    call update_accum_field  ('SOIL10', rbufslc, nstep)
+    call extract_accum_field ('SOIL10', this%soila10_col, nstep)
     
     ! Accumulate and extract TDM5
 
@@ -1556,6 +1577,7 @@ contains
     end if
 
     deallocate(rbufslp)
+    deallocate(rbufslc)
 
   end subroutine UpdateAccVars
 

@@ -17,11 +17,11 @@ module lnd2glcMod
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_infnan_mod  , only : nan => shr_infnan_nan, assignment(=)
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : get_proc_bounds, bounds_type
+  use decompMod       , only : get_proc_bounds, bounds_type, subgrid_level_column
   use domainMod       , only : ldomain
   use clm_varpar      , only : maxpatch_glc
   use clm_varctl      , only : iulog
-  use clm_varcon      , only : spval, tfrz, namec
+  use clm_varcon      , only : spval, tfrz
   use column_varcon   , only : col_itype_to_ice_class
   use landunit_varcon , only : istice, istsoil
   use abortutils      , only : endrun
@@ -210,7 +210,7 @@ contains
          write(iulog,*) 'One possible cause is having multiple columns in the istsoil landunit,'
          write(iulog,*) 'which this routine cannot handle.'
          write(iulog,*) 'g, n = ', g, n
-         call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
 
       ! Send surface temperature, topography, and SMB flux (qice) to coupler.

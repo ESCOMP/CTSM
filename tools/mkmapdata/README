@@ -71,9 +71,9 @@ That will enable the --netcdf4 and --64bit_offset options to be used.
         different resolutions.
 
    Option C.) Alternatively, run mknoocnmap.pl to create a single-point/regional
-   map for an area without ocean.
+   map for an area without ocean (in the site_and_regional directory parallel to this one.
 
-   ./mknoocnmap.pl -help      # for help on this script
+   ../site_and_regional/mknoocnmap.pl -help      # for help on this script
 
 3) move (and rename if appropriate) generated map datasets
    to $DIN_LOC_ROOT/lnd/clm/mappingdata/maps, etc.
@@ -86,8 +86,5 @@ Important files:
   mvNimport.sh --------- Script to copy and import mapping files in for many resolutions
   mkmapdata.sh --------- Script to create mapping datasets for a given resolution
 
-  mknoocnmap.pl -------- Script to create unity mapping dataset for single-point
-                         or regional studies over land-only (no ocean).
-  mkunitymap.ncl ------- NCL script to create a unity map -- ran by above script
   rmdups.ncl ----------- NCL script to remove duplicate mapping points
 

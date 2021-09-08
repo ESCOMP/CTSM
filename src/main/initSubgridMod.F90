@@ -11,8 +11,7 @@ module initSubgridMod
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
   use clm_varctl     , only : iulog, use_fates
-  use clm_varcon     , only : namep, namec, namel
-  use decompMod      , only : bounds_type
+  use decompMod      , only : bounds_type, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
   use GridcellType   , only : grc                
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
@@ -93,7 +92,7 @@ contains
           curc = patch%column(p)
           if (curc < bounds%begc .or. curc > bounds%endc) then
              write(iulog,*) 'clm_ptrs_compdown ERROR: pcolumn ',p,curc,bounds%begc,bounds%endc
-             call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
           endif
           col%patchi(curc) = p
        endif
@@ -103,7 +102,7 @@ contains
           curl = patch%landunit(p)
           if (curl < bounds%begl .or. curl > bounds%endl) then
              write(iulog,*) 'clm_ptrs_compdown ERROR: plandunit ',p,curl,bounds%begl,bounds%endl
-             call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
           endif
           lun%patchi(curl) = p
        endif
@@ -117,7 +116,7 @@ contains
           curl = col%landunit(c)
           if (curl < bounds%begl .or. curl > bounds%endl) then
              write(iulog,*) 'clm_ptrs_compdown ERROR: clandunit ',c,curl,bounds%begl,bounds%endl
-             call endrun(decomp_index=c, clmlevel=namec, msg=errMsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
           endif
           lun%coli(curl) = c
        endif
@@ -133,7 +132,7 @@ contains
        curg = lun%gridcell(l)
        if (curg < bounds%begg .or. curg > bounds%endg) then
           write(iulog,*) 'clm_ptrs_compdown ERROR: landunit_indices ', l,curg,bounds%begg,bounds%endg
-          call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errMsg(sourcefile, __LINE__))
        end if
 
        if (grc%landunit_indices(ltype, curg) == ispval) then
@@ -141,7 +140,7 @@ contains
        else
           write(iulog,*) 'clm_ptrs_compdown ERROR: This landunit type has already been set for this gridcell'
           write(iulog,*) 'l, ltype, curg = ', l, ltype, curg
-          call endrun(decomp_index=l, clmlevel=namel, msg=errMsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, msg=errMsg(sourcefile, __LINE__))
        end if
     end do
 
@@ -197,15 +196,10 @@ contains
 
     error = .false.
     if (minval(lun%gridcell(begl:endl)) < begg .or. maxval(lun%gridcell(begl:endl)) > endg) error=.true.
-    if (error) write(iulog,*) 'isgerror1'
     if (minval(lun%coli(begl:endl)) < begc .or. maxval(lun%coli(begl:endl)) > endc) error=.true.
-    if (error) write(iulog,*) 'isgerror2'
     if (minval(lun%colf(begl:endl)) < begc .or. maxval(lun%colf(begl:endl)) > endc) error=.true.
-    if (error) write(iulog,*) 'isgerror3'
     if (minval(lun%patchi(begl:endl)) < begp .or. maxval(lun%patchi(begl:endl)) > endp) error=.true.
-    if (error) write(iulog,*) 'isgerror4'
     if (minval(lun%patchf(begl:endl)) < begp .or. maxval(lun%patchf(begl:endl)) > endp) error=.true.
-    if (error) write(iulog,*) 'isgerror5'
     if (error) then
        call endrun( &
             msg = 'clm_ptrs_check: l index ranges - ERROR', &
@@ -246,7 +240,7 @@ contains
       if (lun%patchi(l) < lun%patchi(l-1)) error = .true.
       if (lun%patchf(l) < lun%patchf(l-1)) error = .true.
       if (error) then
-         call endrun(decomp_index=l, clmlevel=namel, &
+         call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, &
               msg = 'clm_ptrs_check: l mono increasing - ERROR', &
               additional_msg = errMsg(sourcefile, __LINE__))
       endif
@@ -265,7 +259,7 @@ contains
       if (col%patchi(c) < col%patchi(c-1)) error = .true.
       if (col%patchf(c) < col%patchf(c-1)) error = .true.
       if (error) then
-         call endrun(decomp_index=c, clmlevel=namec, &
+         call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
               msg = 'clm_ptrs_check: c mono increasing - ERROR', &
               additional_msg = errMsg(sourcefile, __LINE__))
       endif
@@ -283,7 +277,7 @@ contains
       if (patch%landunit(p) < patch%landunit(p-1)) error = .true.
       if (patch%column  (p) < patch%column  (p-1)) error = .true.
       if (error) then
-         call endrun(decomp_index=p, clmlevel=namep, &
+         call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, &
               msg = 'clm_ptrs_check: p mono increasing - ERROR', &
               additional_msg = errMsg(sourcefile, __LINE__))
       endif
@@ -300,7 +294,7 @@ contains
              if (lun%itype(l) /= ltype) error = .true.
              if (lun%gridcell(l) /= g) error = .true.
              if (error) then
-                call endrun(decomp_index=l, clmlevel=namel, &
+                call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit, &
                      msg = 'clm_ptrs_check: tree consistent - ERROR', &
                      additional_msg = errMsg(sourcefile, __LINE__))
              endif
@@ -308,7 +302,7 @@ contains
                 if (col%gridcell(c) /= g) error = .true.
                 if (col%landunit(c) /= l) error = .true.
                 if (error) then
-                   call endrun(decomp_index=c, clmlevel=namec, &
+                   call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
                         msg = 'clm_ptrs_check: tree consistent - ERROR', &
                         additional_msg = errMsg(sourcefile, __LINE__))
                 endif
@@ -317,7 +311,7 @@ contains
                    if (patch%landunit(p) /= l) error = .true.
                    if (patch%column(p)   /= c) error = .true.
                    if (error) then
-                      call endrun(decomp_index=p, clmlevel=namep, &
+                      call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, &
                            msg = 'clm_ptrs_check: tree consistent - ERROR', &
                            additional_msg = errMsg(sourcefile, __LINE__))
                    endif

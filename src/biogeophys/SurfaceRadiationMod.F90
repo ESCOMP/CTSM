@@ -8,8 +8,7 @@ module SurfaceRadiationMod
   use shr_kind_mod      , only : r8 => shr_kind_r8
   use shr_log_mod       , only : errMsg => shr_log_errMsg
   use clm_varctl        , only : use_snicar_frc, use_fates
-  use decompMod         , only : bounds_type
-  use clm_varcon        , only : namec
+  use decompMod         , only : bounds_type, subgrid_level_column
   use atm2lndType       , only : atm2lnd_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
   use CanopyStateType   , only : canopystate_type
@@ -850,7 +849,7 @@ contains
              write(iulog,*)"flx_absin2  = ",sum(flx_absin(c,:))*tri(p,2)
              write(iulog,*)"albgrd_nir  = ",albgrd(c,2)
              write(iulog,*)"coszen      = ",coszen(c)
-             call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+             call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
           endif
 
           ! Diagnostic: shortwave penetrating ground (e.g. top layer)

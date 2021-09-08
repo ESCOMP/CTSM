@@ -9,7 +9,7 @@ module clm_driver
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use clm_varctl             , only : wrtdia, iulog, use_fates
+  use clm_varctl             , only : iulog, use_fates
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
   use clm_varctl             , only : use_soil_moisture_streams
@@ -620,7 +620,9 @@ contains
             water_inst%wateratm2lndbulk_inst, water_inst%waterdiagnosticbulk_inst, &
             water_inst%waterstatebulk_inst)
 
-       call ozone_inst%CalcOzoneStress(bounds_clump, filter(nc)%num_exposedvegp, filter(nc)%exposedvegp)
+       call ozone_inst%CalcOzoneStress(bounds_clump, &
+            filter(nc)%num_exposedvegp, filter(nc)%exposedvegp, &
+            filter(nc)%num_noexposedvegp, filter(nc)%noexposedvegp)
 
        ! TODO(wjs, 2019-10-02) I'd like to keep moving this down until it is below
        ! LakeFluxes... I'll probably leave it in place there.
@@ -1307,10 +1309,6 @@ contains
     ! ============================================================================
 
     nstep = get_nstep()
-    if (wrtdia) call mpi_barrier(mpicom,ier)
-    call t_startf('wrtdiag')
-    call write_diagnostic(bounds_proc, wrtdia, nstep, lnd2atm_inst)
-    call t_stopf('wrtdiag')
 
     ! ============================================================================
     ! Update accumulators
@@ -1393,11 +1391,13 @@ contains
        ! Create history and write history tapes if appropriate
        call t_startf('clm_drv_io_htapes')
 
-       call hist_htapes_wrapup( rstwr, nlend, bounds_proc,                    &
-            soilstate_inst%watsat_col(bounds_proc%begc:bounds_proc%endc, 1:), &
-            soilstate_inst%sucsat_col(bounds_proc%begc:bounds_proc%endc, 1:), &
-            soilstate_inst%bsw_col(bounds_proc%begc:bounds_proc%endc, 1:),    &
-            soilstate_inst%hksat_col(bounds_proc%begc:bounds_proc%endc, 1:))
+       call hist_htapes_wrapup( rstwr, nlend, bounds_proc,                      &
+            soilstate_inst%watsat_col(bounds_proc%begc:bounds_proc%endc, 1:),   &
+            soilstate_inst%sucsat_col(bounds_proc%begc:bounds_proc%endc, 1:),   &
+            soilstate_inst%bsw_col(bounds_proc%begc:bounds_proc%endc, 1:),      &
+            soilstate_inst%hksat_col(bounds_proc%begc:bounds_proc%endc, 1:),    &
+            soilstate_inst%cellsand_col(bounds_proc%begc:bounds_proc%endc, 1:), &
+            soilstate_inst%cellclay_col(bounds_proc%begc:bounds_proc%endc, 1:))
 
        call t_stopf('clm_drv_io_htapes')
 
@@ -1616,7 +1616,7 @@ contains
   end subroutine clm_drv_patch2col
 
   !------------------------------------------------------------------------
-  subroutine write_diagnostic (bounds, wrtdia, nstep, lnd2atm_inst)
+  subroutine write_diagnostic (bounds, nstep, lnd2atm_inst)
     !
     ! !DESCRIPTION:
     ! Write diagnostic surface temperature output each timestep.  Written to
@@ -1634,7 +1634,6 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)  , intent(in) :: bounds
-    logical            , intent(in) :: wrtdia     !true => write diagnostic
     integer            , intent(in) :: nstep      !model time step
     type(lnd2atm_type) , intent(in) :: lnd2atm_inst
     !
@@ -1653,31 +1652,10 @@ contains
 
     call get_proc_global(ng=numg)
 
-    if (wrtdia) then
-
-       call t_barrierf('sync_write_diag', mpicom)
-       psum = sum(lnd2atm_inst%t_rad_grc(bounds%begg:bounds%endg))
-       call mpi_reduce(psum, tsum, 1, MPI_REAL8, MPI_SUM, 0, mpicom, ier)
-       if (ier/=0) then
-          write(iulog,*) 'write_diagnostic: Error in mpi_reduce()'
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
-       if (masterproc) then
-          tsxyav = tsum / numg
-          write(iulog,1000) nstep, tsxyav
-          call shr_sys_flush(iulog)
-       end if
-
-    else
-
-       if (masterproc) then
-          write(iulog,*)'clm: completed timestep ',nstep
-          call shr_sys_flush(iulog)
-       end if
-
-    endif
-
-1000 format (1x,'nstep = ',i10,'   TS = ',f21.15)
+    if (masterproc) then
+       write(iulog,*)'clm: completed timestep ',nstep
+       call shr_sys_flush(iulog)
+    end if
 
   end subroutine write_diagnostic
 

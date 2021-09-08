@@ -35,7 +35,7 @@ module CLMFatesInterfaceMod
 #include "shr_assert.h"
    use PatchType         , only : patch
    use shr_kind_mod      , only : r8 => shr_kind_r8
-   use decompMod         , only : bounds_type
+   use decompMod         , only : bounds_type, subgrid_level_column
    use WaterStateBulkType    , only : waterstatebulk_type
    use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
    use WaterFluxBulkType     , only : waterfluxbulk_type
@@ -47,7 +47,6 @@ module CLMFatesInterfaceMod
 
    use SoilStateType     , only : soilstate_type 
    use clm_varctl        , only : iulog
-   use clm_varctl        , only : use_vertsoilc
    use clm_varctl        , only : fates_parteh_mode
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
@@ -333,11 +332,8 @@ module CLMFatesInterfaceMod
         end if
         call set_fates_ctrlparms('use_ch4',ival=pass_ch4)
         
-        if(use_vertsoilc) then
-           pass_vertsoilc = 1
-        else
-           pass_vertsoilc = 0
-        end if
+        ! use_vertsoilc: Carbon soil layer profile is assumed to be on all the time now
+        pass_vertsoilc = 1
         call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
         
         if(use_fates_fixed_biogeog)then
@@ -598,11 +594,7 @@ module CLMFatesInterfaceMod
 
             this%fates(nc)%sites(s)%h_gid = c
             
-            if (use_vertsoilc) then
-               ndecomp = col%nbedrock(c)
-            else
-               ndecomp = 1
-            end if
+            ndecomp = col%nbedrock(c)
 
             call allocate_bcin(this%fates(nc)%bc_in(s),col%nbedrock(c),ndecomp, num_harvest_inst)
             call allocate_bcout(this%fates(nc)%bc_out(s),col%nbedrock(c),ndecomp)
@@ -699,13 +691,15 @@ module CLMFatesInterfaceMod
             
             write(iulog,*) 'INACTIVE COLUMN WITH ACTIVE FATES SITE'
             write(iulog,*) 'c = ',c
-            call endrun(msg=errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=errMsg(sourcefile, __LINE__))
 
          elseif (this%f2hmap(nc)%hsites(c)==0 .and. col%active(c)) then
             
             write(iulog,*) 'ACTIVE COLUMN WITH INACTIVE FATES SITE'
             write(iulog,*) 'c = ',c
-            call endrun(msg=errMsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=errMsg(sourcefile, __LINE__))
          end if
       end do
 
@@ -2592,25 +2586,19 @@ module CLMFatesInterfaceMod
        this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp) = &
              dzsoi_decomp(1:nlevdecomp)
 
-       if (use_vertsoilc) then
-          do j=1,nlevsoil
-             this%fates(nc)%bc_in(s)%decomp_id(j) = j
-             ! Check to make sure that dz = dz_decomp_sisl when vertical soil dynamics
-             ! are active
-             if(abs(this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)-this%fates(nc)%bc_in(s)%dz_sisl(j))>1.e-10_r8)then
-                write(iulog,*) 'when vertical soil decomp dynamics are on'
-                write(iulog,*) 'fates assumes that the decomposition depths equal the soil depths'
-                write(iulog,*) 'layer: ',j
-                write(iulog,*) 'dz_decomp_sisl(j): ',this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)
-                write(iulog,*) 'dz_sisl(j): ',this%fates(nc)%bc_in(s)%dz_sisl(j)
-                call endrun(msg=errMsg(sourcefile, __LINE__))
-             end if
-          end do
-       else
-          do j=1,nlevsoil
-             this%fates(nc)%bc_in(s)%decomp_id(j) = 1
-          end do
-       end if
+       do j=1,nlevsoil
+          this%fates(nc)%bc_in(s)%decomp_id(j) = j
+          ! Check to make sure that dz = dz_decomp_sisl when vertical soil dynamics
+          ! are active
+          if(abs(this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)-this%fates(nc)%bc_in(s)%dz_sisl(j))>1.e-10_r8)then
+             write(iulog,*) 'when vertical soil decomp dynamics are on'
+             write(iulog,*) 'fates assumes that the decomposition depths equal the soil depths'
+             write(iulog,*) 'layer: ',j
+             write(iulog,*) 'dz_decomp_sisl(j): ',this%fates(nc)%bc_in(s)%dz_decomp_sisl(j)
+             write(iulog,*) 'dz_sisl(j): ',this%fates(nc)%bc_in(s)%dz_sisl(j)
+             call endrun(msg=errMsg(sourcefile, __LINE__))
+          end if
+       end do
 
     end do
 

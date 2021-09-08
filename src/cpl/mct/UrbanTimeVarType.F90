@@ -8,7 +8,7 @@ module UrbanTimeVarType
   use shr_kind_mod    , only : r8 => shr_kind_r8, CL => shr_kind_CL
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use abortutils      , only : endrun
-  use decompMod       , only : bounds_type
+  use decompMod       , only : bounds_type, subgrid_level_landunit
   use clm_varctl      , only : iulog, inst_name
   use landunit_varcon , only : isturb_MIN, isturb_MAX
   use clm_varcon      , only : spval
@@ -299,10 +299,11 @@ contains
    end do
    if ( found ) then
       write(iulog,*)'ERROR: no valid urban data for g= ',gindx
-      write(iulog,*)'landunit type:   ',lun%itype(l)
+      write(iulog,*)'landunit type:   ',lun%itype(lindx)
       write(iulog,*)'urban_valid:     ',urban_valid(gindx)
       write(iulog,*)'t_building_max:  ',this%t_building_max(lindx)
-      call endrun(msg=errmsg(sourcefile, __LINE__))
+      call endrun(subgrid_index=lindx, subgrid_level=subgrid_level_landunit, &
+           msg=errmsg(sourcefile, __LINE__))
    end if
 
 

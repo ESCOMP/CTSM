@@ -56,8 +56,6 @@ contains
     ! !DESCRIPTION:
     ! Obtain gridcell properties, aggregated across all landunits
     !
-    ! !USES
-    !
     ! !ARGUMENTS
     integer , intent(in)  :: gi       ! grid cell index
     type(glc_behavior_type), intent(in) :: glc_behavior

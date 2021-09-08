@@ -2,7 +2,7 @@ module lnd_import_export
 
   use shr_kind_mod , only: r8 => shr_kind_r8, cl=>shr_kind_cl
   use abortutils   , only: endrun
-  use decompmod    , only: bounds_type
+  use decompmod    , only: bounds_type, subgrid_level_gridcell
   use lnd2atmType  , only: lnd2atm_type
   use lnd2glcMod   , only: lnd2glc_type
   use atm2lndType  , only: atm2lnd_type
@@ -180,7 +180,8 @@ contains
           co2_ppmv_val = co2_ppmv
        end if
        if ( (co2_ppmv_val < 10.0_r8) .or. (co2_ppmv_val > 15000.0_r8) )then
-          call endrun( sub//' ERROR: CO2 is outside of an expected range' )
+          call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+               msg = sub//' ERROR: CO2 is outside of an expected range' )
        end if
        atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv_val * 1.e-6_r8 * forc_pbot 
        if (use_c13) then

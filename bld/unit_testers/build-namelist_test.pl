@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1740;
+my $ntests = 1829;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1185;
+   $ntests += 1245;
 }
 plan( tests=>$ntests );
 
@@ -315,38 +315,48 @@ print "\n=======================================================================
 print "Test configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case\n";
 print "=================================================================================\n";
 
-# configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
 my $startfile = "clmrun.clm2.r.1964-05-27-00000.nc";
-foreach my $options ( "-configuration nwp",
-                      "-structure fast",
-                      "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
-                      "-use_case 1850_control",
-                      "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
-                      "-envxml_dir . -infile myuser_nl_clm", 
-                      "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
-                      "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
-                      "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
-                     ) {
-   my $file = $startfile;
-   &make_env_run();
-   eval{ system( "$bldnml -res 0.9x1.25 -envxml_dir . $options > $tempfile 2>&1 " ); };
-   is( $@, '', "options: $options" );
-   $cfiles->checkfilesexist( "$options", $mode );
-   $cfiles->shownmldiff( "default", $mode );
-   my $finidat = `grep finidat lnd_in`;
-   if ( $options =~ /myuser_nl_clm/ ) {
-      my $fsurdat =  `grep fsurdat lnd_in`;
-      like( $fsurdat, "/MYDINLOCROOT/lnd/clm2/PTCLMmydatafiles/1x1pt_US-UMB/surfdata_1x1pt_US-UMB_simyr2000_clm4_5_c131122.nc/", "$options" );
+foreach my $driver ( "mct", "nuopc" ) {
+   print "   For $driver driver\n\n";
+   # configuration, structure, irrigate, verbose, clm_demand, ssp_rcp, test, sim_year, use_case
+   foreach my $options ( "-configuration nwp",
+                         "-structure fast",
+                         "-namelist '&a irrigate=.true./'", "-verbose", "-ssp_rcp SSP1-2.6", "-test", "-sim_year 1850",
+                         "-namelist '&a use_lai_streams=.true.,use_soil_moisture_streams=.true./'",
+                         "-use_case 1850_control",
+                         "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
+                         "-res 1x1_brazil",
+                         "-clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
+                         "-envxml_dir . -infile myuser_nl_clm", 
+                         "-ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
+                         "-clm_start_type branch -namelist '&a nrevsn=\"thing.nc\",use_init_interp=T/'",
+                         "-ignore_ic_date -clm_start_type startup -namelist '&a finidat=\"thing.nc\"/' -bgc bgc -crop",
+                        ) {
+      my $file = $startfile;
+      &make_env_run();
+      my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
+      if ( $driver eq "nuopc" ) {
+         $base_options = "$base_options -lnd_frac UNSET";
+      }
+      eval{ system( "$bldnml $base_options $options > $tempfile 2>&1 " ); };
+      is( $@, '', "options: $base_options $options" );
+      $cfiles->checkfilesexist( "$base_options $options", $mode );
+      $cfiles->shownmldiff( "default", $mode );
+      my $finidat = `grep finidat lnd_in`;
+      if ( $options =~ /myuser_nl_clm/ ) {
+         my $fsurdat =  `grep fsurdat lnd_in`;
+         like( $fsurdat, "/MYDINLOCROOT/lnd/clm2/PTCLMmydatafiles/1x1pt_US-UMB/surfdata_1x1pt_US-UMB_simyr2000_clm4_5_c131122.nc/", "$options" );
+      }
+      if ( defined($opts{'compare'}) ) {
+         $cfiles->doNOTdodiffonfile( "$tempfile", "$base_options $options", $mode );
+         $cfiles->dodiffonfile( "$real_par_file", "$base_options $options", $mode );
+         $cfiles->comparefiles( "$base_options $options", $mode, $opts{'compare'} );
+      }
+      if ( defined($opts{'generate'}) ) {
+         $cfiles->copyfiles( "$base_options $options", $mode );
+      }
+      &cleanup();
    }
-   if ( defined($opts{'compare'}) ) {
-      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
-      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
-      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
-   }
-   if ( defined($opts{'generate'}) ) {
-      $cfiles->copyfiles( "$options", $mode );
-   }
-   &cleanup();
 }
 print "\n===============================================================================\n";
 print "Test the NEON sites\n";
@@ -448,7 +458,7 @@ foreach my $options (
                       "-bgc bgc -use_case 1850-2100_SSP3-7.0_transient -namelist '&a start_ymd=20701029/'",
                       "-bgc fates  -use_case 2000_control -no-megan",
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
-                      "-bgc cn  -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
+                      "-bgc bgc -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
                      ) {
@@ -516,6 +526,16 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "decomp_without_cn"         =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"soil_decomp_method='CENTURYKoven2013'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
+     "bgc_with_no_decomp"        =>{ options=>" -envxml_dir . -bgc bgc",
+                                     namelst=>"soil_decomp_method='None'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
      "reseed without CN"         =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"reseed_dead_plants=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -531,7 +551,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "dribble_crphrv w/o crop"   =>{ options=>" -envxml_dir . -bgc cn -no-crop",
+     "dribble_crphrv w/o crop"   =>{ options=>" -envxml_dir . -bgc bgc -no-crop",
                                      namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
@@ -541,12 +561,12 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "use_cndv=T without bldnml op"=>{ options=>"-bgc cn -envxml_dir . -ignore_warnings",
+     "use_cndv=T without bldnml op"=>{ options=>"-bgc bgc -envxml_dir . -ignore_warnings",
                                      namelst=>"use_cndv=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "use_cndv=F with dyn_veg op"=>{ options=>"-bgc cn -dynamic_vegetation -envxml_dir . -ignore_warnings",
+     "use_cndv=F with dyn_veg op"=>{ options=>"-bgc bgc -dynamic_vegetation -envxml_dir . -ignore_warnings",
                                      namelst=>"use_cndv=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
@@ -617,12 +637,12 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      # This one should fail now, because we don't have non irrigated non-crop datasets
-     "-irrigate=F without -crop" =>{ options=>"-bgc cn -no-crop -envxml_dir .",
+     "-irrigate=F without -crop" =>{ options=>"-bgc bgc -no-crop -envxml_dir .",
                                     namelst=>"irrigate=.false.",
                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                     phys=>"clm4_5",
                                    },
-     "grainproductWOcrop"       =>{ options=>"-bgc cn -no-crop -envxml_dir .",
+     "grainproductWOcrop"       =>{ options=>"-bgc bgc -no-crop -envxml_dir .",
                                     namelst=>"use_grainproduct=.true.",
                                     GLC_TWO_WAY_COUPLING=>"FALSE",
                                     phys=>"clm4_5",
@@ -672,7 +692,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "lightres no fire"          =>{ options=>"-bgc cn -envxml_dir . -light_res 360x720",
+     "lightres no fire"          =>{ options=>"-bgc bgc -envxml_dir . -light_res 360x720",
                                      namelst=>"fire_method='nofire'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
@@ -697,20 +717,10 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "bgc=cn and bgc settings"   =>{ options=>"-bgc cn -envxml_dir .",
-                                     namelst=>"use_lch4=.true.,use_nitrif_denitrif=.true.,use_vertsoilc=.true.,use_century_decomp=.true.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
-                                   },
-     "finundated and not methane"=>{ options=>"-bgc cn -envxml_dir .",
+     "finundated and not methane"=>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"use_lch4=.false.,finundation_method='h2osfc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
-                                   },
-     "bgc=bgc and cn-only set"   =>{ options=>"-bgc bgc -envxml_dir .",
-                                     namelst=>"use_lch4=.false.,use_nitrif_denitrif=.false.,use_vertsoilc=.false.,use_century_decomp=.false.",
-                                     GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm4_5",
                                    },
      "use_cn=true bgc=sp"        =>{ options=>"-bgc sp -envxml_dir .",
                                      namelst=>"use_cn=.true.",
@@ -722,7 +732,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
                                    },
-     "use_cn=false bgc=cn"       =>{ options=>"-bgc cn -envxml_dir .",
+     "use_cn=false bgc=bgc"      =>{ options=>"-bgc bgc -envxml_dir .",
                                      namelst=>"use_cn=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
@@ -872,10 +882,30 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "both lnd_frac and on nml"  =>{ options=>"-lnd_frac domain.nc -envxml_dir .",
+     "both lnd_frac and on nml"  =>{ options=>"-driver mct -lnd_frac domain.nc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
+                                   },
+     "lnd_frac set to UNSET"     =>{ options=>"-driver mct -lnd_frac UNSET -envxml_dir .",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac domain.nc -envxml_dir .",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "lnd_frac not set but lilac"=>{ options=>"-driver nuopc -lilac -envxml_dir . -lnd_frac UNSET",
+                                     namelst=>"fsurdat='surfdata.nc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
+                                     namelst=>"fatmlndfrc='frac.nc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
      "branch but NO nrevsn"      =>{ options=>"-clm_start_type branch -envxml_dir .",
                                      namelst=>"",
@@ -1047,6 +1077,11 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
+     "SPModeWNitrifNMethane"     =>{ options=>"-envxml_dir . -bgc sp",
+                                     namelst=>"use_lch4=.true., use_nitrif_denitrif=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_0",
+                                   },
      "knitrmaxWOnitrif"          =>{ options=>"-envxml_dir . -bgc bgc",
                                      namelst=>"use_nitrif_denitrif=.false., k_nitr_max=1.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
@@ -1113,15 +1148,15 @@ my %warntest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "use_c13_wo_bgc"            =>{ options=>"-envxml_dir . -bgc cn",
-                                     namelst=>"use_c13=.true.",
+     "bgc=bgc WO nitrif_denit"   =>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_nitrif_denitrif=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
+                                     phys=>"clm4_5",
                                    },
-     "use_c14_wo_bgc"            =>{ options=>"-envxml_dir . -bgc cn",
-                                     namelst=>"use_c14=.true.",
+     "methane off W nitrif_denit"=>{ options=>"-bgc bgc -envxml_dir .",
+                                     namelst=>"use_nitrif_denitrif=.true.,use_lch4=.false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
-                                     phys=>"clm5_0",
+                                     phys=>"clm5_1",
                                    },
      "soilm_stream w transient"  =>{ options=>"-res 0.9x1.25 -envxml_dir . -use_case 20thC_transient",
                                      namelst=>"use_soil_moisture_streams=T,soilm_tintalgo='linear'",
@@ -1137,6 +1172,11 @@ my %warntest = (
                                      namelst=>"megan_specifier='ZZTOP=zztop'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm4_5",
+                                   },
+     "FUN_wo_flexCN"             =>{ options=>"-envxml_dir . -bgc bgc",
+                                     namelst=>"use_fun=.true.,use_flexiblecn=.false.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
                );
 foreach my $key ( keys(%warntest) ) {
@@ -1183,7 +1223,6 @@ foreach my $res ( @resolutions ) {
    # Resolutions for mksurfdata mapping
    } elsif ( $res eq "0.5x0.5"     ||
              $res eq "0.25x0.25"   ||
-             $res eq "0.1x0.1"     ||
              $res eq "3x3min"      ||
              $res eq "5x5min"      ||
              $res eq "10x10min"    ||
@@ -1485,9 +1524,9 @@ foreach my $phys ( "clm4_5", 'clm5_0', 'clm5_1' ) {
         &cleanup();
      }
   }
-  my $clmopts = "-bgc cn -crop";
+  my $clmopts = "-bgc bgc -crop";
   my $res = "1.9x2.5";
-  $options = "-res $res -namelist '&a irrigate=.true./' -crop -bgc cn  -envxml_dir .";
+  $options = "-res $res -namelist '&a irrigate=.true./' -crop -envxml_dir .";
   &make_env_run();
   eval{ system( "$bldnml $options $clmopts  > $tempfile 2>&1 " ); };
   is( $@, '', "$options $clmopts" );

@@ -8,15 +8,14 @@ module subgridRestMod
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use glc_elevclass_mod  , only : glc_get_num_elevation_classes, glc_get_elevclass_bounds
   use abortutils         , only : endrun
-  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, gindex_global
+  use decompMod          , only : bounds_type, bounds_level_proc, gindex_global, get_global_index_array
+  use decompMod          , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
-  use clm_varcon         , only : nameg, namel, namec, namep
   use clm_varpar         , only : nlevsno, nlevmaxurbgrnd
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
-  use GetGlobalValuesMod , only : GetGlobalIndexArray
-  use GridcellType       , only : grc                
+  use GridcellType       , only : grc
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
   use PatchType          , only : patch                
@@ -202,7 +201,8 @@ contains
          long_name='2d latitude index of corresponding landunit',                  &
          interpinic_flag='skip', readvar=readvar, data=ilarr)
 
-    ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
+    ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, &
+         subgrid_level=subgrid_level_gridcell)
     call restartvar(ncid=ncid, flag=flag, varname='land1d_gridcell_index', xtype=ncd_int, &
          dim1name='landunit',                                                             &
          long_name='gridcell index of corresponding landunit',                            &
@@ -267,13 +267,15 @@ contains
          long_name='2d latitude index of corresponding column', units=' ',          &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    icarr = GetGlobalIndexArray(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=nameg)
+    icarr = get_global_index_array(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+         subgrid_level=subgrid_level_gridcell)
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_gridcell_index', xtype=ncd_int, &
          dim1name='column',                                                               &
          long_name='gridcell index of corresponding column',                              &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    icarr = GetGlobalIndexArray(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=namel)
+    icarr = get_global_index_array(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+         subgrid_level=subgrid_level_landunit)
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_landunit_index', xtype=ncd_int, &
          dim1name='column',                                                               &
          long_name='landunit index of corresponding column',                              &
@@ -370,19 +372,22 @@ contains
          long_name='2d latitude index of corresponding pft', units='',         &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    iparr = GetGlobalIndexArray(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=nameg)
+    iparr = get_global_index_array(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+         subgrid_level=subgrid_level_gridcell)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_gridcell_index', xtype=ncd_int, &
          dim1name='pft',                                                                  &
          long_name='gridcell index of corresponding pft',                                 &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    iparr = GetGlobalIndexArray(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namel)
+    iparr = get_global_index_array(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+         subgrid_level=subgrid_level_landunit)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_landunit_index', xtype=ncd_int, &
          dim1name='pft',                                                                  &
          long_name='landunit index of corresponding pft',                                 &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    iparr = GetGlobalIndexArray(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namec)
+    iparr = get_global_index_array(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+         subgrid_level=subgrid_level_column)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_column_index', xtype=ncd_int,   &
          dim1name='pft',                                                                  &
          long_name='column index of corresponding pft',                                   &
@@ -594,7 +599,7 @@ contains
     character(len=*), parameter :: subname = 'save_old_weights'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname//' ERROR: expect proc-level bounds')
+    SHR_ASSERT(bounds%level == bounds_level_proc, subname//' ERROR: expect proc-level bounds')
 
     allocate(pft_wtlunit_before_rest_read(bounds%begp:bounds%endp))
     pft_wtlunit_before_rest_read(bounds%begp:bounds%endp) = patch%wtlunit(bounds%begp:bounds%endp)
@@ -721,7 +726,7 @@ contains
                write(iulog,*) '    in user_nl_clm'
                write(iulog,*) '    In this case, CLM will take the weights from the initial conditions file.'
                write(iulog,*) ' '
-               call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
             end if
          end if
       end do

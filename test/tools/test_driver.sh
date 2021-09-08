@@ -54,6 +54,8 @@ module load nco
 module load python
 module load ncl
 
+ncar_pylib
+
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line

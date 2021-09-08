@@ -1,5 +1,11 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev054     erik 09/02/2021 New parameters on paramsfile, many bit-for-bit changes, new history fields for IWUELN,VPD_2M, allow Medlyn Photosynthesis for non-PHS cases, fixes to HumanStressIndex
+    ctsm5.1.dev053    sacks 08/13/2021 Add Antarctica compset and change min_snow_to_keep
+    ctsm5.1.dev052   negins 08/11/2021 Wrapper script for running NEON sites, and some NEON updates
+    ctsm5.1.dev051 multiple 08/06/2021 New LUNA-specific ozone stress option
+    ctsm5.1.dev050    sacks 08/02/2021 Improve and document method for getting diagnostics on a problem point
+    ctsm5.1.dev049 jedwards 07/26/2021 Update externals, NEON updates, fix stop_option=date, move neon niwo test to match user_mods, local time option
     ctsm5.1.dev048   slevis 07/10/2021 Make certain history fields descriptive inst. of labeling by number
     ctsm5.1.dev047 mvertens 07/08/2021 Start bounds at 1; remove references to MCT
     ctsm5.1.dev046   rgknox 07/02/2021 Updating external fates has to tag sci.1.46.2_api.16.1.0

@@ -1,4 +1,645 @@
 ===============================================================
+Tag name:  ctsm5.1.dev054
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Sep  2 01:18:31 MDT 2021
+One-line Summary: New parameters on paramsfile, many bit-for-bit changes, new history fields for IWUELN,VPD_2M, allow Medlyn Photosynthesis for non-PHS cases, fixes to HumanStressIndex
+
+Purpose and description of changes
+----------------------------------
+
+Brings more hardcoded parameters to the paramsfile. Some bit-for-bit cleanup. A fix for HumanStressIndex. Adding IWUELN 
+and VPD_2M diagnostic to history output. Add in ability to run Medlyn photosynthesis for non-PHS cases (not turned on yet though).
+Most of the addition of parameters is from Keith Oleson.
+
+Daniel Kennedy added two new diagnostic fields available for history outuput.
+IWUELN: the intrinsic water use efficiency at local noon (umolCO2/molH2O)
+VPD_2M: vapor pressure deficit at 2m reference height (pascals)
+
+The Medlyn stomatal conductance functionality was deployed for CLM5. It had not been implemented for use_hydrstress=.false 
+(i.e.  SMS).  Previously if we opted for: use_hydrstress=.false and stomatalcond_method = 'Medlyn2011', 
+the model would actually use the Ball-Berry stomatal conductance model. Daniel Kennedy adds the changes to allow this for
+non-PHS.
+
+Human Stress index changes are from Jonathan Buzan and Keith Oleson.
+
+Some clean-up work on arctic vegetation changes. Also removal of the option to run non-CENTRY based soil
+decomposition model. CN options are removed along with use_century_decomp and use_vertsoilc. use_nitrif_dentrif and
+use_lch4 are still retained, but recommended to be always on, and will be removed later.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+
+  Fixes #1472 - hist_master_list_file dies if master_list_file.rst already exists
+  Fixes #1469 - Remove unused 0.1x0.1 grid
+  Fixes #1468 - Remove vestiges of ch4 0.9x1.25 grid in mksurfdata_map/mkmapdata
+  Fixes #1427 - Division of critical day length by 2 is incorrect
+  Fixes #1403 - Invalid test running single-point forcing data before or after it's valid data series
+  Fixes #1401 - 1-Degree methane finundated stream data is labeled as if it's 2-degree
+  Fixes #1399 - Some cleanup for arctic luna changes
+  Fixes #1296 - Make a checklist of issues to check for when running a simulation.
+  Fixes #1245 - intrinsic water use efficiency diagnosti
+  Fixes #1250 - Error in HumanIndexMod (QSat_2 subroutine)
+  Fixes #1284 - change where stem_biomass is set
+  Fixes #1382 - write out friction velocity to history files by default
+  Fixes #1379 - Invalid xml for namelist_definition file: missing end tag
+  Fixes #1185 - Remove wrtdia
+  Fixes #1168 - Remove duplication between phys versions in CLM_BLDNML_OPTS settings (and fix some others) in config_component.xml
+  Fixes #886 -- Warning if FUN is on, but FlexibleCN is not
+  Fixes #808 -- Remove camdenNJ test from prebeta test list, replace it with working tests
+
+Partial work on #1356 (but use_lch4, use_nitrif_dentrif remain)
+
+Known bugs found since the previous tag (include issue #):
+  #1462 -- GSSUN and GSSHA are not set on history files
+  #1460 -- Initialize t_soisno to 272K instead of 274K to avoid deep soil carbon in permafrost regions
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  Vertical soil carbon is now hardcoded to on. This means that if you had run a simulation
+  with it turned off -- you won't be able to use it's restart files in this versions and after.
+  Likewise with CENTURY-BGC.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Removed namelist options: wrtdia, use_vertsoilc, use_century_decomp, min_wind_snowcompact
+  Added namelist options:   min_critical_dayl_method, soil_decomp_method
+    New options for min_critical_dayl_method, DependsOnVeg and DependsOnLatAndVeg
+
+  Remove 1x1_camdenNJ and 1x1_asphaltjungleNJ grid options
+  Remove some uneeded grids and files, correct 360x720cru grid for mksurfdata_map
+  Remove vestiges of ch4 files in mksurfdata_map
+  Remove the "cn" option to "-bgc" in CLM_BLDNML_OPTS and remove Cn compsets and tests
+  
+  New history variables: VPD2M, IWUELN (FV made default active)
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+  New parameter files
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   After we turn on methane and nitrfication-dentrification for all configurations we
+   can remove the use_lch4 and use_nitrif_denitrif options
+
+Changes to tests or testing:
+    Removed CN and 1x1_camdenNJ tests as well as NoVSNoNI
+    Shortened 1x1_cancouverCAN test as it ran beyond the end of data
+    Changed name of "rootlit" test to "anoxia" as that was the only thing it does, it now
+      also runs with vertical soil Carbon profile
+
+
+Testing summary: regular, tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - OK
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit (except diagnostic fields when HumanStress is turned on)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: When human-stress turned on
+    - what platforms/compilers: All
+    - nature of change: Small (only to diagnostic fields)
+         Also now can't run with use_vertsoilc off
+	 anoxia tests are different from rootlit tests as use_vertsoilc is now hardcoded on
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #1164 -- Some more hardcoded parameters to the params file
+  #1250 -- Error in HumanIndexMod (QSat_2 subroutine)
+  #1267 -- Adding IWUELN and VPD_2M diagnostic
+  #1321 -- Medlyn-SMS
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev053
+Originator(s):  sacks (Bill Sacks)
+Date:  Fri Aug 13 10:17:42 MDT 2021
+One-line Summary: Add Antarctica compset and change min_snow_to_keep
+
+Purpose and description of changes
+----------------------------------
+
+(1) Add a compset for running CISM with Antarctica
+
+(2) Change min_snow_to_keep (see
+    https://github.com/ESCOMP/CTSM/issues/1425 for details)
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1425 (Need to increase min_snow_to_keep)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, but very limited circumstances
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: rarely, when have large snow capping flux
+    - what platforms/compilers: all (potentially)
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      slightly larger than roundoff when it occurs
+
+    Changes only appear if removing the entire bottom layer of the snow
+    pack in one time step due to snow capping. The only test in the test
+    suite that changes answers is:
+
+    ERS_D.f10_f10_mg37.I1850Clm50BgcCrop.cheyenne_intel.clm-reseedresetsnow
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev052
+Originator(s):  negins/jedwards/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Wed Aug 11 21:58:47 MDT 2021
+One-line Summary: Wrapper script for running NEON sites, and some NEON updates
+
+Purpose and description of changes
+----------------------------------
+
+This is a wrapper script for running CTSM simulation for one or more neon sites using 
+CIME case objects.
+
+This script accomplishes the following:
+
+Downloads and parses neon listing file for the available neon data :
+https://neon-ncar.s3.data.neonscience.org/listing.csv
+
+Create a base generic case and clone other cases from this generic base case.
+
+Enable the user to run in AD, Post-AD, and transient mode.
+
+Currently, there is no case dependency or case status check in the code. Which means 
+that the user cannot run Post-AD +AD + transient all at the same time. If we add case 
+dependency, then the code that checks the status of a case (e.g. spinup) every 2
+seconds and once it is finished successfully submit the next phase (e.g. transient.)
+
+Externals are also updated to fix some NEON issues.
+
+New tools subdirectory site_and_regional and current scripts for handling single-point 
+moved underneath. Also README files and tools testing changed for this move. Also tools 
+test added for the new wrapper script talked about above. Fix an issue in subset_data.py
+where it couldn't be run from outside of a git directory because it checks for the git hash.
+
+Changes so that CTSM will write restarts as signaled at end of simulation by the CMEPS mediator.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+  Fixes #1354 Batch run single point sites
+  Fixes #1454 run_sys_test improve error for rerun option
+  Fixes #1456 Missing files for test tools
+  Fixes #1407 mkmapdata.sh failing for regional grid
+  Fixes #1446 modifiy_neon script changes dimension for zbedrock
+  Fixes #1429 Modified neon datasets have errors
+
+Known bugs introduced in this tag (include issue #):
+  #1459 -- Change run_neon to run from any directory and add some additional options for testing
+
+Known bugs found since the previous tag (include issue #):
+  #1443 -- NEON site data requirements
+  #1442 -- Rename NEON files for CLM
+  #1433 -- Bring in eval data from NEON
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing: tools testing modified add a tools test for the run_neon script
+
+Testing summary: regular and tools
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
+  (PTCLM is being deprecated, so we only expect this to be done on occasion)
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cism, cime, cmeps, cdeps
+   cism to cismwrap_2_1_87
+   cime to cime6.0.4
+   cmeps to cmeps0.13.23
+   cdeps to cdeps0.12.19
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #1444 -- Wrapper script for batch running NEON sites, and NEON fixes
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev051
+Originator(s): Stefanie Falk, Sunniva Indrehus, Bill Sacks
+Date:  Fri Aug  6 10:30:32 MDT 2021
+One-line Summary: New LUNA-specific ozone stress option
+
+Purpose and description of changes
+----------------------------------
+
+Add a new ozone stress option that modifies jmax; this stress option is
+specific to LUNA. See https://github.com/ESCOMP/CTSM/issues/1224 for a
+detailed description.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1224 (Add new feature: Ozone impact on Jmax in
+  LUNA (OzoneLUNA))
+
+Known bugs introduced in this tag (include issue #):
+- https://github.com/ESCOMP/CTSM/issues/1381 (Distinction between sunlit
+  vs. shaded leaves in Luna (e.g., for ozone stress))
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- use_ozone logical replaced by o3_veg_stress_method string
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Ozone tests reworked so that one covers this new option
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+  any other testing (give details below):
+  - Ran ERP_D_Ld5_P72x2.f10_f10_mg37.I2000Clm50BgcCrop.cheyenne_intel.clm-o3falk (passes)
+  - Ran the two old ozone tests that have been replaced; these passed
+    and were bit-for-bit (other than fieldlist diffs due to new ozone
+    diagnostic fields added in this tag)
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, just roundoff-level for pgi
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: anything with LUNA
+    - what platforms/compilers: pgi
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+     I verified that the answer changes just arise due to an extra
+     multiplication by 1 in LUNA, which must change order of operations
+     for pgi. (I compared with this one-off from master and was
+     bit-for-bit:
+     https://github.com/billsacks/ctsm/commit/011c79fc361a98c04a42824b74ca81209262da7c)
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1232
+https://github.com/ESCOMP/CTSM/pull/1370
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev050
+Originator(s):  sacks (Bill Sacks)
+Date:  Mon Aug  2 17:17:10 MDT 2021
+One-line Summary: Improve and document method for getting diagnostics on a problem point
+
+Purpose and description of changes
+----------------------------------
+
+Following from the changes in ctsm5.1.dev047 to change the lower bounds
+to 1 on all processors: The one downside of that change was that it made
+it a bit harder to write diagnostics on a given point. This PR cleans up
+the method for writing these diagnostics and adds relevant
+documentation.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#164 (BalanceCheck: Calls get_proc_bounds from
+  threaded region)
+- Resolves ESCOMP/CTSM#1424 (Change all the endrun calls to write out
+  the point context information)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cdeps: cdeps0.12.14 -> cdeps0.12.17
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/issues/1424
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev049
+Originator(s):  jedwards4b/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Jul 26 01:31:04 MDT 2021
+One-line Summary: Update externals, NEON updates, fix stop_option=date, move neon niwo test to match user_mods, local time option
+
+Purpose and description of changes
+----------------------------------
+
+Move the NEON_NIWO test to NEON/NIWO to match the names in usermods. Output particular fields for the NEON
+cases, and use a reduced size dataset for lightning for NEON sites. Update NEON surface datasets with
+new scripts included here. Fix stop option for NUOPC. NEON NIWO test in testlist explicity uses the user-mod
+as well as the defaults testmod.
+
+This script is for modifying the surface dataset at neon sites using data available from the neon server.
+
+Also add the ability to output history fields for a particular time of day (in seconds) with the LXXXXX 
+history averaging option from Ronny Meier.
+
+Externals are updated extensively to the version with cpl7 cime directories split out for CESM.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations? No
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #): #1412
+   Fixes #1412 -- Reduce data requirements for NEON single point sites
+   Fixes #1353 -- Need script to modify NEON surface datasets
+
+CIME Issues fixed (include issue #): #3915
+  Fixes cime/#3915 -- CESM nuopc build fails on izumi_nag
+
+Known bugs introduced in this tag (include issue #):
+  #1437 -- modify_singlept_site_neon.py seems to have trouble finding latest file and creates hidden file for output
+  #1436 -- Need subset_data.py script to be able to run from any directory
+
+Known bugs found since the previous tag (include issue #):
+   #1429 -- Modified NEON surface datasets have errors
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  NEON cases now download data to $RUNDIR
+
+Changes to the datasets (e.g., parameter, surface or initial files): NEON sufdata
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Note when you have a test with two testmod directories it won't be able to reduce any deuplication
+   that happens in directories used between the two.
+
+Changes to tests or testing:
+   Test mods in testlists can now include multiple test mod directories and this is used for the NEON test
+
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+ 
+    cheyenne - PASS (47 tests differ from before because of NEON surface dataset update)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): cism, mosart, rtm, cime, cmeps, cdeps (cime split)
+   cism   to cismwrap_2_1_85
+   mosart to mosart1_0_43
+   rtm    to rtm1_0_77
+   cime   to cime6.0.3
+   cmeps  to cmeps0.13.15
+   cdeps  to cdeps0.12.14
+
+   New cime-split externals:
+
+   cpl7.0.3
+   share1.0.2
+   MCT_2.11.0
+   pio2_5_4
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #1411 -- fix stop_option=date, move neon niwo test to match user_mods
+   #1375 -- Script for modifying neon surface dataset 
+   #1374 -- Local solar time option for average flag
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev048
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Sat Jul 10 11:39:55 MDT 2021

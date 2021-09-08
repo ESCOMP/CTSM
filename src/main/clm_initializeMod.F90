@@ -61,6 +61,7 @@ contains
     use initGridCellsMod     , only: initGridCells
     use UrbanParamsType      , only: IsSimpleBuildTemp
     use dynSubgridControlMod , only: dynSubgridControl_init
+    use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
 
     !
     ! !ARGUMENTS
@@ -97,6 +98,7 @@ contains
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
+    call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
     if (masterproc) call control_print()
@@ -118,7 +120,7 @@ contains
     use clm_varpar                    , only : nlevsno
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl                    , only : use_century_decomp, use_cn, use_fates
+    use clm_varctl                    , only : use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only: use_hillslope
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
