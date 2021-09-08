@@ -1927,7 +1927,6 @@ contains
                     a10tmin(p) > minplanttemp(ivt(p))          .and. &
                     jday       >= minplantjday(ivt(p),h)       .and. &
                     jday       <= maxplantjday(ivt(p),h)       .and. &
-                    t10(p) /= spval .and. a10tmin(p) /= spval  .and. &
                     gdd820(p) /= spval                         .and. &
                     gdd820(p) >= gddmin(ivt(p))) then
 
