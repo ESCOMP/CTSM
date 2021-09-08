@@ -12,7 +12,7 @@ module histFileMod
   use shr_sys_mod    , only : shr_sys_flush
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_fates, compname
+  use clm_varctl     , only : iulog, use_fates, compname, use_cn, use_crop
   use clm_varcon     , only : spval, ispval
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index_array
@@ -388,8 +388,13 @@ contains
        write(master_list_file,fmt_txt) '==================='
        write(master_list_file,*)
 
-       ! A warning message
+       ! A warning message and flags from the current CTSM case
        write(master_list_file,fmt_txt) 'CAUTION: Not all variables are relevant / present for all CTSM cases.'
+       write(master_list_file,fmt_txt) 'Key flags used in this CTSM case:'
+       fmt_txt = '(a,l)'
+       write(master_list_file,fmt_txt) 'use_cn = ', use_cn
+       write(master_list_file,fmt_txt) 'use_crop = ', use_crop
+       write(master_list_file,fmt_txt) 'use_fates = ', use_fates
        write(master_list_file,*)
 
        ! Table header
