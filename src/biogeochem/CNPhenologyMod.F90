@@ -1687,6 +1687,8 @@ contains
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    logical do_plant_normal ! are the normal planting rules for non-winter cereals defined and satisfied?
+    logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -1922,13 +1924,23 @@ contains
             else ! not winter cereal... slevis: added distinction between NH and SH
                ! slevis: The idea is that jday will equal idop sooner or later in the year
                !         while the gdd part is either true or false for the year.
-               if (t10(p) /= spval.and. a10tmin(p) /= spval   .and. &
-                    t10(p)     > planttemp(ivt(p))             .and. &
-                    a10tmin(p) > minplanttemp(ivt(p))          .and. &
-                    jday       >= minplantjday(ivt(p),h)       .and. &
-                    jday       <= maxplantjday(ivt(p),h)       .and. &
-                    gdd820(p) /= spval                         .and. &
-                    gdd820(p) >= gddmin(ivt(p))) then
+
+               ! srabin 2021-09-08. (No new behavior added; just allows for de-duplication of code.)
+               ! Are all the normal requirements for planting met?
+               do_plant_normal = t10(p) /= spval .and. a10tmin(p) /= spval .and. &
+                                 t10(p)     > planttemp(ivt(p))            .and. &
+                                 a10tmin(p) > minplanttemp(ivt(p))         .and. &
+                                 jday       >= minplantjday(ivt(p),h)      .and. &
+                                 jday       <= maxplantjday(ivt(p),h)      .and. &
+                                 gdd820(p)  /= spval                       .and. &
+                                 gdd820(p)  >= gddmin(ivt(p))
+               ! If not, but it's the last day of the planting window, what about relaxed rules?
+               do_plant_lastchance = (.not. do_plant_normal) .and. &
+                                     jday == maxplantjday(ivt(p),h) .and. &
+                                     gdd820(p) > 0._r8 .and. &
+                                     gdd820(p) /= spval
+
+               if (do_plant_normal) then
 
                   ! impose limit on growing season length needed
                   ! for crop maturity - for cold weather constraints
@@ -1984,8 +1996,7 @@ contains
 
 
                   ! If hit the max planting julian day -- go ahead and plant
-               else if (jday == maxplantjday(ivt(p),h) .and. gdd820(p) > 0._r8 .and. &
-                    gdd820(p) /= spval ) then
+               else if (do_plant_lastchance) then
                   croplive(p)  = .true.
                   cropplant(p) = .true.
                   idop(p)      = jday
