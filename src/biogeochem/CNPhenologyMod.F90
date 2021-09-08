@@ -1940,7 +1940,7 @@ contains
                                      gdd820(p) > 0._r8 .and. &
                                      gdd820(p) /= spval
 
-               if (do_plant_normal) then
+               if (do_plant_normal .or. do_plant_lastchance) then
 
                   ! impose limit on growing season length needed
                   ! for crop maturity - for cold weather constraints
@@ -1962,7 +1962,9 @@ contains
                       ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                       ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                      gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
-                     gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
+                     if (do_plant_normal) then
+                        gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
+                     end if
                   end if
                   if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
                       ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
@@ -1994,55 +1996,6 @@ contains
                      endif
                   endif
 
-
-                  ! If hit the max planting julian day -- go ahead and plant
-               else if (do_plant_lastchance) then
-                  croplive(p)  = .true.
-                  cropplant(p) = .true.
-                  idop(p)      = jday
-                  harvdate(p)  = NOT_Harvested
-
-                  if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
-                      ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
-                     gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
-                  end if
-                  
-                  if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
-                      ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
-                      ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
-                      ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
-                     gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
-                  end if
-                  if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
-                      ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
-                      ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
-                     gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
-                  end if
-
-                  leafc_xfer(p)  = initial_seed_at_planting
-                  leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-                  if (use_c13) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-                     endif
-                  endif
-                  if (use_c14) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-                     endif
-                  endif
 
                else
                   gddmaturity(p) = 0._r8
