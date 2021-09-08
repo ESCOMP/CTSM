@@ -1,4 +1,5 @@
 !finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_map/iclm45fates-finit-s1.4.0-a3.0.0-f45.clm2.r.0111-01-01-00000.nc'
+hist_master_list_file = .true.
 hist_mfilt        = 365
 hist_nhtfrq       = -24
 hist_empty_htapes = .false.

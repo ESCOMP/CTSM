@@ -3,6 +3,10 @@ CTSM History Fields
 ===================
 
 CAUTION: Not all variables are relevant / present for all CTSM cases.
+Key flags used in this CTSM case:
+use_cn = T
+use_crop = T
+use_fates = F
 
 ==== =================================== ============================================================================================== ================================================================= ======= 
 CTSM History Fields

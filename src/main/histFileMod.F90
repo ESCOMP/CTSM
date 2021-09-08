@@ -334,6 +334,8 @@ contains
     integer width_col_sum  ! widths of columns summed, including spaces
     character(len=3) str_width_col(ncol)  ! string version of width_col
     character(len=3) str_w_col_sum  ! string version of width_col_sum
+    character(len=7) file_identifier  ! fates identifier used in file_name
+    character(len=23) file_name  ! master_list_file.rst with or without fates
     character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
@@ -378,7 +380,13 @@ contains
 
        ! Open master_list_file
        master_list_file = getavu()  ! get next available file unit number
-       open(unit = master_list_file, file = 'master_list_file.rst',  &
+       if (use_fates) then
+          file_identifier = 'fates'
+       else
+          file_identifier = 'nofates'
+       end if
+       file_name = 'master_list_' // file_identifier // '.rst'
+       open(unit = master_list_file, file = file_name,  &
             status = 'replace', action = 'write', form = 'formatted')
 
        ! File title
