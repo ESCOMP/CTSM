@@ -1860,34 +1860,13 @@ contains
                   cumvd(p)       = 0._r8
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
-                  croplive(p)    = .true.
-                  cropplant(p)   = .true.
-                  idop(p)        = jday
-                  harvdate(p)    = NOT_Harvested
-                  gddmaturity(p) = hybgdd(ivt(p))
-                  leafc_xfer(p)  = initial_seed_at_planting
-                  leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
+                  
+                  PlantCrop(p, jday, crop_inst, &
+                            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+                            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+                            c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-                  if (use_c13) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-                     endif
-                  endif
-                  if (use_c14) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-                     endif
-                  endif
+                  gddmaturity(p) = hybgdd(ivt(p))
 
                else
                   gddmaturity(p) = 0._r8
@@ -1914,12 +1893,10 @@ contains
 
                if (do_plant_normal .or. do_plant_lastchance) then
 
-                  ! impose limit on growing season length needed
-                  ! for crop maturity - for cold weather constraints
-                  croplive(p)  = .true.
-                  cropplant(p) = .true.
-                  idop(p)      = jday
-                  harvdate(p)  = NOT_Harvested
+                  PlantCrop(p, jday, crop_inst, &
+                            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+                            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+                            c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
                   ! go a specified amount of time before/after
                   ! climatological date
@@ -1943,31 +1920,6 @@ contains
                       ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
                      gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
                   end if
-
-                  leafc_xfer(p)  = initial_seed_at_planting
-                  leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-                  if (use_c13) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-                     endif
-                  endif
-                  if (use_c14) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-                     endif
-                  endif
-
 
                else
                   gddmaturity(p) = 0._r8
@@ -2257,6 +2209,79 @@ contains
     tbase = 0._r8
 
   end subroutine CropPhenologyInit
+
+    !-----------------------------------------------------------------------
+  subroutine PlantCrop(p, jday, &
+       crop_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+       cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,              &
+       c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+    !
+    ! !DESCRIPTION:
+    !
+    ! subroutine calculates initializes variables to what they should be upon
+    ! planting. Includes only operations that apply to all crop types; 
+    ! additional operations need to happen in CropPhenology().
+
+    ! !USES:
+    use clm_varctl       , only : use_c13, use_c14
+    use clm_varcon       , only : c13ratio, c14ratio
+    !
+    ! !ARGUMENTS:
+    integer                , intent(in)    :: p    ! PATCH index running over
+    integer                , intent(in)    :: jday    ! julian day of the year
+    type(crop_type)                , intent(inout) :: crop_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
+    type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
+    type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
+    type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
+    !------------------------------------------------------------------------
+
+    associate(                                                                      & 
+         croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
+         cropplant         =>    crop_inst%cropplant_patch                       , & ! Output: [logical  (:) ]  Flag, true if crop may be planted
+         harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
+         leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
+         leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
+         crop_seedc_to_leaf =>   cnveg_carbonflux_inst%crop_seedc_to_leaf_patch  , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to leaf
+         crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
+         )
+
+      ! impose limit on growing season length needed
+      ! for crop maturity - for cold weather constraints
+      croplive(p)  = .true.
+      cropplant(p) = .true.
+      idop(p)      = jday
+      harvdate(p)  = NOT_Harvested
+
+      leafc_xfer(p)  = initial_seed_at_planting
+      leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
+      crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
+      crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
+
+      ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
+      ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
+      if (use_c13) then
+         if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+            c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+            c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+         else
+            c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
+         endif
+      endif
+      if (use_c14) then
+         if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+            c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+               c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+         else
+            c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
+         endif
+      endif
+
+    end associate
+
+  end subroutine PlantCrop
 
   !-----------------------------------------------------------------------
   subroutine vernalization(p, &
