@@ -385,15 +385,15 @@ contains
        else
           file_identifier = 'nofates'
        end if
-       file_name = 'master_list_' // file_identifier // '.rst'
+       file_name = 'master_list_' // trim(file_identifier) // '.rst'
        open(unit = master_list_file, file = file_name,  &
             status = 'replace', action = 'write', form = 'formatted')
 
        ! File title
        fmt_txt = '(a)'
-       write(master_list_file,fmt_txt) '==================='
-       write(master_list_file,fmt_txt) 'CTSM History Fields'
-       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,fmt_txt) '============================='
+       write(master_list_file,fmt_txt) 'CTSM History Fields (' // trim(file_identifier) // ')'
+       write(master_list_file,fmt_txt) '============================='
        write(master_list_file,*)
 
        ! A warning message and flags from the current CTSM case

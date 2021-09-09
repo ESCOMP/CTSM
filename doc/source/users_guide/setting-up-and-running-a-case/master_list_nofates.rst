@@ -1,6 +1,6 @@
-===================
-CTSM History Fields
-===================
+=============================
+CTSM History Fields (nofates)
+=============================
 
 CAUTION: Not all variables are relevant / present for all CTSM cases.
 Key flags used in this CTSM case:
