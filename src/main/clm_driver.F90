@@ -1006,7 +1006,7 @@ contains
 
        ! Prescribed biogeography - prescribed canopy structure, some prognostic carbon fluxes
 
-       if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb)).or.(use_fates_sp.and.(doalb))) then
+       if (((.not. use_cn) .and. (.not. use_fates) .and. (doalb))) then
           call t_startf('SatellitePhenology')
           call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
