@@ -1687,7 +1687,7 @@ contains
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
-    logical do_plant_normal ! are the normal planting rules for non-winter cereals defined and satisfied?
+    logical do_plant_normal ! are the normal planting rules defined and satisfied?
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     !------------------------------------------------------------------------
 
@@ -1841,11 +1841,21 @@ contains
                !         cropplant through the end of the year for a harvested crop.
                !         Also harvdate(p) should be harvdate(p,ivt(p)) and should be
                !         updated on Jan 1st instead of at harvest (slevis)
-               if (a5tmin(p)             /= spval                  .and. &
-                    a5tmin(p)             <= minplanttemp(ivt(p))   .and. &
-                    jday                  >= minplantjday(ivt(p),h) .and. &
-                    (gdd020(p)            /= spval                  .and. &
-                    gdd020(p)             >= gddmin(ivt(p)))) then
+
+               ! srabin 2021-09-09. (No new behavior added; just allows for de-duplication of code.)
+               ! Are all the normal requirements for planting met?
+               do_plant_normal = a5tmin(p)   /= spval                  .and. &
+                                 a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
+                                 jday        >= minplantjday(ivt(p),h) .and. &
+                                 (gdd020(p)  /= spval                  .and. &
+                                 gdd020(p)   >= gddmin(ivt(p)))
+               ! If not, but it's the last day of the planting window, what about relaxed rules?
+               do_plant_lastchance = (.not. do_plant_normal)               .and. &
+                                     jday       >=  maxplantjday(ivt(p),h) .and. &
+                                     gdd020(p)  /= spval                   .and. &
+                                     gdd020(p)  >= gddmin(ivt(p))
+
+               if (do_plant_normal .or. do_plant_lastchance) then
 
                   cumvd(p)       = 0._r8
                   hdidx(p)       = 0._r8
@@ -1879,44 +1889,6 @@ contains
                      endif
                   endif
 
-                  ! latest possible date to plant winter cereal and after all other 
-                  ! crops were harvested for that year
-
-               else if (jday       >=  maxplantjday(ivt(p),h) .and. &
-                    gdd020(p)  /= spval                   .and. &
-                    gdd020(p)  >= gddmin(ivt(p))) then
-
-                  cumvd(p)       = 0._r8
-                  hdidx(p)       = 0._r8
-                  vf(p)          = 0._r8
-                  croplive(p)    = .true.
-                  cropplant(p)   = .true.
-                  idop(p)        = jday
-                  harvdate(p)    = NOT_Harvested
-                  gddmaturity(p) = hybgdd(ivt(p))
-                  leafc_xfer(p)  = initial_seed_at_planting
-                  leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-                  if (use_c13) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-                     endif
-                  endif
-                  if (use_c14) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-                     endif
-                  endif
                else
                   gddmaturity(p) = 0._r8
                end if
