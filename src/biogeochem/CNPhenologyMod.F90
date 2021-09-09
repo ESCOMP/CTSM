@@ -1860,10 +1860,10 @@ contains
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
                   
-                  PlantCrop(p, jday, crop_inst, &
-                            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
-                            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-                            c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+                  call PlantCrop(p, jday, crop_inst, &
+                                 cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+                                 cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+                                 c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
                   gddmaturity(p) = hybgdd(ivt(p))
 
@@ -1891,10 +1891,10 @@ contains
 
                if (do_plant_normal .or. do_plant_lastchance) then
 
-                  PlantCrop(p, jday, crop_inst, &
-                            cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
-                            cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
-                            c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+                  call PlantCrop(p, jday, crop_inst, &
+                                 cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+                                 cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+                                 c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
                   ! go a specified amount of time before/after
                   ! climatological date
