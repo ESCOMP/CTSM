@@ -1842,7 +1842,6 @@ contains
                !         Also harvdate(p) should be harvdate(p,ivt(p)) and should be
                !         updated on Jan 1st instead of at harvest (slevis)
 
-               ! srabin 2021-09-09. (No new behavior added; just allows for de-duplication of code.)
                ! Are all the normal requirements for planting met?
                do_plant_normal = a5tmin(p)   /= spval                  .and. &
                                  a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
@@ -1876,7 +1875,6 @@ contains
                ! slevis: The idea is that jday will equal idop sooner or later in the year
                !         while the gdd part is either true or false for the year.
 
-               ! srabin 2021-09-08. (No new behavior added; just allows for de-duplication of code.)
                ! Are all the normal requirements for planting met?
                do_plant_normal = t10(p) /= spval .and. a10tmin(p) /= spval .and. &
                                  t10(p)     > planttemp(ivt(p))            .and. &
