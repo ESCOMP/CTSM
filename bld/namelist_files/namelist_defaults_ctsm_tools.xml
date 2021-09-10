@@ -67,9 +67,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125x0.125_nomask_c140702.nc</scripgriddata>
 <scripgriddata hgrid="0.33x0.33" lmask="navy"    
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.33x0.33_navy_c111207.nc</scripgriddata>
-<scripgriddata hgrid="0.1x0.1"   lmask="nomask"    
-   >lnd/clm2/mappingdata/grids/SCRIPgrid_0.1x0.1_nomask_c110712.nc</scripgriddata>
-<scripgriddata hgrid="0.5x0.5"   lmask="nomask"    
+<!-- The 360x720cru grid is on 0-360 longitude grid and is important for running the model -->
+<scripgriddata hgrid="360x720cru" lmask="nomask"
+   >lnd/clm2/mappingdata/grids/SCRIPgrid_360x720_nomask_c120830.nc</scripgriddata>
+<!-- The half degree grid is on -180-180 longitude and is important for mksurfdata_map grids -->
+<scripgriddata hgrid="0.5x0.5"   lmask="nomask"
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.5x0.5_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="0.25x0.25" lmask="nomask"     
    >lnd/clm2/mappingdata/grids/SCRIPgrid_0.25x0.25_nomask_c200309.nc</scripgriddata>
@@ -93,9 +95,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <!-- Single-point / Regional grids -->
 <scripgriddata hgrid="0.125nldas2"         lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_0.125nldas2_nomask_c190328.nc</scripgriddata>
-<scripgriddata hgrid="1x1_asphaltjungleNJ" lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_brazil"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_brazil_nomask_c110308.nc</scripgriddata>
-<scripgriddata hgrid="1x1_camdenNJ"        lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_camdenNJ_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_mexicocityMEX"   lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_mexicocityMEX_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_numaIA"          lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_numaIA_nomask_c110308.nc</scripgriddata>
 <scripgriddata hgrid="1x1_smallvilleIA"    lmask="nomask" >lnd/clm2/mappingdata/grids/SCRIPgrid_1x1pt_smallvilleIA_nomask_c110308.nc</scripgriddata>
@@ -160,7 +160,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <lmask type="abm"              >nomask</lmask>
 <lmask type="topostats"        >HYDRO1K-merge-nomask</lmask>
 <lmask type="vic"              >nomask</lmask>
-<lmask type="ch4"              >nomask</lmask>
 
 <!-- Grid resolutions for different types of mksurfdata_map input files -->
 <hgrid type="lak"              >3x3min</hgrid>
@@ -187,7 +186,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hgrid type="abm"              >0.5x0.5</hgrid>
 <hgrid type="topostats"        >1km-merge-10min</hgrid>
 <hgrid type="vic"              >0.9x1.25</hgrid>
-<hgrid type="ch4"              >0.5x0.5</hgrid>
 
 <!-- namelist filenames for different types of mksurfdata_map input files -->
 <mksrf_filename type="lak" >mksrf_flakwat</mksrf_filename>
@@ -210,7 +208,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <mksrf_filename type="abm" >mksrf_fabm</mksrf_filename>
 <mksrf_filename type="topostats">mksrf_ftopostats</mksrf_filename>
 <mksrf_filename type="vic" >mksrf_fvic</mksrf_filename>
-<mksrf_filename type="ch4" >mksrf_fch4</mksrf_filename>
 
 <!-- mksrf_navyoro Orography -->
 <mksrf_fnavyoro hgrid="0.33x0.33" mask="navy" >lnd/clm2/rawdata/mksrf_navyoro_20min.c010129.nc</mksrf_fnavyoro>
@@ -312,9 +309,6 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <mksrf_fvic hgrid="0.9x1.25" lmask="nomask"
 >lnd/clm2/rawdata/mksrf_vic_0.9x1.25_GRDC_simyr2000.c130307.nc</mksrf_fvic>
-
-<mksrf_fch4 hgrid="0.5x0.5" lmask="nomask"
->lnd/clm2/rawdata/mksrf_ch4inversion_0.5x0.5_cruncep_simyr2000.c191112.nc</mksrf_fch4>
 
 <!-- mksrf_fvegtyp -->
 
