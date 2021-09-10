@@ -88,7 +88,7 @@ contains
   end subroutine SatellitePhenologyInit
 
   !================================================================
-  subroutine SatellitePhenology(bounds, num_nolakep, filter_nolakep, &
+  subroutine SatellitePhenology(bounds, num_filter, filter, &
        waterdiagnosticbulk_inst, canopystate_inst)
     !
     ! !DESCRIPTION:
@@ -105,8 +105,8 @@ contains
     !
     ! !ARGUMENTS:
     type(bounds_type)              , intent(in)    :: bounds
-    integer                        , intent(in)    :: num_nolakep                               ! number of column non-lake points in patch filter
-    integer                        , intent(in)    :: filter_nolakep(bounds%endp-bounds%begp+1) ! patch filter for non-lake points
+    integer                        , intent(in)    :: num_filter                        ! number of column non-lake points in patch filter
+    integer                        , intent(in)    :: filter(bounds%endp-bounds%begp+1) ! patch filter for non-lake points
     type(waterdiagnosticbulk_type) , intent(in)    :: waterdiagnosticbulk_inst
     type(canopystate_type)         , intent(inout) :: canopystate_inst
     !
@@ -132,8 +132,8 @@ contains
          call lai_interp(bounds, canopystate_inst)
       endif
 
-      do fp = 1, num_nolakep
-         p = filter_nolakep(fp)
+      do fp = 1, num_filter
+         p = filter(fp)
          c = patch%column(p)
 
          ! need to update elai and esai only every albedo time step so do not
