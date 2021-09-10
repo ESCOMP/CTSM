@@ -1,18 +1,18 @@
 ===============================================================
 Tag name:  ctsm5.1.dev055
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Wed Sep  8 16:14:11 MDT 2021
+Date:  Fri Sep 10 11:25:08 MDT 2021
 One-line Summary: Updates to master_list_file.rst
 
 Purpose and description of changes
 ----------------------------------
 
- Adding code that writes a disclaimer and a few of the case's flags near
+ Added code that writes a disclaimer and a few of the case's flags near
  the top of master_list_file.rst.
- Adding code to generate a FATES version of master_list_file.rst.
- Naming new file master_list_file_fates.rst and renaming existing file
+ Added code to generate a FATES version of master_list_file.rst.
+ Named new file master_list_file_fates.rst and renamed existing file
  master_list_file_nofates.rst.
- Updating .rst files in the documentation accordingly.
+ Updated .rst files in the documentation accordingly.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -38,10 +38,10 @@ Bugs fixed or introduced
 Notes of particular relevance for users
 ---------------------------------------
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
- As far as users are concerned, the changes described above mainly
- affect the documentation. If a user sets hist_master_list_file = .true.
+ The changes described above mainly affect the documentation.
+ If a user sets hist_master_list_file = .true.
  to see the list of history fields available in their case, then they
- will see the small changes to master_list_file.rst described above.
+ will see the changes to master_list_file.rst described above.
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -54,11 +54,22 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- 
-    izumi ------- 
-  
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
+    cheyenne ---- OK
+    izumi ------- OK
 
+ Note 1. On izumi I got four NLCOMP failures that seem unexpected:
+ ERI_D_Ld9_P48x1_Vnuopc.f10_f10_mg37.I2000Clm50Sp.izumi_nag.clm-SNICARFRC
+ ERS_D_Mmpi-serial_Ld5_Vnuopc.1x1_brazil.I2000Clm50FatesRs.izumi_nag.clm-FatesColdDef
+ SMS_D_Ld1_P48x1_Vnuopc.f10_f10_mg37.I2000Clm50BgcCru.izumi_nag.clm-af_bias_v7
+ SMS_D_Vnuopc_Mmpi-serial.CLM_USRDAT.I1PtClm51Bgc.izumi_nag.clm-default--clm-NEON-NIWO
+ with errors like this:
+ Comparison failed between '/scratch/cluster/slevis/tests_0908-183947iz/ERI_D_Ld9_P48x1_Vnuopc.f10_f10_mg37.I2000Clm50Sp.izumi_nag.clm-SNICARFRC.GC.0908-183947iz_nag/CaseDocs/lnd_in' with '/fs/cgd/csm/ccsm_baselines/ctsm5.1.dev054/ERI_D_Ld9_P48x1_Vnuopc.f10_f10_mg37.I2000Clm50Sp.izumi_nag.clm-SNICARFRC/CaseDocs/lnd_in'
+  missing variable: 'fatmlndfrc'
+
+ Note 2. On cheyenne I got an expected NLCOMP failure due to the Fates test
+ that I modified to output the master_list_fates.rst file.
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
 Answer changes
 --------------
