@@ -996,23 +996,20 @@ contains
          end do
 
          ! TODO May need a hook from MIMICS to ch4 code for this to work
-         if (use_lch4) then
-            ! Calculate ANOXIA
-            if (anoxia) then
-               ! Check for anoxia w/o LCH4 now done in controlMod.
+         ! Calculate ANOXIA
+         ! anoxia = .true. when (use_lch4 .and. use_vertsoilc)
 
-               do j = 1,nlev_soildecomp_standard
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
+         if (anoxia) then
 
-                     if (j==1) o_scalar(c,:) = 0._r8
+            do j = 1,nlev_soildecomp_standard
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
 
-                     o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
-                  end do
+                  if (j==1) o_scalar(c,:) = 0._r8
+
+                  o_scalar(c,1) = o_scalar(c,1) + fr(c,j) * max(o2stress_unsat(c,j), mino2lim)
                end do
-            else
-               o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
-            end if
+            end do
          else
             o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
          end if
@@ -1042,21 +1039,17 @@ contains
             end do
          end do
 
-         if (use_lch4) then
-            ! Calculate ANOXIA
-            ! Check for anoxia w/o LCH4 now done in controlMod.
+         ! Calculate ANOXIA
+         ! anoxia = .true. when (use_lch4 .and. use_vertsoilc)
 
-            if (anoxia) then
-               do j = 1,nlevdecomp
-                  do fc = 1,num_soilc
-                     c = filter_soilc(fc)
+         if (anoxia) then
+            do j = 1,nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
 
-                     o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
-                  end do
+                  o_scalar(c,j) = max(o2stress_unsat(c,j), mino2lim)
                end do
-            else
-               o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
-            end if
+            end do
          else
             o_scalar(bounds%begc:bounds%endc,1:nlevdecomp) = 1._r8
          end if
@@ -1068,14 +1061,13 @@ contains
       do j = 1, nlevdecomp
          do fc = 1, num_soilc
             c = filter_soilc(fc)
-            if (use_vertsoilc) then
-               ! Using fixed e-folding depth as in
-               ! SoilBiogeochemDecompCascadeBGCMod.F90
+!           if (use_vertsoilc) then
+!              ! Using fixed e-folding depth as in
+!              ! SoilBiogeochemDecompCascadeBGCMod.F90
 !              depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
+!           else
                depth_scalar(c,j) = 1.0_r8
-            else
-               depth_scalar(c,j) = 1.0_r8
-            end if
+!           end if
          end do
       end do
 
@@ -1124,9 +1116,9 @@ contains
          ! tau ends up in units of per hour but is expected
          ! in units of per second, so convert here; alternatively
          ! place the conversion once in w_d_o_scalars
-         tau_m1 = mimics_tau_r_p1 * exp(mimics_tau_r_p2 * fmet) * tau_mod * &
+         tau_m1 = mimics_tau_r_p1 * exp(mimics_tau_r_p2 * fmet) * tau_mod / &
                   secsphr
-         tau_m2 = mimics_tau_k_p1 * exp(mimics_tau_k_p2 * fmet) * tau_mod * &
+         tau_m2 = mimics_tau_k_p1 * exp(mimics_tau_k_p2 * fmet) * tau_mod / &
                   secsphr
 
          ! These two get used in SoilBiogeochemPotentialMod.F90
@@ -1149,20 +1141,20 @@ contains
             ! place the conversion once in w_d_o_scalars
             ! Table B1 Wieder et al. 2015 & MIMICS params file give diff
             ! kslope. I used the params file value(s).
-            t_soi_degC = t_soisno(c,j) + tfrz
+            t_soi_degC = t_soisno(c,j) - tfrz
 
             vmax_l1_m1 = exp(vslope_l1_m1 * t_soi_degC + vint_l1_m1) * &
-                         vmod_l1_m1 * secsphr
+                         vmod_l1_m1 / secsphr
             vmax_l1_m2 = exp(vslope_l1_m2 * t_soi_degC + vint_l1_m2) * &
-                         vmod_l1_m2 * secsphr
+                         vmod_l1_m2 / secsphr
             vmax_l2_m1 = exp(vslope_l2_m1 * t_soi_degC + vint_l2_m1) * &
-                         vmod_l2_m1 * secsphr
+                         vmod_l2_m1 / secsphr
             vmax_l2_m2 = exp(vslope_l2_m2 * t_soi_degC + vint_l2_m2) * &
-                         vmod_l2_m2 * secsphr
+                         vmod_l2_m2 / secsphr
             vmax_s1_m1 = exp(vslope_s1_m1 * t_soi_degC + vint_s1_m1) * &
-                         vmod_s1_m1 * secsphr
+                         vmod_s1_m1 / secsphr
             vmax_s1_m2 = exp(vslope_s1_m2 * t_soi_degC + vint_s1_m2) * &
-                         vmod_s1_m2 * secsphr
+                         vmod_s1_m2 / secsphr
 
             km_l1_m1 = exp(kslope_l1_m1 * t_soi_degC + kint_l1_m1) * &
                        kmod_l1_m1
@@ -1181,7 +1173,7 @@ contains
             ! Q10 = 1.1 w/ reference temperature of 25C.
             ! Expected in units of per second, so convert; alternatively
             ! place the conversion once in w_d_o_scalars
-            desorption = desorp(c,j) * mimics_desorpQ10 * secsphr * &
+            desorption = (desorp(c,j) / secsphr) * mimics_desorpQ10 * &
                          exp((t_soi_degC - mimics_t_soi_ref) / 10.0_r8)
 
             ! Microbial concentration with necessary unit conversions
