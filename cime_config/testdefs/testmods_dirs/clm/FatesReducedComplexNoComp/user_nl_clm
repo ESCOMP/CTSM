@@ -1,1 +1,2 @@
 use_fates_nocomp = .true.
+fates_spitfire_mode = 0
