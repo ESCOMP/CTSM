@@ -1860,7 +1860,7 @@ contains
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
                   
-                  call PlantCrop(p, jday, crop_inst, &
+                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
@@ -1891,7 +1891,7 @@ contains
 
                if (do_plant_normal .or. do_plant_lastchance) then
 
-                  call PlantCrop(p, jday, crop_inst, &
+                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
                                  cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                                  cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
                                  c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
@@ -2209,8 +2209,9 @@ contains
   end subroutine CropPhenologyInit
 
     !-----------------------------------------------------------------------
-  subroutine PlantCrop(p, jday, &
-       crop_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+  subroutine PlantCrop(p, leafcn_in, jday, &
+       crop_inst, cnveg_state_inst,                                 &
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,            &
        cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,              &
        c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
     !
@@ -2225,9 +2226,11 @@ contains
     use clm_varcon       , only : c13ratio, c14ratio
     !
     ! !ARGUMENTS:
-    integer                , intent(in)    :: p    ! PATCH index running over
-    integer                , intent(in)    :: jday    ! julian day of the year
+    integer                , intent(in)    :: p         ! PATCH index running over
+    real(r8)               , intent(in)    :: leafcn_in ! leaf C:N (gC/gN) of this patch's vegetation type (pftcon%leafcn(ivt(p)))
+    integer                , intent(in)    :: jday      ! julian day of the year
     type(crop_type)                , intent(inout) :: crop_inst
+    type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
     type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
     type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
     type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
@@ -2236,14 +2239,15 @@ contains
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
     !------------------------------------------------------------------------
 
-    associate(                                                                      & 
+    associate(                                                                     & 
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          cropplant         =>    crop_inst%cropplant_patch                       , & ! Output: [logical  (:) ]  Flag, true if crop may be planted
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
+         idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
          crop_seedc_to_leaf =>   cnveg_carbonflux_inst%crop_seedc_to_leaf_patch  , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to leaf
-         crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch, & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
+         crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
          )
 
       ! impose limit on growing season length needed
@@ -2254,7 +2258,7 @@ contains
       harvdate(p)  = NOT_Harvested
 
       leafc_xfer(p)  = initial_seed_at_planting
-      leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
+      leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
       crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
       crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
 
