@@ -12,7 +12,7 @@ module histFileMod
   use shr_sys_mod    , only : shr_sys_flush
   use spmdMod        , only : masterproc
   use abortutils     , only : endrun
-  use clm_varctl     , only : iulog, use_fates, compname
+  use clm_varctl     , only : iulog, use_fates, compname, use_cn, use_crop
   use clm_varcon     , only : spval, ispval
   use clm_varcon     , only : grlnd, nameg, namel, namec, namep
   use decompMod      , only : get_proc_bounds, get_proc_global, bounds_type, get_global_index_array
@@ -334,6 +334,8 @@ contains
     integer width_col_sum  ! widths of columns summed, including spaces
     character(len=3) str_width_col(ncol)  ! string version of width_col
     character(len=3) str_w_col_sum  ! string version of width_col_sum
+    character(len=7) file_identifier  ! fates identifier used in file_name
+    character(len=23) file_name  ! master_list_file.rst with or without fates
     character(len=99) fmt_txt  ! format statement
     character(len=*),parameter :: subname = 'CLM_hist_printflds'
     !-----------------------------------------------------------------------
@@ -378,14 +380,29 @@ contains
 
        ! Open master_list_file
        master_list_file = getavu()  ! get next available file unit number
-       open(unit = master_list_file, file = 'master_list_file.rst',  &
+       if (use_fates) then
+          file_identifier = 'fates'
+       else
+          file_identifier = 'nofates'
+       end if
+       file_name = 'master_list_' // trim(file_identifier) // '.rst'
+       open(unit = master_list_file, file = file_name,  &
             status = 'replace', action = 'write', form = 'formatted')
 
        ! File title
        fmt_txt = '(a)'
-       write(master_list_file,fmt_txt) '==================='
-       write(master_list_file,fmt_txt) 'CTSM History Fields'
-       write(master_list_file,fmt_txt) '==================='
+       write(master_list_file,fmt_txt) '============================='
+       write(master_list_file,fmt_txt) 'CTSM History Fields (' // trim(file_identifier) // ')'
+       write(master_list_file,fmt_txt) '============================='
+       write(master_list_file,*)
+
+       ! A warning message and flags from the current CTSM case
+       write(master_list_file,fmt_txt) 'CAUTION: Not all variables are relevant / present for all CTSM cases.'
+       write(master_list_file,fmt_txt) 'Key flags used in this CTSM case:'
+       fmt_txt = '(a,l)'
+       write(master_list_file,fmt_txt) 'use_cn = ', use_cn
+       write(master_list_file,fmt_txt) 'use_crop = ', use_crop
+       write(master_list_file,fmt_txt) 'use_fates = ', use_fates
        write(master_list_file,*)
 
        ! Table header

@@ -1,1 +1,2 @@
 use_lch4 = .true.
+hist_master_list_file = .true.
