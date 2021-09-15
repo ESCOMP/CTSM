@@ -4016,6 +4016,7 @@ sub setup_logic_fates {
               if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
                     $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
            }
+	 }
         }
         my $var = "use_fates_inventory_init";
         if ( defined($nl->get_value($var))  ) {
