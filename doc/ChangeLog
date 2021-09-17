@@ -42,6 +42,8 @@ CIME Issues fixed (include issue #):
 
 Known bugs introduced in this tag (include issue #):
   #1485 -- Forthcoming FATES satellite phenology ERS test fails COMPARE_base_rest
+  #1488 -- FATES SP mode filter comparison: all_soil_patches and soil
+  #1489 -- Add graceful build failure for additional modes that are incompatible with use_fates_sp
 
 Known bugs found since the previous tag (include issue #):
   MOSART #45 -- frivinp_rtm is still required even if MOSART is turned off
