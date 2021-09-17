@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 """
 Run this code by using the following wrapper script:
 ../../tools/modify_fsurdat/fsurdat_modifier
@@ -35,8 +34,8 @@ class ModifyFsurdat:
     Methods
     -------
     add_tag_to_filename(filename, tag)
-       add a tag and timetag to a filename ending with 
-       [._]cYYMMDD.nc or [._]YYMMDD.nc 
+       add a tag and timetag to a filename ending with
+       [._]cYYMMDD.nc or [._]YYMMDD.nc
 
     update_metadata(nc, filename)
 
@@ -45,7 +44,8 @@ class ModifyFsurdat:
     """
 
     def __init__(self, overwrite_single_pft, dominant_pft,
-                 zero_nonveg_landunits, uniform_snowpack, no_saturation_excess):
+                 zero_nonveg_landunits, uniform_snowpack,
+                 no_saturation_excess):
         self.overwrite_single_pft = overwrite_single_pft
         self.dominant_pft = dominant_pft
         self.zero_nonveg_landunits = zero_nonveg_landunits
@@ -65,20 +65,25 @@ class ModifyFsurdat:
         basename = os.path.basename(filename)
         cend = -10
 
-        if ( basename[cend] == "c" ):
-           cend = cend - 1
+        if basename[cend] == "c":
+            cend = cend - 1
         if ( (basename[cend] != ".") and (basename[cend] != "_") ):
-           print ( "Trouble figuring out where to add tag to filename:" + filename )
-           os.abort()
+            print ( "Trouble figuring out where to add tag to filename:" + filename )
+            os.abort()
 
         today = date.today()
         today_string = today.strftime("%y%m%d")
 
-        return(basename[:cend] + "_" + tag + "_c" + today_string + '.nc')
+        return basename[:cend] + "_" + tag + "_c" + today_string + '.nc'
 
 
     @staticmethod
-    def update_metadata(nc, filename):
+    def update_metadata(file, filename):
+        """
+        Description
+        -----------
+        Update netcdf file's metadata
+        """
 
         #update attributes
         today = date.today()
@@ -87,54 +92,59 @@ class ModifyFsurdat:
         #get git hash
         sha = get_git_sha()
 
-        nc.attrs['Created_on'] = today_string
-        nc.attrs['Created_by'] = getuser()
-        nc.attrs['Created_with'] = os.path.abspath(__file__) + " -- " + sha
-        nc.attrs['Created_from'] = filename
+        file.attrs['Created_on'] = today_string
+        file.attrs['Created_by'] = getuser()
+        file.attrs['Created_with'] = os.path.abspath(__file__) + " -- " + sha
+        file.attrs['Created_from'] = filename
 
         #delete unrelated attributes if they exist
         del_attrs = ['source_code', 'SVN_url', 'hostname', 'history'
                      'History_Log', 'Logname', 'Host', 'Version',
                      'Compiler_Optimized']
-        attr_list = nc.attrs
+        attr_list = file.attrs
 
         for attr in del_attrs:
             if attr in attr_list:
-                del(nc.attrs[attr])
+                del file.attrs[attr]
 
 
     def modify(self):
+        """
+        Description
+        -----------
+        Modify variable of output file
+        """
 
         print ("Creating surface dataset file")
         filename = self.fsurf_in
         print("Open file: " + filename)
-        f1 = xr.open_dataset(filename)
+        file = xr.open_dataset(filename)
 
         # modify surface data properties
         if self.overwrite_single_pft:
-            f1['PCT_NAT_PFT'][:,:,:] = 0
-            f1['PCT_NAT_PFT'][:,:,self.dominant_pft] = 100
+            file['PCT_NAT_PFT'][:,:,:] = 0
+            file['PCT_NAT_PFT'][:,:,self.dominant_pft] = 100
         if self.zero_nonveg_landunits:
-            f1['PCT_NATVEG'][:,:]  = 100
-            f1['PCT_CROP'][:,:]    = 0
-            f1['PCT_LAKE'][:,:]    = 0.
-            f1['PCT_WETLAND'][:,:] = 0.
-            f1['PCT_URBAN'][:,:,]   = 0.
-            f1['PCT_GLACIER'][:,:] = 0.
+            file['PCT_NATVEG'][:,:]  = 100
+            file['PCT_CROP'][:,:]    = 0
+            file['PCT_LAKE'][:,:]    = 0.
+            file['PCT_WETLAND'][:,:] = 0.
+            file['PCT_URBAN'][:,:,]   = 0.
+            file['PCT_GLACIER'][:,:] = 0.
         if self.uniform_snowpack:
-            f1['STD_ELEV'][:,:] = 20.
+            file['STD_ELEV'][:,:] = 20.
         if self.no_saturation_excess:
-            f1['FMAX'][:,:] = 0.
+            file['FMAX'][:,:] = 0.
 
-        # specify dimension order 
-        f1= f1.transpose(u'time', u'cft', u'lsmpft', u'natpft', u'nglcec', u'nglcecp1', u'nlevsoi', u'nlevurb', u'numrad', u'numurbl', 'lsmlat', 'lsmlon')
-        
-        #update attributes
-        self.update_metadata(f1, filename)
+        # specify dimension order
+        file = file.transpose(u'time', u'cft', u'lsmpft', u'natpft', u'nglcec',
+                              u'nglcecp1', u'nlevsoi', u'nlevurb', u'numrad',
+                              u'numurbl', 'lsmlat', 'lsmlon')
+
+        # update attributes
+        self.update_metadata(file, filename)
 
         # mode 'w' overwrites file if it exists
-        f1.to_netcdf(path=self.fsurf_out, mode='w')
+        file.to_netcdf(path=self.fsurf_out, mode='w')
         print('Successfully created file (fsurf_out) :' + self.fsurf_out)
-        f1.close()
-
-
+        file.close()

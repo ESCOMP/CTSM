@@ -49,7 +49,6 @@ _CTSM_PYTHON = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                             'python')
 sys.path.insert(1, _CTSM_PYTHON)
 
-# This lives in CTSM pyton/ctsm...
 from ctsm.modify_fsurdat.fsurdat_modifier import main
 
 if __name__ == "__main__":
