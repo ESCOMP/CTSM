@@ -4003,6 +4003,7 @@ sub setup_logic_fates {
         }
         #
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
+        # And also check for other settings that can't be trigged on as well
         #
         my $var = "use_fates_sp";
         if ( defined($nl->get_value($var))  ) {
@@ -4013,6 +4014,7 @@ sub setup_logic_fates {
                     $log->fatal_error("$var is required when FATES SP is on (use_fates_sp)" );
                  }
               }
+              # spit-fire can't be on with FATES SP mode is active
               if ( $nl->get_value('fates_spitfire_mode') > 0 ) {
                     $log->fatal_error('fates_spitfire_mode can NOT be set to greater than 0 when use_fates_sp is true');
            }
