@@ -1,4 +1,131 @@
 ===============================================================
+Tag name:  ctsm5.1.dev056
+Originator(s):  glemieux (Gregory Lemieux,,,)
+Date: Fri Sep 17 15:41:57 MDT 2021
+One-line Summary: FATES Satellite Phenology mode implemented
+
+Purpose and description of changes
+----------------------------------
+
+This PR enables FATES TLAI, TSAI, and HTOP to be driven by the host land model
+satellite data sets.  The parameter file has been updated to include an array
+mapping the indices of the host land model pfts to fates pfts.  FATES satellite
+phenology mode automatically enables two additional reduced complexity modes:
+fixed biogeography and no competition.  The former had previously been
+implimented although this update corrected an error associated with this mode.
+The latter is a new mode introduced in this PR as well and a corresponding
+regression test has been added along with a new sp mode regression test.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Adds FATES-SP mode as part of #1047 (a FATES v1 requirement)
+
+Known bugs introduced in this tag (include issue #):
+  #1485 -- Forthcoming FATES satellite phenology ERS test fails COMPARE_base_rest
+  #1488 -- FATES SP mode filter comparison: all_soil_patches and soil
+  #1489 -- Add graceful build failure for additional modes that are incompatible with use_fates_sp
+
+Known bugs found since the previous tag (include issue #):
+  MOSART #45 -- frivinp_rtm is still required even if MOSART is turned off
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  The SPITFIRE model is set to fail gracefully if accidentally enabled in conjunction with sp mode.
+  There is a known error in the satellite phenology exact restart, so restarts should not be
+  attempted until issue #1485 has been resolved.
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  History variables TLAI, TSAI, and HTOP are updated to reflect the fates sp mode outputs by means
+  of overwriting the existing history outputs.  The original canopystate variables are still
+  calculated, but not available to the user.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  Add namelist option: use_fates_sp, use_fates_nocomp
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+  New fates paramter file which include hlm to fates pft indexing map
+
+Substantial timing or memory changes: None
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  All single site fates suite tests need to be manually built and submitted given MOSART #45.  PR #1275 will resolve
+  this by switching to a non-MOSART compset.
+
+Changes to tests or testing:
+  A temporary SMS test has been added for Satellite Phenology testmod given the known ERS failure (issue #1485).
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+    ok: NLCOMP failures due to new fates namelist options added
+
+  fates tests:
+    cheyenne ---- OK
+
+    ok: FixedBiogeo DIFF deemed acceptable due to error correction from previous baseline.
+
+    fates baseline: fates-sci.1.46.2_api.16.1.0-ctsm5.1.dev055
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:  No (except for FATES FixedBiogeo)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: FATES FixedBiogeo mode only
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff due to corrected hlm-fates pft mapping
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+  fates: sci.1.46.2_api.16.1.0 -> sci.1.47.0_api.17.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1182 -- FATES SP api
+  FATES #703 -- Fates SP mode
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev055
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
 Date:  Fri Sep 10 11:25:08 MDT 2021
@@ -95,7 +222,7 @@ One-line Summary: New parameters on paramsfile, many bit-for-bit changes, new hi
 Purpose and description of changes
 ----------------------------------
 
-Brings more hardcoded parameters to the paramsfile. Some bit-for-bit cleanup. A fix for HumanStressIndex. Adding IWUELN 
+Brings more hardcoded parameters to the paramsfile. Some bit-for-bit cleanup. A fix for HumanStressIndex. Adding IWUELN
 and VPD_2M diagnostic to history output. Add in ability to run Medlyn photosynthesis for non-PHS cases (not turned on yet though).
 Most of the addition of parameters is from Keith Oleson.
 
@@ -103,8 +230,8 @@ Daniel Kennedy added two new diagnostic fields available for history outuput.
 IWUELN: the intrinsic water use efficiency at local noon (umolCO2/molH2O)
 VPD_2M: vapor pressure deficit at 2m reference height (pascals)
 
-The Medlyn stomatal conductance functionality was deployed for CLM5. It had not been implemented for use_hydrstress=.false 
-(i.e.  SMS).  Previously if we opted for: use_hydrstress=.false and stomatalcond_method = 'Medlyn2011', 
+The Medlyn stomatal conductance functionality was deployed for CLM5. It had not been implemented for use_hydrstress=.false
+(i.e.  SMS).  Previously if we opted for: use_hydrstress=.false and stomatalcond_method = 'Medlyn2011',
 the model would actually use the Ball-Berry stomatal conductance model. Daniel Kennedy adds the changes to allow this for
 non-PHS.
 
@@ -178,7 +305,7 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
   Remove some uneeded grids and files, correct 360x720cru grid for mksurfdata_map
   Remove vestiges of ch4 files in mksurfdata_map
   Remove the "cn" option to "-bgc" in CLM_BLDNML_OPTS and remove Cn compsets and tests
-  
+
   New history variables: VPD2M, IWUELN (FV made default active)
 
 Changes to the datasets (e.g., parameter, surface or initial files):
@@ -218,7 +345,7 @@ Testing summary: regular, tools
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
   any other testing (give details below):
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
@@ -303,7 +430,7 @@ Changes answers relative to baseline: YES, but very limited circumstances
   Summarize any changes to answers, i.e.,
     - what code configurations: rarely, when have large snow capping flux
     - what platforms/compilers: all (potentially)
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       slightly larger than roundoff when it occurs
 
     Changes only appear if removing the entire bottom layer of the snow
@@ -322,7 +449,7 @@ One-line Summary: Wrapper script for running NEON sites, and some NEON updates
 Purpose and description of changes
 ----------------------------------
 
-This is a wrapper script for running CTSM simulation for one or more neon sites using 
+This is a wrapper script for running CTSM simulation for one or more neon sites using
 CIME case objects.
 
 This script accomplishes the following:
@@ -334,15 +461,15 @@ Create a base generic case and clone other cases from this generic base case.
 
 Enable the user to run in AD, Post-AD, and transient mode.
 
-Currently, there is no case dependency or case status check in the code. Which means 
-that the user cannot run Post-AD +AD + transient all at the same time. If we add case 
+Currently, there is no case dependency or case status check in the code. Which means
+that the user cannot run Post-AD +AD + transient all at the same time. If we add case
 dependency, then the code that checks the status of a case (e.g. spinup) every 2
 seconds and once it is finished successfully submit the next phase (e.g. transient.)
 
 Externals are also updated to fix some NEON issues.
 
-New tools subdirectory site_and_regional and current scripts for handling single-point 
-moved underneath. Also README files and tools testing changed for this move. Also tools 
+New tools subdirectory site_and_regional and current scripts for handling single-point
+moved underneath. Also README files and tools testing changed for this move. Also tools
 test added for the new wrapper script talked about above. Fix an issue in subset_data.py
 where it couldn't be run from outside of a git directory because it checks for the git hash.
 
@@ -414,7 +541,7 @@ Testing summary: regular and tools
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
   any other testing (give details below):
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
@@ -517,7 +644,7 @@ Changes answers relative to baseline: YES, just roundoff-level for pgi
   Summarize any changes to answers, i.e.,
     - what code configurations: anything with LUNA
     - what platforms/compilers: pgi
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       roundoff
 
    If bitwise differences were observed, how did you show they were no worse
@@ -584,7 +711,7 @@ Testing summary:
 
     cheyenne ---- ok
     izumi ------- ok
-  
+
 Answer changes
 --------------
 
@@ -615,7 +742,7 @@ as well as the defaults testmod.
 
 This script is for modifying the surface dataset at neon sites using data available from the neon server.
 
-Also add the ability to output history fields for a particular time of day (in seconds) with the LXXXXX 
+Also add the ability to output history fields for a particular time of day (in seconds) with the LXXXXX
 history averaging option from Ronny Meier.
 
 Externals are updated extensively to the version with cpl7 cime directories split out for CESM.
@@ -681,7 +808,7 @@ Testing summary: regular
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
- 
+
     cheyenne - PASS (47 tests differ from before because of NEON surface dataset update)
 
   tools-tests (test/tools) (if tools have been changed):
@@ -696,7 +823,7 @@ Testing summary: regular
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
 Answer changes
 --------------
 
@@ -723,7 +850,7 @@ Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
 
    #1411 -- fix stop_option=date, move neon niwo test to match user_mods
-   #1375 -- Script for modifying neon surface dataset 
+   #1375 -- Script for modifying neon surface dataset
    #1374 -- Local solar time option for average flag
 
 ===============================================================
@@ -917,7 +1044,7 @@ One-line Summary: Updating external fates has to tag sci.1.46.2_api.16.1.0. FATE
 Purpose and description of changes
 ----------------------------------
 
-  This change brings the fates external up to sci.1.46.2_api.16.1.0. FATES side changes expand 
+  This change brings the fates external up to sci.1.46.2_api.16.1.0. FATES side changes expand
   the FATES parameter file to include new fields.
 
   New and UNUSED parameters include:
@@ -978,7 +1105,7 @@ Issues fixed (include CTSM Issue #):
 Notes of particular relevance for users
 ---------------------------------------
 
- The FATES parameter file now contains new fields. Users must update their personal parameter 
+ The FATES parameter file now contains new fields. Users must update their personal parameter
  files to contain these new fields.  See src/fates/parameter_files/fates_params_default.cdl
 
 Notes of particular relevance for developers:
@@ -1006,7 +1133,7 @@ Testing summary:   regular
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
   fates tests:
     cheyenne ---- OK
 
@@ -1089,7 +1216,7 @@ Notes of particular relevance for users
 Notes of particular relevance for developers:
 ---------------------------------------------
 
-	
+
 Testing summary:
 ----------------
 
@@ -1107,7 +1234,7 @@ Testing summary:
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
 
 Answer changes
 --------------
@@ -1280,7 +1407,7 @@ Testing summary:
 
     cheyenne ---- OK (read above in "bugs introduced" about CN failures)
     izumi ------- OK (read below in "other testing" about pgi failures)
-  
+
   any other testing (give details below):
  Two unexpected tests fail on izumi, so I performed additional testing.
  The tests that fail:
@@ -1375,7 +1502,7 @@ Testing summary:   regular
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
 
@@ -1408,10 +1535,10 @@ One-line Summary: Updates to coupling interface to enable FATES-CH4, and to be c
 Purpose and description of changes
 ----------------------------------
 
-These changes are only relegated to the API with FATES. Boundary conditions were prepared within 
-FATES to enable proper use of the methane model. Further, some minor changes were made to the FATES 
-interface code (clmfates_interfaceMod.F90) allowing compatibility with FATES tag sci.1.46.0_api.16.0.0 
-(https://github.com/NGEET/fates/releases/tag/sci.1.46.0_api.16.0.0). Most of these changes have to do 
+These changes are only relegated to the API with FATES. Boundary conditions were prepared within
+FATES to enable proper use of the methane model. Further, some minor changes were made to the FATES
+interface code (clmfates_interfaceMod.F90) allowing compatibility with FATES tag sci.1.46.0_api.16.0.0
+(https://github.com/NGEET/fates/releases/tag/sci.1.46.0_api.16.0.0). Most of these changes have to do
 with how the FATES history interface is instantiated.
 
 Significant changes to scientifically-supported configurations
@@ -1765,7 +1892,7 @@ This also brings in Negin's first version of the subset_data.py script to create
 datasets for single-point and regional cases. And a version of it was run to
 create the NEON surface datasets.
 
-To setup a NEON site do the following 
+To setup a NEON site do the following
 
 cd cime/scripts
 ./create_newcase --case myNEONtest --res CLM_USRDAT --compset IHist1PtClm51Bgc \
@@ -1799,14 +1926,14 @@ Bugs fixed or introduced
 
 Issues fixed (include CTSM Issue #):
    #1368 -- Longitude isn't correct for NEON singlept fsurdat files.
-   #1353 -- Modify NEON surface data 
+   #1353 -- Modify NEON surface data
 
 Known bugs introduced in this tag (include issue #):
   #1364 -- Change NEON surface datasets to 79PFT files to facilitate the crop sites
   #1368 -- Additional modifications to subset_data.py
   #1363 -- 2018 and 2018-PD compsets for NEON single point ty
   #1354 -- Batch run single point sites, including NEON
-  #1355 -- Python scripts for NEON analyses 
+  #1355 -- Python scripts for NEON analyses
   cime/#3970 -- cdeps library fails to build on izumi: nag, intel, and gnu compilers
 
 Known bugs found since the previous tag (include issue #):
@@ -1857,7 +1984,7 @@ Testing summary:   regular
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
   any other testing (give details below):
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
@@ -1884,7 +2011,7 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): c
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
-   #1278 -- Neon compsets 
+   #1278 -- Neon compsets
    #1360 -- Singlept and regional subsetting script (initial version)
 
 ===============================================================
@@ -1974,7 +2101,7 @@ Testing summary:  regular
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
   any other testing (give details below):
 
       Ran mkmapdata.sh for 1-deg maps
@@ -2075,7 +2202,7 @@ Testing summary:
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
   any other testing (give details below):
   Unit tests PASS
 
@@ -2114,11 +2241,11 @@ One-line Summary: FATES tag update and snow occlusion of LAI fix
 Purpose and description of changes
 ----------------------------------
 
-This tag updates the way in which fates is called during restarts to appropriately 
-handle the fates-side snow occlusion code.  Additionally, this update points to the 
+This tag updates the way in which fates is called during restarts to appropriately
+handle the fates-side snow occlusion code.  Additionally, this update points to the
 most recent fates tag, which includes a number of fates science updates (including
-the snow occlusion fix) and fates-side bug fixes (see below for list of issues 
-addressed).  
+the snow occlusion fix) and fates-side bug fixes (see below for list of issues
+addressed).
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -2169,13 +2296,13 @@ Testing summary: regular
 
     cheyenne ---- ok
     izumi ------- ok
-  
+
     ok: All non-fates testmods PASS b4b. Fates testmods have DIFF as expected due to update of fates science tag.
 
   fates tests:
     cheyenne ---- ok
 
-    ok: NLCOMP failures due to clm50_param file update relative to ctsm tag used on the last fates baseline. 
+    ok: NLCOMP failures due to clm50_param file update relative to ctsm tag used on the last fates baseline.
 
     fates baseline: fates-sci.1.44.1_api.14.2.0-ctsm5.1.dev033-C30ca1849-F6065b9a2
 
@@ -2193,7 +2320,7 @@ Changes answers relative to baseline: Yes, only for fates
    than roundoff?
     - fates-side review of expected differences for all PRs that changed answers (2 science updates
       and 2 bug fixes)
-	
+
 
 Other details
 -------------
@@ -2206,8 +2333,8 @@ Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
 
   - https://github.com/ESCOMP/CTSM/pull/1324
-  - https://github.com/NGEET/fates/pull/734 
-  
+  - https://github.com/NGEET/fates/pull/734
+
 ===============================================================
 ===============================================================
 Tag name:  ctsm5.1.dev035
@@ -2323,13 +2450,13 @@ One-line Summary: Bring in Arctic changes to LUNA from Leah Birch
 Purpose and description of changes
 ----------------------------------
 
-This is @lmbirch89 branch from #947 with the exception that Kattge is used in place of 
-Leuning in LUNA. Also the startup initial values in the luna bug fix branch #961 is 
+This is @lmbirch89 branch from #947 with the exception that Kattge is used in place of
+Leuning in LUNA. Also the startup initial values in the luna bug fix branch #961 is
 used in place of the updated values by @lmbirch89. The LUNA bug fixes have already come
 in, so these are some changes to improve arctic plants.
 
-We have addressed the issues in phenology and photosynthesis in the high latitudes. 
-Development was focused on PFT specific differences and we used observations to inform 
+We have addressed the issues in phenology and photosynthesis in the high latitudes.
+Development was focused on PFT specific differences and we used observations to inform
 model development. GPP is improved now such that the tundra is realistically less
 productive than the boreal forest.
 
@@ -2403,7 +2530,7 @@ Testing summary: regular
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
 Answer changes
 --------------
 
@@ -2420,7 +2547,7 @@ Changes answers relative to baseline: Yes for clm5_1 physics
 
    URL for LMWG diagnostics output used to validate new climate:
      http://webext.cgd.ucar.edu/I1850/clm50_ctsm10d089_2deg_GSWP3V1_lmbirch_wkattge_jmaxb1-0.17_slatopA_1850AD/
-	
+
 
 Other details
 -------------
@@ -2554,7 +2681,7 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: Cases where CTSM receives CO2 from atmosphere
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       potentially new climate
 
    Answer changes due to fixing these issues:
@@ -2631,7 +2758,7 @@ Testing summary:
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
 
@@ -2683,14 +2810,14 @@ Purpose and description of changes
 
 Implemented new nuopc/cmeps single column functionality.
 
-In config/cesm/config_files.xml - single point domains are only used 
-for mct/cpl7. For cmeps single point meshes are now generated on the 
+In config/cesm/config_files.xml - single point domains are only used
+for mct/cpl7. For cmeps single point meshes are now generated on the
 fly and component domains files are no longer needed.
-env_run.xml variables PTS_LAT, PTS_LON and PTS_DOMAINFILE are used 
+env_run.xml variables PTS_LAT, PTS_LON and PTS_DOMAINFILE are used
 to determine if there is a single point or single column run.
-If PTS_LAT and PTS_LON are not -999 and PTS_DOMAINFILE is UNSET, 
+If PTS_LAT and PTS_LON are not -999 and PTS_DOMAINFILE is UNSET,
 then you have a single point run and the exact values of PTS_LAT
-and PTS_LON are used.  If PTS_LAT and PTS_LON are not -999 and 
+and PTS_LON are used.  If PTS_LAT and PTS_LON are not -999 and
 PTS_DOMAINFILE is not UNSET, then then the cmeps driver will recognize the nearest neighbor
 values of PTS_LAT and PTS_LON in PTS_DOMAINFILE as the single column lat and lon to use.
 
@@ -2723,7 +2850,7 @@ Issues fixed (include CTSM Issue #):
 Known bugs introduced in this tag (include issue #):
 
 Known bugs found since the previous tag (include issue #):
-   #1317 -- MPI timeout for some izumi_nag tests reading in datm forcing files in NUOPC cap 
+   #1317 -- MPI timeout for some izumi_nag tests reading in datm forcing files in NUOPC cap
    #1314 -- Send unset value for scol_lat/lon from driver
 
 Notes of particular relevance for users
@@ -2762,7 +2889,7 @@ Testing summary: regular
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
   any other testing (give details below): Ran full izumi test list for nuopc driver (failed tests appear above)
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
@@ -2773,7 +2900,7 @@ Answer changes
 
 Changes answers relative to baseline: No
    (List of fields change though)
-	
+
 
 Other details
 -------------
@@ -2786,7 +2913,7 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): c
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
    #1309 -- New single column functionality for NUOPC/CMEPS
-   #1310 -- run_sys_tests: add --retry option on izumi 
+   #1310 -- run_sys_tests: add --retry option on izumi
 
 ===============================================================
 ===============================================================
@@ -2846,16 +2973,16 @@ limited changes for LILAC
   Summarize any changes to answers, i.e.,
     - what code configurations: NUOPC, and limited changes for LILAC
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       roundoff
 
       For nuopc: changes in area (relatively large differences in the
       f10 test in the test suite, but Mariana saw only very small
       changes in an f09 case), landfrac; these influence l2r fields,
       which in turn influence TWS and methane fields.
-      
+
       For lilac: just changes in area
-      
+
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? Examination of cprnc diffs.
 
@@ -2939,13 +3066,13 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: all
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       Not investigated carefully, but expected to be larger than
       roundoff/same climate
-    
+
    If bitwise differences were observed, how did you show they were no worse
    than roundoff? N/A
-	
+
 
 Other details
 -------------
@@ -3048,7 +3175,7 @@ Changes answers relative to baseline: YES, but just for nuopc
   Summarize any changes to answers, i.e.,
     - what code configurations: Just with nuopc driver
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       Not investigated
 
    The only test that changes answers is
@@ -3269,19 +3396,19 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    cheyenne -
 
   tools-tests (test/tools):
 
-    cheyenne - 
+    cheyenne -
 
   PTCLM testing (tools/shared/PTCLM/test):
 
-    cheyenne - 
+    cheyenne -
 
   python testing (see instructions in python/README.md; document testing done):
 
-    (any machine) - 
+    (any machine) -
 
   regular tests (aux_clm):
 
@@ -3352,7 +3479,7 @@ Bugs fixed or introduced
 ------------------------
 Issues fixed (include CTSM Issue #):
   Fixes #1256 -- num_iter incorrect
-  Fixes #1268 -- Leaf biomass not updated for 
+  Fixes #1268 -- Leaf biomass not updated for
   Fixes #1262 -- pconv should be 1 for crops
   Fixes #1261 -- Restarts fail in AD-spinup mode
   Fixes #1255 -- mkmapdata crashes because of modules
@@ -3405,7 +3532,7 @@ Testing summary: regular tools
 
     cheyenne ---- PASS
     izumi ------- PASS
-  
+
   any other testing (give details below):
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
@@ -3480,15 +3607,15 @@ Known bugs found since the previous tag (include issue #):
 Notes of particular relevance for users
 ---------------------------------------
 
-Changes made to namelist defaults (e.g., changed parameter values): 
+Changes made to namelist defaults (e.g., changed parameter values):
   - fates_spitfire_mode updated with multiple modes that use external datasets
   - use_fates_cohort_age_tracking added to enable size and age dependent mortality
   - fates_parteh_mode option 2 added for fates CNP mode
 
-Changes to the datasets (e.g., parameter, surface or initial files): 
+Changes to the datasets (e.g., parameter, surface or initial files):
   fates_paramfile updated to fates_params_api.14.0.0_12pft_c200921.nc
 
-Substantial timing or memory changes: 
+Substantial timing or memory changes:
   Only the fates testmod FatesAllVars failed the MEMCOMP test due to the increase in the number of variables included
 
 
@@ -3496,13 +3623,13 @@ Notes of particular relevance for developers:
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance): 
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
    There are a couple of issues we plan to address later (#1265, and #1272)
     Note also that NAG compiler production tests started failing because of a compiler error
     Since, we only care about NAG for DEBUG testing we removed those tests. Hopefully, a compiler
     update will allow that to work in the future.
 
-Changes to tests or testing: 
+Changes to tests or testing:
   - Added FatesPRT2 testmod test which activates fates CNP mode
   - Added FatesReducedComplexFixedBiogeo testmod which activates fates fixed biogeography mode
   - Added FatesSizeAgeMort testmod which activates tracking of size and age dependent mortality in fates
@@ -3523,17 +3650,17 @@ Testing summary: regular
     cheyenne ---- PASS (fates testmods DIFFs are expected)
     izumi ------- OK
 
-    ok: All non-fates testmods PASS. Fates testmods have DIFF as expected due to update of fates tag.  
+    ok: All non-fates testmods PASS. Fates testmods have DIFF as expected due to update of fates tag.
     BFAILs expected due to changing non-debug nag test to debug.  See #1264 comments for discussion.
 
   fates tests:
-    cheyenne ---- OK 
+    cheyenne ---- OK
 
     ok: expected failures on COMPARE_base_rest for FatesHydro
     and Fates_nat_and_anthro_ignitions.  All else B4B.
 
     fates baseline: fates-sci.1.43.2_api.14.2.0-ctsm5.1.dev020-C5f348cac-F5534a940
-  
+
   any other testing (give details below):
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
@@ -3549,7 +3676,7 @@ Changes answers relative to baseline: Yes, only for fates
     - nature of change (roundoff; larger than roundoff/same climate; new
     climate): larger than roundoff
 
-  Comparison made using fates suite between fates_main_api (at ctsm5.1.dev020) 
+  Comparison made using fates suite between fates_main_api (at ctsm5.1.dev020)
   and ctsm5.1.dev022.  All tests PASS, except for two expected failures and
   expected NLCOMP failure due to ctsm5.1.dev021 update to paramfile.
 
@@ -3582,12 +3709,12 @@ physics and when FATES is turned on. Those cases are identical to before, answer
 when it's turned on.
 
 Papers describing BHS simulations:
-R. Meier, Davin, E., Swenson, S., Lawrence, D., and Schwaab, Jo. (2019). Biomass heat 
+R. Meier, Davin, E., Swenson, S., Lawrence, D., and Schwaab, Jo. (2019). Biomass heat
 storage dampens diurnal temperature variations
 in forests. Environmental Research Letters. 14. 084026. 10.1088/1748-9326/ab2b4e.
 
-S.C. Swenson, Burns, S. P., and Lawrence, D. M. ( 2019). The impact of biomass heat storage 
-on the canopy energy balance and atmospheric stability in the community land model, Journal 
+S.C. Swenson, Burns, S. P., and Lawrence, D. M. ( 2019). The impact of biomass heat storage
+on the canopy energy balance and atmospheric stability in the community land model, Journal
 of Advances in Modeling Earth Systems, 11, 83– 98.
 https://doi.org/10.1029/2018MS001476
 
@@ -3596,11 +3723,11 @@ Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #):
-   #342 --- set medlynslope to C4 appropriate value for millet and sorghum 
+   #342 --- set medlynslope to C4 appropriate value for millet and sorghum
              (had already been done for miscanthus and switchgrass)
    #1246 -- Make spinup_factor_deadwood a variable rather than hardcoded constant
 
-Known bugs introduced in this tag (include github issue ID): 
+Known bugs introduced in this tag (include github issue ID):
    #1247 -- FATES doesn't work with BHS
 
 Significant changes to scientifically-supported configurations
@@ -3911,7 +4038,7 @@ Changes answers relative to baseline: YES, but just in select coupled configurat
     - what code configurations: Coupled configurations where CTSM
       receives NDEP from CAM
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       potentially new climate
 
    If bitwise differences were observed, how did you show they were no worse
@@ -3922,7 +4049,7 @@ Changes answers relative to baseline: YES, but just in select coupled configurat
        - casename: N/A
 
    URL for LMWG diagnostics output used to validate new climate: N/A
-	
+
 
 Detailed list of changes
 ------------------------
@@ -4000,19 +4127,19 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    cheyenne -
 
   tools-tests (test/tools):
 
-    cheyenne - 
+    cheyenne -
 
   PTCLM testing (tools/shared/PTCLM/test):
 
-    cheyenne - 
+    cheyenne -
 
   python testing (see instructions in python/README.md; document testing done):
 
-    (any machine) - 
+    (any machine) -
 
   regular tests (aux_clm):
 
@@ -4058,7 +4185,7 @@ Purpose of changes
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #): #34 #941 
+Issues fixed (include CTSM Issue #): #34 #941
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -4125,19 +4252,19 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    cheyenne -
 
   tools-tests (test/tools):
 
-    cheyenne - 
+    cheyenne -
 
   PTCLM testing (tools/shared/PTCLM/test):
 
-    cheyenne - 
+    cheyenne -
 
   python testing (see instructions in python/README.md; document testing done):
 
-    (any machine) - 
+    (any machine) -
 
   regular tests (aux_clm):
 
@@ -4494,7 +4621,7 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: all (or at least most)
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       new climate, at least to some extent
 
       Changes arise from (1) & (2) (large changes) and from (3) (small
@@ -4595,7 +4722,7 @@ Substantial timing or memory changes:
    relative to the baseline. I have more carefully investigated this
    change in the context of pio2, which will soon become the default:
    with pio2, this change is important to get good performance.
-   
+
 
 Notes of particular relevance for developers: (including Code reviews and testing)
 ---------------------------------------------
@@ -4908,7 +5035,7 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: ALL
     - what platforms/compilers: ALL
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       Larger than roundoff; potentially new climate regionally, over Greenland
 
       The changes arise from changes in the meaning of
@@ -4929,7 +5056,7 @@ Changes answers relative to baseline: YES
        - casename: N/A
 
    URL for LMWG diagnostics output used to validate new climate: N/A
-	
+
 
 Detailed list of changes
 ------------------------
@@ -5110,8 +5237,8 @@ Notes of particular relevance for users
 
 Caveats for users (e.g., need to interpolate initial conditions): None
 
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):  
-	- maxpatch_pft is removed from namelist 
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+	- maxpatch_pft is removed from namelist
 
 Changes made to namelist defaults (e.g., changed parameter values): None
 
@@ -5149,7 +5276,7 @@ CTSM testing:
 
   regular tests (aux_clm):
 
-    cheyenne ---- ok 
+    cheyenne ---- ok
     izumi ------- ok
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here: N/A
@@ -5191,7 +5318,7 @@ Fix the finidat files being selected for 2000_control conditions for clm5_1
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #): 
+Issues fixed (include CTSM Issue #):
    Fixes #1158 -- Turn dribble_crophrv_xsmrpool_2atm on when crop is on for all physics versions
    Another issue in #1166 -- correct finidat file for 2000Clm51
 
@@ -5273,7 +5400,7 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): N
 Pull Requests that document the changes (include PR ids): #1177
 (https://github.com/ESCOMP/ctsm/pull)
 
-  #1177 -- Two answer changes turn dribble_crophrv_xsmrpool_2atm and correct clm5_1 finidat 
+  #1177 -- Two answer changes turn dribble_crophrv_xsmrpool_2atm and correct clm5_1 finidat
            file for 2000 conditions
 
 ===============================================================
@@ -5440,7 +5567,7 @@ Changes answers relative to baseline: YES, for all CN/BGC configurations
   Summarize any changes to answers, i.e.,
     - what code configurations: All CN/BGC configurations
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       larger than roundoff; expected to be same climate, but not
       investigated yet
 
@@ -5592,7 +5719,7 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: Clm51Bgc
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       larger than roundoff; whether it is climate changing was not investigated
 
 Detailed list of changes
@@ -5717,7 +5844,7 @@ Changes answers relative to baseline: YES - just for CLM51
   Summarize any changes to answers, i.e.,
     - what code configurations: CLM51
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       possibly new climate
 
 Detailed list of changes
@@ -5837,7 +5964,7 @@ Changes answers relative to baseline: YES, but in very limited circumstances
     - what code configurations: Only when the model run uses a different
       time step than the initial conditions file
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       larger than roundoff; magnitude not investigated; in some cases,
       the differences might be significant if the model actually
       continues without aborting
@@ -5985,7 +6112,7 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: Transient cases
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       Mostly roundoff-level. See below for details.
 
       - Differences in HEAT_CONTENT1, ICE_CONTENT1, LIQUID_CONTENT1, as
@@ -6019,7 +6146,7 @@ Changes answers relative to baseline: YES
        - casename: N/A
 
    URL for LMWG diagnostics output used to validate new climate: N/A
-	
+
 
 Detailed list of changes
 ------------------------
@@ -6096,19 +6223,19 @@ CTSM testing:
 
   build-namelist tests:
 
-    cheyenne - 
+    cheyenne -
 
   tools-tests (test/tools):
 
-    cheyenne - 
+    cheyenne -
 
   PTCLM testing (tools/shared/PTCLM/test):
 
-    cheyenne - 
+    cheyenne -
 
   python testing (see instructions in python/README.md; document testing done):
 
-    (any machine) - 
+    (any machine) -
 
   regular tests (aux_clm):
 
@@ -6182,7 +6309,7 @@ Some more work done to change clm to ctsm, and allow for ctsm as a component.
 Bugs fixed or introduced
 ------------------------
 
-Issues fixed (include CTSM Issue #): 
+Issues fixed (include CTSM Issue #):
   Fix #1142 -- Add ctsm_sci test list
   Fix #1145 -- File was corrupted on glade
   Fix #1144 -- Move btran2 to just inside of fire model
@@ -6210,7 +6337,7 @@ Caveats for users (e.g., need to interpolate initial conditions): None
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables): Adds clm5_1 option to CLM_PHYSICS_VERSION
   clm5_1_GSWP3v1 is the only LND_TUNING_MDOE option for clm5_1
   New compsets added for CLM51 I2000Clm51BgcCropGs, I2000Clm51BgcGs, I1850Clm51BgcGs, IHistClm51BgcGs, IHistClm51BgcCropGs
-     
+
 
 Changes made to namelist defaults (e.g., changed parameter values): clm5_1 physics options added in
     Add the ability to set the component name in filenames (default is still clm2, but can be clm4, olr clm5)
