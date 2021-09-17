@@ -92,13 +92,6 @@ from getpass import getuser
 from logging.handlers import RotatingFileHandler
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-# -- add python/ctsm  to path
-_CTSM_PYTHON = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir, "python"
-)
-
-sys.path.insert(1, _CTSM_PYTHON)
-
 
 from ctsm.site_and_regional.base_case import BaseCase
 from ctsm.site_and_regional.single_point_case import SinglePointCase
@@ -483,6 +476,8 @@ def get_git_sha():
     Returns Git short SHA for the currect directory.
     """
     try:
+
+        #os.abspath(__file__)
         sha = (
             subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
             .strip()
@@ -887,7 +882,3 @@ def main():
     else:
         # print help when no option is chosen
         get_parser().print_help()
-
-
-if __name__ == "__main__":
-    main()
