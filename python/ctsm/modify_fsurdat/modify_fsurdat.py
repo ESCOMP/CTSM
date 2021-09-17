@@ -7,20 +7,13 @@ The wrapper script includes a full description and instructions.
 
 #  Import libraries
 import os
-import subprocess
 
 from datetime import date
 from getpass import getuser
 
 import xarray as xr
 
-
-def get_git_sha():
-    """
-    Returns Git short SHA for the currect directory.
-    """
-    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode()
-
+from ctsm.utils import get_git_sha
 
 class ModifyFsurdat:
     """

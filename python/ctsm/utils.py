@@ -4,6 +4,7 @@ import logging
 import sys
 import string
 import pdb
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -33,3 +34,9 @@ def fill_template_file(path_to_template, path_to_final, substitutions):
     final_file_contents = template.substitute(substitutions)
     with open(path_to_final, 'w') as final_file:
         final_file.write(final_file_contents)
+
+def get_git_sha():
+    """
+    Returns Git short SHA for the currect directory.
+    """
+    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode()
