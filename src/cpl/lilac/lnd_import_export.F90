@@ -4,7 +4,7 @@ module lnd_import_export
   use shr_kind_mod          , only : r8 => shr_kind_r8, cx=>shr_kind_cx, cxx=>shr_kind_cxx, cs=>shr_kind_cs
   use shr_sys_mod           , only : shr_sys_abort
   use shr_const_mod         , only : fillvalue=>SHR_CONST_SPVAL
-  use clm_varctl            , only : iulog, ndep_from_cpl
+  use clm_varctl            , only : iulog, ndep_from_cpl, co2_ppmv
   use clm_time_manager      , only : get_nstep
   use clm_instMod           , only : atm2lnd_inst, lnd2atm_inst, water_inst
   use domainMod             , only : ldomain
@@ -34,7 +34,6 @@ module lnd_import_export
   integer                :: drydep_nflds             ! number of dry deposition velocity fields lnd-> atm
   integer                :: emis_nflds               ! number of fire emission fields from lnd-> atm
 
-  integer                :: glc_nec = 10             ! number of glc elevation classes
   integer, parameter     :: debug = 0                ! internal debug level
 
   character(*),parameter :: F01 = "('(lnd_import_export) ',a,i5,2x,i5,2x,d21.14)"
@@ -70,12 +69,12 @@ contains
     real(r8)                  :: qsat_kg_kg                             ! saturation specific humidity (kg/kg)
     real(r8)                  :: forc_noy(bounds%begg:bounds%endg)
     real(r8)                  :: forc_nhx(bounds%begg:bounds%endg)
+    real(r8)                  :: forc_pbot  ! atmospheric pressure (Pa)
     character(len=*), parameter :: subname='(lnd_import_export:import_fields)'
 
     !---------------------------------------------------------------------------
 
     rc = ESMF_SUCCESS
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
 
     ! Set bounds
     begg = bounds%begg; endg=bounds%endg
@@ -249,6 +248,11 @@ contains
 
     call check_for_errors(bounds, atm2lnd_inst, water_inst%wateratm2lndbulk_inst)
 
+    do g = begg, endg
+       forc_pbot = atm2lnd_inst%forc_pbot_not_downscaled_grc(g)
+       atm2lnd_inst%forc_pco2_grc(g) = co2_ppmv * 1.e-6_r8 * forc_pbot
+    end do
+
   end subroutine import_fields
 
   !===============================================================================
@@ -277,7 +281,7 @@ contains
     !---------------------------------------------------------------------------
 
     ! Implementation notes: The CTSM decomposition is set up so that ocean points appear
-    ! at the end of the vectors received from the coupler. Thus, in order to check if
+    ! at the end of the vectors received from the atm. Thus, in order to check if
     ! there are any points that the atmosphere considers land but CTSM considers ocean,
     ! it is sufficient to check the points following the typical ending bounds in the
     ! vectors received from the coupler.
@@ -293,7 +297,6 @@ contains
        if (atm_landfrac(n) > 0._r8) then
           write(iulog,*) 'At point ', n, ' atm landfrac = ', atm_landfrac(n)
           write(iulog,*) 'but CTSM thinks this is ocean.'
-          write(iulog,*) "Make sure the mask on CTSM's fatmlndfrc file agrees with the atmosphere's land mask"
           call shr_sys_abort( subname//&
                ' ERROR: atm landfrac > 0 for a point that CTSM thinks is ocean')
        end if
@@ -519,8 +522,6 @@ contains
 
     rc = ESMF_SUCCESS
 
-    call ESMF_LogWrite(subname//' called', ESMF_LOGMSG_INFO)
-
     if (masterproc .and. debug > 0)  then
        write(iulog,F01)' Show me what is in the state? for  '//trim(fldname)
        call ESMF_StatePrint(state, rc=rc)
@@ -530,12 +531,16 @@ contains
     ! Get the pointer to data in the field
     if (present(ungridded_index)) then
        write(cvalue,*) ungridded_index
-       call ESMF_LogWrite(trim(subname)//": getting import for "//trim(fldname)//" index "//trim(cvalue), &
-            ESMF_LOGMSG_INFO)
+       if (debug > 0) then
+          call ESMF_LogWrite(trim(subname)//": getting import for "//trim(fldname)//" index "//trim(cvalue), &
+               ESMF_LOGMSG_INFO)
+       end if
        call state_getfldptr(state, trim(fb), trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
-       call ESMF_LogWrite(trim(subname)//": getting import for "//trim(fldname),ESMF_LOGMSG_INFO)
+       if (debug > 0) then
+          call ESMF_LogWrite(trim(subname)//": getting import for "//trim(fldname),ESMF_LOGMSG_INFO)
+       end if
        call state_getfldptr(state, trim(fb), trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
@@ -605,12 +610,16 @@ contains
 
     ! get field pointer
     if (present(ungridded_index)) then
-       call ESMF_LogWrite(trim(subname)//": setting export for "//trim(fldname)//" index "//trim(cvalue), &
-            ESMF_LOGMSG_INFO)
+       if (debug > 0) then
+          call ESMF_LogWrite(trim(subname)//": setting export for "//trim(fldname)//" index "//trim(cvalue), &
+               ESMF_LOGMSG_INFO)
+       end if
        call state_getfldptr(state, trim(fb), trim(fldname), fldptr2d=fldptr2d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     else
-       call ESMF_LogWrite(trim(subname)//": setting export for "//trim(fldname), ESMF_LOGMSG_INFO)
+       if (debug > 0) then
+          call ESMF_LogWrite(trim(subname)//": setting export for "//trim(fldname), ESMF_LOGMSG_INFO)
+       end if
        call state_getfldptr(state, trim(fb), trim(fldname), fldptr1d=fldptr1d, rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
@@ -670,8 +679,6 @@ contains
     ! local variables
     type(ESMF_FieldStatus_Flag) :: status
     type(ESMF_Field)            :: lfield
-    type(ESMF_Mesh)             :: lmesh
-    integer                     :: nnodes, nelements
     type(ESMF_FieldBundle)      :: fieldBundle
     character(len=*), parameter :: subname='(lnd_import_export:state_getfldptr)'
     ! ----------------------------------------------
@@ -695,18 +702,6 @@ contains
        rc = ESMF_FAILURE
        return
     else
-       call ESMF_FieldGet(lfield, mesh=lmesh, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       call ESMF_MeshGet(lmesh, numOwnedNodes=nnodes, numOwnedElements=nelements, rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-
-       if (nnodes == 0 .and. nelements == 0) then
-          call ESMF_LogWrite(trim(subname)//": no local nodes or elements ", ESMF_LOGMSG_INFO)
-          rc = ESMF_FAILURE
-          return
-       end if
-
        ! Get the data from the field
        if (present(fldptr1d)) then
           call ESMF_FieldGet(lfield, farrayPtr=fldptr1d, rc=rc)

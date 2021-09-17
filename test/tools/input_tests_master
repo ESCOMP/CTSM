@@ -38,6 +38,15 @@ bliT4 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_200
 smiT2 TSMscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 bliT2 TBLscript_tools.sh mksurfdata_map mksurfdata.pl mksrfdt_1x1_numaIA_crp_SSP5-8.5_1850-2100^tools__s
 
+sm0a1 TSMscript_tools.sh site_and_regional run_neon.py run_neon_YELL
+bl0a1 TBLscript_tools.sh site_and_regional run_neon.py run_neon_YELL
+
+smba1 TSMscript_tools.sh site_and_regional subset_data.py subset_data_YELL
+blba1 TBLscript_tools.sh site_and_regional subset_data.py subset_data_YELL
+
+smaa2 TSMscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
+blaa2 TBLscript_tools.sh site_and_regional modify_singlept_site_neon.py modify_data_YELL
+
 smi#2 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 bli#2 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_ne30np4
 smi59 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
@@ -45,18 +54,18 @@ bli59 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
 smi79 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
 bli79 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
 
-smf84 TSMscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
-blf84 TBLscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
-smfc4 TSMscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_Cycle_clm4_5^buildtools
-blfc4 TBLscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_Cycle_clm4_5^buildtools
-smfg4 TSMscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_Global_clm4_5^buildtools
-blfg4 TBLscript_tools.sh PTCLM   PTCLMmkdata             PTCLM_USUMB_Global_clm4_5^buildtools
+smf84 TSMscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
+blf84 TBLscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
+smfc4 TSMscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_Cycle_clm4_5^buildtools
+blfc4 TBLscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_Cycle_clm4_5^buildtools
+smfg4 TSMscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_Global_clm4_5^buildtools
+blfg4 TBLscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_Global_clm4_5^buildtools
 
-smiS4 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional
-bliS4 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional
-smiS8 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional_ndep
-bliS8 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional_ndep
-smiS9 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional_T62
-bliS9 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional_T62
-smiS0 TSMscript_tools.sh ncl_scripts getregional_datasets.pl getregional_0.5popd
-bliS0 TBLscript_tools.sh ncl_scripts getregional_datasets.pl getregional_0.5popd
+smiS4 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional
+bliS4 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional
+smiS8 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional_ndep
+bliS8 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional_ndep
+smiS9 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional_T62
+bliS9 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional_T62
+smiS0 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional_05popd
+bliS0 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional_05popd

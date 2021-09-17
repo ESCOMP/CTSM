@@ -322,9 +322,17 @@ The following is the recommended CTSM options to run WRF::
 In ``ctsm.cfg`` you should specify CTSM domain file, surface dataset and finidat file.
 For this example (US domain), you can use the following settings::
 
- lnd_domain_file = /glade/work/slevis/barlage_wrf_ctsm/conus/gen_domain_files/domain.lnd.wrf2ctsm_lnd_wrf2ctsm_ocn.191211.nc
- fsurdat = /glade/work/slevis/git_wrf/ctsm_surf/surfdata_conus_hist_16pfts_Irrig_CMIP6_simyr2000_c191212.nc
+ lnd_domain_file = /glade/work/slevis/git_wrf/ctsm_domain/domain.lnd.wrf2clm_lnd_noneg_wrf2clm_ocn_noneg.201117.nc
+ fsurdat = /glade/work/slevis/git_wrf/ctsm_surf/surfdata_conus_hist_16pfts_Irrig_CMIP6_simyr2000_c210119.nc
  finidat = /glade/work/slevis/git_wrf/ctsm_init/finidat_interp_dest_wrfinit_snow_ERAI_12month.nc
+
+File ``user_nl_ctsm`` allows you to override individual CTSM namelist variables
+and set any extra namelist items you would like to appear in your ``lnd_in``.
+For this example, we recommend adding the following options in
+``user_nl_ctsm``::
+
+    use_init_interp = .true.
+    init_interp_fill_missing_with_natveg = .true.
 
 Run the script ``make_runtime_inputs`` to create ``lnd_in`` and
 ``clm.input_data_list``::
@@ -333,8 +341,8 @@ Run the script ``make_runtime_inputs`` to create ``lnd_in`` and
 
 Modify ``lilac_in`` as needed. For this example, you can use the following options::
 
- atm_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc'
- lnd_mesh_filename = '/glade/work/slevis/barlage_wrf_ctsm/conus/mesh/wrf2ctsm_land_conus_ESMFMesh_c20191216.nc' 
+ atm_mesh_filename = '/glade/scratch/negins/wrf_ctsm_files/wrf2ctsm_land_conus_ESMFMesh_c20201110.nc'
+ lnd_mesh_filename = '/glade/scratch/negins/wrf_ctsm_files/wrf2ctsm_land_conus_ESMFMesh_c20201110.nc' 
 
 
 Run ``download_input_data`` script to download any of CTSM's standard input

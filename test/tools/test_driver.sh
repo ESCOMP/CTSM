@@ -54,6 +54,8 @@ module load nco
 module load python
 module load ncl
 
+ncar_pylib
+
 
 ##omp threads
 if [ -z "\$CLM_THREADS" ]; then   #threads NOT set on command line
@@ -78,6 +80,7 @@ export MACH_WORKSPACE="/glade/scratch"
 export CPRNC_EXE="$CESMDATAROOT/tools/cime/tools/cprnc/cprnc.cheyenne"
 dataroot="$CESMDATAROOT"
 export TOOLSLIBS=""
+export REGRID_PROC=1
 export TOOLS_CONF_STRING="--mpilib mpi-serial"
 
 

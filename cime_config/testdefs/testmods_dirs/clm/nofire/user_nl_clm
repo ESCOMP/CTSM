@@ -1,4 +1,3 @@
- wrtdia         = .true.
  hist_dov2xy    = .true.,.false.
 ! Even though only 2 history tapes are defined here, set ndens to 1 for up to 6 history
 ! tapes, for the sake of mods that extend these default mods and may add other history tapes

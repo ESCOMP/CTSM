@@ -9,4 +9,6 @@ flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x
 
 ! BUG(wjs, 2020-09-25, ESCOMP/CTSM#43) Dynamic lakes don't work when methane is active,
 ! so for now disable methane for this test.
+! This also requires use_nitrif_denitrif to be off as well
 use_lch4 = .false.
+use_nitrif_denitrif = .true.

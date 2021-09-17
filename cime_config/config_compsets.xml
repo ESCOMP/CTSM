@@ -18,7 +18,7 @@
     ICE  = [CICE, DICE, SICE]
     OCN  = [DOCN, ,AQUAP, SOCN]
     ROF  = [RTM, SROF]
-    GLC  = [CISM1, CISM2]
+    GLC  = [CISM2, SGLC]
     WAV  = [SWAV]
     BGC  = optional BGC scenario
 
@@ -35,6 +35,16 @@
   </help>
 
 <!-- I single point forcing -->
+
+  <compset>
+    <alias>I1PtClm51Bgc</alias>
+    <lname>2000_DATM%1PT_CLM51%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>IHist1PtClm51Bgc</alias>
+    <lname>HIST_DATM%1PT_CLM51%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
+  </compset>
 
   <compset>
     <alias>I1PtClm51SpRs</alias>
@@ -118,11 +128,6 @@
   </compset>
 
   <!-- Primarily for testing -->
-  <compset>
-    <alias>I2000Clm50Cn</alias>
-    <lname>2000_DATM%GSWP3v1_CLM50%CN_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-  </compset>
-
   <compset>
     <alias>I1850Clm50Sp</alias>
     <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
@@ -210,6 +215,10 @@
   <compset>
     <alias>I2000Clm50Fates</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+  <compset>
+    <alias>I2000Clm50FatesCruRsGs</alias>
+    <lname>2000_DATM%CRUv7_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm50FatesCru</alias>
@@ -455,11 +464,6 @@
   </compset>
 
   <compset>
-    <alias>I1850Clm45Cn</alias>
-    <lname>1850_DATM%GSWP3v1_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
     <alias>I1850Clm45Bgc</alias>
     <lname>1850_DATM%GSWP3v1_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
     <science_support grid="f09_g17"/>
@@ -501,22 +505,27 @@
 
   <compset>
     <alias>I1850Clm50SpG</alias>
-    <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I1850Clm50SpGa</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%AIS-EVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>IHistClm50SpG</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>I1850Clm50BgcCropG</alias>
-    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>IHistClm50BgcCropG</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%EVOLVE_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
   </compset>
 
   <!-- For LILAC. Uses a stub atmosphere to avoid needing to download

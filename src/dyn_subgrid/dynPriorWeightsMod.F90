@@ -15,7 +15,7 @@ module dynPriorWeightsMod
   ! !USES:
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use decompMod      , only : bounds_type, BOUNDS_LEVEL_PROC
+  use decompMod      , only : bounds_type, bounds_level_proc
   use ColumnType     , only : col
   use PatchType      , only : patch                
   !
@@ -58,7 +58,7 @@ contains
     character(len=*), parameter :: subname = 'prior_weights_type constructor'
     ! ----------------------------------------------------------------------
      
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
     
     allocate(constructor%pwtgcell(bounds%begp:bounds%endp))
     allocate(constructor%cactive(bounds%begc:bounds%endc))

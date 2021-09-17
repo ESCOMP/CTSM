@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if   [ "`./xmlquery ATM_GRID --value`" == "1x1_vancouverCAN"  ]; then
+  # Go one day in, so don't have to set the TOD as well
+  ./xmlchange RUN_STARTDATE="1992-08-13"
+elif [ "`./xmlquery ATM_GRID --value`" == "1x1_mexicocityMEX" ]; then
+  # Go one day in, so don't have to set the TOD as well
+  ./xmlchange RUN_STARTDATE="1993-12-02"
+elif [ "`./xmlquery ATM_GRID --value`" == "1x1_urbanc_alpha"  ]; then
+  # Go one day in, so don't have to set the TOD as well
+  ./xmlchange RUN_STARTDATE="0001-08-13"
+#
+# Otherwise let this be set by the specific site
+#
+fi
+

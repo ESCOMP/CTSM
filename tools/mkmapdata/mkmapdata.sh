@@ -14,6 +14,7 @@
 # -t <type>          Output type, supported values are [regional, global]
 # -r <res>           Output resolution
 # -b                 use batch mode (not default)
+# -i                 High resolution mode (Only used with -f)
 # -l                 list mapping files required (so can use check_input_data to get them)
 # -d                 debug usage -- display mkmapdata that will be run but don't execute them
 # -v                 verbose usage -- log more information on what is happening
@@ -38,9 +39,24 @@ default_res="10x15"
 #----------------------------------------------------------------------
 # SET SOME DEFAULTS -- if not set via env variables outside
 
-if [ -z "$CSMDATA" ]; then
-   CSMDATA=/glade/p/cesm/cseg/inputdata
-fi
+case $hostname in
+
+  ##cheyenne
+  cheyenne* | r* )
+  if [ -z "$CSMDATA" ]; then
+     CSMDATA=/glade/p/cesm/cseg/inputdata
+  fi
+  ;;
+
+  ##hobart/izumi/thorodin
+  hobart* | izumi* | thorodin* )
+  if [ -z "$CSMDATA" ]; then
+     CSMDATA=/fs/cgd/csm/inputdata
+  fi
+  ;;
+
+esac
+
 #----------------------------------------------------------------------
 # Usage subroutine
 usage() {
@@ -68,6 +84,8 @@ usage() {
   echo "     you need to have a separate batch script for a supported machine"
   echo "     that calls this script interactively - you cannot submit this"
   echo "     script directly to the batch system"
+  echo "[-i|--hires]"
+  echo "     Output maps are high resolution and large file support should be used"
   echo "[-l|--list]"
   echo "     List mapping files required (use check_input_data to get them)"
   echo "     also writes data to $outfilelist"
@@ -137,6 +155,7 @@ list="no"
 outgrid=""
 gridfile="default"
 fast="no"
+netcdfout="none"
 
 while [ $# -gt 0 ]; do
    case $1 in
@@ -151,6 +170,9 @@ while [ $# -gt 0 ]; do
 	   ;;
        --fast)
 	   fast="YES"
+	   ;;
+       -i|--hires)
+           netcdfout="64bit_offset"
 	   ;;
        -l|--list)
 	   debug="YES"
@@ -202,12 +224,11 @@ if [ "$gridfile" != "default" ]; then
        exit 1
     fi
     
-    # For now, make some assumptions about user-specified grids --
-    # that they are SCRIP format, and small enough to not require
-    # large file support for the output mapping file. In the future,
-    # we may want to provide command-line options to allow the user to
-    # override these defaults.
-    DST_LRGFIL="none"
+    # For now, maked the assumption about user-specified grids --
+    # that they are SCRIP format. In the future we may want to 
+    # provide a command-line options to allow the user to
+    # override that default.
+    DST_LRGFIL=$netcdfout
     DST_TYPE="SCRIP"
 else
     if [ "$res" = "default" ]; then
@@ -263,22 +284,13 @@ fi
 
 if [ "$phys" = "clm4_5" ]; then
     grids=(                    \
-           "0.5x0.5_AVHRR"     \
-           "0.25x0.25_MODIS"   \
-           "0.5x0.5_MODIS"     \
-           "3x3min_LandScan2004" \
-           "3x3min_MODIS-wCsp" \
-           "3x3min_USGS"       \
+           "0.5x0.5_nomask"     \
+           "0.25x0.25_nomask"   \
+           "0.125x0.125_nomask"   \
+           "3x3min_nomask" \
            "5x5min_nomask"     \
-           "5x5min_IGBP-GSDP"  \
-           "5x5min_ISRIC-WISE" \
-           "5x5min_ORNL-Soil" \
            "10x10min_nomask"   \
-           "10x10min_IGBPmergeICESatGIS" \
-           "3x3min_GLOBE-Gardner" \
-           "3x3min_GLOBE-Gardner-mergeGIS" \
-           "0.9x1.25_GRDC" \
-           "360x720cru_cruncep" \
+           "0.9x1.25_nomask" \
            "1km-merge-10min_HYDRO1K-merge-nomask" \
           )
 
@@ -288,7 +300,13 @@ else
 fi
 
 # Set timestamp for names below 
-CDATE="c"`date +%y%m%d`
+# The flag `-d "-0 days"` can serve as a time saver as follows:
+# If the script aborted without creating all of the map_ files and
+# the user resubmits to create the remaining files on the next day,
+# the user could change -0 to -1 to prevent the script from
+# duplicating files already generated the day before.
+# 
+CDATE="c"`date -d "-0 days" +%y%m%d`
 
 # Set name of each output mapping file
 # First determine the name of the input scrip grid file  
@@ -338,28 +356,42 @@ echo "Hostname = $hostname"
 case $hostname in
   ##cheyenne
   cheyenne* | r* )
-  . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
+  . /glade/u/apps/ch/opt/lmod/8.1.7/lmod/lmod/init/bash
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=36
   fi
-  esmfvers=7.1.0r
-  intelvers=18.0.5    # Could also use intel/19.0.2 EBK 10/4/2019
-  module load esmf_libs/$esmfvers
+  if [ interactive = "YES" ]; then
+     REGRID_PROC=1
+  fi
+  if [ "$verbose" = "YES" ]; then
+     echo "Number of processors to regrid with = $REGRID_PROC"
+  fi
+  esmfvers=8.2.0b13
+  intelvers=19.1.1
+  module purge
   module load intel/$intelvers
-  module load ncl
+# module load esmf_libs
+# module load esmf_libs/$esmfvers
   module load nco
 
   if [[ $REGRID_PROC > 1 ]]; then
-     mpi=mpi
+     mpi=mpt
+     module load mpt/2.22
   else
-     mpi=uni
+     mpi=mpiuni
   fi
-  module load esmf-${esmfvers}-ncdfio-${mpi}-O
+# module load esmf-${esmfvers}-ncdfio-${mpi}-O
+  module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/$intelvers
+  module load esmf-${esmfvers}-ncdfio-${mpi}-g
   if [ -z "$ESMFBIN_PATH" ]; then
      ESMFBIN_PATH=`grep ESMF_APPSDIR $ESMFMKFILE | awk -F= '{print $2}'`
   fi
   if [ -z "$MPIEXEC" ]; then
      MPIEXEC="mpiexec_mpt -np $REGRID_PROC"
+  fi
+  if [ "$verbose" = "YES" ]; then
+     echo "list of modules"
+     module list
   fi
   ;;
 
@@ -368,6 +400,9 @@ case $hostname in
   . /glade/u/apps/ch/opt/lmod/7.2.1/lmod/lmod/init/bash
   if [ -z "$REGRID_PROC" ]; then
      REGRID_PROC=8
+  fi
+  if [ interactive = "YES" ]; then
+     REGRID_PROC=1
   fi
   echo "REGRID_PROC=$REGRID_PROC"
   esmfvers=7.1.0r
@@ -378,7 +413,6 @@ case $hostname in
     echo "Error doing module load: intel/$intelvers"
     exit 1
   fi
-  module load ncl
   module load nco
   module load netcdf
   module load ncarcompilers
@@ -534,19 +568,11 @@ until ((nfile>${#INGRID[*]})); do
       runcmd "ncatted -a history,global,a,c,"$history"  ${OUTFILE[nfile]}"
       runcmd "ncatted -a hostname,global,a,c,$HOST   -h ${OUTFILE[nfile]}"
       runcmd "ncatted -a logname,global,a,c,$LOGNAME -h ${OUTFILE[nfile]}"
-
-      # check for duplicate mapping weights
-      newfile="rmdups_${OUTFILE[nfile]}"
-      runcmd "rm -f $newfile"
-      runcmd "env MAPFILE=${OUTFILE[nfile]} NEWMAPFILE=$newfile ncl $dir/rmdups.ncl"
-      if [ -f "$newfile" ]; then
-         runcmd "mv $newfile ${OUTFILE[nfile]}"
-      fi
    fi
 
    nfile=nfile+1
 done
 
-echo "Successffully created needed mapping files for $res"
+echo "Successfully created needed mapping files for $res"
 
 exit 0

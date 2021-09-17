@@ -12,7 +12,7 @@ module unittestSubgridMod
   !     this module (i.e., using unittest_add_landunit, etc. - NOT directly via add_landunit, etc.)
   ! (3) call unittest_subgrid_setup_end
   !
-  !   Example: To add a single grid cell, with two landunits (nat. veg. and icemec), with a
+  !   Example: To add a single grid cell, with two landunits (nat. veg. and ice), with a
   !   single column on the nat veg landunit, the following can be done:
   !
   !     call unittest_subgrid_setup_start()
@@ -20,14 +20,14 @@ module unittestSubgridMod
   !     call unittest_add_landunit(my_gi=gi, ltype=istsoil, wtgcell=0.4_r8)
   !     call unittest_add_column(my_li=li, ctype=1, wtlunit=1.0_r8)
   !     c_soil = ci
-  !     call unittest_add_landunit(my_gi=gi, ltype=istice_mec, wtgcell=0.6_r8)
+  !     call unittest_add_landunit(my_gi=gi, ltype=istice, wtgcell=0.6_r8)
   !     call unittest_subgrid_setup_end()
   ! 
   !   A few things to note about this example:
   !   (1) Note the use of gi, li and ci to get the index of the most recently-added grid
   !       cell / landunit / column
   !   (2) Note that not all subgrid information has been filled in: no patches were added
-  !       to the soil landunit, and no columns or patches were added to the icemec
+  !       to the soil landunit, and no columns or patches were added to the ice
   !       landunit. This is because this extra level of detail wasn't needed for this
   !       particular unit test. This omission is perfectly acceptable.
   ! 
@@ -40,6 +40,7 @@ module unittestSubgridMod
 
   use shr_kind_mod , only : r8 => shr_kind_r8
   use decompMod    , only : bounds_type, procinfo, get_proc_bounds
+  use decompMod    , only : gindex_grc, gindex_lun, gindex_col, gindex_patch
   use GridcellType , only : grc                
   use LandunitType , only : lun                
   use ColumnType   , only : col                
@@ -83,12 +84,11 @@ module unittestSubgridMod
 
   ! Indices of initial grid cell / landunit / column / patch
   !
-  ! Note that we do NOT start at 1, in order to catch any code that assumes indices start
-  ! at 1.
-  integer, parameter, public :: begg = 11
-  integer, parameter, public :: begl = 21
-  integer, parameter, public :: begc = 31
-  integer, parameter, public :: begp = 41
+  ! Now we do start at 1.
+  integer, parameter, public :: begg = 1
+  integer, parameter, public :: begl = 1
+  integer, parameter, public :: begc = 1
+  integer, parameter, public :: begp = 1
 
   ! Indices of final grid cell / landunit / column / patch
   ! Note that these are the final indices of the allocated arrays, which may be greater
@@ -176,10 +176,6 @@ contains
     ! We need to do this (in addition to just making sure that the bounds derived type
     ! object is set up correctly) for the sake of callers of get_proc_bounds.
     !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    !
     ! !LOCAL VARIABLES:
 
     character(len=*), parameter :: subname = 'set_decomp_info'
@@ -207,6 +203,18 @@ contains
 
     ! Currently leaving cohort info unset because it isn't needed in any unit tests. We
     ! may have to fix this in the future.
+
+
+    ! The following are needed in endrun calls, but since they are only used for printing
+    ! information, we can fill them with garbage.
+    allocate(gindex_grc(procinfo%begg:procinfo%endg))
+    allocate(gindex_lun(procinfo%begl:procinfo%endl))
+    allocate(gindex_col(procinfo%begc:procinfo%endc))
+    allocate(gindex_patch(procinfo%begp:procinfo%endp))
+    gindex_grc(:) = 0
+    gindex_lun(:) = 0
+    gindex_col(:) = 0
+    gindex_patch(:) = 0
 
   end subroutine set_decomp_info
 

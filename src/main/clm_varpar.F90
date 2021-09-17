@@ -8,14 +8,14 @@ module clm_varpar
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_sys_mod  , only: shr_sys_abort
   use spmdMod      , only: masterproc
-  use clm_varctl   , only: use_extralakelayers, use_vertsoilc
-  use clm_varctl   , only: use_century_decomp, use_c13, use_c14
+  use clm_varctl   , only: use_extralakelayers
+  use clm_varctl   , only: use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, rundef
   use clm_varctl   , only: soil_layerstruct_predefined
   use clm_varctl   , only: soil_layerstruct_userdefined
   use clm_varctl   , only: soil_layerstruct_userdefined_nlevsoi
-  use clm_varctl   , only: use_fates
+  use clm_varctl   , only: use_fates, use_cn
 
   !
   ! !PUBLIC TYPES:
@@ -63,11 +63,17 @@ module clm_varpar
 
   ! constants for decomposition cascade
 
-  integer, public, parameter :: i_met_lit  = 1
-  integer, public, parameter :: i_cel_lit  = i_met_lit + 1
-  integer, public, parameter :: i_lig_lit  = i_cel_lit + 1
-  integer, public    :: i_cwd
+  integer, public, parameter :: i_litr1 = 1   ! TEMPORARY FOR CascadeCN TO BUILD
+  integer, public            :: i_litr2 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
+  integer, public            :: i_litr3 = -9  ! TEMPORARY FOR CascadeCN TO BUILD
+  ! The code currently expects i_litr_min = i_met_lit = 1 and
+  !                            i_litr_max = 2 or 3
+  integer, public :: i_litr_min = -9  ! min index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_litr_max = -9  ! max index of litter pools; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_met_lit = -9  ! index of metabolic litter pool; overwritten in SoilBiogeochemDecompCascade*Mod
+  integer, public :: i_cwd      = -9  ! index of cwd pool; overwritten in SoilBiogeochemDecompCascade*Mod
 
+  integer, public :: ndecomp_pools_max
   integer, public :: ndecomp_pools
   integer, public :: ndecomp_cascade_transitions
 
@@ -86,7 +92,7 @@ module clm_varpar
   integer, public :: cft_ub             ! In arrays of PFTs, upper bound of PFTs on the crop landunit
   integer, public :: cft_size           ! Number of PFTs on crop landunit in arrays of PFTs
 
-  integer, public :: maxpatch_glcmec    ! max number of elevation classes
+  integer, public :: maxpatch_glc    ! max number of elevation classes
   integer, public :: max_patch_per_col
   !
   ! !PUBLIC MEMBER FUNCTIONS:
@@ -201,9 +207,12 @@ contains
        nlayert     =  nlayer + (nlevgrnd -nlevsoi)
     endif
 
-    ! here is a switch to set the number of soil levels for the biogeochemistry calculations.
-    ! currently it works on either a single level or on nlevsoi and nlevgrnd levels
-    if (use_vertsoilc) then
+    !
+    ! Number of layers for soil decomposition
+    !
+    if ( use_cn .or. use_fates )then
+       ! to set the number of soil levels for the biogeochemistry calculations.
+       ! currently it works on nlevsoi and nlevgrnd levels
        nlevdecomp      = nlevsoi
        nlevdecomp_full = nlevgrnd
     else
@@ -226,26 +235,6 @@ contains
        write(iulog, '(a, i3)') '    nlevlak = ', nlevlak
        write(iulog, *)
     end if
-
-    if ( use_fates ) then
-       i_cwd = 0
-       if (use_century_decomp) then
-          ndecomp_pools = 6
-          ndecomp_cascade_transitions = 8
-       else
-          ndecomp_pools = 7
-          ndecomp_cascade_transitions = 7
-       end if
-    else
-       i_cwd = 4
-       if (use_century_decomp) then
-          ndecomp_pools = 7
-          ndecomp_cascade_transitions = 10
-       else
-          ndecomp_pools = 8
-          ndecomp_cascade_transitions = 9
-       end if
-    endif
 
   end subroutine clm_varpar_init
 

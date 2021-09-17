@@ -9,10 +9,10 @@ module CanopyStateType
   use decompMod       , only : bounds_type
   use landunit_varcon , only : istsoil, istcrop
   use clm_varpar      , only : nlevcan, nvegwcs
-  use clm_varcon      , only : spval  
-  use clm_varctl      , only : iulog, use_cn, use_fates, use_hydrstress
-  use LandunitType    , only : lun                
-  use PatchType       , only : patch                
+  use clm_varcon      , only : spval
+  use clm_varctl      , only : iulog, use_cn, use_fates, use_fates_sp, use_hydrstress
+  use LandunitType    , only : lun
+  use PatchType       , only : patch
   !
   implicit none
   save
@@ -21,28 +21,33 @@ module CanopyStateType
   ! !PUBLIC TYPES:
   type, public :: CanopyState_type
 
-     integer  , pointer :: frac_veg_nosno_patch     (:)   ! patch fraction of vegetation not covered by snow (0 OR 1) [-] 
-     integer  , pointer :: frac_veg_nosno_alb_patch (:)   ! patch fraction of vegetation not covered by snow (0 OR 1) [-] 
+     integer  , pointer :: frac_veg_nosno_patch     (:)   ! patch fraction of vegetation not covered by snow (0 OR 1) [-]
+     integer  , pointer :: frac_veg_nosno_alb_patch (:)   ! patch fraction of vegetation not covered by snow (0 OR 1) [-]
 
      real(r8) , pointer :: tlai_patch               (:)   ! patch canopy one-sided leaf area index, no burying by snow
      real(r8) , pointer :: tsai_patch               (:)   ! patch canopy one-sided stem area index, no burying by snow
      real(r8) , pointer :: elai_patch               (:)   ! patch canopy one-sided leaf area index with burying by snow
      real(r8) , pointer :: esai_patch               (:)   ! patch canopy one-sided stem area index with burying by snow
-     real(r8) , pointer :: elai240_patch            (:)   ! patch canopy one-sided leaf area index with burying by snow average over 10days 
-     real(r8) , pointer :: laisun_patch             (:)   ! patch patch sunlit projected leaf area index  
-     real(r8) , pointer :: laisha_patch             (:)   ! patch patch shaded projected leaf area index  
-     real(r8) , pointer :: laisun_z_patch           (:,:) ! patch patch sunlit leaf area for canopy layer 
-     real(r8) , pointer :: laisha_z_patch           (:,:) ! patch patch shaded leaf area for canopy layer 
+
+     real(r8) , pointer :: tlai_hist_patch               (:)   ! patch canopy one-sided leaf area index, for SP mode
+     real(r8) , pointer :: tsai_hist_patch               (:)   ! patch canopy one-sided stem area index, for SP mode
+     real(r8) , pointer :: htop_hist_patch               (:)   ! patch canopy height, for SP mode
+
+     real(r8) , pointer :: elai240_patch            (:)   ! patch canopy one-sided leaf area index with burying by snow average over 10days
+     real(r8) , pointer :: laisun_patch             (:)   ! patch patch sunlit projected leaf area index
+     real(r8) , pointer :: laisha_patch             (:)   ! patch patch shaded projected leaf area index
+     real(r8) , pointer :: laisun_z_patch           (:,:) ! patch patch sunlit leaf area for canopy layer
+     real(r8) , pointer :: laisha_z_patch           (:,:) ! patch patch shaded leaf area for canopy layer
      real(r8) , pointer :: mlaidiff_patch           (:)   ! patch difference between lai month one and month two (for dry deposition of chemical tracers)
-     real(r8) , pointer :: annlai_patch             (:,:) ! patch 12 months of monthly lai from input data set (for dry deposition of chemical tracers) 
+     real(r8) , pointer :: annlai_patch             (:,:) ! patch 12 months of monthly lai from input data set (for dry deposition of chemical tracers)
      real(r8) , pointer :: stem_biomass_patch       (:)   ! Aboveground stem biomass (kg/m**2)
      real(r8) , pointer :: leaf_biomass_patch       (:)   ! Aboveground leaf biomass  (kg/m**2)
      real(r8) , pointer :: htop_patch               (:)   ! patch canopy top (m)
      real(r8) , pointer :: hbot_patch               (:)   ! patch canopy bottom (m)
      real(r8) , pointer :: z0m_patch                (:)   ! patch momentum roughness length (m)
      real(r8) , pointer :: displa_patch             (:)   ! patch displacement height (m)
-     real(r8) , pointer :: fsun_patch               (:)   ! patch sunlit fraction of canopy         
-     real(r8) , pointer :: fsun24_patch             (:)   ! patch 24hr average of sunlit fraction of canopy 
+     real(r8) , pointer :: fsun_patch               (:)   ! patch sunlit fraction of canopy
+     real(r8) , pointer :: fsun24_patch             (:)   ! patch 24hr average of sunlit fraction of canopy
      real(r8) , pointer :: fsun240_patch            (:)   ! patch 240hr average of sunlit fraction of canopy
 
      real(r8) , pointer :: dleaf_patch              (:)   ! patch characteristic leaf width (diameter) [m]
@@ -57,15 +62,15 @@ module CanopyStateType
 
    contains
 
-     procedure, public  :: Init         
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, public  :: Init
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
      procedure, public  :: ReadNML
      procedure, public  :: InitAccBuffer
      procedure, public  :: InitAccVars
      procedure, public  :: UpdateAccVars
-     procedure, public  :: Restart      
+     procedure, public  :: Restart
 
   end type CanopyState_type
 
@@ -73,13 +78,13 @@ module CanopyStateType
        __FILE__
   !------------------------------------------------------------------------
 
-contains   
+contains
 
   !------------------------------------------------------------------------
   subroutine Init(this, bounds)
 
     class(canopystate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
 
     call this%InitAllocate(bounds)
     call this%InitHistory(bounds)
@@ -98,7 +103,7 @@ contains
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -112,6 +117,9 @@ contains
 
     allocate(this%frac_veg_nosno_patch     (begp:endp))           ; this%frac_veg_nosno_patch     (:)   = huge(1)
     allocate(this%frac_veg_nosno_alb_patch (begp:endp))           ; this%frac_veg_nosno_alb_patch (:)   = 0
+    allocate(this%tlai_hist_patch          (begp:endp))           ; this%tlai_hist_patch          (:)   = nan
+    allocate(this%tsai_hist_patch          (begp:endp))           ; this%tsai_hist_patch          (:)   = nan
+    allocate(this%htop_hist_patch          (begp:endp))           ; this%htop_hist_patch          (:)   = nan
     allocate(this%tlai_patch               (begp:endp))           ; this%tlai_patch               (:)   = nan
     allocate(this%tsai_patch               (begp:endp))           ; this%tsai_patch               (:)   = nan
     allocate(this%elai_patch               (begp:endp))           ; this%elai_patch               (:)   = nan
@@ -135,7 +143,7 @@ contains
 
     allocate(this%dleaf_patch              (begp:endp))           ; this%dleaf_patch              (:)   = nan
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
-!    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8     
+!    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8
     allocate(this%vegwp_patch              (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan
     allocate(this%vegwp_ln_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_ln_patch           (:,:) = nan
     allocate(this%vegwp_pd_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_pd_patch           (:,:) = nan
@@ -149,7 +157,7 @@ contains
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: begc, endc
@@ -169,16 +177,6 @@ contains
     call hist_addfld1d (fname='ESAI', units='m^2/m^2', &
          avgflag='A', long_name='exposed one-sided stem area index', &
          ptr_patch=this%esai_patch)
-
-    this%tlai_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TLAI', units='m^2/m^2', &
-         avgflag='A', long_name='total projected leaf area index', &
-         ptr_patch=this%tlai_patch)
-
-    this%tsai_patch(begp:endp) = spval
-    call hist_addfld1d (fname='TSAI', units='m^2/m^2', &
-         avgflag='A', long_name='total projected stem area index', &
-         ptr_patch=this%tsai_patch)
 
     this%laisun_patch(begp:endp) = spval
     call hist_addfld1d (fname='LAISUN', units='m^2/m^2', &
@@ -206,11 +204,6 @@ contains
             avgflag='A', long_name='sunlit fraction of canopy', &
             ptr_patch=this%fsun_patch, default='inactive')
 
-       this%htop_patch(begp:endp) = spval
-       call hist_addfld1d (fname='HTOP', units='m', &
-            avgflag='A', long_name='canopy top', &
-            ptr_patch=this%htop_patch)
-
        this%hbot_patch(begp:endp) = spval
        call hist_addfld1d (fname='HBOT', units='m', &
             avgflag='A', long_name='canopy bottom', &
@@ -220,12 +213,50 @@ contains
        call hist_addfld1d (fname='DISPLA', units='m', &
             avgflag='A', long_name='displacement height', &
             ptr_patch=this%displa_patch, default='inactive')
-    end if
 
-       this%z0m_patch(begp:endp) = spval
-       call hist_addfld1d (fname='Z0M', units='m', &
-            avgflag='A', long_name='momentum roughness length', &
-            ptr_patch=this%z0m_patch, default='inactive')
+       if(use_fates_sp)then
+          this%htop_hist_patch(begp:endp) = spval
+          call hist_addfld1d (fname='HTOP', units='m', &
+              avgflag='A', long_name='HTOP weights for SP mode', &
+              ptr_patch=this%htop_hist_patch)
+       else
+          this%htop_patch(begp:endp) = spval
+          call hist_addfld1d (fname='HTOP', units='m', &
+              avgflag='A', long_name='canopy top', &
+              ptr_patch=this%htop_patch)
+       endif
+
+
+    endif !fates or CN
+
+    if(use_fates_sp)then
+      this%tlai_hist_patch(begp:endp) = spval
+      call hist_addfld1d (fname='TLAI', units='m', &
+          avgflag='A', long_name='TLAI weights for SP mode', &
+          ptr_patch=this%tlai_hist_patch)
+
+      this%tsai_hist_patch(begp:endp) = spval
+      call hist_addfld1d (fname='TSAI', units='m', &
+          avgflag='A', long_name='TSAI weights for SP mode', &
+          ptr_patch=this%tsai_hist_patch)
+
+    else
+       this%tlai_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TLAI', units='m^2/m^2', &
+           avgflag='A', long_name='total projected leaf area index', &
+           ptr_patch=this%tlai_patch)
+
+       this%tsai_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TSAI', units='m^2/m^2', &
+           avgflag='A', long_name='total projected stem area index', &
+           ptr_patch=this%tsai_patch)
+
+    endif !FATES_SP
+
+    this%z0m_patch(begp:endp) = spval
+    call hist_addfld1d (fname='Z0M', units='m', &
+         avgflag='A', long_name='momentum roughness length', &
+          ptr_patch=this%z0m_patch, default='inactive')
 
     ! Accumulated fields
     this%fsun24_patch(begp:endp) = spval
@@ -253,7 +284,7 @@ contains
 
 !    call hist_addfld1d (fname='GCCANOPY', units='none',  &
 !         avgflag='A', long_name='Canopy Conductance: mmol m-2 s-1', &
-!         ptr_patch=this%GCcanopy_patch, set_lake=0._r8, set_urb=0._r8)  
+!         ptr_patch=this%GCcanopy_patch, set_lake=0._r8, set_urb=0._r8)
 
     if ( use_hydrstress ) then
        this%vegwp_patch(begp:endp,:) = spval
@@ -280,12 +311,12 @@ contains
     ! This routine set defaults values that are then overwritten by the
     ! restart file for restart or branch runs
     !
-    ! !USES 
+    ! !USES
     use accumulMod  , only : init_accum_field
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !---------------------------------------------------------------------
 
     this%fsun24_patch(bounds%begp:bounds%endp) = spval
@@ -311,16 +342,16 @@ contains
     ! !DESCRIPTION:
     ! Initialize module variables that are associated with
     ! time accumulated fields. This routine is called for both an initial run
-    ! and a restart run (and must therefore must be called after the restart file 
+    ! and a restart run (and must therefore must be called after the restart file
     ! is read in and the accumulation buffer is obtained)
     !
-    ! !USES 
+    ! !USES
     use accumulMod       , only : extract_accum_field
     use clm_time_manager , only : get_nstep
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer  :: begp, endp
@@ -362,7 +393,7 @@ contains
   subroutine ReadNML( this, NLFilename )
     !
     ! Read in canopy parameter namelist
-    !       
+    !
     ! USES:
     use shr_mpi_mod   , only : shr_mpi_bcast
     use abortutils    , only : endrun
@@ -423,7 +454,7 @@ contains
     !
     ! !ARGUMENTS:
     class(canopystate_type)             :: this
-    type(bounds_type)      , intent(in) :: bounds  
+    type(bounds_type)      , intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: g,p                       ! indices
@@ -446,7 +477,7 @@ contains
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
-    ! Accumulate and extract fsun24 & fsun240   
+    ! Accumulate and extract fsun24 & fsun240
     do p = begp,endp
        rbufslp(p) = this%fsun_patch(p)
     end do
@@ -471,10 +502,10 @@ contains
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
-    integer  :: p,l,c,g 
+    integer  :: p,l,c,g
     !-----------------------------------------------------------------------
 
     do p = bounds%begp, bounds%endp
@@ -495,6 +526,10 @@ contains
           this%laisha_patch(p) = 0._r8
        end if
 
+       this%tlai_hist_patch(p)       = 0._r8
+       this%tsai_hist_patch(p)       = 0._r8
+       this%htop_hist_patch(p)       = 0._r8
+
        ! needs to be initialized to spval to avoid problems when averaging for the accum
        ! field
        this%fsun_patch(p) = spval
@@ -504,14 +539,14 @@ contains
 
   !------------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag)
-    ! 
+    !
     ! !USES:
     use ncdio_pio  , only : file_desc_t, ncd_double, ncd_int
     use restUtilMod
     !
     ! !ARGUMENTS:
     class(canopystate_type) :: this
-    type(bounds_type) , intent(in)    :: bounds 
+    type(bounds_type) , intent(in)    :: bounds
     type(file_desc_t) , intent(inout) :: ncid   ! netcdf id
     character(len=*)  , intent(in)    :: flag   ! 'read' or 'write'
     !
@@ -538,11 +573,11 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='elai', xtype=ncd_double,  &
          dim1name='pft', long_name='one-sided leaf area index, with burying by snow', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%elai_patch)
-    
+
     call restartvar(ncid=ncid, flag=flag, varname='esai', xtype=ncd_double,  &
          dim1name='pft', long_name='one-sided stem area index, with burying by snow', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%esai_patch)
-    
+
     call restartvar(ncid=ncid, flag=flag, varname='stem_biomass', xtype=ncd_double,  &
          dim1name='pft', long_name='stem biomass', units='kg/m^2', &
          interpinic_flag='interp', readvar=readvar, data=this%stem_biomass_patch)
@@ -581,16 +616,19 @@ contains
        call restartvar(ncid=ncid, flag=flag, varname='vegwp', xtype=ncd_double,  &
             dim1name='pft', dim2name='vegwcs', switchdim=.true., &
             long_name='vegetation water matric potential', units='mm', &
-            interpinic_flag='interp', readvar=readvar, data=this%vegwp_patch) 
+            scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=this%vegwp_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='VEGWPLN', xtype=ncd_double,  &
-            dim1name='pft', dim2name='vegwcs', &                                                                                                                                        
+            dim1name='pft', dim2name='vegwcs', switchdim=.false., &
             long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', units='mm', &
+            scale_by_thickness=.false., &
             interpinic_flag='skip', readvar=readvar, data=this%vegwp_ln_patch)
 
        call restartvar(ncid=ncid, flag=flag, varname='VEGWPPD', xtype=ncd_double,  &
-            dim1name='pft', dim2name='vegwcs', &
+            dim1name='pft', dim2name='vegwcs', switchdim=.false., &
             long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', units='mm', &
+            scale_by_thickness=.false., &
             interpinic_flag='skip', readvar=readvar, data=this%vegwp_pd_patch)
 
     end if

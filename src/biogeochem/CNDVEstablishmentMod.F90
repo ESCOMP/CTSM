@@ -7,7 +7,7 @@ module CNDVEstablishmentMod
   !
   ! !USES:
   use shr_kind_mod         , only : r8 => shr_kind_r8
-  use decompMod            , only : bounds_type
+  use decompMod            , only : bounds_type, subgrid_level_gridcell
   use pftconMod            , only : pftcon
   use atm2lndType          , only : atm2lnd_type
   use CNDVType             , only : dgvs_type, dgv_ecophyscon
@@ -82,7 +82,7 @@ contains
     real(r8)::  bm_delta
 
     ! parameters
-    real(r8), parameter :: ramp_agddtw = 300.0
+    real(r8), parameter :: ramp_agddtw = 300.0_r8
 
     ! minimum individual density for persistence of PATCH (indiv/m2)
     real(r8), parameter :: nind_min = 1.0e-10_r8
@@ -425,8 +425,8 @@ contains
                greffic(p) = bm_delta / (lm_ind * slatop(ivt(p)))
             end if
          else
-            greffic(p) = 0.
-            heatstress(p) = 0.
+            greffic(p) = 0._r8
+            heatstress(p) = 0._r8
          end if
 
       end do
@@ -443,7 +443,7 @@ contains
       if (fn > 0) then
          g = filterg(1)
          write(iulog,*) 'Error in Establishment: fpc_total =',fpc_total(g), ' at gridcell ',g
-         call endrun(msg=errMsg(sourcefile, __LINE__))
+         call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, msg=errMsg(sourcefile, __LINE__))
       end if
 
     end associate 

@@ -16,7 +16,7 @@ module FrictionVelocityMod
   use LandunitType            , only : lun
   use ColumnType              , only : col
   use PatchType               , only : patch
-  use landunit_varcon         , only : istsoil, istcrop, istice_mec, istwet
+  use landunit_varcon         , only : istsoil, istcrop, istice, istwet
   use ncdio_pio               , only : file_desc_t
   use paramUtilMod            , only : readNcdioScalar
   use atm2lndType             , only : atm2lnd_type
@@ -234,8 +234,8 @@ contains
     if (use_cn) then
        this%fv_patch(begp:endp) = spval
        call hist_addfld1d (fname='FV', units='m/s', &
-            avgflag='A', long_name='friction velocity for dust model', &
-            ptr_patch=this%fv_patch, default='inactive')
+            avgflag='A', long_name='friction velocity', &
+            ptr_patch=this%fv_patch)
     end if
 
        call hist_addfld1d (fname='RAH1', units='s/m', &
@@ -564,7 +564,7 @@ contains
              forc_hgt_t_patch(p) = forc_hgt_t(g) + z0m(p) + displa(p)
              forc_hgt_q_patch(p) = forc_hgt_q(g) + z0m(p) + displa(p)
           end if
-       else if (lun%itype(l) == istwet .or. lun%itype(l) == istice_mec) then
+       else if (lun%itype(l) == istwet .or. lun%itype(l) == istice) then
           forc_hgt_u_patch(p) = forc_hgt_u(g) + z0mg(c)
           forc_hgt_t_patch(p) = forc_hgt_t(g) + z0mg(c)
           forc_hgt_q_patch(p) = forc_hgt_q(g) + z0mg(c)

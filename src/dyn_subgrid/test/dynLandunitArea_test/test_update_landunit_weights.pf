@@ -6,7 +6,7 @@ module test_update_landunit_weights
   use unittestSubgridMod
   use dynLandunitAreaMod
   use shr_kind_mod	, only : r8 => shr_kind_r8
-  use landunit_varcon	, only : istsoil, istcrop, istice_mec, istdlak, istwet
+  use landunit_varcon	, only : istsoil, istcrop, istice, istdlak, istwet
   use landunit_varcon	, only : isturb_tbd, isturb_hd, isturb_md
   use GridcellType	, only : grc
   use LandunitType	, only : lun
@@ -37,7 +37,7 @@ contains
     ! Test update_landunit_weights with a single grid cell, which has all landunits
     ! present
 
-    integer :: index_soil, index_crop, index_icemec, index_urbmd
+    integer :: index_soil, index_crop, index_ice, index_urbmd
     real(r8) :: expected(begl:endl)
     
     call setup_start()
@@ -57,12 +57,12 @@ contains
     ! In the following, we assume that the first few elements of decrease_order are:
     ! istsoil, istcrop, isturb_md
 
-    ! First increase the area of istice_mec: weights of istice_mec + istsoil + istcrop + 0.01
+    ! First increase the area of istice: weights of istice + istsoil + istcrop + 0.01
     index_soil = grc%landunit_indices(istsoil,gi)
     index_crop = grc%landunit_indices(istcrop,gi)
-    index_icemec = grc%landunit_indices(istice_mec,gi)
+    index_ice = grc%landunit_indices(istice,gi)
     index_urbmd = grc%landunit_indices(isturb_md,gi)
-    lun%wtgcell(index_icemec) = lun%wtgcell(index_icemec) + lun%wtgcell(index_soil) + lun%wtgcell(index_crop) + 0.01_r8
+    lun%wtgcell(index_ice) = lun%wtgcell(index_ice) + lun%wtgcell(index_soil) + lun%wtgcell(index_crop) + 0.01_r8
 
     ! Now set the expected outcome
     expected = lun%wtgcell
@@ -81,21 +81,21 @@ contains
     ! Test update_landunit_weights with a single grid cell, which has only some landunits
     ! present
 
-    integer :: index_wet, index_icemec, index_crop
+    integer :: index_wet, index_ice, index_crop
     real(r8) :: expected(begl:endl)
 
     call setup_start()
     call unittest_add_gridcell()
     call unittest_add_landunit(my_gi=gi, ltype=istwet, wtgcell=0.3_r8)
     index_wet = li
-    call unittest_add_landunit(my_gi=gi, ltype=istice_mec, wtgcell=0.8_r8)
-    index_icemec = li
+    call unittest_add_landunit(my_gi=gi, ltype=istice, wtgcell=0.8_r8)
+    index_ice = li
     call unittest_add_landunit(my_gi=gi, ltype=istcrop, wtgcell=0.5_r8)
     index_crop = li
     call setup_end()
 
     ! In the following, we assume that crop is decreased before wetland:
-    expected(index_icemec) = 0.8_r8
+    expected(index_ice) = 0.8_r8
     expected(index_crop) = 0.0_r8
     expected(index_wet) = 0.2_r8
 
@@ -122,10 +122,10 @@ contains
     g3 = gi
 
     ! Deliberately add landunits out-of-order
-    call unittest_add_landunit(my_gi=g2, ltype=istice_mec, wtgcell=0.8_r8)
+    call unittest_add_landunit(my_gi=g2, ltype=istice, wtgcell=0.8_r8)
     call unittest_add_landunit(my_gi=g3, ltype=istcrop,    wtgcell=0.6_r8)
     call unittest_add_landunit(my_gi=g1, ltype=isturb_md,  wtgcell=0.45_r8)
-    call unittest_add_landunit(my_gi=g3, ltype=istice_mec, wtgcell=0.4_r8)
+    call unittest_add_landunit(my_gi=g3, ltype=istice, wtgcell=0.4_r8)
     call unittest_add_landunit(my_gi=g1, ltype=istcrop,    wtgcell=0.7_r8)
     call unittest_add_landunit(my_gi=g2, ltype=istsoil,    wtgcell=0.1_r8)
 
