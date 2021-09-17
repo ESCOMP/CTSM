@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev056
 Originator(s):  glemieux (Gregory Lemieux,,,)
-Date:  Thu 16 Sep 2021 04:03:15 PM PDT
+Date: Fri Sep 17 15:41:57 MDT 2021
 One-line Summary: FATES Satellite Phenology mode implemented
 
 Purpose and description of changes
@@ -37,8 +37,7 @@ Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #):
-
-CIME Issues fixed (include issue #):
+  Adds FATES-SP mode as part of #1047 (a FATES v1 requirement)
 
 Known bugs introduced in this tag (include issue #):
   #1485 -- Forthcoming FATES satellite phenology ERS test fails COMPARE_base_rest
@@ -67,10 +66,7 @@ Changes made to namelist defaults (e.g., changed parameter values):
 Changes to the datasets (e.g., parameter, surface or initial files):
   New fates paramter file which include hlm to fates pft indexing map
 
-Substantial timing or memory changes:
-[e.g., check PFS test in the test suite and look at timings, if you
-expect possible significant timing changes]
-
+Substantial timing or memory changes: None
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -109,7 +105,7 @@ Testing summary:
 Answer changes
 --------------
 
-Changes answers relative to baseline: Yes
+Changes answers relative to baseline:  No (except for FATES FixedBiogeo)
 
   Summarize any changes to answers, i.e.,
     - what code configurations: FATES FixedBiogeo mode only
