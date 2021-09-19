@@ -1,10 +1,14 @@
 """General-purpose utility functions"""
 
 import logging
+import os
 import sys
 import string
 import pdb
 import subprocess
+
+from datetime import date
+from getpass import getuser
 
 logger = logging.getLogger(__name__)
 
@@ -40,3 +44,68 @@ def get_git_sha():
     Returns Git short SHA for the currect directory.
     """
     return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode()
+
+def add_tag_to_filename(filename, tag):
+    """
+    Add a tag and replace timetag of a filename
+    Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
+    Add the tag to just before that ending part
+    and change the ending part to the current time tag
+    """
+
+    basename = os.path.basename(filename)
+    cend = -10
+
+    if basename[cend] == "c":
+        cend = cend - 1
+    if ( (basename[cend] != ".") and (basename[cend] != "_") ):
+        errmsg = 'Trouble figuring out where to add tag to filename: ' + filename
+        abort(errmsg)
+
+    today = date.today()
+    today_string = today.strftime("%y%m%d")
+
+    return basename[:cend] + "_" + tag + "_c" + today_string + '.nc'
+
+def update_metadata(file, title, summary, contact, data_script, description):
+    """
+    Description
+    -----------
+    Update netcdf file's metadata
+
+    Arguments
+    ---------
+    title: No more than short one-sentence explanation.
+
+    summary: No more than two-sentence explanation.
+
+    contact: E.g. CAM bulletin board at https://bb.cgd.ucar.edu
+
+    data_script: Script or instructions used to generate the dataset.
+
+    description: Anything else that's relevant. Capturing the command-line
+                 would be good (sys.argv) here or in data_script.
+    """
+
+    #update attributes
+    today = date.today()
+    today_string = today.strftime("%Y-%m-%d")
+
+    # This is the required metadata for inputdata files
+    file.attrs['title'] = title
+    file.attrs['summary'] = summary
+    file.attrs['creator'] = getuser()
+    file.attrs['contact'] = contact
+    file.attrs['creation_date'] = today_string
+    file.attrs['data_script'] = data_script
+    file.attrs['description'] = description
+
+    #delete unrelated attributes if they exist
+    del_attrs = ['source_code', 'SVN_url', 'hostname', 'history'
+                 'History_Log', 'Logname', 'Host', 'Version',
+                 'Compiler_Optimized']
+    attr_list = file.attrs
+
+    for attr in del_attrs:
+        if attr in attr_list:
+            del file.attrs[attr]

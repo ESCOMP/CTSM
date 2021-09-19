@@ -5,7 +5,9 @@ Description
 Tool that allows user to modify the fsurdat file.
 
 This script reads a surface dataset (fsurdat file) and outputs a
-modified copy of the same file.
+modified copy of the same file. It differs from modify_singlept_site_neon.py
+as follows:
+- TODO
 
 Files accessed
 --------------

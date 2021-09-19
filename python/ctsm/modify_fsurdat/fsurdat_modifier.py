@@ -34,13 +34,11 @@ def get_parser():
                 help='Dominant PFT if overwrite_single_pft = .true. [default: %(default)s] ',
                 action="store",
                 dest="dom_pft",
-                type =int,
-                default=7)
+                type =int)
     parser.add_argument('--uni_snow',
                 help='Turn on the flag to create uniform snowpack. [default: %(default)s]',
-                action="store",
-                dest="uni_snow",
-                default=False)
+                action="store_true",
+                dest="uni_snowpack")
     parser.add_argument('--overwrite_single_pft',
                 help='Turn on flag to make whole grid 100% single PFT. [default: %(default)s]',
                 action="store",
@@ -49,7 +47,7 @@ def get_parser():
     parser.add_argument('--zero_nonveg',
                 help='Set all non-vegetation landunits to zero. [default: %(default)s]',
                 action="store",
-                dest="zero_nonveg",
+                dest="zero_nonveg_lu",
                 type =bool,
                 default=False)
     parser.add_argument('--no_saturation_excess',
@@ -85,25 +83,15 @@ def main ():
     # Parse arguments from the command line
     args = get_parser().parse_args()
 
-    #--  Modify landunit structure
-    overwrite_single_pft = args.overwrite_single_pft
-    dominant_pft         = args.dom_pft
-    zero_nonveg_landunits= args.zero_nonveg
-    uniform_snowpack     = args.uni_snow
-    no_saturation_excess = args.no_saturation_excess
-
     #--  Create ModifyFsurdat Object
-    modify_fsurdat = ModifyFsurdat(overwrite_single_pft, dominant_pft,
-                                   zero_nonveg_landunits, uniform_snowpack,
-                                   no_saturation_excess)
+    modify_fsurdat = ModifyFsurdat(args.fsurdat_in,
+                                   args.fsurdat_out,
+                                   args.overwrite_single_pft,
+                                   args.dom_pft,
+                                   args.zero_nonveg_lu,
+                                   args.uni_snowpack,
+                                   args.no_saturation_excess)
     print(modify_fsurdat)
-
-    #--  Set input and output filenames
-    fsurf_in = args.fsurdat_in
-    fsurf_out = args.fsurdat_out
-
-    modify_fsurdat.fsurf_in = fsurf_in
-    modify_fsurdat.fsurf_out = fsurf_out
 
     #--  Create CTSM surface data file
     modify_fsurdat.modify()
