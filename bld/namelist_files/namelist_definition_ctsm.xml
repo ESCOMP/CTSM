@@ -673,6 +673,13 @@ Toggle to turn on the logging module (only relevant if FATES is being used).
   (use_fates_planthydro=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
 </entry>
 
+<entry id="use_fates_hardening" type="logical" category="physics"
+       group="clm_inparm" valid_values="" value=".false.">
+  Toggle to turn on plant hardening (only relevant if FATES is on).
+  (use_fates_hardening=".true." is EXPERIMENTAL NOT SUPPORTED! Nor is it Tested!)
+</entry>
+
+
 <entry id="use_fates_cohort_age_tracking" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
   Toggle to turn on cohort age tracking (only relevant if FATES is on).
