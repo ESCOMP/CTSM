@@ -658,7 +658,6 @@ contains
              this%val(k,level) = &
                   min(max(this%val(k,level) + field(kf), 0._r8), 99999._r8)
              this%nsteps(k,level) = this%nsteps(k,level) + 1
-             write(iulog,*) "Check1003", this%val(k,level), field(kf)
           end if
        end if
     end do

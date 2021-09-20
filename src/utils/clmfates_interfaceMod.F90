@@ -2691,14 +2691,9 @@ module CLMFatesInterfaceMod
  ! ======================================================================================
 
  subroutine wrap_hydraulics_drive(this, bounds_clump, nc, &
-<<<<<<< HEAD
                                  soilstate_inst, waterstatebulk_inst, waterdiagnosticbulk_inst, waterfluxbulk_inst, &
                                  fn, filterp, solarabs_inst, energyflux_inst)
-=======
-                                 fn, filterp, &
-                                 soilstate_inst, waterstate_inst, waterflux_inst, &
-                                 solarabs_inst, energyflux_inst)
->>>>>>> dc29f83... pass vriables to fates for hardening
+
 
 
    implicit none
