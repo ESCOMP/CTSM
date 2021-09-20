@@ -1,4 +1,59 @@
 ===============================================================
+Tag name:  ctsm5.1.dev057
+Originator(s): Sam Rabin
+Date:  Mon Sep 20 10:07:26 MDT 2021
+One-line Summary: Consolidate duplicated crop phenology code
+
+Purpose and description of changes
+----------------------------------
+
+Consolidate duplicated code related to crop planting
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1479 (Suggested cleanup in CropPhenology():
+  Removing duplicated sowing code)
+
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+  
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1482
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev056
 Originator(s):  glemieux (Gregory Lemieux,,,)
 Date: Fri Sep 17 15:41:57 MDT 2021
