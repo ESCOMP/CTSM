@@ -217,9 +217,8 @@ contains
     use clm_varcon , only : spval  
     use spmdMod    , only : masterproc
     use decompMod  , only : get_proc_global
-    use restUtilMod
-    use ncdio_pio
-    use pio
+    use restUtilMod, only : restartvar
+    use ncdio_pio  , only : ncd_double, ncd_inqvdlen, ncd_int, file_desc_t
     !
     ! !ARGUMENTS:
     class(dgvs_type) :: this

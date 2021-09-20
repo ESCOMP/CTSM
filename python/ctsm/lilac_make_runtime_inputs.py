@@ -251,6 +251,7 @@ def buildnml(cime_path, rundir):
                '-clm_start_type', 'default',
                '-configuration', configuration,
                '-structure', structure,
+               '-lilac',
                '-lnd_frac', lnd_domain_file,
                '-glc_nec', str(10),
                '-co2_ppmv', co2_ppmv,

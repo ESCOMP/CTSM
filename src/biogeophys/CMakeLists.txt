@@ -24,7 +24,9 @@ list(APPEND clm_sources
   SoilStateType.F90
   SoilWaterRetentionCurveMod.F90
   SolarAbsorbedType.F90
+  PhotosynthesisMod.F90
   SurfaceAlbedoType.F90
+  OzoneBaseMod.F90
   TemperatureType.F90
   TotalWaterAndHeatMod.F90
   UrbanParamsType.F90
