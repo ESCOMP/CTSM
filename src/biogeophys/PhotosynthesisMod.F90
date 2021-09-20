@@ -4241,7 +4241,6 @@ contains
     real(r8) :: aquad, bquad, cquad  ! terms for quadratic equations
     real(r8) :: r1, r2               ! roots of quadratic equation
     real(r8) :: term                 ! intermediate in Medlyn stomatal model
-    real(r8), parameter :: max_cs = 10.e-06_r8  ! Max CO2 partial pressure at leaf surface (Pa) for PHS
     !
     !------------------------------------------------------------------------------
     
