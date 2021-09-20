@@ -71,10 +71,13 @@ class ModifyFsurdat:
         self.file.close()
 
 
-    def overwrite_single_pft(self, dom_pft):
+    def dom_pft(self, dom_pft):
         """
         Description
         -----------
+        Replace fsurdat file's PCT_NAT_PFT values with:
+        - 100 for dom_pft selected by user
+        - 0 for all other PFTs
         """
 
         self.file['PCT_NAT_PFT'][:,:,:] = 0
@@ -104,10 +107,11 @@ class ModifyFsurdat:
         self.file['STD_ELEV'][:,:] = 20
 
 
-    def no_saturation_excess(self):
+    def max_sat_area(self, max_sat_area):
         """
         Description
         -----------
+        Replace fsurdat file's FMAX values with a constant selected by user
         """
 
-        self.file['FMAX'][:,:] = 0
+        self.file['FMAX'][:,:] = max_sat_area
