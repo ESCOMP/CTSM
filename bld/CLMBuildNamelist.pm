@@ -870,12 +870,13 @@ sub setup_cmdl_bgc {
   my $var = "soil_decomp_method";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
               'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+  my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
 
   if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
-     if ( remove_leading_and_trailing_quotes( $nl->get_value($var)) eq "None" ) {
+     if ( $soil_decomp_method eq "None" ) {
         $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
      }
-  } elsif ( remove_leading_and_trailing_quotes($nl->get_value($var)) ne "None" ) {
+  } elsif ( $soil_decomp_method ne "None" ) {
      $log->fatal_error("$var must be None if use_cn or use_fates are not");
   }
   #
@@ -885,13 +886,13 @@ sub setup_cmdl_bgc {
   my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
   foreach my $var ( @list ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+                 'phys'=>$nl_flags->{'phys'}, 'soil_decomp_method'=>$soil_decomp_method );
      $nl_flags->{$var} = $nl->get_value($var);
   }
-  if ( remove_leading_and_trailing_quotes( $nl->get_value($var)) eq "None" ) {
+  if ( $soil_decomp_method eq "None" ) {
      foreach my $var ( @list ) {
         if ( &value_is_true($nl_flags->{$var}) ) {
-           $log->fatal_error("When soil_decomp_method is NONE $var can NOT be TRUE");
+           $log->fatal_error("When soil_decomp_method is None $var can NOT be TRUE");
         }
      }
   } else {
