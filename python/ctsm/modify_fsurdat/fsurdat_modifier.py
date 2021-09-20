@@ -83,18 +83,21 @@ def main ():
     # Parse arguments from the command line
     args = get_parser().parse_args()
 
-    #--  Create ModifyFsurdat Object
-    modify_fsurdat = ModifyFsurdat(args.fsurdat_in,
-                                   args.fsurdat_out,
-                                   args.overwrite_single_pft,
-                                   args.dom_pft,
-                                   args.zero_nonveg_lu,
-                                   args.uni_snowpack,
-                                   args.no_saturation_excess)
-    print(modify_fsurdat)
+    # create ModifyFsurdat object
+    modify_fsurdat = ModifyFsurdat(args.fsurdat_in)
 
-    #--  Create CTSM surface data file
-    modify_fsurdat.modify()
+    # modify surface data properties
+    if args.overwrite_single_pft:
+        modify_fsurdat.overwrite_single_pft(args.dom_pft)
+    if args.zero_nonveg_lu:
+        modify_fsurdat.zero_nonveg_lu()
+    if args.uni_snowpack:
+        modify_fsurdat.uni_snowpack()
+    if args.no_saturation_excess:
+        modify_fsurdat.no_saturation_excess()
+
+    # output CTSM surface data file
+    modify_fsurdat.write_output(args.fsurdat_in, args.fsurdat_out)
 
     print( "Successful completion of script." )
     sys.exit()

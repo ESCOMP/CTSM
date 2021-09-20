@@ -2,12 +2,17 @@
 """
 Description
 -----------
-Tool that allows user to modify the fsurdat file.
+fsurdat_modifier is a tool that modifies fsurdat files. It reads a surface
+dataset (fsurdat file) and outputs a modified copy of the same file.
 
-This script reads a surface dataset (fsurdat file) and outputs a
-modified copy of the same file. It differs from modify_singlept_site_neon.py
-as follows:
-- TODO
+It differs from modify_singlept_site_neon.py in that the latter specifically
+modifies soil properties of single-point surface datasets. Some functions
+could become shared for use by fsurdat_modifier.
+
+It also differs from the subset_data tool in that the latter subsets fsurdat
+files to regional or single-point domains. Though subset_data includes some
+"modify" functionality when subsetting to single-point, we intend for similar
+functionality to be more extensive and more object oriented in fsurdat_modifier.
 
 Files accessed
 --------------
