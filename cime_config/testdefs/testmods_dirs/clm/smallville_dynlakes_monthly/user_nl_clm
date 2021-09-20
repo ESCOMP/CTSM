@@ -6,9 +6,3 @@ do_transient_lakes = .true.
 ! PCT_CROP is also changed so that PCT_LAKE + PCT_CROP <= 100. (Here, PCT_CROP increases and decreases at the same time as PCT_LAKE in order to exercise the simultaneous increase or decrease of two landunits, but that isn't a critical part of this test.)
 ! Note that the use of this file means that this testmod can only be used with the 1x1_smallvilleIA grid.
 flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_map/landuse.timeseries_1x1_smallvilleIA_hist_78pfts_simyr1850-1855_dynLakes_c200928.nc'
-
-! BUG(wjs, 2020-09-25, ESCOMP/CTSM#43) Dynamic lakes don't work when methane is active,
-! so for now disable methane for this test.
-! This also requires use_nitrif_denitrif to be off as well
-use_lch4 = .false.
-use_nitrif_denitrif = .true.
