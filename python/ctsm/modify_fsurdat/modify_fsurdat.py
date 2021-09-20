@@ -23,8 +23,11 @@ class ModifyFsurdat:
 
     Methods
     -------
-    modify:
-        Modify input surface dataset
+    write_output:
+        Write out the modified fsurdat (surface dataset)
+
+    TODO:
+        Complete the list of methods
     """
 
     def __init__(self, fsurdat_in):
@@ -47,13 +50,14 @@ class ModifyFsurdat:
                                         'lsmlat', 'lsmlon')
 
         # update attributes
-        title = 'Modified fsurdat file'
-        summary = 'Modified fsurdat file'
-        contact = 'N/A'
-        data_script = os.path.abspath(__file__) + " -- " + get_git_sha()
-        description = 'Modified this file: ' + fsurdat_in
-        update_metadata(self.file, title, summary, contact, data_script,
-                        description)
+        _title = 'Modified fsurdat file'
+        _summary = 'Modified fsurdat file'
+        _contact = 'N/A'
+        _data_script = os.path.abspath(__file__) + " -- " + get_git_sha()
+        _description = 'Modified this file: ' + fsurdat_in
+        update_metadata(self.file, title=_title, summary=_summary,
+                        contact=_contact, data_script=_data_script,
+                        description=_description)
 
         # abort if output file already exists
         file_exists = os.path.exists(fsurdat_out)
