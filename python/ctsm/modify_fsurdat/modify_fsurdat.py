@@ -63,7 +63,7 @@ class ModifyFsurdat:
 
         # mode 'w' overwrites file if it exists
         self.file.to_netcdf(path=fsurdat_out, mode='w')
-        print('Successfully created file (fsurdat_out) :' + fsurdat_out)
+        print('Successfully created fsurdat_out:' + fsurdat_out)
         self.file.close()
 
 
