@@ -74,7 +74,7 @@ def main ():
     """
     Description
     -----------
-    Runs the modify function
+    Calls various functions that modify an fsurdat (surface dataset)
     """
 
     # Parse arguments from the command line
@@ -96,5 +96,4 @@ def main ():
     # output CTSM surface data file
     modify_fsurdat.write_output(args.fsurdat_in, args.fsurdat_out)
 
-    print( "SUCCESS" )
-    sys.exit()
+    sys.exit('SUCCESS')
