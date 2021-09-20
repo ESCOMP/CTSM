@@ -52,6 +52,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates
    use clm_varctl        , only : fates_spitfire_mode
    use clm_varctl        , only : use_fates_planthydro
+   use clm_varctl        , only : use_fates_hardening !marius
    use clm_varctl        , only : use_fates_cohort_age_tracking
    use clm_varctl        , only : use_fates_ed_st3
    use clm_varctl        , only : use_fates_ed_prescribed_phys
@@ -263,6 +264,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_logging
      integer                                        :: pass_ed_prescribed_phys
      integer                                        :: pass_planthydro
+     integer                                        :: pass_hardening !marius
      integer                                        :: pass_inventory_init
      integer                                        :: pass_is_restart
      integer                                        :: pass_cohort_age_tracking
@@ -368,6 +370,13 @@ module CLMFatesInterfaceMod
            pass_planthydro = 0
         end if
         call set_fates_ctrlparms('use_planthydro',ival=pass_planthydro)
+        
+        if(use_fates_hardening) then !marius
+           pass_hardening = 1
+        else
+           pass_hardening = 0
+        end if
+        call set_fates_ctrlparms('use_hardening,ival=pass_hardening)
         
         if(use_fates_cohort_age_tracking) then
            pass_cohort_age_tracking = 1
