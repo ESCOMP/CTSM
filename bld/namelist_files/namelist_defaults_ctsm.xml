@@ -101,11 +101,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <modifyphoto_and_lmr_forcrop phys="clm4_5" >.false.</modifyphoto_and_lmr_forcrop>
 
 <!-- Method to use for stomatal conducatance -->
-<stomatalcond_method phys="clm5_1"  use_hydrstress=".true." >Medlyn2011</stomatalcond_method>
-<stomatalcond_method phys="clm5_1"  use_hydrstress=".false.">Ball-Berry1987</stomatalcond_method>
-<stomatalcond_method phys="clm5_0"  use_hydrstress=".true." >Medlyn2011</stomatalcond_method>
-<stomatalcond_method phys="clm5_0"  use_hydrstress=".false.">Ball-Berry1987</stomatalcond_method>
-<stomatalcond_method phys="clm4_5"                          >Ball-Berry1987</stomatalcond_method>
+<stomatalcond_method phys="clm5_1"         >Medlyn2011</stomatalcond_method>
+<stomatalcond_method phys="clm5_0"         >Medlyn2011</stomatalcond_method>
+<stomatalcond_method phys="clm4_5"         >Ball-Berry1987</stomatalcond_method>
 
 <!-- Carbon isotope concentration files -->
 <atm_c13_filename use_c13=".true." use_c13_timeseries=".true." ssp_rcp="hist"     >lnd/clm2/isotopes/atm_delta_C13_CMIP6_1850-2015_yearly_v2.0_c190528.nc</atm_c13_filename>
