@@ -43,12 +43,6 @@ class ModifyFsurdat:
         Write output file
         """
 
-        # specify dimension order
-        self.file = self.file.transpose(u'time', u'cft', u'lsmpft', u'natpft',
-                                        u'nglcec', u'nglcecp1', u'nlevsoi',
-                                        u'nlevurb', u'numrad', u'numurbl',
-                                        'lsmlat', 'lsmlon')
-
         # update attributes
         _title = 'Modified fsurdat file'
         _summary = 'Modified fsurdat file'
@@ -66,7 +60,8 @@ class ModifyFsurdat:
             abort(errmsg)
 
         # mode 'w' overwrites file if it exists
-        self.file.to_netcdf(path=fsurdat_out, mode='w')
+        self.file.to_netcdf(path=fsurdat_out, mode='w',
+                            format="NETCDF3_64BIT")
         print('Successfully created fsurdat_out: ' + fsurdat_out)
         self.file.close()
 
