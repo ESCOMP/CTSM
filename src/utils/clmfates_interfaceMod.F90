@@ -376,7 +376,7 @@ module CLMFatesInterfaceMod
         else
            pass_hardening = 0
         end if
-        call set_fates_ctrlparms('use_hardening,ival=pass_hardening)
+        call set_fates_ctrlparms('use_hardening',ival=pass_hardening)
         
         if(use_fates_cohort_age_tracking) then
            pass_cohort_age_tracking = 1
@@ -817,7 +817,7 @@ module CLMFatesInterfaceMod
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
                waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil) 
 
-         this%fates(nc)%bc_in(s)%t_veg24_si = &
+         this%fates(nc)%bc_in(s)%t_veg24_pa = &
                temperature_inst%t_veg24_patch(col%patchi(c)) 
 
          this%fates(nc)%bc_in(s)%t_ref2m_24_si = &
