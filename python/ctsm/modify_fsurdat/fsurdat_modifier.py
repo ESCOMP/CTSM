@@ -54,9 +54,9 @@ def get_parser():
                 dest="fsurdat_in",
                 type=str,
                 # TODO: Require user to enter this and remove the default
-                default="/glade/p/cesmdata/cseg/inputdata/lnd/clm2/" + \
-                        "surfdata_map/release-clm5.0.18/" \
-                        "surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc")
+                default="/glade/p/cesmdata/cseg/inputdata" \
+                        "/lnd/clm2/surfdata_map/" \
+                        "surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc")
     parser.add_argument('--fsurdat_out',
                 help='Output surface dataset. [default: %(default)s]',
                 action="store",
@@ -64,7 +64,7 @@ def get_parser():
                 type=str,
                 # TODO: Require user to enter this and remove the default
                 default="/glade/scratch/" + getuser() +
-                          "/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214_modified.nc")
+                        "/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824_modified.nc")
 
     return parser
 
@@ -89,7 +89,7 @@ def main ():
     max_dom_pft = int(max(modify_fsurdat.file.lsmpft))
     if args.dom_pft >= min_dom_pft and args.dom_pft <= max_dom_pft:
         modify_fsurdat.dom_pft(args.dom_pft)
-    else:
+    elif args.dom_pft != -999:
         errmsg = 'Argument --dom_pft can only be set to values from ' + \
                  str(min_dom_pft) + ' to ' + str(max_dom_pft)
         abort(errmsg)
@@ -108,7 +108,7 @@ def main ():
     if args.max_sat_area >= min_max_sat_area and \
        args.max_sat_area <= max_max_sat_area:
         modify_fsurdat.max_sat_area(args.max_sat_area)
-    else:
+    elif args.max_sat_area != -999:
         errmsg = 'Argument --max_sat_area can only be set to values from ' + \
                  str(min_max_sat_area) + ' to ' + str(max_max_sat_area)
         abort(errmsg)

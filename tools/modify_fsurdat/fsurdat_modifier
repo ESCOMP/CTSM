@@ -42,11 +42,11 @@ Example
 
 Inputs
 ------
-/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214.nc
+/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc
 
 Outputs
 -------
-/glade/scratch/$USER/surfdata_0.9x1.25_hist_78pfts_CMIP6_simyr2000_c190214_modified.nc
+/glade/scratch/$USER/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc_modified.nc
 """
 
 import os
