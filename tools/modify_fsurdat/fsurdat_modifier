@@ -7,12 +7,13 @@ dataset (fsurdat file) and outputs a modified copy of the same file.
 
 It differs from modify_singlept_site_neon.py in that the latter specifically
 modifies soil properties of single-point surface datasets. Some functions
-could become shared for use by fsurdat_modifier.
+could/should become shared for use by fsurdat_modifier.
 
 It also differs from the subset_data tool in that the latter subsets fsurdat
 files to regional or single-point domains. Though subset_data includes some
 "modify" functionality when subsetting to single-point, we intend for similar
 functionality to be more extensive and more object oriented in fsurdat_modifier.
+Again, some functions could/should become shared among these tools.
 
 Files accessed
 --------------
@@ -29,10 +30,11 @@ ncar_pylib
 (Use "deactivate" to reverse the latter.)
 2) ./fsurdat_modifier --help
 for a list of available arguments
-3) ./fsurdat_modifier (--fsurdat_in input_file.nc --fsurdat_out output_file.nc)
+3) ./fsurdat_modifier (--fsurdat_in input_file.nc --fsurdat_out output_file.nc --dom_pft int --max_sat_area float --uni_snow --zero_nonveg_lu)
 Arguments in parentheses are optional.
 Optional arguments fsurdat_in and fsurdat_out include default values that have
-been tested as shown in the following example.
+been tested as shown in the following example, though we will likely change
+them to required.
 
 Example
 -------

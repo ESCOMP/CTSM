@@ -17,13 +17,9 @@ from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 def get_parser():
 
     """
+    Description
+    -----------
     Get parser object for this script.
-
-    Command-line inputs
-    - fsurdat_in: input file (str)
-    - fsurdat_out: output file (str)
-    - variable: variable to modify (str)
-    - value: value assigned to the variable to be modified (float)
     """
 
     parser = ArgumentParser(description=__doc__,
@@ -38,7 +34,7 @@ def get_parser():
                 type=int,
                 default=-999)
     parser.add_argument('--uni_snow',
-                help='Turn on the flag to create uniform snowpack. [default: %(default)s]',
+                help='Create uniform snowpack. [default: %(default)s]',
                 action="store_true",
                 dest="uni_snowpack")
     parser.add_argument('--zero_nonveg',
@@ -98,15 +94,15 @@ def main ():
                  str(min_dom_pft) + ' to ' + str(max_dom_pft)
         abort(errmsg)
 
-    #
+    # set all non-vegetation landunits to zero
     if args.zero_nonveg_lu:
         modify_fsurdat.zero_nonveg_lu()
 
-    #
+    # create uniform snowpack
     if args.uni_snowpack:
         modify_fsurdat.uni_snowpack()
 
-    # Set max_sat_area to a constant everywhere
+    # set max_sat_area to a constant everywhere
     min_max_sat_area = 0
     max_max_sat_area = 1
     if args.max_sat_area >= min_max_sat_area and \
