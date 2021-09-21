@@ -752,6 +752,7 @@ contains
     if (send_to_atm) then
        call state_setexport_1d(exportState, Sl_t      , lnd2atm_inst%t_rad_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       ! NOTE: the following does not work if Sl_snowh is initialized to spval over ocean
        call state_setexport_1d(exportState, Sl_snowh  , waterlnd2atmbulk_inst%h2osno_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_avsdr  , lnd2atm_inst%albd_grc(begg:,1), rc=rc)
@@ -764,21 +765,29 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_tref   , lnd2atm_inst%t_ref2m_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Sl_qref   , waterlnd2atmbulk_inst%q_ref2m_grc(begg:), rc=rc)
+       call state_setexport_1d(exportState, Sl_qref   , waterlnd2atmbulk_inst%q_ref2m_grc(begg:), &
+             rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_taux , lnd2atm_inst%taux_grc(begg:), minus=.true., rc=rc)
+       call state_setexport_1d(exportState, Fall_taux , lnd2atm_inst%taux_grc(begg:), minus=.true., &
+             rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_tauy , lnd2atm_inst%tauy_grc(begg:), minus=.true., rc=rc)
+       call state_setexport_1d(exportState, Fall_tauy , lnd2atm_inst%tauy_grc(begg:), minus=.true., &
+             rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_lat  , lnd2atm_inst%eflx_lh_tot_grc(begg:), minus=.true., rc=rc)
+       call state_setexport_1d(exportState, Fall_lat  , lnd2atm_inst%eflx_lh_tot_grc(begg:), minus=.true., &
+             rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_sen  , lnd2atm_inst%eflx_sh_tot_grc(begg:), minus=.true., rc=rc)
+       call state_setexport_1d(exportState, Fall_sen  , lnd2atm_inst%eflx_sh_tot_grc(begg:), minus=.true., &
+             rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_lwup , lnd2atm_inst%eflx_lwrad_out_grc(begg:), minus=.true., rc=rc)
+       call state_setexport_1d(exportState, Fall_lwup , lnd2atm_inst%eflx_lwrad_out_grc(begg:), minus=.true., &
+             rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_evap , waterlnd2atmbulk_inst%qflx_evap_tot_grc(begg:), minus=.true., rc=rc)
+       call state_setexport_1d(exportState, Fall_evap , waterlnd2atmbulk_inst%qflx_evap_tot_grc(begg:), minus=.true., &
+             rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_swnet, lnd2atm_inst%fsa_grc(begg:), rc=rc)
+       call state_setexport_1d(exportState, Fall_swnet, lnd2atm_inst%fsa_grc(begg:), &
+             rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! optional fields
@@ -797,7 +806,8 @@ contains
        call state_setexport_1d(exportState, Sl_fv, lnd2atm_inst%fv_grc(begg:), rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (fldchk(exportState, Sl_soilw)) then
-          call state_setexport_1d(exportState, Sl_soilw, waterlnd2atmbulk_inst%h2osoi_vol_grc(begg:,1), rc=rc)
+          call state_setexport_1d(exportState, Sl_soilw, waterlnd2atmbulk_inst%h2osoi_vol_grc(begg:,1), &
+                rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Fall_fco2_lnd)) then
@@ -806,7 +816,8 @@ contains
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Sl_ddvel)) then ! dry dep velocities
-          call state_setexport_2d(exportState, Sl_ddvel, lnd2atm_inst%ddvel_grc(begg:,1:drydep_nflds), rc=rc)
+          call state_setexport_2d(exportState, Sl_ddvel, lnd2atm_inst%ddvel_grc(begg:,1:drydep_nflds), &
+                rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Fall_voc)) then ! megan voc emis fluxes
