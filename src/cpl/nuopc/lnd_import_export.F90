@@ -296,17 +296,17 @@ contains
        call fldlist_add(fldsFrLnd_num, fldsFrlnd, Flrl_irrig )
     end if
 
-    ! export to glc
-    call NUOPC_CompAttributeGet(gcomp, name="histaux_l2x1yrg", value=cvalue, &
-         isPresent=isPresent, isSet=isSet, rc=rc)
-    if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (isPresent .and. isSet) then
-       read(cvalue,*) send_lnd2glc
+    ! export to glc if appropriate
+    send_lnd2glc = .false.
+    if (glc_present) then
+       send_lnd2glc = .true.
     else
-       send_lnd2glc = .false.
+       call NUOPC_CompAttributeGet(gcomp, name="histaux_l2x1yrg", value=cvalue, &
+            isPresent=isPresent, isSet=isSet, rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return
+       if (isPresent .and. isSet) read(cvalue,*) send_lnd2glc
     end if
-
-    if ((send_lnd2glc) .or. (glc_present .and. cism_evolve)) then
+    if (send_lnd2glc) then
        ! lnd->glc states from land all lnd->glc elevation classes (1:glc_nec) plus bare land (index 0).
        ! The following puts all of the elevation class fields as an! undistributed dimension in 
        ! the export state field
@@ -743,95 +743,106 @@ contains
     ! output to mediator
     ! -----------------------
 
-    call state_setexport_1d(exportState, Sl_lfrin, ldomain%frac(begg:), rc=rc)
+    call state_setexport_1d(exportState, Sl_lfrin, ldomain%frac(begg:), init_spval=.false., rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     ! -----------------------
     ! output to atm
     ! -----------------------
+
     if (send_to_atm) then
-       call state_setexport_1d(exportState, Sl_t      , lnd2atm_inst%t_rad_grc(begg:), rc=rc)
+       call state_setexport_1d(exportState, Sl_t      , lnd2atm_inst%t_rad_grc(begg:), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       ! NOTE: the following does not work if Sl_snowh is initialized to spval over ocean
-       call state_setexport_1d(exportState, Sl_snowh  , waterlnd2atmbulk_inst%h2osno_grc(begg:), rc=rc)
+       call state_setexport_1d(exportState, Sl_snowh  , waterlnd2atmbulk_inst%h2osno_grc(begg:), &
+            init_spval=.false., rc=rc)
+       if (ChkErr(rc,__LINE__,u_FILE_u)) return       
+       call state_setexport_1d(exportState, Sl_avsdr  , lnd2atm_inst%albd_grc(begg:,1), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Sl_avsdr  , lnd2atm_inst%albd_grc(begg:,1), rc=rc)
+       call state_setexport_1d(exportState, Sl_anidr  , lnd2atm_inst%albd_grc(begg:,2), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Sl_anidr  , lnd2atm_inst%albd_grc(begg:,2), rc=rc)
+       call state_setexport_1d(exportState, Sl_avsdf  , lnd2atm_inst%albi_grc(begg:,1), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Sl_avsdf  , lnd2atm_inst%albi_grc(begg:,1), rc=rc)
+       call state_setexport_1d(exportState, Sl_anidf  , lnd2atm_inst%albi_grc(begg:,2), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Sl_anidf  , lnd2atm_inst%albi_grc(begg:,2), rc=rc)
-       if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Sl_tref   , lnd2atm_inst%t_ref2m_grc(begg:), rc=rc)
+       call state_setexport_1d(exportState, Sl_tref   , lnd2atm_inst%t_ref2m_grc(begg:), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_qref   , waterlnd2atmbulk_inst%q_ref2m_grc(begg:), &
-             rc=rc)
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_taux , lnd2atm_inst%taux_grc(begg:), minus=.true., &
-             rc=rc)
+       call state_setexport_1d(exportState, Fall_taux , lnd2atm_inst%taux_grc(begg:), &
+            init_spval=.false., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_tauy , lnd2atm_inst%tauy_grc(begg:), minus=.true., &
-             rc=rc)
+       call state_setexport_1d(exportState, Fall_tauy , lnd2atm_inst%tauy_grc(begg:),  &
+            init_spval=.false., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_lat  , lnd2atm_inst%eflx_lh_tot_grc(begg:), minus=.true., &
-             rc=rc)
+       call state_setexport_1d(exportState, Fall_lat  , lnd2atm_inst%eflx_lh_tot_grc(begg:), &
+            init_spval=.false., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_sen  , lnd2atm_inst%eflx_sh_tot_grc(begg:), minus=.true., &
-             rc=rc)
+       call state_setexport_1d(exportState, Fall_sen  , lnd2atm_inst%eflx_sh_tot_grc(begg:), &
+            init_spval=.false., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_lwup , lnd2atm_inst%eflx_lwrad_out_grc(begg:), minus=.true., &
-             rc=rc)
+       call state_setexport_1d(exportState, Fall_lwup , lnd2atm_inst%eflx_lwrad_out_grc(begg:), &
+            init_spval=.false., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Fall_evap , waterlnd2atmbulk_inst%qflx_evap_tot_grc(begg:), minus=.true., &
-             rc=rc)
+       call state_setexport_1d(exportState, Fall_evap , waterlnd2atmbulk_inst%qflx_evap_tot_grc(begg:), &
+            init_spval=.false., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Fall_swnet, lnd2atm_inst%fsa_grc(begg:), &
-             rc=rc)
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! optional fields
        call state_setexport_2d(exportState, Fall_flxdst, lnd2atm_inst%flxdst_grc(begg:,1:4), &
-            minus= .true., rc=rc)
+            init_spval=.false., minus= .true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (fldchk(exportState, Fall_methane)) then
           call state_setexport_1d(exportState, Fall_methane, lnd2atm_inst%ch4_surf_flux_tot_grc(begg:), &
-               minus=.true., rc=rc)
+               init_spval=.false., minus=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
-       call state_setexport_1d(exportState, Sl_u10, lnd2atm_inst%u_ref10m_grc(begg:), rc=rc)
+       call state_setexport_1d(exportState, Sl_u10, lnd2atm_inst%u_ref10m_grc(begg:), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Sl_ram1, lnd2atm_inst%ram1_grc(begg:), rc=rc)
+       call state_setexport_1d(exportState, Sl_ram1, lnd2atm_inst%ram1_grc(begg:), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
-       call state_setexport_1d(exportState, Sl_fv, lnd2atm_inst%fv_grc(begg:), rc=rc)
+       call state_setexport_1d(exportState, Sl_fv, lnd2atm_inst%fv_grc(begg:), &
+            init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (fldchk(exportState, Sl_soilw)) then
           call state_setexport_1d(exportState, Sl_soilw, waterlnd2atmbulk_inst%h2osoi_vol_grc(begg:,1), &
-                rc=rc)
+               init_spval=.false., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Fall_fco2_lnd)) then
           call state_setexport_1d(exportState, Fall_fco2_lnd, lnd2atm_inst%net_carbon_exchange_grc(begg:), &
-               minus=.true., rc=rc)
+               init_spval=.false., minus=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Sl_ddvel)) then ! dry dep velocities
           call state_setexport_2d(exportState, Sl_ddvel, lnd2atm_inst%ddvel_grc(begg:,1:drydep_nflds), &
-                rc=rc)
+               init_spval=.false., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Fall_voc)) then ! megan voc emis fluxes
           call state_setexport_2d(exportState, Fall_voc, lnd2atm_inst%flxvoc_grc(begg:,1:shr_megan_mechcomps_n), &
-               minus = .true., rc=rc)
+               init_spval=.false., minus = .true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Fall_fire)) then ! fire emis from land
           call state_setexport_2d(exportState, Fall_fire, lnd2atm_inst%fireflx_grc(begg:,1:emis_nflds), &
-               minus = .true., rc=rc)
+               init_spval=.false., minus = .true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Sl_fztop)) then ! fire emis from land
-          call state_setexport_1d(exportState, Sl_fztop, lnd2atm_inst%fireztop_grc(begg:), rc=rc)
+          call state_setexport_1d(exportState, Sl_fztop, lnd2atm_inst%fireztop_grc(begg:), &
+               init_spval=.false., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
     endif
@@ -1100,7 +1111,7 @@ contains
   end subroutine state_getimport_2d
 
   !===============================================================================
-  subroutine state_setexport_1d(state, fldname, ctsmdata, minus, init_spval, rc)
+  subroutine state_setexport_1d(state, fldname, ctsmdata, init_spval, minus, rc)
 
     ! fill in ctsm export data for 1d field
 
@@ -1112,13 +1123,12 @@ contains
     type(ESMF_State) , intent(in) :: state
     character(len=*) , intent(in) :: fldname
     real(r8)         , intent(in) :: ctsmdata(:)
+    logical          , intent(in) :: init_spval
     logical, optional, intent(in) :: minus
-    logical, optional, intent(in) :: init_spval
     integer          , intent(out):: rc
 
     ! local variables
     logical           :: l_minus ! local version of minus
-    logical           :: l_init_spval ! local version of init_spval
     real(r8), pointer :: fldPtr1d(:)
     integer           :: g
     character(len=*), parameter :: subname='(lnd_export_export:state_setexport_1d)'
@@ -1132,15 +1142,9 @@ contains
        l_minus = .false.
     end if
 
-    if (present(init_spval)) then
-       l_init_spval = init_spval
-    else
-       l_init_spval = .false.
-    end if
-
     call state_getfldptr(state, trim(fldname), fldptr1d=fldptr1d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (l_init_spval) then
+    if (init_spval) then
        fldptr1d(:) = shr_const_spval
     else
        fldptr1d(:) = 0._r8
@@ -1159,7 +1163,7 @@ contains
   end subroutine state_setexport_1d
 
   !===============================================================================
-  subroutine state_setexport_2d(state, fldname, ctsmdata, minus, init_spval, rc)
+  subroutine state_setexport_2d(state, fldname, ctsmdata, init_spval, minus, rc)
 
     ! fill in ctsm export data for 2d field
 
@@ -1171,13 +1175,12 @@ contains
     type(ESMF_State) , intent(in) :: state
     character(len=*) , intent(in) :: fldname
     real(r8)         , intent(in) :: ctsmdata(:,:)
+    logical,           intent(in) :: init_spval
     logical, optional, intent(in) :: minus
-    logical, optional, intent(in) :: init_spval
     integer          , intent(out):: rc
 
     ! local variables
     logical           :: l_minus         ! local version of minus
-    logical           :: l_init_spval ! local version of init_spval
     real(r8), pointer :: fldPtr2d(:,:)
     integer           :: g, n
     character(len=CS) :: cnum
@@ -1192,15 +1195,9 @@ contains
        l_minus = .false.
     end if
 
-    if (present(init_spval)) then
-       l_init_spval = init_spval
-    else
-       l_init_spval = .false.
-    end if
-
     call state_getfldptr(state, trim(fldname), fldptr2d=fldptr2d, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
-    if (l_init_spval) then
+    if (init_spval) then
        fldptr2d(:,:) = shr_const_spval
     else
        fldptr2d(:,:) = 0._r8
