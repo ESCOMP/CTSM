@@ -347,26 +347,6 @@ contains
          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc   (bounds%begg:bounds%endg), &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
-    if(use_hillslope_routing) then
-
-       call l2g( bounds, &
-            water_inst%waterfluxbulk_inst%qstreamflow_lun (bounds%begl:bounds%endl), &
-            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc   (bounds%begg:bounds%endg), &
-            l2g_scale_type='unity' )
-       
-       ! convert streamflow from m3/s to mm/s (discharge to flux)
-       do g = bounds%begg, bounds%endg
-          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
-               water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
-               * 1.e3_r8 / (1.e6_r8 * grc%area(g)) 
-       enddo
-    
-       ! for now, set surface runoff to zero and subsurface runoff to streamflow
-       ! instead of modifying src/cpl/*/lnd_import_export.F90
-       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg) = 0._r8
-       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg)
-    endif
-    
     do c = bounds%begc, bounds%endc
        if (col%active(c)) then
           ! It's not entirely appropriate to put qflx_liq_from_ice_col into
@@ -410,6 +390,28 @@ contains
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
 
 
+    if(use_hillslope_routing) then
+
+       call l2g( bounds, &
+            water_inst%waterfluxbulk_inst%qstreamflow_lun (bounds%begl:bounds%endl), &
+            water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc   (bounds%begg:bounds%endg), &
+            l2g_scale_type='unity' )
+       
+       ! convert streamflow from m3/s to mm/s (discharge to flux)
+       do g = bounds%begg, bounds%endg
+          water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) = &
+               water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(g) &
+               * 1.e3_r8 / (1.e6_r8 * grc%area(g)) 
+       enddo
+    
+       ! for now, set surface runoff and perched drainage to zero, and
+       ! set subsurface runoff to streamflow (which accounts for all three fluxes)
+       ! instead of modifying src/cpl/*/lnd_import_export.F90
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsur_grc(bounds%begg:bounds%endg) = 0._r8
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_drain_perched_grc(bounds%begg:bounds%endg) = 0._r8
+       water_inst%waterlnd2atmbulk_inst%qflx_rofliq_qsub_grc(bounds%begg:bounds%endg) = water_inst%waterlnd2atmbulk_inst%qflx_rofliq_stream_grc(bounds%begg:bounds%endg)
+    endif
+    
     call c2g( bounds, &
          water_inst%waterfluxbulk_inst%qflx_sfc_irrig_col (bounds%begc:bounds%endc), &
          water_inst%waterlnd2atmbulk_inst%qirrig_grc(bounds%begg:bounds%endg), &
