@@ -35,7 +35,7 @@ module BalanceCheckMod
   use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
-  use clm_varctl         , only : use_hillslope
+  use clm_varctl         , only : use_hillslope, use_hillslope_routing
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -270,11 +270,21 @@ contains
              c2l_scale_type='urbanf', l2g_scale_type='unity')
 
     ! add landunit level state variable, convert from (m3) to (kg m-2)
-    do l = begl, endl
-       g = lun%gridcell(l)
-       wb_grc(g) = wb_grc(g) +  waterstate_inst%stream_water_lun(l) &
-            *1e3_r8/(grc%area(g)*1.e6_r8)
-    enddo
+    if (use_hillslope_routing) then
+       do l = bounds%begl, bounds%endl
+          g = lun%gridcell(l)
+          ! input water flux to stream channel (-)
+          errh2o_grc(g) = errh2o_grc(g) &
+               - (qflx_surf_grc(g)  &
+               + qflx_drain_grc(g)  &
+               + qflx_drain_perched_grc(g)) * dtime
+
+          ! output water flux from streamflow (+)
+          errh2o_grc(g) = errh2o_grc(g) &
+               +  waterflux_inst%qstreamflow_lun(l) &
+               *1e3_r8/(grc%area(g)*1.e6_r8) * dtime
+       enddo
+    endif
     
     ! Call the beginning or ending version of the subroutine according
     ! to flag value
