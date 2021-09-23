@@ -180,12 +180,13 @@ contains
     ! TODO Need next one for spin-ups? If so, then add prefixes
     ! mimics here and bgc in BGCMod if these two will differ or
     ! move reading the parameter to CNSharedParamsMod if they
-    ! will not differ. Similar for both initial_Cstocks params.
+    ! will not differ.
     tString='initial_Cstocks_depth_bgc'
     call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%initial_Cstocks_depth=tempr
 
+    ! TODO initial_Cstocks definitely needs to differ: mimics_ vs. bgc_
     allocate(params_inst%initial_Cstocks(ndecomp_pools_max))
     tString='initial_Cstocks_bgc'
     call ncd_io(trim(tString), params_inst%initial_Cstocks(:), 'read', ncid, readvar=readv)
@@ -1192,6 +1193,8 @@ contains
             term_1 = vmax_l1_m1 * m1_conc / (km_l1_m1 + m1_conc)
             term_2 = vmax_l1_m2 * m2_conc / (km_l1_m2 + m2_conc)
             decomp_k(c,j,i_met_lit) = (term_1 + term_2) * w_d_o_scalars
+            ! TODO May need if-statment for all cases that term_1 +/ term_2
+            ! are zero bc biomass would never flow into such pools in that case
             pathfrac_decomp_cascade(c,j,i_l1m1) = term_1 / (term_1 + term_2)
             pathfrac_decomp_cascade(c,j,i_l1m2) = term_2 / (term_1 + term_2)
 

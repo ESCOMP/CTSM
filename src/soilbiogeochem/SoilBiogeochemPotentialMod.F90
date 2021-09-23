@@ -217,7 +217,11 @@ contains
                            p_decomp_npool_loss - p_decomp_npool_gain(c,j,k)
                      end if  ! using mimics
                   end if  ! floating_cn_ratio_decomp_pools = .true.
-               end if  ! donors donating (decomp_cpools_vr and decomp_k > 0)
+               else  ! donors not donating
+                  p_decomp_cpool_gain(c,j,k) = 0.0_r8
+                  p_decomp_npool_gain(c,j,k) = 0.0_r8
+                  p_decomp_npool_to_din(c,j,k) = 0.0_r8
+               end if  ! donors donating? (ie decomp_cpools_vr & decomp_k > 0)
             end do  ! column loop
 
          end do  ! soil level loop
@@ -300,8 +304,6 @@ contains
                end if
                if (use_mimics_decomp) then
                   gross_nmin_vr(c,j) = gross_nmin_vr(c,j) + p_decomp_npool_to_din(c,j,k)
-                  if (c == 1) write(iulog,*) 'gross_nmin_vr, p_decomp_npool_to_din, c,j'  ! slevis diag
-                  if (c == 1) write(iulog,*) gross_nmin_vr(c,j), p_decomp_npool_to_din(c,j,k), c,j,k  ! slevis diag
                end if
             end do
          end do
