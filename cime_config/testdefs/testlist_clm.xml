@@ -2352,7 +2352,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-    <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesReducedComplexNoComp">
+    <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexNoComp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2362,7 +2362,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="SMS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesReducedComplexSatellitePhenology">
+  <test name="SMS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
