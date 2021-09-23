@@ -47,6 +47,7 @@ module SoilBiogeochemCarbonFluxType
      real(r8), pointer :: fphr_col                                  (:,:)   ! fraction of potential heterotrophic respiration
 
      real(r8), pointer :: hr_col                                    (:)     ! (gC/m2/s) total heterotrophic respiration
+     real(r8), pointer :: michr_col                                 (:)     ! (gC/m2/s) microbial heterotrophic respiration
      real(r8), pointer :: cwdhr_col                                 (:)     ! (gC/m2/s) coarse woody debris heterotrophic respiration
      real(r8), pointer :: lithr_col                                 (:)     ! (gC/m2/s) litter heterotrophic respiration 
      real(r8), pointer :: somhr_col                                 (:)     ! (gC/m2/s) soil organic matter heterotrophic res   
@@ -147,6 +148,7 @@ contains
      this%decomp_cpools_transport_tendency_col(:,:,:)= nan
 
      allocate(this%hr_col                  (begc:endc)) ; this%hr_col                  (:) = nan
+     allocate(this%michr_col               (begc:endc)) ; this%michr_col               (:) = nan
      allocate(this%cwdhr_col               (begc:endc)) ; this%cwdhr_col               (:) = nan
      allocate(this%lithr_col               (begc:endc)) ; this%lithr_col               (:) = nan
      allocate(this%somhr_col               (begc:endc)) ; this%somhr_col               (:) = nan
@@ -221,6 +223,11 @@ contains
         call hist_addfld1d (fname='HR', units='gC/m^2/s', &
              avgflag='A', long_name='total heterotrophic respiration', &
              ptr_col=this%hr_col)
+
+        this%michr_col(begc:endc) = spval
+        call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
+             avgflag='A', long_name='microbial C heterotrophic respiration', &
+             ptr_col=this%michr_col)
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='CWDC_HR', units='gC/m^2/s', &
@@ -434,6 +441,11 @@ contains
              avgflag='A', long_name='C13 total heterotrophic respiration', &
              ptr_col=this%hr_col)
 
+        this%michr_col(begc:endc) = spval
+        call hist_addfld1d (fname='C13_MICC_HR', units='gC13/m^2/s', &
+             avgflag='A', long_name='C13 microbial heterotrophic respiration', &
+             ptr_col=this%michr_col, default='inactive')
+
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_CWDC_HR', units='gC/m^2/s', &
              avgflag='A', long_name='C13 cwd C heterotrophic respiration', &
@@ -507,6 +519,11 @@ contains
         call hist_addfld1d (fname='C14_HR', units='gC14/m^2/s', &
              avgflag='A', long_name='C14 total heterotrophic respiration', &
              ptr_col=this%hr_col)
+
+        this%michr_col(begc:endc) = spval
+        call hist_addfld1d (fname='C14_MICC_HR', units='gC13/m^2/s', &
+             avgflag='A', long_name='C14 microbial heterotrophic respiration', &
+             ptr_col=this%michr_col, default='inactive')
 
         this%cwdhr_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_CWDC_HR', units='gC/m^2/s', &
@@ -775,6 +792,7 @@ contains
        this%somhr_col(i)         = value_column
        this%lithr_col(i)         = value_column
        this%cwdhr_col(i)         = value_column
+       this%michr_col(i)         = value_column
        this%soilc_change_col(i)  = value_column
     end do
 
@@ -894,11 +912,24 @@ contains
       end do
     end associate
 
+    ! microbial heterotrophic respiration (MICHR)
+    associate(is_microbe => decomp_cascade_con%is_microbe)  ! TRUE => pool is a microbial pool
+      do k = 1, ndecomp_cascade_transitions
+         if ( is_microbe(decomp_cascade_con%cascade_donor_pool(k)) ) then
+            do fc = 1,num_soilc
+               c = filter_soilc(fc)
+               this%michr_col(c) = this%michr_col(c) + this%decomp_cascade_hr_col(c,k)
+            end do
+         end if
+      end do
+    end associate
+
     ! total heterotrophic respiration (HR)
     do fc = 1,num_soilc
        c = filter_soilc(fc)
        
           this%hr_col(c) = &
+               this%michr_col(c) + &
                this%cwdhr_col(c) + &
                this%lithr_col(c) + &
                this%somhr_col(c)

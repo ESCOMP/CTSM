@@ -3416,12 +3416,12 @@ contains
 
        if (lun%ifspecial(l)) then
           this%annsum_npp_col(c) = spval
+          this%ligninNratioAvg_col(c) = spval
        end if
 
-       ! also initialize dynamic landcover fluxes so that they have
-       ! real values on first timestep, prior to calling pftdyn_cnbal
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
           this%annsum_npp_col(c) = 0._r8   
+          this%ligninNratioAvg_col(c) = 0._r8
        end if
     end do
 
@@ -3588,6 +3588,11 @@ contains
          dim1name='column', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%annsum_npp_col) 
+
+    call restartvar(ncid=ncid, flag=flag, varname='ligninNratioAvg', xtype=ncd_double,  &
+         dim1name='column', &
+         long_name='', units='', &
+         interpinic_flag='interp', readvar=readvar, data=this%ligninNratioAvg_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='tempsum_litfall', xtype=ncd_double,  &
          dim1name='pft', &

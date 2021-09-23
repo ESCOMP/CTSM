@@ -325,7 +325,7 @@ contains
       do g = bounds%begg, bounds%endg
          ! calculate gridcell-level carbon storage for mass conservation check
          ! Notes:
-         ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
+         ! totgrcc = totcolc = totc_p2c_col(c) + soilbiogeochem_cwdc_col(c) + soilbiogeochem_totlitc_col(c) + soilbiogeochem_totmicc_col(c) + soilbiogeochem_totsomc_col(c) + soilbiogeochem_ctrunc_col(c)
          ! totc_p2c_col = totc_patch = totvegc_patch(p) + xsmrpool_patch(p) + ctrunc_patch(p) + cropseedc_deficit_patch(p)
          ! Not including seedc_grc in grc_begcb and grc_endcb because
          ! seedc_grc forms out of thin air, for now, and equals

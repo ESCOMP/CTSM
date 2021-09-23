@@ -948,6 +948,7 @@ contains
          num_soilc, filter_soilc, num_soilp, filter_soilp, &
          soilbiogeochem_cwdc_col=soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
          soilbiogeochem_totlitc_col=soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
+         soilbiogeochem_totmicc_col=soilbiogeochem_carbonstate_inst%totmicc_col(begc:endc), &
          soilbiogeochem_totsomc_col=soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
          soilbiogeochem_ctrunc_col=soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
 
@@ -956,6 +957,7 @@ contains
             num_soilc, filter_soilc, num_soilp, filter_soilp, &
             soilbiogeochem_cwdc_col=c13_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c13_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
+            soilbiogeochem_totmicc_col=c13_soilbiogeochem_carbonstate_inst%totmicc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c13_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
             soilbiogeochem_ctrunc_col=c13_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
     end if
@@ -965,6 +967,7 @@ contains
             num_soilc, filter_soilc, num_soilp, filter_soilp, &
             soilbiogeochem_cwdc_col=c14_soilbiogeochem_carbonstate_inst%cwdc_col(begc:endc), &
             soilbiogeochem_totlitc_col=c14_soilbiogeochem_carbonstate_inst%totlitc_col(begc:endc), &
+            soilbiogeochem_totmicc_col=c14_soilbiogeochem_carbonstate_inst%totmicc_col(begc:endc), &
             soilbiogeochem_totsomc_col=c14_soilbiogeochem_carbonstate_inst%totsomc_col(begc:endc), &
             soilbiogeochem_ctrunc_col=c14_soilbiogeochem_carbonstate_inst%ctrunc_col(begc:endc))
     end if

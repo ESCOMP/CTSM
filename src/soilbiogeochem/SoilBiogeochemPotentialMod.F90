@@ -215,13 +215,13 @@ contains
                            p_decomp_npool_loss * nue_decomp_cascade(k)
                         p_decomp_npool_to_din(c,j,k) = &
                            p_decomp_npool_loss - p_decomp_npool_gain(c,j,k)
-                     end if
-                  end if
-               end if
-            end do
+                     end if  ! using mimics
+                  end if  ! floating_cn_ratio_decomp_pools = .true.
+               end if  ! donors donating (decomp_cpools_vr and decomp_k > 0)
+            end do  ! column loop
 
-         end do
-      end do
+         end do  ! soil level loop
+      end do  ! transitions loop
 
       ! Determine immobilization vs. mineralization by comparing the
       ! cn_gain into microbial biomass compared with the target C:N
@@ -233,41 +233,53 @@ contains
                ! Sum C & N fluxes from all transitions into m1 & m2 pools.
                ! Had to form a new loop for the summation due to the order
                ! necessary, ie do k as the innermost loop.
+               p_decomp_cpool_gain_sum(:) = 0.0_r8
+               p_decomp_npool_gain_sum(:) = 0.0_r8
                do k = 1, ndecomp_cascade_transitions
                   if (cascade_receiver_pool(k) == i_cop_mic .or. &
                       cascade_receiver_pool(k) == i_oli_mic) then
-                     p_decomp_cpool_gain_sum(cascade_receiver_pool(k)) = &
-                        p_decomp_cpool_gain_sum(cascade_receiver_pool(k)) + &
-                        p_decomp_cpool_gain(c,j,k)
-                     p_decomp_npool_gain_sum(cascade_receiver_pool(k)) = &
-                        p_decomp_npool_gain_sum(cascade_receiver_pool(k)) + &
-                        p_decomp_npool_gain(c,j,k)
-                     ! Once k-loop completes, the left hand side should end up
-                     ! with the correct cn ratio
-                     if (p_decomp_npool_gain_sum(cascade_receiver_pool(k)) > 0.0_r8) then
-                        p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) = &
-                           p_decomp_cpool_gain_sum(cascade_receiver_pool(k)) / &
-                           p_decomp_npool_gain_sum(cascade_receiver_pool(k))
-                     end if
-                  end if
-               end do
+                     if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. &
+                         decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
+                        p_decomp_cpool_gain_sum(cascade_receiver_pool(k)) = &
+                           p_decomp_cpool_gain_sum(cascade_receiver_pool(k)) + &
+                           p_decomp_cpool_gain(c,j,k)
+                        p_decomp_npool_gain_sum(cascade_receiver_pool(k)) = &
+                           p_decomp_npool_gain_sum(cascade_receiver_pool(k)) + &
+                           p_decomp_npool_gain(c,j,k)
+                        ! Once k-loop completes, the left hand side should end
+                        ! up with the correct cn ratio
+                        if (p_decomp_npool_gain_sum(cascade_receiver_pool(k)) > 0.0_r8) then
+                           p_decomp_cn_gain(c,j,k) = &
+                              p_decomp_cpool_gain_sum(cascade_receiver_pool(k)) / &
+                              p_decomp_npool_gain_sum(cascade_receiver_pool(k))
+                        else
+                           p_decomp_cn_gain(c,j,k) = 0.0_r8
+                        end if  ! denominator check
+                     end if  ! donors donating (decomp_cpools_vr & decomp_k > 0)
+                  end if  ! microbes receiving
+               end do  ! transitions loop
                do k = 1, ndecomp_cascade_transitions
                   if (cascade_receiver_pool(k) == i_cop_mic .or. &
                       cascade_receiver_pool(k) == i_oli_mic) then
-                     ! if p_decomp_cn_diff < 0  N mineralization
-                     !                     > 0  immobilization
-                     p_decomp_cn_diff_ratio = &
-                        (p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) - &
-                         cn_col(c,cascade_receiver_pool(k))) / cn_col(c,cascade_receiver_pool(k))
-                     ! Actual amount of N that's mineralized or that would need to be immobilized
-                     ! negative=mineralization: add to the DIN pool
-                     ! positive=immobilizaiton: compete for N with plants to see how much we get
-                     pmnf_decomp_cascade(c,j,k) = p_decomp_cn_diff_ratio * p_decomp_npool_gain(c,j,k)
-                  end if
-               end do
-            end do
-         end do
-      end if
+                     if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. &
+                         decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
+                        ! if p_decomp_cn_diff < 0  N mineralization
+                        !                     > 0  immobilization
+                        p_decomp_cn_diff_ratio = max(0.0_r8, &
+                           (p_decomp_cn_gain(c,j,k) - &
+                            cn_col(c,cascade_receiver_pool(k))) / cn_col(c,cascade_receiver_pool(k)))
+                        ! Actual amount of N that's mineralized or that would
+                        ! need to be immobilized
+                        ! negative=mineralization: add to the DIN pool
+                        ! positive=immobilizaiton: compete for N with plants to
+                        !                          see how much we get
+                        pmnf_decomp_cascade(c,j,k) = p_decomp_cn_diff_ratio * p_decomp_npool_gain(c,j,k)
+                     end if  ! donors donating (decomp_cpools_vr & decomp_k > 0)
+                  end if  ! microbes receiving
+               end do  ! transitions loop
+            end do  ! column loop
+         end do  ! soil levels loop
+      end if  ! using mimics
 
       ! Sum up all the potential immobilization fluxes (positive pmnf flux)
       ! and all the mineralization fluxes (negative pmnf flux)
@@ -288,6 +300,8 @@ contains
                end if
                if (use_mimics_decomp) then
                   gross_nmin_vr(c,j) = gross_nmin_vr(c,j) + p_decomp_npool_to_din(c,j,k)
+                  if (c == 1) write(iulog,*) 'gross_nmin_vr, p_decomp_npool_to_din, c,j'  ! slevis diag
+                  if (c == 1) write(iulog,*) gross_nmin_vr(c,j), p_decomp_npool_to_din(c,j,k), c,j,k  ! slevis diag
                end if
             end do
          end do
