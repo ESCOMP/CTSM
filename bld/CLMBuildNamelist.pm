@@ -2232,10 +2232,20 @@ sub setup_logic_surface_dataset {
   if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
   }
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
+  # Always get the crop version of the datasets now and let the code turn it into the form desired
+  my $var = "fsurdat";
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
               'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
-              'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
-              'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
+              'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.",
+              'use_crop'=>".true.", 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1);
+  # If didn't find the crop version check for the exact match
+  if ( ! defined($nl->get_value($var) ) ) {
+     $log->verbose_message( "Crop version of $var NOT found, searching for an exact match" );
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
+                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
+  }
 }
 
 #-------------------------------------------------------------------------------

@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1843;
+my $ntests = 1842;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1254;
 }
@@ -638,12 +638,6 @@ my %failtest = (
                                      namelst=>"baset_mapping='constant', baset_latvary_slope=1.0, baset_latvary_intercept=10.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
-                                   },
-     # This one should fail now, because we don't have non irrigated non-crop datasets
-     "-irrigate=F without -crop" =>{ options=>"-bgc bgc -no-crop -envxml_dir .",
-                                    namelst=>"irrigate=.false.",
-                                    GLC_TWO_WAY_COUPLING=>"FALSE",
-                                    phys=>"clm4_5",
                                    },
      "grainproductWOcrop"       =>{ options=>"-bgc bgc -no-crop -envxml_dir .",
                                     namelst=>"use_grainproduct=.true.",
