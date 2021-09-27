@@ -752,72 +752,72 @@ contains
 
     if (send_to_atm) then
        call state_setexport_1d(exportState, Sl_t      , lnd2atm_inst%t_rad_grc(begg:), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_snowh  , waterlnd2atmbulk_inst%h2osno_grc(begg:), &
             init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return       
        call state_setexport_1d(exportState, Sl_avsdr  , lnd2atm_inst%albd_grc(begg:,1), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_anidr  , lnd2atm_inst%albd_grc(begg:,2), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_avsdf  , lnd2atm_inst%albi_grc(begg:,1), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_anidf  , lnd2atm_inst%albi_grc(begg:,2), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_tref   , lnd2atm_inst%t_ref2m_grc(begg:), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_qref   , waterlnd2atmbulk_inst%q_ref2m_grc(begg:), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Fall_taux , lnd2atm_inst%taux_grc(begg:), &
-            init_spval=.false., minus=.true., rc=rc)
+            init_spval=.true., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Fall_tauy , lnd2atm_inst%tauy_grc(begg:),  &
-            init_spval=.false., minus=.true., rc=rc)
+            init_spval=.true., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Fall_lat  , lnd2atm_inst%eflx_lh_tot_grc(begg:), &
-            init_spval=.false., minus=.true., rc=rc)
+            init_spval=.true., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Fall_sen  , lnd2atm_inst%eflx_sh_tot_grc(begg:), &
-            init_spval=.false., minus=.true., rc=rc)
+            init_spval=.true., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Fall_lwup , lnd2atm_inst%eflx_lwrad_out_grc(begg:), &
-            init_spval=.false., minus=.true., rc=rc)
+            init_spval=.true., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Fall_evap , waterlnd2atmbulk_inst%qflx_evap_tot_grc(begg:), &
-            init_spval=.false., minus=.true., rc=rc)
+            init_spval=.true., minus=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Fall_swnet, lnd2atm_inst%fsa_grc(begg:), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
        ! optional fields
        call state_setexport_2d(exportState, Fall_flxdst, lnd2atm_inst%flxdst_grc(begg:,1:4), &
-            init_spval=.false., minus= .true., rc=rc)
+            init_spval=.true., minus= .true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (fldchk(exportState, Fall_methane)) then
           call state_setexport_1d(exportState, Fall_methane, lnd2atm_inst%ch4_surf_flux_tot_grc(begg:), &
-               init_spval=.false., minus=.true., rc=rc)
+               init_spval=.true., minus=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        call state_setexport_1d(exportState, Sl_u10, lnd2atm_inst%u_ref10m_grc(begg:), &
             init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_ram1, lnd2atm_inst%ram1_grc(begg:), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        call state_setexport_1d(exportState, Sl_fv, lnd2atm_inst%fv_grc(begg:), &
-            init_spval=.false., rc=rc)
+            init_spval=.true., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
        if (fldchk(exportState, Sl_soilw)) then
           call state_setexport_1d(exportState, Sl_soilw, waterlnd2atmbulk_inst%h2osoi_vol_grc(begg:,1), &
-               init_spval=.false., rc=rc)
+               init_spval=.true., rc=rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
        if (fldchk(exportState, Fall_fco2_lnd)) then
