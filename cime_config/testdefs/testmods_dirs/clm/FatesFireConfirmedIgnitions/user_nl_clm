@@ -1,0 +1,8 @@
+stream_fldfilename_lightng = '/glade/u/home/glemieux/data/Federal_Wildland_Fire_Activity_California_ignitions_1980-2016_monthly_0.8x0.8_c190801.nc'
+stream_year_first_lightng = 1980
+stream_year_last_lightng = 2016
+model_year_align_lightng = 1980
+fates_spitfire_mode = 3
+hist_nhtfrq = 0
+hist_mfilt = 1
+
