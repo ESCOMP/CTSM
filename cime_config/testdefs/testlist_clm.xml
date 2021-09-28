@@ -250,7 +250,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERI_N2_Ld9" grid="f19_g17" compset="I2000Clm51BgcCrop" testmods="clm/default">
+  <test name="ERI_C2_Ld9" grid="f19_g17" compset="I2000Clm51BgcCrop" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1570,7 +1570,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_N2_D_Lh12" grid="f09_g17" compset="I2000Clm50Sp" testmods="clm/pauseResume">
+  <test name="SMS_C2_D_Lh12" grid="f09_g17" compset="I2000Clm50Sp" testmods="clm/pauseResume">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1578,7 +1578,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="DAE_N2_D_Lh12" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/DA_multidrv">
+  <test name="DAE_C2_D_Lh12" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/DA_multidrv">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="prealpha"/>
