@@ -253,7 +253,7 @@ sub process_commandline {
                co2_type              => undef,
                co2_ppmv              => undef,
                clm_demand            => "null",
-               driver                => "mct",
+               driver                => "nuopc",
                help                  => 0,
                glc_nec               => "default",
                glc_use_antarctica    => 0,
