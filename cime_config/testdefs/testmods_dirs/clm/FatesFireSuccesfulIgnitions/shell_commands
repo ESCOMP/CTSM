@@ -1,0 +1,18 @@
+./xmlchange ATM_DOMAIN_PATH=/glade/u/home/glemieux/fates-scratch/Development/California/ignitions_dataset/slevis-setup
+./xmlchange LND_DOMAIN_PATH=/glade/u/home/glemieux/fates-scratch/Development/California/ignitions_dataset/slevis-setup
+./xmlchange ATM_DOMAIN_FILE=domain.lnd.cz2.nc
+./xmlchange LND_DOMAIN_FILE=domain.lnd.cz2.nc
+
+# Are these necessary for the build?
+# ./xmlchange CLM_USRDAT_NAME=california
+
+./xmlchange DATM_CLMNCEP_YR_START=1999
+./xmlchange DATM_CLMNCEP_YR_END=2006
+./xmlchange --append CLM_BLDNML_OPTS='-mask navy -no-crop'
+./xmlchange CALENDAR=GREGORIAN
+./xmlchange DOUT_S=FALSE
+./xmlchange ATM_NCPL=24
+./xmlchange RUN_STARTDATE=1999-01-01
+./xmlchange DATM_CLMNCEP_YR_ALIGN=1999
+./xmlchange DIN_LOC_ROOT=/glade/p/cesm/cseg/inputdata
+./xmlchange DIN_LOC_ROOT_CLMFORC=/glade/p/cesm/cseg/inputdata/lnd/clm2/PTCLMmydatafiles.c171024

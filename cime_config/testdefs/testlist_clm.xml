@@ -2424,6 +2424,15 @@
       <option name="comment">13 month single site FATES smoke test.</option>
     </options>
   </test>
+  <test name="ERS_Lm12" grid="CLM_USRDAT" compset="I2000Clm50FatesCru" testmods="clm/FatesFireSuccesfulIgnitions">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="fates"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:00:00</option>
+      <option name="comment">12 month exact restart FATES California debug test covering succesful fire ignition mode.</option>
+    </options>
+  </test>
   <test name="ERS_Lm12" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesFireLightningPopDens">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
