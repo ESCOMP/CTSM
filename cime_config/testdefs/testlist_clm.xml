@@ -614,7 +614,7 @@
       <machine name="cheyenne" compiler="intel" category="prebeta"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment"  >NUOPC test covering flooding. (Comments from mct version of this test say: Do a test with RTM and flooding on as that also impacts CLM code)</option>
     </options>
   </test>
