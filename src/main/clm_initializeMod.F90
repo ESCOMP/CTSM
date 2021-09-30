@@ -10,7 +10,7 @@ module clm_initializeMod
   use spmdMod               , only : masterproc
   use decompMod             , only : bounds_type, get_proc_bounds, get_proc_clumps, get_clump_bounds
   use abortutils            , only : endrun
-  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch
+  use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch, use_fates_sp
   use clm_varctl            , only : is_cold_start, is_interpolated_start
   use clm_varctl            , only : iulog
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, use_fates
@@ -60,6 +60,7 @@ contains
     use initGridCellsMod     , only: initGridCells
     use UrbanParamsType      , only: IsSimpleBuildTemp
     use dynSubgridControlMod , only: dynSubgridControl_init
+    use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_par_init
     !
     ! !ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -95,6 +96,7 @@ contains
     call ncd_pio_init()
     call surfrd_get_num_patches(fsurdat, actual_maxsoil_patches, actual_numcft)
     call clm_varpar_init(actual_maxsoil_patches, actual_numcft)
+    call decomp_cascade_par_init( NLFilename )
     call clm_varcon_init( IsSimpleBuildTemp() )
     call landunit_varcon_init()
     if (masterproc) call control_print()
@@ -116,7 +118,7 @@ contains
     use clm_varpar                    , only : nlevsno
     use clm_varctl                    , only : fsurdat
     use clm_varctl                    , only : finidat, finidat_interp_source, finidat_interp_dest, fsurdat
-    use clm_varctl                    , only : use_century_decomp, use_cn, use_fates
+    use clm_varctl                    , only : use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use landunit_varcon               , only : landunit_varcon_init, max_lunit
@@ -147,7 +149,7 @@ contains
     use restFileMod                   , only : restFile_read, restFile_write
     use ndepStreamMod                 , only : ndep_init, ndep_interp
     use LakeCon                       , only : LakeConInit
-    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg
+    use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
     use lnd2atmMod                    , only : lnd2atm_minimal
     use controlMod                    , only : NLFilename
@@ -588,6 +590,10 @@ contains
           ! This needs to be done even if CN or CNDV is on!
           call interpMonthlyVeg(bounds_proc, canopystate_inst)
        end if
+    ! If fates has satellite phenology enabled, get the monthly veg values
+    ! prior to the first call to SatellitePhenology()
+    elseif ( use_fates_sp ) then
+          call interpMonthlyVeg(bounds_proc, canopystate_inst)
     end if
 
     ! Determine gridcell averaged properties to send to atm
@@ -619,6 +625,17 @@ contains
 
     ! Initialise the fates model state structure
     if ( use_fates .and. .not.is_restart() .and. finidat == ' ') then
+       ! If fates is using satellite phenology mode, make sure to call the SatellitePhenology
+       ! procedure prior to init_coldstart which will eventually call leaf_area_profile
+       if ( use_fates_sp ) then
+          !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+          do nc = 1,nclumps
+             call get_clump_bounds(nc, bounds_clump)
+             call SatellitePhenology(bounds_clump, filter(nc)%num_nolakep, filter(nc)%nolakep, &
+                  water_inst%waterdiagnosticbulk_inst, canopystate_inst)
+          end do
+          !$OMP END PARALLEL DO
+       end if
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst)

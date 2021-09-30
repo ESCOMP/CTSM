@@ -366,7 +366,7 @@ case $hostname in
   if [ "$verbose" = "YES" ]; then
      echo "Number of processors to regrid with = $REGRID_PROC"
   fi
-  esmfvers=8.2.0.b06
+  esmfvers=8.2.0b13
   intelvers=19.1.1
   module purge
   module load intel/$intelvers
@@ -378,7 +378,7 @@ case $hostname in
      mpi=mpt
      module load mpt/2.22
   else
-     mpi=uni
+     mpi=mpiuni
   fi
 # module load esmf-${esmfvers}-ncdfio-${mpi}-O
   module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/$intelvers
