@@ -1305,9 +1305,10 @@ sub setup_cmdl_vichydro {
 
   $var = "use_vichydro";
   $val = $nl->get_value($var);
+  my $set = undef;
   if ($nl_flags->{'vichydro'} eq 1) {
      my $group = $definition->get_group_name($var);
-     my $set = ".true.";
+     $set = ".true.";
      if ( defined($val) && $set ne $val ) {
         $log->fatal_error("$var contradicts the command-line -vichydro option" );
      }
@@ -1316,7 +1317,10 @@ sub setup_cmdl_vichydro {
         my @valid_values   = $definition->get_valid_values( $var );
         $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
      }
+  } else {
+     $set = ".false.";
   }
+  $nl_flags->{$var} = $set;
 }
 
 
@@ -2166,6 +2170,7 @@ sub setup_logic_demand {
   $settings{'hgrid'}          = $nl_flags->{'res'};
   $settings{'sim_year'}       = $nl_flags->{'sim_year'};
   $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
+  $settings{'use_vichydro'}   = $nl_flags->{'use_vichydro'};
   $settings{'mask'}           = $nl_flags->{'mask'};
   $settings{'crop'}           = $nl_flags->{'crop'};
   $settings{'ssp_rcp'}        = $nl_flags->{'ssp_rcp'};
@@ -2203,7 +2208,22 @@ sub setup_logic_demand {
     if ( $item eq "finidat" ) {
         $log->fatal_error( "Do NOT put findat in the clm_demand list, set the clm_start_type=startup so initial conditions are required");
     }
+    # For landuse.timeseries try with crop and irrigate on first, if found use it, otherwise try with exact settings
+    # Logic for this is identical for fsurdat
+    if ( $item eq "flanduse.timeseries" ) {
+       $settings{'irrigate'} = ".true.";
+       $settings{'use_crop'} = ".true.";
+       $settings{'nofail'}   = 1;
+    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
+    if ( $item eq "flanduse.timeseries" ) {
+       $settings{'nofail'}   = 0;
+       $settings{'irrigate'} = $nl_flags->{'irrigate'};
+       $settings{'use_crop'} = $nl_flags->{'use_crop'};
+       if ( ! defined($nl->get_value( $item )) ) {
+          add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
+       }
+    }
   }
 }
 
@@ -2234,16 +2254,15 @@ sub setup_logic_surface_dataset {
   }
   # Always get the crop version of the datasets now and let the code turn it into the form desired
   my $var = "fsurdat";
-  my $use_vic = $nl->get_value( 'use_vichydro' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
               'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
-              'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_vichydro'=>$use_vic, 
+              'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_vichydro'=>$nl_flags->{'use_vichydro'},
               'use_crop'=>".true.", 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1);
   # If didn't find the crop version check for the exact match
   if ( ! defined($nl->get_value($var) ) ) {
      $log->verbose_message( "Crop version of $var NOT found, searching for an exact match" );
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$use_vic, 
+                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
                  'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
                  'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
   }
@@ -2931,7 +2950,7 @@ sub setup_logic_hydrology_switches {
   }
   # Test bad configurations
   my $lower   = $nl->get_value( 'lower_boundary_condition'  );
-  my $use_vic = $nl->get_value( 'use_vichydro'              );
+  my $use_vic = $nl_flags->{'use_vichydro'};
   my $use_bed = $nl->get_value( 'use_bedrock'               );
   my $soilmtd = $nl->get_value( 'soilwater_movement_method' );
   if ( defined($soilmtd) && defined($lower) && $soilmtd == 0 && $lower != 4 ) {
