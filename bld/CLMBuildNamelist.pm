@@ -2210,13 +2210,13 @@ sub setup_logic_demand {
     }
     # For landuse.timeseries try with crop and irrigate on first, if found use it, otherwise try with exact settings
     # Logic for this is identical for fsurdat
-    if ( $item eq "flanduse.timeseries" ) {
+    if ( $item eq "flanduse_timeseries" ) {
        $settings{'irrigate'} = ".true.";
        $settings{'use_crop'} = ".true.";
        $settings{'nofail'}   = 1;
     }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
-    if ( $item eq "flanduse.timeseries" ) {
+    if ( $item eq "flanduse_timeseries" ) {
        $settings{'nofail'}   = 0;
        $settings{'irrigate'} = $nl_flags->{'irrigate'};
        $settings{'use_crop'} = $nl_flags->{'use_crop'};
