@@ -2205,7 +2205,7 @@
       <option name="comment">ERP FATES test covering all standard FATES history variables.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesPRT2">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefPRT2">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2342,7 +2342,7 @@
       <option name="comment">60 day exact restart test activating FATES prescribed physiology mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesReducedComplexFixedBiogeo">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexFixedBiogeo">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -2373,7 +2373,7 @@
       <option name="comment">Temporary smoke test.  This test should be removed once the ERS version of this test passes COMPARE_base_rest</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesReducedComplexSatellitePhenology">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
