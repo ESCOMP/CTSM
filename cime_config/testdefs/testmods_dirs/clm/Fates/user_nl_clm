@@ -4,15 +4,15 @@ hist_nhtfrq       = -24
 hist_empty_htapes = .false.
 fates_spitfire_mode = 1
 hist_fexcl1       = 'PFTbiomass',
-'PFTleafbiomass,'
-'PFTstorebiomass,'
-'PFTcrownarea,'
-'PFTcanopycrownarea,'
-'PFTgpp,'
-'PFTnpp,'
-'PFTnindivs,'
-'RECRUITMENT,'
-'MORTALITY,'
+'PFTleafbiomass',
+'PFTstorebiomass',
+'PFTcrownarea',
+'PFTcanopycrownarea',
+'PFTgpp',
+'PFTnpp',
+'PFTnindivs',
+'RECRUITMENT',
+'MORTALITY',
 'PATCH_AREA_BY_AGE',
 'LAI_BY_AGE',
 'ZSTAR_BY_AGE',
