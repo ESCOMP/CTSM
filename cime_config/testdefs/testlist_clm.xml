@@ -2168,6 +2168,7 @@
   <test name="ERP_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2177,6 +2178,7 @@
   <test name="ERP_D_P32x2_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2186,7 +2188,6 @@
   <test name="ERP_Ld3" grid="f09_g17" compset="I2000Clm50Fates" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2197,7 +2198,6 @@
   <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2230,6 +2230,7 @@
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="cheyenne" compiler="gnu" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2240,6 +2241,7 @@
   <test name="ERS_D_Ld5" grid="f19_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2304,7 +2306,6 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/Fates">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2325,7 +2326,6 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefST3">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2345,7 +2345,6 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexFixedBiogeo">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2355,7 +2354,6 @@
     <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexNoComp">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2365,7 +2363,6 @@
   <test name="SMS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
@@ -2376,7 +2373,6 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCru" testmods="clm/FatesColdDefReducedComplexSatPhen">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="lawrencium-lr3" compiler="intel" category="fates"/>
     </machines>
     <options>
