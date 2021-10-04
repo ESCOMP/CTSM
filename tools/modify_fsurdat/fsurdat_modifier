@@ -28,25 +28,28 @@ To run on Cheyenne/Casper
 module load python
 ncar_pylib
 (Use "deactivate" to reverse the latter.)
-2) ./fsurdat_modifier --help
+2) ./fsurdat_modifier --help  # TODO This doesn't work currently...
 for a list of available arguments
-3) ./fsurdat_modifier (--fsurdat_in input_file.nc --fsurdat_out output_file.nc --dom_pft int --max_sat_area float --uni_snow --zero_nonveg_lu)
-Arguments in parentheses are optional.
-Optional arguments fsurdat_in and fsurdat_out include default values that have
-been tested as shown in the following example, though we will likely change
-them to required.
+3) ./fsurdat_modifier --fsurdat_out output_file.nc [--fsurdat_in input_file.nc
+                      --dom_pft int --max_sat_area float --std_elev float
+                      --lnd_lat_min float --lnd_lat_max float
+                      --lnd_lon_min float --lnd_lon_max float --zero_nonveg]
+Arguments in brackets are optional.
+Optional arguments --lnd_lat_min --lnd_lat_max --lnd_lon_min --lnd_lon_max
+all need to be set in order to work together.
 
 Example
 -------
->>> ./fsurdat_modifier
+>>> ./fsurdat_modifier --fsurdat_out test.nc
 
 Inputs
 ------
-/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc
+/glade/p/cesmdata/cseg/inputdata/lnd/clm2/surfdata_map/
+surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc
 
 Outputs
 -------
-/glade/scratch/$USER/surfdata_10x15_78pfts_CMIP6_simyr1850_c170824.nc_modified.nc
+./test.nc
 """
 
 import os

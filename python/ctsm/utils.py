@@ -109,3 +109,26 @@ def update_metadata(file, title, summary, contact, data_script, description):
     for attr in del_attrs:
         if attr in attr_list:
             del file.attrs[attr]
+
+def lon_range_0_to_360(lon_in):
+    """
+    Description
+    -----------
+    Restrict longitude to 0 to 360 when given as -180 to 180.
+    """
+    lon_1 = -180
+    lon_2 = 0
+    lon_3 = 180
+    lon_4 = 360
+    if lon_1 <= lon_in < lon_2:
+        lon_out = lon_in + lon_4
+        message = 'WARNING: Resetting longitude from ' + str(lon_in) + \
+                  ' to ' + str(lon_out) + ' to keep in the range 0 to 360'
+        print(message)  # TODO Use logging to print this
+    elif lon_2 <= lon_in <= lon_4 or lon_in == -999:
+        lon_out = lon_in
+    else:
+        errmsg = 'lon_in needs to be in the range 0 to 360'
+        abort(errmsg)
+
+    return lon_out
