@@ -244,6 +244,11 @@ def get_parser(args, description, valid_neon_sites):
     if args.base_case_root:
         base_case_root = os.path.abspath(args.base_case_root)
 
+    # Reduce output level for this script unless --debug or --verbose is provided on the command line
+    if not args.debug and not args.verbose:
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.WARN)
+
     return neon_sites, args.output_root, args.run_type, args.overwrite, run_length, base_case_root, args.run_from_postad, args.setup_only, args.no_batch, args.rerun
 
 def get_isosplit(s, split):
@@ -312,7 +317,7 @@ class NeonSite :
         overwrite (bool) : 
             Flag to overwrite the case if exists
         """
-        logger.info("---- building a base case -------")
+        print("---- building a base case -------")
         self.base_case_root = output_root
         user_mods_dirs = [os.path.join(cesmroot,"cime_config","usermods_dirs","NEON",self.name)]
         if not output_root:
@@ -328,19 +333,19 @@ class NeonSite :
             
         with Case(case_path, read_only=False) as case:
             if not os.path.isdir(case_path):
-                logger.info("---- creating a base case -------")
+                print("---- creating a base case -------")
 
                 case.create(case_path, cesmroot, compset, res, 
                             run_unsupported=True, answer="r",output_root=output_root,
                             user_mods_dirs = user_mods_dirs, driver="nuopc")
 
-                logger.info("---- base case created ------")
+                print("---- base case created ------")
 
                 #--change any config for base_case:
                 #case.set_value("RUN_TYPE","startup")
 
 
-                logger.info("---- base case setup ------")
+                print("---- base case setup ------")
                 case.case_setup()
             else:
                 case.case_setup(reset=True)
@@ -349,13 +354,13 @@ class NeonSite :
             if setup_only:
                 return case_path
 
-            logger.info("---- base case build ------")
+            print("---- base case build ------")
             # always walk through the build process to make sure it's up to date. 
             t0 = time.time()
             build.case_build(case_path, case=case)
             t1 = time.time()
             total = t1-t0
-            logger.info ("Time required to building the base case: {} s.".format(total))
+            print ("Time required to building the base case: {} s.".format(total))
             # update case_path to be the full path to the base case
         return case_path
 
@@ -375,13 +380,13 @@ class NeonSite :
             with Case(case_root, read_only=False) as case:
                 rundir = case.get_value("RUNDIR")
                 if overwrite:
-                    logger.info("---- removing the existing case -------")
+                    print("---- removing the existing case -------")
                     shutil.rmtree(case_root)
                 elif rerun:
                     if os.path.isfile(os.path.join(rundir,"ESMF_Profile.summary")):
-                        logger.info("Case {} appears to be complete, not rerunning.".format(case_root))
+                        print("Case {} appears to be complete, not rerunning.".format(case_root))
                     elif not setup_only:
-                        logger.info("Resubmitting case {}".format(case_root))
+                        print("Resubmitting case {}".format(case_root))
                         case.submit(no_batch=no_batch)
                 else:
                     logger.warning("Case already exists in {}, not overwritting.".format(case_root))
@@ -396,7 +401,7 @@ class NeonSite :
         if not os.path.isdir(case_root):
             # read_only = False should not be required here
             with Case(base_case_root, read_only=False) as basecase:
-                logger.info("---- cloning the base case in {}".format(case_root))
+                print("---- cloning the base case in {}".format(case_root))
                 basecase.create_clone(case_root, keepexe=True, user_mods_dirs=user_mods_dirs)
 
         with Case(case_root, read_only=False) as case:
@@ -631,6 +636,7 @@ def main(description):
     valid_neon_sites = sorted([v.split('/')[-1] for v in valid_neon_sites])
 
     site_list, output_root, run_type, overwrite, run_length, base_case_root, run_from_postad, setup_only, no_batch, rerun = get_parser(sys.argv, description, valid_neon_sites)
+
     if output_root:
         logger.debug ("output_root : "+ output_root)
         if not os.path.exists(output_root):
