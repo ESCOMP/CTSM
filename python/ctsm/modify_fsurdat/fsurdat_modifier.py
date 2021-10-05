@@ -136,23 +136,7 @@ def main ():
     # modify surface data properties
     # ------------------------------
 
-    # 1) Set dom_nat_pft to 100% everywhere
-    if args.dom_nat_pft != -999:
-        modify_fsurdat.dom_nat_pft(args.dom_nat_pft)
-
-    # 2) Set all non-vegetation landunits to zero
-    if args.zero_nonveg:
-        modify_fsurdat.zero_nonveg()
-
-    # 3) Create uniform snowpack by setting STD_ELEV to a constant everywhere
-    if args.std_elev != -999:
-        modify_fsurdat.std_elev(args.std_elev)
-
-    # 4) Set max_sat_area (FMAX) to a constant everywhere
-    if args.max_sat_area != -999:
-        modify_fsurdat.max_sat_area(args.max_sat_area)
-
-    # 5) Set land swath to land, making all else ocean
+    # 1) Set land swath to land, making all else ocean
     if args.lnd_lon_1 == -999 or args.lnd_lat_1 == -999 or \
        args.lnd_lon_2 == -999 or args.lnd_lat_2 == -999:
         warning_msg = 'Warning: One or more of the optional arguments ' \
@@ -162,6 +146,22 @@ def main ():
     else:
         modify_fsurdat.land_swath(args.lnd_lon_1, args.lnd_lon_2,
                                   args.lnd_lat_1, args.lnd_lat_2)
+
+    # 2) Set dom_nat_pft to 100% everywhere
+    if args.dom_nat_pft != -999:
+        modify_fsurdat.dom_nat_pft(args.dom_nat_pft)
+
+    # 3) Set all non-vegetation landunits to zero
+    if args.zero_nonveg:
+        modify_fsurdat.zero_nonveg()
+
+    # 4) Create uniform snowpack by setting STD_ELEV to a constant everywhere
+    if args.std_elev != -999:
+        modify_fsurdat.std_elev(args.std_elev)
+
+    # 5) Set max_sat_area (FMAX) to a constant everywhere
+    if args.max_sat_area != -999:
+        modify_fsurdat.max_sat_area(args.max_sat_area)
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file

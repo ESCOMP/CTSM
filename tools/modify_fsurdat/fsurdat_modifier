@@ -5,6 +5,9 @@ Description
 fsurdat_modifier is a tool that modifies fsurdat files. It reads a surface
 dataset (fsurdat file) and outputs a modified copy of the same file.
 
+Current applications are limited to the simplest CTSM(SP) mode, so bgc, fire,
+urban, vic, lake, transient, and crop-related variables in the fsurdat file remain unchanged.
+
 It differs from modify_singlept_site_neon.py in that the latter specifically
 modifies soil properties of single-point surface datasets. Some functions
 could/should become shared for use by fsurdat_modifier.

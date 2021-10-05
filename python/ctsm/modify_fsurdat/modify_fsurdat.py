@@ -183,20 +183,38 @@ class ModifyFsurdat:
         lat_idx_1 = int(min(temp.lsmlat.where(temp >= lat_in_1, drop=True)))
         lat_idx_2 = int(min(temp.lsmlat.where(temp >= lat_in_2, drop=True)))
 
-        # TODO Complete list of fsurdat variables to be set/overwritten below
+        # initialize to global values
+        self.file['PCT_NATVEG'][:,:] = 0  # partly overwrite below
+        self.file['PCT_CROP'][:,:] = 0  # so skip crop-related variables
+        self.file['PCT_LAKE'][:,:] = 0  # so skip lake-related variables
+        self.file['PCT_WETLAND'][:,:] = 100  # partly overwrite below
+        self.file['PCT_URBAN'][:,:] = 0  # so skip urban-related variables
+        self.file['PCT_GLACIER'][:,:] = 0  # so skip glacier-related variables
 
-        # first initialize to global values
-        self.file['PCT_NATVEG'][:,:] = 0
-        self.file['PCT_CROP'][:,:] = 0
-        self.file['PCT_LAKE'][:,:] = 0
-        self.file['PCT_WETLAND'][:,:] = 100
-        self.file['PCT_URBAN'][:,:] = 0
-        self.file['PCT_GLACIER'][:,:] = 0
+        self.file['PFTDATA_MASK'][:,:] = 0  # partly overwrite below
+        self.file['LANDFRAC_PFT'][:,:] = 0  # partly overwrite below
 
-        self.file['PFTDATA_MASK'][:,:] = 0
-        self.file['LANDFRAC_PFT'][:,:] = 0
+        self.file['SOIL_COLOR'][:,:] = 15  # value that represents loam
+        self.file['PCT_SAND'][:,:,:] = 43  # value that represents loam
+        self.file['PCT_CLAY'][:,:,:] = 18  # value that represents loam
+        self.file['ORGANIC'][:,:,:] = 0
 
-        # now overwrite with land swath
+        # defaulting to bare soil
+        self.file['PCT_CFT'][:,:,:] = 0
+        self.file['PCT_NAT_PFT'][:,:,:] = 0  # next line partly overwrites this
+        self.file['PCT_NAT_PFT'][0,:,:] = 100  # --dom_nat_pft can override this
+        self.file['MONTHLY_LAI'][:,:,:,:] = 0  # TODO add functionality to
+        self.file['MONTHLY_SAI'][:,:,:,:] = 0  #        ...override this with
+        self.file['MONTHLY_HEIGHT_TOP'][:,:,:,:] = 0  # ... --dom_nat_pft
+        self.file['MONTHLY_HEIGHT_BOT'][:,:,:,:] = 0  # ... or some other way?
+
+        self.file['zbedrock'][:,:] = 10  # reasonable?
+        self.file['SLOPE'][:,:] = 0  # mean topographic slope
+        self.file['STD_ELEV'][:,:] = 0  # --std_elev can override this
+        self.file['FMAX'][:,:] = 0  # --max_sat_area can override this
+        self.file['F0'][:,:] = 0  # max inundated fraction (skip related vars)
+
+        # overwrite with land swath
         if lon_idx_1 > lon_idx_2 and lat_idx_1 < lat_idx_2:
             # If only the lon indices are in descending order,
             # wrap around the 0-degree meridian
