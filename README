@@ -5,6 +5,12 @@ offline-build and test scripts. This gives you everything you need
 to run CTSM with CESM with the CMEPS driver and CDEPS data models to provide CRU NCEP or GSWP3 forcing data in 
 place of a modeled atmosphere.
 
+CMEPS is the Community Mediator for Earth Prediction Systems. And CDEPS is the
+Community Data Models for Earth Prediction System. They are both NUOPC based models
+used to drive the CESM (Community Earth System Model) of which CTSM is a component of.
+NUOPC is the National Unified Operational Prediction Capability a standard way of building
+coupled model systems. The NUOPC layer is based on the Earth System Modeling Framework (ESMF).
+
 For lists of current bugs (issues) and current development see the CTSM GitHub page:
 
 https://github.com/ESCOMP/CTSM
@@ -38,18 +44,18 @@ python ------------ Some python modules mostly for use by run_sys_tests (but cou
 Directory structure only for a CTSM checkout:
 
 components -------- Other active sub-components needed for CTSM to run (river routing and land-ice models)
-libraries --------- CESM libraries: MCT and PIO
+libraries --------- CESM libraries: MCT (Model Coupling Toolkit) and PIO
 share ------------- CESM shared code
 
 cime/scripts --------------- cesm/cime driver scripts
 
-components/cmeps -------------------- CESM top level driver (for NUOPC driver) source code.
+components/cmeps -------------------- CESM top level driver (for NUOPC driver [which is the default]) source code.
 components/cdeps -------------------- CESM top level data model shared code (for NUOPC driver).
-components/cpl7 --------------------- CESM top level driver for the MCT driver
 cime/src/externals ------------------ CESM external utility codes  (genf90)
 components/cism --------------------- CESM Community land Ice Sheet Model.
 components/mosart ------------------- Model for Scale Adaptive River Transport
 components/rtm ---------------------- CESM River Transport Model.
+components/cpl7 --------------------- CESM top level driver for MCT driver (being deprecated)
 
 Top level documentation ($CTSMROOT):
 
