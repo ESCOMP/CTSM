@@ -15,6 +15,12 @@ For lists of current bugs (issues) and current development see the CTSM GitHub p
 
 https://github.com/ESCOMP/CTSM
 
+INFORMATION ON THE CMEPS DRIVER:
+
+https://escomp.github.io/CMEPS
+
+https://earthsystemmodeling.org/nuopc/
+
 IMPORTANT NOTE ON CESM CHECKOUT VERSUS A CTSM CHECKOUT:
 
 If this is the top level directory from making a clone of CTSM the 
