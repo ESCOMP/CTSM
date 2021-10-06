@@ -747,14 +747,13 @@ sub setup_cmdl_fates_mode {
       # want to set a catch to fail and warn users if they explicitly set incompatible user namelist
       # options
 
-#      my $var = "use_somevar";
-#      $val = $nl_flags->{$var};
-#      if ( defined($nl->get_value($var))  ) {
-#	  if ( &value_is_true($nl->get_value($var)) ) {
-#	      $log->fatal_error("$var was set to .true., which is incompatible when -bgc fates option is used.");
-#	  }
-#      }
-
+       my $var = "use_crop";
+       $val = $nl_flags->{$var};
+       if ( defined($nl->get_value($var))  ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->fatal_error("$var was set to .true., which is incompatible when -bgc fates option is used.");
+          }
+       }
 
       # The following variables may be set by the user and are compatible with use_fates
       # no need to set defaults, covered in a different routine
@@ -2252,15 +2251,22 @@ sub setup_logic_surface_dataset {
   if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
   }
+  #
   # Always get the crop version of the datasets now and let the code turn it into the form desired
+  # Provided this isn't with FATES on
+  #
   my $var = "fsurdat";
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-              'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
-              'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_vichydro'=>$nl_flags->{'use_vichydro'},
-              'use_crop'=>".true.", 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1);
+  if ( !  &value_is_true($nl_flags->{'use_fates'}) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_vichydro'=>$nl_flags->{'use_vichydro'},
+                 'use_crop'=>".true.", 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1);
+  }
   # If didn't find the crop version check for the exact match
   if ( ! defined($nl->get_value($var) ) ) {
-     $log->verbose_message( "Crop version of $var NOT found, searching for an exact match" );
+     if ( !  &value_is_true($nl_flags->{'use_fates'}) ) {
+        $log->verbose_message( "Crop version of $var NOT found, searching for an exact match" );
+     }
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
                  'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
                  'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
