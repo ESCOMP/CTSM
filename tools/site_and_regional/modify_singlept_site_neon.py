@@ -496,16 +496,23 @@ def main():
     f2= f1
     soil_levels = f2['PCT_CLAY'].size
     for soil_lev in range(soil_levels):
-        #print ("--------------------------")
-        #print (soil_lev)
-        #print (df['clayTotal'][bin_index[soil_lev]])
+        print ("--------------------------")
+        print ("soil_lev:",soil_lev)
+        print (df['clayTotal'][bin_index[soil_lev]])
         f2['PCT_CLAY'][soil_lev] = df['clayTotal'][bin_index[soil_lev]]
         f2['PCT_SAND'][soil_lev] = df['sandTotal'][bin_index[soil_lev]]
         bulk_den = df['bulkDensExclCoarseFrag'][bin_index[soil_lev]]
         carbon_tot = df['carbonTot'][bin_index[soil_lev]]
         #print ("carbon_tot:", carbon_tot)
         layer_depth = df['biogeoBottomDepth'][bin_index[soil_lev]] - df['biogeoTopDepth'][bin_index[soil_lev]]
-        f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58 
+        f2['ORGANIC'][soil_lev] = carbon_tot *  bulk_den * 0.1 / layer_depth * 100 / 0.58
+        print ("bin_index:", bin_index[soil_lev])
+        print ("layer_depth:", layer_depth)
+        print ("carbon_tot:",carbon_tot)
+        print ("bulk_den:",bulk_den)
+        print ("organic=carbon_tot*bulk_den*0.1/layer_depth * 100/0.58 ")
+        print ("organic:", f2['ORGANIC'][soil_lev].values)
+        print ("--------------------------")
 
     #TODO : max depth for neon sites from WW (zbedrock)
     # Update zbedrock if neon observation don't make it down to 2m depth
@@ -516,8 +523,8 @@ def main():
     zb_flag = False
 
     if (obs_bot.iloc[-1]<rock_thresh):
-        f2['zbedrock']=obs_bot.iloc[-1]
-        print (f2['zbedrock'])
+        print ('zbedrock is updated.')
+        f2['zbedrock'].values[:,:]=obs_bot.iloc[-1]
         zb_flag = True
 
 

@@ -21,8 +21,10 @@
       <value component="ctsm"      >$SRCROOT</value>
       <value component="dlnd" comp_interface="mct">$SRCROOT/components/cpl7/components/data_comps_mct/dlnd</value>
       <value component="dlnd" comp_interface="nuopc">$SRCROOT/components/cdeps/dlnd</value>
-      <value component="slnd"      >$CIMEROOT/src/components/stub_comps_$COMP_INTERFACE/slnd</value>
-      <value component="xlnd"      >$CIMEROOT/src/components/xcpl_comps_$COMP_INTERFACE/xlnd</value>
+      <value component="slnd"  comp_interface="mct"     >$SRCROOT/components/cpl7/components/stub_comps_mct/slnd</value>
+      <value component="xlnd" comp_interface="mct"      >$SRCROOT/components/cpl7/components/xcpl_comps_mct/xlnd</value>
+      <value component="slnd"  comp_interface="nuopc"    >$CIMEROOT/src/components/stub_comps_nuopc/slnd</value>
+      <value component="xlnd"  comp_interface="nuopc"    >$CIMEROOT/src/components/xcpl_comps_nuopc/xlnd</value>
     </values>
     <group>case_comps</group>
     <file>env_case.xml</file>

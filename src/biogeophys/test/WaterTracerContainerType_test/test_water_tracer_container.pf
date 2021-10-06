@@ -5,7 +5,7 @@ module test_water_tracer_container
   use pfunit_mod
   use WaterTracerContainerType
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use decompMod, only : BOUNDS_SUBGRID_GRIDCELL
+  use decompMod, only : subgrid_level_gridcell
   use unittestUtils, only : endrun_msg
 
   implicit none
@@ -50,9 +50,9 @@ contains
     data1 = [1._r8, 2._r8, 3._r8]
     ! Add enough variables that we can be pretty confident that there has been a resize
     ! sometime after adding the pointer to data1
-    call container%add_var(data1, 1, 'my data1', BOUNDS_SUBGRID_GRIDCELL)
+    call container%add_var(data1, 1, 'my data1', subgrid_level_gridcell)
     do i = 1, 4
-       call container%add_var(more_data(:,i), 1, 'more data', BOUNDS_SUBGRID_GRIDCELL)
+       call container%add_var(more_data(:,i), 1, 'more data', subgrid_level_gridcell)
     end do
     call container%complete_setup()
     data1 = [11._r8, 12._r8, 13._r8]
@@ -73,7 +73,7 @@ contains
     character(len=:), allocatable :: expected_msg
 
     call container%init()
-    call container%add_var(data, 1, 'my data', BOUNDS_SUBGRID_GRIDCELL)
+    call container%add_var(data, 1, 'my data', subgrid_level_gridcell)
     num_vars = container%get_num_vars()
     expected_msg = endrun_msg( &
          'Attempt to call get_num_vars without calling complete_setup')
@@ -90,9 +90,9 @@ contains
     character(len=:), allocatable :: expected_msg
 
     call container%init()
-    call container%add_var(data1, 1, 'my data1', BOUNDS_SUBGRID_GRIDCELL)
+    call container%add_var(data1, 1, 'my data1', subgrid_level_gridcell)
     call container%complete_setup()
-    call container%add_var(data2, 1, 'my data2', BOUNDS_SUBGRID_GRIDCELL)
+    call container%add_var(data2, 1, 'my data2', subgrid_level_gridcell)
     expected_msg = endrun_msg( &
          'Attempt to call add_var after complete_setup was called')
     @assertExceptionRaised(expected_msg)
