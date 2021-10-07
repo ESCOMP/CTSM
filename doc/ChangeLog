@@ -1,4 +1,114 @@
 ===============================================================
+Tag name:  ctsm5.1.dev058
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date:  Thu Oct  7 15:24:12 MDT 2021
+One-line Summary: Some miscellaneous small answer changes
+
+Purpose and description of changes
+----------------------------------
+
+Change ceta from 450 to 358 for CTSM5.1 See Leo VanKamenhout's work on this in https://github.com/ESCOMP/CTSM/pull/250.
+See van Kampenhout et al. (2017).  Turn Medlyn on for PHS off for clm51 and clm50.
+Make max CO2 partial pressure consistent in Photosynthesis.
+Change surface datasets to only use 78PFT versions
+Fix GSSUN and GSSHA history variables so now not just writing missing values.
+Changes FATES to run with use_nitrif_dentrif=T by default. Change dynlakes test to methane/use_nitrif_=T.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+   Fixes #1504
+   Fixes #1503
+   Fixes #1462
+   Fixes #1394
+   Fixes #1460
+   Fixes #1465
+   Fixes #1356
+   Fixes #1496
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files): New parameter file for clm5_1
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+
+Testing summary:   regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - OK (306 tests different than baseline)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+  
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Most
+    - what platforms/compilers: all
+    - nature of change:
+        similar climate most changes are near roundoff level
+ 
+    All clm5_1 physics change answers because of change in ceta parameter.
+    When PHS off for clm5_1 and clm5_0 changes answers because of Medlyn photosynthesis over Ball-Berry.
+    Photosynthesis potentially changes all the time because a parameter was off.
+    Answer should be close to roundoff for Sp and Bgc cases without Crop because we now use crop surface datasets.
+    GSSUN anmd GSSHA now have values.
+    FATES changes answers since user_nitrif_dentrif is now on by default
+    vichydro results are identical
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #1497 -- Miscellaneous small answer changes
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev057
 Originator(s): Sam Rabin
 Date:  Mon Sep 20 10:07:26 MDT 2021
