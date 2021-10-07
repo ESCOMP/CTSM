@@ -1015,7 +1015,8 @@ contains
 
        if (use_fates_sp.and.doalb) then
           call t_startf('SatellitePhenology')
-          call SatellitePhenology(bounds_clump, filter(nc)%num_all_soil_patches, filter(nc)%all_soil_patches, &
+          call SatellitePhenology(bounds_clump, &
+               filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
        end if
