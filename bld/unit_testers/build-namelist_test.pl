@@ -190,7 +190,7 @@ my $mode = "-phys $phys";
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
 my $real_par_file = "user_nl_ctsm_real_parameters";
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
@@ -335,8 +335,8 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $file = $startfile;
       &make_env_run();
       my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
-      if ( $driver eq "nuopc" ) {
-         $base_options = "$base_options -lnd_frac UNSET";
+      if ( $driver eq "mct" ) {
+         $base_options = "$base_options -lnd_frac $DOMFILE";
       }
       eval{ system( "$bldnml $base_options $options > $tempfile 2>&1 " ); };
       is( $@, '', "options: $base_options $options" );
