@@ -1,4 +1,129 @@
 ===============================================================
+Tag name:  ctsm5.1.dev058
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Oct  7 20:47:14 MDT 2021
+One-line Summary: Some miscellaneous small answer changes
+
+Purpose and description of changes
+----------------------------------
+
+Change ceta from 450 to 358 for CTSM5.1 See Leo VanKamenhout's work on this in 
+https://github.com/ESCOMP/CTSM/pull/250. Note, this is used in the PPE work.
+See van Kampenhout et al. (2017).  Turn Medlyn on for PHS off for clm51 and clm50.
+Make max CO2 partial pressure consistent in Photosynthesis.
+Change surface datasets to only use 78PFT versions
+Fix GSSUN and GSSHA history variables so now not just writing missing values.
+Changes FATES to run with use_nitrif_dentrif=T by default. Change dynlakes test 
+to methane/use_nitrif_=T.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #):
+   Fixes #1504 -- Transient Sp cases fail when using mismatched crop surface/landuse-timeseries datasets #1504
+   Fixes #1503 -- VIC cases can't use crop surface datasets because of missing vic data #1503
+   Fixes #1462 -- GSSUN and GSSHA are not set on history files #1462
+   Fixes #1394 -- Max partial pressure of CO2 be should be 1.e-6 rather than 10.e-6 which it is for ci_func_PHS #1394
+   Fixes #1460 -- Initialize t_soisno to 272K instead of 274K to avoid deep soil carbon in permafrost regions #1460
+   Fixes #1465 -- Change FATES to run with use_nitrif_dentrif TRUE #1465
+   Worked on #1356 -- Remove the CN (non CENTURY) version of Carbon-Nitrogen soil biogeochemistry code and its testing #1356
+   Fixes #1496 -- SP NoAnthro case fails... #1496
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  stomatalcond_method is now Medlyn2011 for clm5_0 and clm5_1
+  use_nitrif_denitrif is now TRUE when using FATES
+
+Changes to the datasets (e.g., parameter, surface or initial files): 
+  New parameter file for clm5_1 (changes ceta)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  Surface datasets are now labeled with use_vichydro=TRUE in the xml. This also means that some files
+  listed in the XML are listed twice for VIC both on and off (that's important for FATES since it still 
+  requires non-crop datasets (see #1505)
+
+  Also the logic for finding both fsurdat and flanduse_timeseries files needs to be the same in first
+  asking for a crop version and then an exact match if it isn't found (unless it's FATES and then you just
+  do the exact match).
+
+Changes to tests or testing:
+  Dynamic lakes test now has methane on, which works because we turn off methane conservation check after restart
+  See #43 for more information on this.
+
+
+Testing summary:   regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - OK (306 tests different than baseline)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- PASS
+  
+If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Most
+    - what platforms/compilers: all
+    - nature of change:
+        similar climate most changes are near roundoff level
+ 
+    All clm5_1 physics change answers because of change in ceta parameter.
+    When PHS off for clm5_1 and clm5_0 changes answers because of Medlyn photosynthesis over Ball-Berry.
+    Photosynthesis potentially changes all the time because a maximum parameter was off.
+    Answer should be close to roundoff for Sp and Bgc cases without Crop because we now use crop surface datasets.
+    FATES changes answers since user_nitrif_dentrif is now on by default
+    COLDSTART BGC cases will change answers because of a change in initial soil temperature
+    clm4_5 and clm5_0 vichydro results are identical
+    clm4_5 and clm5_0 single point urban tests are identical
+    Some tests are still identical mostly crop-cases non-cold-start
+    In some cases GSSUN and GSSHA will be different.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   #1497 -- Miscellaneous small answer changes
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev057
 Originator(s): Sam Rabin
 Date:  Mon Sep 20 10:07:26 MDT 2021
