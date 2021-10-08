@@ -222,6 +222,7 @@ class ModifyFsurdat:
         # set remaining variables according to the dom_nat_pft option
         # but initialize to bare soil globally first
         self.file['PCT_CFT'][:,:,:] = 0
+        self.file['PCT_CFT'][15,:,:] = 100  # required when PCT_CROP = 0
         self.file['PCT_NAT_PFT'][:,:,:] = 0
         self.file['PCT_NAT_PFT'][0,:,:] = 100
         self.file['MONTHLY_LAI'][:,:,:,:] = 0
