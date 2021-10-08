@@ -31,7 +31,7 @@ module decompInitMod
   ! !PRIVATE TYPES:
   integer, pointer   :: lcid(:)          ! temporary for setting decomposition
   integer            :: nglob_x, nglob_y ! global sizes
-  integer, parameter :: dbug=1           ! 0 = min, 1=normal, 2=much, 3=max
+  integer, parameter :: dbug=0           ! 0 = min, 1=normal, 2=much, 3=max
   character(len=*), parameter :: sourcefile = &
        __FILE__
 

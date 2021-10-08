@@ -187,9 +187,6 @@ contains
                ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
                leaf_biomass(p) = max(0.0025_r8,leafc(p)) &
                     * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
-
-            else
-               leaf_biomass(p) = 0_r8
             end if
 
             if (woody(ivt(p)) == 1._r8) then
@@ -219,8 +216,6 @@ contains
                   ! Assumes fbw (fraction of biomass that is water) is the same for leaves and stems
                   stem_biomass(p) = (spinup_factor_deadwood*deadstemc(p) + livestemc(p)) &
                        * c_to_b * 1.e-3_r8 / (1._r8 - fbw(ivt(p)))
-               else
-                  stem_biomass(p) = 0_r8
                end if
 
                !

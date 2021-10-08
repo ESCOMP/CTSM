@@ -17,10 +17,10 @@ module ncdio_pio
   use shr_log_mod    , only : errMsg => shr_log_errMsg
   use spmdMod        , only : masterproc, mpicom, iam, npes
   use spmdMod        , only : MPI_REAL8, MPI_INTEGER, MPI_LOGICAL
-  use clm_varcon     , only : spval,ispval, grlnd, nameg, namel, namec, namep
+  use clm_varcon     , only : spval, ispval, grlnd
   use clm_varctl     , only : single_column, iulog
   use shr_sys_mod    , only : shr_sys_flush
-  use decompMod      , only : get_clmlevel_gsize, get_clmlevel_gindex
+  use decompMod      , only : get_subgrid_level_from_name, get_subgrid_level_gsize, get_subgrid_level_gindex
   use perf_mod       , only : t_startf, t_stopf
   use fileutils      , only : getavu, relavu
   use pio            , only : file_desc_t, io_desc_t, iosystem_desc_t
@@ -1664,7 +1664,7 @@ contains
     logical          , optional, intent(in)  :: cnvrtnan2fill ! true => convert any NaN's to _FillValue (spval)
     !
     ! Local Variables
-    character(len=8)                 :: clmlevel   ! clmlevel
+    character(len=8)                 :: subgrid_level_name   ! nameg, namel, etc.
     character(len=32)                :: dimname    ! temporary
     integer                          :: n          ! index
     integer                          :: iodnum     ! iodesc num in list
@@ -1688,10 +1688,10 @@ contains
     start(:) = 0
     count(:) = 0
 
-    clmlevel = dim1name
+    subgrid_level_name = dim1name
 
     if (masterproc .and. debug > 1) then
-       write(iulog,*) subname//' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
+       write(iulog,*) subname//' ',trim(flag),' ',trim(varname),' ',trim(subgrid_level_name)
     end if
 
 #if ({ITYPE}==TYPEDOUBLE)
@@ -1709,8 +1709,8 @@ contains
        if (varpresent) then
           if (single_column) then
              start(:) = 1 ; count(:) = 1
-             call scam_field_offsets(ncid,clmlevel,vardesc,start,count)
-             if (trim(clmlevel) == grlnd) then
+             call scam_field_offsets(ncid,subgrid_level_name,vardesc,start,count)
+             if (trim(subgrid_level_name) == grlnd) then
                 n=2
                 if (present(nt)) then
                    start(3) = nt ; count(3) = 1
@@ -1755,7 +1755,7 @@ contains
              enddo
              status = pio_inq_vartype(ncid, vardesc, xtype)
 
-             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+             call ncd_getiodesc(ncid, subgrid_level_name, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                   xtype, iodnum)
 
              iodesc_plus => iodesc_list(iodnum)
@@ -1784,7 +1784,7 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        status = pio_inq_vartype(ncid, vardesc, xtype)
-       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+       call ncd_getiodesc(ncid, subgrid_level_name, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
             xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
@@ -1847,7 +1847,7 @@ contains
     real(r8), pointer :: temp(:,:)
 #endif
     integer           :: ndim1,ndim2
-    character(len=8)  :: clmlevel   ! clmlevel
+    character(len=8)  :: subgrid_level_name   ! nameg, namel, etc.
     character(len=32) :: dimname    ! temporary
     integer           :: status     ! error status
     integer           :: ndims      ! ndims total for var
@@ -1872,10 +1872,10 @@ contains
     start(:)=0
     count(:)=0
 
-    clmlevel = dim1name
+    subgrid_level_name = dim1name
 
     if (masterproc .and. debug > 1) then
-       write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
+       write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(subgrid_level_name)
     end if
 
 #if ({ITYPE}==TYPEDOUBLE)
@@ -1904,8 +1904,8 @@ contains
        if (varpresent) then
           if (single_column) then
              start(:) = 1 ; count(:) = 1
-             call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
-             if (trim(clmlevel) == grlnd) then
+             call scam_field_offsets(ncid, subgrid_level_name, vardesc, start, count)
+             if (trim(subgrid_level_name) == grlnd) then
                 count(3) = size(data,dim=2)
                 n=3
                 if (present(nt)) then
@@ -1951,7 +1951,7 @@ contains
                 call pio_setframe(ncid, vardesc, int(nt,kind=Pio_Offset_Kind))
              end if
              if (present(switchdim)) then
-                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                call ncd_getiodesc(ncid, subgrid_level_name, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                      xtype, iodnum, switchdim=.true.)
                 iodesc_plus => iodesc_list(iodnum)
                 call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, temp)
@@ -1961,7 +1961,7 @@ contains
                    end do
                 end do
              else
-                call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+                call ncd_getiodesc(ncid, subgrid_level_name, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                      xtype, iodnum)
                 iodesc_plus => iodesc_list(iodnum)
                 call read_darray_dispatcher(ncid, vardesc, iodesc_plus%iodesc, varname, xtype, data)
@@ -2002,10 +2002,10 @@ contains
        enddo
        status = pio_inq_vartype(ncid, vardesc, xtype)
        if (present(switchdim)) then
-          call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+          call ncd_getiodesc(ncid, subgrid_level_name, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                xtype, iodnum, switchdim=.true.)
        else
-          call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+          call ncd_getiodesc(ncid, subgrid_level_name, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                xtype, iodnum)
        end if
        iodesc_plus => iodesc_list(iodnum)
@@ -2083,7 +2083,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer                          :: ndim1,ndim2
-    character(len=8)                 :: clmlevel   ! clmlevel
+    character(len=8)                 :: subgrid_level_name   ! nameg, namel, etc.
     character(len=32)                :: dimname    ! temporary
     integer                          :: status     ! error status
     integer                          :: ndims      ! ndims total for var
@@ -2102,10 +2102,10 @@ contains
     character(len=*),parameter :: subname='ncd_io_3d_{TYPE}' ! subroutine name
     !-----------------------------------------------------------------------
 
-    clmlevel = dim1name
+    subgrid_level_name = dim1name
 
     if (masterproc .and. debug > 1) then
-       write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(clmlevel)
+       write(iulog,*) trim(subname),' ',trim(flag),' ',trim(varname),' ',trim(subgrid_level_name)
     end if
 
     if (flag == 'read') then
@@ -2115,8 +2115,8 @@ contains
           if (single_column) then
              start(:) = 1
              count(:) = 1
-             call scam_field_offsets(ncid, clmlevel, vardesc, start, count)
-             if (trim(clmlevel) == grlnd) then
+             call scam_field_offsets(ncid, subgrid_level_name, vardesc, start, count)
+             if (trim(subgrid_level_name) == grlnd) then
                 count(3) = size(data,dim=2);
                 count(4) = size(data,dim=3)
                 n=4
@@ -2153,7 +2153,7 @@ contains
                 status = pio_inq_dimlen(ncid,dids(n),dims(n))
              enddo
              status = pio_inq_vartype(ncid, vardesc, xtype)
-             call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+             call ncd_getiodesc(ncid, subgrid_level_name, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
                   xtype, iodnum)
              iodesc_plus => iodesc_list(iodnum)
              if (present(nt)) then
@@ -2184,7 +2184,7 @@ contains
           status = pio_inq_dimlen(ncid,dids(n),dims(n))
        enddo
        status = pio_inq_vartype(ncid, vardesc, xtype)
-       call ncd_getiodesc(ncid, clmlevel, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
+       call ncd_getiodesc(ncid, subgrid_level_name, ndims_iod, dims(1:ndims_iod), dids(1:ndims_iod), &
             xtype, iodnum)
        iodesc_plus => iodesc_list(iodnum)
        if (present(nt)) then
@@ -2556,7 +2556,7 @@ contains
 
   !------------------------------------------------------------------------
 
-  subroutine ncd_getiodesc(ncid, clmlevel, ndims, dims, dimids, &
+  subroutine ncd_getiodesc(ncid, subgrid_level_name, ndims, dims, dimids, &
        xtype, iodnum, switchdim)
     !
     ! !DESCRIPTION:
@@ -2564,7 +2564,7 @@ contains
     !
     ! !ARGUMENTS:
     class(file_desc_t) , intent(inout) :: ncid       ! PIO file descriptor
-    character(len=8)   , intent(in)    :: clmlevel   ! clmlevel
+    character(len=8)   , intent(in)    :: subgrid_level_name ! one of nameg, namel, etc.
     integer            , intent(in)    :: ndims      ! ndims for var
     integer            , intent(in)    :: dims(:)    ! dim sizes
     integer            , intent(in)    :: dimids(:)  ! dim ids
@@ -2576,8 +2576,9 @@ contains
     integer :: k,m,n,cnt                     ! indices
     integer :: basetype                      ! pio basetype
     integer :: fullsize                      ! size of entire array on cdf
-    integer :: lsize                         ! local size of clmlevel gindex
-    integer :: gsize                         ! global size of clmlevel
+    integer :: subgrid_level                 ! integer version of subgrid_level_name
+    integer :: lsize                         ! local size of subgrid_level gindex
+    integer :: gsize                         ! global size of subgrid_level
     integer :: vsize                         ! other dimensions
     integer :: vsize1, vsize2                ! other dimensions
     integer :: status                        ! error status
@@ -2659,11 +2660,12 @@ contains
        call shr_sys_abort(errMsg(sourcefile,__LINE__))
     end if
 
-    call get_clmlevel_gindex(clmlevel, gindex)
+    subgrid_level = get_subgrid_level_from_name(subgrid_level_name)
+    call get_subgrid_level_gindex(subgrid_level, gindex)
     if (.not. associated(gindex)) then
-       call shr_sys_abort('gindex for clmlevel '//trim(clmlevel)//' is not associated')
+       call shr_sys_abort('gindex for subgrid level '//trim(subgrid_level_name)//' is not associated')
     end if
-    gsize = get_clmlevel_gsize(clmlevel)
+    gsize = get_subgrid_level_gsize(subgrid_level)
     lsize = size(gindex)
 
     fullsize = 1
