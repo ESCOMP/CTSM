@@ -1015,10 +1015,17 @@ contains
 
        if (use_fates_sp.and.doalb) then
           call t_startf('SatellitePhenology')
+
+          ! FATES satellite phenology mode needs to include all active and inactive patch-level soil
+          ! filters due to the translation between the hlm pfts and the fates pfts.
+          ! E.g. in FATES, an active PFT vector of 1, 0, 0, 0, 1, 0, 1, 0 would be mapped into
+          ! the host land model as 1, 1, 1, 0, 0, 0, 0.  As such, the 'active' filter would only
+          ! use the first three points, which would incorrectly represent the interpolated values.
           call SatellitePhenology(bounds_clump, &
                filter_inactive_and_active(nc)%num_soilp, filter_inactive_and_active(nc)%soilp, &
                water_inst%waterdiagnosticbulk_inst, canopystate_inst)
           call t_stopf('SatellitePhenology')
+
        end if
 
        ! Dry Deposition of chemical tracers (Wesely (1998) parameterizaion)
