@@ -140,14 +140,15 @@ class ModifyFsurdat:
         min_max_sat_area = 0
         max_max_sat_area = 1
         if min_max_sat_area <= max_sat_area <= max_max_sat_area:
-            self.file['FMAX'][:,:] = min(0, max_sat_area)
+            self.file['FMAX'][:,:] = max_sat_area
         else:
             errmsg = 'Argument --max_sat_area requires values from ' + \
                      str(min_max_sat_area) + ' to ' + str(max_max_sat_area)
             abort(errmsg)
 
 
-    def land_swath(self, lon_in_1, lon_in_2, lat_in_1, lat_in_2):
+    def land_swath(self, lon_in_1, lon_in_2, lat_in_1, lat_in_2,
+                   dom_nat_pft, lai, sai, hgt_top, hgt_bot):
         """
         Description
         -----------
@@ -163,6 +164,16 @@ class ModifyFsurdat:
             (int) southernmost edge of land swath
         lat_in_2:
             (int) northernmost edge of land swath
+        dom_nat_pft:
+            (int) user-selected PFT for all land area to be set to 100%
+        lai:
+            (float) user-defined leaf area index
+        sai:
+            (float) user-defined stem area index
+        hgt_top:
+            (float) user-defined height at top of vegetation canopy (m)
+        hgt_bot:
+            (float) user-defined height at bottom of vegetation canopy (m)
         """
 
         # Currently lon_in_1 & lon_in_2 are integers with required range 0-360.
@@ -184,88 +195,128 @@ class ModifyFsurdat:
         lat_idx_2 = int(min(temp.lsmlat.where(temp >= lat_in_2, drop=True)))
 
         # initialize to global values
-        self.file['PCT_NATVEG'][:,:] = 0  # partly overwrite below
-        self.file['PCT_CROP'][:,:] = 0  # so skip crop-related variables
-        self.file['PCT_LAKE'][:,:] = 0  # so skip lake-related variables
-        self.file['PCT_WETLAND'][:,:] = 100  # partly overwrite below
-        self.file['PCT_URBAN'][:,:] = 0  # so skip urban-related variables
-        self.file['PCT_GLACIER'][:,:] = 0  # so skip glacier-related variables
-
+        # set PFTDATA_MASK & LANDFRAC_PFT to 0 over ocean and to 1 over land
+        #     PCT_NATVEG to 0 over ocean and to 100 over land
+        #     PCT_WETLAND to 100 over ocean and to 0 over land
+        #     the rest to 0 which means that there's no need to update
+        #     other crop, lake, urban, glacier, and F0-related variables
         self.file['PFTDATA_MASK'][:,:] = 0  # partly overwrite below
         self.file['LANDFRAC_PFT'][:,:] = 0  # partly overwrite below
-
-        self.file['SOIL_COLOR'][:,:] = 15  # value that represents loam
-        self.file['PCT_SAND'][:,:,:] = 43  # value that represents loam
-        self.file['PCT_CLAY'][:,:,:] = 18  # value that represents loam
-        self.file['ORGANIC'][:,:,:] = 0
-
-        # defaulting to bare soil
-        self.file['PCT_CFT'][:,:,:] = 0
-        self.file['PCT_NAT_PFT'][:,:,:] = 0  # next line partly overwrites this
-        self.file['PCT_NAT_PFT'][0,:,:] = 100  # --dom_nat_pft can override this
-        self.file['MONTHLY_LAI'][:,:,:,:] = 0  # TODO add functionality to
-        self.file['MONTHLY_SAI'][:,:,:,:] = 0  #        ...override this with
-        self.file['MONTHLY_HEIGHT_TOP'][:,:,:,:] = 0  # ... --dom_nat_pft
-        self.file['MONTHLY_HEIGHT_BOT'][:,:,:,:] = 0  # ... or some other way?
-
-        self.file['zbedrock'][:,:] = 10  # reasonable?
-        self.file['SLOPE'][:,:] = 0  # mean topographic slope
-        self.file['STD_ELEV'][:,:] = 0  # --std_elev can override this
+        self.file['PCT_NATVEG'][:,:] = 0  # partly overwrite below
+        self.file['PCT_WETLAND'][:,:] = 100  # partly overwrite below
+        self.file['PCT_CROP'][:,:] = 0
+        self.file['PCT_LAKE'][:,:] = 0
+        self.file['PCT_URBAN'][:,:] = 0
+        self.file['PCT_GLACIER'][:,:] = 0
+        self.file['F0'][:,:] = 0  # max inundated fraction
         self.file['FMAX'][:,:] = 0  # --max_sat_area can override this
-        self.file['F0'][:,:] = 0  # max inundated fraction (skip related vars)
+        self.file['STD_ELEV'][:,:] = 0  # --std_elev can override this
+        self.file['SLOPE'][:,:] = 0  # mean topographic slope
+        # non-zero value seems appropriate; reasonable?
+        self.file['zbedrock'][:,:] = 10
+        # set next three to values representing loam
+        self.file['SOIL_COLOR'][:,:] = 15
+        self.file['PCT_SAND'][:,:,:] = 43
+        self.file['PCT_CLAY'][:,:,:] = 18
+        self.file['ORGANIC'][:,:,:] = 0
+        # set remaining variables according to the dom_nat_pft option
+        # but initialize to bare soil globally first
+        self.file['PCT_CFT'][:,:,:] = 0
+        self.file['PCT_NAT_PFT'][:,:,:] = 0
+        self.file['PCT_NAT_PFT'][0,:,:] = 100
+        self.file['MONTHLY_LAI'][:,:,:,:] = 0
+        self.file['MONTHLY_SAI'][:,:,:,:] = 0
+        self.file['MONTHLY_HEIGHT_TOP'][:,:,:,:] = 0
+        self.file['MONTHLY_HEIGHT_BOT'][:,:,:,:] = 0
+        if dom_nat_pft == -999:
+            dom_nat_pft = 0  # default to bare soil
+        elif dom_nat_pft > 0:
+            # update lai, sai, and heights globally because they will be
+            # used only if grid cell is vegetated
+            self.file['MONTHLY_LAI'][:,dom_nat_pft,:,:] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft,:,:] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft,:,:] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft,:,:] = hgt_bot
 
         # overwrite with land swath
         if lon_idx_1 > lon_idx_2 and lat_idx_1 < lat_idx_2:
             # If only the lon indices are in descending order,
             # wrap around the 0-degree meridian
-            self.file['PCT_NATVEG'][lat_idx_1:lat_idx_2,:lon_idx_2] = 100
-            self.file['PCT_WETLAND'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
             self.file['PFTDATA_MASK'][lat_idx_1:lat_idx_2,:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:lat_idx_2,:lon_idx_2] = 1
+            self.file['PCT_WETLAND'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_NATVEG'][lat_idx_1:lat_idx_2,:lon_idx_2] = 100
+            self.file['PCT_NAT_PFT'][0,lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:lat_idx_2,:lon_idx_2] = 100
 
-            self.file['PCT_NATVEG'][lat_idx_1:lat_idx_2,lon_idx_1:] = 100
-            self.file['PCT_WETLAND'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
             self.file['PFTDATA_MASK'][lat_idx_1:lat_idx_2,lon_idx_1:] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:lat_idx_2,lon_idx_1:] = 1
+            self.file['PCT_WETLAND'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_NATVEG'][lat_idx_1:lat_idx_2,lon_idx_1:] = 100
+            self.file['PCT_NAT_PFT'][0,lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:lat_idx_2,lon_idx_1:] = 100
         elif lon_idx_1 < lon_idx_2 and lat_idx_1 > lat_idx_2:
             # If only the lat indices are in descending order, make two land
-            # swaths, one in the north and one in the south
-            self.file['PCT_NATVEG'][:lat_idx_2,lon_idx_1:lon_idx_2] = 100
-            self.file['PCT_WETLAND'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            # swaths, one in the north and one in the south rather than one
+            # between the lat indices
             self.file['PFTDATA_MASK'][:lat_idx_2,lon_idx_1:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][:lat_idx_2,lon_idx_1:lon_idx_2] = 1
+            self.file['PCT_WETLAND'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_NATVEG'][:lat_idx_2,lon_idx_1:lon_idx_2] = 100
+            self.file['PCT_NAT_PFT'][0,:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,:lat_idx_2,lon_idx_1:lon_idx_2] = 100
 
-            self.file['PCT_NATVEG'][lat_idx_1:,lon_idx_1:lon_idx_2] = 100
-            self.file['PCT_WETLAND'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
             self.file['PFTDATA_MASK'][lat_idx_1:,lon_idx_1:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:,lon_idx_1:lon_idx_2] = 1
+            self.file['PCT_WETLAND'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_NATVEG'][lat_idx_1:,lon_idx_1:lon_idx_2] = 100
+            self.file['PCT_NAT_PFT'][0,lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:,lon_idx_1:lon_idx_2] = 100
         elif lon_idx_1 > lon_idx_2 and lat_idx_1 > lat_idx_2:
             # If both the lon and the lat indices are in descending order,
             # wrap around the 0-degree meridian AND make a land swath in the
-            # north and another in the south
-            self.file['PCT_NATVEG'][:lat_idx_2,:lon_idx_2] = 100
-            self.file['PCT_WETLAND'][:lat_idx_2,:lon_idx_2] = 0
+            # north and another in the south rather than only one between the
+            # lat indices
             self.file['PFTDATA_MASK'][:lat_idx_2,:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][:lat_idx_2,:lon_idx_2] = 1
+            self.file['PCT_WETLAND'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_NATVEG'][:lat_idx_2,:lon_idx_2] = 100
+            self.file['PCT_NAT_PFT'][0,:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,:lat_idx_2,:lon_idx_2] = 100
 
-            self.file['PCT_NATVEG'][:lat_idx_2,lon_idx_1:] = 100
-            self.file['PCT_WETLAND'][:lat_idx_2,lon_idx_1:] = 0
             self.file['PFTDATA_MASK'][:lat_idx_2,lon_idx_1:] = 1
             self.file['LANDFRAC_PFT'][:lat_idx_2,lon_idx_1:] = 1
+            self.file['PCT_WETLAND'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_NATVEG'][:lat_idx_2,lon_idx_1:] = 100
+            self.file['PCT_NAT_PFT'][0,:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,:lat_idx_2,lon_idx_1:] = 100
 
-            self.file['PCT_NATVEG'][lat_idx_1:,:lon_idx_2] = 100
-            self.file['PCT_WETLAND'][lat_idx_1:,:lon_idx_2] = 0
             self.file['PFTDATA_MASK'][lat_idx_1:,:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:,:lon_idx_2] = 1
+            self.file['PCT_WETLAND'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['PCT_NATVEG'][lat_idx_1:,:lon_idx_2] = 100
+            self.file['PCT_NAT_PFT'][0,lat_idx_1:,:lon_idx_2] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:,:lon_idx_2] = 100
 
-            self.file['PCT_NATVEG'][lat_idx_1:,lon_idx_1:] = 100
-            self.file['PCT_WETLAND'][lat_idx_1:,lon_idx_1:] = 0
             self.file['PFTDATA_MASK'][lat_idx_1:,lon_idx_1:] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:,lon_idx_1:] = 1
+            self.file['PCT_WETLAND'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['PCT_NATVEG'][lat_idx_1:,lon_idx_1:] = 100
+            self.file['PCT_NAT_PFT'][0,lat_idx_1,lon_idx_1:] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1,lon_idx_1:] = 100
         else:
-            # Simple case: both the lon and the lat indices are in ascending
-            # order
-            self.file['PCT_NATVEG'][lat_idx_1:lat_idx_2,lon_idx_1:lon_idx_2] = 100
-            self.file['PCT_WETLAND'][lat_idx_1:lat_idx_2,lon_idx_1:lon_idx_2] = 0
-            self.file['PFTDATA_MASK'][lat_idx_1:lat_idx_2,lon_idx_1:lon_idx_2] = 1
-            self.file['LANDFRAC_PFT'][lat_idx_1:lat_idx_2,lon_idx_1:lon_idx_2] = 1
+            # Simple case: both lon and lat indices in ascending order
+            self.file['PFTDATA_MASK'][lat_idx_1:lat_idx_2, \
+                                      lon_idx_1:lon_idx_2] = 1
+            self.file['LANDFRAC_PFT'][lat_idx_1:lat_idx_2, \
+                                      lon_idx_1:lon_idx_2] = 1
+            self.file['PCT_WETLAND'][lat_idx_1:lat_idx_2, \
+                                     lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_NATVEG'][lat_idx_1:lat_idx_2, \
+                                    lon_idx_1:lon_idx_2] = 100
+            self.file['PCT_NAT_PFT'][0, \
+                                     lat_idx_1:lat_idx_2, \
+                                     lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft, \
+                                     lat_idx_1:lat_idx_2, \
+                                     lon_idx_1:lon_idx_2] = 100

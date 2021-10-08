@@ -27,6 +27,7 @@ def get_parser():
     parser.print_usage = parser.print_help
 
     # Accepted values
+    # TODO Read control/namelist file rather than command-line options/arguments
 
     parser.add_argument('--dom_nat_pft',
                 help='Optional non-crop PFT to be set to 100% everywhere ' \
@@ -37,6 +38,42 @@ def get_parser():
                 type=int,
                 choices=range(0, 15),  # maximum natveg = 14
                 default=-999)
+    parser.add_argument('--lai',
+                help='Optional non-crop PFT leaf area index value to be ' \
+                     'set when setting --dom_nat_pft to non-bare soil '
+                     'only when also setting the lon/lat boundaries '
+                     '(float). [default: %(default)s]',
+                action="store",
+                dest="lai",
+                type=float,
+                default=0)
+    parser.add_argument('--sai',
+                help='Optional non-crop PFT stem area index value to be ' \
+                     'set when setting --dom_nat_pft to non-bare soil '
+                     'only when also setting the lon/lat boundaries '
+                     '(float). [default: %(default)s]',
+                action="store",
+                dest="sai",
+                type=float,
+                default=0)
+    parser.add_argument('--hgt_top',
+                help='Optional non-crop PFT top of canopy height to be ' \
+                     'set when setting --dom_nat_pft to non-bare soil '
+                     'only when also setting the lon/lat boundaries '
+                     '(float, meters). [default: %(default)s]',
+                action="store",
+                dest="hgt_top",
+                type=float,
+                default=0)
+    parser.add_argument('--hgt_bot',
+                help='Optional non-crop PFT bottop of canopy height to be ' \
+                     'set when setting --dom_nat_pft to non-bare soil '
+                     'only when also setting the lon/lat boundaries '
+                     '(float, meters). [default: %(default)s]',
+                action="store",
+                dest="hgt_bot",
+                type=float,
+                default=0)
     parser.add_argument('--std_elev',
                 help='Optional STD_ELEV value to specify uniform snowpack ' \
                      'everywhere (integer from 0 to 100 m). [default: %(default)s]',
@@ -46,7 +83,7 @@ def get_parser():
                 choices=range(0, 101),  # TODO reasonable range?
                 default=-999)
     parser.add_argument('--zero_nonveg',
-                help='Optional flag to set non-vegetation landunits to zero. ' \
+                help='Optional: sets non-vegetation landunits to 0 globally. ' \
                      'Redundant if defining new land mask using --lnd_lat_1, ' \
                      '--lnd_lat_2, --lnd_lon_1, and --lnd_lon_2 [default: %(default)s]',
                 action="store_true",
@@ -136,7 +173,21 @@ def main ():
     # modify surface data properties
     # ------------------------------
 
-    # 1) Set land swath to land, making all else ocean
+    # 1) Set non-vegetation landunits to zero globally
+    #    If both zero_nonveg and land_swath get called, then land_swath will
+    #    overwrite the global changes made by zero_nonveg with corresponding
+    #    regional changes according to the user-defined lon/lat settings
+    if args.zero_nonveg:
+        modify_fsurdat.zero_nonveg()
+
+    # 2) Set user-selected dom_nat_pft to 100% globally
+    #    If both dom_nat_pft and land_swath get called, then land_swath will
+    #    overwrite the global changes made by dom_nat_pft with corresponding
+    #    regional changes according to the user-defined lon/lat settings
+    if args.dom_nat_pft != -999:
+        modify_fsurdat.dom_nat_pft(args.dom_nat_pft)
+
+    # 3) Set land swath to land, making all else ocean
     if args.lnd_lon_1 == -999 or args.lnd_lat_1 == -999 or \
        args.lnd_lon_2 == -999 or args.lnd_lat_2 == -999:
         warning_msg = 'Warning: One or more of the optional arguments ' \
@@ -144,16 +195,15 @@ def main ():
                       'set, so all four are ignored.'
         print(warning_msg)  # TODO Use logging for this statement
     else:
-        modify_fsurdat.land_swath(args.lnd_lon_1, args.lnd_lon_2,
-                                  args.lnd_lat_1, args.lnd_lat_2)
-
-    # 2) Set dom_nat_pft to 100% everywhere
-    if args.dom_nat_pft != -999:
-        modify_fsurdat.dom_nat_pft(args.dom_nat_pft)
-
-    # 3) Set all non-vegetation landunits to zero
-    if args.zero_nonveg:
-        modify_fsurdat.zero_nonveg()
+        modify_fsurdat.land_swath(lon_in_1=args.lnd_lon_1,
+                                  lon_in_2=args.lnd_lon_2,
+                                  lat_in_1=args.lnd_lat_1,
+                                  lat_in_2=args.lnd_lat_2,
+                                  dom_nat_pft=args.dom_nat_pft,
+                                  lai=args.lai,
+                                  sai=args.sai,
+                                  hgt_top=args.hgt_top,
+                                  hgt_bot=args.hgt_bot)
 
     # 4) Create uniform snowpack by setting STD_ELEV to a constant everywhere
     if args.std_elev != -999:
