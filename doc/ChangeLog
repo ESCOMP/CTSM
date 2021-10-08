@@ -1,18 +1,20 @@
 ===============================================================
 Tag name:  ctsm5.1.dev058
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Thu Oct  7 17:06:29 MDT 2021
+Date: Thu Oct  7 20:47:14 MDT 2021
 One-line Summary: Some miscellaneous small answer changes
 
 Purpose and description of changes
 ----------------------------------
 
-Change ceta from 450 to 358 for CTSM5.1 See Leo VanKamenhout's work on this in https://github.com/ESCOMP/CTSM/pull/250.
+Change ceta from 450 to 358 for CTSM5.1 See Leo VanKamenhout's work on this in 
+https://github.com/ESCOMP/CTSM/pull/250. Note, this is used in the PPE work.
 See van Kampenhout et al. (2017).  Turn Medlyn on for PHS off for clm51 and clm50.
 Make max CO2 partial pressure consistent in Photosynthesis.
 Change surface datasets to only use 78PFT versions
 Fix GSSUN and GSSHA history variables so now not just writing missing values.
-Changes FATES to run with use_nitrif_dentrif=T by default. Change dynlakes test to methane/use_nitrif_=T.
+Changes FATES to run with use_nitrif_dentrif=T by default. Change dynlakes test 
+to methane/use_nitrif_=T.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -51,7 +53,7 @@ Changes made to namelist defaults (e.g., changed parameter values):
   use_nitrif_denitrif is now TRUE when using FATES
 
 Changes to the datasets (e.g., parameter, surface or initial files): 
-  New parameter file for clm5_1
+  New parameter file for clm5_1 (changes ceta)
 
 Notes of particular relevance for developers:
 ---------------------------------------------
@@ -61,8 +63,12 @@ Caveats for developers (e.g., code that is duplicated that requires double maint
   listed in the XML are listed twice for VIC both on and off (that's important for FATES since it still 
   requires non-crop datasets (see #1505)
 
+  Also the logic for finding both fsurdat and flanduse_timeseries files needs to be the same in first
+  asking for a crop version and then an exact match if it isn't found (unless it's FATES and then you just
+  do the exact match).
+
 Changes to tests or testing:
-  Dynamic lakes test now has methane on, which works because we turn off methane conservation check after restar
+  Dynamic lakes test now has methane on, which works because we turn off methane conservation check after restart
   See #43 for more information on this.
 
 
@@ -101,10 +107,12 @@ Changes answers relative to baseline: Yes
     When PHS off for clm5_1 and clm5_0 changes answers because of Medlyn photosynthesis over Ball-Berry.
     Photosynthesis potentially changes all the time because a maximum parameter was off.
     Answer should be close to roundoff for Sp and Bgc cases without Crop because we now use crop surface datasets.
-    GSSUN anmd GSSHA now have values.
     FATES changes answers since user_nitrif_dentrif is now on by default
     COLDSTART BGC cases will change answers because of a change in initial soil temperature
-    vichydro results are identical
+    clm4_5 and clm5_0 vichydro results are identical
+    clm4_5 and clm5_0 single point urban tests are identical
+    Some tests are still identical mostly crop-cases non-cold-start
+    In some cases GSSUN and GSSHA will be different.
 
 Other details
 -------------
