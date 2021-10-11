@@ -41,6 +41,13 @@ module CropType
      character(len=20) :: baset_mapping
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
+     integer , pointer :: sdate_thisseason        (:)   ! patch sowing date for current (active) season
+     integer , pointer :: hdate_thisseason        (:)   ! patch harvest date for current (active) season
+     integer , pointer :: sdates_thisyr           (:,:) ! all prescribed sowing dates for this patch this year
+     integer , pointer :: hdates_thisyr           (:,:) ! all prescribed harvest dates for this patch this year
+     integer , pointer :: growingseason_count     (:)   ! number of growing seasons that have begun this year for this patch
+     integer , pointer :: n_growingseasons_thisyear_thispatch (:)   ! number of sowing dates read in for this patch this year
+     integer           :: max_growingseasons_per_year   ! maximum number of growing seasons per year allowed in any patch
 
    contains
      ! Public routines
@@ -199,6 +206,15 @@ contains
     allocate(this%vf_patch       (begp:endp)) ; this%vf_patch       (:) = 0.0_r8
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
+    allocate(this%sdate_thisseason(begp:endp)) ; this%sdate_thisseason(:) = -1
+    allocate(this%hdate_thisseason(begp:endp)) ; this%hdate_thisseason(:) = -1
+    allocate(this%sdates_thisyr(begp:endp,1:max_growingseasons_per_year))
+    allocate(this%hdates_thisyr(begp:endp,1:max_growingseasons_per_year))
+    allocate(this%growingseason_count(begp:endp)) ; this%growingseason_count(:) = 0
+    allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
+
+    this%sdates_thisyr(:,:) = nan
+    this%hdates_thisyr(:,:) = nan
 
   end subroutine InitAllocate
 

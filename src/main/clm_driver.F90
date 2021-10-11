@@ -58,6 +58,7 @@ module clm_driver
   use SoilBiogeochemVerticalProfileMod   , only : SoilBiogeochemVerticalProfile
   use SatellitePhenologyMod  , only : SatellitePhenology, interpMonthlyVeg
   use ndepStreamMod          , only : ndep_interp
+  use cropcalStreamMod       , only : cropcal_advance
   use ch4Mod                 , only : ch4, ch4_init_gridcell_balance_check, ch4_init_column_balance_check
   use DUSTMod                , only : DustDryDep, DustEmission
   use VOCEmissionMod         , only : VOCEmission
@@ -446,6 +447,9 @@ contains
     if ((.not. use_cn) .and. (.not. use_fates) .and. (doalb) .and. use_lai_streams) then
        call lai_advance( bounds_proc )
     endif
+
+    ! Advance crop calendar data
+    call cropcal_advance( bounds_proc )
 
     ! ============================================================================
     ! Initialize variables from previous time step, downscale atm forcings, and

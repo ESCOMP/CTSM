@@ -148,6 +148,7 @@ contains
     use restFileMod                   , only : restFile_getfile, restFile_open, restFile_close
     use restFileMod                   , only : restFile_read, restFile_write
     use ndepStreamMod                 , only : ndep_init, ndep_interp
+    use cropcalStreamMod              , only : cropcal_init, cropcal_interp
     use LakeCon                       , only : LakeConInit
     use SatellitePhenologyMod         , only : SatellitePhenologyInit, readAnnualVegetation, interpMonthlyVeg, SatellitePhenology
     use SnowSnicarMod                 , only : SnowAge_init, SnowOptics_init
@@ -553,6 +554,12 @@ contains
        end if
        call t_stopf('init_ndep')
     end if
+
+    ! Initialize crop calendars
+    call t_startf('init_cropcal')
+    call cropcal_init(bounds, actual_numcft)
+    call cropcal_interp(bounds_proc, crop_inst)
+    call t_stopf('init_cropcal')
 
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this
