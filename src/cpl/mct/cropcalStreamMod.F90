@@ -41,11 +41,12 @@ module cropcalStreamMod
 contains
 !==============================================================================
 
-  subroutine cropcal_init(bounds, actual_numcft)
+  subroutine cropcal_init(bounds)
     !
     ! Initialize data stream information for crop calendars.
     !
     ! !USES:
+    use clm_varpar       , only : mxpft
     use clm_time_manager , only : get_calendar
     use ncdio_pio        , only : pio_subsystem
     use shr_pio_mod      , only : shr_pio_getiotype
@@ -61,7 +62,6 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type), intent(in) :: bounds          ! bounds
-    integer,           intent(in) :: actual_numcft   ! number of crop types
     !
     ! !LOCAL VARIABLES:
     integer            :: stream_year_first_cropcal      ! first year in crop calendar streams to use
@@ -136,8 +136,8 @@ contains
 
     ! create the field list for these cropcal fields...use in shr_strdata_create
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-    fldList_sdate1 = shr_string_listCreateField( actual_numcft, "sdate1" )
-    fldList_hdate1 = shr_string_listCreateField( actual_numcft, "hdate1" )
+    fldList_sdate1 = shr_string_listCreateField( mxpft, "sdate1" )
+    fldList_hdate1 = shr_string_listCreateField( mxpft, "hdate1" )
 
     ! SSR TODO:
     ! - Make these work with max_growingseasons_per_year > 1
