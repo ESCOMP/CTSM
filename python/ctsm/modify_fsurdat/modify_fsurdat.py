@@ -147,25 +147,25 @@ class ModifyFsurdat:
             abort(errmsg)
 
 
-    def land_swath(self, lon_in_1, lon_in_2, lat_in_1, lat_in_2,
-                   dom_nat_pft, lai, sai, hgt_top, hgt_bot):
+    def set_a_rectangle(self, lon_in_1, lon_in_2, lat_in_1, lat_in_2,
+                        dom_nat_pft, lai, sai, hgt_top, hgt_bot):
         """
         Description
         -----------
-        Make a swath of land defined by lon/lat limits and make all else ocean.
+        Set fsurdat variables in a rectangle defined by lon/lat limits
 
         Arguments
         ---------
         lon_in_1:
-            (int) westernmost edge of land swath
+            (int) westernmost edge of rectangle
         lon_in_2:
-            (int) easternmost edge of land swath
+            (int) easternmost edge of rectangle
         lat_in_1:
-            (int) southernmost edge of land swath
+            (int) southernmost edge of rectangle
         lat_in_2:
-            (int) northernmost edge of land swath
+            (int) northernmost edge of rectangle
         dom_nat_pft:
-            (int) user-selected PFT for all land area to be set to 100%
+            (int) user-selected PFT to be set to 100% in rectangle
         lai:
             (float) user-defined leaf area index
         sai:
@@ -194,52 +194,18 @@ class ModifyFsurdat:
         lat_idx_1 = int(min(temp.lsmlat.where(temp >= lat_in_1, drop=True)))
         lat_idx_2 = int(min(temp.lsmlat.where(temp >= lat_in_2, drop=True)))
 
-        # initialize to global values
-        # set PFTDATA_MASK & LANDFRAC_PFT to 0 over ocean and to 1 over land
-        #     PCT_NATVEG to 0 over ocean and to 100 over land
-        #     PCT_WETLAND to 100 over ocean and to 0 over land
-        #     the rest to 0 which means that there's no need to update
-        #     other crop, lake, urban, glacier, and F0-related variables
-        self.file['PFTDATA_MASK'][:,:] = 0  # partly overwrite below
-        self.file['LANDFRAC_PFT'][:,:] = 0  # partly overwrite below
-        self.file['PCT_NATVEG'][:,:] = 0  # partly overwrite below
-        self.file['PCT_WETLAND'][:,:] = 100  # partly overwrite below
-        self.file['PCT_CROP'][:,:] = 0
-        self.file['PCT_LAKE'][:,:] = 0
-        self.file['PCT_URBAN'][:,:] = 0
-        self.file['PCT_GLACIER'][:,:] = 0
-        self.file['F0'][:,:] = 0  # max inundated fraction
-        self.file['FMAX'][:,:] = 0  # --max_sat_area can override this
-        self.file['STD_ELEV'][:,:] = 0  # --std_elev can override this
-        self.file['SLOPE'][:,:] = 0  # mean topographic slope
-        # non-zero value seems appropriate; reasonable?
-        self.file['zbedrock'][:,:] = 10
-        # set next three to values representing loam
-        self.file['SOIL_COLOR'][:,:] = 15
-        self.file['PCT_SAND'][:,:,:] = 43
-        self.file['PCT_CLAY'][:,:,:] = 18
-        self.file['ORGANIC'][:,:,:] = 0
-        # set remaining variables according to the dom_nat_pft option
-        # but initialize to bare soil globally first
-        self.file['PCT_CFT'][:,:,:] = 0
-        self.file['PCT_CFT'][15,:,:] = 100  # required when PCT_CROP = 0
-        self.file['PCT_NAT_PFT'][:,:,:] = 0
-        self.file['PCT_NAT_PFT'][0,:,:] = 100
-        self.file['MONTHLY_LAI'][:,:,:,:] = 0
-        self.file['MONTHLY_SAI'][:,:,:,:] = 0
-        self.file['MONTHLY_HEIGHT_TOP'][:,:,:,:] = 0
-        self.file['MONTHLY_HEIGHT_BOT'][:,:,:,:] = 0
+        # default to bare soil
         if dom_nat_pft == -999:
-            dom_nat_pft = 0  # default to bare soil
-        elif dom_nat_pft > 0:
-            # update lai, sai, and heights globally because they will be
-            # used only if grid cell is vegetated
-            self.file['MONTHLY_LAI'][:,dom_nat_pft,:,:] = lai
-            self.file['MONTHLY_SAI'][:,dom_nat_pft,:,:] = sai
-            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft,:,:] = hgt_top
-            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft,:,:] = hgt_bot
+            dom_nat_pft = 0
+        if dom_nat_pft == 0:
+            lai = 0
+            sai = 0
+            hgt_top = 0
+            hgt_bot = 0
 
-        # overwrite with land swath
+        # overwrite with rectangle
+        # The simplest case appears last and includes the most explanations
+        # which do not get repeated in the more complex cases
         if lon_idx_1 > lon_idx_2 and lat_idx_1 < lat_idx_2:
             # If only the lon indices are in descending order,
             # wrap around the 0-degree meridian
@@ -249,6 +215,29 @@ class ModifyFsurdat:
             self.file['PCT_NATVEG'][lat_idx_1:lat_idx_2,:lon_idx_2] = 100
             self.file['PCT_NAT_PFT'][0,lat_idx_1:lat_idx_2,:lon_idx_2] = 0
             self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:lat_idx_2,:lon_idx_2] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     lat_idx_1:lat_idx_2,:lon_idx_2] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     lat_idx_1:lat_idx_2,:lon_idx_2] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            lat_idx_1:lat_idx_2,:lon_idx_2] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            lat_idx_1:lat_idx_2,:lon_idx_2] = hgt_bot
+            self.file['PCT_CROP'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_LAKE'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_URBAN'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_GLACIER'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['F0'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['FMAX'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['STD_ELEV'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['SLOPE'][lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['zbedrock'][lat_idx_1:lat_idx_2,:lon_idx_2] = 10
+            self.file['SOIL_COLOR'][lat_idx_1:lat_idx_2,:lon_idx_2] = 15
+            self.file['PCT_SAND'][:,lat_idx_1:lat_idx_2,:lon_idx_2] = 43
+            self.file['PCT_CLAY'][:,lat_idx_1:lat_idx_2,:lon_idx_2] = 18
+            self.file['ORGANIC'][:,lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_CFT'][:,lat_idx_1:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_CFT'][15,lat_idx_1:lat_idx_2,:lon_idx_2] = 100
 
             self.file['PFTDATA_MASK'][lat_idx_1:lat_idx_2,lon_idx_1:] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:lat_idx_2,lon_idx_1:] = 1
@@ -256,16 +245,62 @@ class ModifyFsurdat:
             self.file['PCT_NATVEG'][lat_idx_1:lat_idx_2,lon_idx_1:] = 100
             self.file['PCT_NAT_PFT'][0,lat_idx_1:lat_idx_2,lon_idx_1:] = 0
             self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:lat_idx_2,lon_idx_1:] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     lat_idx_1:lat_idx_2,lon_idx_1:] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     lat_idx_1:lat_idx_2,lon_idx_1:] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            lat_idx_1:lat_idx_2,lon_idx_1:] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            lat_idx_1:lat_idx_2,lon_idx_1:] = hgt_bot
+            self.file['PCT_CROP'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_LAKE'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_URBAN'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_GLACIER'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['F0'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['FMAX'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['STD_ELEV'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['SLOPE'][lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['zbedrock'][lat_idx_1:lat_idx_2,lon_idx_1:] = 10
+            self.file['SOIL_COLOR'][lat_idx_1:lat_idx_2,lon_idx_1:] = 15
+            self.file['PCT_SAND'][:,lat_idx_1:lat_idx_2,lon_idx_1:] = 43
+            self.file['PCT_CLAY'][:,lat_idx_1:lat_idx_2,lon_idx_1:] = 18
+            self.file['ORGANIC'][:,lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_CFT'][:,lat_idx_1:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_CFT'][15,lat_idx_1:lat_idx_2,lon_idx_1:] = 100
         elif lon_idx_1 < lon_idx_2 and lat_idx_1 > lat_idx_2:
-            # If only the lat indices are in descending order, make two land
-            # swaths, one in the north and one in the south rather than one
-            # between the lat indices
+            # If only the lat indices are in descending order, make two
+            # rectangles, one in the north and one in the south rather than
+            # one between the lat indices
             self.file['PFTDATA_MASK'][:lat_idx_2,lon_idx_1:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][:lat_idx_2,lon_idx_1:lon_idx_2] = 1
             self.file['PCT_WETLAND'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
             self.file['PCT_NATVEG'][:lat_idx_2,lon_idx_1:lon_idx_2] = 100
             self.file['PCT_NAT_PFT'][0,:lat_idx_2,lon_idx_1:lon_idx_2] = 0
             self.file['PCT_NAT_PFT'][dom_nat_pft,:lat_idx_2,lon_idx_1:lon_idx_2] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     :lat_idx_2,lon_idx_1:lon_idx_2] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     :lat_idx_2,lon_idx_1:lon_idx_2] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            :lat_idx_2,lon_idx_1:lon_idx_2] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            :lat_idx_2,lon_idx_1:lon_idx_2] = hgt_bot
+            self.file['PCT_CROP'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_LAKE'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_URBAN'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_GLACIER'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['F0'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['FMAX'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['STD_ELEV'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['SLOPE'][:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['zbedrock'][:lat_idx_2,lon_idx_1:lon_idx_2] = 10
+            self.file['SOIL_COLOR'][:lat_idx_2,lon_idx_1:lon_idx_2] = 15
+            self.file['PCT_SAND'][:,:lat_idx_2,lon_idx_1:lon_idx_2] = 43
+            self.file['PCT_CLAY'][:,:lat_idx_2,lon_idx_1:lon_idx_2] = 18
+            self.file['ORGANIC'][:,:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_CFT'][:,:lat_idx_2,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_CFT'][15,:lat_idx_2,lon_idx_1:lon_idx_2] = 100
 
             self.file['PFTDATA_MASK'][lat_idx_1:,lon_idx_1:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:,lon_idx_1:lon_idx_2] = 1
@@ -273,17 +308,63 @@ class ModifyFsurdat:
             self.file['PCT_NATVEG'][lat_idx_1:,lon_idx_1:lon_idx_2] = 100
             self.file['PCT_NAT_PFT'][0,lat_idx_1:,lon_idx_1:lon_idx_2] = 0
             self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:,lon_idx_1:lon_idx_2] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     lat_idx_1:,lon_idx_1:lon_idx_2] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     lat_idx_1:,lon_idx_1:lon_idx_2] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            lat_idx_1:,lon_idx_1:lon_idx_2] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            lat_idx_1:,lon_idx_1:lon_idx_2] = hgt_bot
+            self.file['PCT_CROP'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_LAKE'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_URBAN'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_GLACIER'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['F0'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['FMAX'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['STD_ELEV'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['SLOPE'][lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['zbedrock'][lat_idx_1:,lon_idx_1:lon_idx_2] = 10
+            self.file['SOIL_COLOR'][lat_idx_1:,lon_idx_1:lon_idx_2] = 15
+            self.file['PCT_SAND'][:,lat_idx_1:,lon_idx_1:lon_idx_2] = 43
+            self.file['PCT_CLAY'][:,lat_idx_1:,lon_idx_1:lon_idx_2] = 18
+            self.file['ORGANIC'][:,lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_CFT'][:,lat_idx_1:,lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_CFT'][15,lat_idx_1:,lon_idx_1:lon_idx_2] = 100
         elif lon_idx_1 > lon_idx_2 and lat_idx_1 > lat_idx_2:
             # If both the lon and the lat indices are in descending order,
-            # wrap around the 0-degree meridian AND make a land swath in the
-            # north and another in the south rather than only one between the
-            # lat indices
+            # wrap around the 0-degree meridian AND make a rectangle in the
+            # north and another in the south rather than only one between
+            # the lat indices
             self.file['PFTDATA_MASK'][:lat_idx_2,:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][:lat_idx_2,:lon_idx_2] = 1
             self.file['PCT_WETLAND'][:lat_idx_2,:lon_idx_2] = 0
             self.file['PCT_NATVEG'][:lat_idx_2,:lon_idx_2] = 100
             self.file['PCT_NAT_PFT'][0,:lat_idx_2,:lon_idx_2] = 0
             self.file['PCT_NAT_PFT'][dom_nat_pft,:lat_idx_2,:lon_idx_2] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     :lat_idx_2,:lon_idx_2] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     :lat_idx_2,:lon_idx_2] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            :lat_idx_2,:lon_idx_2] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            :lat_idx_2,:lon_idx_2] = hgt_bot
+            self.file['PCT_CROP'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_LAKE'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_URBAN'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_GLACIER'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['F0'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['FMAX'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['STD_ELEV'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['SLOPE'][:lat_idx_2,:lon_idx_2] = 0
+            self.file['zbedrock'][:lat_idx_2,:lon_idx_2] = 10
+            self.file['SOIL_COLOR'][:lat_idx_2,:lon_idx_2] = 15
+            self.file['PCT_SAND'][:,:lat_idx_2,:lon_idx_2] = 43
+            self.file['PCT_CLAY'][:,:lat_idx_2,:lon_idx_2] = 18
+            self.file['ORGANIC'][:,:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_CFT'][:,:lat_idx_2,:lon_idx_2] = 0
+            self.file['PCT_CFT'][15,:lat_idx_2,:lon_idx_2] = 100
 
             self.file['PFTDATA_MASK'][:lat_idx_2,lon_idx_1:] = 1
             self.file['LANDFRAC_PFT'][:lat_idx_2,lon_idx_1:] = 1
@@ -291,6 +372,29 @@ class ModifyFsurdat:
             self.file['PCT_NATVEG'][:lat_idx_2,lon_idx_1:] = 100
             self.file['PCT_NAT_PFT'][0,:lat_idx_2,lon_idx_1:] = 0
             self.file['PCT_NAT_PFT'][dom_nat_pft,:lat_idx_2,lon_idx_1:] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     :lat_idx_2,lon_idx_1:] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     :lat_idx_2,lon_idx_1:] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            :lat_idx_2,lon_idx_1:] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            :lat_idx_2,lon_idx_1:] = hgt_bot
+            self.file['PCT_CROP'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_LAKE'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_URBAN'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_GLACIER'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['F0'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['FMAX'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['STD_ELEV'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['SLOPE'][:lat_idx_2,lon_idx_1:] = 0
+            self.file['zbedrock'][:lat_idx_2,lon_idx_1:] = 10
+            self.file['SOIL_COLOR'][:lat_idx_2,lon_idx_1:] = 15
+            self.file['PCT_SAND'][:,:lat_idx_2,lon_idx_1:] = 43
+            self.file['PCT_CLAY'][:,:lat_idx_2,lon_idx_1:] = 18
+            self.file['ORGANIC'][:,:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_CFT'][:,:lat_idx_2,lon_idx_1:] = 0
+            self.file['PCT_CFT'][15,:lat_idx_2,lon_idx_1:] = 100
 
             self.file['PFTDATA_MASK'][lat_idx_1:,:lon_idx_2] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:,:lon_idx_2] = 1
@@ -298,13 +402,59 @@ class ModifyFsurdat:
             self.file['PCT_NATVEG'][lat_idx_1:,:lon_idx_2] = 100
             self.file['PCT_NAT_PFT'][0,lat_idx_1:,:lon_idx_2] = 0
             self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:,:lon_idx_2] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     lat_idx_1:,:lon_idx_2] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     lat_idx_1:,:lon_idx_2] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            lat_idx_1:,:lon_idx_2] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            lat_idx_1:,:lon_idx_2] = hgt_bot
+            self.file['PCT_CROP'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['PCT_LAKE'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['PCT_URBAN'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['PCT_GLACIER'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['F0'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['FMAX'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['STD_ELEV'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['SLOPE'][lat_idx_1:,:lon_idx_2] = 0
+            self.file['zbedrock'][lat_idx_1:,:lon_idx_2] = 10
+            self.file['SOIL_COLOR'][lat_idx_1:,:lon_idx_2] = 15
+            self.file['PCT_SAND'][:,lat_idx_1:,:lon_idx_2] = 43
+            self.file['PCT_CLAY'][:,lat_idx_1:,:lon_idx_2] = 18
+            self.file['ORGANIC'][:,lat_idx_1:,:lon_idx_2] = 0
+            self.file['PCT_CFT'][:,lat_idx_1:,:lon_idx_2] = 0
+            self.file['PCT_CFT'][15,lat_idx_1:,:lon_idx_2] = 100
 
             self.file['PFTDATA_MASK'][lat_idx_1:,lon_idx_1:] = 1
             self.file['LANDFRAC_PFT'][lat_idx_1:,lon_idx_1:] = 1
             self.file['PCT_WETLAND'][lat_idx_1:,lon_idx_1:] = 0
             self.file['PCT_NATVEG'][lat_idx_1:,lon_idx_1:] = 100
-            self.file['PCT_NAT_PFT'][0,lat_idx_1,lon_idx_1:] = 0
-            self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1,lon_idx_1:] = 100
+            self.file['PCT_NAT_PFT'][0,lat_idx_1:,lon_idx_1:] = 0
+            self.file['PCT_NAT_PFT'][dom_nat_pft,lat_idx_1:,lon_idx_1:] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     lat_idx_1:,lon_idx_1:] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     lat_idx_1:,lon_idx_1:] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            lat_idx_1:,lon_idx_1:] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            lat_idx_1:,lon_idx_1:] = hgt_bot
+            self.file['PCT_CROP'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['PCT_LAKE'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['PCT_URBAN'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['PCT_GLACIER'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['F0'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['FMAX'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['STD_ELEV'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['SLOPE'][lat_idx_1:,lon_idx_1:] = 0
+            self.file['zbedrock'][lat_idx_1:,lon_idx_1:] = 10
+            self.file['SOIL_COLOR'][lat_idx_1:,lon_idx_1:] = 15
+            self.file['PCT_SAND'][:,lat_idx_1:,lon_idx_1:] = 43
+            self.file['PCT_CLAY'][:,lat_idx_1:,lon_idx_1:] = 18
+            self.file['ORGANIC'][:,lat_idx_1:,lon_idx_1:] = 0
+            self.file['PCT_CFT'][:,lat_idx_1:,lon_idx_1:] = 0
+            self.file['PCT_CFT'][15,lat_idx_1:,lon_idx_1:] = 100
         else:
             # Simple case: both lon and lat indices in ascending order
             self.file['PFTDATA_MASK'][lat_idx_1:lat_idx_2, \
@@ -321,3 +471,47 @@ class ModifyFsurdat:
             self.file['PCT_NAT_PFT'][dom_nat_pft, \
                                      lat_idx_1:lat_idx_2, \
                                      lon_idx_1:lon_idx_2] = 100
+            self.file['MONTHLY_LAI'][:,dom_nat_pft, \
+                                     lat_idx_1:lat_idx_2, \
+                                     lon_idx_1:lon_idx_2] = lai
+            self.file['MONTHLY_SAI'][:,dom_nat_pft, \
+                                     lat_idx_1:lat_idx_2, \
+                                     lon_idx_1:lon_idx_2] = sai
+            self.file['MONTHLY_HEIGHT_TOP'][:,dom_nat_pft, \
+                                            lat_idx_1:lat_idx_2, \
+                                            lon_idx_1:lon_idx_2] = hgt_top
+            self.file['MONTHLY_HEIGHT_BOT'][:,dom_nat_pft, \
+                                            lat_idx_1:lat_idx_2, \
+                                            lon_idx_1:lon_idx_2] = hgt_bot
+            self.file['PCT_CROP'][lat_idx_1:lat_idx_2, \
+                                  lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_LAKE'][lat_idx_1:lat_idx_2, \
+                                  lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_URBAN'][lat_idx_1:lat_idx_2, \
+                                   lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_GLACIER'][lat_idx_1:lat_idx_2, \
+                                     lon_idx_1:lon_idx_2] = 0
+            self.file['F0'][lat_idx_1:lat_idx_2, \
+                            lon_idx_1:lon_idx_2] = 0  # max inundated fraction
+            self.file['FMAX'][lat_idx_1:lat_idx_2, \
+                              lon_idx_1:lon_idx_2] = 0  # --max_sat_area can override this
+            self.file['STD_ELEV'][lat_idx_1:lat_idx_2, \
+                                  lon_idx_1:lon_idx_2] = 0  # --std_elev can override this
+            self.file['SLOPE'][lat_idx_1:lat_idx_2, \
+                               lon_idx_1:lon_idx_2] = 0  # mean topographic slope
+            # non-zero value seems appropriate; reasonable?
+            self.file['zbedrock'][lat_idx_1:lat_idx_2, \
+                                  lon_idx_1:lon_idx_2] = 10
+            # set next three to values representing loam
+            self.file['SOIL_COLOR'][lat_idx_1:lat_idx_2, \
+                                    lon_idx_1:lon_idx_2] = 15
+            self.file['PCT_SAND'][:,lat_idx_1:lat_idx_2, \
+                                    lon_idx_1:lon_idx_2] = 43
+            self.file['PCT_CLAY'][:,lat_idx_1:lat_idx_2, \
+                                    lon_idx_1:lon_idx_2] = 18
+            self.file['ORGANIC'][:,lat_idx_1:lat_idx_2, \
+                                   lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_CFT'][:,lat_idx_1:lat_idx_2, \
+                                   lon_idx_1:lon_idx_2] = 0
+            self.file['PCT_CFT'][15,lat_idx_1:lat_idx_2, \
+                                    lon_idx_1:lon_idx_2] = 100  # required when PCT_CROP = 0

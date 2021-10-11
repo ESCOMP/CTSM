@@ -96,9 +96,9 @@ def get_parser():
                 type=float,
                 default=-999)
     parser.add_argument('--lnd_lat_1',
-                help='Optional southernmost latitude for land swath (integer ' \
+                help='Optional southernmost latitude for rectangle (integer ' \
                      '-90 to 90). If lnd_lat_1 > lnd_lat_2 the code creates ' \
-                     'two land swaths, one in the north and one in the ' \
+                     'two rectangles, one in the north and one in the ' \
                      'south. Required for lnd_lat_2, lnd_lon_1, and ' \
                      'lnd_lon_2 to work together [default: %(default)s]',
                 dest='lnd_lat_1',
@@ -107,9 +107,9 @@ def get_parser():
                 choices=range(-90, 91),
                 default=-999)
     parser.add_argument('--lnd_lat_2',
-                help='Optional northernmost latitude for land swath (integer ' \
+                help='Optional northernmost latitude for rectangle (integer ' \
                      '-90 to 90). If lnd_lat_1 > lnd_lat_2 the code creates ' \
-                     'two land swaths, one in the north and one in the ' \
+                     'two rectangles, one in the north and one in the ' \
                      'south. Required for lnd_lat_1, lnd_lon_1, and ' \
                      'lnd_lon_2 to work together [default: %(default)s]',
                 action="store",
@@ -118,8 +118,8 @@ def get_parser():
                 choices=range(-90, 91),
                 default=-999)
     parser.add_argument('--lnd_lon_1',
-                help='Optional minimum longitude for land swath (integer 0 ' \
-                     'to 360). If lnd_lon_1 > lnd_lon_2 the land swath wraps ' \
+                help='Optional minimum longitude for rectangle (integer 0 ' \
+                     'to 360). If lnd_lon_1 > lnd_lon_2 the rectangle wraps ' \
                      'around the 0-degree meridian. Required for lnd_lon_2, ' \
                      'lnd_lat_1, and lnd_lat_2 to work together [default: %(default)s]',
                 action="store",
@@ -128,8 +128,8 @@ def get_parser():
                 choices=range(0, 361),
                 default=-999)
     parser.add_argument('--lnd_lon_2',
-                help='Optional maximum longitude for land swath (integer 0 ' \
-                     'to 360). If lnd_lon_1 > lnd_lon_2 the land swath wraps ' \
+                help='Optional maximum longitude for rectangle (integer 0 ' \
+                     'to 360). If lnd_lon_1 > lnd_lon_2 the rectangle wraps ' \
                      'around the 0-degree meridian. Required for lnd_lon_1, ' \
                      'lnd_lat_1, and lnd_lat_2 to work together [default: %(default)s]',
                 action="store",
@@ -173,45 +173,44 @@ def main ():
     # modify surface data properties
     # ------------------------------
 
-    # 1) Set non-vegetation landunits to zero globally
-    #    If both zero_nonveg and land_swath get called, then land_swath will
-    #    overwrite the global changes made by zero_nonveg with corresponding
-    #    regional changes according to the user-defined lon/lat settings
-    if args.zero_nonveg:
-        modify_fsurdat.zero_nonveg()
-
-    # 2) Set user-selected dom_nat_pft to 100% globally
-    #    If both dom_nat_pft and land_swath get called, then land_swath will
-    #    overwrite the global changes made by dom_nat_pft with corresponding
-    #    regional changes according to the user-defined lon/lat settings
-    if args.dom_nat_pft != -999:
-        modify_fsurdat.dom_nat_pft(args.dom_nat_pft)
-
-    # 3) Set land swath to land, making all else ocean
+    # 1) Set fsurdat variables in a rectangle
+    # Note that the land/ocean mask gets specified in the domain file for
+    # MCT or the ocean mesh files for NUOPC. The function set_a_rectangle
+    # can specify fsurdat variables inside a box but it cannot
+    # change which points will run as land and which as ocean.
     if args.lnd_lon_1 == -999 or args.lnd_lat_1 == -999 or \
        args.lnd_lon_2 == -999 or args.lnd_lat_2 == -999:
         warning_msg = 'Warning: One or more of the optional arguments ' \
                       'lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2 were not ' \
                       'set, so all four are ignored.'
         print(warning_msg)  # TODO Use logging for this statement
+
+        # 1a) If not setting in a rectangle, can set user-selected
+        # dom_nat_pft to 100% globally.
+        if args.dom_nat_pft != -999:
+            modify_fsurdat.dom_nat_pft(args.dom_nat_pft)
+        # 1b) If not setting in a rectangle, can set non-vegetation
+        # landunits to zero globally.
+        if args.zero_nonveg:
+            modify_fsurdat.zero_nonveg()
+        # 1c) If not modifying a rectangle, can create uniform snowpack
+        # by setting STD_ELEV to a constant everywhere
+        if args.std_elev != -999:
+            modify_fsurdat.std_elev(args.std_elev)
+        # 1d) If not modifying a rectangle, can set max_sat_area (FMAX)
+        # to a constant everywhere
+        if args.max_sat_area != -999:
+            modify_fsurdat.max_sat_area(args.max_sat_area)
     else:
-        modify_fsurdat.land_swath(lon_in_1=args.lnd_lon_1,
-                                  lon_in_2=args.lnd_lon_2,
-                                  lat_in_1=args.lnd_lat_1,
-                                  lat_in_2=args.lnd_lat_2,
-                                  dom_nat_pft=args.dom_nat_pft,
-                                  lai=args.lai,
-                                  sai=args.sai,
-                                  hgt_top=args.hgt_top,
-                                  hgt_bot=args.hgt_bot)
-
-    # 4) Create uniform snowpack by setting STD_ELEV to a constant everywhere
-    if args.std_elev != -999:
-        modify_fsurdat.std_elev(args.std_elev)
-
-    # 5) Set max_sat_area (FMAX) to a constant everywhere
-    if args.max_sat_area != -999:
-        modify_fsurdat.max_sat_area(args.max_sat_area)
+        modify_fsurdat.set_a_rectangle(lon_in_1=args.lnd_lon_1,
+                                       lon_in_2=args.lnd_lon_2,
+                                       lat_in_1=args.lnd_lat_1,
+                                       lat_in_2=args.lnd_lat_2,
+                                       dom_nat_pft=args.dom_nat_pft,
+                                       lai=args.lai,
+                                       sai=args.sai,
+                                       hgt_top=args.hgt_top,
+                                       hgt_bot=args.hgt_bot)
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
