@@ -528,6 +528,12 @@
     <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%AIS-EVOLVE%GRIS-EVOLVE_SWAV</lname>
   </compset>
 
+  <!-- Primarily for testing: same as I1850Clm50SpGag but with SROF -->
+  <compset>
+    <alias>I1850Clm50SpRsGag</alias>
+    <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_SROF_CISM2%AIS-EVOLVE%GRIS-EVOLVE_SWAV</lname>
+  </compset>
+
   <compset>
     <alias>IHistClm50SpG</alias>
     <lname>HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
