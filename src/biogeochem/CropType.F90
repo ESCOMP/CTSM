@@ -196,6 +196,9 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
 
+    ! SSR TODO: Replace this with read from netCDF
+    this%max_growingseasons_per_year = 1
+
     allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
     allocate(this%cropplant_patch(begp:endp)) ; this%cropplant_patch(:) = .false.
@@ -208,13 +211,13 @@ contains
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%sdate_thisseason(begp:endp)) ; this%sdate_thisseason(:) = -1
     allocate(this%hdate_thisseason(begp:endp)) ; this%hdate_thisseason(:) = -1
-    allocate(this%sdates_thisyr(begp:endp,1:max_growingseasons_per_year))
-    allocate(this%hdates_thisyr(begp:endp,1:max_growingseasons_per_year))
+    allocate(this%sdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
+    allocate(this%hdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
     allocate(this%growingseason_count(begp:endp)) ; this%growingseason_count(:) = 0
     allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
 
-    this%sdates_thisyr(:,:) = nan
-    this%hdates_thisyr(:,:) = nan
+    this%sdates_thisyr(:,:) = -1
+    this%hdates_thisyr(:,:) = -1
 
   end subroutine InitAllocate
 
