@@ -557,7 +557,7 @@ contains
 
     ! Initialize crop calendars
     call t_startf('init_cropcal')
-    call cropcal_init(bounds, actual_numcft)
+    call cropcal_init(bounds_proc, actual_numcft)
     call cropcal_interp(bounds_proc, crop_inst)
     call t_stopf('init_cropcal')
 

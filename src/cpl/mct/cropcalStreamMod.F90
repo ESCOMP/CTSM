@@ -136,8 +136,8 @@ contains
 
     ! create the field list for these cropcal fields...use in shr_strdata_create
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-    fldList_sdate1 = shr_string_listCreateField( numCropcalFields, "sdate1" )
-    fldList_hdate1 = shr_string_listCreateField( numCropcalFields, "hdate1" )
+    fldList_sdate1 = shr_string_listCreateField( actual_numcft, "sdate1" )
+    fldList_hdate1 = shr_string_listCreateField( actual_numcft, "hdate1" )
 
     ! SSR TODO:
     ! - Make these work with max_growingseasons_per_year > 1
@@ -163,8 +163,8 @@ contains
          domMaskName='mask',                           &
          filePath='',                                  &
          filename=(/stream_fldFileName_sdate/),        &
-         fldListFile=fldList,                          &
-         fldListModel=fldList,                         &
+         fldListFile=fldList_sdate1,                   &
+         fldListModel=fldList_sdate1,                  &
          fillalgo='none',                              &
          mapalgo=cropcal_mapalgo,                      &
          tintalgo=cropcal_tintalgo,                    &
@@ -191,8 +191,8 @@ contains
          domMaskName='mask',                           &
          filePath='',                                  &
          filename=(/stream_fldFileName_hdate/),        &
-         fldListFile=fldList,                          &
-         fldListModel=fldList,                         &
+         fldListFile=fldList_hdate1,                   &
+         fldListModel=fldList_hdate1,                  &
          fillalgo='none',                              &
          mapalgo=cropcal_mapalgo,                      &
          tintalgo=cropcal_tintalgo,                    &
