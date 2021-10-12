@@ -326,12 +326,10 @@ class NeonSite :
             
         logger.info ('base_case_name : {}'.format(self.name))
         logger.info ('user_mods_dir  : {}'.format(user_mods_dirs[0]))
-        import pdb
-        pdb.set_trace()
+
         if overwrite and os.path.isdir(case_path):
             print ("Removing the existing case at: {}".format(case_path))
             shutil.rmtree(case_path)
-            sleep(1)
 
         with Case(case_path, read_only=False) as case:
             if not os.path.isdir(case_path):
