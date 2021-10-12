@@ -284,6 +284,12 @@ module clm_varctl
   logical, public :: use_lai_streams = .false. ! true => use lai streams in SatellitePhenologyMod.F90
 
   !----------------------------------------------------------
+  ! crop calendar streams switch for CropPhenology
+  !----------------------------------------------------------
+
+  logical, public :: use_cropcal_streams = .false. ! true => read crop calendar streams for use in CropPhenology.F90
+
+  !----------------------------------------------------------
   ! biomass heat storage switch
   !----------------------------------------------------------
 

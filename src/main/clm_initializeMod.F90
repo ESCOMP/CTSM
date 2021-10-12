@@ -121,6 +121,7 @@ contains
     use clm_varctl                    , only : use_cn, use_fates
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
+    use clm_varctl                    , only : use_cropcal_streams
     use landunit_varcon               , only : landunit_varcon_init, max_lunit
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
@@ -556,10 +557,12 @@ contains
     end if
 
     ! Initialize crop calendars
-    call t_startf('init_cropcal')
-    call cropcal_init(bounds_proc)
-    call cropcal_interp(bounds_proc, crop_inst)
-    call t_stopf('init_cropcal')
+    if (use_cropcal_streams) then
+      call t_startf('init_cropcal')
+      call cropcal_init(bounds_proc)
+      call cropcal_interp(bounds_proc, crop_inst)
+      call t_stopf('init_cropcal')
+    end if
 
     ! Initialize active history fields.
     ! This is only done if not a restart run. If a restart run, then this
