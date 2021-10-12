@@ -326,11 +326,13 @@ class NeonSite :
             
         logger.info ('base_case_name : {}'.format(self.name))
         logger.info ('user_mods_dir  : {}'.format(user_mods_dirs[0]))
-
+        import pdb
+        pdb.set_trace()
         if overwrite and os.path.isdir(case_path):
-            logger.info ("Removing the existing case at: {}".format(case_path))
+            print ("Removing the existing case at: {}".format(case_path))
             shutil.rmtree(case_path)
-            
+            sleep(1)
+
         with Case(case_path, read_only=False) as case:
             if not os.path.isdir(case_path):
                 print("---- creating a base case -------")
@@ -377,20 +379,21 @@ class NeonSite :
         case_root = os.path.abspath(os.path.join(base_case_root,"..", self.name+"."+run_type))
         rundir = None
         if os.path.isdir(case_root):
-            with Case(case_root, read_only=False) as case:
-                rundir = case.get_value("RUNDIR")
-                if overwrite:
-                    print("---- removing the existing case -------")
-                    shutil.rmtree(case_root)
-                elif rerun:
+            if overwrite:
+                print("---- removing the existing case -------")
+                shutil.rmtree(case_root)
+            elif rerun:
+                with Case(case_root, read_only=False) as case:
+                    rundir = case.get_value("RUNDIR")
                     if os.path.isfile(os.path.join(rundir,"ESMF_Profile.summary")):
                         print("Case {} appears to be complete, not rerunning.".format(case_root))
                     elif not setup_only:
                         print("Resubmitting case {}".format(case_root))
                         case.submit(no_batch=no_batch)
-                else:
-                    logger.warning("Case already exists in {}, not overwritting.".format(case_root))
-            return
+                    return
+            else:
+                logger.warning("Case already exists in {}, not overwritting.".format(case_root))
+                return
 
         if run_type == "postad":
             adcase_root = case_root.replace('.postad','.ad')
