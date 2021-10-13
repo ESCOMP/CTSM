@@ -1,4 +1,103 @@
 ===============================================================
+Tag name:  ctsm5.1.dev059
+Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Wed Oct 13 10:46:06 MDT 2021
+One-line Summary: Update fates tests and list for diversity and coverage
+
+Purpose and description of changes
+----------------------------------
+
+This tag changes the list of fates testmod represented in the aux_clm category test list
+to provide an updated set of testmods to improve coverage and diversity of fates modes
+to be checked during ctsm updates now that fates is updating directory to the ctsm main/master
+branch.  A number of updates were made to the fates category list as well, including
+test name changes, variables including for fates testmods, and the addition of a fates landuse
+testmod.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+    Fixes #1273 -- Add testmod for FATES land use
+    Fixes #1265 -- Diversifying fates testmods included in aux_clm test suite
+
+CIME Issues fixed (include issue #):
+
+Known bugs introduced in this tag (include issue #):
+    FATES #790 -- NAG compiler runtime error in FatesHydroWTFMod
+    #1518 -- FATES P32x2 test appears to fail reliably when using I2000FatesCruRsGs compset
+    #1520 -- Short clm ERS test hits reasonable wall clock limit on izumi nag
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+    - The list of fates testmods that are included as part of the aux_clm testlist has been updated to
+      change older compset coverage for newer Clm50 compsets.  It also changes the list of fates testmods
+      to improve coverage for stable fates run mode options.
+    - The list of tests for the fates test category on all machines has been updated to use river stub compsets
+      for most tests in an effort to reduce test runtime.
+    - The list of tests for the fates test category on izumi has been change to only include debug-only tests as
+      a short term work around for FATES #771
+    - The output variables for most all fates testmods is updated to only include site-level variables in an
+      effort to decrease history write time for any given test
+    - Updates the expected failure test list to remove out-of-date entries failures
+    - Many of the fates testmods have been renamed to be have a more broadly consistent naming scheme that denotes
+      which testmod is a baseline for a given testmod
+    - FatesColdDefLandUse testmod has been added to gain coverage for the do_harvest mode
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+  fates tests:
+    cheyenne ---- ok
+
+  any other testing (give details below):
+
+    Note that since testnames and variable inclusion list was changed for all fates testmods, test results
+    are not automatically comparable by cprnc.  Manually comparison was done to validate output for fates testmods.
+    See PR #1275 details for more thorough explanation of testing results.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (only for non-fates testsmods)
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): none
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+  #1275 -- FATES testing update and cleanup
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev058
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Thu Oct  7 20:47:14 MDT 2021
@@ -7,13 +106,13 @@ One-line Summary: Some miscellaneous small answer changes
 Purpose and description of changes
 ----------------------------------
 
-Change ceta from 450 to 358 for CTSM5.1 See Leo VanKamenhout's work on this in 
+Change ceta from 450 to 358 for CTSM5.1 See Leo VanKamenhout's work on this in
 https://github.com/ESCOMP/CTSM/pull/250. Note, this is used in the PPE work.
 See van Kampenhout et al. (2017).  Turn Medlyn on for PHS off for clm51 and clm50.
 Make max CO2 partial pressure consistent in Photosynthesis.
 Change surface datasets to only use 78PFT versions
 Fix GSSUN and GSSHA history variables so now not just writing missing values.
-Changes FATES to run with use_nitrif_dentrif=T by default. Change dynlakes test 
+Changes FATES to run with use_nitrif_dentrif=T by default. Change dynlakes test
 to methane/use_nitrif_=T.
 
 Significant changes to scientifically-supported configurations
@@ -52,7 +151,7 @@ Changes made to namelist defaults (e.g., changed parameter values):
   stomatalcond_method is now Medlyn2011 for clm5_0 and clm5_1
   use_nitrif_denitrif is now TRUE when using FATES
 
-Changes to the datasets (e.g., parameter, surface or initial files): 
+Changes to the datasets (e.g., parameter, surface or initial files):
   New parameter file for clm5_1 (changes ceta)
 
 Notes of particular relevance for developers:
@@ -60,7 +159,7 @@ Notes of particular relevance for developers:
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
   Surface datasets are now labeled with use_vichydro=TRUE in the xml. This also means that some files
-  listed in the XML are listed twice for VIC both on and off (that's important for FATES since it still 
+  listed in the XML are listed twice for VIC both on and off (that's important for FATES since it still
   requires non-crop datasets (see #1505)
 
   Also the logic for finding both fsurdat and flanduse_timeseries files needs to be the same in first
@@ -88,7 +187,7 @@ Testing summary:   regular
 
     cheyenne ---- OK
     izumi ------- PASS
-  
+
 If the tag used for baseline comparisons was NOT the previous tag, note that here: previous
 
 
@@ -102,7 +201,7 @@ Changes answers relative to baseline: Yes
     - what platforms/compilers: all
     - nature of change:
         similar climate most changes are near roundoff level
- 
+
     All clm5_1 physics change answers because of change in ceta parameter.
     When PHS off for clm5_1 and clm5_0 changes answers because of Medlyn photosynthesis over Ball-Berry.
     Photosynthesis potentially changes all the time because a maximum parameter was off.
@@ -166,7 +265,7 @@ Testing summary:
 
     cheyenne ---- ok
     izumi ------- ok
-  
+
 Answer changes
 --------------
 
@@ -180,7 +279,7 @@ https://github.com/ESCOMP/CTSM/pull/1482
 ===============================================================
 ===============================================================
 Tag name:  ctsm5.1.dev056
-Originator(s):  glemieux (Gregory Lemieux,,,)
+Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Fri Sep 17 15:41:57 MDT 2021
 One-line Summary: FATES Satellite Phenology mode implemented
 
@@ -251,7 +350,6 @@ Substantial timing or memory changes: None
 Notes of particular relevance for developers:
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
   All single site fates suite tests need to be manually built and submitted given MOSART #45.  PR #1275 will resolve

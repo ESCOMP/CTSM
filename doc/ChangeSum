@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev059 glemieux 10/13/2021 Update fates tests and list for diversity and coverage
     ctsm5.1.dev058     erik 10/07/2021 Some miscellaneous small answer changes
     ctsm5.1.dev057 samrabin 09/20/2021 Consolidate duplicated crop phenology code
     ctsm5.1.dev056 glemieux 09/17/2021 FATES Satellite Phenology mode implemented
