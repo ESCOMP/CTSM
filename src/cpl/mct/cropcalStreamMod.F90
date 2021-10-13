@@ -26,7 +26,7 @@ module cropcalStreamMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: cropcal_init    ! position datasets for crop calendars
   public :: cropcal_advance ! Advance the crop calendar streams (outside of a Open-MP threading loop)
-  public :: cropcal_interp  ! interpolates between two years of crop calendar data (when crop calendar streams
+  public :: cropcal_interp  ! interpolates between two years of crop calendar data
 
   ! !PRIVATE MEMBER DATA:
   integer, allocatable    :: g_to_ig(:)         ! Array matching gridcell index to data index
@@ -254,6 +254,7 @@ contains
     use pftconMod       , only : noveg
     use CropType        , only : crop_type
     use PatchType       , only : patch
+    use filterMod       , only : filter
     !
     ! !ARGUMENTS:
     implicit none
@@ -262,6 +263,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
+    integer :: nc, fp
     character(len=CL)  :: stream_var_name
     !-----------------------------------------------------------------------
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
@@ -274,30 +276,26 @@ contains
     SHR_ASSERT_FL( (ubound(sdat_hdate1%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
 
     ! SSR TODO: Make these work with max_growingseasons_per_year > 1
-    do p = bounds%begp, bounds%endp
-       ivt = patch%itype(p)
-       ! Set crop calendars for each gridcell/patch combination
-       if (ivt /= noveg) then
-          ! vegetated pft
-          write(stream_var_name,"(i6)") ivt
-          
-          ! SSR TODO: Add check that variable exists in netCDF
-          stream_var_name = 'sdate1_'//trim(adjustl(stream_var_name))
-          ip = mct_aVect_indexRA(sdat_sdate1%avs(1),trim(stream_var_name))
-          ig = g_to_ig(patch%gridcell(p))
-          crop_inst%sdates_thisyr(p,1) = sdat_sdate1%avs(1)%rAttr(ip,ig)
+    do nc = 1, get_proc_clumps()
+      do fp = 1, filter(nc)%num_pcropp
+         p = filter_pcropp(fp)
+         ivt = patch%itype(p)
+         ! Set crop calendars for each gridcell/patch combination
+         write(stream_var_name,"(i6)") ivt
+         
+         ! SSR TODO: Add check that variable exists in netCDF
+         stream_var_name = 'sdate1_'//trim(adjustl(stream_var_name))
+         ip = mct_aVect_indexRA(sdat_sdate1%avs(1),trim(stream_var_name))
+         ig = g_to_ig(patch%gridcell(p))
+         crop_inst%sdates_thisyr(p,1) = sdat_sdate1%avs(1)%rAttr(ip,ig)
 
-          ! SSR TODO: Add check that variable exists in netCDF
-          stream_var_name = 'hdate1_'//trim(adjustl(stream_var_name))
-          ip = mct_aVect_indexRA(sdat_hdate1%avs(1),trim(stream_var_name))
-          ig = g_to_ig(patch%gridcell(p))
-          crop_inst%hdates_thisyr(p,1) = sdat_hdate1%avs(1)%rAttr(ip,ig)
-       else                       
-          ! non-vegetated pft
-         crop_inst%sdates_thisyr(p,1) = -1
-         crop_inst%hdates_thisyr(p,1) = -1
-       endif
-    end do
+         ! SSR TODO: Add check that variable exists in netCDF
+         stream_var_name = 'hdate1_'//trim(adjustl(stream_var_name))
+         ip = mct_aVect_indexRA(sdat_hdate1%avs(1),trim(stream_var_name))
+         ig = g_to_ig(patch%gridcell(p))
+         crop_inst%hdates_thisyr(p,1) = sdat_hdate1%avs(1)%rAttr(ip,ig)
+      end do
+   end do
 
   end subroutine cropcal_interp
 
