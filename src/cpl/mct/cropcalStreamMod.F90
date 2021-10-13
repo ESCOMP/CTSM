@@ -255,6 +255,7 @@ contains
     use CropType        , only : crop_type
     use PatchType       , only : patch
     use filterMod       , only : filter
+    use decompMod       , only : get_proc_clumps
     !
     ! !ARGUMENTS:
     implicit none
@@ -278,7 +279,7 @@ contains
     ! SSR TODO: Make these work with max_growingseasons_per_year > 1
     do nc = 1, get_proc_clumps()
       do fp = 1, filter(nc)%num_pcropp
-         p = filter_pcropp(fp)
+         p = filter(nc)%pcropp(fp)
          ivt = patch%itype(p)
          ! Set crop calendars for each gridcell/patch combination
          write(stream_var_name,"(i6)") ivt

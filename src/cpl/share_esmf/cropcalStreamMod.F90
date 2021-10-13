@@ -10,7 +10,7 @@ module cropcalStreamMod
   use ESMF
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_CL, CS => shr_kind_CS
   use dshr_strdata_mod , only : shr_strdata_type
-  use decompMod        , only : bounds_type
+  use decompMod        , only : bounds_type, get_proc_clumps
   use abortutils       , only : endrun
   use clm_varctl       , only : iulog
   use clm_varpar       , only : mxpft
@@ -294,7 +294,7 @@ contains
 
     do nc = 1, get_proc_clumps()
       do fp = 1, filter(nc)%num_pcropp
-         p = filter_pcropp(fp)
+         p = filter(nc)%pcropp(fp)
          ! Set crop calendar for each gridcell/patch combination
          ig = g_to_ig(patch%gridcell(p))
          ivt = patch%itype
