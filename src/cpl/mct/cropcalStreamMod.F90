@@ -31,8 +31,8 @@ module cropcalStreamMod
   ! !PRIVATE MEMBER DATA:
   integer, allocatable    :: g_to_ig(:)         ! Array matching gridcell index to data index
   ! SSR TODO: Make these work with max_growingseasons_per_year > 1
-  type(shr_strdata_type)  :: sdat_sdate1        ! 1st sowing date input data stream
-  type(shr_strdata_type)  :: sdat_hdate1        ! 1st harvest date input data stream
+  type(shr_strdata_type)  :: sdat_sdate        ! sowing date input data stream
+  type(shr_strdata_type)  :: sdat_hdate        ! harvest date input data stream
 
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -140,10 +140,9 @@ contains
     fldList_hdate1 = shr_string_listCreateField( mxpft, "hdate1" )
 
     ! SSR TODO:
-    ! - Make these work with max_growingseasons_per_year > 1
     ! - Delete "area" and "mask"?
     ! - Is this correct taxmode?
-    call shr_strdata_create(sdat_sdate1,               &
+    call shr_strdata_create(sdat_sdate,               &
          name="cropcaldyn",                            &
          pio_subsystem=pio_subsystem,                  &
          pio_iotype=shr_pio_getiotype(inst_name),      &
@@ -171,7 +170,7 @@ contains
          calendar=get_calendar(),                      &
          taxmode='cycle'                               )
 
-   call shr_strdata_create(sdat_hdate1,               &
+   call shr_strdata_create(sdat_hdate,               &
          name="cropcaldyn",                            &
          pio_subsystem=pio_subsystem,                  &
          pio_iotype=shr_pio_getiotype(inst_name),      &
@@ -200,8 +199,8 @@ contains
          taxmode='cycle'                               )
 
     if (masterproc) then
-       call shr_strdata_print(sdat_sdate1,'sdate1 data')
-       call shr_strdata_print(sdat_hdate1,'hdate1 data')
+       call shr_strdata_print(sdat_sdate,'sdate1 data')
+       call shr_strdata_print(sdat_hdate,'hdate1 data')
     endif
 
   end subroutine cropcal_init
@@ -231,8 +230,8 @@ contains
     mcdate = year*10000 + mon*100 + day
 
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-    call shr_strdata_advance(sdat_sdate1, mcdate, sec, mpicom, 'cropcaldyn')
-    call shr_strdata_advance(sdat_hdate1, mcdate, sec, mpicom, 'cropcaldyn')
+    call shr_strdata_advance(sdat_sdate, mcdate, sec, mpicom, 'cropcaldyn')
+    call shr_strdata_advance(sdat_hdate, mcdate, sec, mpicom, 'cropcaldyn')
 
     if ( .not. allocated(g_to_ig) )then
        allocate (g_to_ig(bounds%begg:bounds%endg) )
@@ -271,10 +270,10 @@ contains
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
 
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-    SHR_ASSERT_FL( (lbound(sdat_sdate1%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(sdat_sdate1%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (lbound(sdat_hdate1%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
-    SHR_ASSERT_FL( (ubound(sdat_hdate1%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(sdat_sdate%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_sdate%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (lbound(sdat_hdate%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
+    SHR_ASSERT_FL( (ubound(sdat_hdate%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
 
     ! SSR TODO: Make these work with max_growingseasons_per_year > 1
     do nc = 1, get_proc_clumps()
@@ -286,15 +285,15 @@ contains
          
          ! SSR TODO: Add check that variable exists in netCDF
          stream_var_name = 'sdate1_'//trim(adjustl(stream_var_name))
-         ip = mct_aVect_indexRA(sdat_sdate1%avs(1),trim(stream_var_name))
+         ip = mct_aVect_indexRA(sdat_sdate%avs(1),trim(stream_var_name))
          ig = g_to_ig(patch%gridcell(p))
-         crop_inst%sdates_thisyr(p,1) = sdat_sdate1%avs(1)%rAttr(ip,ig)
+         crop_inst%sdates_thisyr(p,1) = sdat_sdate%avs(1)%rAttr(ip,ig)
 
          ! SSR TODO: Add check that variable exists in netCDF
          stream_var_name = 'hdate1_'//trim(adjustl(stream_var_name))
-         ip = mct_aVect_indexRA(sdat_hdate1%avs(1),trim(stream_var_name))
+         ip = mct_aVect_indexRA(sdat_hdate%avs(1),trim(stream_var_name))
          ig = g_to_ig(patch%gridcell(p))
-         crop_inst%hdates_thisyr(p,1) = sdat_hdate1%avs(1)%rAttr(ip,ig)
+         crop_inst%hdates_thisyr(p,1) = sdat_hdate%avs(1)%rAttr(ip,ig)
       end do
    end do
 
