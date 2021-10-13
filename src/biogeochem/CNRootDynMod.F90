@@ -8,8 +8,9 @@ module CNRootDynMod
 ! !USES:
    use shr_kind_mod                    , only : r8 => shr_kind_r8
    use clm_time_manager                , only : get_step_size_real
+   use abortutils                      , only : endrun
    use clm_varpar                      , only : nlevsoi, nlevgrnd
-   use clm_varctl                      , only : use_vertsoilc, use_bedrock
+   use clm_varctl                      , only : use_bedrock
    use decompMod                       , only : bounds_type
    use pftconMod                       , only : noveg, npcropmin, pftcon 
    use ColumnType                      , only : col
@@ -186,16 +187,7 @@ subroutine CNRootDyn(bounds, num_soilc, filter_soilc, num_soilp, filter_soilp, &
 ! Calculate the nitrogen profile in each layer
 ! For now, the profile for each PFT is equivilent to the
 ! column profile, in the future, this could be changed to a weighted profile
-         if(use_vertsoilc) then !for vertical soil profile
-            rsmn(p,j) = sminn_vr(c,j) 
-         else ! need to calculate a profile, top 0.2m are constant, and decrease linearly
-            if(zi(c,j) <= 0.2_r8)then
-                rsmn(p,j) = dz(c,j)
-            end if
-            if(zi(c,j) > 0.2_r8)then
-                rsmn(p,j) = dz(c,j) * (zi(c,nlevsoi) - zi(c,j)) / (zi(c,nlevsoi) - 0.2_r8)
-            end if 
-         end if
+         rsmn(p,j) = sminn_vr(c,j) 
          if (root_depth(p) >= zi(c,j).or. &
                (zi(c,j-1) < root_depth(p) .and. zi(c,j) > root_depth(p))) then
             sumrsmn(p) = sumrsmn(p) + rsmn(p,j)      
