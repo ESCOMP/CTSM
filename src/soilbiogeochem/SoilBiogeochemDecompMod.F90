@@ -11,7 +11,7 @@ module SoilBiogeochemDecompMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates
+  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates, use_mimics_decomp, iulog
   use clm_varcon                         , only : dzsoi_decomp
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
@@ -70,7 +70,8 @@ contains
   subroutine SoilBiogeochemDecomp (bounds, num_soilc, filter_soilc,                                &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst, &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
-       cn_decomp_pools, p_decomp_cpool_loss, pmnf_decomp_cascade)
+       cn_decomp_pools, p_decomp_cpool_loss, pmnf_decomp_cascade, &
+       p_decomp_npool_to_din)
     !
     ! !USES:
     use SoilBiogeochemDecompCascadeConType, only : i_atm
@@ -87,6 +88,7 @@ contains
     real(r8)                                , intent(inout) :: cn_decomp_pools(bounds%begc:,1:,1:)     ! c:n ratios of applicable pools
     real(r8)                                , intent(inout) :: p_decomp_cpool_loss(bounds%begc:,1:,1:) ! potential C loss from one pool to another
     real(r8)                                , intent(inout) :: pmnf_decomp_cascade(bounds%begc:,1:,1:) ! potential mineral N flux from one pool to another
+    real(r8)                                , intent(inout) :: p_decomp_npool_to_din(bounds%begc:,1:,1:) ! potential flux to dissolved inorganic N
     !
     ! !LOCAL VARIABLES:
     integer :: c,j,k,l,m                                    ! indices
@@ -101,6 +103,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))               , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(p_decomp_npool_to_din) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
 
     associate(                                                                                                          & 
          cascade_donor_pool               =>    decomp_cascade_con%cascade_donor_pool                                 , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step
@@ -182,10 +185,14 @@ contains
                         sminn_to_denit_decomp_cascade_vr(c,j,k) = -params_inst%dnp * pmnf_decomp_cascade(c,j,k)
                      end if
                   end if
-                  decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k) + c_overflow_vr(c,j,k)
-                  ! TODO slevis: Should the next line also account for
-                  !              c_overflow_vr? If so, repeat for fates below
+                  decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                   decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
+                  if (use_mimics_decomp) then
+                     decomp_cascade_hr_vr(c,j,k) = min( &
+                        p_decomp_cpool_loss(c,j,k), &
+                        decomp_cascade_hr_vr(c,j,k) + c_overflow_vr(c,j,k))
+                     decomp_cascade_ctransfer_vr(c,j,k) = max(0.0_r8, p_decomp_cpool_loss(c,j,k) - decomp_cascade_hr_vr(c,j,k))
+                  end if
                   if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. cascade_receiver_pool(k) /= i_atm) then
                      decomp_cascade_ntransfer_vr(c,j,k) = p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
                   else
@@ -197,6 +204,12 @@ contains
                      decomp_cascade_sminn_flux_vr(c,j,k) = - pmnf_decomp_cascade(c,j,k)
                   endif
                   net_nmin_vr(c,j) = net_nmin_vr(c,j) - pmnf_decomp_cascade(c,j,k)
+! TODO slevis: NEED THIS if-block? If so, need anything additional that
+!              is done to pmnf_decomp_cascade or other?
+                  if (use_mimics_decomp) then
+                     decomp_cascade_sminn_flux_vr(c,j,k) = decomp_cascade_sminn_flux_vr(c,j,k) + p_decomp_npool_to_din(c,j,k)
+                     net_nmin_vr(c,j) = net_nmin_vr(c,j) + p_decomp_npool_to_din(c,j,k)
+                  end if
                else
                   decomp_cascade_ntransfer_vr(c,j,k) = 0._r8
                   if (.not. use_nitrif_denitrif) then
@@ -214,9 +227,14 @@ contains
             do fc = 1,num_soilc
                c = filter_soilc(fc)
                !
-               decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k) + c_overflow_vr(c,j,k)
-               !
+               decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
+               if (use_mimics_decomp) then
+                  decomp_cascade_hr_vr(c,j,k) = min( &
+                     p_decomp_cpool_loss(c,j,k), &
+                     decomp_cascade_hr_vr(c,j,k) + c_overflow_vr(c,j,k))
+                  decomp_cascade_ctransfer_vr(c,j,k) = max(0.0_r8, p_decomp_cpool_loss(c,j,k) - decomp_cascade_hr_vr(c,j,k))
+               end if
                !
             end do
          end do

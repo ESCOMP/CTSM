@@ -71,7 +71,8 @@ contains
   subroutine SoilBiogeochemPotential (bounds, num_soilc, filter_soilc, &
        soilbiogeochem_state_inst, soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst,  &
        soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, &
-       cn_decomp_pools, p_decomp_cpool_loss, p_decomp_cn_gain, pmnf_decomp_cascade)
+       cn_decomp_pools, p_decomp_cpool_loss, p_decomp_cn_gain, &
+       pmnf_decomp_cascade, p_decomp_npool_to_din)
     !
     ! !USES:
     use shr_log_mod                       , only : errMsg => shr_log_errMsg
@@ -89,6 +90,7 @@ contains
     real(r8)                                , intent(out)   :: cn_decomp_pools(bounds%begc:,1:,1:)     ! c:n ratios of applicable pools
     real(r8)                                , intent(out)   :: p_decomp_cpool_loss(bounds%begc:,1:,1:) ! potential C loss from one pool to another
     real(r8)                                , intent(out)   :: pmnf_decomp_cascade(bounds%begc:,1:,1:) ! potential mineral N flux, from one pool to another
+    real(r8)                                , intent(out)   :: p_decomp_npool_to_din(bounds%begc:,1:,1:)  ! potential flux to dissolved inorganic N
     real(r8)                                , intent(out)   :: p_decomp_cn_gain(bounds%begc:,1:,1:)  ! C:N ratio of the flux gained by the receiver pool
     !
     ! !LOCAL VARIABLES:
@@ -98,7 +100,6 @@ contains
     real(r8):: immob(bounds%begc:bounds%endc,1:nlevdecomp)  !potential N immobilization
     real(r8):: p_decomp_cpool_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential C gain by receiver pool
     real(r8):: p_decomp_npool_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential N gain by receiver pool
-    real(r8):: p_decomp_npool_to_din(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential flux to dissolved inorganic N
     real(r8):: p_decomp_cpool_gain_sum(1:ndecomp_pools)  ! total potential C gain by receiver pool (only microbial pools)
     real(r8):: p_decomp_npool_gain_sum(1:ndecomp_pools)  ! total potential N gain by receiver pool (only microbial pools)
     real(r8):: decomp_nc_loss_donor  ! N:C ratio of donor pool
@@ -113,6 +114,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(p_decomp_cn_gain)    == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(p_decomp_npool_to_din) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
 
     associate(                                                                                                          & 
          cascade_donor_pool               => decomp_cascade_con%cascade_donor_pool                                 , & ! Input:  [integer  (:)     ]  which pool is C taken from for a given decomposition step
