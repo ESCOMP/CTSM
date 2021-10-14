@@ -2029,21 +2029,10 @@
   <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesRs" testmods="clm/FatesColdDefAllVars">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">ERP FATES test covering all standard FATES history variables.</option>
-    </options>
-  </test>
-  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefHydro">
-    <machines>
-      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
-      <machine name="izumi" compiler="nag" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro.</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I2000Clm45Fates" testmods="clm/FatesColdDef">
@@ -2273,6 +2262,7 @@
   </test>
   <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDefHydro">
     <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm"/>
       <machine name="cheyenne" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
