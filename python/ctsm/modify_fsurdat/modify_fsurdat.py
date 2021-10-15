@@ -179,7 +179,7 @@ class ModifyFsurdat:
         """
 
         # default to bare soil
-        if dom_nat_pft == -999:
+        if dom_nat_pft is None:
             dom_nat_pft = 0
         if dom_nat_pft == 0:
             lai = [0,0,0,0,0,0,0,0,0,0,0,0]
@@ -218,7 +218,6 @@ class ModifyFsurdat:
         # rectangles overlap
         rectangle = np.logical_and(union_1, union_2)
         not_rectangle = np.logical_not(rectangle)
-        print(rectangle)
 
         # Overwrite in rectangle(s)
         # ------------------------
@@ -276,7 +275,7 @@ class ModifyFsurdat:
             # initialize 3D variable
             self.file['PCT_NAT_PFT'][pft,:,:] = \
              self.file['PCT_NAT_PFT'][pft,:,:].where(not_rectangle, other=0)
-            for mon in (self.file.time - 1):
+            for mon in self.file.time - 1:
                 # initialize 4D variables
                 self.file['MONTHLY_LAI'][mon,pft,:,:] = \
                  self.file['MONTHLY_LAI'][mon,pft,:,:].where(not_rectangle, other=0)
@@ -293,12 +292,14 @@ class ModifyFsurdat:
                     self.file['MONTHLY_SAI'][mon,pft,:,:] = \
                      self.file['MONTHLY_SAI'][mon,pft,:,:].where(not_rectangle, other=sai[int(mon)])
                     self.file['MONTHLY_HEIGHT_TOP'][mon,pft,:,:] = \
-                     self.file['MONTHLY_HEIGHT_TOP'][mon,pft,:,:].where(not_rectangle, other=hgt_top[int(mon)])
+                     self.file['MONTHLY_HEIGHT_TOP'][mon,pft,:,:]. \
+                          where(not_rectangle, other=hgt_top[int(mon)])
                     self.file['MONTHLY_HEIGHT_BOT'][mon,pft,:,:] = \
-                     self.file['MONTHLY_HEIGHT_BOT'][mon,pft,:,:].where(not_rectangle, other=hgt_bot[int(mon)])
+                     self.file['MONTHLY_HEIGHT_BOT'][mon,pft,:,:]. \
+                          where(not_rectangle, other=hgt_bot[int(mon)])
 
         for crop in self.file.cft:
-            cft_local = crop - (pft + 1)
+            cft_local = crop - (pft + 1)  # uses last pft from previous loop
             # initialize 3D variable
             self.file['PCT_CFT'][cft_local,:,:] = \
              self.file['PCT_CFT'][cft_local,:,:].where(not_rectangle, other=0)

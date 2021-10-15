@@ -9,8 +9,16 @@ import subprocess
 
 from datetime import date
 from getpass import getuser
+from configparser import NoSectionError, NoOptionError
 
 logger = logging.getLogger(__name__)
+
+# This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
+# to denote a value that needs to be filled in
+_PLACEHOLDER = 'FILL_THIS_IN'
+# This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
+# to denote a value that can be filled in, but doesn't absolutely need to be
+_UNSET = 'UNSET'
 
 def abort(errmsg):
     """Abort the program with the given error message
@@ -116,19 +124,55 @@ def lon_range_0_to_360(lon_in):
     -----------
     Restrict longitude to 0 to 360 when given as -180 to 180.
     """
-    lon_1 = -180
-    lon_2 = 0
-    lon_3 = 180
-    lon_4 = 360
-    if lon_1 <= lon_in < lon_2:
-        lon_out = lon_in + lon_4
-        message = 'WARNING: Resetting longitude from ' + str(lon_in) + \
+    if -180 <= lon_in < 0:
+        lon_out = lon_in + 360
+        message = 'INFO: Resetting longitude from ' + str(lon_in) + \
                   ' to ' + str(lon_out) + ' to keep in the range 0 to 360'
         print(message)  # TODO Use logging to print this
-    elif lon_2 <= lon_in <= lon_4 or lon_in == -999:
+    elif 0 <= lon_in <= 360 or lon_in is None:
         lon_out = lon_in
     else:
         errmsg = 'lon_in needs to be in the range 0 to 360'
         abort(errmsg)
 
     return lon_out
+
+def get_config_value(config, section, item, file_path, allowed_values=None):
+    """Get a given item from a given section of the config object
+    Give a helpful error message if we can't find the given section or item
+    Note that the file_path argument is only used for the sake of the error message
+    If allowed_values is present, it should be a list of strings giving allowed values
+    """
+    try:
+        val = config.get(section, item)
+    except NoSectionError:
+        abort("ERROR: Config file {} must contain section '{}'".format(file_path, section))
+    except NoOptionError:
+        abort("ERROR: Config file {} must contain item '{}' in section '{}'".format(
+            file_path, item, section))
+
+    if val == _PLACEHOLDER:
+        abort("Error: {} needs to be specified in config file {}".format(item, file_path))
+
+    if allowed_values is not None:
+        if val not in allowed_values:
+            abort("Error: {} is not an allowed value for {} in config file {}\n"
+                  "Allowed values: {}".format(val, item, file_path, allowed_values))
+
+    return val
+
+def select_value(var, default, type_of_var):
+    """
+    Description
+    -----------
+    Determines whether to assign the default value or the user-specified one
+    """
+    if var == _UNSET:
+        var = default
+    elif isinstance(default, list):
+        var = list(var.split())  # convert string to list of strings
+        var = list(map(type_of_var, var))  # convert elements to type_of_var
+    else:
+        var = type_of_var(var)
+
+    return var
