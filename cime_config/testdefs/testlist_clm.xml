@@ -2158,7 +2158,6 @@
   <test name="ERP_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdDef">
     <machines>
       <machine name="cheyenne" compiler="intel" category="fates"/>
-      <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
