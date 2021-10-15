@@ -60,7 +60,7 @@
     </phase>
   </test>
 
-  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdDefHydroo">
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesCruRsGs.izumi_nag.clm-FatesColdDefHydro">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#1525</issue>
