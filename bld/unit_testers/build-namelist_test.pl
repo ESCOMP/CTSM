@@ -84,6 +84,31 @@ EOF
    $fh->close();
 }
 
+sub cat_and_create_namelistinfile {
+#
+# Concatenate the user_nl_clm files together and turn it into a namelist input file
+# that can be read in by build-namelist
+#
+   my ($file1, $file2, $outfile) = @_;
+
+   my $fh    = IO::File->new($file1,   '<') or die "can't open file: $file1";
+   my $outfh = IO::File->new($outfile, '>') or die "can't open file: $outfile";
+   print $outfh "&clm_settings\n\n";
+   while ( my $line = <$fh> ) {
+     print $outfh " $line";
+   }
+   $fh->close();
+   if ( defined($file2) ) {
+      my $fh    = IO::File->new($file2,   '<') or die "can't open file: $file2";
+      while ( my $line = <$fh> ) {
+        print $outfh " $line";
+      }
+   }
+   print $outfh "\n/\n";
+   $fh->close();
+   $outfh->close();
+}
+
 #
 # Process command-line options.
 #
@@ -138,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1576;
+my $ntests = 1765;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1053;
+   $ntests += 1194;
 }
 plan( tests=>$ntests );
 
@@ -326,6 +351,56 @@ foreach my $options ( "-configuration nwp",
    }
    &cleanup();
 }
+print "\n===============================================================================\n";
+print "Test the NEON sites\n";
+print "=================================================================================\n";
+my $phys = "clm5_1";
+$mode = "-phys $phys";
+&make_config_cache($phys);
+my $neondir      = "../../cime_config/usermods_dirs/NEON";
+foreach my $site ( "ABBY", "BLAN", "CPER", "DEJU", "GRSM", "HEAL", "KONA", "LENO", "NIWO", 
+                   "ONAQ", "PUUM", "SERC", "SRER", "TALL", "TREE", "WOOD", "BARR", "BONA", 
+                   "DCFS", "DELA", "GUAN", "JERC", "KONZ", "MLBS", "NOGP", "ORNL", "RMNP", 
+                   "SJER", "STEI", "TEAK", "UKFS", "WREF", "BART", "CLBJ", "DSNY", "HARV", 
+                   "JORN", "LAJA", "MOAB", "OAES", "OSBS", "SCBI", "SOAP", "STER", "TOOL", 
+                   "UNDE", "YELL" 
+ ) {
+   &make_env_run();
+   #
+   # Concatonate  default usermods and specific sitetogether expanding env variables while doing that
+   # 
+   if ( ! -d "$neondir/$site" ) {
+      print "NEON directory is not there: $neondir/$site\n";
+      die "ERROR:: NEON site does not exist: $site\n";
+   }
+   my $neondefaultfile = "$neondir/defaults/user_nl_clm";
+   my $neonsitefile = "$neondir/$site/user_nl_clm";
+   if ( ! -f $neonsitefile )  {
+      $neonsitefile = undef;
+   }
+   $ENV{'NEONSITE'} = $site;
+   my $namelistfile = "temp.namelistinfile_$site";
+   &cat_and_create_namelistinfile( $neondefaultfile, $neonsitefile, $namelistfile );
+   #
+   # Now run  the site
+   # 
+   my $options = "-res CLM_USRDAT -clm_usr_name NEON -no-megan -bgc bgc -sim_year 2000 -infile $namelistfile";
+   eval{ system( "$bldnml -envxml_dir . $options > $tempfile 2>&1 " ); };
+   is( $@, '', "options: $options" );
+   $cfiles->checkfilesexist( "$options", $mode );
+   $cfiles->shownmldiff( "default", $mode );
+   if ( defined($opts{'compare'}) ) {
+      $cfiles->doNOTdodiffonfile( "$tempfile", "$options", $mode );
+      $cfiles->dodiffonfile(      "lnd_in",    "$options", $mode );
+      $cfiles->dodiffonfile( "$real_par_file", "$options", $mode );
+      $cfiles->comparefiles( "$options", $mode, $opts{'compare'} );
+   }
+   if ( defined($opts{'generate'}) ) {
+      $cfiles->copyfiles( "$options", $mode );
+   }
+   system( "/bin/rm $namelistfile" );
+   &cleanup();
+}
 
 print "\n===============================================================================\n";
 print "Test some CAM specific setups for special grids \n";
@@ -448,6 +523,11 @@ my %failtest = (
                                      namelst=>"reseed_dead_plants=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
+                                   },
+     "onset_threh w SP"          =>{ options=>" -envxml_dir . -bgc sp",
+                                     namelst=>"onset_thresh_depends_on_veg=.true.",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
      "dribble_crphrv w/o CN"     =>{ options=>" -envxml_dir . -bgc sp",
                                      namelst=>"dribble_crophrv_xsmrpool_2atm=.true.",
@@ -806,7 +886,7 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "glc_nec inconsistent"      =>{ options=>"-envxml_dir .",
-                                     namelst=>"maxpatch_glcmec=5",
+                                     namelst=>"maxpatch_glc=5",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },

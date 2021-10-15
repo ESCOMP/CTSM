@@ -77,12 +77,13 @@ contains
   ! Public methods
   ! ========================================================================
 
-  subroutine interp_multilevel(this, data_dest, data_source, index_dest)
+  subroutine interp_multilevel(this, data_dest, data_source, index_dest, scale_by_thickness)
     ! Mock version: Asserts that it is called with correct arguments
     class(interp_multilevel_mock_type), intent(in) :: this
     real(r8) , intent(inout) :: data_dest(:)    ! not modified here, but intent(inout) to match interface
     real(r8) , intent(in)    :: data_source(:)
     integer  , intent(in)    :: index_dest
+    logical  , intent(in)    :: scale_by_thickness
 
     @assertEqual(size(this%expected_data_dest), size(data_dest), message=this%name//': data_dest size')
     @assertEqual(this%expected_data_dest, data_dest, message=this%name//': data_dest')

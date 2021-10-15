@@ -23,7 +23,7 @@ contains
                         ptr_gcell, ptr_lunit, ptr_col, ptr_patch, ptr_lnd, &
                         ptr_atm, p2c_scale_type, c2l_scale_type, &
                         l2g_scale_type, set_lake, set_nolake, set_urb, set_nourb, &
-                        set_noglcmec, set_spec, default)
+                        set_noglc, set_spec, default)
       character(len=*), intent(in)           :: fname          ! field name
     character(len=*), intent(in)           :: units          ! units of field
     character(len=1), intent(in)           :: avgflag        ! time averaging flag
@@ -39,7 +39,7 @@ contains
     real(r8)        , optional, intent(in) :: set_nolake     ! value to set non-lakes to
     real(r8)        , optional, intent(in) :: set_urb        ! value to set urban to
     real(r8)        , optional, intent(in) :: set_nourb      ! value to set non-urban to
-    real(r8)        , optional, intent(in) :: set_noglcmec   ! value to set non-glacier_mec to
+    real(r8)        , optional, intent(in) :: set_noglc      ! value to set non-glacier to
     real(r8)        , optional, intent(in) :: set_spec       ! value to set special to
     character(len=*), optional, intent(in) :: p2c_scale_type ! scale type for subgrid averaging of pfts to column
     character(len=*), optional, intent(in) :: c2l_scale_type ! scale type for subgrid averaging of columns to landunits

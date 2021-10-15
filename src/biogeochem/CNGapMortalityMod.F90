@@ -122,14 +122,13 @@ contains
     real(r8)                               , intent(in)    :: stem_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: p             ! patch index
-    integer :: fp            ! patch filter index
-    real(r8):: am            ! rate for fractional mortality (1/yr)
-    real(r8):: m             ! rate for fractional mortality (1/s)
-    real(r8):: mort_max      ! asymptotic max mortality rate (/yr)
-    real(r8):: k_mort = 0.3  ! coeff of growth efficiency in mortality equation
-    real(r8):: dt
-    logical,parameter :: matrixcheck_gm = .False.
+    integer :: p                ! patch index
+    integer :: fp               ! patch filter index
+    real(r8):: am               ! rate for fractional mortality (1/yr)
+    real(r8):: m                ! rate for fractional mortality (1/s)
+    real(r8):: mort_max         ! asymptotic max mortality rate (/yr)
+    real(r8):: k_mort = 0.3_r8  ! coeff of growth efficiency in mortality equation
+    logical,parameter :: matrixcheck_gm = .False. ! If matrix check shoudl be done
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)

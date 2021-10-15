@@ -549,13 +549,14 @@ contains
        ptr2d => this%sminn_vr_col
        call restartvar(ncid=ncid, flag=flag, varname="sminn_vr", xtype=ncd_double,  &
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='',  units='', fill_value=spval, &
+            long_name='',  units='gN/m3', fill_value=spval, &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=ptr2d)
     else
        ptr1d => this%sminn_vr_col(:,1)
        call restartvar(ncid=ncid, flag=flag, varname="sminn", xtype=ncd_double,  &
             dim1name='column', &
-            long_name='',  units='', fill_value=spval, &
+            long_name='',  units='gN/m3', fill_value=spval, &
             interpinic_flag='interp' , readvar=readvar, data=ptr1d)
     end if
     if (flag=='read' .and. .not. readvar) then
@@ -570,13 +571,14 @@ contains
           ptr2d => this%decomp_npools_vr_col(:,:,k)
           call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vr", xtype=ncd_double, &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d)			   
+               long_name='', units='gN/m3', &
+               scale_by_thickness=.false., &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
        else
           ptr1d => this%decomp_npools_vr_col(:,1,k)
           call restartvar(ncid=ncid, flag=flag, varname=varname, xtype=ncd_double,  &
                dim1name='column', &
-               long_name='',  units='', fill_value=spval, &
+               long_name='',  units='gN/m3', fill_value=spval, &
                interpinic_flag='interp' , readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
@@ -759,13 +761,14 @@ contains
        ptr2d => this%ntrunc_vr_col
        call restartvar(ncid=ncid, flag=flag, varname="col_ntrunc_vr", xtype=ncd_double,  &
             dim1name='column', dim2name='levgrnd', switchdim=.true., &
-            long_name='',  units='', fill_value=spval, &
+            long_name='',  units='gN/m3', fill_value=spval, &
+            scale_by_thickness=.false., &
             interpinic_flag='interp', readvar=readvar, data=ptr2d)
     else
        ptr1d => this%ntrunc_vr_col(:,1)
        call restartvar(ncid=ncid, flag=flag, varname="col_ntrunc", xtype=ncd_double,  &
             dim1name='column', &
-            long_name='',  units='', fill_value=spval, &
+            long_name='',  units='gN/m3', fill_value=spval, &
             interpinic_flag='interp' , readvar=readvar, data=ptr1d)
     end if
 
@@ -775,13 +778,14 @@ contains
           ptr2d => this%smin_no3_vr_col(:,:)
           call restartvar(ncid=ncid, flag=flag, varname='smin_no3_vr', xtype=ncd_double, &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
+               long_name='', units='gN/m3', &
+               scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)
        else
           ptr1d => this%smin_no3_vr_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname='smin_no3', xtype=ncd_double, &
                dim1name='column', &
-               long_name='', units='', &
+               long_name='', units='gN/m3', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
@@ -795,13 +799,14 @@ contains
           ptr2d => this%smin_nh4_vr_col(:,:)
           call restartvar(ncid=ncid, flag=flag, varname='smin_nh4_vr', xtype=ncd_double, &
                dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='', &
+               long_name='', units='gN/m3', &
+               scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d) 
        else
           ptr1d => this%smin_nh4_vr_col(:,1)
           call restartvar(ncid=ncid, flag=flag, varname='smin_nh4', xtype=ncd_double, &
                dim1name='column', &
-               long_name='', units='', &
+               long_name='', units='gN/m3', &
                interpinic_flag='interp', readvar=readvar, data=ptr1d)
        end if
        if (flag=='read' .and. .not. readvar) then
