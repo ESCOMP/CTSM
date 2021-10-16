@@ -5,7 +5,6 @@ tools/modify_fsurdat/fsurdat_modifier
 The wrapper script includes a full description and instructions.
 """
 
-#  Import libraries
 import sys
 from configparser import ConfigParser
 from ctsm.utils import get_config_value, select_value
@@ -16,7 +15,7 @@ def main ():
     """
     Description
     -----------
-    Calls various functions that modify an fsurdat (surface dataset)
+    Calls function that modifies an fsurdat (surface dataset)
     """
 
     # read the config file
