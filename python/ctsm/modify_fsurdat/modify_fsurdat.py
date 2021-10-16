@@ -27,7 +27,7 @@ class ModifyFsurdat:
     write_output:
         Write out the modified fsurdat (surface dataset)
 
-    TODO: List of methods here?
+    TODO: Complete list of methods here?
     """
 
     def __init__(self, fsurdat_in):
@@ -170,46 +170,10 @@ class ModifyFsurdat:
         self.file['PCT_GLACIER'][:,:] = 0
 
 
-    def std_elev(self, std_elev):
-        """
-        Description
-        -----------
-        Set STD_ELEV to specify uniform snowpack.
-
-        Arguments
-        ---------
-        std_elev:
-            (float) command line entry of STD_ELEV value
-        """
-
-        self.file['STD_ELEV'][:,:] = std_elev
-
-
-    def max_sat_area(self, max_sat_area):
-        """
-        Description
-        -----------
-        Replace fsurdat file's FMAX values with a constant selected by user
-
-        Arguments
-        ---------
-        max_sat_area:
-            (float) command line entry of FMAX value
-        """
-
-        min_max_sat_area = 0
-        max_max_sat_area = 1
-        if min_max_sat_area <= max_sat_area <= max_max_sat_area:
-            self.file['FMAX'][:,:] = max_sat_area
-        else:
-            errmsg = 'Argument --max_sat_area requires values from ' + \
-                     str(min_max_sat_area) + ' to ' + str(max_max_sat_area)
-            abort(errmsg)
-
-
-    def set_in_rectangle(self, idealized, lon_in_1, lon_in_2, lat_in_1,
-                        lat_in_2, dom_nat_pft, lai, sai, hgt_top, hgt_bot,
-                        zero_nonveg, std_elev, max_sat_area):
+    def set_in_rectangle(self, _idealized, _lon_in_1, _lon_in_2, _lat_in_1,
+                        _lat_in_2, _dom_nat_pft, _lai, _sai, _hgt_top,
+                        _hgt_bot, _zero_nonveg, _std_elev, _soil_color,
+                        _max_sat_area):
         """
         Description
         -----------
@@ -217,48 +181,45 @@ class ModifyFsurdat:
 
         Arguments
         ---------
-        lon_in_1:
+        _lon_in_1:
             (int) westernmost edge of rectangle
-        lon_in_2:
+        _lon_in_2:
             (int) easternmost edge of rectangle
-        lat_in_1:
+        _lat_in_1:
             (int) southernmost edge of rectangle
-        lat_in_2:
+        _lat_in_2:
             (int) northernmost edge of rectangle
-        dom_nat_pft:
+        _dom_nat_pft:
             (int) user-selected PFT to be set to 100% in rectangle
-        lai:
+        _lai:
             (list of floats) user-defined leaf area index
-        sai:
+        _sai:
             (list of floats) user-defined stem area index
-        hgt_top:
-            (list of floats) user-defined height at top of vegetation canopy (m)
-        hgt_bot:
-            (list of floats) user-defined height at bottom of vegetation canopy (m)
+        _hgt_top:
+            (list of floats) user-defined height at top of vegetation
+            canopy (m)
+        _hgt_bot:
+            (list of floats) user-defined height at bottom of vegetation
+            canopy (m)
+        _zero_nonveg:
+        _std_elev:
+        _soil_color:
+        _max_sat_area:
         """
-
-        # default to bare soil
-        if dom_nat_pft is None:
-            dom_nat_pft = 0
-        if dom_nat_pft == 0:
-            lai = [0] * 12
-            sai = [0] * 12
-            hgt_top = [0] * 12
-            hgt_bot = [0] * 12
 
         # Currently type(lon_in_*) = int with required range 0-360.
         # If instead of requiring integer values, we decide to allow floats,
         # then ensure that lon ranges 0-360 in case user entered -180 to 180.
-        lon_1 = lon_range_0_to_360(lon_in_1)
-        lon_2 = lon_range_0_to_360(lon_in_2)
+        lon_1 = lon_range_0_to_360(_lon_in_1)
+        lon_2 = lon_range_0_to_360(_lon_in_2)
 
         # determine the rectangle(s)
         # TODO This is not really "nearest" for the edges but isel didn't work
         rectangle_1 = (self.file.LONGXY >= lon_1)
         rectangle_2 = (self.file.LONGXY <= lon_2)
         eps = np.finfo(np.float32).eps  # to avoid roundoff issue
-        rectangle_3 = (self.file.LATIXY >= (lat_in_1 - eps))
-        rectangle_4 = (self.file.LATIXY <= (lat_in_2 + eps))
+        rectangle_3 = (self.file.LATIXY >= (_lat_in_1 - eps))
+        rectangle_4 = (self.file.LATIXY <= (_lat_in_2 + eps))
 
         if lon_1 <= lon_2:
             # rectangles overlap
@@ -267,7 +228,7 @@ class ModifyFsurdat:
             # rectangles don't overlap (stradling the 0-degree meridian)
             union_1 = np.logical_or(rectangle_1, rectangle_2)
 
-        if lat_in_1 <= lat_in_2:
+        if _lat_in_1 <= _lat_in_2:
             # rectangles overlap
             union_2 = np.logical_and(rectangle_3, rectangle_4)
         else:
@@ -284,17 +245,31 @@ class ModifyFsurdat:
         # "other" assigns the corresponding value in the rectangle.
         # Values outside the rectangle are preserved.
         # ------------------------
-        if idealized:
+        if _idealized:
+            if _dom_nat_pft is None:  # default to bare soil when not user-set
+                _dom_nat_pft = 0
+            if _dom_nat_pft == 0:  # values corresponding to bare soil
+                _lai = [0] * 12
+                _sai = [0] * 12
+                _hgt_top = [0] * 12
+                _hgt_bot = [0] * 12
+            if _soil_color is None:  # default to loam when not user-set
+                _soil_color = 15
+            if _std_elev is None:  # other default values when not user-set
+                _std_elev = 0
+            if _max_sat_area is None:
+                _max_sat_area = 0
+
             # 2D variables
             # max inundated fraction
             self.file['F0'] = \
              self.file['F0'].where(not_rectangle, other=0)
             # max saturated area
             self.file['FMAX'] = \
-             self.file['FMAX'].where(not_rectangle, other=max_sat_area)
+             self.file['FMAX'].where(not_rectangle, other=_max_sat_area)
             # standard deviation of elevation
             self.file['STD_ELEV'] = \
-             self.file['STD_ELEV'].where(not_rectangle, other=std_elev)
+             self.file['STD_ELEV'].where(not_rectangle, other=_std_elev)
             # mean topographic slope
             self.file['SLOPE'] = \
              self.file['SLOPE'].where(not_rectangle, other=0)
@@ -303,7 +278,7 @@ class ModifyFsurdat:
              self.file['zbedrock'].where(not_rectangle, other=10)
             # value representing loam
             self.file['SOIL_COLOR'] = \
-             self.file['SOIL_COLOR'].where(not_rectangle, other=15)
+             self.file['SOIL_COLOR'].where(not_rectangle, other=_soil_color)
 
             self.file['PFTDATA_MASK'] = \
              self.file['PFTDATA_MASK'].where(not_rectangle, other=1)
@@ -343,21 +318,31 @@ class ModifyFsurdat:
             self.file['PCT_CFT'][0,:,:] = \
              self.file['PCT_CFT'][0,:,:].where(not_rectangle, other=100)
 
-            # set PCT_NAT_PFT, MONLTHLY_LAI, MONTHLY_SAI, MONTHLY_HEIGHT_TOP,
-            # MONTHLY_HEIGHT_TOP
-            self.set_dom_nat_pft(dom_nat_pft=dom_nat_pft, lai=lai, sai=sai,
-                                 hgt_top=hgt_top, hgt_bot=hgt_bot,
+            # set 3D and 4D variables PCT_NAT_PFT, MONLTHLY_LAI, MONTHLY_SAI,
+            # MONTHLY_HEIGHT_TOP, MONTHLY_HEIGHT_TOP
+            self.set_dom_nat_pft(dom_nat_pft=_dom_nat_pft, lai=_lai, sai=_sai,
+                                 hgt_top=_hgt_top, hgt_bot=_hgt_bot,
                                  not_rectangle=not_rectangle)
 
         else:  # not idealized
-            # If not idealized, the user wants changes in specific vars in the
-            # rectangle and everything else unchanged. In such cases call
-            if dom_nat_pft is not None:
-                self.set_dom_nat_pft(dom_nat_pft=dom_nat_pft, lai=lai, sai=sai,
-                                     hgt_top=hgt_top, hgt_bot=hgt_bot,
+            # Changing specific vars in the rectangle and leaving everything
+            # else unchanged
+            if _dom_nat_pft is not None:
+                self.set_dom_nat_pft(dom_nat_pft=_dom_nat_pft,
+                                     lai=_lai, sai=_sai,
+                                     hgt_top=_hgt_top, hgt_bot=_hgt_bot,
                                      not_rectangle=not_rectangle)
-            # Also,
-            # - zero_nonveg
-            # - std_elev
-            # - max_sat_area
-            # - soil_color (function not written, yet)
+            if _max_sat_area is not None:
+                # max saturated area
+                self.file['FMAX'] = \
+                 self.file['FMAX'].where(not_rectangle, other=_max_sat_area)
+            if _std_elev is not None:
+                # standard deviation of elevation
+                self.file['STD_ELEV'] = \
+                 self.file['STD_ELEV'].where(not_rectangle, other=_std_elev)
+            if _soil_color is not None:
+                # value representing loam
+                self.file['SOIL_COLOR'] = \
+                 self.file['SOIL_COLOR'].where(not_rectangle,
+                                               other=_soil_color)
+            # TODO Next also zero_nonveg or is idealized option sufficient?

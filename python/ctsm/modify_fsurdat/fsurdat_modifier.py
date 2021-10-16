@@ -31,6 +31,8 @@ def main ():
                                    cfg_path)
 
     # not required: user may set these in ./modify.cfg
+    # TODO Error checking not complete for these. Should it be done here
+    # while reading or later when using them?
     temp = get_config_value(config, 'modify_input', 'idealized', cfg_path,
                             allowed_values=['True','False','UNSET'])
     idealized = select_value(var=temp, default=False, type_of_var=bool)
@@ -64,11 +66,16 @@ def main ():
     temp = get_config_value(config, 'modify_input', 'hgt_bot', cfg_path)
     hgt_bot = select_value(var=temp, default=[], type_of_var=float)
 
+    temp = get_config_value(config, 'modify_input', 'soil_color', cfg_path,
+        allowed_values=['1','2','3','4','5','6','7','8','9','10','11','12',
+                        '13','14','15','16','17','18','19','20','UNSET'])
+    soil_color = select_value(var=temp, default=None, type_of_var=int)
+
     temp = get_config_value(config, 'modify_input', 'std_elev', cfg_path)
-    std_elev = select_value(var=temp, default=0, type_of_var=float)
+    std_elev = select_value(var=temp, default=None, type_of_var=float)
 
     temp = get_config_value(config, 'modify_input', 'max_sat_area', cfg_path)
-    max_sat_area = select_value(var=temp, default=0, type_of_var=float)
+    max_sat_area = select_value(var=temp, default=None, type_of_var=float)
 
     temp = get_config_value(config, 'modify_input', 'zero_nonveg', cfg_path,
                             allowed_values=['True','False','UNSET'])
@@ -86,19 +93,20 @@ def main ():
     # MCT or the ocean mesh files for NUOPC. The function set_in_rectangle
     # can specify fsurdat variables inside a box but it cannot
     # change which points will run as land and which as ocean.
-    modify_fsurdat.set_in_rectangle(idealized,
-                                    lon_in_1=lnd_lon_1,
-                                    lon_in_2=lnd_lon_2,
-                                    lat_in_1=lnd_lat_1,
-                                    lat_in_2=lnd_lat_2,
-                                    dom_nat_pft=dom_nat_pft,
-                                    lai=lai,
-                                    sai=sai,
-                                    hgt_top=hgt_top,
-                                    hgt_bot=hgt_bot,
-                                    zero_nonveg=zero_nonveg,
-                                    std_elev=std_elev,
-                                    max_sat_area=max_sat_area)
+    modify_fsurdat.set_in_rectangle(_idealized=idealized,
+                                    _lon_in_1=lnd_lon_1,
+                                    _lon_in_2=lnd_lon_2,
+                                    _lat_in_1=lnd_lat_1,
+                                    _lat_in_2=lnd_lat_2,
+                                    _dom_nat_pft=dom_nat_pft,
+                                    _lai=lai,
+                                    _sai=sai,
+                                    _hgt_top=hgt_top,
+                                    _hgt_bot=hgt_bot,
+                                    _zero_nonveg=zero_nonveg,
+                                    _std_elev=std_elev,
+                                    _soil_color=soil_color,
+                                    _max_sat_area=max_sat_area)
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
