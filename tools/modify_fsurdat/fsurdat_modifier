@@ -6,7 +6,8 @@ fsurdat_modifier is a tool that modifies fsurdat files. It reads a surface
 dataset (fsurdat file) and outputs a modified copy of the same file.
 
 Current applications are limited to the simplest CTSM(SP) mode, so bgc, fire,
-urban, vic, lake, transient, and crop-related variables in the fsurdat file remain unchanged.
+urban, vic, lake, transient, and crop-related variables in the fsurdat file
+remain unchanged.
 
 It differs from modify_singlept_site_neon.py in that the latter specifically
 modifies soil properties of single-point surface datasets. Some functions
@@ -15,8 +16,9 @@ could/should become shared for use by fsurdat_modifier.
 It also differs from the subset_data tool in that the latter subsets fsurdat
 files to regional or single-point domains. Though subset_data includes some
 "modify" functionality when subsetting to single-point, we intend for similar
-functionality to be more extensive and more object oriented in fsurdat_modifier.
-Again, some functions could/should become shared among these tools.
+functionality to be more extensive and more object oriented in
+fsurdat_modifier. Again, some functions could/should become shared among
+these tools.
 
 Files accessed
 --------------
@@ -31,19 +33,13 @@ To run on Cheyenne/Casper
 module load python
 ncar_pylib
 (Use "deactivate" to reverse the latter.)
-2) ./fsurdat_modifier --help  # TODO This doesn't work currently...
-for a list of available arguments
-3) ./fsurdat_modifier --fsurdat_out output_file.nc [--fsurdat_in input_file.nc
-                      --dom_pft int --max_sat_area float --std_elev float
-                      --lnd_lat_min float --lnd_lat_max float
-                      --lnd_lon_min float --lnd_lon_max float --zero_nonveg]
-Arguments in brackets are optional.
-Optional arguments --lnd_lat_min --lnd_lat_max --lnd_lon_min --lnd_lon_max
-all need to be set in order to work together.
+2) Modify the configure file named modify.cfg, which contains all the
+arguments needed by the script.
+3) Run the script: ./fsurdat_modifier
 
 Example
 -------
->>> ./fsurdat_modifier --fsurdat_out test.nc
+>>> ./fsurdat_modifier
 
 Inputs
 ------

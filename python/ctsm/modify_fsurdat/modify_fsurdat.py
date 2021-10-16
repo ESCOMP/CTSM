@@ -74,22 +74,81 @@ class ModifyFsurdat:
         self.file.close()
 
 
-    def dom_nat_pft(self, dom_nat_pft):
+    def set_dom_nat_pft(self, dom_nat_pft, lai, sai, hgt_top, hgt_bot,
+                        not_rectangle):
         """
         Description
         -----------
-        Replace fsurdat file's PCT_NAT_PFT values with:
+        In rectangle selected by user (or default -90 to 90 and 0 to 360),
+        replace fsurdat file's PCT_NAT_PFT with:
         - 100 for dom_nat_pft selected by user
         - 0 for all other non-crop PFTs
+        If user has specified lai, sai, hgt_top, hgt_bot, replace these with
+        values selected by the user for dom_nat_pft
 
         Arguments
         ---------
         dom_nat_pft:
-            (int) Command line entry of PFT to be set to 100% everywhere
+            (int) User's entry of PFT to be set to 100% everywhere
+        lai:
+            (float) User's entry of MONTHLY_LAI for their dom_nat_pft
+        sai:
+            (float) User's entry of MONTHLY_SAI for their dom_nat_pft
+        hgt_top:
+            (float) User's entry of MONTHLY_HEIGHT_TOP for their dom_nat_pft
+        hgt_bot:
+            (float) User's entry of MONTHLY_HEIGHT_BOT for their dom_nat_pft
+        not_rectangle:
+            (xarray dataarray) Inverse of land rectangle selected by user
         """
 
-        self.file['PCT_NAT_PFT'][:,:,:] = 0
-        self.file['PCT_NAT_PFT'][dom_nat_pft,:,:] = 100
+        for pft in self.file.natpft:
+            # initialize 3D variable; set outside the loop below
+            self.file['PCT_NAT_PFT'][pft,:,:] = \
+             self.file['PCT_NAT_PFT'][pft,:,:]. \
+                  where(not_rectangle, other=0)
+
+            self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                  var_name='MONTHLY_LAI', var=lai,
+                                  not_rectangle=not_rectangle)
+            self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                  var_name='MONTHLY_SAI', var=sai,
+                                  not_rectangle=not_rectangle)
+            self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                  var_name='MONTHLY_HEIGHT_TOP', var=hgt_top,
+                                  not_rectangle=not_rectangle)
+            self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                  var_name='MONTHLY_HEIGHT_BOT', var=hgt_bot,
+                                  not_rectangle=not_rectangle)
+
+        # set 3D variable
+        self.file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
+         self.file['PCT_NAT_PFT'][dom_nat_pft,:,:]. \
+              where(not_rectangle, other=100)
+
+
+    def set_lai_sai_hgts(self, pft, dom_nat_pft, var_name, var, not_rectangle):
+        """
+        Description
+        -----------
+        If user has specified lai, sai, hgt_top, hgt_bot, replace these with
+        values selected by the user for dom_nat_pft. Else do nothing.
+        """
+        if len(var) == 12:
+            for mon in self.file.time - 1:  # loop over 12 months
+                # initialize 4D variable; set in "if pft" below
+                self.file[var_name][mon,pft,:,:] = \
+                 self.file[var_name][mon,pft,:,:]. \
+                      where(not_rectangle, other=0)
+                if pft == dom_nat_pft:
+                    # set 4D variable to value for dom_nat_pft
+                    self.file[var_name][mon,pft,:,:] = \
+                     self.file[var_name][mon,pft,:,:]. \
+                          where(not_rectangle, other=var[int(mon)])
+        elif len(var) != 0:
+            message = 'Error: This variable should have 12 entries in the ' \
+                      'configure file: ' + var_name
+            print(message)  # TODO do this via logging
 
 
     def zero_nonveg(self):
@@ -182,10 +241,10 @@ class ModifyFsurdat:
         if dom_nat_pft is None:
             dom_nat_pft = 0
         if dom_nat_pft == 0:
-            lai = [0,0,0,0,0,0,0,0,0,0,0,0]
-            sai = [0,0,0,0,0,0,0,0,0,0,0,0]
-            hgt_top = [0,0,0,0,0,0,0,0,0,0,0,0]
-            hgt_bot = [0,0,0,0,0,0,0,0,0,0,0,0]
+            lai = [0] * 12
+            sai = [0] * 12
+            hgt_top = [0] * 12
+            hgt_bot = [0] * 12
 
         # Currently type(lon_in_*) = int with required range 0-360.
         # If instead of requiring integer values, we decide to allow floats,
@@ -225,99 +284,80 @@ class ModifyFsurdat:
         # "other" assigns the corresponding value in the rectangle.
         # Values outside the rectangle are preserved.
         # ------------------------
-        # 2D variables
-        # max inundated fraction
-        self.file['F0'] = \
-         self.file['F0'].where(not_rectangle, other=0)
-        # max saturated area
-        self.file['FMAX'] = \
-         self.file['FMAX'].where(not_rectangle, other=max_sat_area)
-        # standard deviation of elevation
-        self.file['STD_ELEV'] = \
-         self.file['STD_ELEV'].where(not_rectangle, other=std_elev)
-        # mean topographic slope
-        self.file['SLOPE'] = \
-         self.file['SLOPE'].where(not_rectangle, other=0)
-        # is 10 seem reasonable?
-        self.file['zbedrock'] = \
-         self.file['zbedrock'].where(not_rectangle, other=10)
-        # value representing loam
-        self.file['SOIL_COLOR'] = \
-         self.file['SOIL_COLOR'].where(not_rectangle, other=15)
+        if idealized:
+            # 2D variables
+            # max inundated fraction
+            self.file['F0'] = \
+             self.file['F0'].where(not_rectangle, other=0)
+            # max saturated area
+            self.file['FMAX'] = \
+             self.file['FMAX'].where(not_rectangle, other=max_sat_area)
+            # standard deviation of elevation
+            self.file['STD_ELEV'] = \
+             self.file['STD_ELEV'].where(not_rectangle, other=std_elev)
+            # mean topographic slope
+            self.file['SLOPE'] = \
+             self.file['SLOPE'].where(not_rectangle, other=0)
+            # is 10 seem reasonable?
+            self.file['zbedrock'] = \
+             self.file['zbedrock'].where(not_rectangle, other=10)
+            # value representing loam
+            self.file['SOIL_COLOR'] = \
+             self.file['SOIL_COLOR'].where(not_rectangle, other=15)
 
-        self.file['PFTDATA_MASK'] = \
-         self.file['PFTDATA_MASK'].where(not_rectangle, other=1)
-        self.file['LANDFRAC_PFT'] = \
-         self.file['LANDFRAC_PFT'].where(not_rectangle, other=1)
-        self.file['PCT_WETLAND'] = \
-         self.file['PCT_WETLAND'].where(not_rectangle, other=0)
-        self.file['PCT_CROP'] = \
-         self.file['PCT_CROP'].where(not_rectangle, other=0)
-        self.file['PCT_LAKE'] = \
-         self.file['PCT_LAKE'].where(not_rectangle, other=0)
-        self.file['PCT_URBAN'] = \
-         self.file['PCT_URBAN'].where(not_rectangle, other=0)
-        self.file['PCT_GLACIER'] = \
-         self.file['PCT_GLACIER'].where(not_rectangle, other=0)
-        self.file['PCT_NATVEG'] = \
-         self.file['PCT_NATVEG'].where(not_rectangle, other=100)
+            self.file['PFTDATA_MASK'] = \
+             self.file['PFTDATA_MASK'].where(not_rectangle, other=1)
+            self.file['LANDFRAC_PFT'] = \
+             self.file['LANDFRAC_PFT'].where(not_rectangle, other=1)
+            self.file['PCT_WETLAND'] = \
+             self.file['PCT_WETLAND'].where(not_rectangle, other=0)
+            self.file['PCT_CROP'] = \
+             self.file['PCT_CROP'].where(not_rectangle, other=0)
+            self.file['PCT_LAKE'] = \
+             self.file['PCT_LAKE'].where(not_rectangle, other=0)
+            self.file['PCT_URBAN'] = \
+             self.file['PCT_URBAN'].where(not_rectangle, other=0)
+            self.file['PCT_GLACIER'] = \
+             self.file['PCT_GLACIER'].where(not_rectangle, other=0)
+            self.file['PCT_NATVEG'] = \
+             self.file['PCT_NATVEG'].where(not_rectangle, other=100)
 
-        for lev in self.file.nlevsoi:
-            # set next three 3D variables to values representing loam
-            self.file['PCT_SAND'][lev,:,:] = \
-             self.file['PCT_SAND'][lev,:,:].where(not_rectangle, other=43)
-            self.file['PCT_CLAY'][lev,:,:] = \
-             self.file['PCT_CLAY'][lev,:,:].where(not_rectangle, other=18)
-            self.file['ORGANIC'][lev,:,:] = \
-             self.file['ORGANIC'][lev,:,:].where(not_rectangle, other=0)
+            for lev in self.file.nlevsoi:
+                # set next three 3D variables to values representing loam
+                self.file['PCT_SAND'][lev,:,:] = \
+                 self.file['PCT_SAND'][lev,:,:].where(not_rectangle, other=43)
+                self.file['PCT_CLAY'][lev,:,:] = \
+                 self.file['PCT_CLAY'][lev,:,:].where(not_rectangle, other=18)
+                self.file['ORGANIC'][lev,:,:] = \
+                 self.file['ORGANIC'][lev,:,:].where(not_rectangle, other=0)
 
-        for pft in self.file.natpft:
-            # initialize 3D variable
-            self.file['PCT_NAT_PFT'][pft,:,:] = \
-             self.file['PCT_NAT_PFT'][pft,:,:].where(not_rectangle, other=0)
-            for mon in self.file.time - 1:
-                # initialize 4D variables
-                self.file['MONTHLY_LAI'][mon,pft,:,:] = \
-                 self.file['MONTHLY_LAI'][mon,pft,:,:].where(not_rectangle, other=0)
-                self.file['MONTHLY_SAI'][mon,pft,:,:] = \
-                 self.file['MONTHLY_SAI'][mon,pft,:,:].where(not_rectangle, other=0)
-                self.file['MONTHLY_HEIGHT_TOP'][mon,pft,:,:] = \
-                 self.file['MONTHLY_HEIGHT_TOP'][mon,pft,:,:].where(not_rectangle, other=0)
-                self.file['MONTHLY_HEIGHT_BOT'][mon,pft,:,:] = \
-                 self.file['MONTHLY_HEIGHT_BOT'][mon,pft,:,:].where(not_rectangle, other=0)
-                if pft == dom_nat_pft:
-                    # set 4D variables to values for dom_nat_pft
-                    self.file['MONTHLY_LAI'][mon,pft,:,:] = \
-                     self.file['MONTHLY_LAI'][mon,pft,:,:].where(not_rectangle, other=lai[int(mon)])
-                    self.file['MONTHLY_SAI'][mon,pft,:,:] = \
-                     self.file['MONTHLY_SAI'][mon,pft,:,:].where(not_rectangle, other=sai[int(mon)])
-                    self.file['MONTHLY_HEIGHT_TOP'][mon,pft,:,:] = \
-                     self.file['MONTHLY_HEIGHT_TOP'][mon,pft,:,:]. \
-                          where(not_rectangle, other=hgt_top[int(mon)])
-                    self.file['MONTHLY_HEIGHT_BOT'][mon,pft,:,:] = \
-                     self.file['MONTHLY_HEIGHT_BOT'][mon,pft,:,:]. \
-                          where(not_rectangle, other=hgt_bot[int(mon)])
+            for crop in self.file.cft:
+                cft_local = crop - (max(self.file.natpft) + 1)
+                # initialize 3D variable; set outside the loop below
+                self.file['PCT_CFT'][cft_local,:,:] = \
+                 self.file['PCT_CFT'][cft_local,:,:]. \
+                      where(not_rectangle, other=0)
 
-        for crop in self.file.cft:
-            cft_local = crop - (pft + 1)  # uses last pft from previous loop
-            # initialize 3D variable
-            self.file['PCT_CFT'][cft_local,:,:] = \
-             self.file['PCT_CFT'][cft_local,:,:].where(not_rectangle, other=0)
-        # set 3D variables
-        self.file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
-         self.file['PCT_NAT_PFT'][dom_nat_pft,:,:].where(not_rectangle, other=100)
-        # required even though PCT_CROP = 0; the sum of all crops must = 100
-        self.file['PCT_CFT'][0,:,:] = \
-         self.file['PCT_CFT'][0,:,:].where(not_rectangle, other=100)
+            # set 3D variable
+            # required although PCT_CROP = 0: the sum of all crops must = 100
+            self.file['PCT_CFT'][0,:,:] = \
+             self.file['PCT_CFT'][0,:,:].where(not_rectangle, other=100)
 
+            # set PCT_NAT_PFT, MONLTHLY_LAI, MONTHLY_SAI, MONTHLY_HEIGHT_TOP,
+            # MONTHLY_HEIGHT_TOP
+            self.set_dom_nat_pft(dom_nat_pft=dom_nat_pft, lai=lai, sai=sai,
+                                 hgt_top=hgt_top, hgt_bot=hgt_bot,
+                                 not_rectangle=not_rectangle)
 
-
-#       -------------------------------------------------------------------
-
-#       # If not idealized, the user wants changes in specific vars in the
-#       # rectangle and everything else unchanged. In such cases call
-#       # - dom_nat_pft
-#       # - zero_nonveg
-#       # - std_elev
-#       # - max_sat_area
-#       # - soil_color (function not written, yet)
+        else:  # not idealized
+            # If not idealized, the user wants changes in specific vars in the
+            # rectangle and everything else unchanged. In such cases call
+            if dom_nat_pft is not None:
+                self.set_dom_nat_pft(dom_nat_pft=dom_nat_pft, lai=lai, sai=sai,
+                                     hgt_top=hgt_top, hgt_bot=hgt_bot,
+                                     not_rectangle=not_rectangle)
+            # Also,
+            # - zero_nonveg
+            # - std_elev
+            # - max_sat_area
+            # - soil_color (function not written, yet)
