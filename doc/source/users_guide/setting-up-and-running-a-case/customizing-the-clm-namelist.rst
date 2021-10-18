@@ -41,9 +41,14 @@ Included in the table are the following pieces of information:
 - units
 
 
-Table 1-3. CLM History Fields
------------------------------
-For Table, please see :doc:`master_list_file`.
+Table 1-3. CLM History Fields from a BgcCrop case
+-------------------------------------------------
+For Table from a BgcCrop case, please see :doc:`master_list_nofates`.
+
+
+Table 1-4. CLM History Fields from a Fates case
+-----------------------------------------------
+For Table from a Fates case, please see :doc:`master_list_fates`.
 
 
 ---------------------------------------------
