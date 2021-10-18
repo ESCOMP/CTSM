@@ -23,7 +23,7 @@ What files change?
 rpointer.drv becomes rpointer.cpl
 cpl.log.* files get's split into med.log.* and drv.log.*
 user_datm.streams.txt.* file changes goes into the user_nl_datm_streams files
-datm.streams.txt.* files are all in datm.streams.xml
+datm.streams.txt.* files are all in one file called datm.streams.xml
 
 What XML variables change in your case?
 
@@ -36,7 +36,8 @@ CREATE_ESMF_PET_FILES -- Create output log files from ESMF for each Processor (P
 ESMF_VERBOSITY_LEVEL --- Verbosity level for ESMF logging
 ESMF_PROFILING_LEVEL --- Verbosity level for ESMF profiling
 
-nuopc.runseq is a text file that determines how the driver operates.
+nuopc.runseq is a text file that determines how the driver operates. You can change the operation
+by having an updated copy in your case directory.
 
 
 What if I want to use the previous MCT driver?
