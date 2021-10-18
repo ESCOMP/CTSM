@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev060
 Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date:  Sat 16 Oct 2021 12:27:09 AM PDT
+Date: Mon Oct 18 13:13:03 MDT 2021
 One-line Summary: Izumi aux_clm test fixes for fates testmods
 
 Purpose and description of changes
@@ -10,7 +10,8 @@ Purpose and description of changes
 This tag corrects an accidental inclusion of non-debug, nag compiled fates testmods
 into the izumi aux_clm test list.  It also makes corrections to the expected failures
 list as well as adjusts the fates izumi test list as well as updates the externals
-file to point to the most recent fates tag.
+file to point to the most recent fates tag (which includes a science update so answers
+change for FATES).
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -31,14 +32,9 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed or introduced
 ------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
 
 Issues fixed (include CTSM Issue #):
     FATES #790 -- NAG compiler runtime error in FatesHydroWTFMod
-
-CIME Issues fixed (include issue #):
-
-Known bugs introduced in this tag (include issue #):
 
 Known bugs found since the previous tag (include issue #):
     #1525 -- ERS fates hydro test failing with nag compiler due to use_lch4
@@ -47,7 +43,6 @@ Known bugs found since the previous tag (include issue #):
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
 
 Changes to tests or testing:
 
@@ -74,7 +69,7 @@ Testing summary:
 Answer changes
 --------------
 
-Changes answers relative to baseline: No (only for non-fates testmods)
+Changes answers relative to baseline: Yes (ONLY for FATES tests because of the FATES tag update)
 
 Other details
 -------------
