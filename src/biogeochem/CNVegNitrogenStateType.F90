@@ -1038,6 +1038,7 @@ contains
        this%totecosysn_col(c) =    &
             soilbiogeochem_nitrogenstate_inst%cwdn_col(c)    + &
             soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
+            soilbiogeochem_nitrogenstate_inst%totmicn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
             this%totvegn_col(c)                              
@@ -1047,6 +1048,7 @@ contains
        this%totn_col(c) = this%totn_p2c_col(c)               + &
             soilbiogeochem_nitrogenstate_inst%cwdn_col(c)    + &
             soilbiogeochem_nitrogenstate_inst%totlitn_col(c) + &
+            soilbiogeochem_nitrogenstate_inst%totmicn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%totsomn_col(c) + &
             soilbiogeochem_nitrogenstate_inst%sminn_col(c)   + &
             soilbiogeochem_nitrogenstate_inst%ntrunc_col(c)
