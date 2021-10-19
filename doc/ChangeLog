@@ -1,4 +1,162 @@
 ===============================================================
+Tag name:  ctsm5.1.dev061
+Originator(s): mvertens (Mariana Vertenstein)
+Date:  Tue Oct 19 11:56:30 MDT 2021
+One-line Summary: Changes needed to get aux history output with cmeps
+
+Purpose and description of changes
+----------------------------------
+
+These changes are needed to create auxiliary land history files when the
+new cmeps configuration variable is set to true. histaux_l2x1yrg =
+.true.
+
+The changes needed in CTSM enable lnd2glc fields to be sent to the
+mediator even if glc is not present - based on querying the
+histaux_l2x1yrg setting.
+
+This includes a related change to set most lnd -> mediator fields to
+spval over ocean, instead of sending zero values over ocean.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+- Resolves ESCOMP/CTSM#1238 (In nuopc cap: change logic for when glc
+  fields are sent to facilitate writing cpl aux hist files)
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NUOPC only
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+      Just changes missing value patterns for lnd -> mediator fields
+
+      Most lnd -> mediator fields now have missing value over ocean
+      instead of sending zero values over ocean. This shows up as
+      FILLDIFFs in most nuopc tests.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/1495
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev060
+Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date: Mon Oct 18 13:13:03 MDT 2021
+One-line Summary: Izumi aux_clm test fixes for fates testmods
+
+Purpose and description of changes
+----------------------------------
+
+This tag corrects an accidental inclusion of non-debug, nag compiled fates testmods
+into the izumi aux_clm test list.  It also makes corrections to the expected failures
+list as well as adjusts the fates izumi test list as well as updates the externals
+file to point to the most recent fates tag (which includes a science update so answers
+change for FATES).
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+    FATES #790 -- NAG compiler runtime error in FatesHydroWTFMod
+
+Known bugs found since the previous tag (include issue #):
+    #1525 -- ERS fates hydro test failing with nag compiler due to use_lch4
+    #1526 -- Switch FATES methane test for methane off
+    FATES #795 -- NAG compiler runtime error in hydraulics_bs
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+
+    Changed the non-debug fates testmods in the izumi aux_clm list to compile with intel
+    instead of nag to avoid fates issue 771 and provide testing parity with the cheyenne
+    aux_clm list.
+
+    Removed two tests from the fates izumi test list:
+      - FatesColdDefAllVars testmod as it takes too long to complete due to history writes
+      - f19, 3-day, ERP fates testmod due to a sporadic memleak
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+  fates tests:
+    cheyenne ---- ok
+    izumi ------- ok
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes (ONLY for FATES tests because of the FATES tag update)
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+    fates: sci.1.47.0_api.17.0.0 -> sci.1.48.0_api.17.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+    # 1524 -- Switch izumi aux_clm category non-debug fates testmods from nag to intel
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev059
 Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Wed Oct 13 10:46:06 MDT 2021
