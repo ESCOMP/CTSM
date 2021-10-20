@@ -222,6 +222,8 @@ contains
     ! Read surface dataset and set up subgrid weight arrays
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
+    !!! (RGK) TEST RESET TIME
+    call CLMFatesGlobals(dtime=1800.0_r8)
  
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
@@ -321,7 +323,8 @@ contains
     ! This also sets up various global constants in FATES
     ! ------------------------------------------------------------------------
 
-    call CLMFatesGlobals(dtime)
+    !!! (RGK test relocation)
+    !!!call CLMFatesGlobals(dtime)
 
     
     ! Initialize Balance checking (after time-manager)
