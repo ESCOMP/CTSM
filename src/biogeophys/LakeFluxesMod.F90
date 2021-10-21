@@ -182,8 +182,8 @@ contains
     real(r8) :: kva0temp                           ! (K) temperature for kva0; will be set below
     real(r8), parameter :: kva0pres = 1.013e5_r8   ! (Pa) pressure for kva0
     real(r8) :: kva                                ! kinematic viscosity of air at ground temperature and forcing pressure
-    real(r8), parameter :: prn = 0.713             ! Prandtl # for air at neutral stability
-    real(r8), parameter :: sch = 0.66              ! Schmidt # for water in air at neutral stability
+    real(r8), parameter :: prn = 0.713_r8          ! Prandtl # for air at neutral stability
+    real(r8), parameter :: sch = 0.66_r8           ! Schmidt # for water in air at neutral stability
 
     !-----------------------------------------------------------------------
 
@@ -269,6 +269,7 @@ contains
          eflx_gnet        =>    energyflux_inst%eflx_gnet_patch        , & ! Output: [real(r8) (:)   ]  net heat flux into ground (W/m**2)                
          taux             =>    energyflux_inst%taux_patch             , & ! Output: [real(r8) (:)   ]  wind (shear) stress: e-w (kg/m/s**2)              
          tauy             =>    energyflux_inst%tauy_patch             , & ! Output: [real(r8) (:)   ]  wind (shear) stress: n-s (kg/m/s**2)              
+         dhsdt_canopy     =>    energyflux_inst%dhsdt_canopy_patch     , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm] 
 
          ks               =>    lakestate_inst%ks_col                  , & ! Output: [real(r8) (:)   ]  coefficient passed to LakeTemperature            
          ws               =>    lakestate_inst%ws_col                  , & ! Output: [real(r8) (:)   ]  surface friction velocity (m/s)                   
@@ -377,6 +378,7 @@ contains
          c = patch%column(p)
          g = patch%gridcell(p)
 
+         dhsdt_canopy(p) = 0.0_r8
          nmozsgn(p) = 0
          obuold(p) = 0._r8
          displa(p) = 0._r8

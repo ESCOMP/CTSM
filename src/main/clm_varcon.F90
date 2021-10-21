@@ -13,7 +13,7 @@ module clm_varcon
                            SHR_CONST_RHOICE,SHR_CONST_TKFRZ,SHR_CONST_REARTH, &
                            SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
                            SHR_CONST_RGAS, SHR_CONST_PSTD,                    &
-                           SHR_CONST_MWDAIR, SHR_CONST_MWWV
+                           SHR_CONST_MWDAIR, SHR_CONST_MWWV, SHR_CONST_CPFW
   use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
   use clm_varpar   , only: ngases
   use clm_varpar   , only: nlayer
@@ -44,8 +44,6 @@ module clm_varcon
   ! Initialize physical constants
   !------------------------------------------------------------------
 
-  real(r8), public, parameter :: pc = 0.4                           ! threshold probability
-  real(r8), public, parameter :: mu = 0.13889                       ! connectivity exponent 
   real(r8), public, parameter :: secsphr = 3600._r8                 ! Seconds in an hour
   integer,  public, parameter :: isecsphr = int(secsphr)            ! Integer seconds in an hour
   integer,  public, parameter :: isecspmin= 60                      ! Integer seconds in a minute
@@ -81,6 +79,8 @@ module clm_varcon
   real(r8), public :: alpha_aero = 1.0_r8                           ! constant for aerodynamic parameter weighting
   real(r8), public :: tlsai_crit = 2.0_r8                           ! critical value of elai+esai for which aerodynamic parameters are maximum
   real(r8), public :: watmin = 0.01_r8                              ! minimum soil moisture (mm)
+  real(r8), public :: c_water = SHR_CONST_CPFW                      ! specific heat of water   [J/kg/K]
+  real(r8), public :: c_dry_biomass  = 1400_r8                      ! specific heat of dry biomass
 
   real(r8), public :: re = SHR_CONST_REARTH*0.001_r8                ! radius of earth (km)
 
@@ -117,15 +117,16 @@ module clm_varcon
 
   real(r8), public :: thk_bedrock = 3.0_r8  ! thermal conductivity of 'typical' saturated granitic rock 
                                     ! (Clauser and Huenges, 1995)(W/m/K)
-  real(r8), public :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000) !scs
+  real(r8), public :: csol_bedrock = 2.0e6_r8 ! vol. heat capacity of granite/sandstone  J/(m3 K)(Shabbir, 2000)
   real(r8), public, parameter :: zmin_bedrock = 0.4_r8 ! minimum soil depth [m]
 
   real(r8), public, parameter :: aquifer_water_baseline = 5000._r8 ! baseline value for water in the unconfined aquifer [mm]
-
+  real(r8), public, parameter :: c_to_b = 2.0_r8         ! conversion between mass carbon and total biomass (g biomass /g C)
+  
   !!! C13
-  real(r8), public, parameter :: preind_atm_del13c = -6.0   ! preindustrial value for atmospheric del13C
-  real(r8), public, parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0  ! 13C/12C
-  real(r8), public :: c13ratio = preind_atm_ratio/(1.0+preind_atm_ratio) ! 13C/(12+13)C preind atmosphere
+  real(r8), public, parameter :: preind_atm_del13c = -6.0_r8   ! preindustrial value for atmospheric del13C
+  real(r8), public, parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0_r8  ! 13C/12C
+  real(r8), public :: c13ratio = preind_atm_ratio/(1.0_r8+preind_atm_ratio) ! 13C/(12+13)C preind atmosphere
 
    ! typical del13C for C3 photosynthesis (permil, relative to PDB)
   real(r8), public, parameter :: c3_del13c = -28._r8
@@ -168,7 +169,7 @@ module clm_varcon
   real(r8), public, parameter :: dens_floor = 2.35e3_r8 ! density of floor - concrete (Salmanca et al. 2010, TAC) (kg m-3)
   real(r8), public, parameter :: sh_floor = 880._r8     ! specific heat of floor - concrete (Salmanca et al. 2010, TAC) (J kg-1 K-1)
   real(r8), public :: cp_floor = dens_floor*sh_floor    ! volumetric heat capacity of floor - concrete (Salmanca et al. 2010, TAC) (J m-3 K-1)
-  real(r8), public :: vent_ach = 0.3                    ! ventilation rate (air exchanges per hour)
+  real(r8), public :: vent_ach = 0.3_r8                    ! ventilation rate (air exchanges per hour)
 
   real(r8), public :: wasteheat_limit = 100._r8         ! limit on wasteheat (W/m2)
 
@@ -187,7 +188,6 @@ module clm_varcon
   !------------------------------------------------------------------
 
   character(len=16), public, parameter :: grlnd  = 'lndgrid'      ! name of lndgrid
-  character(len=16), public, parameter :: namea  = 'gridcellatm'  ! name of atmgrid
   character(len=16), public, parameter :: nameg  = 'gridcell'     ! name of gridcells
   character(len=16), public, parameter :: namel  = 'landunit'     ! name of landunits
   character(len=16), public, parameter :: namec  = 'column'       ! name of columns

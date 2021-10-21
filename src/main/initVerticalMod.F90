@@ -16,19 +16,18 @@ module initVerticalMod
   use clm_varpar        , only : toplev_equalspace, nlev_equalspace
   use clm_varpar        , only : nlevsoi, nlevsoifl, nlevurb, nlevmaxurbgrnd
   use clm_varctl        , only : fsurdat, iulog
-  use clm_varctl        , only : use_vancouver, use_mexicocity, use_vertsoilc, use_extralakelayers
+  use clm_varctl        , only : use_vancouver, use_mexicocity, use_extralakelayers
   use clm_varctl        , only : use_bedrock, rundef
   use clm_varctl        , only : soil_layerstruct_predefined, soil_layerstruct_userdefined
   use clm_varctl        , only : use_fates
   use clm_varcon        , only : zlak, dzlak, zsoi, dzsoi, zisoi, dzsoi_decomp, spval, ispval, grlnd 
   use column_varcon     , only : icol_roof, icol_sunwall, icol_shadewall, is_hydrologically_active
-  use landunit_varcon   , only : istdlak, istice_mec
+  use landunit_varcon   , only : istdlak, istice
   use fileutils         , only : getfil
   use LandunitType      , only : lun                
   use GridcellType      , only : grc                
   use ColumnType        , only : col                
   use glcBehaviorMod    , only : glc_behavior_type
-  use SnowHydrologyMod  , only : InitSnowLayers             
   use abortUtils        , only : endrun    
   use ncdio_pio
   !
@@ -40,9 +39,15 @@ module initVerticalMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: initVertical
   public :: find_soil_layer_containing_depth
+  public :: readParams
 
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: hasBedrock  ! true if the given column type includes bedrock layers
+  type, private :: params_type
+     real(r8) :: slopebeta      ! exponent for microtopography pdf sigma (unitless)
+     real(r8) :: slopemax       ! max topographic slope for microtopography pdf sigma (unitless)
+  end type params_type
+  type(params_type), private ::  params_inst
   !
 
   character(len=*), parameter, private :: sourcefile = &
@@ -53,14 +58,35 @@ module initVerticalMod
 
 contains
 
+  !-----------------------------------------------------------------------
+  subroutine readParams( ncid )
+    !
+    ! !USES:
+    use ncdio_pio, only: file_desc_t
+    use paramUtilMod, only: readNcdioScalar
+    !
+    ! !ARGUMENTS:
+    implicit none
+    type(file_desc_t),intent(inout) :: ncid   ! pio netCDF file id
+    !
+    ! !LOCAL VARIABLES:
+    character(len=*), parameter :: subname = 'readParams_initVertical'
+    !--------------------------------------------------------------------
+
+    ! Exponent for microtopography pdf sigma (unitless)
+    call readNcdioScalar(ncid, 'slopebeta', subname, params_inst%slopebeta)
+    ! Max topographic slope for microtopography pdf sigma (unitless) 
+    call readNcdioScalar(ncid, 'slopemax', subname, params_inst%slopemax)
+
+  end subroutine readParams
+
   !------------------------------------------------------------------------
-  subroutine initVertical(bounds, glc_behavior, snow_depth, thick_wall, thick_roof)
+  subroutine initVertical(bounds, glc_behavior, thick_wall, thick_roof)
     use clm_varcon, only : zmin_bedrock
     !
     ! !ARGUMENTS:
     type(bounds_type)   , intent(in)    :: bounds
     type(glc_behavior_type), intent(in) :: glc_behavior
-    real(r8)            , intent(in)    :: snow_depth(bounds%begc:)
     real(r8)            , intent(in)    :: thick_wall(bounds%begl:)
     real(r8)            , intent(in)    :: thick_roof(bounds%begl:)
     !
@@ -73,8 +99,6 @@ contains
     real(r8) ,pointer     :: std (:)           ! read in - topo_std 
     real(r8) ,pointer     :: tslope (:)        ! read in - topo_slope 
     real(r8)              :: slope0            ! temporary
-    real(r8)              :: slopebeta         ! temporary
-    real(r8)              :: slopemax          ! temporary
     integer               :: ier               ! error status
     real(r8)              :: scalez = 0.025_r8 ! Soil layer thickness discretization (m)
     real(r8)              :: thick_equal = 0.2
@@ -118,7 +142,6 @@ contains
     begc = bounds%begc; endc= bounds%endc
     begl = bounds%begl; endl= bounds%endl
 
-    SHR_ASSERT_ALL_FL((ubound(snow_depth)  == (/endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(thick_wall)  == (/endl/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(thick_roof)  == (/endl/)), sourcefile, __LINE__)
 
@@ -250,12 +273,8 @@ contains
     end if  ! calc_method is node-based or thickness-based
 
     ! define a vertical grid spacing such that it is the normal dzsoi if
-    ! nlevdecomp =nlevgrnd, or else 1 meter
-    if (use_vertsoilc) then
-       dzsoi_decomp = dzsoi            !thickness b/n two interfaces
-    else
-       dzsoi_decomp(1) = 1._r8
-    end if
+    ! nlevdecomp =nlevgrnd
+    dzsoi_decomp = dzsoi            !thickness b/n two interfaces
 
     if (masterproc) then
        write(iulog, *) 'zsoi', zsoi(:) 
@@ -652,12 +671,6 @@ contains
     end do
 
     !-----------------------------------------------
-    ! Set cold-start values for snow levels, snow layers and snow interfaces 
-    !-----------------------------------------------
-
-    call InitSnowLayers(bounds, snow_depth(bounds%begc:bounds%endc))
-
-    !-----------------------------------------------
     ! Read in topographic index and slope
     !-----------------------------------------------
 
@@ -693,10 +706,8 @@ contains
 
     do c = begc,endc
        ! microtopographic parameter, units are meters (try smooth function of slope)
-       slopebeta = 3._r8
-       slopemax = 0.4_r8
-       slope0 = slopemax**(-1._r8/slopebeta)
-       col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(-slopebeta)
+       slope0 = params_inst%slopemax**(1._r8/params_inst%slopebeta)
+       col%micro_sigma(c) = (col%topo_slope(c) + slope0)**(params_inst%slopebeta)
     end do
 
     call ncd_pio_closefile(ncid)
@@ -760,7 +771,7 @@ contains
     ! from the upper layers.
     !
     ! !USES:
-    use landunit_varcon, only : istice_mec, isturb_MIN, isturb_MAX
+    use landunit_varcon, only : istice, isturb_MIN, isturb_MAX
     use column_varcon  , only : icol_road_perv
     !
     ! !ARGUMENTS:
@@ -784,7 +795,7 @@ contains
     ! == istdlak - that way, hasBedrock(lake) would be more likely to get updated
     ! correctly if the lake logic changes.
 
-    if (lun_itype == istice_mec) then
+    if (lun_itype == istice) then
        hasBedrock = .false.
     else if (lun_itype >= isturb_MIN .and. lun_itype <= isturb_MAX) then
        if (col_itype == icol_road_perv) then

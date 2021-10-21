@@ -40,7 +40,7 @@ contains
     ! !USES:
     use filterMod         , only : setFilters
     use subgridWeightsMod , only : set_active, check_weights
-    use decompMod         , only : bounds_type, BOUNDS_LEVEL_CLUMP
+    use decompMod         , only : bounds_type, bounds_level_clump
     use glcBehaviorMod    , only : glc_behavior_type
     !
     ! !ARGUMENTS:
@@ -48,7 +48,7 @@ contains
     type(glc_behavior_type), intent(in) :: glc_behavior
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_clump, sourcefile, __LINE__)
 
     call set_active(bounds, glc_behavior)
     call check_weights(bounds, active_only=.false.)

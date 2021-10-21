@@ -8,16 +8,8 @@ be done.
 
 1.) Respond to CSMDATA and CLM_ROOT as needed.
 2.) Print a line with "success" after the work is completed.
-	
-Scripts available:
-
-Master perl scripts that call the other ncl scripts:
-
-getregional_datasets.pl ----- Extract out regional datasets from global ones and put files in a location that 
-                              can be used by build-namelist.
 
 NCL Scripts available:
 
-getregional_datasets.ncl ---- NCL script to extract out regional datasets.
 getco2_historical.ncl ------- Get historical CO2 to use for input in datm8 streams
-
+	

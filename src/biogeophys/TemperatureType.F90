@@ -7,8 +7,8 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop
-  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevlak, nlevurb, nlevmaxurbgrnd
+  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage
+  use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
   use LandunitType    , only : lun
@@ -22,6 +22,7 @@ module TemperatureType
   type, public :: temperature_type
 
      ! Temperatures
+     real(r8), pointer :: t_stem_patch             (:)   ! patch stem temperatu\re (Kelvin)
      real(r8), pointer :: t_veg_patch              (:)   ! patch vegetation temperature (Kelvin)
      real(r8), pointer :: t_skin_patch             (:)   ! patch skin temperature (Kelvin)
      real(r8), pointer :: t_veg_day_patch          (:)   ! patch daytime  accumulative vegetation temperature (Kelvinx*nsteps), LUNA specific, from midnight to current step
@@ -55,6 +56,7 @@ module TemperatureType
      real(r8), pointer :: thv_col                  (:)   ! col virtual potential temperature (kelvin)
      real(r8), pointer :: thm_patch                (:)   ! patch intermediate variable (forc_t+0.0098*forc_hgt_t_patch)
      real(r8), pointer :: t_a10_patch              (:)   ! patch 10-day running mean of the 2 m temperature (K)
+     real(r8), pointer :: soila10_col              (:)   ! col 10-day running mean of the 12cm soil layer temperature (K)
      real(r8), pointer :: t_a10min_patch           (:)   ! patch 10-day running mean of min 2-m temperature
      real(r8), pointer :: t_a5min_patch            (:)   ! patch 5-day running mean of min 2-m temperature
 
@@ -193,6 +195,7 @@ contains
     begg = bounds%begg; endg= bounds%endg
 
     ! Temperatures
+    allocate(this%t_stem_patch             (begp:endp))                      ; this%t_stem_patch             (:)   = nan
     allocate(this%t_veg_patch              (begp:endp))                      ; this%t_veg_patch              (:)   = nan
     allocate(this%t_skin_patch             (begp:endp))                      ; this%t_skin_patch             (:)   = nan
     if(use_luna) then
@@ -229,6 +232,7 @@ contains
     allocate(this%thv_col                  (begc:endc))                      ; this%thv_col                  (:)   = nan
     allocate(this%thm_patch                (begp:endp))                      ; this%thm_patch                (:)   = nan
     allocate(this%t_a10_patch              (begp:endp))                      ; this%t_a10_patch              (:)   = nan
+    allocate(this%soila10_col              (begc:endc))                      ; this%soila10_col              (:)   = nan
     allocate(this%t_a10min_patch           (begp:endp))                      ; this%t_a10min_patch           (:)   = nan
     allocate(this%t_a5min_patch            (begp:endp))                      ; this%t_a5min_patch            (:)   = nan
 
@@ -391,6 +395,13 @@ contains
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
          ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
 
+    if (use_biomass_heat_storage) then 
+       this%t_stem_patch(begp:endp) = spval
+       call hist_addfld1d (fname='TSTEM', units='K',  &
+            avgflag='A', long_name='stem temperature', &
+            ptr_patch=this%t_stem_patch, default='active')
+    endif
+
     this%t_veg_patch(begp:endp) = spval
     call hist_addfld1d (fname='TV', units='K',  &
          avgflag='A', long_name='vegetation temperature', &
@@ -456,13 +467,16 @@ contains
     call hist_addfld1d (fname='T10', units='K',  &
          avgflag='A', long_name='10-day running mean of 2-m temperature', &
          ptr_patch=this%t_a10_patch, default='inactive')
-
-    if (use_cn .and.  use_crop )then
-       this%t_a5min_patch(begp:endp) = spval
-       call hist_addfld1d (fname='A5TMIN', units='K',  &
-            avgflag='A', long_name='5-day running mean of min 2-m temperature', &
-            ptr_patch=this%t_a5min_patch, default='inactive')
-    end if
+    
+    this%soila10_col(begc:endc) = spval
+    call hist_addfld1d (fname='SOIL10', units='K',  &
+         avgflag='A', long_name='10-day running mean of 12cm layer soil', &
+         ptr_col=this%soila10_col, default='inactive')
+    
+    this%t_a5min_patch(begp:endp) = spval
+    call hist_addfld1d (fname='A5TMIN', units='K',  &
+         avgflag='A', long_name='5-day running mean of min 2-m temperature', &
+         ptr_patch=this%t_a5min_patch, default='inactive')
 
     if (use_cn .and. use_crop )then
        this%t_a10min_patch(begp:endp) = spval
@@ -641,7 +655,7 @@ contains
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use shr_const_mod  , only : SHR_CONST_TKFRZ
     use clm_varcon     , only : denice, denh2o, sb
-    use landunit_varcon, only : istwet, istsoil, istdlak, istice_mec
+    use landunit_varcon, only : istwet, istsoil, istdlak, istice
     use column_varcon  , only : icol_road_imperv, icol_roof, icol_sunwall
     use column_varcon  , only : icol_shadewall, icol_road_perv
     use clm_varctl     , only : iulog, use_vancouver, use_mexicocity
@@ -690,7 +704,7 @@ contains
          ! Below snow temperatures - nonlake points (lake points are set below)
          if (.not. lun%lakpoi(l)) then
 
-            if (lun%itype(l)==istice_mec) then
+            if (lun%itype(l)==istice) then
                this%t_soisno_col(c,1:nlevgrnd) = 250._r8
 
             else if (lun%itype(l) == istwet) then
@@ -702,11 +716,11 @@ contains
                      ! Set road top layer to initial air temperature and interpolate other
                      ! layers down to 20C in bottom layer
                      do j = 1, nlevgrnd
-                        this%t_soisno_col(c,j) = 297.56 - (j-1) * ((297.56-293.16)/(nlevgrnd-1))
+                        this%t_soisno_col(c,j) = 297.56_r8 - (j-1) * ((297.56_r8-293.16_r8)/(nlevgrnd-1))
                      end do
                      ! Set wall and roof layers to initial air temperature
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
-                     this%t_soisno_col(c,1:nlevurb) = 297.56
+                     this%t_soisno_col(c,1:nlevurb) = 297.56_r8
                   else
                      this%t_soisno_col(c,1:nlevgrnd) = 283._r8
                   end if
@@ -715,11 +729,11 @@ contains
                      ! Set road top layer to initial air temperature and interpolate other
                      ! layers down to 22C in bottom layer
                      do j = 1, nlevgrnd
-                        this%t_soisno_col(c,j) = 289.46 - (j-1) * ((289.46-295.16)/(nlevgrnd-1))
+                        this%t_soisno_col(c,j) = 289.46_r8 - (j-1) * ((289.46_r8-295.16_r8)/(nlevgrnd-1))
                      end do
                   else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall .or. col%itype(c) == icol_roof) then
                      ! Set wall and roof layers to initial air temperature
-                     this%t_soisno_col(c,1:nlevurb) = 289.46
+                     this%t_soisno_col(c,1:nlevurb) = 289.46_r8
                   else
                      this%t_soisno_col(c,1:nlevgrnd) = 283._r8
                   end if
@@ -797,28 +811,30 @@ contains
             this%t_veg_patch(p)   = 283._r8
          end if
 
+         this%t_stem_patch(p)   = this%t_veg_patch(p)
+
          if (use_vancouver) then
-            this%t_ref2m_patch(p) = 297.56
+            this%t_ref2m_patch(p) = 297.56_r8
          else if (use_mexicocity) then
-            this%t_ref2m_patch(p) = 289.46
+            this%t_ref2m_patch(p) = 289.46_r8
          else
             this%t_ref2m_patch(p) = 283._r8
          end if
 
          if (lun%urbpoi(l)) then
             if (use_vancouver) then
-               this%t_ref2m_u_patch(p) = 297.56
+               this%t_ref2m_u_patch(p) = 297.56_r8
             else if (use_mexicocity) then
-               this%t_ref2m_u_patch(p) = 289.46
+               this%t_ref2m_u_patch(p) = 289.46_r8
             else
                this%t_ref2m_u_patch(p) = 283._r8
             end if
          else
             if (.not. lun%ifspecial(l)) then
                if (use_vancouver) then
-                  this%t_ref2m_r_patch(p) = 297.56
+                  this%t_ref2m_r_patch(p) = 297.56_r8
                else if (use_mexicocity) then
-                  this%t_ref2m_r_patch(p) = 289.46
+                  this%t_ref2m_r_patch(p) = 289.46_r8
                else
                   this%t_ref2m_r_patch(p) = 283._r8
                end if
@@ -889,12 +905,18 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='T_SOISNO', xtype=ncd_double,   &
          dim1name='column', dim2name='levtot', switchdim=.true., &
          long_name='soil-snow temperature', units='K', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%t_soisno_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='T_VEG', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='vegetation temperature', units='K', &
          interpinic_flag='interp', readvar=readvar, data=this%t_veg_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='T_STEM', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='stem temperature', units='K', &
+         interpinic_flag='interp', readvar=readvar, data=this%t_stem_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='TH2OSFC', xtype=ncd_double,  &
          dim1name='column', &
@@ -907,6 +929,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='T_LAKE', xtype=ncd_double,  &
          dim1name='column', dim2name='levlak', switchdim=.true., &
          long_name='lake temperature', units='K', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=this%t_lake_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='T_GRND', xtype=ncd_double,  &
@@ -1175,15 +1198,18 @@ contains
     call init_accum_field (name='T10', units='K', &
          desc='10-day running mean of 2-m temperature', accum_type='runmean', accum_period=-10, &
          subgrid_type='pft', numlev=1,init_value=SHR_CONST_TKFRZ+20._r8)
+    call init_accum_field (name='SOIL10', units='K', &
+         desc='10-day running mean of 3rd layer soil temp.', accum_type='runmean', accum_period=-10, &
+         subgrid_type='column', numlev=1,init_value=SHR_CONST_TKFRZ)
+    call init_accum_field (name='TDM5', units='K', &
+         desc='5-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-5, &
+         subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
 
     if ( use_crop )then
        call init_accum_field (name='TDM10', units='K', &
             desc='10-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-10, &
             subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
 
-       call init_accum_field (name='TDM5', units='K', &
-            desc='5-day running mean of min 2-m temperature', accum_type='runmean', accum_period=-5, &
-            subgrid_type='pft', numlev=1, init_value=SHR_CONST_TKFRZ)
     end if
 
     if ( use_crop )then
@@ -1233,18 +1259,28 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: begp, endp
+    integer  :: begc, endc
     integer  :: nstep
     integer  :: ier
-    real(r8), pointer :: rbufslp(:)  ! temporary
+    real(r8), pointer :: rbufslp(:)  ! temporary for patch
+    real(r8), pointer :: rbufslc(:)  ! temporary for columns
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     ! Allocate needed dynamic memory for single level pft field
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)' in '
        call endrun(msg="extract_accum_hist allocation error for rbufslp"//&
+            errMsg(sourcefile, __LINE__))
+    endif
+    ! Allocate needed dynamic memory for single level column field
+    allocate(rbufslc(begc:endc), stat=ier)
+    if (ier/=0) then
+       write(iulog,*)' in '
+       call endrun(msg="extract_accum_hist allocation error for rbufslc"//&
             errMsg(sourcefile, __LINE__))
     endif
 
@@ -1262,13 +1298,17 @@ contains
 
     call extract_accum_field ('T10', rbufslp, nstep)
     this%t_a10_patch(begp:endp) = rbufslp(begp:endp)
+    
+    call extract_accum_field ('SOIL10', rbufslc, nstep)
+    this%soila10_col(begc:endc) = rbufslc(begc:endc)
 
+    call extract_accum_field ('TDM5', rbufslp, nstep)
+    this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)
+    
     if (use_crop) then
        call extract_accum_field ('TDM10', rbufslp, nstep)
        this%t_a10min_patch(begp:endp)= rbufslp(begp:endp)
 
-       call extract_accum_field ('TDM5', rbufslp, nstep)
-       this%t_a5min_patch(begp:endp) = rbufslp(begp:endp)
     end if
 
     ! Initialize variables that are to be time accumulated
@@ -1306,6 +1346,7 @@ contains
     end if
 
     deallocate(rbufslp)
+    deallocate(rbufslc)
 
   end subroutine InitAccVars
 
@@ -1316,6 +1357,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use clm_time_manager , only : get_step_size, get_nstep, is_end_curr_day, get_curr_date
     use accumulMod       , only : update_accum_field, extract_accum_field, accumResetVal
+    use CNSharedParamsMod, only : upper_soil_layer
     !
     ! !ARGUMENTS:
     class(temperature_type)                :: this
@@ -1333,10 +1375,13 @@ contains
     integer :: secs                      ! seconds into current date for nstep
     logical :: end_cd                    ! temporary for is_end_curr_day() value
     integer :: begp, endp
+    integer :: begc, endc
     real(r8), pointer :: rbufslp(:)      ! temporary single level - pft level
+    real(r8), pointer :: rbufslc(:)      ! temporary single level - column level
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp = bounds%endp
+    begc = bounds%begc; endc = bounds%endc
 
     dtime = get_step_size()
     nstep = get_nstep()
@@ -1347,6 +1392,14 @@ contains
     allocate(rbufslp(begp:endp), stat=ier)
     if (ier/=0) then
        write(iulog,*)'update_accum_hist allocation error for rbuf1dp'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    endif
+
+    ! Allocate needed dynamic memory for single level column field
+
+    allocate(rbufslc(begc:endc), stat=ier)
+    if (ier/=0) then
+       write(iulog,*)'update_accum_hist allocation error for rbuf1dc'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     endif
 
@@ -1453,6 +1506,24 @@ contains
 
     call update_accum_field  ('T10', this%t_ref2m_patch, nstep)
     call extract_accum_field ('T10', this%t_a10_patch, nstep)
+    
+    ! Accumulate and extract SOIL10, for a sepcific soil layer
+    !(acumulates SOIL10 as 10-day running mean)
+
+    do c = begc,endc    
+       rbufslc(c) = this%t_soisno_col(c,upper_soil_layer)
+    end do
+    call update_accum_field  ('SOIL10', rbufslc, nstep)
+    call extract_accum_field ('SOIL10', this%soila10_col, nstep)
+    
+    ! Accumulate and extract TDM5
+
+    do p = begp,endp
+       rbufslp(p) = min(this%t_ref2m_min_patch(p),this%t_ref2m_min_inst_patch(p)) !slevis: ok choice?
+       if (rbufslp(p) > 1.e30_r8) rbufslp(p) = SHR_CONST_TKFRZ !and were 'min'&
+    end do                                         !'min_inst' not initialized?
+    call update_accum_field  ('TDM5', rbufslp, nstep)
+    call extract_accum_field ('TDM5', this%t_a5min_patch, nstep)
 
     if ( use_crop )then
        ! Accumulate and extract TDM10
@@ -1464,14 +1535,7 @@ contains
        call update_accum_field  ('TDM10', rbufslp, nstep)
        call extract_accum_field ('TDM10', this%t_a10min_patch, nstep)
 
-       ! Accumulate and extract TDM5
 
-       do p = begp,endp
-          rbufslp(p) = min(this%t_ref2m_min_patch(p),this%t_ref2m_min_inst_patch(p)) !slevis: ok choice?
-          if (rbufslp(p) > 1.e30_r8) rbufslp(p) = SHR_CONST_TKFRZ !and were 'min'&
-       end do                                         !'min_inst' not initialized?
-       call update_accum_field  ('TDM5', rbufslp, nstep)
-       call extract_accum_field ('TDM5', this%t_a5min_patch, nstep)
 
        ! Accumulate and extract GDD0
 
@@ -1535,6 +1599,7 @@ contains
     end if
 
     deallocate(rbufslp)
+    deallocate(rbufslc)
   end subroutine UpdateAccVars
 
 end module TemperatureType

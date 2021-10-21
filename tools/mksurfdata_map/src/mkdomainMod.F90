@@ -49,6 +49,7 @@ module mkdomainMod
   public domain_read_map
   public domain_write         
   public domain_checksame
+  public is_domain_0to360_longs  ! Does this domain have longitude on a 0 to 360 degree range
   public for_test_create_domain  ! For unit testing create a simple domain
 !
 !
@@ -321,9 +322,6 @@ end subroutine domain_check
        
       call check_ret(nf_inq_varid (ncid, 'frac_b', varid), subname)
       call check_ret(nf_get_var_double (ncid, varid, domain%frac), subname)
-
-      call check_ret(nf_inq_varid (ncid, 'mask_b', varid), subname)
-      call check_ret(nf_get_var_int (ncid, varid, domain%mask), subname)
 
       call check_ret(nf_inq_varid (ncid, 'area_b', varid), subname)
       call check_ret(nf_get_var_double (ncid, varid, domain%area), subname)
@@ -818,13 +816,9 @@ end subroutine domain_check
      integer :: n, ni                  ! indices
      real(r8), pointer :: xc_src(:)    ! Source longitude
      real(r8), pointer :: yc_src(:)    ! Source latitude
-     real(r8), pointer :: frac_src(:)  ! Source fraction
-     integer,  pointer :: mask_src(:)  ! Source mask
      integer,  pointer :: src_indx(:)  ! Source index
      real(r8), pointer :: xc_dst(:)    ! Destination longitude
      real(r8), pointer :: yc_dst(:)    ! Destination latitude
-     real(r8), pointer :: frac_dst(:)  ! Destination fraction
-     integer,  pointer :: mask_dst(:)  ! Destination mask
      integer,  pointer :: dst_indx(:)  ! Destination index
      character(len= 32) :: subname = 'domain_checksame'
 
@@ -839,7 +833,7 @@ end subroutine domain_check
         write(6,*) trim(subname)//'ERROR: source domain is unset!'
         call abort()
      end if
-     if (srcdomain%set == unset) then
+     if (dstdomain%set == unset) then
         write(6,*) trim(subname)//'ERROR: destination domain is unset!'
         call abort()
      end if
@@ -847,7 +841,6 @@ end subroutine domain_check
      call gridmap_setptrs( tgridmap, nsrc=na, ndst=nb, ns=ns,    &
                            xc_src=xc_src, yc_src=yc_src,         &
                            xc_dst=xc_dst, yc_dst=yc_dst,         &
-                           mask_src=mask_src, mask_dst=mask_dst, &
                            src_indx=src_indx, dst_indx=dst_indx  &
                          )
        
@@ -867,15 +860,6 @@ end subroutine domain_check
      end if
      do n = 1,ns
         ni = src_indx(n)
-        if ( srcdomain%maskset )then
-           if (srcdomain%mask(ni) /= mask_src(ni)) then
-              write(6,*) trim(subname)// &              
-                 ' ERROR: input domain mask and gridmap mask are not the same at ni = ',ni
-              write(6,*)' domain  mask= ',srcdomain%mask(ni)
-              write(6,*)' gridmap mask= ',mask_src(ni)
-              call abort()
-           end if
-        end if
         if (abs(srcdomain%lonc(ni) - xc_src(ni)) > eps) then
            write(6,*) trim(subname)// &
                ' ERROR: input domain lon and gridmap lon not the same at ni = ',ni
@@ -893,15 +877,6 @@ end subroutine domain_check
      end do
      do n = 1,ns
         ni = dst_indx(n)
-        if ( dstdomain%maskset )then
-           if (dstdomain%mask(ni) /= mask_dst(ni)) then
-              write(6,*) trim(subname)// &                              
-                  ' ERROR: output domain mask and gridmap mask are not the same at ni = ',ni
-              write(6,*)' domain  mask= ',dstdomain%mask(ni)
-              write(6,*)' gridmap mask= ',mask_dst(ni)
-              call abort()
-           end if
-        end if
         if (abs(dstdomain%lonc(ni) - xc_dst(ni)) > eps) then
            write(6,*) trim(subname)// &
                ' ERROR: output domain lon and gridmap lon not the same at ni = ',ni
@@ -918,6 +893,36 @@ end subroutine domain_check
         end if
      end do
   end subroutine domain_checksame
+
+
+!-----------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: is_domain_0to360_longs
+!
+! !INTERFACE:
+  logical function is_domain_0to360_longs( domain )
+!
+! !DESCRIPTION:
+! Check if the domain has longitudes on a -180 to 180 grid or a 0 to 360 grid.
+! CESM requires the later right now.
+!
+! USES:
+    use mkgridmapMod, only : gridmap_type, gridmap_setptrs
+! !ARGUMENTS:
+    implicit none
+    type(domain_type), intent(in) :: domain ! input domain
+!
+! !REVISION HISTORY:
+!
+!EOP
+!-----------------------------------------------------------------------
+     if ( any(domain%lonc < 0.0_r8) )then
+        is_domain_0to360_longs = .false.
+     else
+        is_domain_0to360_longs = .true.
+     end if
+  end function is_domain_0to360_longs
 
 !-----------------------------------------------------------------------
 !BOP

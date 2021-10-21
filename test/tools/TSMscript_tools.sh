@@ -49,7 +49,7 @@ cp $cfgdir/sample_* $rundir
 optfile=${3%^*}
 cfgfile=${3#*^}
 
-if [[ "$1" == "PTCLM" ]]; then
+if [[ "$1" == "site_and_regional/PTCLM" ]]; then
   echo "TSMscript_tools.sh: calling TCBscripttools.sh to prepare executables for $1"
   ${CLM_SCRIPTDIR}/TCBscripttools.sh $1 $cfgfile
   rc=$?
@@ -73,7 +73,7 @@ elif [ "$optfile" != "$3" ]; then
   fi 
   tcbtools=${CLM_TESTDIR}/TCBtools.$1.$cfgfile
 else
-  tcbtools="."
+  tcbtools="$rundir"
 fi
 
 scopts=`cat ${CLM_SCRIPTDIR}/nl_files/$optfile | sed -e "s|CSMDATA|$CSMDATA|g" | sed -e "s|EXEDIR|$tcbtools|" | sed -e "s|CFGDIR|$cfgdir|g"`

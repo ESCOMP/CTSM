@@ -27,7 +27,7 @@ module CNFireLi2021Mod
   use atm2lndType                        , only : atm2lnd_type
   use CNDVType                           , only : dgvs_type
   use CNVegStateType                     , only : cnveg_state_type
-  use CNVegCarbonStateType               , only : cnveg_carbonstate_type
+  use CNVegCarbonStateType               , only : cnveg_carbonstate_type, spinup_factor_deadwood
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CNVegNitrogenStateType             , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
@@ -421,19 +421,11 @@ contains
                  end if
               end if
            end if
-           if (spinup_state == 2) then         
-              rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
-                   frootc_xfer(p) + deadcrootc(p) * 10._r8 +       &
+           rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
+                   frootc_xfer(p) + deadcrootc(p) * spinup_factor_deadwood +       &
                    deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
                    livecrootc(p)+livecrootc_storage(p) +           &
                    livecrootc_xfer(p))*patch%wtcol(p)
-           else
-              rootc_col(c) = rootc_col(c) + (frootc(p) + frootc_storage(p) + &
-                   frootc_xfer(p) + deadcrootc(p) +                &
-                   deadcrootc_storage(p) + deadcrootc_xfer(p) +    &
-                   livecrootc(p)+livecrootc_storage(p) +           &
-                   livecrootc_xfer(p))*patch%wtcol(p)
-           endif
 
            fsr_col(c) = fsr_col(c) + fsr_pft(patch%itype(p))*patch%wtcol(p)/(1.0_r8-cropf_col(c))
 
@@ -589,7 +581,7 @@ contains
         if( cropf_col(c)  <  1._r8 )then
            fuelc(c) = totlitc(c)+totvegc(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            if (spinup_state == 2) then
-              fuelc(c) = fuelc(c) + ((10._r8 - 1._r8)*deadstemc_col(c))
+              fuelc(c) = fuelc(c) + ((spinup_factor_deadwood - 1._r8)*deadstemc_col(c))
               do j = 1, nlevdecomp  
                  fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j) * spinup_factor(i_cwd) &
                             * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
@@ -604,7 +596,7 @@ contains
            if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then  
               afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
-              arh30=1._r8-max(0.7_r8, min(1._r8,rh30_col(c)/90._r8))
+              arh30=1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/90._r8))
               if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
                 fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8) &
                              *((1._r8-btran_col(c)/wtlf(c))**0.5_r8)
@@ -614,8 +606,8 @@ contains
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
               ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
-                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))*0.22_r8)  &
-                         *(1._r8-fs)*(1._r8-cropf_col(c))
+                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                         cnfire_params%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c))
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               spread_m = fire_m**0.5_r8

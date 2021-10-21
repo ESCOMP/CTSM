@@ -8,7 +8,6 @@ module CNVegNitrogenStateType
   use clm_varpar                         , only : nlevdecomp_full, nlevdecomp
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp, zisoi
   use landunit_varcon                    , only : istcrop, istsoil 
-  use clm_varctl                         , only : use_nitrif_denitrif, use_vertsoilc, use_century_decomp
   use clm_varctl                         , only : iulog, override_bgc_restart_mismatch_dump
   use clm_varctl                         , only : use_crop
   use CNSharedParamsMod                  , only : use_fun
@@ -529,7 +528,8 @@ contains
   !-----------------------------------------------------------------------
   subroutine Restart ( this,  bounds, ncid, flag, leafc_patch, &
                        leafc_storage_patch, frootc_patch, frootc_storage_patch, &
-                       deadstemc_patch, filter_reseed_patch, num_reseed_patch )
+                       deadstemc_patch, filter_reseed_patch, num_reseed_patch, &
+                       spinup_factor_deadwood )
     !
     ! !DESCRIPTION: 
     ! Read/write restart data 
@@ -554,6 +554,7 @@ contains
     real(r8)          , intent(in) :: deadstemc_patch(bounds%begp:)
     integer           , intent(in) :: filter_reseed_patch(:)
     integer           , intent(in) :: num_reseed_patch
+    real(r8)          , intent(in) :: spinup_factor_deadwood
     !
     ! !LOCAL VARIABLES:
     integer            :: i, p, l
@@ -719,18 +720,18 @@ contains
        if (spinup_state <= 1 .and. restart_file_spinup_state == 2 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools out of AD spinup mode'
           exit_spinup = .true.
-          if ( masterproc ) write(iulog, *) 'Multiplying stemn and crootn by 10 for exit spinup '
+          if ( masterproc ) write(iulog, *) 'Multiplying stemn and crootn by ', spinup_factor_deadwood, 'for exit spinup '
           do i = bounds%begp,bounds%endp
-             this%deadstemn_patch(i) = this%deadstemn_patch(i) * 10._r8
-             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * 10._r8
+             this%deadstemn_patch(i) = this%deadstemn_patch(i) * spinup_factor_deadwood
+             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) * spinup_factor_deadwood
           end do
        else if (spinup_state == 2 .and. restart_file_spinup_state <= 1 ) then
           if ( masterproc ) write(iulog,*) ' CNRest: taking Dead wood N pools into AD spinup mode'
           enter_spinup = .true.
-          if ( masterproc ) write(iulog, *) 'Dividing stemn and crootn by 10 for enter spinup '
+          if ( masterproc ) write(iulog, *) 'Dividing stemn and crootn by ', spinup_factor_deadwood, 'for enter spinup '
           do i = bounds%begp,bounds%endp
-             this%deadstemn_patch(i) = this%deadstemn_patch(i) / 10._r8
-             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) / 10._r8
+             this%deadstemn_patch(i) = this%deadstemn_patch(i) / spinup_factor_deadwood
+             this%deadcrootn_patch(i) = this%deadcrootn_patch(i) / spinup_factor_deadwood
           end do
        endif
 

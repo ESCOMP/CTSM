@@ -8,7 +8,7 @@ module restFileMod
 #include "shr_assert.h"
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use decompMod        , only : bounds_type, get_proc_clumps, get_clump_bounds
-  use decompMod        , only : BOUNDS_LEVEL_PROC
+  use decompMod        , only : bounds_level_proc
   use spmdMod          , only : masterproc, mpicom
   use abortutils       , only : endrun
   use shr_log_mod      , only : errMsg => shr_log_errMsg
@@ -182,7 +182,7 @@ contains
     ! The provided bounds need to be proc-level bounds. This is in part because of logic
     ! below that divides this into clump-level bounds for the sake of reweight_wrapup.
     ! But it *MAY* also be necessary to have proc-level bounds for these i/o routines.
-    SHR_ASSERT(bounds_proc%level == BOUNDS_LEVEL_PROC, subname // ': argument must be PROC-level bounds')
+    SHR_ASSERT(bounds_proc%level == bounds_level_proc, subname // ': argument must be PROC-level bounds')
 
     ! Open file
 
@@ -506,7 +506,7 @@ contains
     use clm_varctl           , only : conventions, source
     use dynSubgridControlMod , only : get_flanduse_timeseries
     use clm_varpar           , only : numrad, nlevlak, nlevsno, nlevgrnd, nlevmaxurbgrnd, nlevcan
-    use clm_varpar           , only : maxpatch_glcmec, nvegwcs
+    use clm_varpar           , only : maxpatch_glc, nvegwcs
     use decompMod            , only : get_proc_global
     !
     ! !ARGUMENTS:
@@ -548,8 +548,8 @@ contains
     if ( use_hydrstress ) then
       call ncd_defdim(ncid , 'vegwcs'  , nvegwcs        ,  dimid)
     end if
-    call ncd_defdim(ncid , 'glc_nec', maxpatch_glcmec, dimid)
-    call ncd_defdim(ncid , 'glc_nec1', maxpatch_glcmec+1, dimid)
+    call ncd_defdim(ncid , 'glc_nec', maxpatch_glc, dimid)
+    call ncd_defdim(ncid , 'glc_nec1', maxpatch_glc+1, dimid)
 
     ! Define global attributes
 

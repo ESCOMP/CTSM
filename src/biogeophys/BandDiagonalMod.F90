@@ -176,7 +176,7 @@ contains
        n=jbot(ci)-jtop(ci)+1
 
        allocate(ab(m,n))
-       ab=0.0
+       ab=0.0_r8
 
        ab(kl+ku-1,3:n)=b(ci,1,jtop(ci):jbot(ci)-2)   ! 2nd superdiagonal
        ab(kl+ku+0,2:n)=b(ci,2,jtop(ci):jbot(ci)-1)   ! 1st superdiagonal

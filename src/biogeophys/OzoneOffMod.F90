@@ -22,6 +22,7 @@ module OzoneOffMod
    contains
      procedure, public :: Init
      procedure, public :: Restart
+     procedure, public :: CalcOzoneUptake
      procedure, public :: CalcOzoneStress
   end type ozone_off_type
 
@@ -59,12 +60,25 @@ contains
   end function constructor
 
 
-  subroutine Init(this, bounds)
+  subroutine Init(this,  bounds, o3_veg_stress_method)
+    !
+    ! !DESCRIPTION:
+    ! Initialize ozone data structure
+    !
+    ! ! USES:
+    use abortutils,only : endrun
+    !
+    ! !ARGUMENTS:
     class(ozone_off_type) , intent(inout) :: this
-    type(bounds_type)     , intent(in)    :: bounds
+    type(bounds_type)     , intent(in)           :: bounds
+    character(len=*), intent(in)                      :: o3_veg_stress_method 
+    !-----------------------------------------------------------------------
 
+    if (o3_veg_stress_method /= 'unset' ) call endrun(' unconsistent choice of o3_veg_stress_method in init OzoneOffMod.')
+    
     call this%InitAllocateBase(bounds)
     call this%InitColdBase(bounds)
+
   end subroutine Init
 
   subroutine Restart(this, bounds, ncid, flag)
@@ -79,8 +93,8 @@ contains
 
   end subroutine Restart
 
-  subroutine CalcOzoneStress(this, bounds, num_exposedvegp, filter_exposedvegp, &
-          forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
+  subroutine CalcOzoneUptake(this, bounds, num_exposedvegp, filter_exposedvegp, &
+       forc_pbot, forc_th, rssun, rssha, rb, ram, tlai)
 
     class(ozone_off_type) , intent(inout) :: this
     type(bounds_type)      , intent(in)    :: bounds
@@ -104,13 +118,21 @@ contains
     SHR_ASSERT_ALL_FL((ubound(ram) == (/bounds%endp/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(tlai) == (/bounds%endp/)), sourcefile, __LINE__)
 
-    ! Explicitly set outputs to 1. This isn't really needed, because they should still be
-    ! at 1 from cold-start initialization, but do this for clarity here.
+    ! Do nothing: In the ozone off case, we don't need to track ozone uptake
 
-    this%o3coefvsha_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefvsun_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefgsha_patch(bounds%begp:bounds%endp) = 1._r8
-    this%o3coefgsun_patch(bounds%begp:bounds%endp) = 1._r8
+  end subroutine CalcOzoneUptake
+
+  subroutine CalcOzoneStress(this, bounds, &
+       num_exposedvegp, filter_exposedvegp, &
+       num_noexposedvegp, filter_noexposedvegp)
+    class(ozone_off_type), intent(inout) :: this
+    type(bounds_type)    , intent(in) :: bounds
+    integer              , intent(in) :: num_exposedvegp
+    integer              , intent(in) :: filter_exposedvegp(:)
+    integer              , intent(in) :: num_noexposedvegp
+    integer              , intent(in) :: filter_noexposedvegp(:)
+
+    ! Outputs (stress terms) are already fixed at 1 from cold start initialization
 
   end subroutine CalcOzoneStress
 

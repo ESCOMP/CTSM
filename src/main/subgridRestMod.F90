@@ -8,15 +8,14 @@ module subgridRestMod
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use glc_elevclass_mod  , only : glc_get_num_elevation_classes, glc_get_elevclass_bounds
   use abortutils         , only : endrun
-  use decompMod          , only : bounds_type, BOUNDS_LEVEL_PROC, ldecomp
+  use decompMod          , only : bounds_type, bounds_level_proc, gindex_global, get_global_index_array
+  use decompMod          , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
   use domainMod          , only : ldomain
   use clm_time_manager   , only : get_curr_date
-  use clm_varcon         , only : nameg, namel, namec, namep
   use clm_varpar         , only : nlevsno, nlevmaxurbgrnd
   use pio                , only : file_desc_t
   use ncdio_pio          , only : ncd_int, ncd_double
-  use GetGlobalValuesMod , only : GetGlobalIndexArray
-  use GridcellType       , only : grc                
+  use GridcellType       , only : grc
   use LandunitType       , only : lun                
   use ColumnType         , only : col                
   use PatchType          , only : patch                
@@ -115,6 +114,7 @@ contains
     integer , pointer :: ilarr(:)    ! temporary
     integer , pointer :: icarr(:)    ! temporary
     integer , pointer :: iparr(:)    ! temporary
+    integer           :: gindex      ! global index
 
     real(r8), pointer :: elevclass_bounds(:)
 
@@ -141,7 +141,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=grc%latdeg)
 
     do g=bounds%begg,bounds%endg
-       igarr(g)= mod(ldecomp%gdc2glo(g)-1,ldomain%ni) + 1
+       gindex = gindex_global(g-bounds%begg+1)
+       igarr(g)= mod(gindex-1,ldomain%ni) + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='grid1d_ixy', xtype=ncd_int,    &
          dim1name='gridcell',                                          &
@@ -149,7 +150,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=igarr)
 
     do g=bounds%begg,bounds%endg
-       igarr(g)= (ldecomp%gdc2glo(g) - 1)/ldomain%ni + 1
+       gindex = gindex_global(g-bounds%begg+1)
+       igarr(g)= (gindex - 1)/ldomain%ni + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='grid1d_jxy', xtype=ncd_int,    &
          dim1name='gridcell',                                          &
@@ -182,7 +184,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=rlarr)
 
     do l=bounds%begl,bounds%endl
-       ilarr(l) = mod(ldecomp%gdc2glo(lun%gridcell(l))-1,ldomain%ni) + 1
+       gindex = gindex_global(lun%gridcell(l)-bounds%begg+1)
+       ilarr(l) = mod(gindex-1,ldomain%ni) + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='land1d_ixy', xtype=ncd_int,     &
          dim1name='landunit',                                                      &
@@ -190,14 +193,16 @@ contains
          interpinic_flag='skip', readvar=readvar, data=ilarr)
 
     do l=bounds%begl,bounds%endl
-       ilarr(l) = (ldecomp%gdc2glo(lun%gridcell(l))-1)/ldomain%ni + 1
+       gindex = gindex_global(lun%gridcell(l)-bounds%begg+1)
+       ilarr(l) = (gindex-1)/ldomain%ni + 1
     end do
     call restartvar(ncid=ncid, flag=flag, varname='land1d_jxy', xtype=ncd_int,     &
          dim1name='landunit',                                                      &
          long_name='2d latitude index of corresponding landunit',                  &
          interpinic_flag='skip', readvar=readvar, data=ilarr)
 
-    ilarr = GetGlobalIndexArray(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, clmlevel=nameg)
+    ilarr = get_global_index_array(lun%gridcell(bounds%begl:bounds%endl), bounds%begl, bounds%endl, &
+         subgrid_level=subgrid_level_gridcell)
     call restartvar(ncid=ncid, flag=flag, varname='land1d_gridcell_index', xtype=ncd_int, &
          dim1name='landunit',                                                             &
          long_name='gridcell index of corresponding landunit',                            &
@@ -245,7 +250,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=rcarr)
 
     do c= bounds%begc, bounds%endc
-       icarr(c) = mod(ldecomp%gdc2glo(col%gridcell(c))-1,ldomain%ni) + 1
+       gindex = gindex_global(col%gridcell(c)-bounds%begg+1)
+       icarr(c) = mod(gindex-1,ldomain%ni) + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_ixy', xtype=ncd_int,      &
          dim1name='column',                                                         &
@@ -253,20 +259,23 @@ contains
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
     do c= bounds%begc, bounds%endc
-       icarr(c) = (ldecomp%gdc2glo(col%gridcell(c))-1)/ldomain%ni + 1
+       gindex = gindex_global(col%gridcell(c)-bounds%begg+1)
+       icarr(c) = (gindex-1)/ldomain%ni + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_jxy', xtype=ncd_int,      &
          dim1name='column',                                                         &
          long_name='2d latitude index of corresponding column', units=' ',          &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    icarr = GetGlobalIndexArray(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=nameg)
+    icarr = get_global_index_array(col%gridcell(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+         subgrid_level=subgrid_level_gridcell)
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_gridcell_index', xtype=ncd_int, &
          dim1name='column',                                                               &
          long_name='gridcell index of corresponding column',                              &
          interpinic_flag='skip', readvar=readvar, data=icarr)
 
-    icarr = GetGlobalIndexArray(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, clmlevel=namel)
+    icarr = get_global_index_array(col%landunit(bounds%begc:bounds%endc), bounds%begc, bounds%endc, &
+         subgrid_level=subgrid_level_landunit)
     call restartvar(ncid=ncid, flag=flag, varname='cols1d_landunit_index', xtype=ncd_int, &
          dim1name='column',                                                               &
          long_name='landunit index of corresponding column',                              &
@@ -300,6 +309,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS', xtype=ncd_int,   &
          dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true.,                   &
          long_name='class in which each layer falls', units=' ',                    &
+         scale_by_thickness=.false., &
          interpinic_flag='skip', readvar=readvar, data=col%levgrnd_class)
 
     allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd))
@@ -307,6 +317,16 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z', xtype=ncd_double,  & 
          dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='layer depth, excluding snow layers', units='m', &
+         scale_by_thickness=.false., &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_r)
+    deallocate(temp2d_r)
+
+    allocate(temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd))
+    temp2d_r(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd) = col%dz(bounds%begc:bounds%endc, 1:nlevmaxurbgrnd)
+    call restartvar(ncid=ncid, flag=flag, varname='DZSOI', xtype=ncd_double,  &
+         dim1name='column', dim2name='levmaxurbgrnd', switchdim=.true., &
+         long_name='soil layer thickness', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='skip', readvar=readvar, data=temp2d_r)
     deallocate(temp2d_r)
 
@@ -335,7 +355,8 @@ contains
          interpinic_flag='skip', readvar=readvar, data=rparr)
 
     do p=bounds%begp,bounds%endp
-       iparr(p) = mod(ldecomp%gdc2glo(patch%gridcell(p))-1,ldomain%ni) + 1
+       gindex = gindex_global(patch%gridcell(p)-bounds%begg+1)
+       iparr(p) = mod(gindex-1,ldomain%ni) + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_ixy', xtype=ncd_int, &
          dim1name='pft',                                                       &
@@ -343,26 +364,30 @@ contains
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
     do p=bounds%begp,bounds%endp
-       iparr(p) = (ldecomp%gdc2glo(patch%gridcell(p))-1)/ldomain%ni + 1
+       gindex = gindex_global(patch%gridcell(p)-bounds%begg+1)
+       iparr(p) = (gindex-1)/ldomain%ni + 1
     enddo
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_jxy', xtype=ncd_int, &
          dim1name='pft',                                                       &
          long_name='2d latitude index of corresponding pft', units='',         &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    iparr = GetGlobalIndexArray(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=nameg)
+    iparr = get_global_index_array(patch%gridcell(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+         subgrid_level=subgrid_level_gridcell)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_gridcell_index', xtype=ncd_int, &
          dim1name='pft',                                                                  &
          long_name='gridcell index of corresponding pft',                                 &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    iparr = GetGlobalIndexArray(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namel)
+    iparr = get_global_index_array(patch%landunit(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+         subgrid_level=subgrid_level_landunit)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_landunit_index', xtype=ncd_int, &
          dim1name='pft',                                                                  &
          long_name='landunit index of corresponding pft',                                 &
          interpinic_flag='skip', readvar=readvar, data=iparr)
 
-    iparr = GetGlobalIndexArray(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, clmlevel=namec)
+    iparr = get_global_index_array(patch%column(bounds%begp:bounds%endp), bounds%begp, bounds%endp, &
+         subgrid_level=subgrid_level_column)
     call restartvar(ncid=ncid, flag=flag, varname='pfts1d_column_index', xtype=ncd_int,   &
          dim1name='pft',                                                                  &
          long_name='column index of corresponding pft',                                   &
@@ -409,6 +434,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='LEVGRND_CLASS_p', xtype=ncd_int, &
          dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='class in which each layer falls, patch-level', units=' ', &
+         scale_by_thickness=.false., &
          interpinic_flag='skip', readvar=readvar, data=temp2d_i)
     deallocate(temp2d_i)
 
@@ -420,6 +446,19 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='COL_Z_p', xtype=ncd_double, &
          dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
          long_name='layer depth, excluding snow layers, patch-level', units='m', &
+         scale_by_thickness=.false., &
+         interpinic_flag='skip', readvar=readvar, data=temp2d_r)
+    deallocate(temp2d_r)
+
+    allocate(temp2d_r(bounds%begp:bounds%endp, 1:nlevmaxurbgrnd))
+    do p=bounds%begp,bounds%endp
+       c = patch%column(p)
+       temp2d_r(p, 1:nlevmaxurbgrnd) = col%dz(c, 1:nlevmaxurbgrnd)
+    end do
+    call restartvar(ncid=ncid, flag=flag, varname='DZSOI_p', xtype=ncd_double, &
+         dim1name='pft', dim2name='levmaxurbgrnd', switchdim=.true., &
+         long_name='soil layer thickness, patch-level', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='skip', readvar=readvar, data=temp2d_r)
     deallocate(temp2d_r)
 
@@ -507,6 +546,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='DZSNO', xtype=ncd_double,  & 
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer thickness', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%dz(bounds%begc:bounds%endc,-nlevsno+1:0) = temp2d(bounds%begc:bounds%endc,-nlevsno+1:0) 
@@ -520,6 +560,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='ZSNO', xtype=ncd_double,  & 
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
          long_name='snow layer depth', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%z(bounds%begc:bounds%endc,-nlevsno+1:0) = temp2d(bounds%begc:bounds%endc,-nlevsno+1:0) 
@@ -533,6 +574,7 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='ZISNO', xtype=ncd_double,  & 
          dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno, upperb2=-1, &
          long_name='snow interface depth at the top of the given layer', units='m', &
+         scale_by_thickness=.false., &
          interpinic_flag='interp', readvar=readvar, data=temp2d)
     if (flag == 'read') then
        col%zi(bounds%begc:bounds%endc,-nlevsno:-1) = temp2d(bounds%begc:bounds%endc,-nlevsno:-1) 
@@ -557,7 +599,7 @@ contains
     character(len=*), parameter :: subname = 'save_old_weights'
     !-----------------------------------------------------------------------
     
-    SHR_ASSERT(bounds%level == BOUNDS_LEVEL_PROC, subname//' ERROR: expect proc-level bounds')
+    SHR_ASSERT(bounds%level == bounds_level_proc, subname//' ERROR: expect proc-level bounds')
 
     allocate(pft_wtlunit_before_rest_read(bounds%begp:bounds%endp))
     pft_wtlunit_before_rest_read(bounds%begp:bounds%endp) = patch%wtlunit(bounds%begp:bounds%endp)
@@ -684,7 +726,7 @@ contains
                write(iulog,*) '    in user_nl_clm'
                write(iulog,*) '    In this case, CLM will take the weights from the initial conditions file.'
                write(iulog,*) ' '
-               call endrun(decomp_index=p, clmlevel=namep, msg=errMsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, msg=errMsg(sourcefile, __LINE__))
             end if
          end if
       end do
