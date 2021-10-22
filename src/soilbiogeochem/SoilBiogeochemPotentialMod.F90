@@ -111,7 +111,7 @@ contains
     begc = bounds%begc; endc = bounds%endc
 
     SHR_ASSERT_ALL_FL((ubound(cn_decomp_pools)     == (/endc,nlevdecomp,ndecomp_pools/))               , sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(p_decomp_cn_gain)    == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(p_decomp_cn_gain)    == (/endc,nlevdecomp,ndecomp_pools/))               , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(p_decomp_cpool_loss) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(pmnf_decomp_cascade) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(p_decomp_npool_to_din) == (/endc,nlevdecomp,ndecomp_cascade_transitions/)) , sourcefile, __LINE__)
@@ -255,11 +255,11 @@ contains
                         ! Once k-loop completes, the left hand side should end
                         ! up with the correct cn ratio
                         if (p_decomp_npool_gain_sum(cascade_receiver_pool(k)) > 0.0_r8) then
-                           p_decomp_cn_gain(c,j,k) = &
+                           p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) = &
                               p_decomp_cpool_gain_sum(cascade_receiver_pool(k)) / &
                               p_decomp_npool_gain_sum(cascade_receiver_pool(k))
                         else
-                           p_decomp_cn_gain(c,j,k) = 0.0_r8
+                           p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) = 0.0_r8
                         end if  ! denominator check
                      end if  ! donors donating (decomp_cpools_vr & decomp_k > 0)
                   end if  ! microbes receiving
@@ -272,7 +272,7 @@ contains
                         ! if p_decomp_cn_diff < 0  N mineralization
                         !                     > 0  immobilization
                         p_decomp_cn_diff_ratio = max(0.0_r8, &
-                           (p_decomp_cn_gain(c,j,k) - &
+                           (p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) - &
                             cn_col(c,cascade_receiver_pool(k))) / cn_col(c,cascade_receiver_pool(k)))
                         ! Actual amount of N that's mineralized or that would
                         ! need to be immobilized
