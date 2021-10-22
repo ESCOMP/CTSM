@@ -116,12 +116,14 @@ module CLMFatesInterfaceMod
    use FatesInterfaceMod     , only : SetFatesTime
    use FatesInterfaceMod     , only : set_fates_ctrlparms
    use FatesInterfaceMod     , only : UpdateFatesRMeansTStep
+   use FatesInterfaceMod     , only : InitTimeAveragingGlobals
    use FatesHistoryInterfaceMod, only : fates_hist
    use FatesRestartInterfaceMod, only : fates_restart_interface_type
 
    use EDTypesMod            , only : ed_patch_type
    use PRTGenericMod         , only : num_elements
-   use FatesInterfaceTypesMod     , only : hlm_numlevgrnd
+   use FatesInterfaceTypesMod, only : hlm_numlevgrnd
+   use FatesInterfaceTypesMod, only : hlm_stepsize
    use EDMainMod             , only : ed_ecosystem_dynamics
    use EDMainMod             , only : ed_update_site
    use EDInitMod             , only : zero_site
@@ -239,7 +241,7 @@ module CLMFatesInterfaceMod
  contains
 
 
-   subroutine CLMFatesGlobals(dtime)
+   subroutine CLMFatesGlobals()
 
      ! --------------------------------------------------------------------------------
      ! This is one of the first calls to fates
@@ -251,8 +253,6 @@ module CLMFatesInterfaceMod
      ! over the NL variables to FATES global settings.
      ! --------------------------------------------------------------------------------
 
-     real(r8), intent(in)                           :: dtime  ! main model timestep (s)
-     
      logical                                        :: verbose_output
      integer                                        :: pass_masterproc
      integer                                        :: pass_vertsoilc
@@ -321,7 +321,6 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
         call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
         call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
-        call set_fates_ctrlparms('stepsize', rval = dtime)
 
         if(is_restart()) then
            pass_is_restart = 1
@@ -458,7 +457,19 @@ module CLMFatesInterfaceMod
    end subroutine CLMFatesGlobals
 
 
-  ! ====================================================================================
+   ! ===================================================================================
+  
+   subroutine CLMFatesTimesteps()
+     
+     hlm_stepsize = get_step_size_real()
+
+     call InitTimeAveragingGlobals()
+
+     return
+   end subroutine CLMFatesTimesteps
+   
+   
+   ! ====================================================================================
 
    subroutine init(this, bounds_proc )
 

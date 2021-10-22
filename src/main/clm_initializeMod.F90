@@ -27,6 +27,7 @@ module clm_initializeMod
   use reweightMod           , only : reweight_wrapup
   use filterMod             , only : allocFilters, filter, filter_inactive_and_active
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals
+  use CLMFatesInterfaceMod  , only : CLMFatesTimesteps
   use dynSubgridControlMod  , only : dynSubgridControl_init, get_reset_dynbal_baselines
   use SelfTestDriver        , only : self_test_driver
   use SoilMoistureStreamMod , only : PrescribedSoilMoistureInit
@@ -222,9 +223,20 @@ contains
     ! Read surface dataset and set up subgrid weight arrays
     call surfrd_get_data(begg, endg, ldomain, fsurdat, actual_numcft)
 
-    !!! (RGK) TEST RESET TIME
-    call CLMFatesGlobals(dtime=1800.0_r8)
- 
+    ! Ask Fates to evaluate its own dimensioning needs.
+    ! This determines the total amount of space it requires in its largest
+    ! dimension.  We are currently calling that the "cohort" dimension, but
+    ! it is really a utility dimension that captures the models largest
+    ! size need.
+    ! Sets:
+    !   fates_maxElementsPerPatch
+    !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
+    ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
+    ! to allocate space)
+    ! This also sets up various global constants in FATES
+    ! ------------------------------------------------------------------------
+    
+    call CLMFatesGlobals()
 
     ! Determine decomposition of subgrid scale landunits, columns, patches
     call decompInit_clumps(ni, nj, glc_behavior)
@@ -300,6 +312,9 @@ contains
        call timemgr_restart()
     end if
 
+    ! Pass model timestep info to FATES
+    call CLMFatesTimesteps()
+    
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
     call t_startf('init_orbd')
     calday = get_curr_calday()
@@ -310,23 +325,6 @@ contains
     call t_stopf('init_orbd')
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
 
-    ! Ask Fates to evaluate its own dimensioning needs.
-    ! This determines the total amount of space it requires in its largest
-    ! dimension.  We are currently calling that the "cohort" dimension, but
-    ! it is really a utility dimension that captures the models largest
-    ! size need.
-    ! Sets:
-    !   fates_maxElementsPerPatch
-    !   fates_maxElementsPerSite (where a site is roughly equivalent to a column)
-    ! (Note: fates_maxELementsPerSite is the critical variable used by CLM
-    ! to allocate space)
-    ! This also sets up various global constants in FATES
-    ! ------------------------------------------------------------------------
-
-    !!! (RGK test relocation)
-    !!!call CLMFatesGlobals(dtime)
-
-    
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
 
