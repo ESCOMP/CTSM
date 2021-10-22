@@ -9,7 +9,7 @@ module pftconMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
   use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, ndecomp_pools
-  use clm_varctl  , only : iulog, use_cndv, use_vertsoilc, use_crop
+  use clm_varctl  , only : iulog, use_cndv, use_crop
   !
   ! !PUBLIC TYPES:
   implicit none

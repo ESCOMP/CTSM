@@ -129,11 +129,6 @@
 
   <!-- Primarily for testing -->
   <compset>
-    <alias>I2000Clm50Cn</alias>
-    <lname>2000_DATM%GSWP3v1_CLM50%CN_SICE_SOCN_MOSART_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
     <alias>I1850Clm50Sp</alias>
     <lname>1850_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
     <science_support grid="f09_g17"/>
@@ -466,11 +461,6 @@
   <compset>
     <alias>I2000Clm45FatesRs</alias>
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm45Cn</alias>
-    <lname>1850_DATM%GSWP3v1_CLM45%CN_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
   <compset>
