@@ -375,39 +375,6 @@ contains
             end do
          end do
 
-         if (use_mimics_decomp) then
-            do j = 1, nlevdecomp
-               do fc=1,num_soilc
-                  c = filter_soilc(fc)
-
-                  fpi_vr(c,j) = 0.0_r8
-
-                  do k = 1, ndecomp_cascade_transitions
-                     ! TODO slevis: ok to identify as receiver pools?
-                     if (cascade_receiver_pool(k) == i_cop_mic .or. &
-                         cascade_receiver_pool(k) == i_oli_mic) then
-                        if (pmnf_decomp_cascade(c,j,k) > 0.0_r8 .and. &
-                            sum_ndemand_vr(c,j) > 0.0_r8) then
-                           amnf_immob_vr = (sminn_vr(c,j) / dt) * &
-                                           (pmnf_decomp_cascade(c,j,k) / &
-                                            sum_ndemand_vr(c,j))
-                           n_deficit_vr = pmnf_decomp_cascade(c,j,k) - &
-                                          amnf_immob_vr
-                           c_overflow_vr(c,j,k) = &
-                              n_deficit_vr * p_decomp_cn_gain(c,j,cascade_receiver_pool(k))
-                        else
-                           c_overflow_vr(c,j,k) = 0.0_r8
-                        end if
-                     else
-                        c_overflow_vr(c,j,k) = 0.0_r8
-                     end if
-                  end do
-               end do
-            end do
-         else  ! not use_mimics_decomp
-            c_overflow_vr(:,:,:) = 0.0_r8
-         end if
-
          if ( local_use_fun ) then
             call t_startf( 'CNFUN' )
             call CNFUN(bounds,num_soilc,filter_soilc,num_soilp,filter_soilp,waterstatebulk_inst, &
@@ -590,7 +557,29 @@ contains
                sum_nh4_demand_scaled(c,j) = plant_ndemand(c)* nuptake_prof(c,j) * compet_plant_nh4 + &
                     potential_immob_vr(c,j)*compet_decomp_nh4 + pot_f_nit_vr(c,j)*compet_nit
 
-               if (sum_nh4_demand(c,j)*dt < smin_nh4_vr(c,j)) then
+               if (use_mimics_decomp) then
+                  ! this turns off fpi for MIMICS and only lets plants
+                  ! take up available mineral nitrogen.
+                  ! TODO slevis: -ve or tiny sminn_vr could cause problems
+                  nlimit_nh4(c,j) = 1
+                  fpi_nh4_vr(c,j) = 1.0_r8
+                  actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j)
+                  ! TODO slevis: check the logic here...
+                  f_nit_vr(c,j) = pot_f_nit_vr(c,j)
+                  if ( .not. local_use_fun ) then
+                     smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j) / dt) * &
+                                                     plant_ndemand(c) * &
+                                                     nuptake_prof(c,j) * &
+                                                     compet_plant_nh4 / &
+                                                     sum_nh4_demand_scaled(c,j), &
+                                                     plant_ndemand(c) * &
+                                                     nuptake_prof(c,j))
+                  else
+                     smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j) / dt - &
+                                                 actual_immob_nh4_vr(c,j) - &
+                                                 f_nit_vr(c,j)
+                  end if
+               else if (sum_nh4_demand(c,j)*dt < smin_nh4_vr(c,j)) then
 
                   ! NH4 availability is not limiting immobilization or plant
                   ! uptake, and all can proceed at their potential rates
@@ -661,7 +650,32 @@ contains
                   
           
 
-               if (sum_no3_demand(c,j)*dt < smin_no3_vr(c,j)) then
+               if (use_mimics_decomp) then
+                  ! this turns off fpi for MIMICS and only lets plants
+                  ! take up available mineral nitrogen.
+                  ! TODO slevis: -ve or tiny sminn_vr could cause problems
+                  nlimit_no3(c,j) = 1
+                  fpi_no3_vr(c,j) = 1.0_r8 - fpi_nh4_vr(c,j)  ! currently 0
+                  actual_immob_no3_vr(c,j) = potential_immob_vr(c,j) - &
+                                             actual_immob_nh4_vr(c,j)  ! currently 0
+                  ! TODO slevis: check the logic here...
+                  f_denit_vr(c,j) = pot_f_denit_vr(c,j)
+                  if ( .not. local_use_fun ) then
+                     smin_no3_to_plant_vr(c,j) = min((smin_no3_vr(c,j) / dt) * &
+                                                     (plant_ndemand(c) * &
+                                                      nuptake_prof(c,j) - &
+                                                      smin_nh4_to_plant_vr(c,j)) * &
+                                                      compet_plant_no3 / &
+                                                      sum_no3_demand_scaled(c,j), &
+                                                      plant_ndemand(c) * &
+                                                      nuptake_prof(c,j) - &
+                                                      smin_nh4_to_plant_vr(c,j))
+                  else
+                     smin_no3_to_plant_vr(c,j) = smin_no3_vr(c,j) / dt - &
+                                                 actual_immob_no3_vr(c,j) - &
+                                                 f_denit_vr(c,j)
+                  end if
+               else if (sum_no3_demand(c,j)*dt < smin_no3_vr(c,j)) then
 
                   ! NO3 availability is not limiting immobilization or plant
                   ! uptake, and all can proceed at their potential rates
@@ -833,6 +847,40 @@ contains
                end do
             end do
 
+         end if
+
+         ! TODO slevis: MIMICS block ok here? And
+         ! ok to check for microbes as receiver pools?
+         if (use_mimics_decomp) then
+            do j = 1, nlevdecomp
+               do fc=1,num_soilc
+                  c = filter_soilc(fc)
+
+                  do k = 1, ndecomp_cascade_transitions
+                     if (cascade_receiver_pool(k) == i_cop_mic .or. &
+                         cascade_receiver_pool(k) == i_oli_mic) then
+                        sum_ndemand_vr(c,j) = sum_no3_demand_scaled(c,j) + &
+                                              sum_nh4_demand_scaled(c,j)
+                        if (pmnf_decomp_cascade(c,j,k) > 0.0_r8 .and. &
+                            sum_ndemand_vr(c,j) > 0.0_r8) then
+                           amnf_immob_vr = (sminn_vr(c,j) / dt) * &
+                                           (pmnf_decomp_cascade(c,j,k) / &
+                                            sum_ndemand_vr(c,j))
+                           n_deficit_vr = pmnf_decomp_cascade(c,j,k) - &
+                                          amnf_immob_vr
+                           c_overflow_vr(c,j,k) = &
+                              n_deficit_vr * p_decomp_cn_gain(c,j,cascade_receiver_pool(k))
+                        else  ! not pmnf and sum_ndemand > 0
+                           c_overflow_vr(c,j,k) = 0.0_r8
+                        end if
+                     else  ! not microbes receiving
+                        c_overflow_vr(c,j,k) = 0.0_r8
+                     end if
+                  end do
+               end do
+            end do
+         else  ! not use_mimics_decomp
+            c_overflow_vr(:,:,:) = 0.0_r8
          end if
 
          if(.not.local_use_fun)then
