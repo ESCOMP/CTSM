@@ -4489,9 +4489,13 @@ contains
        ! Calculate ligninNratioAve
        do fc = 1,num_soilc
           c = filter_soilc(fc)
-          ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
-                             (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
-                             soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
+          if (soilbiogeochem_cwdn_col(c) > 0._r8) then
+             ligninNratio_cwd = CNParamsShareInst%cwd_flig * &
+                (soilbiogeochem_cwdc_col(c) / soilbiogeochem_cwdn_col(c)) * &
+                soilbiogeochem_decomp_cascade_ctransfer_col(c,i_cwdl2)
+          else
+             ligninNratio_cwd = 0._r8
+          end if
           this%ligninNratioAvg_col(c) = &
              (ligninNratio_leaf_col(c) + ligninNratio_froot_col(c) + &
               ligninNratio_cwd) / &

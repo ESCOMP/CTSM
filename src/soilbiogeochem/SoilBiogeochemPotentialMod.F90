@@ -229,9 +229,11 @@ contains
          end do  ! soil level loop
       end do  ! transitions loop
 
-      ! Determine immobilization vs. mineralization by comparing the
-      ! cn_gain into microbial biomass compared with the target C:N
-      ! ratio of microbial biomass pools
+      ! Calculate cn_gain into microbial biomass (in first do k
+      ! transitions loop).
+      ! Compare cn_gain to target C:N ratio of microbial biomass pools
+      ! to determine immobilization vs. mineralization (in second do k
+      ! transitions loop).
       if (use_mimics_decomp) then
          do j = 1,nlevdecomp
             do fc = 1,num_soilc
@@ -271,9 +273,9 @@ contains
                          decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
                         ! if p_decomp_cn_diff < 0  N mineralization
                         !                     > 0  immobilization
-                        p_decomp_cn_diff_ratio = max(0.0_r8, &
+                        p_decomp_cn_diff_ratio =  &
                            (p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) - &
-                            cn_col(c,cascade_receiver_pool(k))) / cn_col(c,cascade_receiver_pool(k)))
+                            cn_col(c,cascade_receiver_pool(k))) / cn_col(c,cascade_receiver_pool(k))
                         ! Actual amount of N that's mineralized or that would
                         ! need to be immobilized
                         ! negative=mineralization: add to the DIN pool
