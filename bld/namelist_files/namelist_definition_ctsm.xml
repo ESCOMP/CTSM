@@ -1771,6 +1771,58 @@ Mapping method from LAI input file to the model resolution
 </entry>
 
 <!-- ========================================================================================  -->
+<!-- cropcal_streams streams Namelist                                                          -->
+<!-- ========================================================================================  -->
+
+<!-- Crop calendars -->
+<entry id="use_cropcal_streams" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Toggle to turn on use of crop calendar streams in place of CFT-specific sowing windows and harvest criteria.
+(EXPERIMENTAL and NOT tested)
+</entry>
+
+<entry id="stream_year_first_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+First year to loop over for crop calendar data
+</entry>
+
+<entry id="stream_year_last_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Last year to loop over for crop calendar data
+</entry>
+
+<entry id="model_year_align_cropcal" type="integer" category="datasets"
+       group="cropcal_streams" valid_values="" >
+Simulation year that aligns with stream_year_first_cropcal value
+</entry>
+
+<entry id="stream_fldfilename_sdates" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for sowing dates
+</entry>
+
+<entry id="stream_fldfilename_hdates" type="char*256(30)" category="datasets"
+       input_pathname="abs" group="cropcal_streams" valid_values="" >
+Filename of input stream data for harvest dates
+</entry>
+
+<entry id="cropcal_tintalgo" type="char*80" category="datasets"
+       group="cropcal_streams" valid_values="nearest" >
+Time interpolation method to use with crop calendar streams
+</entry>
+
+<entry id="cropcal_mapalgo" type="char*256" category="datasets"
+       group="cropcal_streams" valid_values="nn,nnoni,nnonj" >
+Mapping method from crop calendar input files to the model resolution
+    bilinear = bilinear interpolation
+    nn       = nearest neighbor
+    nnoni    = nearest neighbor on the "i" (longitude) axis
+    nnonj    = nearest neighbor on the "j" (latitude) axis
+    spval    = set to special value
+    copy     = copy using the same indices
+</entry>
+
+<!-- ========================================================================================  -->
 <!-- light_streams streams Namelist (when CN an CLM4_5 is active)                              -->
 <!-- ========================================================================================  -->
 

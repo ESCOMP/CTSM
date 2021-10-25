@@ -1566,6 +1566,17 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <lai_mapalgo  hgrid="1x1_asphaltjungleNJ" >nn</lai_mapalgo>
 <lai_mapalgo  hgrid="5x5_amazon"          >nn</lai_mapalgo>
 
+<!-- crop calendar streams namelist defaults -->
+<use_cropcal_streams    >.false.</use_cropcal_streams>
+<stream_year_first_cropcal  >1850</stream_year_first_cropcal>
+<stream_year_last_cropcal   >2100</stream_year_last_cropcal>
+<model_year_align_cropcal   >1850</model_year_align_cropcal>
+
+<stream_fldfilename_sdate hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0.5_c140711.nc</stream_fldfilename_sdate>
+<stream_fldfilename_hdate hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0.5_c140711.nc</stream_fldfilename_hdate>
+
+<cropcal_mapalgo>nn</cropcal_mapalgo>
+
 <!-- lightning streams namelist defaults -->
 
 <light_res    use_cn=".false."                     >none</light_res>
