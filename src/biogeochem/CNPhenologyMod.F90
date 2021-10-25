@@ -124,6 +124,8 @@ module CNPhenologyMod
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
 
+  logical,  private :: generate_crop_gdds = .false. ! If true, harvest the day before next sowing
+
   ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
   integer,  public, parameter :: critical_daylight_constant           = 1
@@ -165,7 +167,7 @@ contains
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
-                           min_critical_dayl_method
+                           min_critical_dayl_method, generate_crop_gdds
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -189,6 +191,7 @@ contains
     call shr_mpi_bcast (initial_seed_at_planting,    mpicom)
     call shr_mpi_bcast (onset_thresh_depends_on_veg, mpicom)
     call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
+    call shr_mpi_bcast (generate_crop_gdds,          mpicom)
 
     if (      min_critical_dayl_method == "DependsOnLat"       )then
        critical_daylight_method = critical_daylight_depends_on_lat
@@ -1691,6 +1694,8 @@ contains
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     logical do_plant_prescribed ! is today the prescribed sowing date?
+    logical do_harvest    ! Are harvest conditions satisfied?
+    logical force_harvest ! Should we harvest today no matter what?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -2054,7 +2059,26 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
+            if (generate_crop_gdds) then
+               if (.not. use_cropcal_streams) then 
+                  write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
+                  call endrun(msg=errMsg(sourcefile, __LINE__))
+               endif
+               if (next_rx_sdate >= 0) then
+                  ! Harvest the day before the next sowing date this year.
+                  do_harvest = jday == next_rx_sdate - 1
+               else
+                  ! If this patch has already had all its plantings for the year, don't harvest
+                  ! until some time next year.
+                  do_harvest = .false.
+               endif
+            else
+               ! Original harvest rule
+               do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))
+            endif
+            force_harvest = generate_crop_gdds .and. do_harvest
+
+            if ((.not. force_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
@@ -2080,7 +2104,7 @@ contains
                ! the onset_counter would change from dt and you'd need to make
                ! changes to the offset subroutine below
 
-            else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
+            else if (do_harvest) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
