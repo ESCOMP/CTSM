@@ -1722,7 +1722,7 @@ contains
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
          cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
-         sdate_rx          =>    crop_inst%sdate_thisseason                    , & ! Input:  [integer  (:) ]  prescribed sowing date
+         next_rx_sdate     =>    crop_inst%next_rx_sdate                       , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -1825,7 +1825,7 @@ contains
             !         According to Chris Kucharik, the dataset of
             !         xinpdate was generated from a previous model run at 0.5 deg resolution
 
-            do_plant_prescribed = sdate_rx(p) == jday
+            do_plant_prescribed = next_rx_sdate == jday
 
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
