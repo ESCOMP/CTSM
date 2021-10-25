@@ -1801,11 +1801,6 @@ Simulation year that aligns with stream_year_first_cropcal value
 Filename of input stream data for sowing dates
 </entry>
 
-<entry id="stream_fldfilename_hdates" type="char*256(30)" category="datasets"
-       input_pathname="abs" group="cropcal_streams" valid_values="" >
-Filename of input stream data for harvest dates
-</entry>
-
 <entry id="cropcal_tintalgo" type="char*80" category="datasets"
        group="cropcal_streams" valid_values="nearest" >
 Time interpolation method to use with crop calendar streams

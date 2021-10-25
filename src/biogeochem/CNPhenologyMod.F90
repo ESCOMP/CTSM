@@ -1691,8 +1691,6 @@ contains
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     logical do_plant_prescribed ! is today the prescribed sowing date?
     logical sowing_is_prescribed ! is sowing date prescribed for this season?
-    logical harvest_is_prescribed ! is harvest date prescribed for this season?
-    logical do_harvest_prescribed ! is today the prescribed harvest date?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -1725,7 +1723,6 @@ contains
          cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
          sdate_rx          =>    crop_inst%sdate_thisseason                    , & ! Input:  [integer  (:) ]  prescribed sowing date
-         hdate_rx          =>    crop_inst%hdate_thisseason                    , & ! Input:  [integer  (:) ]  prescribed harvest date
          peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -1830,8 +1827,6 @@ contains
 
             sowing_is_prescribed = sdate_rx(p) >= 0
             do_plant_prescribed = sdate_rx(p) == jday
-            harvest_is_prescribed = hdate_rx(p) >= 0
-            do_harvest_prescribed = hdate_rx(p) == jday
 
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
@@ -2060,7 +2055,7 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            if ((.not. do_harvest_prescribed) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
+            if (leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
                if (abs(onset_counter(p)) > 1.e-6_r8) then
                   onset_flag(p)    = 1._r8
@@ -2086,7 +2081,7 @@ contains
                ! the onset_counter would change from dt and you'd need to make
                ! changes to the offset subroutine below
 
-            else if (do_harvest_prescribed .or. ((.not. harvest_is_prescribed) .and. hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p)))) then
+            else if (hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
