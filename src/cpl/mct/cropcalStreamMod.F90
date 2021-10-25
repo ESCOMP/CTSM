@@ -248,6 +248,13 @@ contains
          ip = mct_aVect_indexRA(sdat_sdate%avs(1),trim(stream_var_name))
          ig = g_to_ig(patch%gridcell(p))
          crop_inst%sdates_thisyr(p,1) = sdat_sdate%avs(1)%rAttr(ip,ig)
+
+         ! SSR TODO: Make this work with max_growingseasons_per_year > 1
+         crop_inst%n_growingseasons_thisyear_thispatch = crop_inst%sdates_thisyr(p,1) >= 0
+
+         ! Only for first sowing date of the year
+         crop_inst%next_rx_sdate = crop_inst%sdates_thisyr(p,1)
+
       end do
    end do
 

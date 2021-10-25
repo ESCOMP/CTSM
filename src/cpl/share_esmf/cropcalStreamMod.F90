@@ -251,6 +251,10 @@ contains
          ivt = patch%itype
          ! SSR TODO: Make below work with arbitrary # of growing seasons per year
          crop_inst%sdates_thisyr(p,1) = dataptr2d_sdate(ig,ivt)
+         crop_inst%n_growingseasons_thisyear_thispatch = crop_inst%sdates_thisyr(p,1) >= 0
+
+         ! Only for first sowing date of the year
+         crop_inst%next_rx_sdate = crop_inst%sdates_thisyr(p,1)
       end do
     end do
     deallocate(dataptr2d)
