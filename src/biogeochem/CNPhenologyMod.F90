@@ -1728,6 +1728,7 @@ contains
          cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
          next_rx_sdate     =>    crop_inst%next_rx_sdate                       , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
+         growingseason_count =>  crop_inst%growingseason_count                 , & ! Inout:  [integer  (:) ]  number of growing seasons that have begun this year for this patch
          peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -1811,6 +1812,10 @@ contains
                !           else ! not possible to have croplive and ivt==cornORsoy? (slevis)
             end if
 
+         end if
+
+         if ( jday == 1 .and. mcsec == 0 ) then
+            growingseason_count = 0
          end if
 
          if ( (.not. croplive(p)) .and. (.not. cropplant(p)) ) then
