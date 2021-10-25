@@ -2253,6 +2253,7 @@ contains
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          cropplant         =>    crop_inst%cropplant_patch                       , & ! Output: [logical  (:) ]  Flag, true if crop may be planted
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
+         growingseason_count =>  crop_inst%growingseason_count                   , & ! Inout:  [integer  (:) ]  number of growing seasons that have begun this year for this patch
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
@@ -2266,6 +2267,7 @@ contains
       cropplant(p) = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
+      growingseason_count = growingseason_count + 1
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
