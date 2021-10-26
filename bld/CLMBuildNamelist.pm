@@ -1639,6 +1639,11 @@ sub process_namelist_inline_logic {
   ##################################
   setup_logic_lai_streams($opts,  $nl_flags, $definition, $defaults, $nl);
 
+  ##################################
+  # namelist group: cropcal_streams  #
+  ##################################
+  setup_logic_cropcal_streams($opts,  $nl_flags, $definition, $defaults, $nl);
+
   ##########################################
   # namelist group: soil_moisture_streams  #
   ##########################################
@@ -3738,6 +3743,43 @@ sub setup_logic_lai_streams {
 
 #-------------------------------------------------------------------------------
 
+sub setup_logic_cropcal_streams {
+  my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_cropcal_streams');
+
+  if ( ! &value_is_true($nl_flags->{'use_crop'}) && &value_is_true($nl->get_value('use_cropcal_streams'))  ) {
+    $log->verbose_message("use_crop set to true, so use_cropcal_streams will have no effect.");
+  }
+
+  if ( &value_is_true($nl->get_value('use_cropcal_streams')) ) {
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_cropcal_streams');
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcal_mapalgo',
+                'hgrid'=>$nl_flags->{'res'} );
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_last_cropcal',
+                'sim_year'=>$nl_flags->{'sim_year'},
+                'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    # Set align year, if first and last years are different
+    if ( $nl->get_value('stream_year_first_cropcal') !=
+        $nl->get_value('stream_year_last_cropcal') ) {
+      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl,
+                  'model_year_align_cropcal', 'sim_year'=>$nl_flags->{'sim_year'},
+                  'sim_year_range'=>$nl_flags->{'sim_year_range'});
+    }
+    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_fldfilename_cropcal',
+                'hgrid'=>"360x720cru" );
+    if ($opts->{'driver'} eq "nuopc" ) {
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_meshfile_cropcal',
+                    'hgrid'=>"360x720cru" );
+    }
+  }
+}
+
+#-------------------------------------------------------------------------------
+
 sub setup_logic_soilwater_movement {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
@@ -4105,6 +4147,7 @@ sub write_output_files {
   my @groups;
   @groups = qw(clm_inparm ndepdyn_nml popd_streams urbantv_streams light_streams
                soil_moisture_streams lai_streams atm2lnd_inparm lnd2atm_inparm clm_canopyhydrology_inparm cnphenology
+               cropcal_streams
                clm_soilhydrology_inparm dynamic_subgrid cnvegcarbonstate
                finidat_consistency_checks dynpft_consistency_checks
                clm_initinterp_inparm century_soilbgcdecompcascade
