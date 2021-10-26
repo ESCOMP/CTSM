@@ -30,6 +30,11 @@ module FireDataBaseType
       type(shr_strdata_type)    :: sdat_hdm     ! Human population density input data stream
       real(r8), public, pointer :: forc_lnfm(:) ! Lightning frequency
       type(shr_strdata_type)    :: sdat_lnfm    ! Lightning frequency input data stream
+      
+      real(r8), public, pointer :: gdp_lf_col(:)   ! col global real gdp data (k US$/capita)
+      real(r8), public, pointer :: peatf_lf_col(:) ! col global peatland fraction data (0-1)
+      integer , public, pointer :: abm_lf_col(:)   ! col global peak month of crop fire emissions
+      
     contains
       !
       ! !PUBLIC MEMBER FUNCTIONS:

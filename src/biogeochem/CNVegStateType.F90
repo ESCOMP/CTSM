@@ -10,9 +10,9 @@ module CNVegStateType
   use clm_varctl     , only : use_cn, iulog, fsurdat, use_crop, use_cndv
   use clm_varcon     , only : spval, ispval, grlnd
   use landunit_varcon, only : istsoil, istcrop
-  use LandunitType   , only : lun                
-  use ColumnType     , only : col                
-  use PatchType      , only : patch                
+  use LandunitType   , only : lun
+  use ColumnType     , only : col
+  use PatchType      , only : patch
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
   use dynSubgridControlMod, only : get_for_testing_allow_non_annual_changes
   !
@@ -45,10 +45,6 @@ module CNVegStateType
 
      integer  , pointer :: idop_patch                  (:)     ! patch date of planting
 
-     real(r8) , pointer :: gdp_lf_col                  (:)     ! col global real gdp data (k US$/capita)
-     real(r8) , pointer :: peatf_lf_col                (:)     ! col global peatland fraction data (0-1)
-     integer  , pointer :: abm_lf_col                  (:)     ! col global peak month of crop fire emissions 
-
      real(r8) , pointer :: lgdp_col                    (:)     ! col gdp limitation factor for fire occurrence (0-1)
      real(r8) , pointer :: lgdp1_col                   (:)     ! col gdp limitation factor for fire spreading (0-1)
      real(r8) , pointer :: lpop_col                    (:)     ! col pop limitation factor for fire spreading (0-1)
@@ -74,7 +70,7 @@ module CNVegStateType
      real(r8) , pointer :: fbac1_col                   (:)     ! col burned area out of conversion region due to land use fire (/sec)
      real(r8) , pointer :: wtlf_col                    (:)     ! col fractional coverage of non-crop Patches (0-1)
      real(r8) , pointer :: lfwt_col                    (:)     ! col fractional coverage of non-crop and non-bare-soil Patches (0-1)
-     real(r8) , pointer :: farea_burned_col            (:)     ! col fractional area burned (/sec) 
+     real(r8) , pointer :: farea_burned_col            (:)     ! col fractional area burned (/sec)
 
      real(r8), pointer :: dormant_flag_patch           (:)     ! patch dormancy flag
      real(r8), pointer :: days_active_patch            (:)     ! patch number of days since last dormancy
@@ -105,11 +101,11 @@ module CNVegStateType
 
    contains
 
-     procedure, public  :: Init         
-     procedure, public  :: Restart      
-     procedure, private :: InitAllocate 
-     procedure, private :: InitHistory  
-     procedure, private :: InitCold     
+     procedure, public  :: Init
+     procedure, public  :: Restart
+     procedure, private :: InitAllocate
+     procedure, private :: InitHistory
+     procedure, private :: InitCold
 
   end type cnveg_state_type
   !------------------------------------------------------------------------
@@ -123,13 +119,13 @@ contains
   subroutine Init(this, bounds)
 
     class(cnveg_state_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
 
     call this%InitAllocate ( bounds )
     if (use_cn) then
        call this%InitHistory ( bounds )
     end if
-    call this%InitCold ( bounds ) 
+    call this%InitCold ( bounds )
 
   end subroutine Init
 
@@ -144,7 +140,7 @@ contains
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -211,12 +207,12 @@ contains
     allocate(this%idop_patch          (begp:endp))                   ; this%idop_patch          (:)   = huge(1)
 
     allocate(this%gdp_lf_col          (begc:endc))                   ;
-    allocate(this%peatf_lf_col        (begc:endc))                   ; 
-    allocate(this%abm_lf_col          (begc:endc))                   ; 
+    allocate(this%peatf_lf_col        (begc:endc))                   ;
+    allocate(this%abm_lf_col          (begc:endc))                   ;
 
-    allocate(this%lgdp_col            (begc:endc))                   ; 
-    allocate(this%lgdp1_col           (begc:endc))                   ; 
-    allocate(this%lpop_col            (begc:endc))                   ;  
+    allocate(this%lgdp_col            (begc:endc))                   ;
+    allocate(this%lgdp1_col           (begc:endc))                   ;
+    allocate(this%lpop_col            (begc:endc))                   ;
 
     allocate(this%tempavg_t2m_patch   (begp:endp))                   ; this%tempavg_t2m_patch   (:)   = nan
     allocate(this%annsum_counter_col  (begc:endc))                   ; this%annsum_counter_col  (:)   = nan
@@ -280,7 +276,7 @@ contains
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
-    type(bounds_type), intent(in) :: bounds  
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
@@ -334,7 +330,7 @@ contains
     call hist_addfld1d (fname='BAF_PEATF',  units='s-1', &
          avgflag='A', long_name='fractional area burned in peatland', &
          ptr_col=this%baf_peatf_col)
- 
+
     this%annavg_t2m_patch(begp:endp) = spval
     call hist_addfld1d (fname='ANNAVG_T2M', units='K', &
          avgflag='A', long_name='annual average 2m air temperature', &
@@ -477,7 +473,7 @@ contains
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
-    type(bounds_type), intent(in) :: bounds   
+    type(bounds_type), intent(in) :: bounds
     !
     ! !LOCAL VARIABLES:
     integer               :: g,l,c,p,n,j,m            ! indices
@@ -488,7 +484,7 @@ contains
     integer               :: dimid                    ! dimension id
     integer               :: ier                      ! error status
     type(file_desc_t)     :: ncid                     ! netcdf id
-    logical               :: readvar 
+    logical               :: readvar
     character(len=256)    :: locfn                    ! local filename
     integer               :: begc, endc
     integer               :: begg, endg
@@ -505,13 +501,13 @@ contains
     call ncd_pio_openfile (ncid, locfn, 0)
 
     ! --------------------------------------------------------------------
-    ! Read in GDP data 
+    ! Read in GDP data
     ! --------------------------------------------------------------------
 
     allocate(gdp(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='gdp', flag='read', data=gdp, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: gdp NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
+       call endrun(msg=' ERROR: gdp NOT on surfdata file'//errMsg(sourcefile, __LINE__))
     end if
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
@@ -520,13 +516,13 @@ contains
     deallocate(gdp)
 
     ! --------------------------------------------------------------------
-    ! Read in peatf data 
+    ! Read in peatf data
     ! --------------------------------------------------------------------
 
     allocate(peatf(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='peatf', flag='read', data=peatf, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: peatf NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
+       call endrun(msg=' ERROR: peatf NOT on surfdata file'//errMsg(sourcefile, __LINE__))
     end if
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
@@ -535,13 +531,13 @@ contains
     deallocate(peatf)
 
     ! --------------------------------------------------------------------
-    ! Read in ABM data 
+    ! Read in ABM data
     ! --------------------------------------------------------------------
 
     allocate(abm(bounds%begg:bounds%endg))
     call ncd_io(ncid=ncid, varname='abm', flag='read', data=abm, dim1name=grlnd, readvar=readvar)
     if (.not. readvar) then
-       call endrun(msg=' ERROR: abm NOT on surfdata file'//errMsg(sourcefile, __LINE__)) 
+       call endrun(msg=' ERROR: abm NOT on surfdata file'//errMsg(sourcefile, __LINE__))
     end if
     do c = bounds%begc, bounds%endc
        g = col%gridcell(c)
@@ -557,12 +553,12 @@ contains
        write(iulog,*) 'Successfully read fmax, soil color, sand and clay boundary data'
        write(iulog,*)
     endif
-    
+
     ! --------------------------------------------------------------------
     ! Initialize terms needed for dust model
-    ! TODO - move these terms to DUSTMod module variables 
+    ! TODO - move these terms to DUSTMod module variables
     ! --------------------------------------------------------------------
-       
+
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
        if (lun%ifspecial(l)) then
@@ -577,15 +573,15 @@ contains
        end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          this%annsum_counter_col(c) = 0._r8   
-          this%annavg_t2m_col(c)     = 280._r8 
+          this%annsum_counter_col(c) = 0._r8
+          this%annavg_t2m_col(c)     = 280._r8
 
-          ! fire related variables 
-          this%baf_crop_col(c)       = 0._r8 
-          this%baf_peatf_col(c)      = 0._r8 
-          this%fbac_col(c)           = 0._r8 
-          this%fbac1_col(c)          = 0._r8 
-          this%farea_burned_col(c)   = 0._r8 
+          ! fire related variables
+          this%baf_crop_col(c)       = 0._r8
+          this%baf_peatf_col(c)      = 0._r8
+          this%fbac_col(c)           = 0._r8
+          this%fbac1_col(c)          = 0._r8
+          this%farea_burned_col(c)   = 0._r8
           this%nfire_col(c)          = 0._r8
        end if
     end do
@@ -654,8 +650,8 @@ contains
           this%tempmax_retransn_patch(p)      = 0._r8
           this%annmax_retransn_patch(p)       = 0._r8
           this%downreg_patch(p)               = 0._r8
-          this%leafcn_offset_patch(p)         = spval 
-          this%plantCN_patch(p)               = spval 
+          this%leafcn_offset_patch(p)         = spval
+          this%plantCN_patch(p)               = spval
        end if
 
     end do
@@ -684,9 +680,9 @@ contains
     !
     ! !ARGUMENTS:
     class(cnveg_state_type) :: this
-    type(bounds_type), intent(in)    :: bounds 
-    type(file_desc_t), intent(inout) :: ncid   
-    character(len=*) , intent(in)    :: flag   
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
     type(cnveg_nitrogenstate_type), intent(in) :: cnveg_nitrogenstate
     type(cnveg_carbonstate_type)  , intent(in) :: cnveg_carbonstate
     integer                       , intent(out), optional :: filter_reseed_patch(:)
@@ -704,128 +700,128 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='dormant_flag', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='dormancy flag', units='unitless', &
-         interpinic_flag='interp', readvar=readvar, data=this%dormant_flag_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%dormant_flag_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='days_active', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='number of days since last dormancy', units='days' , &
-         interpinic_flag='interp', readvar=readvar, data=this%days_active_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%days_active_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='onset_flag', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='flag if critical growing degree-day sum is exceeded', units='unitless' , &
-         interpinic_flag='interp', readvar=readvar, data=this%onset_flag_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%onset_flag_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='onset_counter', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='onset days counter', units='sec' , &
-         interpinic_flag='interp', readvar=readvar, data=this%onset_counter_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%onset_counter_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='onset_gddflag', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='onset flag for growing degree day sum', units='' , &
-         interpinic_flag='interp', readvar=readvar, data=this%onset_gddflag_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%onset_gddflag_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='onset_fdd', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='onset freezing degree days counter', units='days' , &
-         interpinic_flag='interp', readvar=readvar, data=this%onset_fdd_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%onset_fdd_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='onset_gdd', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='onset growing degree days', units='days' , &
-         interpinic_flag='interp', readvar=readvar, data=this%onset_gdd_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%onset_gdd_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='onset_swi', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='onset soil water index', units='days' , &
-         interpinic_flag='interp', readvar=readvar, data=this%onset_swi_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%onset_swi_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='offset_flag', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='offset flag', units='unitless' , &
-         interpinic_flag='interp', readvar=readvar, data=this%offset_flag_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%offset_flag_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='offset_counter', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='offset days counter', units='sec' , &
-         interpinic_flag='interp', readvar=readvar, data=this%offset_counter_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%offset_counter_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='offset_fdd', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='offset freezing degree days counter', units='days' , &
-         interpinic_flag='interp', readvar=readvar, data=this%offset_fdd_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%offset_fdd_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='offset_swi', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%offset_swi_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%offset_swi_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='lgsf', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%lgsf_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%lgsf_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='bglfr', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%bglfr_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%bglfr_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='bgtr', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%bgtr_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%bgtr_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='annavg_t2m', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%annavg_t2m_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%annavg_t2m_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='tempavg_t2m', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%tempavg_t2m_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%tempavg_t2m_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='c_allometry', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%c_allometry_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%c_allometry_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='n_allometry', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%n_allometry_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%n_allometry_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='tempsum_potential_gpp', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%tempsum_potential_gpp_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%tempsum_potential_gpp_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='annsum_potential_gpp', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%annsum_potential_gpp_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%annsum_potential_gpp_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='tempmax_retransn', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%tempmax_retransn_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%tempmax_retransn_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='annmax_retransn', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%annmax_retransn_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%annmax_retransn_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='downreg', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%downreg_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%downreg_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='leafcn_offset', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%leafcn_offset_patch)
-     
+
     call restartvar(ncid=ncid, flag=flag, varname='plantCN', xtype=ncd_double,  &
          dim1name='pft', &
          long_name='', units='', &
@@ -834,22 +830,22 @@ contains
     call restartvar(ncid=ncid, flag=flag, varname='annsum_counter', xtype=ncd_double,  &
          dim1name='column', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%annsum_counter_col) 
+         interpinic_flag='interp', readvar=readvar, data=this%annsum_counter_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='burndate', xtype=ncd_int,  &
          dim1name='pft', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%burndate_patch) 
+         interpinic_flag='interp', readvar=readvar, data=this%burndate_patch)
 
     call restartvar(ncid=ncid, flag=flag, varname='lfc', xtype=ncd_double,  &
          dim1name='column', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%lfc_col) 
+         interpinic_flag='interp', readvar=readvar, data=this%lfc_col)
 
     call restartvar(ncid=ncid, flag=flag, varname='cannavg_t2m', xtype=ncd_double,  &
          dim1name='column', &
          long_name='', units='', &
-         interpinic_flag='interp', readvar=readvar, data=this%annavg_t2m_col) 
+         interpinic_flag='interp', readvar=readvar, data=this%annavg_t2m_col)
 
     if (use_crop) then
 
@@ -864,7 +860,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%peaklai_patch)
 
        call restartvar(ncid=ncid, flag=flag,  varname='idop', xtype=ncd_int,  &
-            dim1name='pft', long_name='Date of planting', units='jday', nvalid_range=(/1,366/), & 
+            dim1name='pft', long_name='Date of planting', units='jday', nvalid_range=(/1,366/), &
             interpinic_flag='interp', readvar=readvar, data=this%idop_patch)
 
        call restartvar(ncid=ncid, flag=flag,  varname='aleaf', xtype=ncd_double,  &
