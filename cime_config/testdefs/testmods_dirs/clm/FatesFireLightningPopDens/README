@@ -16,7 +16,6 @@ dataset for California that has not been placed in the repository of
 CTSM datasets as of 2020/6/6. That dataset can be used with the
 following settings:
 
-fire_method = 'spitfire'
 fates_spitfire_mode = 3
 stream_fldfilename_lightng = '.../data_UCB/observed/CA_monthly_ignition_number_1980-2016/ignition_1980_to_2016_monthly_20190801.nc'
 stream_year_first_lightng = 1980
