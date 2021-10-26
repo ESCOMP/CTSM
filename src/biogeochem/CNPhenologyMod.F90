@@ -1788,11 +1788,11 @@ contains
          ! on an annual basis in cropresidue subroutine
 
          if ( jday == 1 .and. mcsec == 0 ) then
-            growingseason_count = 0
+            growingseason_count(p) = 0
          end if
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
-         if ( (.not. croplive(p)) .and. growingseason_count == 0 ) then
+         if ( (.not. croplive(p)) .and. growingseason_count(p) == 0 ) then
 
             ! gdd needed for * chosen crop and a likely hybrid (for that region) *
             ! to reach full physiological maturity
@@ -1809,7 +1809,7 @@ contains
             !         According to Chris Kucharik, the dataset of
             !         xinpdate was generated from a previous model run at 0.5 deg resolution
 
-            do_plant_prescribed = next_rx_sdate == jday
+            do_plant_prescribed = next_rx_sdate(p) == jday
 
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
@@ -2027,9 +2027,9 @@ contains
                   write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
                   call endrun(msg=errMsg(sourcefile, __LINE__))
                endif
-               if (next_rx_sdate >= 0) then
+               if (next_rx_sdate(p) >= 0) then
                   ! Harvest the day before the next sowing date this year.
-                  do_harvest = jday == next_rx_sdate - 1
+                  do_harvest = jday == next_rx_sdate(p) - 1
                else
                   ! If this patch has already had all its plantings for the year, don't harvest
                   ! until some time next year.
@@ -2252,11 +2252,11 @@ contains
       croplive(p)  = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
-      growingseason_count = growingseason_count + 1
-      if (growingseason_count <= crop_inst%n_growingseasons_thisyear_thispatch) then
-         next_rx_sdate = crop_inst%sdates_thisyr(p, growingseason_count)
+      growingseason_count(p) = growingseason_count(p) + 1
+      if (growingseason_count(p) <= crop_inst%n_growingseasons_thisyear_thispatch(p)) then
+         next_rx_sdate(p) = crop_inst%sdates_thisyr(p, growingseason_count(p))
       else
-         next_rx_sdate = -1
+         next_rx_sdate(p) = -1
       endif
 
       leafc_xfer(p)  = initial_seed_at_planting
