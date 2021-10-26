@@ -110,6 +110,13 @@ contains
        ! Allocate pop dens forcing data
        allocate( this%forc_hdm(bounds%begg:bounds%endg) )
        this%forc_hdm(bounds%begg:) = nan
+       
+       ! Allocate real gdp data
+       allocate(this%gdp_lf_col(bounds%begc:bounds%bounds%endc))
+       ! Allocate peatland fraction data
+       allocate(this%peatf_lf_col(bounds%begc:bounds%bounds%endc))
+       ! Allocates peak month of crop fire emissions
+       allocate(this%abm_lf_col(bounds%begc:bounds%bounds%endc))
 
        call this%hdm_init(bounds, NLFilename)
        call this%hdm_interp(bounds)
