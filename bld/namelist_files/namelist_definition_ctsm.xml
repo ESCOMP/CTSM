@@ -1801,7 +1801,7 @@ Last year to loop over for crop calendar data
 Simulation year that aligns with stream_year_first_cropcal value
 </entry>
 
-<entry id="stream_fldfilename_sdates" type="char*256(30)" category="datasets"
+<entry id="stream_fldfilename_sdate" type="char*256(30)" category="datasets"
        input_pathname="abs" group="cropcal_streams" valid_values="" >
 Filename of input stream data for sowing dates
 </entry>
