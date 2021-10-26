@@ -27,10 +27,8 @@ module CropType
   ! Crop state variables structure
   type, public :: crop_type
 
-     ! Note that cropplant and harvdate could be 2D to facilitate rotation
      integer , pointer :: nyrs_crop_active_patch  (:)   ! number of years this crop patch has been active (0 for non-crop patches)
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
-     logical , pointer :: cropplant_patch         (:)   ! patch Flag, true if planted
      integer , pointer :: harvdate_patch          (:)   ! patch harvest date
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
      real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
@@ -199,7 +197,6 @@ contains
 
     allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
-    allocate(this%cropplant_patch(begp:endp)) ; this%cropplant_patch(:) = .false.
     allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
     allocate(this%fertnitro_patch (begp:endp)) ; this%fertnitro_patch (:) = spval
     allocate(this%gddplant_patch (begp:endp)) ; this%gddplant_patch (:) = spval
@@ -477,31 +474,6 @@ contains
                 this%croplive_patch(p) = .true.
              else
                 this%croplive_patch(p) = .false.
-             end if
-          end do
-       end if
-       deallocate(temp1d)
-
-       allocate(temp1d(bounds%begp:bounds%endp))
-       if (flag == 'write') then 
-          do p= bounds%begp,bounds%endp
-             if (this%cropplant_patch(p)) then
-                temp1d(p) = 1
-             else
-                temp1d(p) = 0
-             end if
-          end do
-       end if
-       call restartvar(ncid=ncid, flag=flag,  varname='cropplant', xtype=ncd_log,  &
-            dim1name='pft', &
-            long_name='Flag that crop is planted, but not harvested' , &
-            interpinic_flag='interp', readvar=readvar, data=temp1d)
-       if (flag == 'read') then 
-          do p= bounds%begp,bounds%endp
-             if (temp1d(p) == 1) then
-                this%cropplant_patch(p) = .true.
-             else
-                this%cropplant_patch(p) = .false.
              end if
           end do
        end if

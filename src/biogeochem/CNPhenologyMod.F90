@@ -1725,7 +1725,6 @@ contains
          leafout           =>    crop_inst%gddtsoi_patch                       , & ! Input:  [real(r8) (:) ]  gdd from top soil layer temperature              
          harvdate          =>    crop_inst%harvdate_patch                      , & ! Output: [integer  (:) ]  harvest date                                       
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
-         cropplant         =>    crop_inst%cropplant_patch                     , & ! Output: [logical  (:) ]  Flag, true if crop may be planted                  
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
          next_rx_sdate     =>    crop_inst%next_rx_sdate                       , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          growingseason_count =>  crop_inst%growingseason_count                 , & ! Inout:  [integer  (:) ]  number of growing seasons that have begun this year for this patch
@@ -1785,40 +1784,15 @@ contains
          ! from AgroIBIS subroutine planting
          ! ---------------------------------
 
-         ! in order to allow a crop to be planted only once each year
-         ! initialize cropplant = .false., but hold it = .true. through the end of the year
-
          ! initialize other variables that are calculated for crops
          ! on an annual basis in cropresidue subroutine
-
-         if ( jday == jdayyrstart(h) .and. mcsec == 0 )then
-
-            ! make sure variables aren't changed at beginning of the year
-            ! for a crop that is currently planted, such as
-            ! WINTER TEMPERATE CEREAL = winter (wheat + barley + rye)
-            ! represented here by the winter wheat pft
-
-            if (.not. croplive(p))  then
-               cropplant(p) = .false.
-               idop(p)      = NOT_Planted
-
-               ! keep next for continuous, annual winter temperate cereal crop;
-               ! if we removed elseif,
-               ! winter cereal grown continuously would amount to a cereal/fallow
-               ! rotation because cereal would only be planted every other year
-
-            else if (croplive(p) .and. (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat)) then
-               cropplant(p) = .false.
-               !           else ! not possible to have croplive and ivt==cornORsoy? (slevis)
-            end if
-
-         end if
 
          if ( jday == 1 .and. mcsec == 0 ) then
             growingseason_count = 0
          end if
 
-         if ( (.not. croplive(p)) .and. (.not. cropplant(p)) ) then
+         ! Once outputs can handle >1 planting per year, remove 2nd condition.
+         if ( (.not. croplive(p)) .and. growingseason_count == 0 ) then
 
             ! gdd needed for * chosen crop and a likely hybrid (for that region) *
             ! to reach full physiological maturity
@@ -1840,22 +1814,6 @@ contains
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
             if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
-
-               ! add check to only plant winter cereal after other crops (soybean, maize)
-               ! have been harvested
-
-               ! *** remember order of planting is crucial - in terms of which crops you want
-               ! to be grown in what order ***
-
-               ! in this case, corn or soybeans are assumed to be planted before
-               ! cereal would be in any particular year that both patches are allowed
-               ! to grow in the same grid cell (e.g., double-cropping)
-
-               ! slevis: harvdate below needs cropplant(p) above to be cropplant(p,ivt(p))
-               !         where ivt(p) has rotated to winter cereal because
-               !         cropplant through the end of the year for a harvested crop.
-               !         Also harvdate(p) should be harvdate(p,ivt(p)) and should be
-               !         updated on Jan 1st instead of at harvest (slevis)
 
                ! Are all the normal requirements for planting met?
                do_plant_normal = (.not. use_cropcal_streams)           .and. &
@@ -2279,7 +2237,6 @@ contains
 
     associate(                                                                     & 
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
-         cropplant         =>    crop_inst%cropplant_patch                       , & ! Output: [logical  (:) ]  Flag, true if crop may be planted
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          next_rx_sdate     =>    crop_inst%next_rx_sdate                         , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
          growingseason_count =>  crop_inst%growingseason_count                   , & ! Inout:  [integer  (:) ]  number of growing seasons that have begun this year for this patch
@@ -2293,7 +2250,6 @@ contains
       ! impose limit on growing season length needed
       ! for crop maturity - for cold weather constraints
       croplive(p)  = .true.
-      cropplant(p) = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
       growingseason_count = growingseason_count + 1
