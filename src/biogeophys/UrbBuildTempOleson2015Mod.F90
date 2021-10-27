@@ -329,7 +329,8 @@ contains
 
     eflx_building     => energyflux_inst%eflx_building_lun , & ! Output:  [real(r8) (:)]  building heat flux from change in interior building air temperature (W/m**2)
     eflx_urban_ac     => energyflux_inst%eflx_urban_ac_lun , & ! Output:  [real(r8) (:)]  urban air conditioning flux (W/m**2)
-    eflx_urban_heat   => energyflux_inst%eflx_urban_heat_lun & ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
+    eflx_urban_heat   => energyflux_inst%eflx_urban_heat_lun,& ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
+    eflx_vent_wasteheat => energyflux_inst%eflx_vent_wasteheat_lun & ! Output: [real(r8) (:)] wasteheat from ventilation (W/m**2)
     )
 
     ! Get step size
@@ -673,7 +674,7 @@ contains
        end if
     end do
 
-    ! Energy balance checks
+    ! Energy balance checks and wasteheat from ventilation
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
        if (urbpoi(l)) then
@@ -899,6 +900,13 @@ contains
            write (iulog,*) 'clm model is stopping'
            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
+
+         ! Wasteheat from ventilation. We keep this as a separate wasteheat term because it is balanced by the
+         ! opposite flux inside the building. It is added as a flux to the canyon floor in SoilTemperatureMod.
+         ! Note that we multiply it here by wtlunit_roof which converts it from W/m2 of building area to W/m2
+         ! of urban area. eflx_urban_ac and eflx_urban_heat are treated similarly below.
+         eflx_vent_wasteheat(l) = wtlunit_roof(l) * ( - ht_roof(l)*(vent_ach/3600._r8) &
+                                  * rho_dair(l) * cpair * (taf(l) - t_building(l)) )
        end if
     end do
 
