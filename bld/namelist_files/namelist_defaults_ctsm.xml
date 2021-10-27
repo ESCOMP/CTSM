@@ -1575,8 +1575,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 
 <stream_fldfilename_sdate hgrid="360x720cru"       >lnd/clm2/lai_streams/MODISPFTLAI_0.5x0.5_c140711.nc</stream_fldfilename_sdate>
 
-<cropcal_mapalgo>nn</cropcal_mapalgo>
-
 <!-- lightning streams namelist defaults -->
 
 <light_res    use_cn=".false."                     >none</light_res>

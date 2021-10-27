@@ -85,9 +85,7 @@ contains
          stream_year_first_cropcal,    &
          stream_year_last_cropcal,     &
          model_year_align_cropcal,     &
-         cropcal_mapalgo,              &
-         stream_fldFileName_sdate,     &
-         cropcal_tintalgo
+         stream_fldFileName_sdate
 
     ! Default values for namelist
     stream_year_first_cropcal     = 1      ! first year in stream to use
@@ -109,11 +107,12 @@ contains
        end if
        close(nu_nml)
     endif
-    call shr_mpi_bcast(stream_year_first_cropcal  , mpicom)
-    call shr_mpi_bcast(stream_year_last_cropcal   , mpicom)
-    call shr_mpi_bcast(model_year_align_cropcal   , mpicom)
+    call shr_mpi_bcast(stream_year_first_cropcal, mpicom)
+    call shr_mpi_bcast(stream_year_last_cropcal , mpicom)
+    call shr_mpi_bcast(model_year_align_cropcal , mpicom)
     call shr_mpi_bcast(stream_fldFileName_sdate , mpicom)
-    call shr_mpi_bcast(cropcal_tintalgo           , mpicom)
+    !call shr_mpi_bcast(cropcal_mapalgo          , mpicom)
+    !call shr_mpi_bcast(cropcal_tintalgo         , mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -122,7 +121,6 @@ contains
        write(iulog,*) '  stream_year_last_cropcal   = ',stream_year_last_cropcal
        write(iulog,*) '  model_year_align_cropcal   = ',model_year_align_cropcal
        write(iulog,*) '  stream_fldFileName_sdate = ',trim(stream_fldFileName_sdate)
-       write(iulog,*) '  cropcal_tintalgo           = ',trim(cropcal_tintalgo)
     endif
 
     call clm_domain_mct (bounds, dom_clm)
