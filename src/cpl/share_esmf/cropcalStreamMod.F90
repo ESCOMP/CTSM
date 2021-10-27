@@ -62,8 +62,8 @@ contains
     integer                 :: nml_error                  ! namelist i/o error flag
     character(len=CL)       :: stream_fldFileName_sdate   ! sdate stream filename to read
     character(len=CL)       :: stream_meshfile_cropcal    ! crop calendar stream meshfile
-    character(len=CL)       :: cropcal_mapalgo = 'nn'     ! Mapping alogrithm
-    character(len=CL)       :: cropcal_tintalgo = 'nn'    ! Time interpolation alogrithm
+    character(len=CL)       :: cropcal_mapalgo = 'nearest'     ! Mapping alogrithm
+    character(len=CL)       :: cropcal_tintalgo = 'nearest'    ! Time interpolation alogrithm
     integer                 :: cropcal_offset = 0             ! Offset in time for dataset (sec)
     integer                 :: rc
     character(*), parameter :: subName = "('cropcaldyn_init')"
