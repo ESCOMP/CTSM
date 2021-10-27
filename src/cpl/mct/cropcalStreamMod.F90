@@ -70,8 +70,8 @@ contains
     integer            :: nml_error                  ! namelist i/o error flag
     type(mct_ggrid)    :: dom_clm                    ! domain information
     character(len=CL)  :: stream_fldFileName_sdate     ! sowing date stream filename to read
-    character(len=CL)  :: cropcal_mapalgo = 'nearest'   ! Mapping alogrithm
-    character(len=CL)  :: cropcal_tintalgo = 'nearest'    ! Time interpolation alogrithm
+    character(len=CL)  :: cropcal_mapalgo  = 'nn'      ! Mapping alogrithm
+    character(len=CL)  :: cropcal_tintalgo = 'nearest' ! Time interpolation alogrithm
     
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
     character(len=CXX) :: fldList_sdate1                  ! field string for 1st sowing dates
@@ -111,8 +111,6 @@ contains
     call shr_mpi_bcast(stream_year_last_cropcal , mpicom)
     call shr_mpi_bcast(model_year_align_cropcal , mpicom)
     call shr_mpi_bcast(stream_fldFileName_sdate , mpicom)
-    !call shr_mpi_bcast(cropcal_mapalgo          , mpicom)
-    !call shr_mpi_bcast(cropcal_tintalgo         , mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
