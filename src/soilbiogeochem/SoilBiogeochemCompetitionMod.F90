@@ -574,31 +574,6 @@ contains
                      smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j)/dt - actual_immob_nh4_vr(c,j) - f_nit_vr(c,j)
                   end if
 
-               else if (use_mimics_decomp) then
-                  ! this turns off fpi for MIMICS and only lets plants
-                  ! take up available mineral nitrogen.
-                  ! TODO slevis: -ve or tiny sminn_vr could cause problems
-                  nlimit_nh4(c,j) = 1
-                  if (sum_nh4_demand(c,j) > 0.0_r8) then
-                     fpi_nh4_vr(c,j) = 1.0_r8
-                     actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j)
-                     ! TODO slevis: consolidate repeating code if poss.
-                     f_nit_vr(c,j) =  min((smin_nh4_vr(c,j)/dt)*(pot_f_nit_vr(c,j)*compet_nit / &
-                          sum_nh4_demand_scaled(c,j)), pot_f_nit_vr(c,j))
-                     if ( .not. local_use_fun ) then
-                        smin_nh4_to_plant_vr(c,j) = min((smin_nh4_vr(c,j) / dt) * &
-                                                        plant_ndemand(c) * &
-                                                        nuptake_prof(c,j) * &
-                                                        compet_plant_nh4 / &
-                                                        sum_nh4_demand_scaled(c,j), &
-                                                        plant_ndemand(c) * &
-                                                        nuptake_prof(c,j))
-                     else
-                        smin_nh4_to_plant_vr(c,j) = smin_nh4_vr(c,j) / dt - &
-                                                    actual_immob_nh4_vr(c,j) - &
-                                                    f_nit_vr(c,j)
-                     end if
-                  end if
                else
 
                   ! NH4 availability can not satisfy the sum of immobilization, nitrification, and
@@ -636,7 +611,13 @@ contains
 
                end if
           
-              
+               if (use_mimics_decomp) then
+                  ! turn off fpi for MIMICS and only lets plants
+                  ! take up available mineral nitrogen.
+                  ! TODO slevis: -ve or tiny sminn_vr could cause problems
+                  fpi_nh4_vr(c,j) = 1.0_r8
+                  actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j)
+               end if
               
                if(.not.local_use_fun)then
                    sum_no3_demand(c,j) = (plant_ndemand(c)*nuptake_prof(c,j)-smin_nh4_to_plant_vr(c,j)) + &
@@ -676,34 +657,6 @@ contains
                      end if
                   endif
                 
-               else if (use_mimics_decomp) then
-                  ! this turns off fpi for MIMICS and only lets plants
-                  ! take up available mineral nitrogen.
-                  ! TODO slevis: -ve or tiny sminn_vr could cause problems
-                  nlimit_no3(c,j) = 1
-                  if (sum_no3_demand(c,j) > 0.0_r8) then
-                     fpi_no3_vr(c,j) = 1.0_r8 - fpi_nh4_vr(c,j)  ! => 0
-                     actual_immob_no3_vr(c,j) = potential_immob_vr(c,j) - &
-                                                actual_immob_nh4_vr(c,j)  ! => 0
-                     ! TODO slevis: consolidate repeating code if poss.
-                     f_denit_vr(c,j) = min((smin_no3_vr(c,j)/dt)*(pot_f_denit_vr(c,j)*compet_denit / &
-                                  sum_no3_demand_scaled(c,j)), pot_f_denit_vr(c,j))
-                     if ( .not. local_use_fun ) then
-                        smin_no3_to_plant_vr(c,j) = min((smin_no3_vr(c,j) / dt) * &
-                                                        (plant_ndemand(c) * &
-                                                         nuptake_prof(c,j) - &
-                                                         smin_nh4_to_plant_vr(c,j)) * &
-                                                         compet_plant_no3 / &
-                                                         sum_no3_demand_scaled(c,j), &
-                                                         plant_ndemand(c) * &
-                                                         nuptake_prof(c,j) - &
-                                                         smin_nh4_to_plant_vr(c,j))
-                     else
-                        smin_no3_to_plant_vr(c,j) = smin_no3_vr(c,j) / dt - &
-                                                    actual_immob_no3_vr(c,j) - &
-                                                    f_denit_vr(c,j)
-                     end if
-                  end if
                else 
 
                   ! NO3 availability can not satisfy the sum of immobilization, denitrification, and
@@ -757,9 +710,15 @@ contains
                   end if
 
                end if
-
                
-                    
+               if (use_mimics_decomp) then
+                  ! turn off fpi for MIMICS and only lets plants
+                  ! take up available mineral nitrogen.
+                  ! TODO slevis: -ve or tiny sminn_vr could cause problems
+                  fpi_no3_vr(c,j) = 1.0_r8 - fpi_nh4_vr(c,j)  ! => 0
+                  actual_immob_no3_vr(c,j) = potential_immob_vr(c,j) - &
+                                             actual_immob_nh4_vr(c,j)  ! => 0
+               end if
 
                ! n2o emissions: n2o from nitr is const fraction, n2o from denitr is calculated in nitrif_denitrif
                f_n2o_nit_vr(c,j) = f_nit_vr(c,j) * nitrif_n2o_loss_frac
@@ -855,8 +814,6 @@ contains
 
          end if
 
-         ! TODO slevis: MIMICS block ok here? And
-         ! ok to check for microbes as receiver pools?
          if (use_mimics_decomp) then
             do j = 1, nlevdecomp
                do fc=1,num_soilc
