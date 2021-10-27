@@ -541,8 +541,10 @@ contains
     ! matches what the restart file was generated with.  
     ! add info about the SOM decomposition cascade
 
-    if (use_century_decomp .or. use_mimics_decomp) then
+    if (use_century_decomp) then
        decomp_cascade_state = 1
+    else if (use_mimics_decomp) then
+       decomp_cascade_state = 2
     else
        decomp_cascade_state = 0
     end if
