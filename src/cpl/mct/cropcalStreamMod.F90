@@ -125,10 +125,7 @@ contains
 
     ! create the field list for these cropcal fields...use in shr_strdata_create
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-    write(iulog,'(a,i6)') '        cft_lb = ',cft_lb
-    write(iulog,'(a,i6)') '        cft_ub = ',cft_ub
     fldList_sdate1 = shr_string_listCreateField_range( cft_lb, cft_ub, "sdate1" )
-    write(iulog,*) 'fldList_sdate1 = ',trim(fldList_sdate1)
 
     ! SSR TODO:
     ! - Delete "area" and "mask"?
@@ -227,39 +224,27 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
     integer :: nc, fp
-    integer :: patch_gridcell_g
     character(len=CL)  :: stream_var_name
     !-----------------------------------------------------------------------
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
 
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-    write(iulog,*) 'cropcal_interp() A'
     SHR_ASSERT_FL( (lbound(sdat_sdate%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(sdat_sdate%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
 
     ! SSR TODO: Make these work with max_growingseasons_per_year > 1
-    write(iulog,*) 'cropcal_interp() B'
     do fp = 1, num_pcropp
-       write(iulog,*) 'cropcal_interp() C'
        p = filter_pcropp(fp)
        ivt = patch%itype(p)
        ! Set crop calendars for each gridcell/patch combination
        write(stream_var_name,"(i6)") ivt
        
        ! SSR TODO: Add check that variable exists in netCDF
-       write(iulog,*) 'cropcal_interp() D1'
        stream_var_name = 'sdate1_'//trim(adjustl(stream_var_name))
-       write(iulog,*) 'cropcal_interp() D2'
        ip = mct_aVect_indexRA(sdat_sdate%avs(1),trim(stream_var_name))
        if (ivt /= noveg) then
-          write(iulog,*) 'cropcal_interp() D3'
-          write(iulog,'(a,i6)')'                    p = ', p
-          write(iulog,'(a,i6)')'                  ivt = ', ivt
-          write(iulog,'(a,i6)')'    patch%gridcell(p) = ', patch%gridcell(p)
-          write(iulog,'(a,i6)')'       g_to_ig(above) = ', g_to_ig(patch%gridcell(p))
           ig = g_to_ig(patch%gridcell(p))
-          write(iulog,*) 'cropcal_interp() D4'
           crop_inst%sdates_thisyr(p,1) = sdat_sdate%avs(1)%rAttr(ip,ig)
        endif
 
