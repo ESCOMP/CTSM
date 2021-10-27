@@ -62,8 +62,8 @@ contains
     integer                 :: nml_error                  ! namelist i/o error flag
     character(len=CL)       :: stream_fldFileName_sdate   ! sdate stream filename to read
     character(len=CL)       :: stream_meshfile_cropcal    ! crop calendar stream meshfile
-    character(len=CL)       :: cropcal_mapalgo = 'nn'     ! Mapping alogrithm
-    character(len=CL)       :: cropcal_tintalgo = 'nn'    ! Time interpolation alogrithm
+    character(len=CL)       :: cropcal_mapalgo = 'nearest'     ! Mapping alogrithm
+    character(len=CL)       :: cropcal_tintalgo = 'nearest'    ! Time interpolation alogrithm
     integer                 :: cropcal_offset = 0             ! Offset in time for dataset (sec)
     integer                 :: rc
     character(*), parameter :: subName = "('cropcaldyn_init')"
@@ -75,10 +75,8 @@ contains
          stream_year_first_cropcal,    &
          stream_year_last_cropcal,     &
          model_year_align_cropcal,     &
-         cropcal_mapalgo,              &
          stream_fldFileName_sdate,     &
-         stream_meshfile_cropcal,      &
-         cropcal_tintalgo
+         stream_meshfile_cropcal
 
     ! Default values for namelist
     stream_year_first_cropcal  = 1      ! first year in stream to use
@@ -110,7 +108,8 @@ contains
     call shr_mpi_bcast(model_year_align_cropcal   , mpicom)
     call shr_mpi_bcast(stream_fldFileName_sdate   , mpicom)
     call shr_mpi_bcast(stream_meshfile_cropcal    , mpicom)
-    call shr_mpi_bcast(cropcal_tintalgo           , mpicom)
+    !call shr_mpi_bcast(cropcal_mapalgo            , mpicom)
+    !call shr_mpi_bcast(cropcal_tintalgo           , mpicom)
 
     if (masterproc) then
        write(iulog,*)
@@ -120,7 +119,6 @@ contains
        write(iulog,'(a,i8)') '  model_year_align_cropcal   = ',model_year_align_cropcal
        write(iulog,'(a,a)' ) '  stream_fldFileName_sdate   = ',trim(stream_fldFileName_sdate)
        write(iulog,'(a,a)' ) '  stream_meshfile_cropcal    = ',trim(stream_meshfile_cropcal)
-       write(iulog,'(a,a)' ) '  cropcal_tintalgo           = ',trim(cropcal_tintalgo)
        do n = 1,mxpft
           write(iulog,'(a,a)' ) '  stream_varnames_sdate  = ',trim(stream_varnames_sdate(n))
        end do

@@ -1811,22 +1811,6 @@ Filename of input stream data for sowing dates
 Filename of input stream data for crop calendar inputs
 </entry>
 
-<entry id="cropcal_tintalgo" type="char*80" category="datasets"
-       group="cropcal_streams" valid_values="nearest" >
-Time interpolation method to use with crop calendar streams
-</entry>
-
-<entry id="cropcal_mapalgo" type="char*256" category="datasets"
-       group="cropcal_streams" valid_values="nn,nnoni,nnonj" >
-Mapping method from crop calendar input files to the model resolution
-    bilinear = bilinear interpolation
-    nn       = nearest neighbor
-    nnoni    = nearest neighbor on the "i" (longitude) axis
-    nnonj    = nearest neighbor on the "j" (latitude) axis
-    spval    = set to special value
-    copy     = copy using the same indices
-</entry>
-
 <!-- ========================================================================================  -->
 <!-- light_streams streams Namelist (when CN an CLM4_5 is active)                              -->
 <!-- ========================================================================================  -->

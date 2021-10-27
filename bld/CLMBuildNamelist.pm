@@ -3754,8 +3754,6 @@ sub setup_logic_cropcal_streams {
 
   if ( &value_is_true($nl->get_value('use_cropcal_streams')) ) {
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_cropcal_streams');
-    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'cropcal_mapalgo',
-                'hgrid'=>$nl_flags->{'res'} );
     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'stream_year_first_cropcal',
                 'sim_year'=>$nl_flags->{'sim_year'},
                 'sim_year_range'=>$nl_flags->{'sim_year_range'});
