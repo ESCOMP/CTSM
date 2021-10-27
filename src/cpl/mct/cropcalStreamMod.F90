@@ -45,12 +45,12 @@ contains
     ! Initialize data stream information for crop calendars.
     !
     ! !USES:
-    use clm_varpar       , only : mxpft
+    use clm_varpar       , only : cft_lb, cft_ub
     use clm_time_manager , only : get_calendar
     use ncdio_pio        , only : pio_subsystem
     use shr_pio_mod      , only : shr_pio_getiotype
     use shr_stream_mod   , only : shr_stream_file_null
-    use shr_string_mod   , only : shr_string_listCreateField
+    use shr_string_mod   , only : shr_string_listCreateField_range
     use clm_nlUtilsMod   , only : find_nlgroup_name
     use ndepStreamMod    , only : clm_domain_mct
     use histFileMod      , only : hist_addfld1d
@@ -129,7 +129,10 @@ contains
 
     ! create the field list for these cropcal fields...use in shr_strdata_create
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-    fldList_sdate1 = shr_string_listCreateField( mxpft, "sdate1" )
+    write(iulog,'(a,i6)') '        cft_lb = ',cft_lb
+    write(iulog,'(a,i6)') '        cft_ub = ',cft_ub
+    fldList_sdate1 = shr_string_listCreateField_range( cft_lb, cft_ub, "sdate1" )
+    write(iulog,*) 'fldList_sdate1 = ',trim(fldList_sdate1)
 
     ! SSR TODO:
     ! - Delete "area" and "mask"?
@@ -207,7 +210,7 @@ contains
   end subroutine cropcal_advance
 
   !==============================================================================
-  subroutine cropcal_interp(bounds, crop_inst)
+  subroutine cropcal_interp(bounds, num_pcropp, filter_pcropp, crop_inst)
     !
     ! Interpolate data stream information for crop calendars.
     !
@@ -221,42 +224,58 @@ contains
     ! !ARGUMENTS:
     implicit none
     type(bounds_type)      , intent(in)    :: bounds
+    integer                , intent(in)    :: num_pcropp        ! number of prog. crop patches in filter
+    integer                , intent(in)    :: filter_pcropp(:)  ! filter for prognostic crop patches
     type(crop_type)        , intent(inout) :: crop_inst
     !
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
     integer :: nc, fp
+    integer :: patch_gridcell_g
     character(len=CL)  :: stream_var_name
     !-----------------------------------------------------------------------
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(g_to_ig,1) >= bounds%endg ), sourcefile, __LINE__)
 
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
+    write(iulog,*) 'cropcal_interp() A'
     SHR_ASSERT_FL( (lbound(sdat_sdate%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(sdat_sdate%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
 
     ! SSR TODO: Make these work with max_growingseasons_per_year > 1
-    do nc = 1, get_proc_clumps()
-      do fp = 1, filter(nc)%num_pcropp
-         p = filter(nc)%pcropp(fp)
-         ivt = patch%itype(p)
-         ! Set crop calendars for each gridcell/patch combination
-         write(stream_var_name,"(i6)") ivt
-         
-         ! SSR TODO: Add check that variable exists in netCDF
-         stream_var_name = 'sdate1_'//trim(adjustl(stream_var_name))
-         ip = mct_aVect_indexRA(sdat_sdate%avs(1),trim(stream_var_name))
-         ig = g_to_ig(patch%gridcell(p))
-         crop_inst%sdates_thisyr(p,1) = sdat_sdate%avs(1)%rAttr(ip,ig)
+    write(iulog,*) 'cropcal_interp() B'
+    do fp = 1, num_pcropp
+       write(iulog,*) 'cropcal_interp() C'
+       p = filter_pcropp(fp)
+       ivt = patch%itype(p)
+       ! Set crop calendars for each gridcell/patch combination
+       write(stream_var_name,"(i6)") ivt
+       
+       ! SSR TODO: Add check that variable exists in netCDF
+       write(iulog,*) 'cropcal_interp() D1'
+       stream_var_name = 'sdate1_'//trim(adjustl(stream_var_name))
+       write(iulog,*) 'cropcal_interp() D2'
+       ip = mct_aVect_indexRA(sdat_sdate%avs(1),trim(stream_var_name))
+       if (ivt /= noveg) then
+          write(iulog,*) 'cropcal_interp() D3'
+          write(iulog,'(a,i6)')'                    p = ', p
+          write(iulog,'(a,i6)')'                  ivt = ', ivt
+          write(iulog,'(a,i6)')'    patch%gridcell(p) = ', patch%gridcell(p)
+          write(iulog,'(a,i6)')'       g_to_ig(above) = ', g_to_ig(patch%gridcell(p))
+          ig = g_to_ig(patch%gridcell(p))
+          write(iulog,*) 'cropcal_interp() D4'
+          crop_inst%sdates_thisyr(p,1) = sdat_sdate%avs(1)%rAttr(ip,ig)
+       endif
 
-         ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-         crop_inst%n_growingseasons_thisyear_thispatch = crop_inst%sdates_thisyr(p,1) >= 0
+       ! SSR TODO: Make this work with max_growingseasons_per_year > 1
+       write(iulog,*) 'cropcal_interp() E'
+       crop_inst%n_growingseasons_thisyear_thispatch = crop_inst%sdates_thisyr(p,1) >= 0
 
-         ! Only for first sowing date of the year
-         crop_inst%next_rx_sdate = crop_inst%sdates_thisyr(p,1)
+       ! Only for first sowing date of the year
+       write(iulog,*) 'cropcal_interp() F'
+       crop_inst%next_rx_sdate = crop_inst%sdates_thisyr(p,1)
 
-      end do
-   end do
+    end do
 
   end subroutine cropcal_interp
 
