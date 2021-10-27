@@ -268,12 +268,10 @@ contains
        endif
 
        ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-       write(iulog,*) 'cropcal_interp() E'
-       crop_inst%n_growingseasons_thisyear_thispatch = crop_inst%sdates_thisyr(p,1) >= 0
+       crop_inst%n_growingseasons_thisyear_thispatch(p) = crop_inst%sdates_thisyr(p,1) >= 0
 
        ! Only for first sowing date of the year
-       write(iulog,*) 'cropcal_interp() F'
-       crop_inst%next_rx_sdate = crop_inst%sdates_thisyr(p,1)
+       crop_inst%next_rx_sdate(p) = crop_inst%sdates_thisyr(p,1)
 
     end do
 
