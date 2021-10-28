@@ -14,19 +14,7 @@ from ctsm.utils import abort, get_git_sha, update_metadata, lon_range_0_to_360
 
 class ModifyFsurdat:
     """
-    A case to encapsulate function that modifies fsurdat file.
 
-    ...
-
-    Attributes
-    ----------
-
-    Methods
-    -------
-    write_output:
-        Write out the modified fsurdat (surface dataset)
-
-    TODO: Complete list of methods here?
     """
 
     def __init__(self, fsurdat_in):

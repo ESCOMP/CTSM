@@ -15,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 # This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
 # to denote a value that needs to be filled in
-_PLACEHOLDER = 'FILL_THIS_IN'
+_CONFIG_PLACEHOLDER = 'FILL_THIS_IN'
 # This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
 # to denote a value that can be filled in, but doesn't absolutely need to be
-_UNSET = 'UNSET'
+CONFIG_UNSET = 'UNSET'
 
 def abort(errmsg):
     """Abort the program with the given error message
@@ -151,7 +151,7 @@ def get_config_value(config, section, item, file_path, allowed_values=None):
         abort("ERROR: Config file {} must contain item '{}' in section '{}'".format(
             file_path, item, section))
 
-    if val == _PLACEHOLDER:
+    if val == _CONFIG_PLACEHOLDER:
         abort("Error: {} needs to be specified in config file {}".format(item, file_path))
 
     if allowed_values is not None:
@@ -167,7 +167,7 @@ def select_value(var, default, type_of_var):
     -----------
     Determines whether to assign the default value or the user-specified one
     """
-    if var == _UNSET:
+    if var == CONFIG_UNSET:
         var = default
     elif isinstance(default, list):
         var = list(var.split())  # convert string to list of strings

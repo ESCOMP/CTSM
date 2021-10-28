@@ -9,6 +9,7 @@ import sys
 import argparse
 from configparser import ConfigParser
 from ctsm.utils import get_config_value, select_value
+from ctsm.utils import CONFIG_UNSET
 from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 
 
@@ -59,7 +60,7 @@ def main ():
 
     temp = get_config_value(config, 'modify_input', 'dom_nat_pft', args.cfg_path,
         allowed_values=['0','1','2','3','4','5','6','7','8','9','10','11',
-                        '12','13','14','UNSET'])
+                        '12','13','14',CONFIG_UNSET])
     dom_nat_pft = select_value(var=temp, default=None, type_of_var=int)
 
     temp = get_config_value(config, 'modify_input', 'lai', args.cfg_path)
@@ -76,7 +77,7 @@ def main ():
 
     temp = get_config_value(config, 'modify_input', 'soil_color', args.cfg_path,
         allowed_values=['1','2','3','4','5','6','7','8','9','10','11','12',
-                        '13','14','15','16','17','18','19','20','UNSET'])
+                        '13','14','15','16','17','18','19','20',CONFIG_UNSET])
     soil_color = select_value(var=temp, default=None, type_of_var=int)
 
     temp = get_config_value(config, 'modify_input', 'std_elev', args.cfg_path)
