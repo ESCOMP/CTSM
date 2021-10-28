@@ -50,7 +50,7 @@ contains
     use ncdio_pio        , only : pio_subsystem
     use shr_pio_mod      , only : shr_pio_getiotype
     use shr_stream_mod   , only : shr_stream_file_null
-    use shr_string_mod   , only : shr_string_listCreateField_range
+    use shr_string_mod   , only : shr_string_listCreateField
     use clm_nlUtilsMod   , only : find_nlgroup_name
     use ndepStreamMod    , only : clm_domain_mct
     use histFileMod      , only : hist_addfld1d
@@ -125,7 +125,7 @@ contains
 
     ! create the field list for these cropcal fields...use in shr_strdata_create
     ! SSR TODO: Make this work with max_growingseasons_per_year > 1
-    fldList_sdate1 = shr_string_listCreateField_range( cft_lb, cft_ub, "sdate1" )
+    fldList_sdate1 = shr_string_listCreateField( cft_ub, "sdate1", cft_lb )
 
     ! SSR TODO:
     ! - Delete "area" and "mask"?
