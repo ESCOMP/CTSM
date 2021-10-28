@@ -119,11 +119,11 @@ contains
        this%forc_hdm(bounds%begg:) = nan
        
        ! Allocate real gdp data
-       allocate(this%gdp_lf_col(bounds%begc:bounds%bounds%endc))
+       allocate(this%gdp_lf_col(bounds%begc:bounds%endc))
        ! Allocate peatland fraction data
-       allocate(this%peatf_lf_col(bounds%begc:bounds%bounds%endc))
+       allocate(this%peatf_lf_col(bounds%begc:bounds%endc))
        ! Allocates peak month of crop fire emissions
-       allocate(this%abm_lf_col(bounds%begc:bounds%bounds%endc))
+       allocate(this%abm_lf_col(bounds%begc:bounds%endc))
    
 
        call this%hdm_init(bounds, NLFilename)
@@ -474,6 +474,7 @@ contains
   ! !USES:
   use spmdMod    , only : masterproc
   use clm_varctl , only : nsrest, nsrStartup, fsurdat
+  use clm_varcon , only : grlnd
   use ColumnType , only : col
   use fileutils  , only : getfil
   use ncdio_pio
