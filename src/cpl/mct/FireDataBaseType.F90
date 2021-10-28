@@ -130,6 +130,7 @@ contains
        call this%hdm_interp(bounds)
        call this%lnfm_init(bounds, NLFilename)
        call this%lnfm_interp(bounds)
+       call this%surfdataread(bounds)
     end if
 
   end subroutine BaseFireInit
