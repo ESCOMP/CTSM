@@ -12,7 +12,7 @@ from CIME.buildnml import create_namelist_infile # pylint: disable=import-error
 
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.path_utils import path_to_ctsm_root
-from ctsm.utils import abort
+from ctsm.utils import abort, get_config_value
 
 logger = logging.getLogger(__name__)
 
@@ -100,34 +100,6 @@ Script to create runtime inputs when running CTSM via LILAC
         abort("rundir {} does not exist".format(arguments.rundir))
 
     return arguments
-
-###############################################################################
-def get_config_value(config, section, item, file_path, allowed_values=None):
-    """Get a given item from a given section of the config object
-
-    Give a helpful error message if we can't find the given section or item
-
-    Note that the file_path argument is only used for the sake of the error message
-
-    If allowed_values is present, it should be a list of strings giving allowed values
-    """
-    try:
-        val = config.get(section, item)
-    except NoSectionError:
-        abort("ERROR: Config file {} must contain section '{}'".format(file_path, section))
-    except NoOptionError:
-        abort("ERROR: Config file {} must contain item '{}' in section '{}'".format(
-            file_path, item, section))
-
-    if val == _PLACEHOLDER:
-        abort("Error: {} needs to be specified in config file {}".format(item, file_path))
-
-    if allowed_values is not None:
-        if val not in allowed_values:
-            abort("Error: {} is not an allowed value for {} in config file {}\n"
-                  "Allowed values: {}".format(val, item, file_path, allowed_values))
-
-    return val
 
 ###############################################################################
 def determine_bldnml_opts(bgc_mode, crop, vichydro):
