@@ -6,6 +6,7 @@ The wrapper script includes a full description and instructions.
 """
 
 import sys
+import argparse
 from configparser import ConfigParser
 from ctsm.utils import get_config_value, select_value
 from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
@@ -18,65 +19,70 @@ def main ():
     Calls function that modifies an fsurdat (surface dataset)
     """
 
+    # read the command line argument to obtain the path to the .cfg file
+    parser = argparse.ArgumentParser()
+    parser.add_argument('cfg_path',
+                        help='/path/name.cfg of input file, eg ./modify.cfg')
+    args = parser.parse_args()
+
     # read the config file
     config = ConfigParser()
-    cfg_path = './modify.cfg'
-    config.read(cfg_path)
+    config.read(args.cfg_path)
 
     # required: user must set these in ./modify.cfg
     fsurdat_in = get_config_value(config, 'modify_input', 'fsurdat_in',
-                                  cfg_path)
+                                  args.cfg_path)
     fsurdat_out = get_config_value(config, 'modify_input', 'fsurdat_out',
-                                   cfg_path)
+                                   args.cfg_path)
 
     # not required: user may set these in ./modify.cfg
     # TODO Error checking not complete for these. Should it be done here
     # while reading or later when using them?
-    temp = get_config_value(config, 'modify_input', 'idealized', cfg_path,
+    temp = get_config_value(config, 'modify_input', 'idealized', args.cfg_path,
                             allowed_values=['True','False'])
     idealized = select_value(var=temp, default=None, type_of_var=bool)
 
-    temp = get_config_value(config, 'modify_input', 'lnd_lat_1', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'lnd_lat_1', args.cfg_path)
     lnd_lat_1 = select_value(var=temp, default=None, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'lnd_lat_2', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'lnd_lat_2', args.cfg_path)
     lnd_lat_2 = select_value(var=temp, default=None, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'lnd_lon_1', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'lnd_lon_1', args.cfg_path)
     lnd_lon_1 = select_value(var=temp, default=None, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'lnd_lon_2', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'lnd_lon_2', args.cfg_path)
     lnd_lon_2 = select_value(var=temp, default=None, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'dom_nat_pft', cfg_path,
+    temp = get_config_value(config, 'modify_input', 'dom_nat_pft', args.cfg_path,
         allowed_values=['0','1','2','3','4','5','6','7','8','9','10','11',
                         '12','13','14','UNSET'])
     dom_nat_pft = select_value(var=temp, default=None, type_of_var=int)
 
-    temp = get_config_value(config, 'modify_input', 'lai', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'lai', args.cfg_path)
     lai = select_value(var=temp, default=[], type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'sai', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'sai', args.cfg_path)
     sai = select_value(var=temp, default=[], type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'hgt_top', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'hgt_top', args.cfg_path)
     hgt_top = select_value(var=temp, default=[], type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'hgt_bot', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'hgt_bot', args.cfg_path)
     hgt_bot = select_value(var=temp, default=[], type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'soil_color', cfg_path,
+    temp = get_config_value(config, 'modify_input', 'soil_color', args.cfg_path,
         allowed_values=['1','2','3','4','5','6','7','8','9','10','11','12',
                         '13','14','15','16','17','18','19','20','UNSET'])
     soil_color = select_value(var=temp, default=None, type_of_var=int)
 
-    temp = get_config_value(config, 'modify_input', 'std_elev', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'std_elev', args.cfg_path)
     std_elev = select_value(var=temp, default=None, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'max_sat_area', cfg_path)
+    temp = get_config_value(config, 'modify_input', 'max_sat_area', args.cfg_path)
     max_sat_area = select_value(var=temp, default=None, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'zero_nonveg', cfg_path,
+    temp = get_config_value(config, 'modify_input', 'zero_nonveg', args.cfg_path,
                             allowed_values=['True','False'])
     zero_nonveg = select_value(var=temp, default=None, type_of_var=bool)
 
