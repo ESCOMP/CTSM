@@ -110,3 +110,6 @@ core.*
 *.log !run.log
 *.pyc
 Depends
+
+# ssr
+.vscode/
