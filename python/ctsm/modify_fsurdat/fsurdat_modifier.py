@@ -33,20 +33,20 @@ def main ():
     # TODO Error checking not complete for these. Should it be done here
     # while reading or later when using them?
     temp = get_config_value(config, 'modify_input', 'idealized', cfg_path,
-                            allowed_values=['True','False','UNSET'])
-    idealized = select_value(var=temp, default=False, type_of_var=bool)
+                            allowed_values=['True','False'])
+    idealized = select_value(var=temp, default=None, type_of_var=bool)
 
     temp = get_config_value(config, 'modify_input', 'lnd_lat_1', cfg_path)
-    lnd_lat_1 = select_value(var=temp, default=-90, type_of_var=float)
+    lnd_lat_1 = select_value(var=temp, default=None, type_of_var=float)
 
     temp = get_config_value(config, 'modify_input', 'lnd_lat_2', cfg_path)
-    lnd_lat_2 = select_value(var=temp, default=90, type_of_var=float)
+    lnd_lat_2 = select_value(var=temp, default=None, type_of_var=float)
 
     temp = get_config_value(config, 'modify_input', 'lnd_lon_1', cfg_path)
-    lnd_lon_1 = select_value(var=temp, default=0, type_of_var=float)
+    lnd_lon_1 = select_value(var=temp, default=None, type_of_var=float)
 
     temp = get_config_value(config, 'modify_input', 'lnd_lon_2', cfg_path)
-    lnd_lon_2 = select_value(var=temp, default=360, type_of_var=float)
+    lnd_lon_2 = select_value(var=temp, default=None, type_of_var=float)
 
     temp = get_config_value(config, 'modify_input', 'dom_nat_pft', cfg_path,
         allowed_values=['0','1','2','3','4','5','6','7','8','9','10','11',
@@ -77,8 +77,8 @@ def main ():
     max_sat_area = select_value(var=temp, default=None, type_of_var=float)
 
     temp = get_config_value(config, 'modify_input', 'zero_nonveg', cfg_path,
-                            allowed_values=['True','False','UNSET'])
-    zero_nonveg = select_value(var=temp, default=False, type_of_var=bool)
+                            allowed_values=['True','False'])
+    zero_nonveg = select_value(var=temp, default=None, type_of_var=bool)
 
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat(fsurdat_in)

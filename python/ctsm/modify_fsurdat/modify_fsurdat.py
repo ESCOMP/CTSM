@@ -272,7 +272,7 @@ class ModifyFsurdat:
             # mean topographic slope
             self.file['SLOPE'] = \
              self.file['SLOPE'].where(not_rectangle, other=0)
-            # is 10 seem reasonable?
+            # zbedrock
             self.file['zbedrock'] = \
              self.file['zbedrock'].where(not_rectangle, other=10)
             # value representing loam
