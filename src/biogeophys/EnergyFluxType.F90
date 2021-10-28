@@ -63,11 +63,11 @@ module EnergyFluxType
      real(r8), pointer :: eflx_anthro_patch       (:)   ! patch total anthropogenic heat flux (W/m**2)
      real(r8), pointer :: eflx_traffic_patch      (:)   ! patch traffic sensible heat flux (W/m**2)
      real(r8), pointer :: eflx_wasteheat_patch    (:)   ! patch sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
-     real(r8), pointer :: eflx_vent_wasteheat_patch (:) ! patch sensible heat flux from ventilation source of urban waste heat (W/m**2)
+     real(r8), pointer :: eflx_ventilation_patch  (:)   ! patch sensible heat flux from building ventilation (W/m**2)
      real(r8), pointer :: eflx_heat_from_ac_patch (:)   ! patch sensible heat flux put back into canyon due to removal by AC (W/m**2)
      real(r8), pointer :: eflx_traffic_lun        (:)   ! lun traffic sensible heat flux (W/m**2)
      real(r8), pointer :: eflx_wasteheat_lun      (:)   ! lun sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
-     real(r8), pointer :: eflx_vent_wasteheat_lun (:)   ! lun sensible heat flux from ventilation source of urban waste heat (W/m**2)
+     real(r8), pointer :: eflx_ventilation_lun    (:)   ! lun sensible heat flux from building ventilation (W/m**2)
      real(r8), pointer :: eflx_heat_from_ac_lun   (:)   ! lun sensible heat flux to be put back into canyon due to removal by AC (W/m**2)
      real(r8), pointer :: eflx_building_lun       (:)   ! lun building heat flux from change in interior building air temperature (W/m**2)
      real(r8), pointer :: eflx_urban_ac_lun       (:)   ! lun urban air conditioning flux (W/m**2)
@@ -228,7 +228,7 @@ contains
     allocate( this%eflx_urban_ac_col       (begc:endc))             ; this%eflx_urban_ac_col       (:)   = nan
     allocate( this%eflx_urban_heat_col     (begc:endc))             ; this%eflx_urban_heat_col     (:)   = nan
     allocate( this%eflx_wasteheat_patch    (begp:endp))             ; this%eflx_wasteheat_patch    (:)   = nan
-    allocate( this%eflx_vent_wasteheat_patch (begp:endp))           ; this%eflx_vent_wasteheat_patch(:)   = nan
+    allocate( this%eflx_ventilation_patch  (begp:endp))             ; this%eflx_ventilation_patch  (:)   = nan
     allocate( this%eflx_traffic_patch      (begp:endp))             ; this%eflx_traffic_patch      (:)   = nan
     allocate( this%eflx_heat_from_ac_patch (begp:endp))             ; this%eflx_heat_from_ac_patch (:)   = nan
     allocate( this%eflx_heat_from_ac_lun   (begl:endl))             ; this%eflx_heat_from_ac_lun   (:)   = nan
@@ -237,7 +237,7 @@ contains
     allocate( this%eflx_urban_heat_lun     (begl:endl))             ; this%eflx_urban_heat_lun     (:)   = nan
     allocate( this%eflx_traffic_lun        (begl:endl))             ; this%eflx_traffic_lun        (:)   = nan
     allocate( this%eflx_wasteheat_lun      (begl:endl))             ; this%eflx_wasteheat_lun      (:)   = nan
-    allocate( this%eflx_vent_wasteheat_lun (begl:endl))             ; this%eflx_vent_wasteheat_lun (:)   = nan
+    allocate( this%eflx_ventilation_lun    (begl:endl))             ; this%eflx_ventilation_lun    (:)   = nan
     allocate( this%eflx_anthro_patch       (begp:endp))             ; this%eflx_anthro_patch       (:)   = nan
 
     allocate( this%dgnetdT_patch           (begp:endp))             ; this%dgnetdT_patch           (:)   = nan
@@ -623,10 +623,10 @@ contains
          ptr_patch=this%eflx_wasteheat_patch, set_nourb=0._r8, c2l_scale_type='urbanf')
 
     if ( is_prog_buildtemp )then
-       this%eflx_vent_wasteheat_patch(begp:endp) = spval
-       call hist_addfld1d (fname='VENT_WASTEHEAT', units='W/m^2',  &
-            avgflag='A', long_name='sensible heat flux from ventilation source of urban waste heat', &
-            ptr_patch=this%eflx_vent_wasteheat_patch, set_nourb=0._r8, c2l_scale_type='urbanf')
+       this%eflx_ventilation_patch(begp:endp) = spval
+       call hist_addfld1d (fname='VENTILATION', units='W/m^2',  &
+            avgflag='A', long_name='sensible heat flux from building ventilation', &
+            ptr_patch=this%eflx_ventilation_patch, set_nourb=0._r8, c2l_scale_type='urbanf')
     end if
 
     this%eflx_heat_from_ac_patch(begp:endp) = spval
@@ -763,7 +763,7 @@ contains
        if (.not. lun%urbpoi(l)) then
           this%eflx_traffic_lun(l)        = spval
           this%eflx_wasteheat_lun(l)      = spval
-          this%eflx_vent_wasteheat_lun(l) = spval
+          this%eflx_ventilation_lun(l)    = spval
           if ( is_prog_buildtemp )then
              this%eflx_building_lun(l)   = 0._r8
              this%eflx_urban_ac_lun(l)   = 0._r8
@@ -771,7 +771,7 @@ contains
           end if
 
           this%eflx_wasteheat_patch(p)    = 0._r8
-          this%eflx_vent_wasteheat_patch(p) = 0._r8
+          this%eflx_ventilation_patch(p)  = 0._r8
           this%eflx_heat_from_ac_patch(p) = 0._r8
           this%eflx_traffic_patch(p)      = 0._r8
           if ( is_simple_buildtemp) &
@@ -781,7 +781,7 @@ contains
              this%eflx_building_lun(l)   = 0._r8
              this%eflx_urban_ac_lun(l)   = 0._r8
              this%eflx_urban_heat_lun(l) = 0._r8
-             this%eflx_vent_wasteheat_lun(l) = 0._r8
+             this%eflx_ventilation_lun(l)= 0._r8
           end if
        end if
     end do
@@ -876,14 +876,14 @@ contains
        else
           this%eflx_urban_heat_lun = 0.0_r8
        end if
-       call restartvar(ncid=ncid, flag=flag, varname='EFLX_VENT_WASTEHEAT', xtype=ncd_double, &
+       call restartvar(ncid=ncid, flag=flag, varname='EFLX_VENTILATION', xtype=ncd_double, &
            dim1name='landunit', &
-           long_name='urban wasteheat from ventilation', units='watt/m^2', &
-           interpinic_flag='interp', readvar=readvar, data=this%eflx_vent_wasteheat_lun)
+           long_name='sensible heat flux from building ventilation', units='watt/m^2', &
+           interpinic_flag='interp', readvar=readvar, data=this%eflx_ventilation_lun)
        if (flag=='read' .and. .not. readvar) then
-          if (masterproc) write(iulog,*) "can't find EFLX_VENT_WASTEHEAT in initial file..."
-          if (masterproc) write(iulog,*) "Initialize EFLX_VENT_WASTEHEAT to zero"
-          this%eflx_vent_wasteheat_lun(bounds%begl:bounds%endl) = 0._r8
+          if (masterproc) write(iulog,*) "can't find EFLX_VENTILATION in initial file..."
+          if (masterproc) write(iulog,*) "Initialize EFLX_VENTILATION to zero"
+          this%eflx_ventilation_lun(bounds%begl:bounds%endl) = 0._r8
        end if
 
     else if ( is_simple_buildtemp )then
