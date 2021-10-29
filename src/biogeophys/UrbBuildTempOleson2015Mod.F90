@@ -900,6 +900,14 @@ contains
            write (iulog,*) 'clm model is stopping'
            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
          end if
+
+         ! Sensible heat flux from ventilation. It is added as a flux to the canyon floor in SoilTemperatureMod.
+         ! Note that we multiply it here by wtlunit_roof which converts it from W/m2 of building area to W/m2
+         ! of urban area. eflx_urban_ac and eflx_urban_heat are treated similarly below. This flux is balanced
+         ! by an equal and opposite flux into/out of the building and so has a net effect of zero on the energy balance
+         ! of the urban landunit.
+         eflx_ventilation(l) = wtlunit_roof(l) * ( - ht_roof(l)*(vent_ach/3600._r8) &
+                               * rho_dair(l) * cpair * (taf(l) - t_building(l)) )
        end if
     end do
 
@@ -931,14 +939,6 @@ contains
             eflx_urban_heat(l) = 0._r8
           end if
           eflx_building(l) = wtlunit_roof(l) * (ht_roof(l) * rho_dair(l)*cpair/dtime) * (t_building(l) - t_building_bef(l))
-
-          ! Sensible heat flux from ventilation. It is added as a flux to the canyon floor in SoilTemperatureMod.
-          ! Note that we multiply it here by wtlunit_roof which converts it from W/m2 of building area to W/m2
-          ! of urban area. eflx_urban_ac and eflx_urban_heat are treated similarly above. This flux is balanced
-          ! by an equal and opposite flux into/out of the building and so has a net effect of zero on the energy balance
-          ! of the urban landunit.
-          eflx_ventilation(l) = wtlunit_roof(l) * ( - ht_roof(l)*(vent_ach/3600._r8) &
-                                * rho_dair(l) * cpair * (taf(l) - t_building(l)) )
        end if
     end do
 
