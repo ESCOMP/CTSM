@@ -95,18 +95,43 @@ class ModifyFsurdat:
              self._file['PCT_NAT_PFT'][pft,:,:]. \
                   where(not_rectangle, other=0)
 
-            self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                  var_name='MONTHLY_LAI', var=lai,
-                                  not_rectangle=not_rectangle)
-            self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                  var_name='MONTHLY_SAI', var=sai,
-                                  not_rectangle=not_rectangle)
-            self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                  var_name='MONTHLY_HEIGHT_TOP', var=hgt_top,
-                                  not_rectangle=not_rectangle)
-            self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                  var_name='MONTHLY_HEIGHT_BOT', var=hgt_bot,
-                                  not_rectangle=not_rectangle)
+            if len(lai) == 12:
+                self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                      var_name='MONTHLY_LAI', var=lai,
+                                      not_rectangle=not_rectangle)
+            elif len(lai) != 0:
+                message = 'Error: The variable lai should have 12 ' \
+                          'entries in the configure file: ' + var_name
+                print(message)  # TODO do this via logging
+
+            if len(sai) == 12:
+                self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                      var_name='MONTHLY_SAI', var=sai,
+                                      not_rectangle=not_rectangle)
+            elif len(sai) != 0:
+                message = 'Error: The variable sai should have 12 ' \
+                          'entries in the configure file: ' + var_name
+                print(message)  # TODO do this via logging
+
+            if len(hgt_top) == 12:
+                self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                      var_name='MONTHLY_HEIGHT_TOP',
+                                      var=hgt_top,
+                                      not_rectangle=not_rectangle)
+            elif len(hgt_top) != 0:
+                message = 'Error: Variable hgt_top should have 12 ' \
+                          'entries in the configure file: ' + var_name
+                print(message)  # TODO do this via logging
+
+            if len(hgt_bot) == 12:
+                self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                      var_name='MONTHLY_HEIGHT_BOT',
+                                      var=hgt_bot,
+                                      not_rectangle=not_rectangle)
+            elif len(hgt_bot) != 0:
+                message = 'Error: Variable hgt_bot should have 12 ' \
+                          'entries in the configure file: ' + var_name
+                print(message)  # TODO do this via logging
 
         # set 3D variable
         self._file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
@@ -121,19 +146,14 @@ class ModifyFsurdat:
         If user has specified lai, sai, hgt_top, hgt_bot, replace these with
         values selected by the user for dom_nat_pft. Else do nothing.
         """
-        if len(var) == 12:
-            if dom_nat_pft == 0:  # bare soil
-                var = [0] * 12
-            for mon in self._file.time - 1:  # loop over 12 months
-                if pft == dom_nat_pft:
-                    # set 4D variable to value for dom_nat_pft
-                    self._file[var_name][mon,pft,:,:] = \
-                     self._file[var_name][mon,pft,:,:]. \
-                          where(not_rectangle, other=var[int(mon)])
-        elif len(var) != 0:
-            message = 'Error: This variable should have 12 entries in the ' \
-                      'configure file: ' + var_name
-            print(message)  # TODO do this via logging
+        if dom_nat_pft == 0:  # bare soil
+            var = [0] * 12
+        for mon in self._file.time - 1:  # loop over 12 months
+            if pft == dom_nat_pft:
+                # set 4D variable to value for dom_nat_pft
+                self._file[var_name][mon,pft,:,:] = \
+                 self._file[var_name][mon,pft,:,:]. \
+                      where(not_rectangle, other=var[int(mon)])
 
 
     def zero_nonveg(self):
