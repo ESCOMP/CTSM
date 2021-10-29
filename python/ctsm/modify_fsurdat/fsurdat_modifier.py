@@ -98,20 +98,20 @@ def main ():
     # MCT or the ocean mesh files for NUOPC. The function set_in_rectangle
     # can specify fsurdat variables inside a box but it cannot
     # change which points will run as land and which as ocean.
-    modify_fsurdat.set_in_rectangle(_idealized=idealized,
-                                    _lon_in_1=lnd_lon_1,
-                                    _lon_in_2=lnd_lon_2,
-                                    _lat_in_1=lnd_lat_1,
-                                    _lat_in_2=lnd_lat_2,
-                                    _dom_nat_pft=dom_nat_pft,
-                                    _lai=lai,
-                                    _sai=sai,
-                                    _hgt_top=hgt_top,
-                                    _hgt_bot=hgt_bot,
-                                    _zero_nonveg=zero_nonveg,
-                                    _std_elev=std_elev,
-                                    _soil_color=soil_color,
-                                    _max_sat_area=max_sat_area)
+    modify_fsurdat.set_in_rectangle(idealized=idealized,
+                                    lon_in_1=lnd_lon_1,
+                                    lon_in_2=lnd_lon_2,
+                                    lat_in_1=lnd_lat_1,
+                                    lat_in_2=lnd_lat_2,
+                                    dom_nat_pft=dom_nat_pft,
+                                    lai=lai,
+                                    sai=sai,
+                                    hgt_top=hgt_top,
+                                    hgt_bot=hgt_bot,
+                                    zero_nonveg=zero_nonveg,
+                                    std_elev=std_elev,
+                                    soil_color=soil_color,
+                                    max_sat_area=max_sat_area)
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file
