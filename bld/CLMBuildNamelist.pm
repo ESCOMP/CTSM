@@ -773,9 +773,8 @@ sub setup_cmdl_fates_mode {
     } else {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                      "use_fates_cohort_age_tracking",
+                      "use_fates_cohort_age_tracking","use_fates_hardening",
                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","use_fates_logging","fates_parteh_mode" );
-       # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
           if ( defined($nl->get_value($var)) ) {
               $log->fatal_error("$var is being set, but can ONLY be set when -bgc fates option is used.\n");
@@ -4032,7 +4031,7 @@ sub setup_logic_fates {
            $nl_flags->{'use_fates_sp'} = ".false.";
         }
         my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp",
+                       "use_fates_inventory_init","use_fates_fixed_biogeog","use_fates_nocomp","use_fates_hardening",
                        "use_fates_logging","fates_parteh_mode", "use_fates_cohort_age_tracking" );
         foreach my $var ( @list ) {
  	  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var, 'use_fates'=>$nl_flags->{'use_fates'},
