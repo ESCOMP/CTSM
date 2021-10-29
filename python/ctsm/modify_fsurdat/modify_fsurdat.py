@@ -20,7 +20,7 @@ class ModifyFsurdat:
     def __init__(self, fsurdat_in):
 
         print("Open file: " + fsurdat_in)
-        self.file = xr.open_dataset(fsurdat_in)
+        self._file = xr.open_dataset(fsurdat_in)
 
 
     def write_output(self, fsurdat_in, fsurdat_out):
@@ -44,7 +44,7 @@ class ModifyFsurdat:
         _contact = 'N/A'
         _data_script = os.path.abspath(__file__) + " -- " + get_git_sha()
         _description = 'Modified this file: ' + fsurdat_in
-        update_metadata(self.file, title=_title, summary=_summary,
+        update_metadata(self._file, title=_title, summary=_summary,
                         contact=_contact, data_script=_data_script,
                         description=_description)
 
@@ -55,10 +55,10 @@ class ModifyFsurdat:
             abort(errmsg)
 
         # mode 'w' overwrites file if it exists
-        self.file.to_netcdf(path=fsurdat_out, mode='w',
+        self._file.to_netcdf(path=fsurdat_out, mode='w',
                             format="NETCDF3_64BIT")
         print('Successfully created fsurdat_out: ' + fsurdat_out)
-        self.file.close()
+        self._file.close()
 
 
     def set_dom_nat_pft(self, dom_nat_pft, lai, sai, hgt_top, hgt_bot,
@@ -89,10 +89,10 @@ class ModifyFsurdat:
             (xarray dataarray) Inverse of land rectangle selected by user
         """
 
-        for pft in self.file.natpft:
+        for pft in self._file.natpft:
             # initialize 3D variable; set outside the loop below
-            self.file['PCT_NAT_PFT'][pft,:,:] = \
-             self.file['PCT_NAT_PFT'][pft,:,:]. \
+            self._file['PCT_NAT_PFT'][pft,:,:] = \
+             self._file['PCT_NAT_PFT'][pft,:,:]. \
                   where(not_rectangle, other=0)
 
             self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
@@ -109,8 +109,8 @@ class ModifyFsurdat:
                                   not_rectangle=not_rectangle)
 
         # set 3D variable
-        self.file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
-         self.file['PCT_NAT_PFT'][dom_nat_pft,:,:]. \
+        self._file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
+         self._file['PCT_NAT_PFT'][dom_nat_pft,:,:]. \
               where(not_rectangle, other=100)
 
 
@@ -122,15 +122,13 @@ class ModifyFsurdat:
         values selected by the user for dom_nat_pft. Else do nothing.
         """
         if len(var) == 12:
-            for mon in self.file.time - 1:  # loop over 12 months
-                # initialize 4D variable; set in "if pft" below
-                self.file[var_name][mon,pft,:,:] = \
-                 self.file[var_name][mon,pft,:,:]. \
-                      where(not_rectangle, other=0)
+            if dom_nat_pft == 0:  # bare soil
+                var = [0] * 12
+            for mon in self._file.time - 1:  # loop over 12 months
                 if pft == dom_nat_pft:
                     # set 4D variable to value for dom_nat_pft
-                    self.file[var_name][mon,pft,:,:] = \
-                     self.file[var_name][mon,pft,:,:]. \
+                    self._file[var_name][mon,pft,:,:] = \
+                     self._file[var_name][mon,pft,:,:]. \
                           where(not_rectangle, other=var[int(mon)])
         elif len(var) != 0:
             message = 'Error: This variable should have 12 entries in the ' \
@@ -149,12 +147,12 @@ class ModifyFsurdat:
         ---------
         """
 
-        self.file['PCT_NATVEG'][:,:] = 100
-        self.file['PCT_CROP'][:,:] = 0
-        self.file['PCT_LAKE'][:,:] = 0
-        self.file['PCT_WETLAND'][:,:] = 0
-        self.file['PCT_URBAN'][:,:] = 0
-        self.file['PCT_GLACIER'][:,:] = 0
+        self._file['PCT_NATVEG'][:,:] = 100
+        self._file['PCT_CROP'][:,:] = 0
+        self._file['PCT_LAKE'][:,:] = 0
+        self._file['PCT_WETLAND'][:,:] = 0
+        self._file['PCT_URBAN'][:,:] = 0
+        self._file['PCT_GLACIER'][:,:] = 0
 
 
     def set_in_rectangle(self, _idealized, _lon_in_1, _lon_in_2, _lat_in_1,
@@ -202,11 +200,11 @@ class ModifyFsurdat:
 
         # determine the rectangle(s)
         # TODO This is not really "nearest" for the edges but isel didn't work
-        rectangle_1 = (self.file.LONGXY >= lon_1)
-        rectangle_2 = (self.file.LONGXY <= lon_2)
+        rectangle_1 = (self._file.LONGXY >= lon_1)
+        rectangle_2 = (self._file.LONGXY <= lon_2)
         eps = np.finfo(np.float32).eps  # to avoid roundoff issue
-        rectangle_3 = (self.file.LATIXY >= (_lat_in_1 - eps))
-        rectangle_4 = (self.file.LATIXY <= (_lat_in_2 + eps))
+        rectangle_3 = (self._file.LATIXY >= (_lat_in_1 - eps))
+        rectangle_4 = (self._file.LATIXY <= (_lat_in_2 + eps))
 
         if lon_1 <= lon_2:
             # rectangles overlap
@@ -235,11 +233,6 @@ class ModifyFsurdat:
         if _idealized:
             if _dom_nat_pft is None:  # default to bare soil when not user-set
                 _dom_nat_pft = 0
-            if _dom_nat_pft == 0:  # values corresponding to bare soil
-                _lai = [0] * 12
-                _sai = [0] * 12
-                _hgt_top = [0] * 12
-                _hgt_bot = [0] * 12
             if _soil_color is None:  # default to loam when not user-set
                 _soil_color = 15
             if _std_elev is None:  # other default values when not user-set
@@ -249,61 +242,61 @@ class ModifyFsurdat:
 
             # 2D variables
             # max inundated fraction
-            self.file['F0'] = \
-             self.file['F0'].where(not_rectangle, other=0)
+            self._file['F0'] = \
+             self._file['F0'].where(not_rectangle, other=0)
             # max saturated area
-            self.file['FMAX'] = \
-             self.file['FMAX'].where(not_rectangle, other=_max_sat_area)
+            self._file['FMAX'] = \
+             self._file['FMAX'].where(not_rectangle, other=_max_sat_area)
             # standard deviation of elevation
-            self.file['STD_ELEV'] = \
-             self.file['STD_ELEV'].where(not_rectangle, other=_std_elev)
+            self._file['STD_ELEV'] = \
+             self._file['STD_ELEV'].where(not_rectangle, other=_std_elev)
             # mean topographic slope
-            self.file['SLOPE'] = \
-             self.file['SLOPE'].where(not_rectangle, other=0)
+            self._file['SLOPE'] = \
+             self._file['SLOPE'].where(not_rectangle, other=0)
             # zbedrock
-            self.file['zbedrock'] = \
-             self.file['zbedrock'].where(not_rectangle, other=10)
+            self._file['zbedrock'] = \
+             self._file['zbedrock'].where(not_rectangle, other=10)
             # value representing loam
-            self.file['SOIL_COLOR'] = \
-             self.file['SOIL_COLOR'].where(not_rectangle, other=_soil_color)
+            self._file['SOIL_COLOR'] = \
+             self._file['SOIL_COLOR'].where(not_rectangle, other=_soil_color)
 
-            self.file['PFTDATA_MASK'] = \
-             self.file['PFTDATA_MASK'].where(not_rectangle, other=1)
-            self.file['LANDFRAC_PFT'] = \
-             self.file['LANDFRAC_PFT'].where(not_rectangle, other=1)
-            self.file['PCT_WETLAND'] = \
-             self.file['PCT_WETLAND'].where(not_rectangle, other=0)
-            self.file['PCT_CROP'] = \
-             self.file['PCT_CROP'].where(not_rectangle, other=0)
-            self.file['PCT_LAKE'] = \
-             self.file['PCT_LAKE'].where(not_rectangle, other=0)
-            self.file['PCT_URBAN'] = \
-             self.file['PCT_URBAN'].where(not_rectangle, other=0)
-            self.file['PCT_GLACIER'] = \
-             self.file['PCT_GLACIER'].where(not_rectangle, other=0)
-            self.file['PCT_NATVEG'] = \
-             self.file['PCT_NATVEG'].where(not_rectangle, other=100)
+            self._file['PFTDATA_MASK'] = \
+             self._file['PFTDATA_MASK'].where(not_rectangle, other=1)
+            self._file['LANDFRAC_PFT'] = \
+             self._file['LANDFRAC_PFT'].where(not_rectangle, other=1)
+            self._file['PCT_WETLAND'] = \
+             self._file['PCT_WETLAND'].where(not_rectangle, other=0)
+            self._file['PCT_CROP'] = \
+             self._file['PCT_CROP'].where(not_rectangle, other=0)
+            self._file['PCT_LAKE'] = \
+             self._file['PCT_LAKE'].where(not_rectangle, other=0)
+            self._file['PCT_URBAN'] = \
+             self._file['PCT_URBAN'].where(not_rectangle, other=0)
+            self._file['PCT_GLACIER'] = \
+             self._file['PCT_GLACIER'].where(not_rectangle, other=0)
+            self._file['PCT_NATVEG'] = \
+             self._file['PCT_NATVEG'].where(not_rectangle, other=100)
 
-            for lev in self.file.nlevsoi:
+            for lev in self._file.nlevsoi:
                 # set next three 3D variables to values representing loam
-                self.file['PCT_SAND'][lev,:,:] = \
-                 self.file['PCT_SAND'][lev,:,:].where(not_rectangle, other=43)
-                self.file['PCT_CLAY'][lev,:,:] = \
-                 self.file['PCT_CLAY'][lev,:,:].where(not_rectangle, other=18)
-                self.file['ORGANIC'][lev,:,:] = \
-                 self.file['ORGANIC'][lev,:,:].where(not_rectangle, other=0)
+                self._file['PCT_SAND'][lev,:,:] = \
+                 self._file['PCT_SAND'][lev,:,:].where(not_rectangle, other=43)
+                self._file['PCT_CLAY'][lev,:,:] = \
+                 self._file['PCT_CLAY'][lev,:,:].where(not_rectangle, other=18)
+                self._file['ORGANIC'][lev,:,:] = \
+                 self._file['ORGANIC'][lev,:,:].where(not_rectangle, other=0)
 
-            for crop in self.file.cft:
-                cft_local = crop - (max(self.file.natpft) + 1)
+            for crop in self._file.cft:
+                cft_local = crop - (max(self._file.natpft) + 1)
                 # initialize 3D variable; set outside the loop below
-                self.file['PCT_CFT'][cft_local,:,:] = \
-                 self.file['PCT_CFT'][cft_local,:,:]. \
+                self._file['PCT_CFT'][cft_local,:,:] = \
+                 self._file['PCT_CFT'][cft_local,:,:]. \
                       where(not_rectangle, other=0)
 
             # set 3D variable
             # required although PCT_CROP = 0: the sum of all crops must = 100
-            self.file['PCT_CFT'][0,:,:] = \
-             self.file['PCT_CFT'][0,:,:].where(not_rectangle, other=100)
+            self._file['PCT_CFT'][0,:,:] = \
+             self._file['PCT_CFT'][0,:,:].where(not_rectangle, other=100)
 
             # set 3D and 4D variables PCT_NAT_PFT, MONLTHLY_LAI, MONTHLY_SAI,
             # MONTHLY_HEIGHT_TOP, MONTHLY_HEIGHT_TOP
@@ -321,15 +314,15 @@ class ModifyFsurdat:
                                      not_rectangle=not_rectangle)
             if _max_sat_area is not None:
                 # max saturated area
-                self.file['FMAX'] = \
-                 self.file['FMAX'].where(not_rectangle, other=_max_sat_area)
+                self._file['FMAX'] = \
+                 self._file['FMAX'].where(not_rectangle, other=_max_sat_area)
             if _std_elev is not None:
                 # standard deviation of elevation
-                self.file['STD_ELEV'] = \
-                 self.file['STD_ELEV'].where(not_rectangle, other=_std_elev)
+                self._file['STD_ELEV'] = \
+                 self._file['STD_ELEV'].where(not_rectangle, other=_std_elev)
             if _soil_color is not None:
                 # value representing loam
-                self.file['SOIL_COLOR'] = \
-                 self.file['SOIL_COLOR'].where(not_rectangle,
+                self._file['SOIL_COLOR'] = \
+                 self._file['SOIL_COLOR'].where(not_rectangle,
                                                other=_soil_color)
             # TODO Next also zero_nonveg or is idealized option sufficient?
