@@ -54,7 +54,7 @@
 <do_harvest                    >.false.</do_harvest>
 
 <!-- Set contants having to do with fire due to human influences to zero (human ignition counts, and crop fires -->
-<pot_hmn_ign_counts_alpha      >0.0</pot_hmn_ign_counts_alpha>
-<cropfire_a1                   >0.0</cropfire_a1>
+<pot_hmn_ign_counts_alpha use_cn=".true.">0.0</pot_hmn_ign_counts_alpha>
+<cropfire_a1              use_cn=".true.">0.0</cropfire_a1>
 
 </namelist_defaults>
