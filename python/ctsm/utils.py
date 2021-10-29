@@ -172,11 +172,6 @@ def select_value(var, default, type_of_var):
     elif isinstance(default, list):
         var = list(var.split())  # convert string to list of strings
         var = list(map(type_of_var, var))  # convert elements to type_of_var
-    elif isinstance(default, bool):
-        if var == 'True':
-            var = True
-        else:
-            var = False
     else:
         var = type_of_var(var)
 

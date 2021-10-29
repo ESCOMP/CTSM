@@ -29,61 +29,56 @@ def main ():
     # read the config file
     config = ConfigParser()
     config.read(args.cfg_path)
+    section = config.sections()[0]  # name of the first section
 
     # required: user must set these in ./modify.cfg
-    fsurdat_in = get_config_value(config, 'modify_input', 'fsurdat_in',
+    fsurdat_in = get_config_value(config, section, 'fsurdat_in',
                                   args.cfg_path)
-    fsurdat_out = get_config_value(config, 'modify_input', 'fsurdat_out',
+    fsurdat_out = get_config_value(config, section, 'fsurdat_out',
                                    args.cfg_path)
-
-    temp = get_config_value(config, 'modify_input', 'idealized',
-               args.cfg_path, allowed_values=['True','False'])
-    idealized = select_value(var=temp, default=None, type_of_var=bool)
-
-    temp = get_config_value(config, 'modify_input', 'zero_nonveg',
-               args.cfg_path, allowed_values=['True','False'])
-    zero_nonveg = select_value(var=temp, default=None, type_of_var=bool)
+    idealized = config.getboolean(section, 'idealized')
+    zero_nonveg = config.getboolean(section, 'zero_nonveg')
 
     # not required: user may set these in ./modify.cfg
     # TODO More error checking that could be done here?
-    temp = get_config_value(config, 'modify_input', 'lnd_lat_1', args.cfg_path)
+    temp = get_config_value(config, section, 'lnd_lat_1', args.cfg_path)
     lnd_lat_1 = select_value(var=temp, default=-90, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'lnd_lat_2', args.cfg_path)
+    temp = get_config_value(config, section, 'lnd_lat_2', args.cfg_path)
     lnd_lat_2 = select_value(var=temp, default=90, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'lnd_lon_1', args.cfg_path)
+    temp = get_config_value(config, section, 'lnd_lon_1', args.cfg_path)
     lnd_lon_1 = select_value(var=temp, default=0, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'lnd_lon_2', args.cfg_path)
+    temp = get_config_value(config, section, 'lnd_lon_2', args.cfg_path)
     lnd_lon_2 = select_value(var=temp, default=360, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'dom_nat_pft', args.cfg_path,
+    temp = get_config_value(config, section, 'dom_nat_pft', args.cfg_path,
         allowed_values=['0','1','2','3','4','5','6','7','8','9','10','11',
                         '12','13','14',CONFIG_UNSET])
     dom_nat_pft = select_value(var=temp, default=None, type_of_var=int)
 
-    temp = get_config_value(config, 'modify_input', 'lai', args.cfg_path)
+    temp = get_config_value(config, section, 'lai', args.cfg_path)
     lai = select_value(var=temp, default=[], type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'sai', args.cfg_path)
+    temp = get_config_value(config, section, 'sai', args.cfg_path)
     sai = select_value(var=temp, default=[], type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'hgt_top', args.cfg_path)
+    temp = get_config_value(config, section, 'hgt_top', args.cfg_path)
     hgt_top = select_value(var=temp, default=[], type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'hgt_bot', args.cfg_path)
+    temp = get_config_value(config, section, 'hgt_bot', args.cfg_path)
     hgt_bot = select_value(var=temp, default=[], type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'soil_color', args.cfg_path,
+    temp = get_config_value(config, section, 'soil_color', args.cfg_path,
         allowed_values=['1','2','3','4','5','6','7','8','9','10','11','12',
                         '13','14','15','16','17','18','19','20',CONFIG_UNSET])
     soil_color = select_value(var=temp, default=None, type_of_var=int)
 
-    temp = get_config_value(config, 'modify_input', 'std_elev', args.cfg_path)
+    temp = get_config_value(config, section, 'std_elev', args.cfg_path)
     std_elev = select_value(var=temp, default=None, type_of_var=float)
 
-    temp = get_config_value(config, 'modify_input', 'max_sat_area', args.cfg_path)
+    temp = get_config_value(config, section, 'max_sat_area', args.cfg_path)
     max_sat_area = select_value(var=temp, default=None, type_of_var=float)
 
     # Create ModifyFsurdat object
