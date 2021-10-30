@@ -8,7 +8,7 @@ The wrapper script includes a full description and instructions.
 import sys
 import argparse
 from configparser import ConfigParser
-from ctsm.utils import get_config_value, select_value
+from ctsm.utils import get_config_value
 from ctsm.utils import CONFIG_UNSET
 from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 
@@ -32,10 +32,10 @@ def main ():
     section = config.sections()[0]  # name of the first section
 
     # required: user must set these in ./modify.cfg
-    fsurdat_in = get_config_value(config, section, 'fsurdat_in',
-                                  args.cfg_path)
-    fsurdat_out = get_config_value(config, section, 'fsurdat_out',
-                                   args.cfg_path)
+    fsurdat_in = get_config_value(config=config, section=section,
+        item='fsurdat_in', file_path=args.cfg_path)
+    fsurdat_out = get_config_value(config=config, section=section,
+        item='fsurdat_out', file_path=args.cfg_path)
 
     # required but fallback values available for variables omitted
     # entirely from the .cfg file
@@ -49,33 +49,33 @@ def main ():
     lnd_lon_2 = config.getfloat(section, 'lnd_lon_2', fallback=360)
 
     # not required: user may set these in ./modify.cfg
-    temp = get_config_value(config, section, 'dom_nat_pft', args.cfg_path,
-        allowed_values=['0','1','2','3','4','5','6','7','8','9','10','11',
-                        '12','13','14',CONFIG_UNSET])
-    dom_nat_pft = select_value(var=temp, default=None, type_of_var=int)
+    dom_nat_pft = get_config_value(config=config, section=section,
+        item='dom_nat_pft', file_path=args.cfg_path,
+        allowed_values=['0','1','2','3','4','5','6','7','8','9','10',
+        '11','12','13','14',CONFIG_UNSET], convert_to_type=int)
 
-    temp = get_config_value(config, section, 'lai', args.cfg_path)
-    lai = select_value(var=temp, default=[], type_of_var=float)
+    lai = get_config_value(config=config, section=section, item='lai',
+        file_path=args.cfg_path, is_list=True, convert_to_type=float)
+    sai = get_config_value(config=config, section=section, item='sai',
+        file_path=args.cfg_path, is_list=True, convert_to_type=float)
+    hgt_top = get_config_value(config=config, section=section,
+        item='hgt_top', file_path=args.cfg_path, is_list=True,
+        convert_to_type=float)
+    hgt_bot = get_config_value(config=config, section=section,
+        item='hgt_bot', file_path=args.cfg_path, is_list=True,
+        convert_to_type=float)
 
-    temp = get_config_value(config, section, 'sai', args.cfg_path)
-    sai = select_value(var=temp, default=[], type_of_var=float)
+    soil_color = get_config_value(config=config, section=section,
+        item='soil_color', file_path=args.cfg_path,
+        allowed_values=['1','2','3','4','5','6','7','8','9','10','11',
+        '12','13','14','15','16','17','18','19','20',CONFIG_UNSET],
+        convert_to_type=int)
 
-    temp = get_config_value(config, section, 'hgt_top', args.cfg_path)
-    hgt_top = select_value(var=temp, default=[], type_of_var=float)
-
-    temp = get_config_value(config, section, 'hgt_bot', args.cfg_path)
-    hgt_bot = select_value(var=temp, default=[], type_of_var=float)
-
-    temp = get_config_value(config, section, 'soil_color', args.cfg_path,
-        allowed_values=['1','2','3','4','5','6','7','8','9','10','11','12',
-                        '13','14','15','16','17','18','19','20',CONFIG_UNSET])
-    soil_color = select_value(var=temp, default=None, type_of_var=int)
-
-    temp = get_config_value(config, section, 'std_elev', args.cfg_path)
-    std_elev = select_value(var=temp, default=None, type_of_var=float)
-
-    temp = get_config_value(config, section, 'max_sat_area', args.cfg_path)
-    max_sat_area = select_value(var=temp, default=None, type_of_var=float)
+    std_elev = get_config_value(config=config, section=section,
+        item='std_elev', file_path=args.cfg_path, convert_to_type=float)
+    max_sat_area = get_config_value(config=config, section=section,
+        item='max_sat_area', file_path=args.cfg_path,
+        convert_to_type=float)
 
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat(fsurdat_in, lon_1=lnd_lon_1,

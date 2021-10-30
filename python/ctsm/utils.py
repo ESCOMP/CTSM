@@ -137,7 +137,7 @@ def lon_range_0_to_360(lon_in):
 
     return lon_out
 
-def get_config_value(config, section, item, file_path, allowed_values=None):
+def get_config_value(config, section, item, file_path, allowed_values=None, default=None, is_list=False, convert_to_type=None):
     """Get a given item from a given section of the config object
     Give a helpful error message if we can't find the given section or item
     Note that the file_path argument is only used for the sake of the error message
@@ -159,20 +159,27 @@ def get_config_value(config, section, item, file_path, allowed_values=None):
             abort("Error: {} is not an allowed value for {} in config file {}\n"
                   "Allowed values: {}".format(val, item, file_path, allowed_values))
 
+    val = _handle_config_value(var=val, default=default,
+                               is_list=is_list,
+                               convert_to_type=convert_to_type)
+
     return val
 
-def select_value(var, default, type_of_var):
+def _handle_config_value(var, default, is_list, convert_to_type):
     """
     Description
     -----------
-    Determines whether to assign the default value or the user-specified one
+    Assign the default value or the user-specified one to var.
+    Convert from default type (str) to reqested type (int or float).
     """
     if var == CONFIG_UNSET:
-        var = default
-    elif isinstance(default, list):
+        var = default  # default may be None
+    elif is_list:
         var = list(var.split())  # convert string to list of strings
-        var = list(map(type_of_var, var))  # convert elements to type_of_var
+        var = list(map(convert_to_type, var))  # convert all elements
+    elif convert_to_type is not None:
+        var = convert_to_type(var)
     else:
-        var = type_of_var(var)
+        var = var
 
     return var
