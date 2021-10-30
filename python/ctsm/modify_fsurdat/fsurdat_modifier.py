@@ -26,12 +26,12 @@ def main ():
                         help='/path/name.cfg of input file, eg ./modify.cfg')
     args = parser.parse_args()
 
-    # read the config file
+    # read the .cfg (config) file
     config = ConfigParser()
     config.read(args.cfg_path)
     section = config.sections()[0]  # name of the first section
 
-    # required: user must set these in ./modify.cfg
+    # required: user must set these in the .cfg file
     fsurdat_in = get_config_value(config=config, section=section,
         item='fsurdat_in', file_path=args.cfg_path)
     fsurdat_out = get_config_value(config=config, section=section,
@@ -48,7 +48,7 @@ def main ():
     lnd_lon_1 = config.getfloat(section, 'lnd_lon_1', fallback=0)
     lnd_lon_2 = config.getfloat(section, 'lnd_lon_2', fallback=360)
 
-    # not required: user may set these in ./modify.cfg
+    # not required: user may set these in the .cfg file
     dom_nat_pft = get_config_value(config=config, section=section,
         item='dom_nat_pft', file_path=args.cfg_path,
         allowed_values=['0','1','2','3','4','5','6','7','8','9','10',
