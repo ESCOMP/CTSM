@@ -62,9 +62,9 @@ class ModifyFsurdat:
 
         # union rectangles overlap
         rectangle = np.logical_and(union_1, union_2)
-        _not_rectangle = np.logical_not(rectangle)
+        not_rectangle = np.logical_not(rectangle)
 
-        return _not_rectangle
+        return not_rectangle
 
 
     def write_output(self, fsurdat_in, fsurdat_out):
