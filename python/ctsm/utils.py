@@ -159,13 +159,12 @@ def get_config_value(config, section, item, file_path, allowed_values=None, defa
             abort("Error: {} is not an allowed value for {} in config file {}\n"
                   "Allowed values: {}".format(val, item, file_path, allowed_values))
 
-    val = _handle_config_value(var=val, default=default,
-                               is_list=is_list,
-                               convert_to_type=convert_to_type)
+    val = _handle_config_value(var=val, default=default, item=item,
+        is_list=is_list, convert_to_type=convert_to_type)
 
     return val
 
-def _handle_config_value(var, default, is_list, convert_to_type):
+def _handle_config_value(var, default, item, is_list, convert_to_type):
     """
     Description
     -----------
@@ -180,6 +179,11 @@ def _handle_config_value(var, default, is_list, convert_to_type):
         var = list(map(convert_to_type, var))  # convert all elements
 
     if var is not None and not is_list and convert_to_type is not None:
-        var = convert_to_type(var)
+        try:
+            var = convert_to_type(var)
+        except Exception as err:
+            errmsg = '--> Check .cfg file variable: ' + item
+            err.args = (str(err) + errmsg,)
+            raise
 
     return var
