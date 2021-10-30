@@ -174,12 +174,12 @@ def _handle_config_value(var, default, is_list, convert_to_type):
     """
     if var == CONFIG_UNSET:
         var = default  # default may be None
-    elif is_list:
+
+    if var is not None and is_list:
         var = list(var.split())  # convert string to list of strings
         var = list(map(convert_to_type, var))  # convert all elements
-    elif convert_to_type is not None:
+
+    if var is not None and not is_list and convert_to_type is not None:
         var = convert_to_type(var)
-    else:
-        var = var
 
     return var
