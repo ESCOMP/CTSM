@@ -137,40 +137,21 @@ class ModifyFsurdat:
                   where(self.not_rectangle, other=0)
 
             var_name='MONTHLY_LAI'
-            if len(lai) == 12:
+            if lai is not None:
                 self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
                                       var_name=var_name, var=lai)
-            elif len(lai) != 0:
-                message = 'Error: The variable lai should have 12 ' \
-                          'entries in the configure file: ' + var_name
-                print(message)  # TODO this & next three via logging
-
             var_name='MONTHLY_SAI'
-            if len(sai) == 12:
+            if sai is not None:
                 self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
                                       var_name=var_name, var=sai)
-            elif len(sai) != 0:
-                message = 'Error: The variable sai should have 12 ' \
-                          'entries in the configure file: ' + var_name
-                print(message)
-
             var_name='MONTHLY_HEIGHT_TOP'
-            if len(hgt_top) == 12:
+            if hgt_top is not None:
                 self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
                                       var_name=var_name, var=hgt_top)
-            elif len(hgt_top) != 0:
-                message = 'Error: Variable hgt_top should have 12 ' \
-                          'entries in the configure file: ' + var_name
-                print(message)
-
             var_name='MONTHLY_HEIGHT_BOT'
-            if len(hgt_bot) == 12:
+            if hgt_bot is not None:
                 self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
                                       var_name=var_name, var=hgt_bot)
-            elif len(hgt_bot) != 0:
-                message = 'Error: Variable hgt_bot should have 12 ' \
-                          'entries in the configure file: ' + var_name
-                print(message)
 
         # set 3D variable
         self.file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
@@ -185,8 +166,12 @@ class ModifyFsurdat:
         If user has specified lai, sai, hgt_top, hgt_bot, replace these with
         values selected by the user for dom_nat_pft. Else do nothing.
         """
-        if dom_nat_pft == 0:  # bare soil
+        if dom_nat_pft == 0:  # bare soil: var must equal 0
             var = [0] * 12
+        if len(var) != 12:
+            message = 'Error: Variable should have exactly 12 ' \
+                      'entries in the configure file: ' + var_name
+            print(message)  # TODO do this with logging
         for mon in self.file.time - 1:  # loop over 12 months
             if pft == dom_nat_pft:
                 # set 4D variable to value for dom_nat_pft
