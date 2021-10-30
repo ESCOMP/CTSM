@@ -176,7 +176,12 @@ def _handle_config_value(var, default, item, is_list, convert_to_type):
 
     if var is not None and is_list:
         var = list(var.split())  # convert string to list of strings
-        var = list(map(convert_to_type, var))  # convert all elements
+        try:
+            var = list(map(convert_to_type, var))  # convert
+        except Exception as err:
+            errmsg = '--> Check .cfg file variable: ' + item
+            err.args = (str(err) + errmsg,)
+            raise
 
     if var is not None and not is_list and convert_to_type is not None:
         try:
