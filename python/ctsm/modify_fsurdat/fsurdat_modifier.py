@@ -49,7 +49,6 @@ def main ():
     lnd_lon_2 = config.getfloat(section, 'lnd_lon_2', fallback=360)
 
     # not required: user may set these in ./modify.cfg
-    # TODO More error checking that could be done here?
     temp = get_config_value(config, section, 'dom_nat_pft', args.cfg_path,
         allowed_values=['0','1','2','3','4','5','6','7','8','9','10','11',
                         '12','13','14',CONFIG_UNSET])
@@ -79,7 +78,8 @@ def main ():
     max_sat_area = select_value(var=temp, default=None, type_of_var=float)
 
     # Create ModifyFsurdat object
-    modify_fsurdat = ModifyFsurdat(fsurdat_in)
+    modify_fsurdat = ModifyFsurdat(fsurdat_in, lon_1=lnd_lon_1,
+        lon_2=lnd_lon_2, lat_1=lnd_lat_1, lat_2=lnd_lat_2)
 
     # ------------------------------
     # modify surface data properties
@@ -87,23 +87,34 @@ def main ():
 
     # Set fsurdat variables in a rectangle that could be global (default).
     # Note that the land/ocean mask gets specified in the domain file for
-    # MCT or the ocean mesh files for NUOPC. The function set_in_rectangle
-    # can specify fsurdat variables inside a box but it cannot
-    # change which points will run as land and which as ocean.
-    modify_fsurdat.set_in_rectangle(idealized=idealized,
-                                    lon_in_1=lnd_lon_1,
-                                    lon_in_2=lnd_lon_2,
-                                    lat_in_1=lnd_lat_1,
-                                    lat_in_2=lnd_lat_2,
-                                    dom_nat_pft=dom_nat_pft,
-                                    lai=lai,
-                                    sai=sai,
-                                    hgt_top=hgt_top,
-                                    hgt_bot=hgt_bot,
-                                    zero_nonveg=zero_nonveg,
-                                    std_elev=std_elev,
-                                    soil_color=soil_color,
-                                    max_sat_area=max_sat_area)
+    # MCT or the ocean mesh files for NUOPC. Here the user may specify
+    # fsurdat variables inside a box but cannot change which points will
+    # run as land and which as ocean.
+    if idealized:
+        modify_fsurdat.set_idealized()  # set 2D variables
+        # set 3D and 4D variables pertaining to natural vegetation
+        modify_fsurdat.set_dom_nat_pft(dom_nat_pft=0, lai=[], sai=[],
+                                       hgt_top=[], hgt_bot=[])
+
+    if dom_nat_pft is not None:  # overwrite "idealized" value
+        modify_fsurdat.set_dom_nat_pft(dom_nat_pft=dom_nat_pft,
+                                       lai=lai, sai=sai,
+                                       hgt_top=hgt_top, hgt_bot=hgt_bot)
+
+    if max_sat_area is not None:  # overwrite "idealized" value
+        modify_fsurdat._file['FMAX'] = \
+         modify_fsurdat._file['FMAX'].where(modify_fsurdat._not_rectangle, other=max_sat_area)
+
+    if std_elev is not None:  # overwrite "idealized" value
+        modify_fsurdat._file['STD_ELEV'] = \
+         modify_fsurdat._file['STD_ELEV'].where(modify_fsurdat._not_rectangle, other=std_elev)
+
+    if soil_color is not None:  # overwrite "idealized" value
+        modify_fsurdat._file['SOIL_COLOR'] = \
+         modify_fsurdat._file['SOIL_COLOR'].where(modify_fsurdat._not_rectangle, other=soil_color)
+
+    if zero_nonveg:
+        modiry_fsurdat.zero_nonveg()
 
     # ----------------------------------------------
     # Output the now modified CTSM surface data file

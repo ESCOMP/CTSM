@@ -17,10 +17,52 @@ class ModifyFsurdat:
 
     """
 
-    def __init__(self, fsurdat_in):
+    def __init__(self, fsurdat_in, lon_1, lon_2, lat_1, lat_2):
 
         print("Open file: " + fsurdat_in)
         self._file = xr.open_dataset(fsurdat_in)
+
+        self._not_rectangle = self._get_not_rectangle(
+            lon_1=lon_1, lon_2=lon_2,
+            lat_1=lat_1, lat_2=lat_2,
+            longxy=self._file.LONGXY, latixy=self._file.LATIXY)
+
+
+    def _get_not_rectangle(self, lon_1, lon_2, lat_1, lat_2, longxy, latixy):
+        """
+        Description
+        -----------
+        """
+
+        # ensure that lon ranges 0-360 in case user entered -180 to 180
+        lon_1 = lon_range_0_to_360(lon_1)
+        lon_2 = lon_range_0_to_360(lon_2)
+
+        # determine the rectangle(s)
+        # TODO This is not really "nearest" for the edges but isel didn't work
+        rectangle_1 = (longxy >= lon_1)
+        rectangle_2 = (longxy <= lon_2)
+        eps = np.finfo(np.float32).eps  # to avoid roundoff issue
+        rectangle_3 = (latixy >= (lat_1 - eps))
+        rectangle_4 = (latixy <= (lat_2 + eps))
+
+        if lon_1 <= lon_2:
+            # rectangles overlap
+            union_1 = np.logical_and(rectangle_1, rectangle_2)
+        else:
+            # rectangles don't overlap: stradling the 0-degree meridian
+            union_1 = np.logical_or(rectangle_1, rectangle_2)
+
+        if lat_1 <= lat_2:
+            # rectangles overlap
+            union_2 = np.logical_and(rectangle_3, rectangle_4)
+        else:
+            # rectangles don't overlap: one in the north, one in the south
+            union_2 = np.logical_or(rectangle_3, rectangle_4)
+
+        # union rectangles overlap
+        rectangle = np.logical_and(union_1, union_2)
+        _not_rectangle = np.logical_not(rectangle)
 
 
     def write_output(self, fsurdat_in, fsurdat_out):
@@ -61,8 +103,7 @@ class ModifyFsurdat:
         self._file.close()
 
 
-    def set_dom_nat_pft(self, dom_nat_pft, lai, sai, hgt_top, hgt_bot,
-                        not_rectangle):
+    def set_dom_nat_pft(self, dom_nat_pft, lai, sai, hgt_top, hgt_bot):
         """
         Description
         -----------
@@ -85,49 +126,45 @@ class ModifyFsurdat:
             (float) User's entry of MONTHLY_HEIGHT_TOP for their dom_nat_pft
         hgt_bot:
             (float) User's entry of MONTHLY_HEIGHT_BOT for their dom_nat_pft
-        not_rectangle:
-            (xarray dataarray) Inverse of land rectangle selected by user
         """
 
         for pft in self._file.natpft:
             # initialize 3D variable; set outside the loop below
             self._file['PCT_NAT_PFT'][pft,:,:] = \
              self._file['PCT_NAT_PFT'][pft,:,:]. \
-                  where(not_rectangle, other=0)
+                  where(self._not_rectangle, other=0)
 
+            var_name='MONTHLY_LAI'
             if len(lai) == 12:
                 self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                      var_name='MONTHLY_LAI', var=lai,
-                                      not_rectangle=not_rectangle)
+                                      var_name=var_name, var=lai)
             elif len(lai) != 0:
                 message = 'Error: The variable lai should have 12 ' \
                           'entries in the configure file: ' + var_name
                 print(message)  # TODO do this via logging
 
+            var_name='MONTHLY_SAI'
             if len(sai) == 12:
                 self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                      var_name='MONTHLY_SAI', var=sai,
-                                      not_rectangle=not_rectangle)
+                                      var_name=var_name, var=sai)
             elif len(sai) != 0:
                 message = 'Error: The variable sai should have 12 ' \
                           'entries in the configure file: ' + var_name
                 print(message)  # TODO do this via logging
 
+            var_name='MONTHLY_HEIGHT_TOP'
             if len(hgt_top) == 12:
                 self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                      var_name='MONTHLY_HEIGHT_TOP',
-                                      var=hgt_top,
-                                      not_rectangle=not_rectangle)
+                                      var_name=var_name, var=hgt_top)
             elif len(hgt_top) != 0:
                 message = 'Error: Variable hgt_top should have 12 ' \
                           'entries in the configure file: ' + var_name
                 print(message)  # TODO do this via logging
 
+            var_name='MONTHLY_HEIGHT_BOT'
             if len(hgt_bot) == 12:
                 self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                      var_name='MONTHLY_HEIGHT_BOT',
-                                      var=hgt_bot,
-                                      not_rectangle=not_rectangle)
+                                      var_name=var_name, var=hgt_bot)
             elif len(hgt_bot) != 0:
                 message = 'Error: Variable hgt_bot should have 12 ' \
                           'entries in the configure file: ' + var_name
@@ -136,10 +173,10 @@ class ModifyFsurdat:
         # set 3D variable
         self._file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
          self._file['PCT_NAT_PFT'][dom_nat_pft,:,:]. \
-              where(not_rectangle, other=100)
+              where(self._not_rectangle, other=100)
 
 
-    def set_lai_sai_hgts(self, pft, dom_nat_pft, var_name, var, not_rectangle):
+    def set_lai_sai_hgts(self, pft, dom_nat_pft, var_name, var):
         """
         Description
         -----------
@@ -153,7 +190,7 @@ class ModifyFsurdat:
                 # set 4D variable to value for dom_nat_pft
                 self._file[var_name][mon,pft,:,:] = \
                  self._file[var_name][mon,pft,:,:]. \
-                      where(not_rectangle, other=var[int(mon)])
+                      where(self._not_rectangle, other=var[int(mon)])
 
 
     def zero_nonveg(self):
@@ -175,74 +212,12 @@ class ModifyFsurdat:
         self._file['PCT_GLACIER'][:,:] = 0
 
 
-    def set_in_rectangle(self, idealized, lon_in_1, lon_in_2, lat_in_1,
-                        lat_in_2, dom_nat_pft, lai, sai, hgt_top,
-                        hgt_bot, zero_nonveg, std_elev, soil_color,
-                        max_sat_area):
+    def set_idealized(self):
         """
         Description
         -----------
         Set fsurdat variables in a rectangle defined by lon/lat limits
-
-        Arguments
-        ---------
-        lon_in_1:
-            (int) westernmost edge of rectangle
-        lon_in_2:
-            (int) easternmost edge of rectangle
-        lat_in_1:
-            (int) southernmost edge of rectangle
-        lat_in_2:
-            (int) northernmost edge of rectangle
-        dom_nat_pft:
-            (int) user-selected PFT to be set to 100% in rectangle
-        lai:
-            (list of floats) user-defined leaf area index
-        sai:
-            (list of floats) user-defined stem area index
-        hgt_top:
-            (list of floats) user-defined height at top of vegetation
-            canopy (m)
-        hgt_bot:
-            (list of floats) user-defined height at bottom of vegetation
-            canopy (m)
-        zero_nonveg:
-        std_elev:
-        soil_color:
-        max_sat_area:
         """
-
-        # Currently type(lon_in_*) = int with required range 0-360.
-        # If instead of requiring integer values, we decide to allow floats,
-        # then ensure that lon ranges 0-360 in case user entered -180 to 180.
-        lon_1 = lon_range_0_to_360(lon_in_1)
-        lon_2 = lon_range_0_to_360(lon_in_2)
-
-        # determine the rectangle(s)
-        # TODO This is not really "nearest" for the edges but isel didn't work
-        rectangle_1 = (self._file.LONGXY >= lon_1)
-        rectangle_2 = (self._file.LONGXY <= lon_2)
-        eps = np.finfo(np.float32).eps  # to avoid roundoff issue
-        rectangle_3 = (self._file.LATIXY >= (lat_in_1 - eps))
-        rectangle_4 = (self._file.LATIXY <= (lat_in_2 + eps))
-
-        if lon_1 <= lon_2:
-            # rectangles overlap
-            union_1 = np.logical_and(rectangle_1, rectangle_2)
-        else:
-            # rectangles don't overlap (stradling the 0-degree meridian)
-            union_1 = np.logical_or(rectangle_1, rectangle_2)
-
-        if lat_in_1 <= lat_in_2:
-            # rectangles overlap
-            union_2 = np.logical_and(rectangle_3, rectangle_4)
-        else:
-            # rectangles don't overlap (one in the north, on in the south)
-            union_2 = np.logical_or(rectangle_3, rectangle_4)
-
-        # rectangles overlap
-        rectangle = np.logical_and(union_1, union_2)
-        not_rectangle = np.logical_not(rectangle)
 
         # Overwrite in rectangle(s)
         # ------------------------
@@ -250,100 +225,69 @@ class ModifyFsurdat:
         # "other" assigns the corresponding value in the rectangle.
         # Values outside the rectangle are preserved.
         # ------------------------
-        if idealized:
-            if dom_nat_pft is None:  # not user-set
-                dom_nat_pft = 0  # default to bare soil
-            if soil_color is None:  # not user-set
-                soil_color = 15  # default to loam
-            if std_elev is None:  # not user-set
-                std_elev = 0
-            if max_sat_area is None:  # not user-set
-                max_sat_area = 0
 
-            # 2D variables
-            # max inundated fraction
-            self._file['F0'] = \
-             self._file['F0'].where(not_rectangle, other=0)
-            # max saturated area
-            self._file['FMAX'] = \
-             self._file['FMAX'].where(not_rectangle, other=max_sat_area)
-            # standard deviation of elevation
-            self._file['STD_ELEV'] = \
-             self._file['STD_ELEV'].where(not_rectangle, other=std_elev)
-            # mean topographic slope
-            self._file['SLOPE'] = \
-             self._file['SLOPE'].where(not_rectangle, other=0)
-            # zbedrock
-            self._file['zbedrock'] = \
-             self._file['zbedrock'].where(not_rectangle, other=10)
-            # value representing loam
-            self._file['SOIL_COLOR'] = \
-             self._file['SOIL_COLOR'].where(not_rectangle, other=soil_color)
+        # Default values
+        zbedrock = 10
+        max_sat_area = 0  # max saturated area
+        max_inundated = 0  # max inundated fraction
+        std_elev = 0  # standard deviation of elevation
+        slope = 0  # mean topographic slope
+        pftdata_mask = 1
+        landfrac_pft = 1
+        pct_nat_veg = 100
+        pct_not_nat_veg = 0
+        pct_cft = 100  # PCT_CROP = 0 but sum(PCT_CFT) must = 100
+        pct_sand = 43  # loam
+        pct_clay = 18  # loam
+        soil_color = 15  # loam
+        organic = 0
 
-            self._file['PFTDATA_MASK'] = \
-             self._file['PFTDATA_MASK'].where(not_rectangle, other=1)
-            self._file['LANDFRAC_PFT'] = \
-             self._file['LANDFRAC_PFT'].where(not_rectangle, other=1)
-            self._file['PCT_WETLAND'] = \
-             self._file['PCT_WETLAND'].where(not_rectangle, other=0)
-            self._file['PCT_CROP'] = \
-             self._file['PCT_CROP'].where(not_rectangle, other=0)
-            self._file['PCT_LAKE'] = \
-             self._file['PCT_LAKE'].where(not_rectangle, other=0)
-            self._file['PCT_URBAN'] = \
-             self._file['PCT_URBAN'].where(not_rectangle, other=0)
-            self._file['PCT_GLACIER'] = \
-             self._file['PCT_GLACIER'].where(not_rectangle, other=0)
-            self._file['PCT_NATVEG'] = \
-             self._file['PCT_NATVEG'].where(not_rectangle, other=100)
+        # 2D variables
+        self._file['F0'] = \
+         self._file['F0'].where(self._not_rectangle, other=max_inundated)
+        self._file['FMAX'] = \
+         self._file['FMAX'].where(self._not_rectangle, other=max_sat_area)
+        self._file['STD_ELEV'] = \
+         self._file['STD_ELEV'].where(self._not_rectangle, other=std_elev)
+        self._file['SLOPE'] = \
+         self._file['SLOPE'].where(self._not_rectangle, other=slope)
+        self._file['zbedrock'] = \
+         self._file['zbedrock'].where(self._not_rectangle, other=zbedrock)
+        self._file['SOIL_COLOR'] = \
+         self._file['SOIL_COLOR'].where(self._not_rectangle, other=soil_color)
+        self._file['PFTDATA_MASK'] = \
+         self._file['PFTDATA_MASK'].where(self._not_rectangle, other=pftdata_mask)
+        self._file['LANDFRAC_PFT'] = \
+         self._file['LANDFRAC_PFT'].where(self._not_rectangle, other=landfrac_pft)
+        self._file['PCT_WETLAND'] = \
+         self._file['PCT_WETLAND'].where(self._not_rectangle, other=pct_not_nat_veg)
+        self._file['PCT_CROP'] = \
+         self._file['PCT_CROP'].where(self._not_rectangle, other=pct_not_nat_veg)
+        self._file['PCT_LAKE'] = \
+         self._file['PCT_LAKE'].where(self._not_rectangle, other=pct_not_nat_veg)
+        self._file['PCT_URBAN'] = \
+         self._file['PCT_URBAN'].where(self._not_rectangle, other=pct_not_nat_veg)
+        self._file['PCT_GLACIER'] = \
+         self._file['PCT_GLACIER'].where(self._not_rectangle, other=pct_not_nat_veg)
+        self._file['PCT_NATVEG'] = \
+         self._file['PCT_NATVEG'].where(self._not_rectangle, other=pct_nat_veg)
 
-            for lev in self._file.nlevsoi:
-                # set next three 3D variables to values representing loam
-                self._file['PCT_SAND'][lev,:,:] = \
-                 self._file['PCT_SAND'][lev,:,:].where(not_rectangle, other=43)
-                self._file['PCT_CLAY'][lev,:,:] = \
-                 self._file['PCT_CLAY'][lev,:,:].where(not_rectangle, other=18)
-                self._file['ORGANIC'][lev,:,:] = \
-                 self._file['ORGANIC'][lev,:,:].where(not_rectangle, other=0)
+        for lev in self._file.nlevsoi:
+            # set next three 3D variables to values representing loam
+            self._file['PCT_SAND'][lev,:,:] = \
+             self._file['PCT_SAND'][lev,:,:].where(self._not_rectangle, other=pct_sand)
+            self._file['PCT_CLAY'][lev,:,:] = \
+             self._file['PCT_CLAY'][lev,:,:].where(self._not_rectangle, other=pct_clay)
+            self._file['ORGANIC'][lev,:,:] = \
+             self._file['ORGANIC'][lev,:,:].where(self._not_rectangle, other=organic)
 
-            for crop in self._file.cft:
-                cft_local = crop - (max(self._file.natpft) + 1)
-                # initialize 3D variable; set outside the loop below
-                self._file['PCT_CFT'][cft_local,:,:] = \
-                 self._file['PCT_CFT'][cft_local,:,:]. \
-                      where(not_rectangle, other=0)
+        for crop in self._file.cft:
+            cft_local = crop - (max(self._file.natpft) + 1)
+            # initialize 3D variable; set outside the loop below
+            self._file['PCT_CFT'][cft_local,:,:] = \
+             self._file['PCT_CFT'][cft_local,:,:]. \
+                  where(self._not_rectangle, other=pct_not_nat_veg)
 
-            # set 3D variable
-            # required although PCT_CROP = 0: the sum of all crops must = 100
-            self._file['PCT_CFT'][0,:,:] = \
-             self._file['PCT_CFT'][0,:,:].where(not_rectangle, other=100)
-
-            # set 3D and 4D variables PCT_NAT_PFT, MONLTHLY_LAI, MONTHLY_SAI,
-            # MONTHLY_HEIGHT_TOP, MONTHLY_HEIGHT_TOP
-            self.set_dom_nat_pft(dom_nat_pft=dom_nat_pft,
-                                 lai=lai, sai=sai,
-                                 hgt_top=hgt_top, hgt_bot=hgt_bot,
-                                 not_rectangle=not_rectangle)
-
-        else:  # not idealized
-            # Changing specific vars in the rectangle and leaving everything
-            # else unchanged
-            if dom_nat_pft is not None:
-                self.set_dom_nat_pft(dom_nat_pft=dom_nat_pft,
-                                     lai=lai, sai=sai,
-                                     hgt_top=hgt_top, hgt_bot=hgt_bot,
-                                     not_rectangle=not_rectangle)
-            if max_sat_area is not None:
-                # max saturated area
-                self._file['FMAX'] = \
-                 self._file['FMAX'].where(not_rectangle, other=max_sat_area)
-            if std_elev is not None:
-                # standard deviation of elevation
-                self._file['STD_ELEV'] = \
-                 self._file['STD_ELEV'].where(not_rectangle, other=std_elev)
-            if soil_color is not None:
-                # value representing loam
-                self._file['SOIL_COLOR'] = \
-                 self._file['SOIL_COLOR'].where(not_rectangle,
-                                                other=soil_color)
-            # TODO Next also zero_nonveg or is idealized option sufficient?
+        # set 3D variable
+        self._file['PCT_CFT'][0,:,:] = \
+         self._file['PCT_CFT'][0,:,:].where(self._not_rectangle, other=pct_cft)
