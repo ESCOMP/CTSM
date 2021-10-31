@@ -48,6 +48,9 @@ def main ():
     lnd_lon_1 = config.getfloat(section, 'lnd_lon_1', fallback=0)
     lnd_lon_2 = config.getfloat(section, 'lnd_lon_2', fallback=360)
 
+    landmask_file = get_config_value(config=config, section=section,
+        item='landmask_file', file_path=args.cfg_path)
+
     # not required: user may set these in the .cfg file
     dom_nat_pft = get_config_value(config=config, section=section,
         item='dom_nat_pft', file_path=args.cfg_path,
@@ -79,7 +82,8 @@ def main ():
 
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat(fsurdat_in, lon_1=lnd_lon_1,
-        lon_2=lnd_lon_2, lat_1=lnd_lat_1, lat_2=lnd_lat_2)
+        lon_2=lnd_lon_2, lat_1=lnd_lat_1, lat_2=lnd_lat_2,
+        landmask_file=landmask_file)
 
     # ------------------------------
     # modify surface data properties
