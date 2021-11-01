@@ -15,7 +15,8 @@ from ctsm.utils import abort, get_git_sha, update_metadata, lon_range_0_to_360
 
 class ModifyFsurdat:
     """
-
+    Description
+    -----------
     """
 
     def __init__(self, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file):
@@ -34,8 +35,8 @@ class ModifyFsurdat:
         # could this code be shortened enough to not need functionalizing?
         # Or even should we not support .csv and only support .nc?
         if landmask_file is not None:
-            with open(landmask_file) as f:
-                mask = csv.reader(f)
+            with open(landmask_file) as lmf:
+                mask = csv.reader(lmf)
                 row = 0
                 for row_of_data in mask:  # rows
                     col = 0
