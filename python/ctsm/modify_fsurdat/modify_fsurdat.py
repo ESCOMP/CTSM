@@ -6,7 +6,6 @@ The wrapper script includes a full description and instructions.
 """
 
 import os
-import csv
 import logging
 
 import numpy as np
@@ -25,7 +24,7 @@ class ModifyFsurdat:
     def __init__(self, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file):
 
         logger.info(
-            'Opening fsurdat_in file to be modified: ' + fsurdat_in)
+            'Opening fsurdat_in file to be modified: %s', fsurdat_in)
         self.file = xr.open_dataset(fsurdat_in)
 
         self.not_rectangle = self._get_not_rectangle(
@@ -114,7 +113,7 @@ class ModifyFsurdat:
         # mode 'w' overwrites file if it exists
         self.file.to_netcdf(path=fsurdat_out, mode='w',
                             format="NETCDF3_64BIT")
-        logger.info('Successfully created fsurdat_out: ' + fsurdat_out)
+        logger.info('Successfully created fsurdat_out: %s', fsurdat_out)
         self.file.close()
 
 
