@@ -33,31 +33,12 @@ class ModifyFsurdat:
             lat_1=lat_1, lat_2=lat_2,
             longxy=self.file.LONGXY, latixy=self.file.LATIXY)
 
-        # if landmask_file is not None, overwrite self.not_rectangle with data
-        # from .csv file specified in the .cfg file
-        # TODO Before I make this into a function (eg _overwrite_not_rectangle)
-        # could this code be shortened enough to not need functionalizing?
-        # Or even should we not support .csv and only support .nc?
         if landmask_file is not None:
-            with open(landmask_file) as lmf:
-                mask = csv.reader(lmf)
-                row = 0
-                for row_of_data in mask:  # rows
-                    col = 0
-                    for col_in_row in row_of_data:  # columns
-                        rectangle_element = bool(int(col_in_row))
-                        if row > len(self.file.lsmlat):
-                            errmsg = 'Found number of rows in landmask_file >' \
-                                     'lsmlat dimension in fsurdat_in'
-                            abort(errmsg)
-                        if col > len(self.file.lsmlon):
-                            errmsg = 'Found number of columns in ' \
-                                     'landmask_file > lsmlon dimension in ' \
-                                     'fsurdat_in'
-                            abort(errmsg)
-                        self.not_rectangle[row,col] = not(rectangle_element)
-                        col += 1
-                    row += 1
+            # overwrite self.not_rectangle with data from
+            # user-specified .nc file in the .cfg file
+            self._landmask_file = xr.open_dataset(landmask_file)
+            rectangle = self._landmask_file.landmask
+            self.not_rectangle = np.logical_not(rectangle)
 
 
     def _get_not_rectangle(self, lon_1, lon_2, lat_1, lat_2, longxy, latixy):
