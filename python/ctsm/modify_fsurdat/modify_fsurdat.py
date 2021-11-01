@@ -7,11 +7,14 @@ The wrapper script includes a full description and instructions.
 
 import os
 import csv
+import logging
 
 import numpy as np
 import xarray as xr
 
 from ctsm.utils import abort, get_git_sha, update_metadata, lon_range_0_to_360
+
+logger = logging.getLogger(__name__)
 
 class ModifyFsurdat:
     """
@@ -21,7 +24,8 @@ class ModifyFsurdat:
 
     def __init__(self, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file):
 
-        print("Opening fsurdat_in file to be modified: " + fsurdat_in)
+        logger.info(
+            'Opening fsurdat_in file to be modified: ' + fsurdat_in)
         self.file = xr.open_dataset(fsurdat_in)
 
         self.not_rectangle = self._get_not_rectangle(
@@ -129,7 +133,7 @@ class ModifyFsurdat:
         # mode 'w' overwrites file if it exists
         self.file.to_netcdf(path=fsurdat_out, mode='w',
                             format="NETCDF3_64BIT")
-        print('Successfully created fsurdat_out: ' + fsurdat_out)
+        logger.info('Successfully created fsurdat_out: ' + fsurdat_out)
         self.file.close()
 
 
@@ -197,9 +201,9 @@ class ModifyFsurdat:
         if dom_nat_pft == 0:  # bare soil: var must equal 0
             var = [0] * 12
         if len(var) != 12:
-            message = 'Error: Variable should have exactly 12 ' \
-                      'entries in the configure file: ' + var_name
-            print(message)  # TODO do this with logging
+            errmsg = 'Error: Variable should have exactly 12 ' \
+                     'entries in the configure file: ' + var_name
+            abort(errmsg)
         for mon in self.file.time - 1:  # loop over 12 months
             if pft == dom_nat_pft:
                 # set 4D variable to value for dom_nat_pft

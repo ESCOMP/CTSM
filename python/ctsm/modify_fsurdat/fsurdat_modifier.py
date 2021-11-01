@@ -6,12 +6,15 @@ The wrapper script includes a full description and instructions.
 """
 
 import sys
+import logging
 import argparse
 from configparser import ConfigParser
 from ctsm.utils import get_config_value
 from ctsm.utils import CONFIG_UNSET
+from ctsm.ctsm_logging import setup_logging
 from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 
+logger = logging.getLogger(__name__)
 
 def main ():
     """
@@ -19,6 +22,9 @@ def main ():
     -----------
     Calls function that modifies an fsurdat (surface dataset)
     """
+
+    # set up logging without allowing user control at this time
+    setup_logging(level=logging.INFO)
 
     # read the command line argument to obtain the path to the .cfg file
     parser = argparse.ArgumentParser()
