@@ -602,8 +602,8 @@ def main():
         # -- Use carbon_tot if estimated_oc is bigger than carbon_tot.
 
 
-        #if estimated_oc > carbon_tot:
-        #    estimated_oc = carbon_tot
+        if estimated_oc > carbon_tot:
+            estimated_oc = carbon_tot
 
         layer_depth = (
             df["biogeoBottomDepth"][bin_index[soil_lev]]
