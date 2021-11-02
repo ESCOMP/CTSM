@@ -50,7 +50,6 @@ module mkvarctl
   character(len=256), public :: mksrf_fvocef     = ' '  ! VOC Emission Factor data file name
   character(len=256), public :: mksrf_ftopostats = ' '  ! topography statistics data file name
   character(len=256), public :: mksrf_fvic       = ' '  ! VIC parameters data file name
-  character(len=256), public :: mksrf_fch4       = ' '  ! inversion-derived CH4 parameters data file name
 
   integer           , public :: numpft         = 16   ! number of plant types
 
@@ -74,7 +73,6 @@ module mkvarctl
   character(len=256), public :: map_fharvest    = ' ' ! Mapping file for harvesting
   character(len=256), public :: map_ftopostats  = ' ' ! Mapping file for topography statistics
   character(len=256), public :: map_fvic        = ' ' ! Mapping file for VIC parameters
-  character(len=256), public :: map_fch4        = ' ' ! Mapping file for inversion-derived CH4 parameters
   character(len=80) , public :: gitdescribe     = ' ' ! Description of model version from git
 !
 ! Variables to override data read in with

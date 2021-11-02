@@ -233,6 +233,7 @@ def buildnml(cime_path, rundir):
     # call build-namelist
     cmd = os.path.abspath(os.path.join(path_to_ctsm_root(), "bld", "build-namelist"))
     command = [cmd,
+               '-driver', 'nuopc',
                '-cimeroot', cime_path,
                '-infile', infile,
                '-csmdata', inputdata_path,
@@ -250,6 +251,7 @@ def buildnml(cime_path, rundir):
                '-clm_start_type', 'default',
                '-configuration', configuration,
                '-structure', structure,
+               '-lilac',
                '-lnd_frac', lnd_domain_file,
                '-glc_nec', str(10),
                '-co2_ppmv', co2_ppmv,

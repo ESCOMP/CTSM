@@ -73,8 +73,8 @@ MACHINE_DEFAULTS = {
         baseline_dir=os.path.join(os.path.sep, 'fs', 'cgd', 'csm', 'ccsm_baselines'),
         account_required=False,
         # jobs on izumi experience a high frequency of failures, often at the very end of
-        # the job; so we'll automatically retry a failed job once before giving up on it
-        create_test_retry=1,
+        # the job; so we'll automatically retry a failed job twice before giving up on it
+        create_test_retry=2,
         job_launcher_defaults={
             JOB_LAUNCHER_QSUB: QsubDefaults(
                 queue='medium',

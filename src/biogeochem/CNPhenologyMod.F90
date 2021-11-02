@@ -15,6 +15,7 @@ module CNPhenologyMod
   use shr_sys_mod                     , only : shr_sys_flush
   use decompMod                       , only : bounds_type
   use clm_varpar                      , only : maxveg, nlevdecomp_full
+  use clm_varpar                      , only : i_litr_min, i_litr_max
   use clm_varctl                      , only : iulog, use_cndv
   use clm_varcon                      , only : tfrz
   use abortutils                      , only : endrun
@@ -45,21 +46,48 @@ module CNPhenologyMod
   public :: CNPhenologyreadNML   ! Read namelist
   public :: CNPhenologyInit      ! Initialization
   public :: CNPhenology          ! Update
+
+  ! !PUBLIC for unit testing
+  public :: CNPhenologySetNML         ! Set the namelist setttings explicitly for unit tests
+  public :: CNPhenologySetParams      ! Set the parameters explicitly for unit tests
+  public :: SeasonalDecidOnset        ! Logical function to determine is seasonal decidious onset should be triggered
+  public :: SeasonalCriticalDaylength ! Critical day length needed for Seasonal decidious offset
+
+  ! !PRIVITE MEMBER FIUNCTIONS:
+  private :: CNPhenologyClimate             ! Get climatological everages to figure out triggers for Phenology
+  private :: CNEvergreenPhenology           ! Phenology for evergreen plants
+  private :: CNSeasonDecidPhenology         ! Phenology for seasonal decidious platnts
+  private :: CNStressDecidPhenology         ! Phenology for stress deciidous plants
+  private :: CropPhenology                  ! Phenology for crops
+  private :: CropPhenologyInit              ! Initialize phenology for crops
+  private :: vernalization                  ! Vernalization (overwinterring) of crops
+  private :: CNOnsetGrowth                  ! Leaf Onset growth
+  private :: CNOffsetLitterfall             ! Leaf Offset litter fall
+  private :: CNBackgroundLitterfall         ! Background litter fall
+  private :: CNLivewoodTurnover             ! Liver wood turnover to deadwood
+  private :: CNCropHarvestToProductPools    ! Move crop harvest to product pools
+  private :: CNLitterToColumn               ! Move litter ofrom patch to column level
   !
   ! !PRIVATE DATA MEMBERS:
   type, private :: params_type
-     real(r8) :: crit_dayl       ! critical day length for senescence
-     real(r8) :: ndays_on     	 ! number of days to complete leaf onset
-     real(r8) :: ndays_off	 ! number of days to complete leaf offset
-     real(r8) :: fstor2tran      ! fraction of storage to move to transfer for each onset
-     real(r8) :: crit_onset_fdd  ! critical number of freezing days to set gdd counter
-     real(r8) :: crit_onset_swi  ! critical number of days > soilpsi_on for onset
-     real(r8) :: soilpsi_on      ! critical soil water potential for leaf onset
-     real(r8) :: crit_offset_fdd ! critical number of freezing days to initiate offset
-     real(r8) :: crit_offset_swi ! critical number of water stress days to initiate offset
-     real(r8) :: soilpsi_off     ! critical soil water potential for leaf offset
-     real(r8) :: lwtop   	 ! live wood turnover proportion (annual fraction)
-     real(r8) :: phenology_soil_depth ! soil depth used for measuring states for phenology triggers
+     real(r8) :: crit_dayl             ! critical day length for senescence (sec) 
+                                       ! (11 hrs [39,600 sec] from White 2001)
+     real(r8) :: crit_dayl_at_high_lat ! critical day length for senescence at high latitudes (sec) 
+                                       ! (in Eitel 2019 this was 54000 [15 hrs])
+     real(r8) :: crit_dayl_lat_slope   ! Slope of time for critical day length with latitude (sec/deg) 
+                                       ! (Birch et. all 2021 it was 720 see line below)
+                                       ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude (Birch et. al 2021)
+     real(r8) :: ndays_on              ! number of days to complete leaf onset
+     real(r8) :: ndays_off             ! number of days to complete leaf offset
+     real(r8) :: fstor2tran            ! fraction of storage to move to transfer for each onset
+     real(r8) :: crit_onset_fdd        ! critical number of freezing days to set gdd counter
+     real(r8) :: crit_onset_swi        ! critical number of days > soilpsi_on for onset
+     real(r8) :: soilpsi_on            ! critical soil water potential for leaf onset
+     real(r8) :: crit_offset_fdd       ! critical number of freezing days to initiate offset
+     real(r8) :: crit_offset_swi       ! critical number of water stress days to initiate offset
+     real(r8) :: soilpsi_off           ! critical soil water potential for leaf offset
+     real(r8) :: lwtop                 ! live wood turnover proportion (annual fraction)
+     real(r8) :: phenology_soil_depth  ! soil depth used for measuring states for phenology triggers
   end type params_type
 
   type(params_type) :: params_inst
@@ -95,8 +123,16 @@ module CNPhenologyMod
   integer              :: jdayyrstart(inSH) ! julian day of start of year
 
   real(r8), private :: initial_seed_at_planting        = 3._r8   ! Initial seed at planting
-  logical,  private :: min_crtical_dayl_depends_on_lat = .false. ! If critical day-length for onset depends on latitude
+
+  ! Constants for seasonal decidious leaf onset and offset
   logical,  private :: onset_thresh_depends_on_veg     = .false. ! If onset threshold depends on vegetation type
+  integer,  public, parameter :: critical_daylight_constant           = 1
+  integer,  public, parameter :: critical_daylight_depends_on_lat     = critical_daylight_constant + 1
+  integer,  public, parameter :: critical_daylight_depends_on_veg     = critical_daylight_depends_on_lat + 1
+  integer,  public, parameter :: critical_daylight_depends_on_latnveg = critical_daylight_depends_on_veg + 1
+  integer,  private :: critical_daylight_method = critical_daylight_constant
+  ! For determining leaf offset latitude that's considered high latitude (see Eitel 2019)
+  real(r8), parameter :: critical_offset_high_lat         = 65._r8     ! Start of what's considered high latitude (degrees)
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -124,11 +160,12 @@ contains
     integer :: ierr                 ! error code
     integer :: unitn                ! unit for namelist file
 
+    character(len=25) :: min_critical_dayl_method   ! Method to determine critical day length for onset
     character(len=*), parameter :: subname = 'CNPhenologyReadNML'
     character(len=*), parameter :: nmlname = 'cnphenology'
     !-----------------------------------------------------------------------
     namelist /cnphenology/ initial_seed_at_planting, onset_thresh_depends_on_veg, &
-                           min_crtical_dayl_depends_on_lat
+                           min_critical_dayl_method
 
     ! Initialize options to default values, in case they are not specified in
     ! the namelist
@@ -149,9 +186,21 @@ contains
        call relavu( unitn )
     end if
 
-    call shr_mpi_bcast (initial_seed_at_planting,        mpicom)
-    call shr_mpi_bcast (onset_thresh_depends_on_veg,     mpicom)
-    call shr_mpi_bcast (min_crtical_dayl_depends_on_lat, mpicom)
+    call shr_mpi_bcast (initial_seed_at_planting,    mpicom)
+    call shr_mpi_bcast (onset_thresh_depends_on_veg, mpicom)
+    call shr_mpi_bcast (min_critical_dayl_method,     mpicom)
+
+    if (      min_critical_dayl_method == "DependsOnLat"       )then
+       critical_daylight_method = critical_daylight_depends_on_lat
+    else if ( min_critical_dayl_method == "DependsOnVeg"       )then
+       critical_daylight_method = critical_daylight_depends_on_veg
+    else if ( min_critical_dayl_method == "DependsOnLatAndVeg" )then
+       critical_daylight_method = critical_daylight_depends_on_latnveg
+    else if ( min_critical_dayl_method == "Constant"           )then
+       critical_daylight_method = critical_daylight_constant
+    else
+       call endrun(msg="ERROR min_critical_dayl_method is NOT set to a valid value"//errmsg(sourcefile, __LINE__))
+    end if
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -165,6 +214,45 @@ contains
     
   end subroutine CNPhenologyReadNML
 
+  !-----------------------------------------------------------------------
+  subroutine CNPhenologySetNML( input_onset_thresh_depends_on_veg, input_critical_daylight_method )
+    !
+    ! !DESCRIPTION:
+    ! Set the namelist items for unit-testing
+    !
+    logical, intent(in) :: input_onset_thresh_depends_on_veg
+    integer, intent(in) :: input_critical_daylight_method
+
+    onset_thresh_depends_on_veg = input_onset_thresh_depends_on_veg
+    critical_daylight_method = input_critical_daylight_method
+    if ( (critical_daylight_method < critical_daylight_constant) .or. &
+         (critical_daylight_method > critical_daylight_depends_on_latnveg) )then
+       call endrun(msg="ERROR critical_daylight_method "//errmsg(sourcefile, __LINE__))
+    end if
+  end subroutine CNPhenologySetNML
+  
+  !-----------------------------------------------------------------------
+  subroutine CNPhenologySetParams( )
+    !
+    ! !DESCRIPTION:
+    ! Set the parameters for unit-testing
+    !
+    params_inst%crit_dayl             = 39200._r8     ! Seconds
+    params_inst%crit_dayl_at_high_lat = 54000._r8     ! Seconds
+    params_inst%crit_dayl_lat_slope   = 720._r8       ! Seconds / degree
+    params_inst%ndays_on              = 15._r8        ! Days
+    params_inst%ndays_off             = 30._r8        ! Days
+    params_inst%fstor2tran            = 0.5           ! Fraction
+    params_inst%crit_onset_fdd        = 15._r8        ! Days
+    params_inst%crit_onset_swi        = 15._r8        ! Days
+    params_inst%soilpsi_on            = -0.6_r8       ! MPa
+    params_inst%crit_offset_fdd       = 15._r8        ! Days
+    params_inst%crit_offset_swi       = 15._r8        ! Days
+    params_inst%soilpsi_off           = -0.8          ! MPa
+    params_inst%lwtop                 = 0.7_r8        ! Fraction
+    params_inst%phenology_soil_depth  = 0.08_r8       ! m
+  end subroutine CNPhenologySetParams
+  
   !-----------------------------------------------------------------------
   subroutine readParams ( ncid )
     !
@@ -183,6 +271,8 @@ contains
     !-----------------------------------------------------------------------
 
     call readNcdioScalar(ncid, 'crit_dayl', subname, params_inst%crit_dayl)
+    call readNcdioScalar(ncid, 'crit_dayl_at_high_lat', subname, params_inst%crit_dayl_at_high_lat)
+    call readNcdioScalar(ncid, 'crit_dayl_lat_slope', subname, params_inst%crit_dayl_lat_slope)
     call readNcdioScalar(ncid, 'ndays_on', subname, params_inst%ndays_on)
     call readNcdioScalar(ncid, 'ndays_off', subname, params_inst%ndays_off)
     call readNcdioScalar(ncid, 'fstor2tran', subname, params_inst%fstor2tran)
@@ -194,6 +284,7 @@ contains
     call readNcdioScalar(ncid, 'soilpsi_off', subname, params_inst%soilpsi_off)
     call readNcdioScalar(ncid, 'lwtop_ann', subname, params_inst%lwtop)
     call readNcdioScalar(ncid, 'phenology_soil_depth', subname, params_inst%phenology_soil_depth)
+    
 
   end subroutine readParams
 
@@ -370,6 +461,31 @@ contains
     ! -----------------------------------------
 
     if ( use_crop ) call CropPhenologyInit(bounds)
+
+    ! Error checking for parameters
+    if ( (critical_daylight_method == critical_daylight_depends_on_lat) .or. &
+         (critical_daylight_method == critical_daylight_depends_on_veg) .or.  &
+         (critical_daylight_method == critical_daylight_depends_on_latnveg) )then
+        if ( params_inst%crit_dayl_at_high_lat < params_inst%crit_dayl )then
+            call endrun(msg="ERROR crit_dayl_at_high_lat should be higher than crit_dayl on paramsfile"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl_at_high_lat >= secspday )then
+            call endrun(msg="ERROR crit_dayl_at_high_lat can NOT be higher than seconds in a day"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl >= secspday )then
+            call endrun(msg="ERROR crit_dayl can NOT be higher than seconds in a day"//errmsg(sourcefile, __LINE__))
+        end if
+    end if
+    if ( (critical_daylight_method == critical_daylight_depends_on_lat) .or. &
+         (critical_daylight_method == critical_daylight_depends_on_latnveg) )then
+        if ( params_inst%crit_dayl_lat_slope <= 0.0_r8 )then
+            call endrun(msg="ERROR crit_dayl_lat_slope can not be negative or zero"//errmsg(sourcefile, __LINE__))
+        end if
+        if ( params_inst%crit_dayl_lat_slope >= (secspday - params_inst%crit_dayl_at_high_lat)/ &
+                                                 (90._r8 - critical_offset_high_lat) )then
+            call endrun(msg="ERROR crit_dayl_lat_slope cannot allow crit_dayl longer than a day"//errmsg(sourcefile, __LINE__))
+        end if
+    end if
 
   end subroutine CNPhenologyInit
 
@@ -663,8 +779,8 @@ contains
     real(r8):: ws_flag        !winter-summer solstice flag (0 or 1)
     real(r8):: crit_onset_gdd !critical onset growing degree-day sum
     real(r8):: crit_daylat    !latitudinal light gradient in arctic-boreal 
-    real(r8):: onset_thresh   !flag onset threshold
-    real(r8):: soilt
+    logical :: do_onset       ! Flag if onset should happen
+    real(r8):: soilt          ! soil temperature for layer to use for seasonal phenology trigger
     !-----------------------------------------------------------------------
 
     associate(                                                                                                   & 
@@ -677,7 +793,7 @@ contains
          season_decid_temperate              =>    pftcon%season_decid_temperate                               , & ! Input:  binary flag for seasonal-deciduous temperate leaf habit (0 or 1)
          
          t_soisno                            =>    temperature_inst%t_soisno_col                               , & ! Input:  [real(r8)  (:,:) ]  soil temperature (Kelvin)  (-nlevsno+1:nlevgrnd)
-         soila10                             =>    temperature_inst%soila10_patch                              , & ! Input:  [real(r8) (:)   ] 
+         soila10                             =>    temperature_inst%soila10_col                                , & ! Input:  [real(r8) (:)   ] 
          t_a5min                            =>    temperature_inst%t_a5min_patch                             , & ! input:  [real(r8) (:)   ]
          snow_5day                           =>    waterdiagnosticbulk_inst%snow_5day_col                      , & ! input:  [real(r8) (:)   ] 
 
@@ -852,56 +968,17 @@ contains
 
             ! test for switching from dormant period to growth period
             if (dormant_flag(p) == 1.0_r8) then
-               onset_thresh = 0.0_r8
-               ! Test to turn on growing degree-day sum, if off.
-               ! switch on the growing degree day sum on the winter solstice
-
-               if (onset_gddflag(p) == 0._r8 .and. ws_flag == 1._r8) then
-                  onset_gddflag(p) = 1._r8
-                  onset_gdd(p) = 0._r8
-               end if
-
-               ! Test to turn off growing degree-day sum, if on.
-               ! This test resets the growing degree day sum if it gets past
-               ! the summer solstice without reaching the threshold value.
-               ! In that case, it will take until the next winter solstice
-               ! before the growing degree-day summation starts again.
-
-               if (onset_gddflag(p) == 1._r8 .and. ws_flag == 0._r8) then
-                  onset_gddflag(p) = 0._r8
-                  onset_gdd(p) = 0._r8
-               end if
-
-               ! if the gdd flag is set, and if the soil is above freezing
-               ! then accumulate growing degree days for onset trigger
-
                soilt = t_soisno(c, phenology_soil_layer)
-               if (onset_gddflag(p) == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
-                  onset_gdd(p) = onset_gdd(p) + (soilt-SHR_CONST_TKFRZ)*fracday
-               end if
-               if ( onset_thresh_depends_on_veg ) then
-                  ! separate into non-arctic seasonally deciduous pfts (temperate broadleaf deciduous
-                  ! tree) and arctic/boreal seasonally deciduous pfts (boreal needleleaf deciduous tree,
-                  ! boreal broadleaf deciduous tree, boreal broadleaf deciduous shrub, C3 arctic grass)
-                  if (onset_gdd(p) > crit_onset_gdd .and. season_decid_temperate(ivt(p)) == 1) then
-                     onset_thresh=1.0_r8
-                  else if (season_decid_temperate(ivt(p)) == 0 .and. onset_gddflag(p) == 1.0_r8 .and. &
-                          soila10(p) > SHR_CONST_TKFRZ .and. &
-                          t_a5min(p) > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
-                          dayl(g)>(crit_dayl/2.0_r8) .and. snow_5day(c)<0.1_r8) then
-                     onset_thresh=1.0_r8
-                  end if              
-               else
-                 ! set onset_flag if critical growing degree-day sum is exceeded
-                 if (onset_gdd(p) > crit_onset_gdd) onset_thresh = 1.0_r8
-               end if
+
+               do_onset = SeasonalDecidOnset( onset_gdd(p), onset_gddflag(p), soilt, soila10(c), t_a5min(p), dayl(g), &
+                                              snow_5day(c), ws_flag, crit_onset_gdd, season_decid_temperate(ivt(p)) )
                ! If onset is being triggered
-               if (onset_thresh == 1.0_r8) then
+               if (do_onset) then
                   onset_flag(p) = 1.0_r8
                   dormant_flag(p) = 0.0_r8
                   onset_gddflag(p) = 0.0_r8
                   onset_gdd(p) = 0.0_r8
-                  onset_thresh = 0.0_r8
+                  do_onset = .false.
                   onset_counter(p) = ndays_on * secspday
 
                   ! move all the storage pools into transfer pools,
@@ -943,16 +1020,7 @@ contains
                   if (days_active(p) > 355._r8) pftmayexist(p) = .false.
                end if
 
-               if ( min_crtical_dayl_depends_on_lat )then
-                  ! use 15 hr (54000 min) at ~65N from eitel 2019, to ~11hours in temperate regions
-                  ! 15hr-11hr/(65N-45N)=linear slope = 720 min/latitude
-                  crit_daylat=54000-720*(65-abs(grc%latdeg(g)))
-                  if (crit_daylat < crit_dayl) then
-                     crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
-                  end if
-               else
-                  crit_daylat = crit_dayl
-               end if
+               crit_daylat = SeasonalCriticalDaylength( g, p )
                
                ! only begin to test for offset daylength once past the summer sol
                if (ws_flag == 0._r8 .and. dayl(g) < crit_daylat) then
@@ -970,6 +1038,153 @@ contains
     end associate
  
   end subroutine CNSeasonDecidPhenology
+
+  !-----------------------------------------------------------------------
+  function SeasonalCriticalDaylength( g, p ) result( crit_daylat )
+    !
+    ! !DESCRIPTION:
+    ! Function to determine the critical day length needed for seasonal
+    ! decidious leaf offset. When depends on latitude it's higher for
+    ! high latitudes and lower for temperate regions.
+    !
+    ! !ARGUMENTS:
+    integer, intent(IN) :: g ! Gridcell index
+    integer, intent(IN) :: p ! Patch index
+    real(r8) :: crit_daylat  ! Return value
+    !
+    ! !LOCAL VARIABLES:
+    !-----------------------------------------------------------------------
+
+    select case( critical_daylight_method )
+    ! Critical day length depends on both vegetation type and latitude
+    case(critical_daylight_depends_on_latnveg)
+        ! Critical day length for offset is fixed for temperate type vegetation
+        if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
+           crit_daylat = crit_dayl
+        ! For Arctic vegetation -- critical daylength is longer at high latitudes and shorter
+        ! at midlatitudes
+        else
+           crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* &
+                       (critical_offset_high_lat-abs(grc%latdeg(g)))
+           if (crit_daylat < crit_dayl) then
+              crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
+           end if
+        end if
+    ! Critical day length depends just on vegetation type
+    case(critical_daylight_depends_on_veg)
+        if ( pftcon%season_decid_temperate(patch%itype(p)) == 1 )then
+           crit_daylat = crit_dayl
+        else
+           crit_daylat=params_inst%crit_dayl_at_high_lat
+        end if
+    ! Critical day length depends on latitude
+    case(critical_daylight_depends_on_lat)
+        ! Critical daylength is higher at high latitudes and shorter
+        ! for temperatre regions
+        crit_daylat=params_inst%crit_dayl_at_high_lat-params_inst%crit_dayl_lat_slope* &
+                    (critical_offset_high_lat-abs(grc%latdeg(g)))
+        if (crit_daylat < crit_dayl) then
+           crit_daylat = crit_dayl !maintain previous offset from White 2001 as minimum
+        end if
+    ! Critical day length is constant
+    case(critical_daylight_constant)
+        crit_daylat = crit_dayl
+    case default
+        call endrun(msg="ERROR SeasonalCriticalDaylength critical_daylight_method not implemented "//errmsg(sourcefile, __LINE__))
+    end select
+
+  end function SeasonalCriticalDaylength
+
+  !-----------------------------------------------------------------------
+  function SeasonalDecidOnset( onset_gdd, onset_gddflag, soilt, soila10, t_a5min, dayl, &
+                               snow_5day, ws_flag, crit_onset_gdd, season_decid_temperate ) &
+                       result( do_onset )
+
+    !
+    ! !DESCRIPTION:
+    ! Function to determine if seasonal deciduous leaf onset should happen.
+    !
+    ! !USES:
+    use shr_const_mod   , only: SHR_CONST_TKFRZ
+    ! !ARGUMENTS:
+    real(r8), intent(INOUT) :: onset_gdd      ! onset growing degree days 
+    real(r8), intent(INOUT) :: onset_gddflag  ! Onset freeze flag
+    real(r8), intent(IN)    :: soilt          ! Soil temperature at specific level for this evaluation
+    real(r8), intent(IN)    :: soila10        ! 10-day running mean of the 12cm soil layer temperature (K)
+    real(r8), intent(IN)    :: t_a5min        ! 5-day running mean of min 2-m temperature
+    real(r8), intent(IN)    :: dayl           ! Day length
+    real(r8), intent(IN)    :: snow_5day      ! 5-day average of snow
+    real(r8), intent(IN)    :: ws_flag        ! winter-summer solstice flag (0 or 1)
+    real(r8), intent(IN)    :: crit_onset_gdd ! critical onset growing degree-day sum
+    real(r8), intent(IN)    :: season_decid_temperate  ! If this is a temperate seasonal decidious type 
+    logical :: do_onset                       ! Flag if onset should happen (return value)
+    !
+    ! !LOCAL VARIABLES:
+    real(r8), parameter :: snow5d_thresh_for_onset      = 0.1_r8          ! 5-day snow depth threshold for leaf onset
+    real(r8), parameter :: min_critical_daylength_onset = 39300._r8/2._r8 ! Minimum daylength for onset to happen
+                                                                          ! NOTE above: The 39300/2(19650) value is what we've
+                                                                          ! tested with, we are concerned that changing 
+                                                                          ! it might change answers. This trigger was just
+                                                                          ! added to make sure that onset doesn't happen in Jan/Feb.
+                                                                          ! See more notes on this parameter below.
+    !-----------------------------------------------------------------------
+
+    do_onset = .false.
+    ! Test to turn on growing degree-day sum, if off.
+    ! switch on the growing degree day sum on the winter solstice
+
+    if (onset_gddflag == 0._r8 .and. ws_flag == 1._r8) then
+        onset_gddflag = 1._r8
+        onset_gdd = 0._r8
+    end if
+
+    ! Test to turn off growing degree-day sum, if on.
+    ! This test resets the growing degree day sum if it gets past
+    ! the summer solstice without reaching the threshold value.
+    ! In that case, it will take until the next winter solstice
+    ! before the growing degree-day summation starts again.
+
+    if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8) then
+        onset_gddflag = 0._r8
+        onset_gdd = 0._r8
+    end if
+
+    ! if the gdd flag is set, and if the soil is above freezing
+    ! then accumulate growing degree days for onset trigger
+
+    if (onset_gddflag == 1.0_r8 .and. soilt > SHR_CONST_TKFRZ) then
+        onset_gdd = onset_gdd + (soilt-SHR_CONST_TKFRZ)*fracday
+    end if
+    if ( onset_thresh_depends_on_veg) then
+       ! separate into non-arctic seasonally deciduous pfts
+       ! (temperate broadleaf deciduous
+       ! tree) and arctic/boreal seasonally deciduous pfts (boreal
+       ! needleleaf deciduous tree,
+       ! boreal broadleaf deciduous tree, boreal broadleaf deciduous
+       ! shrub, C3 arctic grass)
+       if (onset_gdd > crit_onset_gdd .and.  season_decid_temperate == 1) then
+           do_onset = .true.
+        ! Note: The check "dayl>min_critical_daylength_onset" in the if
+        ! statement was added because for some coastal
+        ! points the other triggers could allow onset in January/February
+        ! which isn't sustainable and is a degenerate case. To prevent this
+        ! condition was added, but now the other conditions aren't triggered
+        ! until much later so it's value just needs to be high enough to prevent
+        ! the degenerate case of happening too early, and low enough that it
+        ! doesn't restrict onset. As such the value of this parameter shouldn't
+        ! matter for reasonable values between the two degenerate cases.
+        else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
+                soila10 > SHR_CONST_TKFRZ .and. &
+                t_a5min > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
+                dayl>min_critical_daylength_onset .and.  snow_5day<snow5d_thresh_for_onset) then
+           do_onset = .true.
+        end if
+    else
+       ! set do_onset if critical growing degree-day sum is exceeded
+       if (onset_gdd > crit_onset_gdd) do_onset = .true.
+    end if
+
+  end function SeasonalDecidOnset
 
   !-----------------------------------------------------------------------
   subroutine CNStressDecidPhenology (num_soilp, filter_soilp , &
@@ -1472,6 +1687,8 @@ contains
     real(r8) dayspyr  ! days per year
     real(r8) crmcorn  ! comparitive relative maturity for corn
     real(r8) ndays_on ! number of days to fertilize
+    logical do_plant_normal ! are the normal planting rules defined and satisfied?
+    logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     !------------------------------------------------------------------------
 
     associate(                                                                   & 
@@ -1624,82 +1841,32 @@ contains
                !         cropplant through the end of the year for a harvested crop.
                !         Also harvdate(p) should be harvdate(p,ivt(p)) and should be
                !         updated on Jan 1st instead of at harvest (slevis)
-               if (a5tmin(p)             /= spval                  .and. &
-                    a5tmin(p)             <= minplanttemp(ivt(p))   .and. &
-                    jday                  >= minplantjday(ivt(p),h) .and. &
-                    (gdd020(p)            /= spval                  .and. &
-                    gdd020(p)             >= gddmin(ivt(p)))) then
+
+               ! Are all the normal requirements for planting met?
+               do_plant_normal = a5tmin(p)   /= spval                  .and. &
+                                 a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
+                                 jday        >= minplantjday(ivt(p),h) .and. &
+                                 (gdd020(p)  /= spval                  .and. &
+                                 gdd020(p)   >= gddmin(ivt(p)))
+               ! If not, but it's the last day of the planting window, what about relaxed rules?
+               do_plant_lastchance = (.not. do_plant_normal)               .and. &
+                                     jday       >=  maxplantjday(ivt(p),h) .and. &
+                                     gdd020(p)  /= spval                   .and. &
+                                     gdd020(p)  >= gddmin(ivt(p))
+
+               if (do_plant_normal .or. do_plant_lastchance) then
 
                   cumvd(p)       = 0._r8
                   hdidx(p)       = 0._r8
                   vf(p)          = 0._r8
-                  croplive(p)    = .true.
-                  cropplant(p)   = .true.
-                  idop(p)        = jday
-                  harvdate(p)    = NOT_Harvested
+                  
+                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
+                                 cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+                                 cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+                                 c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+
                   gddmaturity(p) = hybgdd(ivt(p))
-                  leafc_xfer(p)  = initial_seed_at_planting
-                  leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
 
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-                  if (use_c13) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-                     endif
-                  endif
-                  if (use_c14) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-                     endif
-                  endif
-
-                  ! latest possible date to plant winter cereal and after all other 
-                  ! crops were harvested for that year
-
-               else if (jday       >=  maxplantjday(ivt(p),h) .and. &
-                    gdd020(p)  /= spval                   .and. &
-                    gdd020(p)  >= gddmin(ivt(p))) then
-
-                  cumvd(p)       = 0._r8
-                  hdidx(p)       = 0._r8
-                  vf(p)          = 0._r8
-                  croplive(p)    = .true.
-                  cropplant(p)   = .true.
-                  idop(p)        = jday
-                  harvdate(p)    = NOT_Harvested
-                  gddmaturity(p) = hybgdd(ivt(p))
-                  leafc_xfer(p)  = initial_seed_at_planting
-                  leafn_xfer(p)  = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-                  if (use_c13) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-                     endif
-                  endif
-                  if (use_c14) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-                     endif
-                  endif
                else
                   gddmaturity(p) = 0._r8
                end if
@@ -1707,21 +1874,27 @@ contains
             else ! not winter cereal... slevis: added distinction between NH and SH
                ! slevis: The idea is that jday will equal idop sooner or later in the year
                !         while the gdd part is either true or false for the year.
-               if (t10(p) /= spval.and. a10tmin(p) /= spval   .and. &
-                    t10(p)     > planttemp(ivt(p))             .and. &
-                    a10tmin(p) > minplanttemp(ivt(p))          .and. &
-                    jday       >= minplantjday(ivt(p),h)       .and. &
-                    jday       <= maxplantjday(ivt(p),h)       .and. &
-                    t10(p) /= spval .and. a10tmin(p) /= spval  .and. &
-                    gdd820(p) /= spval                         .and. &
-                    gdd820(p) >= gddmin(ivt(p))) then
 
-                  ! impose limit on growing season length needed
-                  ! for crop maturity - for cold weather constraints
-                  croplive(p)  = .true.
-                  cropplant(p) = .true.
-                  idop(p)      = jday
-                  harvdate(p)  = NOT_Harvested
+               ! Are all the normal requirements for planting met?
+               do_plant_normal = t10(p) /= spval .and. a10tmin(p) /= spval .and. &
+                                 t10(p)     > planttemp(ivt(p))            .and. &
+                                 a10tmin(p) > minplanttemp(ivt(p))         .and. &
+                                 jday       >= minplantjday(ivt(p),h)      .and. &
+                                 jday       <= maxplantjday(ivt(p),h)      .and. &
+                                 gdd820(p)  /= spval                       .and. &
+                                 gdd820(p)  >= gddmin(ivt(p))
+               ! If not, but it's the last day of the planting window, what about relaxed rules?
+               do_plant_lastchance = (.not. do_plant_normal) .and. &
+                                     jday == maxplantjday(ivt(p),h) .and. &
+                                     gdd820(p) > 0._r8 .and. &
+                                     gdd820(p) /= spval
+
+               if (do_plant_normal .or. do_plant_lastchance) then
+
+                  call PlantCrop(p, leafcn(ivt(p)), jday, crop_inst, cnveg_state_inst, &
+                                 cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
+                                 cnveg_carbonflux_inst, cnveg_nitrogenflux_inst, &
+                                 c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
 
                   ! go a specified amount of time before/after
                   ! climatological date
@@ -1736,88 +1909,15 @@ contains
                       ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
                       ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
                      gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
-                     gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
+                     if (do_plant_normal) then
+                        gddmaturity(p) = max(950._r8, min(gddmaturity(p)+150._r8, 1850._r8))
+                     end if
                   end if
                   if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
                       ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
                       ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
                      gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
                   end if
-
-                  leafc_xfer(p)  = initial_seed_at_planting
-                  leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-                  if (use_c13) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-                     endif
-                  endif
-                  if (use_c14) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-                     endif
-                  endif
-
-
-                  ! If hit the max planting julian day -- go ahead and plant
-               else if (jday == maxplantjday(ivt(p),h) .and. gdd820(p) > 0._r8 .and. &
-                    gdd820(p) /= spval ) then
-                  croplive(p)  = .true.
-                  cropplant(p) = .true.
-                  idop(p)      = jday
-                  harvdate(p)  = NOT_Harvested
-
-                  if (ivt(p) == ntmp_soybean .or. ivt(p) == nirrig_tmp_soybean .or. &
-                      ivt(p) == ntrp_soybean .or. ivt(p) == nirrig_trp_soybean) then
-                     gddmaturity(p) = min(gdd1020(p), hybgdd(ivt(p)))
-                  end if
-                  
-                  if (ivt(p) == ntmp_corn .or. ivt(p) == nirrig_tmp_corn .or. &
-                      ivt(p) == ntrp_corn .or. ivt(p) == nirrig_trp_corn .or. &
-                      ivt(p) == nsugarcane .or. ivt(p) == nirrig_sugarcane .or. &
-                      ivt(p) == nmiscanthus .or. ivt(p) == nirrig_miscanthus .or. &
-                      ivt(p) == nswitchgrass .or. ivt(p) == nirrig_switchgrass) then
-                     gddmaturity(p) = max(950._r8, min(gdd820(p)*0.85_r8, hybgdd(ivt(p))))
-                  end if
-                  if (ivt(p) == nswheat .or. ivt(p) == nirrig_swheat .or. &
-                      ivt(p) == ncotton .or. ivt(p) == nirrig_cotton .or. &
-                      ivt(p) == nrice   .or. ivt(p) == nirrig_rice) then
-                     gddmaturity(p) = min(gdd020(p), hybgdd(ivt(p)))
-                  end if
-
-                  leafc_xfer(p)  = initial_seed_at_planting
-                  leafn_xfer(p) = leafc_xfer(p) / leafcn(ivt(p)) ! with onset
-                  crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
-                  crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
-
-                  ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
-                  ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
-                  if (use_c13) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
-                     endif
-                  endif
-                  if (use_c14) then
-                     if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
-                             c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
-                     else
-                        c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
-                     endif
-                  endif
 
                else
                   gddmaturity(p) = 0._r8
@@ -2107,6 +2207,83 @@ contains
     tbase = 0._r8
 
   end subroutine CropPhenologyInit
+
+    !-----------------------------------------------------------------------
+  subroutine PlantCrop(p, leafcn_in, jday, &
+       crop_inst, cnveg_state_inst,                                 &
+       cnveg_carbonstate_inst, cnveg_nitrogenstate_inst,            &
+       cnveg_carbonflux_inst, cnveg_nitrogenflux_inst,              &
+       c13_cnveg_carbonstate_inst, c14_cnveg_carbonstate_inst)
+    !
+    ! !DESCRIPTION:
+    !
+    ! subroutine calculates initializes variables to what they should be upon
+    ! planting. Includes only operations that apply to all crop types; 
+    ! additional operations need to happen in CropPhenology().
+
+    ! !USES:
+    use clm_varctl       , only : use_c13, use_c14
+    use clm_varcon       , only : c13ratio, c14ratio
+    !
+    ! !ARGUMENTS:
+    integer                , intent(in)    :: p         ! PATCH index running over
+    real(r8)               , intent(in)    :: leafcn_in ! leaf C:N (gC/gN) of this patch's vegetation type (pftcon%leafcn(ivt(p)))
+    integer                , intent(in)    :: jday      ! julian day of the year
+    type(crop_type)                , intent(inout) :: crop_inst
+    type(cnveg_state_type)         , intent(inout) :: cnveg_state_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: cnveg_carbonstate_inst
+    type(cnveg_nitrogenstate_type) , intent(inout) :: cnveg_nitrogenstate_inst
+    type(cnveg_carbonflux_type)    , intent(inout) :: cnveg_carbonflux_inst
+    type(cnveg_nitrogenflux_type)  , intent(inout) :: cnveg_nitrogenflux_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: c13_cnveg_carbonstate_inst
+    type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
+    !------------------------------------------------------------------------
+
+    associate(                                                                     & 
+         croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
+         cropplant         =>    crop_inst%cropplant_patch                       , & ! Output: [logical  (:) ]  Flag, true if crop may be planted
+         harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
+         idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
+         leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
+         leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
+         crop_seedc_to_leaf =>   cnveg_carbonflux_inst%crop_seedc_to_leaf_patch  , & ! Output: [real(r8) (:) ]  (gC/m2/s) seed source to leaf
+         crop_seedn_to_leaf =>   cnveg_nitrogenflux_inst%crop_seedn_to_leaf_patch & ! Output: [real(r8) (:) ]  (gN/m2/s) seed source to leaf
+         )
+
+      ! impose limit on growing season length needed
+      ! for crop maturity - for cold weather constraints
+      croplive(p)  = .true.
+      cropplant(p) = .true.
+      idop(p)      = jday
+      harvdate(p)  = NOT_Harvested
+
+      leafc_xfer(p)  = initial_seed_at_planting
+      leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
+      crop_seedc_to_leaf(p) = leafc_xfer(p)/dt
+      crop_seedn_to_leaf(p) = leafn_xfer(p)/dt
+
+      ! because leafc_xfer is set above rather than incremneted through the normal process, must also set its isotope
+      ! pools here.  use totvegc_patch as the closest analogue if nonzero, and use initial value otherwise
+      if (use_c13) then
+         if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+            c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+            c13_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+         else
+            c13_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c13ratio
+         endif
+      endif
+      if (use_c14) then
+         if ( cnveg_carbonstate_inst%totvegc_patch(p) .gt. 0._r8) then
+            c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * &
+               c14_cnveg_carbonstate_inst%totvegc_patch(p) / cnveg_carbonstate_inst%totvegc_patch(p)
+         else
+            c14_cnveg_carbonstate_inst%leafc_xfer_patch(p) = leafc_xfer(p) * c14ratio
+         endif
+      endif
+
+    end associate
+
+  end subroutine PlantCrop
 
   !-----------------------------------------------------------------------
   subroutine vernalization(p, &
@@ -2914,7 +3091,7 @@ contains
     real(r8)                        , intent(in)    :: froot_prof_patch(bounds%begp:,1:)
     !
     ! !LOCAL VARIABLES:
-    integer :: fc,c,pi,p,j       ! indices
+    integer :: fc,c,pi,p,j,i     ! indices
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_ALL_FL((ubound(leaf_prof_patch)   == (/bounds%endp,nlevdecomp_full/)), sourcefile, __LINE__)
@@ -2927,28 +3104,20 @@ contains
          ivt                       => patch%itype                                             , & ! Input:  [integer  (:)   ]  patch vegetation type                                
          wtcol                     => patch%wtcol                                             , & ! Input:  [real(r8) (:)   ]  weight (relative to column) for this patch (0-1)    
 
-         lf_flab                   => pftcon%lf_flab                                        , & ! Input:  leaf litter labile fraction                       
-         lf_fcel                   => pftcon%lf_fcel                                        , & ! Input:  leaf litter cellulose fraction                    
-         lf_flig                   => pftcon%lf_flig                                        , & ! Input:  leaf litter lignin fraction                       
-         fr_flab                   => pftcon%fr_flab                                        , & ! Input:  fine root litter labile fraction                  
-         fr_fcel                   => pftcon%fr_fcel                                        , & ! Input:  fine root litter cellulose fraction               
-         fr_flig                   => pftcon%fr_flig                                        , & ! Input:  fine root litter lignin fraction                  
+         lf_f                      => pftcon%lf_f                                           , & ! Input:  leaf litter fractions
+         fr_f                      => pftcon%fr_f                                           , & ! Input:  fine root litter fractions
 
          leafc_to_litter           => cnveg_carbonflux_inst%leafc_to_litter_patch           , & ! Input:  [real(r8) (:)   ]  leaf C litterfall (gC/m2/s)                       
          frootc_to_litter          => cnveg_carbonflux_inst%frootc_to_litter_patch          , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
          livestemc_to_litter       => cnveg_carbonflux_inst%livestemc_to_litter_patch       , & ! Input:  [real(r8) (:)   ]  live stem C litterfall (gC/m2/s)                  
          grainc_to_food            => cnveg_carbonflux_inst%grainc_to_food_patch            , & ! Input:  [real(r8) (:)   ]  grain C to food (gC/m2/s)                            
-         phenology_c_to_litr_met_c => cnveg_carbonflux_inst%phenology_c_to_litr_met_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gC/m3/s)
-         phenology_c_to_litr_cel_c => cnveg_carbonflux_inst%phenology_c_to_litr_cel_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gC/m3/s)
-         phenology_c_to_litr_lig_c => cnveg_carbonflux_inst%phenology_c_to_litr_lig_c_col   , & ! Output: [real(r8) (:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter lignin pool (gC/m3/s)
+         phenology_c_to_litr_c     => cnveg_carbonflux_inst%phenology_c_to_litr_c_col       , & ! Output: [real(r8) (:,:,:) ]  C fluxes associated with phenology (litterfall and crop) to litter pools (gC/m3/s)
 
          livestemn_to_litter       => cnveg_nitrogenflux_inst%livestemn_to_litter_patch     , & ! Input:  [real(r8) (:)   ]  livestem N to litter (gN/m2/s)                    
          grainn_to_food            => cnveg_nitrogenflux_inst%grainn_to_food_patch          , & ! Input:  [real(r8) (:)   ]  grain N to food (gN/m2/s) 
          leafn_to_litter           => cnveg_nitrogenflux_inst%leafn_to_litter_patch         , & ! Input:  [real(r8) (:)   ]  leaf N litterfall (gN/m2/s)                       
          frootn_to_litter          => cnveg_nitrogenflux_inst%frootn_to_litter_patch        , & ! Input:  [real(r8) (:)   ]  fine root N litterfall (gN/m2/s)                  
-         phenology_n_to_litr_met_n => cnveg_nitrogenflux_inst%phenology_n_to_litr_met_n_col , & ! Output: [real(r8) (:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter metabolic pool (gN/m3/s)
-         phenology_n_to_litr_cel_n => cnveg_nitrogenflux_inst%phenology_n_to_litr_cel_n_col , & ! Output: [real(r8) (:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter cellulose pool (gN/m3/s)
-         phenology_n_to_litr_lig_n => cnveg_nitrogenflux_inst%phenology_n_to_litr_lig_n_col   & ! Output: [real(r8) (:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter lignin pool (gN/m3/s)
+         phenology_n_to_litr_n     => cnveg_nitrogenflux_inst%phenology_n_to_litr_n_col       & ! Output: [real(r8) (:,:,:) ]  N fluxes associated with phenology (litterfall and crop) to litter pools (gN/m3/s)
          )
     
       do j = 1, nlevdecomp
@@ -2960,37 +3129,27 @@ contains
                   p = col%patchi(c) + pi - 1
                   if (patch%active(p)) then
 
-                     ! leaf litter carbon fluxes
-                     phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                          + leafc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                     phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                          + leafc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                     phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                          + leafc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                     do i = i_litr_min, i_litr_max
+                        ! leaf litter carbon fluxes
+                        phenology_c_to_litr_c(c,j,i) = &
+                           phenology_c_to_litr_c(c,j,i) + &
+                           leafc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
-                     ! leaf litter nitrogen fluxes
-                     phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
-                          + leafn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                     phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
-                          + leafn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                     phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
-                          + leafn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        ! leaf litter nitrogen fluxes
+                        phenology_n_to_litr_n(c,j,i) = &
+                           phenology_n_to_litr_n(c,j,i) + &
+                           leafn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
-                     ! fine root litter carbon fluxes
-                     phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                          + frootc_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                     phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                          + frootc_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                     phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                          + frootc_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                        ! fine root litter carbon fluxes
+                        phenology_c_to_litr_c(c,j,i) = &
+                           phenology_c_to_litr_c(c,j,i) + &
+                           frootc_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
 
-                     ! fine root litter nitrogen fluxes
-                     phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
-                          + frootn_to_litter(p) * fr_flab(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                     phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
-                          + frootn_to_litter(p) * fr_fcel(ivt(p)) * wtcol(p) * froot_prof(p,j)
-                     phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
-                          + frootn_to_litter(p) * fr_flig(ivt(p)) * wtcol(p) * froot_prof(p,j)
+                        ! fine root litter nitrogen fluxes
+                        phenology_n_to_litr_n(c,j,i) = &
+                           phenology_n_to_litr_n(c,j,i) + &
+                           frootn_to_litter(p) * fr_f(ivt(p),i) * wtcol(p) * froot_prof(p,j)
+                     end do
 
                      ! agroibis puts crop stem litter together with leaf litter
                      ! so I've used the leaf lf_f* parameters instead of making
@@ -2998,38 +3157,30 @@ contains
                      ! also for simplicity I've put "food" into the litter pools
 
                      if (ivt(p) >= npcropmin) then ! add livestemc to litter
-                        ! stem litter carbon fluxes
-                        phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                             + livestemc_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                             + livestemc_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                             + livestemc_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                        do i = i_litr_min, i_litr_max
+                           ! stem litter carbon fluxes
+                           phenology_c_to_litr_c(c,j,i) = &
+                              phenology_c_to_litr_c(c,j,i) + &
+                              livestemc_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
 
-                        ! stem litter nitrogen fluxes
-                        phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
-                             + livestemn_to_litter(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
-                             + livestemn_to_litter(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                        phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
-                             + livestemn_to_litter(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                           ! stem litter nitrogen fluxes
+                           phenology_n_to_litr_n(c,j,i) = &
+                              phenology_n_to_litr_n(c,j,i) + &
+                              livestemn_to_litter(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                        end do
 
                         if (.not. use_grainproduct) then
-                         ! grain litter carbon fluxes
-                         phenology_c_to_litr_met_c(c,j) = phenology_c_to_litr_met_c(c,j) &
-                              + grainc_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                         phenology_c_to_litr_cel_c(c,j) = phenology_c_to_litr_cel_c(c,j) &
-                              + grainc_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                         phenology_c_to_litr_lig_c(c,j) = phenology_c_to_litr_lig_c(c,j) &
-                              + grainc_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                         do i = i_litr_min, i_litr_max
+                            ! grain litter carbon fluxes
+                            phenology_c_to_litr_c(c,j,i) = &
+                               phenology_c_to_litr_c(c,j,i) + &
+                               grainc_to_food(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
  
-                         ! grain litter nitrogen fluxes
-                         phenology_n_to_litr_met_n(c,j) = phenology_n_to_litr_met_n(c,j) &
-                              + grainn_to_food(p) * lf_flab(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                         phenology_n_to_litr_cel_n(c,j) = phenology_n_to_litr_cel_n(c,j) &
-                              + grainn_to_food(p) * lf_fcel(ivt(p)) * wtcol(p) * leaf_prof(p,j)
-                         phenology_n_to_litr_lig_n(c,j) = phenology_n_to_litr_lig_n(c,j) &
-                              + grainn_to_food(p) * lf_flig(ivt(p)) * wtcol(p) * leaf_prof(p,j)
+                            ! grain litter nitrogen fluxes
+                            phenology_n_to_litr_n(c,j,i) = &
+                               phenology_n_to_litr_n(c,j,i) + &
+                               grainn_to_food(p) * lf_f(ivt(p),i) * wtcol(p) * leaf_prof(p,j)
+                         end do
                         end if
 
 

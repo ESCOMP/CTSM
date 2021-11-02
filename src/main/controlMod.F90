@@ -17,7 +17,7 @@ module controlMod
   use abortutils                       , only: endrun
   use spmdMod                          , only: masterproc, mpicom
   use spmdMod                          , only: MPI_CHARACTER, MPI_INTEGER, MPI_LOGICAL, MPI_REAL8
-  use decompMod                        , only: clump_pproc
+  use decompInitMod                    , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
   use clm_varpar                       , only: maxpatch_glc, numrad, nlevsno
   use fileutils                        , only: getavu, relavu, get_filename
@@ -119,7 +119,6 @@ contains
     use CNMRespMod                       , only : CNMRespReadNML
     use LunaMod                          , only : LunaReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
-    use SoilBiogeochemDecompCascadeBGCMod, only : DecompCascadeBGCreadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
     !
@@ -197,7 +196,7 @@ contains
     ! Other options
 
     namelist /clm_inparm/  &
-         clump_pproc, wrtdia, &
+         clump_pproc, &
          create_crop_landunit, nsegspc, co2_ppmv, &
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, snow_cover_fraction_method, &
@@ -225,9 +224,13 @@ contains
           use_fates_ed_prescribed_phys,                 &
           use_fates_inventory_init,                     &
           use_fates_fixed_biogeog,                      &
+          use_fates_nocomp,                             &
+          use_fates_sp,                                 &
           fates_inventory_ctrl_filename,                &
           fates_parteh_mode
     
+   ! Ozone vegetation stress method 
+   namelist / clm_inparam / o3_veg_stress_method
 
     ! CLM 5.0 nitrogen flags
     namelist /clm_inparm/ use_flexibleCN, use_luna
@@ -272,8 +275,8 @@ contains
     namelist /clm_inparm/ use_SSRE
 
     namelist /clm_inparm/ &
-         use_lch4, use_nitrif_denitrif, use_vertsoilc, use_extralakelayers, &
-         use_vichydro, use_century_decomp, use_cn, use_cndv, use_crop, use_fertilizer, use_ozone, &
+         use_lch4, use_nitrif_denitrif, use_extralakelayers, &
+         use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, o3_veg_stress_method, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
          use_nguardrail
 
@@ -419,7 +422,7 @@ contains
             errMsg(sourcefile, __LINE__))
        end if
        
-       if (use_lch4 .and. use_vertsoilc) then 
+       if (use_lch4 ) then 
           anoxia = .true.
        else
           anoxia = .false.
@@ -454,7 +457,7 @@ contains
                   errMsg(sourcefile, __LINE__))
           end if
 
-          if (use_ozone ) then
+          if (o3_veg_stress_method /= 'unset' ) then
              call endrun(msg=' ERROR: ozone is not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
@@ -531,9 +534,6 @@ contains
        call CNPrecisionControlReadNML( NLFilename )
        call CNNDynamicsReadNML       ( NLFilename )
        call CNPhenologyReadNML       ( NLFilename )
-    end if
-    if ( use_century_decomp ) then
-       call DecompCascadeBGCreadNML( NLFilename )
     end if
 
     ! ----------------------------------------------------------------------
@@ -621,17 +621,15 @@ contains
 
     call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nitrif_denitrif, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_vertsoilc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_century_decomp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cndv, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nguardrail, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_ozone, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (o3_veg_stress_method, len(o3_veg_stress_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_snicar_frc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vancouver, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_mexicocity, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -707,6 +705,8 @@ contains
     call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_inventory_init, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_fixed_biogeog, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_nocomp, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_sp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
@@ -743,7 +743,7 @@ contains
 
     call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    if (use_cn .and. use_vertsoilc) then
+    if (use_cn ) then
        ! vertical soil mixing variables
        call mpi_bcast (som_adv_flux, 1, MPI_REAL8,  0, mpicom, ier)
        call mpi_bcast (max_depth_cryoturb, 1, MPI_REAL8,  0, mpicom, ier)
@@ -779,7 +779,6 @@ contains
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (wrtdia, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (single_column,1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (scmlat, 1, MPI_REAL8,0, mpicom, ier)
     call mpi_bcast (scmlon, 1, MPI_REAL8,0, mpicom, ier)
@@ -865,16 +864,14 @@ contains
     write(iulog,*) 'process control parameters:'
     write(iulog,*) '    use_lch4 = ', use_lch4
     write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
-    write(iulog,*) '    use_vertsoilc = ', use_vertsoilc
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
-    write(iulog,*) '    use_century_decomp = ', use_century_decomp
     write(iulog,*) '    use_cn = ', use_cn
     write(iulog,*) '    use_cndv = ', use_cndv
     write(iulog,*) '    use_crop = ', use_crop
     write(iulog,*) '    use_fertilizer = ', use_fertilizer
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
-    write(iulog,*) '    use_ozone = ', use_ozone
+    write(iulog,*) '    o3_veg_stress_method = ', o3_veg_stress_method
     write(iulog,*) '    use_snicar_frc = ', use_snicar_frc
     write(iulog,*) '    use_vancouver = ', use_vancouver
     write(iulog,*) '    use_mexicocity = ', use_mexicocity
@@ -932,7 +929,7 @@ contains
        write(iulog,*) '   override_bgc_restart_mismatch_dump                     : ', override_bgc_restart_mismatch_dump
     end if
 
-    if (use_cn .and. use_vertsoilc) then
+    if (use_cn ) then
        write(iulog, *) '   som_adv_flux, the advection term in soil mixing (m/s) : ', som_adv_flux
        write(iulog, *) '   max_depth_cryoturb (m)                                : ', max_depth_cryoturb
        write(iulog, *) '   surfprof_exp                                          : ', surfprof_exp
@@ -1049,6 +1046,7 @@ contains
        write(iulog, *) '    carbon_resp_opt = ', carbon_resp_opt
     end if
     write(iulog, *) '  use_luna = ', use_luna
+    write(iulog, *) '  ozone vegetation stress method = ', o3_veg_stress_method
 
     write(iulog, *) '  ED/FATES: '
     write(iulog, *) '    use_fates = ', use_fates
@@ -1063,6 +1061,8 @@ contains
        write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
        write(iulog, *) '    use_fates_inventory_init = ',use_fates_inventory_init
        write(iulog, *) '    use_fates_fixed_biogeog = ', use_fates_fixed_biogeog
+       write(iulog, *) '    use_fates_nocomp = ', use_fates_nocomp
+       write(iulog, *) '    use_fates_sp = ', use_fates_sp
        write(iulog, *) '    fates_inventory_ctrl_filename = ',fates_inventory_ctrl_filename
     end if
   end subroutine control_print
