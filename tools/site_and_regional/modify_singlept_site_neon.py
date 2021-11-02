@@ -663,6 +663,26 @@ def main():
 
     sort_print_soil_layers(obs_bot, soil_bot)
 
+
+    # -- updates for ag sites : KONA and STER
+    ag_sites = ['KONA', 'STER']
+    if site_name in ag_sites:
+        print ("Updating PCT_NATVEG")
+        print ("Original : ", f2.PCT_NATVEG.values)
+        f2.PCT_NATVEG.values = [[0.]]
+        print ("Updated  : ", f2.PCT_NATVEG.values)
+
+        print ("Updating PCT_CROP")
+        print ("Original : ",f2.PCT_CROP.values)
+        f2.PCT_CROP.values =[[100.]]
+        print ("Updated  : ",f2.PCT_CROP.values)
+
+        print ("Updating PCT_NAT_PFT")
+        print (f2.PCT_NAT_PFT.values[0])
+        f2.PCT_NAT_PFT.values[0] =[[100.]]
+        print (f2.PCT_NAT_PFT[0].values)
+
+
     out_dir = args.out_dir
 
     # -- make out_dir if it does not exist
