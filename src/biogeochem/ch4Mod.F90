@@ -19,7 +19,7 @@ module ch4Mod
   use clm_time_manager               , only : get_step_size_real, get_nstep
   use clm_varctl                     , only : iulog, use_cn, use_nitrif_denitrif, use_lch4, use_cn, use_fates
   use abortutils                     , only : endrun
-  use decompMod                      , only : bounds_type
+  use decompMod                      , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use atm2lndType                    , only : atm2lnd_type
   use CanopyStateType                , only : canopystate_type
   use CNSharedParamsMod              , only : CNParamsShareInst
@@ -112,6 +112,7 @@ module ch4Mod
      real(r8) :: q10lakebase          ! (K) base temperature for lake CH4 production (= 298._r8)
      real(r8) :: atmch4               ! Atmospheric CH4 mixing ratio to prescribe if not provided by the atmospheric model (= 1.7e-6_r8) (mol/mol)
      real(r8) :: rob                  ! ratio of root length to vertical depth ("root obliquity") (= 3._r8)
+     real(r8) :: om_frac_sf           ! Scale factor for organic matter fraction (unitless)
   end type params_type
   type(params_type), private ::  params_inst
 
@@ -1565,6 +1566,11 @@ contains
      call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
      if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
      params_inst%capthick=tempr
+
+     tString='om_frac_sf'
+     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
+     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
+     params_inst%om_frac_sf=tempr
    
   end subroutine readParams
 
@@ -1678,6 +1684,8 @@ contains
     use ch4varcon     , only : replenishlakec, allowlakeprod, ch4offline
     use clm_varcon    , only : secspday
     use ch4varcon     , only : finundation_mtd, finundation_mtd_h2osfc
+    use clm_time_manager, only : is_beg_curr_year
+    use dynSubgridControlMod, only : get_do_transient_lakes
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)    :: bounds   
@@ -1852,7 +1860,8 @@ contains
             if (forc_pch4(g) == 0._r8) then
                write(iulog,*)'not using ch4offline, but methane concentration not passed from the atmosphere', &
                     'to land model! CLM Model is stopping.'
-               call endrun(msg=' ERROR: Methane not being passed to atmosphere'//&
+               call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                    msg=' ERROR: Methane not being passed to atmosphere'//&
                     errMsg(sourcefile, __LINE__))
             end if
          end if
@@ -2254,7 +2263,8 @@ contains
                write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
                     ch4_surf_flux_tot_col(c)*1000._r8
-               call endrun(msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
             end if
          end if
 
@@ -2279,7 +2289,8 @@ contains
                   write(iulog,*)'dtime*ch4_oxid_tot           = ', dtime*ch4_oxid_tot(c)
                   write(iulog,*)'dtime*ch4_surf_flux_tot*1000 = ', dtime*&
                        ch4_surf_flux_tot_col(c)*1000._r8
-                  call endrun(msg=' ERROR: Methane conservation error, allowlakeprod'//&
+                  call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                       msg=' ERROR: Methane conservation error, allowlakeprod'//&
                        errMsg(sourcefile, __LINE__))
                end if
             end if
@@ -2309,7 +2320,16 @@ contains
            ch4_inst%totcolch4_grc(begg:endg), &
            c2l_scale_type= 'unity', l2g_scale_type='unity' )
 
+      !
       ! Gricell level balance
+      !
+
+      ! Skip the check if it's the beginning of a new year and dynamic lakes are on
+      ! See (https://github.com/ESCOMP/CTSM/issues/1356#issuecomment-905963583)
+      ! 
+      if ( is_beg_curr_year() .and. get_do_transient_lakes() )then
+         ch4_first_time_grc(begg:endg) = .true.
+      end if
 
       do g = begg, endg
          if (.not. ch4_first_time_grc(g)) then
@@ -2325,7 +2345,8 @@ contains
                write(iulog,*)'totcolch4_bef_grc =', totcolch4_bef_grc(g)
                write(iulog,*)'dtime * nem_grc   =', dtime * nem_grc(g)
                write(iulog,*)'dtime * ch4_surf_flux_tot * 1000 =', dtime * ch4_surf_flux_tot_grc(g) * 1000._r8
-               call endrun(msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=g, subgrid_level=subgrid_level_gridcell, &
+                    msg=' ERROR: Methane conservation error'//errMsg(sourcefile, __LINE__))
             end if
          end if
       end do
@@ -3662,14 +3683,16 @@ contains
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(msg=' ERROR: Methane demands exceed methane available.'&
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=' ERROR: Methane demands exceed methane available.'&
                     //errMsg(sourcefile, __LINE__))
             else if (ch4stress(c,j) < 1._r8 .and. source(c,j,1) + conc_ch4(c,j) / dtime > 1.e-12_r8) then
                write(iulog,*) 'Methane limited, yet some left over. Error in methane competition (mol/m^3/s), c,j:', &
                     source(c,j,1) + conc_ch4(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(msg=' ERROR: Methane limited, yet some left over.'//&
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=' ERROR: Methane limited, yet some left over.'//&
                     errMsg(sourcefile, __LINE__))
             end if
 
@@ -3679,14 +3702,16 @@ contains
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(msg=' ERROR: Oxygen demands exceed oxygen available.'//&
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=' ERROR: Oxygen demands exceed oxygen available.'//&
                     errMsg(sourcefile, __LINE__) )
             else if (o2stress(c,j) < 1._r8 .and. source(c,j,2) + conc_o2(c,j) / dtime > 1.e-12_r8) then
                write(iulog,*) 'Oxygen limited, yet some left over. Error in oxygen competition (mol/m^3/s), c,j:', &
                     source(c,j,2) + conc_o2(c,j) / dtime, c, j
                g = col%gridcell(c)
                write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-               call endrun(msg=' ERROR: Oxygen limited, yet some left over.'//errMsg(sourcefile, __LINE__))
+               call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                    msg=' ERROR: Oxygen limited, yet some left over.'//errMsg(sourcefile, __LINE__))
             end if
 
             conc_ch4_bef(c,j) = conc_ch4(c,j) !For Balance Check
@@ -3837,7 +3862,7 @@ contains
                   ! expression in Wania (for peat) & Moldrup (for mineral soil)
                   eps =  watsat(c,j)-h2osoi_vol_min(c,j) ! Air-filled fraction of total soil volume
                   if (organic_max > 0._r8) then
-                     om_frac = min(cellorg(c,j)/organic_max, 1._r8)
+                     om_frac = min(params_inst%om_frac_sf*cellorg(c,j)/organic_max, 1._r8)
                      ! Use first power, not square as in iniTimeConst
                   else
                      om_frac = 1._r8
@@ -4153,7 +4178,8 @@ contains
                  nstep,c,errch4(c)
             g = col%gridcell(c)
             write(iulog,*)'Latdeg,Londeg=',grc%latdeg(g),grc%londeg(g)
-            call endrun(msg=' ERROR: CH4 Conservation Error in CH4Mod during diffusion'//&
+            call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+                 msg=' ERROR: CH4 Conservation Error in CH4Mod during diffusion'//&
                  errMsg(sourcefile, __LINE__))
          end if
       end do

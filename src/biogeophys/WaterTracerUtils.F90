@@ -8,7 +8,7 @@ module WaterTracerUtils
 #include "shr_assert.h"
   use shr_kind_mod   , only : r8 => shr_kind_r8
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
-  use decompMod      , only : bounds_type, get_beg, get_end
+  use decompMod      , only : bounds_type, get_beg, get_end, subgrid_level_unspecified
   use clm_varctl     , only : iulog
   use abortutils     , only : endrun
   use shr_infnan_mod , only : shr_infnan_isnan
@@ -53,7 +53,7 @@ contains
     character(len=*)                  , intent(in)    :: name          ! variable name
     type(water_tracer_container_type) , intent(inout) :: container
     type(bounds_type)                 , intent(in)    :: bounds
-    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in decompMod
+    integer                           , intent(in)    :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod
     real(r8)                   , intent(in), optional :: ival          ! initial value, if not NaN
     !
     ! !LOCAL VARIABLES:
@@ -94,7 +94,7 @@ contains
     character(len=*)                  , intent(in)    :: name          ! variable name
     type(water_tracer_container_type) , intent(inout) :: container
     type(bounds_type)                 , intent(in)    :: bounds
-    integer                           , intent(in)    :: subgrid_level ! one of the BOUNDS_SUBGRID levels defined in decompMod
+    integer                           , intent(in)    :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod
     integer                           , intent(in)    :: dim2beg
     integer                           , intent(in)    :: dim2end
     real(r8)                   , intent(in), optional :: ival          ! initial value, if not NaN
@@ -130,7 +130,7 @@ contains
   end subroutine AllocateVar2d
 
   !-----------------------------------------------------------------------
-  subroutine CalcTracerFromBulk(lb, num_pts, filter_pts, &
+  subroutine CalcTracerFromBulk(subgrid_level, lb, num_pts, filter_pts, &
        bulk_source, bulk_val, tracer_source, tracer_val)
     !
     ! !DESCRIPTION:
@@ -145,6 +145,7 @@ contains
     ! values elsewhere
     !
     ! !ARGUMENTS:
+    integer  , intent(in)    :: subgrid_level      ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages; subgrid_level_unspecified is allowed here, in which case some information will not be printed)
     integer  , intent(in)    :: lb                 ! lower bound for arrays
     integer  , intent(in)    :: num_pts            ! number of points in the filter
     integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
@@ -171,6 +172,7 @@ contains
        call CalcTracerFromBulk1Pt( &
             caller        = subname, &
             n             = n, &
+            subgrid_level = subgrid_level, &
             bulk_source   = bulk_source(n), &
             bulk_val      = bulk_val(n), &
             tracer_source = tracer_source(n), &
@@ -180,7 +182,7 @@ contains
   end subroutine CalcTracerFromBulk
 
   !-----------------------------------------------------------------------
-  subroutine CalcTracerFromBulkMasked(lb, num_pts, filter_pts, mask_array, &
+  subroutine CalcTracerFromBulkMasked(subgrid_level, lb, num_pts, filter_pts, mask_array, &
        bulk_source, bulk_val, tracer_source, tracer_val)
     !
     ! !DESCRIPTION:
@@ -189,6 +191,7 @@ contains
     ! See documentation in CalcTracerFromBulk for details
     !
     ! !ARGUMENTS:
+    integer  , intent(in)    :: subgrid_level      ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages; subgrid_level_unspecified is allowed here, in which case some information will not be printed)
     integer  , intent(in)    :: lb                 ! lower bound for arrays
     integer  , intent(in)    :: num_pts            ! number of points in the filter
     integer  , intent(in)    :: filter_pts(:)      ! filter in which tracer_val should be updated
@@ -218,6 +221,7 @@ contains
           call CalcTracerFromBulk1Pt( &
                caller        = subname, &
                n             = n, &
+               subgrid_level = subgrid_level, &
                bulk_source   = bulk_source(n), &
                bulk_val      = bulk_val(n), &
                tracer_source = tracer_source(n), &
@@ -229,7 +233,7 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine CalcTracerFromBulk1Pt(caller, n, bulk_source, bulk_val, tracer_source, tracer_val)
+  subroutine CalcTracerFromBulk1Pt(caller, n, subgrid_level, bulk_source, bulk_val, tracer_source, tracer_val)
     !
     ! !DESCRIPTION:
     ! For a single point: Calculate a tracer variable from a corresponding bulk variable
@@ -239,6 +243,7 @@ contains
     ! !ARGUMENTS:
     character(len=*), intent(in) :: caller ! name of caller (just used for error messages)
     integer , intent(in)  :: n             ! index of point (just used for error messages)
+    integer , intent(in)  :: subgrid_level ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages; subgrid_level_unspecified is allowed here, in which case some information will not be printed)
     real(r8), intent(in)  :: bulk_source   ! value of the source for this variable, for bulk
     real(r8), intent(in)  :: bulk_val      ! value of the variable of interest, for bulk
     real(r8), intent(in)  :: tracer_source ! value of the source for this variable, for the tracer
@@ -260,7 +265,8 @@ contains
        write(iulog,*) 'bulk_val = ', bulk_val
        write(iulog,*) 'at n = ', n
        write(iulog,*) 'This would lead to an indeterminate tracer val.'
-       call endrun(msg=caller//': Non-zero bulk val despite zero bulk source', &
+       call endrun(subgrid_index=n, subgrid_level=subgrid_level, &
+            msg=caller//': Non-zero bulk val despite zero bulk source', &
             additional_msg=errMsg(sourcefile, __LINE__))
     else if (tracer_source /= 0._r8) then
        ! NOTE(wjs, 2018-09-28) To avoid this error, we might need code elsewhere that
@@ -272,7 +278,8 @@ contains
        write(iulog,*) 'tracer_source = ', tracer_source
        write(iulog,*) 'at n = ', n
        write(iulog,*) 'This would lead to an indeterminate tracer val.'
-       call endrun(msg=caller//': Non-zero tracer source despite zero bulk source', &
+       call endrun(subgrid_index=n, subgrid_level=subgrid_level, &
+            msg=caller//': Non-zero tracer source despite zero bulk source', &
             additional_msg=errMsg(sourcefile, __LINE__))
     else
        write(iulog,*) caller//' ERROR: unhandled condition; we should never get here.'
@@ -281,7 +288,8 @@ contains
        write(iulog,*) 'bulk_source = ', bulk_source
        write(iulog,*) 'tracer_source = ', tracer_source
        write(iulog,*) 'at n = ', n
-       call endrun(msg=caller//': unhandled condition; we should never get here', &
+       call endrun(subgrid_index=n, subgrid_level=subgrid_level, &
+            msg=caller//': unhandled condition; we should never get here', &
             additional_msg=errMsg(sourcefile, __LINE__))
     end if
 
@@ -316,13 +324,14 @@ contains
 
 
   !-----------------------------------------------------------------------
-  subroutine CompareBulkToTracer(bounds_beg, bounds_end, &
+  subroutine CompareBulkToTracer(subgrid_level, bounds_beg, bounds_end, &
        bulk, tracer, ratio, caller_location, name)
     !
     ! !DESCRIPTION:
     ! Compare the bulk and tracer quantities; abort if they differ
     !
     ! !ARGUMENTS:
+    integer, intent(in) :: subgrid_level  ! one of the subgrid_level_* constants defined in decompMod (just needed for error messages; subgrid_level_unspecified is allowed here, in which case some information will not be printed)
     ! We could get bounds_beg and bounds_end from the lbound and ubound of the bulk or
     ! tracer arrays, but passing them in helps catch any accidental omission of bounds
     ! slicing in the caller (e.g., passing in foo_col rather than
@@ -359,7 +368,7 @@ contains
              val1 = val1 * ratio
           end if
           if (val1 == 0.0_r8 .and. val2 == 0.0_r8) then
-             ! trap special case were both are zero to avoid division by zero. values equal                                                                    
+             ! trap special case where both are zero to avoid division by zero. values equal
           else if (abs(val1 - val2) / max(abs(val1), abs(val2)) > tolerance) then
              arrays_equal = .false.
              diffloc = i
@@ -389,7 +398,8 @@ contains
           write(iulog, '(a, e25.17)') 'Bulk*ratio: ',bulk(diffloc)*ratio
        end if
        call shr_sys_flush(iulog)
-       call endrun(msg=subname//': tracer does not agree with bulk water')
+       call endrun(subgrid_index=diffloc, subgrid_level=subgrid_level, &
+            msg=subname//': tracer does not agree with bulk water')
     end if
   end subroutine CompareBulkToTracer
 
