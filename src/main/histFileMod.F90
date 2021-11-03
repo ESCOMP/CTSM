@@ -3077,6 +3077,9 @@ contains
                   long_name='FATES pft index of the combined pft-size class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_scmap_levscpf',xtype=ncd_int, dim1name='fates_levscpf', &
                   long_name='FATES size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
+             ! Units are dash here with units of yr added to the long name so
+             ! that postprocessors (like ferret) won't get confused with what
+             ! the time coordinate is. EBK Nov/3/2021 (see #1540)
              call ncd_defvar(varname='fates_levcacls', xtype=tape(t)%ncprec, dim1name='fates_levcacls', &
                   long_name='FATES cohort age class lower bound (yr)', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_pftmap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
