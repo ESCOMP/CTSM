@@ -4121,6 +4121,9 @@ sub write_output_files {
   if ( &value_is_true($nl_flags->{'use_lch4'}) ) {
      push @groups, "ch4par_in";
   }
+  if ( $opts->{'driver'} eq "nuopc" ) {
+     push @groups, "ctsm_nuopc_cap";
+  }
   push @groups, "clm_humanindex_inparm";
   push @groups, "cnmresp_inparm";
   push @groups, "photosyns_inparm";
