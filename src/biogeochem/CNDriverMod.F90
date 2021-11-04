@@ -11,7 +11,7 @@ module CNDriverMod
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
   use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
-  use clm_varctl                      , only : use_mimics_decomp, use_crop
+  use clm_varctl                      , only : iulog, use_mimics_decomp, use_crop
   use SoilBiogeochemDecompCascadeConType, only : century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type

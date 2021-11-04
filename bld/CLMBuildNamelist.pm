@@ -854,7 +854,6 @@ sub setup_cmdl_bgc {
      $nl_flags->{'use_cn'} = ".false.";
      $nl_flags->{'use_fates'} = ".false.";
      $nl_flags->{'use_mimics_decomp'} = ".false.";
-    }
   }
   if ( defined($nl->get_value("use_cn")) && ($nl_flags->{'use_cn'} ne $nl->get_value("use_cn")) ) {
      $log->fatal_error("The namelist variable use_cn is inconsistent with the -bgc option");

@@ -12,7 +12,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
   use clm_varpar                         , only : i_met_lit, i_cop_mic, i_oli_mic, i_cwd
   use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwdl2
-  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_vertsoilc, use_fates
+  use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
   use spmdMod                            , only : masterproc
@@ -1006,7 +1006,7 @@ contains
 
          ! TODO May need a hook from MIMICS to ch4 code for this to work
          ! Calculate ANOXIA
-         ! anoxia = .true. when (use_lch4 .and. use_vertsoilc)
+         ! anoxia = .true. when (use_lch4)
 
          if (anoxia) then
 
@@ -1049,7 +1049,7 @@ contains
          end do
 
          ! Calculate ANOXIA
-         ! anoxia = .true. when (use_lch4 .and. use_vertsoilc)
+         ! anoxia = .true. when (use_lch4)
 
          if (anoxia) then
             do j = 1,nlevdecomp
@@ -1070,13 +1070,10 @@ contains
       do j = 1, nlevdecomp
          do fc = 1, num_soilc
             c = filter_soilc(fc)
-!           if (use_vertsoilc) then
-!              ! Using fixed e-folding depth as in
-!              ! SoilBiogeochemDecompCascadeBGCMod.F90
-!              depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
-!           else
-               depth_scalar(c,j) = 1.0_r8
-!           end if
+            ! Using fixed e-folding depth as in
+            ! SoilBiogeochemDecompCascadeBGCMod.F90
+!           depth_scalar(c,j) = exp(-zsoi(j) / decomp_depth_efolding)
+            depth_scalar(c,j) = 1.0_r8
          end do
       end do
 
