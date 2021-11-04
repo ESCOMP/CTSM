@@ -10,8 +10,9 @@ module CNDriverMod
   use dynSubgridControlMod            , only : get_do_harvest
   use decompMod                       , only : bounds_type
   use perf_mod                        , only : t_startf, t_stopf
-  use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif, use_nguardrail
+  use clm_varctl                      , only : use_nitrif_denitrif, use_nguardrail
   use clm_varctl                      , only : use_mimics_decomp, use_crop
+  use SoilBiogeochemDecompCascadeConType, only : century_decomp, decomp_method
   use CNSharedParamsMod               , only : use_fun
   use CNVegStateType                  , only : cnveg_state_type
   use CNVegCarbonStateType            , only : cnveg_carbonstate_type
@@ -130,7 +131,6 @@ contains
     use dynHarvestMod                     , only: CNHarvest
     use SoilBiogeochemDecompCascadeMIMICSMod, only: decomp_rates_mimics
     use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
-    use SoilBiogeochemDecompCascadeCNMod  , only: decomp_rate_constants_cn
     use SoilBiogeochemCompetitionMod      , only: SoilBiogeochemCompetition
     use SoilBiogeochemDecompMod           , only: SoilBiogeochemDecomp
     use SoilBiogeochemLittVertTranspMod   , only: SoilBiogeochemLittVertTransp
@@ -314,16 +314,17 @@ contains
     !--------------------------------------------
 
     call t_startf('SoilBiogeochem')
-    if (use_century_decomp) then
+    if (decomp_method == century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     else if (use_mimics_decomp) then
        call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
-    else  ! deprecated
-       call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc, &
-            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+    else
+       write(iulog,*) 'WARNING:'
+       write(iulog,*) 'Neither use_mimics_decomp nor century_decomp'
+       write(iulog,*) 'have been set. Is this intentional?'
     end if
 
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)

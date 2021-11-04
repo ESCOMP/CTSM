@@ -9,8 +9,9 @@ module clm_instMod
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
-  use clm_varctl      , only : use_century_decomp, use_crop, snow_cover_fraction_method, paramfile
   use clm_varctl      , only : use_mimics_decomp
+  use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
+  use SoilBiogeochemDecompCascadeConType , only : century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istsoil
   use perf_mod        , only : t_startf, t_stopf
@@ -190,7 +191,6 @@ contains
     use domainMod                          , only : ldomain
     use SoilBiogeochemDecompCascadeMIMICSMod, only : init_decompcascade_mimics
     use SoilBiogeochemDecompCascadeBGCMod  , only : init_decompcascade_bgc
-    use SoilBiogeochemDecompCascadeCNMod   , only : init_decompcascade_cn
     use SoilBiogeochemDecompCascadeContype , only : init_decomp_cascade_constants
     use SoilBiogeochemCompetitionMod       , only : SoilBiogeochemCompetitionInit
     
@@ -378,18 +378,20 @@ contains
        call soilbiogeochem_state_inst%Init(bounds)
 
        ! Initialize decompcascade constants
-       ! Note that init_decompcascade_bgc and init_decompcascade_cn need 
+       ! Note that init_decompcascade_bgc need 
        ! soilbiogeochem_state_inst to be initialized
 
-       call init_decomp_cascade_constants( use_century_decomp, use_mimics_decomp )
-       if (use_century_decomp) then
+       call init_decomp_cascade_constants( )
+       if (decomp_method == century_decomp ) then
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
        else if (use_mimics_decomp) then
           call init_decompcascade_mimics(bounds, soilbiogeochem_state_inst, &
                                          soilstate_inst)
-       else  ! deprecated
-          call init_decompcascade_cn(bounds, soilbiogeochem_state_inst)
+       else
+          write(iulog,*) 'WARNING:'
+          write(iulog,*) 'Neither use_mimics_decomp nor century_decomp'
+          write(iulog,*) 'have been set. Is this intentional?'
        end if
 
        ! Initalize soilbiogeochem carbon types

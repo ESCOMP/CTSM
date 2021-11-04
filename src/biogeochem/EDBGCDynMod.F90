@@ -10,8 +10,8 @@ module EDBGCDynMod
   use perf_mod                        , only : t_startf, t_stopf
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use abortutils                      , only : endrun
-  use clm_varctl                      , only : use_century_decomp, use_nitrif_denitrif
   use clm_varctl                      , only : use_mimics_decomp
+  use SoilBiogeochemDecompCascadeConType , only : century_decomp, decomp_method
   use CNVegCarbonStateType	      , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType	      , only : cnveg_carbonflux_type
   use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
@@ -74,7 +74,6 @@ contains
     use CNGapMortalityMod                 , only: CNGapMortality
     use SoilBiogeochemDecompCascadeMIMICSMod, only: decomp_rates_mimics
     use SoilBiogeochemDecompCascadeBGCMod , only: decomp_rate_constants_bgc
-    use SoilBiogeochemDecompCascadeCNMod  , only: decomp_rate_constants_cn
     use SoilBiogeochemDecompMod           , only: SoilBiogeochemDecomp
     use SoilBiogeochemLittVertTranspMod   , only: SoilBiogeochemLittVertTransp
     use SoilBiogeochemPotentialMod        , only: SoilBiogeochemPotential 
@@ -181,16 +180,17 @@ contains
     ! Soil Biogeochemistry
     !--------------------------------------------
 
-    if (use_century_decomp) then
+    if (decomp_method == century_decomp) then
        call decomp_rate_constants_bgc(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
     else if (use_mimics_decomp) then
        call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
-    else  ! deprecated
-       call decomp_rate_constants_cn(bounds, num_soilc, filter_soilc, &
-            soilstate_inst, temperature_inst, ch4_inst, soilbiogeochem_carbonflux_inst)
+    else
+       write(iulog,*) 'WARNING:'
+       write(iulog,*) 'Neither use_mimics_decomp nor century_decomp'
+       write(iulog,*) 'have been set. Is this intentional?'
     end if
 
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)
