@@ -4080,6 +4080,13 @@ sub setup_logic_misc {
    #
    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+   if ( $opts->{'driver'} ne "nuopc" ) {
+      my $var = "force_send_to_atm";
+      my $val = $nl->get_value($var);
+      if ( defined($val) ) {
+         $log->fatal_error( "$var can only be set for the nuopc driver" );
+      }
+   }
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
 }
