@@ -203,9 +203,9 @@ contains
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%next_rx_sdate(begp:endp)) ; this%next_rx_sdate(:) = -1
-    allocate(this%rx_sdates_thisyr(begp:endp,1:max_growingseasons_per_year))
-    allocate(this%sdates_thisyr(begp:endp,1:max_growingseasons_per_year))
-    allocate(this%hdates_thisyr(begp:endp,1:max_growingseasons_per_year))
+    allocate(this%rx_sdates_thisyr(begp:endp,1:mxgrowseas))
+    allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas))
+    allocate(this%hdates_thisyr(begp:endp,1:mxgrowseas))
     allocate(this%growingseason_count(begp:endp)) ; this%growingseason_count(:) = 0
     allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
 
@@ -261,12 +261,12 @@ contains
     end if
 
     this%sdates_thisyr(begp:endp,:) = -1._r8
-    call hist_addfld2d (fname='SDATES', units='day of year', type2d='max_growingseasons_per_year', &
+    call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxgrowseas', &
          avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
          ptr_col=this%sdates_thisyr, default='inactive')
 
     this%hdates_thisyr(begp:endp,:) = -1._r8
-    call hist_addfld2d (fname='HDATES', units='day of year', type2d='max_growingseasons_per_year', &
+    call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxgrowseas', &
          avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
          ptr_col=this%hdates_thisyr, default='inactive')
 
