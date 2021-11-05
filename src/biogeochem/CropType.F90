@@ -215,8 +215,8 @@ contains
     allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
 
     this%rx_sdates_thisyr(:,:) = -1
-    this%sdates_thisyr(:,:) = -1
-    this%hdates_thisyr(:,:) = -1
+    this%sdates_thisyr(:,:) = -1._r8
+    this%hdates_thisyr(:,:) = -1._r8
 
   end subroutine InitAllocate
 
@@ -265,12 +265,12 @@ contains
             ptr_patch=this%latbaset_patch, default='inactive')
     end if
 
-    this%sdates_thisyr(begp:endp,:) = -1
+    this%sdates_thisyr(begp:endp,:) = -1._r8
     call hist_addfld2d (fname='SDATES', units='day of year', type2d='max_growingseasons_per_year', &
          avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
          ptr_col=this%sdates_thisyr, default='inactive')
 
-    this%hdates_thisyr(begp:endp,:) = -1
+    this%hdates_thisyr(begp:endp,:) = -1._r8
     call hist_addfld2d (fname='HDATES', units='day of year', type2d='max_growingseasons_per_year', &
          avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
          ptr_col=this%hdates_thisyr, default='inactive')

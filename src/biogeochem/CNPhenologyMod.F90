@@ -1791,8 +1791,8 @@ contains
          if ( jday == 1 .and. mcsec == 0 ) then
             growingseason_count(p) = 0
             do s = 1, max_growingseasons_per_year
-               crop_inst%sdates_thisyr(p,s) = -1
-               crop_inst%hdates_thisyr(p,s) = -1
+               crop_inst%sdates_thisyr(p,s) = -1._r8
+               crop_inst%hdates_thisyr(p,s) = -1._r8
             end do
          end if
 
