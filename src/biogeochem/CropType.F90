@@ -29,7 +29,7 @@ module CropType
 
      integer , pointer :: nyrs_crop_active_patch  (:)   ! number of years this crop patch has been active (0 for non-crop patches)
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
-     integer , pointer :: harvdate_patch          (:)   ! patch harvest date
+     integer , pointer :: harvdate_patch          (:)   ! most recent patch harvest date; 999 if currently (or never) planted
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
      real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
@@ -41,6 +41,8 @@ module CropType
      real(r8) :: baset_latvary_slope
      integer , pointer :: next_rx_sdate           (:)   ! prescribed sowing date for the next growing season this year
      integer , pointer :: rx_sdates_thisyr        (:,:) ! all prescribed sowing dates for this patch this year
+     integer , pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
+     integer , pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
      integer , pointer :: growingseason_count     (:)   ! number of growing seasons that have begun this year for this patch
      integer , pointer :: n_growingseasons_thisyear_thispatch (:)   ! number of sowing dates read in for this patch this year
      integer           :: max_growingseasons_per_year   ! maximum number of growing seasons per year allowed in any patch
@@ -206,10 +208,14 @@ contains
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%next_rx_sdate(begp:endp)) ; this%next_rx_sdate(:) = -1
     allocate(this%rx_sdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
+    allocate(this%sdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
+    allocate(this%hdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
     allocate(this%growingseason_count(begp:endp)) ; this%growingseason_count(:) = 0
     allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
 
     this%rx_sdates_thisyr(:,:) = -1
+    this%sdates_thisyr(:,:) = -1
+    this%hdates_thisyr(:,:) = -1
 
   end subroutine InitAllocate
 

@@ -1686,6 +1686,7 @@ contains
     integer c         ! column indices
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
+    integer s         ! growing season indices
     integer idpp      ! number of days past planting
     real(r8) :: dtrad ! radiation time step delta t (seconds)
     real(r8) dayspyr  ! days per year
@@ -1789,6 +1790,10 @@ contains
 
          if ( jday == 1 .and. mcsec == 0 ) then
             growingseason_count(p) = 0
+            do s = 1, crop_inst%max_growingseasons_per_year
+               crop_inst%sdates_thisyr(p,s) = -1
+               crop_inst%hdates_thisyr(p,s) = -1
+            end do
          end if
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
@@ -2069,6 +2074,7 @@ contains
 
             else if (do_harvest) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
+               crop_inst%hdates_thisyr(p, growingseason_count) = jday
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
@@ -2258,6 +2264,7 @@ contains
       else
          next_rx_sdate(p) = -1
       endif
+      crop_inst%sdates_thisyr(p,growingseason_count(p)) = jday
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
