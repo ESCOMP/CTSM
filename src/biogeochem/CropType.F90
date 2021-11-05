@@ -181,6 +181,8 @@ contains
   subroutine InitAllocate(this, bounds)
     ! !USES:
     !
+    use clm_varpar, only : mxgrowseas
+    !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
