@@ -2254,7 +2254,7 @@ contains
       harvdate(p)  = NOT_Harvested
       growingseason_count(p) = growingseason_count(p) + 1
       if (growingseason_count(p) <= crop_inst%n_growingseasons_thisyear_thispatch(p)) then
-         next_rx_sdate(p) = crop_inst%sdates_thisyr(p, growingseason_count(p))
+         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, growingseason_count(p))
       else
          next_rx_sdate(p) = -1
       endif
