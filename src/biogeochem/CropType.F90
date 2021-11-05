@@ -20,12 +20,7 @@ module CropType
   !
   ! !PUBLIC TYPES:
   implicit none
-  save
   private
-  ! Constants
-  !
-  ! SSR TODO: Replace this with read from netCDF
-  integer , public :: max_growingseasons_per_year = 1 ! maximum number of growing seasons per year allowed in any patch
   !
   ! !PUBLIC DATA TYPES:
   !

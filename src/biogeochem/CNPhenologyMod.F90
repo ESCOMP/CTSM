@@ -14,7 +14,7 @@ module CNPhenologyMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use shr_sys_mod                     , only : shr_sys_flush
   use decompMod                       , only : bounds_type
-  use clm_varpar                      , only : maxveg, nlevdecomp_full
+  use clm_varpar                      , only : maxveg, nlevdecomp_full, mxgrowseas
   use clm_varpar                      , only : i_litr_min, i_litr_max
   use clm_varctl                      , only : iulog, use_cndv
   use clm_varcon                      , only : tfrz
@@ -26,7 +26,7 @@ module CNPhenologyMod
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
-  use CropType                        , only : crop_type, max_growingseasons_per_year
+  use CropType                        , only : crop_type
   use pftconMod                       , only : pftcon
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type
@@ -1790,7 +1790,7 @@ contains
 
          if ( jday == 1 .and. mcsec == 0 ) then
             growingseason_count(p) = 0
-            do s = 1, max_growingseasons_per_year
+            do s = 1, mxgrowseas
                crop_inst%sdates_thisyr(p,s) = -1._r8
                crop_inst%hdates_thisyr(p,s) = -1._r8
             end do

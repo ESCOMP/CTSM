@@ -51,6 +51,7 @@ module clm_varpar
   integer, public, parameter :: dst_src_nbr =   3     ! number of size distns in src soil (BGC only)
   integer, public, parameter :: sz_nbr      = 200     ! number of sub-grid bins in large bin of dust size distribution (BGC only)
   integer, public, parameter :: mxpft       =  78     ! maximum number of PFT's for any mode;
+  integer, public, parameter :: mxgrowseas  =   1     ! maximum number of crop growing seasons to begin in any year;
   ! FIX(RF,032414) might we set some of these automatically from reading pft-physiology?
   integer, public, parameter :: nlayer      =   3     ! number of VIC soil layer --Added by AWang
   integer, public    :: nlayert               ! number of VIC soil layer + 3 lower thermal layers

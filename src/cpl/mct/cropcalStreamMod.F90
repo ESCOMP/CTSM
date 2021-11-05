@@ -30,7 +30,7 @@ module cropcalStreamMod
 
   ! !PRIVATE MEMBER DATA:
   integer, allocatable    :: g_to_ig(:)         ! Array matching gridcell index to data index
-  ! SSR TODO: Make these work with max_growingseasons_per_year > 1
+  ! SSR TODO: Make this work with mxgrowseas > 1
   type(shr_strdata_type)  :: sdat_sdate        ! sowing date input data stream
 
   character(len=*), parameter :: sourcefile = &
