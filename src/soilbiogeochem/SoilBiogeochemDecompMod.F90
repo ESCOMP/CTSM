@@ -11,9 +11,9 @@ module SoilBiogeochemDecompMod
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use decompMod                          , only : bounds_type
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions, ndecomp_pools
-  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates, use_mimics_decomp, iulog
+  use clm_varctl                         , only : use_nitrif_denitrif, use_lch4, use_fates, iulog
   use clm_varcon                         , only : dzsoi_decomp
-  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+  use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, mimics_decomp, decomp_method
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
   use SoilBiogeochemCarbonStateType      , only : soilbiogeochem_carbonstate_type
   use SoilBiogeochemCarbonFluxType       , only : soilbiogeochem_carbonflux_type
@@ -187,7 +187,7 @@ contains
                   end if
                   decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                   decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
-                  if (use_mimics_decomp) then
+                  if (decomp_method == mimics_decomp) then
                      decomp_cascade_hr_vr(c,j,k) = min( &
                         p_decomp_cpool_loss(c,j,k), &
                         decomp_cascade_hr_vr(c,j,k) + c_overflow_vr(c,j,k))
@@ -204,7 +204,7 @@ contains
                      decomp_cascade_sminn_flux_vr(c,j,k) = - pmnf_decomp_cascade(c,j,k)
                   endif
                   net_nmin_vr(c,j) = net_nmin_vr(c,j) - pmnf_decomp_cascade(c,j,k)
-                  if (use_mimics_decomp) then
+                  if (decomp_method == mimics_decomp) then
                      decomp_cascade_sminn_flux_vr(c,j,k) = decomp_cascade_sminn_flux_vr(c,j,k) - p_decomp_npool_to_din(c,j,k)
                      net_nmin_vr(c,j) = net_nmin_vr(c,j) + p_decomp_npool_to_din(c,j,k)
                   end if
@@ -227,7 +227,7 @@ contains
                !
                decomp_cascade_hr_vr(c,j,k) = rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
                decomp_cascade_ctransfer_vr(c,j,k) = (1._r8 - rf_decomp_cascade(c,j,k)) * p_decomp_cpool_loss(c,j,k)
-               if (use_mimics_decomp) then
+               if (decomp_method == mimics_decomp) then
                   decomp_cascade_hr_vr(c,j,k) = min( &
                      p_decomp_cpool_loss(c,j,k), &
                      decomp_cascade_hr_vr(c,j,k) + c_overflow_vr(c,j,k))

@@ -4012,9 +4012,9 @@ contains
     ! !USES:
     use clm_time_manager                   , only: get_step_size_real
     use clm_varcon                         , only: secspday
-    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt, use_mimics_decomp
+    use clm_varctl                         , only: nfix_timeconst, carbon_resp_opt
     use subgridAveMod                      , only: p2c, c2g
-    use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con
+    use SoilBiogeochemDecompCascadeConType , only: decomp_cascade_con, mimics_decomp, decomp_method
     use CNSharedParamsMod                  , only: use_fun, CNParamsShareInst
     !
     ! !ARGUMENTS:
@@ -4416,7 +4416,7 @@ contains
             this%hrv_gresp_storage_to_litter_patch(p)      + &
             this%hrv_gresp_xfer_to_litter_patch(p)
 
-       if (use_mimics_decomp) then
+       if (decomp_method == mimics_decomp) then
           ! Calculate ligninNratio for leaves and fine roots
           ! TODO init. ligninNratio vars if nec. for call p2c to work
           associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
@@ -4472,7 +4472,7 @@ contains
          this%gpp_patch(bounds%begp:bounds%endp), &
          this%gpp_col(bounds%begc:bounds%endc))
 
-    if (use_mimics_decomp) then
+    if (decomp_method == mimics_decomp) then
        call p2c(bounds, num_soilc, filter_soilc, &
             ligninNratio_leaf_patch(bounds%begp:bounds%endp), &
             ligninNratio_leaf_col(bounds%begc:bounds%endc))

@@ -1,2 +1,2 @@
-decomp_mode = 'mimics'
+soil_decomp_method = 'MIMICSWieder2015'
 paramfile = '/glade/p/cesmdata/cseg/inputdata/lnd/clm2/paramdata/ctsm51_params.c210825.nc'

@@ -378,7 +378,6 @@ module clm_varctl
   logical, public :: use_nitrif_denitrif = .true.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
-  logical, public :: use_mimics_decomp   = .false.
   logical, public :: use_cn              = .false.
   logical, public :: use_cndv            = .false.
   logical, public :: use_grainproduct    = .false.

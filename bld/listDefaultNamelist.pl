@@ -269,7 +269,6 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
            if ( $sim_year ne 1850 && $sim_year ne 2000 && $sim_year > 1800 ) { next YEAR; }
 
            my @bgcsettings   = $definition->get_valid_values( "bgc_mode", 'noquotes'=>1 );
-           my @decompsettings = $definition->get_valid_values( "decomp_mode", 'noquotes'=>1 );
            print "bgc=@bgcsettings\n" if $printing;
            print "decomp=@decompsettings\n" if $printing;
            #

@@ -8,8 +8,7 @@ module readParamsMod
   !
   ! ! USES:
   use clm_varctl , only : paramfile, iulog, use_fates, use_cn
-  use clm_varctl , only : use_mimics_decomp
-  use SoilBiogeochemDecompCascadeConType, only : century_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType, only : mimics_decomp, century_decomp, decomp_method
   use spmdMod    , only : masterproc
   use fileutils  , only : getfil
   use ncdio_pio  , only : ncd_pio_closefile, ncd_pio_openfile
@@ -101,7 +100,7 @@ contains
     !
     if (use_cn .or. use_fates) then
        call readSoilBiogeochemCompetitionParams(ncid)
-       if (use_mimics_decomp) then
+       if (decomp_method == mimics_decomp) then
           call readSoilBiogeochemDecompMimicsParams(ncid)
        else if (decomp_method == century_decomp) then
           call readSoilBiogeochemDecompBgcParams(ncid)

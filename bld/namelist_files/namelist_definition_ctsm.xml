@@ -1027,12 +1027,6 @@ Exponent power for heterotrophic respiration for max denitrification rates
 Maximum nitrification rate constant (1/s)
 </entry>
 
-<entry id="use_mimics_decomp" type="logical" category="bgc"
-       group="clm_inparm" valid_values="" value=".false.">
-Use MIMICS below-ground decomposition.
-Requires bgc_mode set to bgc or fates and decomp_mode set to mimics.
-</entry>
-
 <entry id="use_extralakelayers" type="logical" category="physics"
        group="clm_inparm" valid_values="" value=".false.">
 Toggle to use 25 lake layers instead of 10
@@ -2094,12 +2088,6 @@ Command line arguement for biogeochemistry mode for CLM4.5
    fates = FATES/ED ecosystem demography model with below ground BGC:
 </entry>
 
-<entry id="decomp_mode" type="char*7" category="default_settings"
-       group="default_settings" valid_values="century,mimics" >
-Command line arguement for below-ground decomposition mode available when
-bgc_mode is set to bgc or fates.
-</entry>
-
 <!-- ========================================================================================  -->
 <!-- namelist elements associated with the vertical CN model                                   -->
 <!-- ========================================================================================  -->
@@ -2166,10 +2154,11 @@ Number of days over which to use exponential relaxation of NPP in N fixation cal
 
 <!-- Soil decomposition options  -->
 <entry id="soil_decomp_method" type="char*20" category="clm_physics"
-       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013" >
+       group="soilbgc_decomp" valid_values="None,CENTURYKoven2013,MIMICSWieder2015" >
 Soil decomposition method
   None --  No soil decomposition is done
   CENTURYKoven2013 -- CENTURY model in CTSM from Koven et. al. 2013
+  MIMICSWieder2015 -- MIMICS model in CTSM from Wieder et. al. 2015
 
 An active soil decomposition method requires the BGC or FATES model to work 
 And both BGC and FATES models require an active soil decomposition model

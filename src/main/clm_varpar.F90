@@ -8,7 +8,7 @@ module clm_varpar
   use shr_kind_mod , only: r8 => shr_kind_r8
   use shr_sys_mod  , only: shr_sys_abort
   use spmdMod      , only: masterproc
-  use clm_varctl   , only: use_extralakelayers, use_mimics_decomp
+  use clm_varctl   , only: use_extralakelayers
   use clm_varctl   , only: use_c13, use_c14
   use clm_varctl   , only: iulog, use_crop, create_crop_landunit, irrigate
   use clm_varctl   , only: use_vichydro, rundef

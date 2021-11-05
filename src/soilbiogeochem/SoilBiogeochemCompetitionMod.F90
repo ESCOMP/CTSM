@@ -176,7 +176,6 @@ contains
     !
     ! !USES:
     use clm_varctl       , only: cnallocate_carbon_only, iulog
-    use clm_varctl       , only: use_mimics_decomp
     use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
     use clm_varpar       , only: i_cop_mic, i_oli_mic
     use clm_varcon       , only: nitrif_n2o_loss_frac
@@ -184,7 +183,7 @@ contains
     use CNFUNMod         , only: CNFUN
     use subgridAveMod    , only: p2c
     use perf_mod         , only : t_startf, t_stopf
-    use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con
+    use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con,  mimics_decomp, decomp_method
     !
     ! !ARGUMENTS:
     type(bounds_type)                       , intent(in)    :: bounds
@@ -611,7 +610,7 @@ contains
 
                end if
           
-               if (use_mimics_decomp) then
+               if (decomp_method == mimics_decomp) then
                   ! turn off fpi for MIMICS and only lets plants
                   ! take up available mineral nitrogen.
                   ! TODO slevis: -ve or tiny sminn_vr could cause problems
@@ -711,7 +710,7 @@ contains
 
                end if
                
-               if (use_mimics_decomp) then
+               if (decomp_method == mimics_decomp) then
                   ! turn off fpi for MIMICS and only lets plants
                   ! take up available mineral nitrogen.
                   ! TODO slevis: -ve or tiny sminn_vr could cause problems
@@ -814,7 +813,7 @@ contains
 
          end if
 
-         if (use_mimics_decomp) then
+         if (decomp_method == mimics_decomp) then
             do j = 1, nlevdecomp
                do fc=1,num_soilc
                   c = filter_soilc(fc)
@@ -842,7 +841,7 @@ contains
                   end do
                end do
             end do
-         else  ! not use_mimics_decomp
+         else  ! not mimics_decomp
             c_overflow_vr(:,:,:) = 0.0_r8
          end if
 

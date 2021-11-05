@@ -92,10 +92,10 @@ OPTIONS
                                 bgc   = Carbon Nitrogen with methane, nitrification, vertical soil C,
                                         CENTURY or MIMICS decomposition
                                     This toggles on the namelist variables:
-                                          use_cn, use_lch4, use_nitrif_denitrif, and use_mimics_decomp
+                                          use_cn, use_lch4, use_nitrif_denitrif
                                 fates = FATES/Ecosystem Demography with below ground BGC
                                     This toggles on the namelist variables:
-                                          use_fates and use_mimics_decomp
+                                          use_fates
                               (Only for CLM4.5/CLM5.0)
      -[no-]chk_res            Also check [do NOT check] to make sure the resolution and
                               land-mask is valid.
@@ -834,26 +834,16 @@ sub setup_cmdl_bgc {
   }
   $log->verbose_message("Using $nl_flags->{$var} for bgc.");
 
-  my $var1 = "decomp_mode";
-  my $val1 = $nl->get_value($var1);
-
   # now set the actual name list variables based on the bgc alias
   if ($nl_flags->{$var} eq "bgc" ) {
      $nl_flags->{'use_cn'} = ".true.";
      $nl_flags->{'use_fates'} = ".false.";
-     if ($val1 eq "'mimics'" ) {
-       $nl_flags->{'use_mimics_decomp'} = ".true.";
-     }
   } elsif ($nl_flags->{$var} eq "fates" ) {
      $nl_flags->{'use_cn'} = ".false.";
      $nl_flags->{'use_fates'} = ".true.";
-     if ($val1 eq "'mimics'" ) {
-       $nl_flags->{'use_mimics_decomp'} = ".true.";
-     }
   } else {
      $nl_flags->{'use_cn'} = ".false.";
      $nl_flags->{'use_fates'} = ".false.";
-     $nl_flags->{'use_mimics_decomp'} = ".false.";
   }
   if ( defined($nl->get_value("use_cn")) && ($nl_flags->{'use_cn'} ne $nl->get_value("use_cn")) ) {
      $log->fatal_error("The namelist variable use_cn is inconsistent with the -bgc option");
@@ -862,8 +852,8 @@ sub setup_cmdl_bgc {
      $log->fatal_error("The namelist variable use_fates is inconsistent with the -bgc option");
   }
 
-  # Now set use_cn, use_fates, use_mimics_decomp
-  foreach $var ( "use_cn", "use_fates", "use_mimics_decomp" ) {
+  # Now set use_cn and use_fates
+  foreach $var ( "use_cn", "use_fates" ) {
      $val = $nl_flags->{$var};
      $group = $definition->get_group_name($var);
      $nl->set_variable_value($group, $var, $val);
@@ -885,7 +875,7 @@ sub setup_cmdl_bgc {
         $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
      }
   } elsif ( $soil_decomp_method ne "None" ) {
-     $log->fatal_error("$var must be None if use_cn or use_fates are not");
+     $log->fatal_error("$var must be None if use_cn and use_fates are off");
   }
   #
   # Soil decomposition control variables, methane and Nitrification-Denitrification
@@ -2190,7 +2180,6 @@ sub setup_logic_demand {
   $settings{'use_cndv'}            = $nl_flags->{'use_cndv'};
   $settings{'use_lch4'}            = $nl_flags->{'use_lch4'};
   $settings{'use_nitrif_denitrif'} = $nl_flags->{'use_nitrif_denitrif'};
-  $settings{'use_mimics_decomp'}   = $nl_flags->{'use_mimics_decomp'};
   $settings{'use_crop'}            = $nl_flags->{'use_crop'};
 
   my $demand = $nl->get_value('clm_demand');
@@ -2339,7 +2328,6 @@ sub setup_logic_initial_conditions {
        $settings{'sim_year'}     = $st_year;
     }
     foreach my $item ( "mask", "maxpft", "irrigate", "glc_nec", "use_crop", "use_cn", "use_cndv",
-                       "use_mimics_decomp",
                        "use_fates",
                        "lnd_tuning_mode",
                      ) {

@@ -31,9 +31,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- CO2 type -->
 <co2_type>constant</co2_type>
 
-<!-- Default Biogeochemistry modes -->
+<!-- Default Biogeochemistry mode -->
 <bgc_mode >sp</bgc_mode>
-<decomp_mode >NONE</decomp_mode>
 
 <lnd_tuning_mode phys="clm4_5" >clm4_5_CRUv7</lnd_tuning_mode>
 <lnd_tuning_mode phys="clm5_0" >clm5_0_cam6.0</lnd_tuning_mode>
@@ -2533,17 +2532,9 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- Defaults for different BGC/decomp modes    -->
 <!-- =========================================  -->
 
-<use_mimics_decomp   bgc_mode="sp"  >.false.</use_mimics_decomp>
-<use_mimics_decomp   bgc_mode="cn"  >.false.</use_mimics_decomp>
-
 <soil_decomp_method use_cn=".true."    >CENTURYKoven2013</soil_decomp_method>
 <soil_decomp_method use_fates=".true." >CENTURYKoven2013</soil_decomp_method>
 <soil_decomp_method                    >None</soil_decomp_method>
-
-<use_mimics_decomp   bgc_mode="bgc" decomp_mode="mimics" >.true.</use_mimics_decomp>
-<use_mimics_decomp   bgc_mode="bgc" decomp_mode="century" >.false.</use_mimics_decomp>
-<use_mimics_decomp   bgc_mode="fates" decomp_mode="mimics" >.true.</use_mimics_decomp>
-<use_mimics_decomp   bgc_mode="fates" decomp_mode="century" >.false.</use_mimics_decomp>
 
 <use_lch4            soil_decomp_method="None" >.false.</use_lch4>
 <use_lch4                                      >.true.</use_lch4>

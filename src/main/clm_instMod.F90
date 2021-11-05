@@ -9,9 +9,9 @@ module clm_instMod
   use decompMod       , only : bounds_type
   use clm_varpar      , only : ndecomp_pools, nlevdecomp_full
   use clm_varctl      , only : use_cn, use_c13, use_c14, use_lch4, use_cndv, use_fates
-  use clm_varctl      , only : iulog, use_mimics_decomp
+  use clm_varctl      , only : iulog
   use clm_varctl      , only : use_crop, snow_cover_fraction_method, paramfile
-  use SoilBiogeochemDecompCascadeConType , only : century_decomp, decomp_method
+  use SoilBiogeochemDecompCascadeConType , only : mimics_decomp, century_decomp, decomp_method
   use clm_varcon      , only : bdsno, c13ratio, c14ratio
   use landunit_varcon , only : istice, istsoil
   use perf_mod        , only : t_startf, t_stopf
@@ -385,7 +385,7 @@ contains
        if (decomp_method == century_decomp ) then
           call init_decompcascade_bgc(bounds, soilbiogeochem_state_inst, &
                                       soilstate_inst )
-       else if (use_mimics_decomp) then
+       else if (decomp_method == mimics_decomp ) then
           call init_decompcascade_mimics(bounds, soilbiogeochem_state_inst, &
                                          soilstate_inst)
        else
