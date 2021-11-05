@@ -41,8 +41,8 @@ module CropType
      real(r8) :: baset_latvary_slope
      integer , pointer :: next_rx_sdate           (:)   ! prescribed sowing date for the next growing season this year
      integer , pointer :: rx_sdates_thisyr        (:,:) ! all prescribed sowing dates for this patch this year
-     integer , pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
-     integer , pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
+     real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
+     real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
      integer , pointer :: growingseason_count     (:)   ! number of growing seasons that have begun this year for this patch
      integer , pointer :: n_growingseasons_thisyear_thispatch (:)   ! number of sowing dates read in for this patch this year
 
