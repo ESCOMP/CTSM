@@ -26,7 +26,7 @@ module CNPhenologyMod
   use CNVegCarbonFluxType             , only : cnveg_carbonflux_type
   use CNVegnitrogenstateType          , only : cnveg_nitrogenstate_type
   use CNVegnitrogenfluxType           , only : cnveg_nitrogenflux_type
-  use CropType                        , only : crop_type
+  use CropType                        , only : crop_type, max_growingseasons_per_year
   use pftconMod                       , only : pftcon
   use SoilStateType                   , only : soilstate_type
   use TemperatureType                 , only : temperature_type
@@ -1790,7 +1790,7 @@ contains
 
          if ( jday == 1 .and. mcsec == 0 ) then
             growingseason_count(p) = 0
-            do s = 1, crop_inst%max_growingseasons_per_year
+            do s = 1, max_growingseasons_per_year
                crop_inst%sdates_thisyr(p,s) = -1
                crop_inst%hdates_thisyr(p,s) = -1
             end do

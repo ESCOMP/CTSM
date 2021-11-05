@@ -193,7 +193,7 @@ module histFileMod
      character(len=max_chars)  :: units        ! units
      character(len=hist_dim_name_length) :: type1d                ! pointer to first dimension type from data type (nameg, etc)
      character(len=hist_dim_name_length) :: type1d_out            ! hbuf first dimension type from data type (nameg, etc)
-     character(len=hist_dim_name_length) :: type2d                ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)"]
+     character(len=hist_dim_name_length) :: type2d                ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)","max_growingseasons_per_year]
      integer :: beg1d                          ! on-node 1d clm pointer start index
      integer :: end1d                          ! on-node 1d clm pointer end index
      integer :: num1d                          ! size of clm pointer first dimension (all nodes)
@@ -1271,7 +1271,7 @@ contains
     integer :: num2d               ! size of second dimension (e.g. number of vertical levels)
     integer :: numdims             ! number of dimensions
     character(len=*),parameter :: subname = 'hist_update_hbuf'
-    character(len=hist_dim_name_length) :: type2d     ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)"]
+    character(len=hist_dim_name_length) :: type2d     ! hbuf second dimension type ["levgrnd","levlak","numrad","ltype","natpft","cft","glc_nec","elevclas","subname(n)","max_growingseasons_per_year"]
     !-----------------------------------------------------------------------
 
     do t = 1,ntapes
@@ -2285,6 +2285,7 @@ contains
     use clm_varctl      , only : version, hostname, username, conventions, source
     use domainMod       , only : ldomain
     use fileutils       , only : get_filename
+    use CropType        , only : max_growingseasons_per_year
     !
     ! !ARGUMENTS:
     integer, intent(in) :: t                   ! tape index
@@ -2420,6 +2421,7 @@ contains
     call ncd_defdim(lnfid, 'ltype', max_lunit, dimid)
     call ncd_defdim(lnfid, 'nlevcan',nlevcan, dimid)
     call ncd_defdim(lnfid, 'nvegwcs',nvegwcs, dimid)
+    call ncd_defdim(lnfid, 'max_growingseasons_per_year' , max_growingseasons_per_year , dimid)
     call htape_add_ltype_metadata(lnfid)
     call htape_add_ctype_metadata(lnfid)
     call ncd_defdim(lnfid, 'natpft', natpft_size, dimid)
@@ -4138,6 +4140,7 @@ contains
     use clm_time_manager, only : is_restart
     use restUtilMod     , only : iflag_skip
     use pio
+    use CropType        , only : max_growingseasons_per_year
     !
     ! !ARGUMENTS:
     type(bounds_type), intent(in)    :: bounds
@@ -5342,6 +5345,7 @@ contains
     use clm_varpar      , only : nlevgrnd, nlevsno, nlevlak, numrad, nlevdecomp_full, nlevcan, nvegwcs,nlevsoi
     use clm_varpar      , only : natpft_size, cft_size, maxpatch_glc
     use landunit_varcon , only : max_lunit
+    use CropType        , only : max_growingseasons_per_year
     !
     ! !ARGUMENTS:
     character(len=*), intent(in) :: fname                      ! field name
@@ -5420,6 +5424,8 @@ contains
        num2d = numrad
     case ('levdcmp')
        num2d = nlevdecomp_full
+    case ('max_growingseasons_per_year')
+       num2d = max_growingseasons_per_year
     case ('fates_levscls')
        num2d = nlevsclass
     case('fates_levcacls')
@@ -5487,7 +5493,7 @@ contains
     case default
        write(iulog,*) trim(subname),' ERROR: unsupported 2d type ',type2d, &
           ' currently supported types for multi level fields are: ', &
-          '[levgrnd,levsoi,levlak,numrad,levdcmp,levtrc,ltype,natpft,cft,glc_nec,elevclas,levsno,nvegwcs]'
+          '[levgrnd,levsoi,levlak,numrad,levdcmp,levtrc,ltype,natpft,cft,glc_nec,elevclas,levsno,nvegwcs,max_growingseasons_per_year]'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end select
 

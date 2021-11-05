@@ -20,7 +20,12 @@ module CropType
   !
   ! !PUBLIC TYPES:
   implicit none
+  save
   private
+  ! Constants
+  !
+  ! SSR TODO: Replace this with read from netCDF
+  integer , public :: max_growingseasons_per_year = 1 ! maximum number of growing seasons per year allowed in any patch
   !
   ! !PUBLIC DATA TYPES:
   !
@@ -45,7 +50,6 @@ module CropType
      integer , pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
      integer , pointer :: growingseason_count     (:)   ! number of growing seasons that have begun this year for this patch
      integer , pointer :: n_growingseasons_thisyear_thispatch (:)   ! number of sowing dates read in for this patch this year
-     integer           :: max_growingseasons_per_year   ! maximum number of growing seasons per year allowed in any patch
 
    contains
      ! Public routines
@@ -194,9 +198,6 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
 
-    ! SSR TODO: Replace this with read from netCDF
-    this%max_growingseasons_per_year = 1
-
     allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
     allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
@@ -207,9 +208,9 @@ contains
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%next_rx_sdate(begp:endp)) ; this%next_rx_sdate(:) = -1
-    allocate(this%rx_sdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
-    allocate(this%sdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
-    allocate(this%hdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
+    allocate(this%rx_sdates_thisyr(begp:endp,1:max_growingseasons_per_year))
+    allocate(this%sdates_thisyr(begp:endp,1:max_growingseasons_per_year))
+    allocate(this%hdates_thisyr(begp:endp,1:max_growingseasons_per_year))
     allocate(this%growingseason_count(begp:endp)) ; this%growingseason_count(:) = 0
     allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
 
@@ -263,6 +264,16 @@ contains
             avgflag='A', long_name='latitude vary base temperature for gddplant', &
             ptr_patch=this%latbaset_patch, default='inactive')
     end if
+
+    this%sdates_thisyr(begp:endp,:) = -1
+    call hist_addfld2d (fname='SDATES', units='day of year', type2d='max_growingseasons_per_year', &
+         avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
+         ptr_col=this%sdates_thisyr, default='inactive')
+
+    this%hdates_thisyr(begp:endp,:) = -1
+    call hist_addfld2d (fname='HDATES', units='day of year', type2d='max_growingseasons_per_year', &
+         avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
+         ptr_col=this%hdates_thisyr, default='inactive')
 
   end subroutine InitHistory
 
