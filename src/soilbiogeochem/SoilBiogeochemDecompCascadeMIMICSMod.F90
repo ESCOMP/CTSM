@@ -489,7 +489,7 @@ contains
       is_cwd(i_met_lit) = .false.
       initial_cn_ratio(i_met_lit) = 10._r8  ! 90 in BGC; not used in MIMICS
       initial_stock(i_met_lit) = params_inst%initial_Cstocks(i_met_lit)
-      initial_stock(i_met_lit) = 1._r8  ! slevis diag
+      initial_stock(i_met_lit) = 1._r8  ! TODO slevis: finalize in params files
       is_metabolic(i_met_lit) = .true.
       is_cellulose(i_met_lit) = .false.
       is_lignin(i_met_lit) = .false.
@@ -506,7 +506,7 @@ contains
       is_cwd(i_str_lit) = .false.
       initial_cn_ratio(i_str_lit) = 10._r8  ! 90 in BGC; not used in MIMICS
       initial_stock(i_str_lit) = params_inst%initial_Cstocks(i_str_lit)
-      initial_stock(i_str_lit) = 1._r8  ! slevis diag
+      initial_stock(i_str_lit) = 1._r8  ! TODO slevis: finalize in params files
       is_metabolic(i_str_lit) = .false.
       is_cellulose(i_str_lit) = .true.
       is_lignin(i_str_lit) = .true.
@@ -533,7 +533,7 @@ contains
       is_cwd(i_avl_som) = .false.
       initial_cn_ratio(i_avl_som) = 10._r8  ! cn_s1 in BGC; not used in MIMICS
       initial_stock(i_avl_som) = params_inst%initial_Cstocks(i_avl_som)
-      initial_stock(i_avl_som) = 200._r8  ! slevis diag
+      initial_stock(i_avl_som) = 200._r8  ! TODO slevis: finalize in params files
       is_metabolic(i_avl_som) = .false.
       is_cellulose(i_avl_som) = .false.
       is_lignin(i_avl_som) = .false.
@@ -550,7 +550,7 @@ contains
       is_cwd(i_chem_som) = .false.
       initial_cn_ratio(i_chem_som) = 10._r8  ! cn_s2 in BGC; not used in MIMICS
       initial_stock(i_chem_som) = params_inst%initial_Cstocks(i_chem_som)
-      initial_stock(i_chem_som) = 200._r8  ! slevis diag
+      initial_stock(i_chem_som) = 200._r8  ! TODO slevis: finalize in params files
       is_metabolic(i_chem_som) = .false.
       is_cellulose(i_chem_som) = .false.
       is_lignin(i_chem_som) = .false.
@@ -567,7 +567,7 @@ contains
       is_cwd(i_phys_som) = .false.
       initial_cn_ratio(i_phys_som) = 10._r8  ! cn_s3 in BGC; not used in MIMICS
       initial_stock(i_phys_som) = params_inst%initial_Cstocks(i_phys_som)
-      initial_stock(i_phys_som) = 200._r8  ! slevis diag
+      initial_stock(i_phys_som) = 200._r8  ! TODO slevis: finalize in params files
       is_metabolic(i_phys_som) = .false.
       is_cellulose(i_phys_som) = .false.
       is_lignin(i_phys_som) = .false.
@@ -584,7 +584,7 @@ contains
       is_cwd(i_cop_mic) = .false.
       initial_cn_ratio(i_cop_mic) = 10._r8  ! MIMICS may use this
       initial_stock(i_cop_mic) = params_inst%initial_Cstocks(i_cop_mic)
-      initial_stock(i_cop_mic) = 1._r8  ! slevis diag
+      initial_stock(i_cop_mic) = 1._r8  ! TODO slevis: finalize in params files
       is_metabolic(i_cop_mic) = .false.
       is_cellulose(i_cop_mic) = .false.
       is_lignin(i_cop_mic) = .false.
@@ -601,7 +601,7 @@ contains
       is_cwd(i_oli_mic) = .false.
       initial_cn_ratio(i_oli_mic) = 10._r8  ! MIMICS may use this
       initial_stock(i_oli_mic) = params_inst%initial_Cstocks(i_oli_mic)
-      initial_stock(i_oli_mic) = 1._r8  ! slevis diag
+      initial_stock(i_oli_mic) = 1._r8  ! TODO slevis: finalize in params files
       is_metabolic(i_oli_mic) = .false.
       is_cellulose(i_oli_mic) = .false.
       is_lignin(i_oli_mic) = .false.
@@ -620,7 +620,7 @@ contains
          is_cwd(i_cwd) = .true.
          initial_cn_ratio(i_cwd) = 10._r8  ! 90 in BGC; not used in MIMICS
          initial_stock(i_cwd) = params_inst%initial_Cstocks(i_cwd)
-         initial_stock(i_cwd) = 1._r8  ! slevis diag
+         initial_stock(i_cwd) = 1._r8  ! TODO slevis: finalize in params files
          is_metabolic(i_cwd) = .false.
          is_cellulose(i_cwd) = .false.
          is_lignin(i_cwd) = .false.
