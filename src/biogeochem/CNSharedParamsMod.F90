@@ -103,12 +103,12 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%maxpsi=tempr
 
-    tString='rf_cwdl2_bgc'  ! TODO slevis: rm suffix in params file(s)
+    tString='rf_cwdl2'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%rf_cwdl2=tempr
 
-    tString='tau_cwd_bgc'  ! TODO slevis: rm suffix in params file(s)
+    tString='tau_cwd'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     CNParamsShareInst%tau_cwd=tempr
