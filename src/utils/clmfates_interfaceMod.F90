@@ -737,7 +737,7 @@ module CLMFatesInterfaceMod
       ! to process array bounding information
 
       ! !USES
-      use FATESFireFactoryMod, only: scalar_lightning
+      use FATESFireFactoryMod, only: scalar_lightning, anthro_ignitions, anthro_suppression
       use subgridMod, only :  natveg_patch_exists
 
       ! !ARGUMENTS:
@@ -798,25 +798,21 @@ module CLMFatesInterfaceMod
       endif
 
       if (fates_spitfire_mode > scalar_lightning) then
-         
          allocate(lnfm24(bounds_clump%begg:bounds_clump%endg), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error for lnfm24"//&
                  errmsg(sourcefile, __LINE__))
          endif
          lnfm24 = this%fates_fire_data_method%GetLight24()
-         
       end if
       
-      if (fates_spitfire_mode > scalar_lightning) then
-         
+      if (fates_spitfire_mode .eq. anthro_suppression) then
          allocate(gdp(bounds_clump%begg:bounds_clump%endg), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error for gdp"//&
                  errmsg(sourcefile, __LINE__))
          endif
          gdp = this%fates_fire_data_method%GetGDP()
-         
       end if
 
       do s=1,this%fates(nc)%nsites
@@ -827,10 +823,15 @@ module CLMFatesInterfaceMod
             do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
                
                this%fates(nc)%bc_in(s)%lightning24(ifp) = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
-               this%fates(nc)%bc_in(s)%pop_density(ifp) = this%fates_fire_data_method%forc_hdm(g)
+               
+               if (fates_spitfire_mode .ge. anthro_ignitions) then)
+                  this%fates(nc)%bc_in(s)%pop_density(ifp) = this%fates_fire_data_method%forc_hdm(g)
+               end if
 
-               ! Placeholder for future fates use of gdp
-               this%fates(nc)%bc_in(s)%gdp(ifp) = gdp(g) ! k US$/capita(g)
+               if (fates_spitfire_mode .eq. anthro_suppression) then
+               ! Placeholder for future fates use of gdp - comment out before integration
+                  this%fates(nc)%bc_in(s)%gdp(ifp) = gdp(g) ! k US$/capita(g)
+               end if
 
             end do ! ifp
          end if
