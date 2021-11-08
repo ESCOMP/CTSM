@@ -22,11 +22,12 @@ module FATESFireFactoryMod
   ! use them as flags elsewhere in the CTSM and FATES-SPITFIRE.
   ! They correspond one-to-one to the fates_spitfire_mode options listed
   ! in bld/namelist_files/namelist_definition_clm4_5.xml
-  integer, public, parameter :: no_fire = 0  ! value of no_fire mode
-  integer, public, parameter :: scalar_lightning = 1  ! value of scalar_lightning mode
+  integer, public, parameter :: no_fire = 0              ! value of no_fire mode
+  integer, public, parameter :: scalar_lightning = 1     ! value of scalar_lightning mode
   integer, public, parameter :: lightning_from_data = 2  ! value of lightning_from_data mode
-  integer, public, parameter :: successful_ignitions = 3  ! value of successful_ignitions mode
-  integer, public, parameter :: anthro_ignitions = 4  ! value of anthro_ignitions mode
+  integer, public, parameter :: successful_ignitions = 3 ! value of successful_ignitions mode
+  integer, public, parameter :: anthro_ignitions = 4     ! value of anthro_ignitions mode
+  integer, public, parameter :: anthro_suppression = 5   ! value of anthro_supression mode
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -61,7 +62,7 @@ contains
 
     case (no_fire:scalar_lightning)
        allocate(fates_fire_no_data_type :: fates_fire_data_method)
-    case (lightning_from_data:anthro_ignitions)
+    case (lightning_from_data:anthro_suppression)
        allocate(fates_fire_data_type :: fates_fire_data_method)
 
     case default

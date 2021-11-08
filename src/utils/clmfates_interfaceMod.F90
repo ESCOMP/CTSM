@@ -144,8 +144,8 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : InitHydrSites
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use FATESFireBase          , only : fates_fire_base_type
-   use FATESFireFactoryMod    , only : no_fire, scalar_lightning, &
-                                       successful_ignitions, anthro_ignitions
+   use FATESFireFactoryMod    , only : no_fire, scalar_lightning, successful_ignitions,&
+                                       anthro_ignitions, anthro_supression
    use dynSubgridControlMod   , only : get_do_harvest
    use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
    use dynHarvestMod          , only : harvest_units, mass_units, unitless_units
@@ -319,6 +319,7 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
         call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
         call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
+        call set_fates_ctrlparms('sf_anthro_supression_def',ival=anthro_supression)
 
         if(is_restart()) then
            pass_is_restart = 1
@@ -763,8 +764,9 @@ module CLMFatesInterfaceMod
       integer  :: p                        ! HLM patch index
       integer  :: nlevsoil                 ! number of soil layers at the site
       integer  :: nld_si                   ! site specific number of decomposition layers
-      integer  :: ft                        ! plant functional type
-      real(r8), pointer :: lnfm24(:)
+      integer  :: ft                       ! plant functional type
+      real(r8), pointer :: lnfm24(:)       ! 24-hour averaged lightning data
+      real(r8), pointer :: gdp(:)          ! gdp data
       integer  :: ier
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
@@ -796,13 +798,25 @@ module CLMFatesInterfaceMod
       endif
 
       if (fates_spitfire_mode > scalar_lightning) then
+         
          allocate(lnfm24(bounds_clump%begg:bounds_clump%endg), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error for lnfm24"//&
                  errmsg(sourcefile, __LINE__))
          endif
-
          lnfm24 = this%fates_fire_data_method%GetLight24()
+         
+      end if
+      
+      if (fates_spitfire_mode > scalar_lightning) then
+         
+         allocate(gdp(bounds_clump%begg:bounds_clump%endg), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg="allocation error for gdp"//&
+                 errmsg(sourcefile, __LINE__))
+         endif
+         gdp = this%fates_fire_data_method%GetGDP()
+         
       end if
 
       do s=1,this%fates(nc)%nsites
@@ -810,11 +824,16 @@ module CLMFatesInterfaceMod
          g = col%gridcell(c)
 
          if (fates_spitfire_mode > scalar_lightning) then
-           do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-             this%fates(nc)%bc_in(s)%lightning24(ifp) = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
-             this%fates(nc)%bc_in(s)%pop_density(ifp) = this%fates_fire_data_method%forc_hdm(g)
-           end do ! ifp
-          end if
+            do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+               
+               this%fates(nc)%bc_in(s)%lightning24(ifp) = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
+               this%fates(nc)%bc_in(s)%pop_density(ifp) = this%fates_fire_data_method%forc_hdm(g)
+
+               ! Placeholder for future fates use of gdp
+               this%fates(nc)%bc_in(s)%gdp(ifp) = gdp(g) ! k US$/capita(g)
+
+            end do ! ifp
+         end if
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
 

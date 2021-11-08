@@ -27,6 +27,7 @@ module FATESFireDataMod
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: need_lightning_and_popdens
       procedure, public :: GetLight24     ! Return 24-hour averaged lightning data
+      procedure, public :: GetGDP         ! Return the global gdp data
       procedure, public :: InitAccBuffer  ! Initialize accumulation processes
       procedure, public :: InitAccVars  ! Initialize accumulation variables
       procedure, public :: UpdateAccVars  ! Update/extract accumulations vars
@@ -64,6 +65,20 @@ contains
     lnfm24 => this%lnfm24
     !---------------------------------------------------------------------
   end function
+  
+  !-----------------------------------------------------------------------
+  function GetGDP( this ) result(gdp)
+    !
+    ! !DESCRIPTION: Get the global gross domestic product data
+    ! !USES
+    !
+    ! !ARGUMENTS:
+    class(fates_fire_data_type) :: this
+    real(r8), pointer :: gdp(:)
+    !---------------------------------------------------------------------
+    gdp => this%gdp
+    !---------------------------------------------------------------------
+  end function GetGDP
   
   !-----------------------------------------------------------------------
   subroutine InitAccBuffer (this, bounds)
