@@ -1579,6 +1579,7 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <light_res    use_fates=".true." fates_spitfire_mode="2" >360x720</light_res>
 <light_res    use_fates=".true." fates_spitfire_mode="3" >360x720</light_res>
 <light_res    use_fates=".true." fates_spitfire_mode="4" >360x720</light_res>
+<light_res    use_fates=".true." fates_spitfire_mode="5" >360x720</light_res>
 
 <stream_year_first_lightng >0001</stream_year_first_lightng>
 <stream_year_last_lightng  >0001</stream_year_last_lightng>
