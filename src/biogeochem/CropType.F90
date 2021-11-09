@@ -265,12 +265,12 @@ contains
     this%sdates_thisyr(begp:endp,:) = -1._r8
     call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxgrowseas', &
          avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
-         ptr_col=this%sdates_thisyr, default='inactive')
+         ptr_patch=this%sdates_thisyr, default='inactive')
 
     this%hdates_thisyr(begp:endp,:) = -1._r8
     call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxgrowseas', &
          avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
-         ptr_col=this%hdates_thisyr, default='inactive')
+         ptr_patch=this%hdates_thisyr, default='inactive')
 
   end subroutine InitHistory
 
