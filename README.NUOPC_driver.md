@@ -31,7 +31,7 @@ DATM_CLMNCEP_YR_* variables change to DATM_YR_*
 
 ## New obscure options:
 
-ESMF_AWARE_THREADING --- ESMF is aware of threading
+ESMF_AWARE_THREADING --- ESMF is aware of threading (can have differing number of threads in components)
 CREATE_ESMF_PET_FILES -- Create output log files from ESMF for each Processor (PET)
 ESMF_VERBOSITY_LEVEL --- Verbosity level for ESMF logging
 ESMF_PROFILING_LEVEL --- Verbosity level for ESMF profiling
@@ -46,4 +46,10 @@ The MCT driver will be available for sometime going forward, but
 new development won't go into it, and it will eventually be removed.
 But, if you have to...
 Use the "--driver mct" command line option to create_newcase
-Or set ./xmlchange COMP_INTERFACE=mct
+You can set COMP_INTERFACE in a case as well, but it won't create it with everything needed
+so we recommend setting up a case from scratch.
+
+
+For more notes see:
+
+https://docs.google.com/presentation/d/1yjiKSEV53JDAJbYxhpY2T9GTxlWFzQAn
