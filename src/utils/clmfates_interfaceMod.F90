@@ -145,7 +145,7 @@ module CLMFatesInterfaceMod
    use FatesPlantHydraulicsMod, only : RestartHydrStates
    use FATESFireBase          , only : fates_fire_base_type
    use FATESFireFactoryMod    , only : no_fire, scalar_lightning, successful_ignitions,&
-                                       anthro_ignitions, anthro_supression
+                                       anthro_ignitions, anthro_suppression
    use dynSubgridControlMod   , only : get_do_harvest
    use dynHarvestMod          , only : num_harvest_inst, harvest_varnames
    use dynHarvestMod          , only : harvest_units, mass_units, unitless_units
@@ -319,7 +319,7 @@ module CLMFatesInterfaceMod
         call set_fates_ctrlparms('sf_scalar_lightning_def',ival=scalar_lightning)
         call set_fates_ctrlparms('sf_successful_ignitions_def',ival=successful_ignitions)
         call set_fates_ctrlparms('sf_anthro_ignitions_def',ival=anthro_ignitions)
-        call set_fates_ctrlparms('sf_anthro_supression_def',ival=anthro_supression)
+        call set_fates_ctrlparms('sf_anthro_suppression_def',ival=anthro_suppression)
 
         if(is_restart()) then
            pass_is_restart = 1

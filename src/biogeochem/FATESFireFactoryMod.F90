@@ -27,7 +27,7 @@ module FATESFireFactoryMod
   integer, public, parameter :: lightning_from_data = 2  ! value of lightning_from_data mode
   integer, public, parameter :: successful_ignitions = 3 ! value of successful_ignitions mode
   integer, public, parameter :: anthro_ignitions = 4     ! value of anthro_ignitions mode
-  integer, public, parameter :: anthro_suppression = 5   ! value of anthro_supression mode
+  integer, public, parameter :: anthro_suppression = 5   ! value of anthro_suppression mode
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
