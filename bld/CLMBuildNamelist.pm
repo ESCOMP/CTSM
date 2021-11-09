@@ -4365,8 +4365,9 @@ sub check_input_files {
 
                 if ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
-                        #MV $pathname =~ s:$inputdata_rootdir::;
-                        print OUTFILE "$var = $pathname\n";
+                        if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
+                           print OUTFILE "$var = $pathname\n";
+                        }
                     }
                     else {
                         if (-e $pathname) {  # use -e rather than -f since the absolute pathname
@@ -4387,7 +4388,9 @@ sub check_input_files {
                     if ($inputdata_rootdir) {
                         $pathname = "$rootdir/$pathname";
                         #MV $pathname =~ s:$inputdata_rootdir::;
-                        print OUTFILE "$var = $pathname\n";
+                        if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
+                           print OUTFILE "$var = $pathname\n";
+                        }
                     }
                     else {
                         if (-f "$rootdir/$pathname") {
