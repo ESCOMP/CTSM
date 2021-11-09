@@ -1647,7 +1647,7 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, get_rad_step_size
+    use clm_time_manager , only : get_curr_calday, get_days_per_year, get_rad_step_size, is_beg_curr_year
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1677,10 +1677,6 @@ contains
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
     !
     ! LOCAL VARAIBLES:
-    integer kyr       ! current year
-    integer kmo       ! month of year  (1, ..., 12)
-    integer kda       ! day of month   (1, ..., 31)
-    integer mcsec     ! seconds of day (0, ..., seconds/day)
     integer jday      ! julian day of the year
     integer fp,p      ! patch indices
     integer c         ! column indices
@@ -1760,7 +1756,6 @@ contains
       ! get time info
       dayspyr = get_days_per_year()
       jday    = get_curr_calday()
-      call get_curr_date(kyr, kmo, kda, mcsec)
       dtrad   = real( get_rad_step_size(), r8 )
 
       if (use_fertilizer) then
@@ -1788,7 +1783,7 @@ contains
          ! initialize other variables that are calculated for crops
          ! on an annual basis in cropresidue subroutine
 
-         if ( jday == 1 .and. mcsec == 0 ) then
+         if ( is_beg_curr_year() ) then
             growingseason_count(p) = 0
             do s = 1, mxgrowseas
                crop_inst%sdates_thisyr(p,s) = -1._r8
