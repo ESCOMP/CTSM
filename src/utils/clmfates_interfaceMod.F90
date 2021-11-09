@@ -824,7 +824,7 @@ module CLMFatesInterfaceMod
                
                this%fates(nc)%bc_in(s)%lightning24(ifp) = lnfm24(g) * 24._r8  ! #/km2/hr to #/km2/day
                
-               if (fates_spitfire_mode .ge. anthro_ignitions) then)
+               if (fates_spitfire_mode .ge. anthro_ignitions) then
                   this%fates(nc)%bc_in(s)%pop_density(ifp) = this%fates_fire_data_method%forc_hdm(g)
                end if
 
