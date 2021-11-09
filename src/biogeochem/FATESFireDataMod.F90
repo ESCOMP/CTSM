@@ -22,7 +22,8 @@ module FATESFireDataMod
   !
   type, extends(fates_fire_base_type) :: fates_fire_data_type
       ! !PRIVATE MEMBER DATA:
-      real(r8), private, pointer :: lnfm24(:)  ! Daily avg lightning by grid cell (#/km2/hr)
+      real(r8), private, pointer :: lnfm24(:) ! Daily avg lightning by grid cell (#/km2/hr)
+      real(r8), private, pointer :: gdp(:)    ! Global gross domestic product
     contains
       ! !PUBLIC MEMBER FUNCTIONS:
       procedure, public :: need_lightning_and_popdens
