@@ -77,7 +77,7 @@ contains
     class(fates_fire_data_type) :: this
     real(r8), pointer :: gdp(:)
     !---------------------------------------------------------------------
-    gdp => this%gdp
+    gdp => this%gdp_lf_col
     !---------------------------------------------------------------------
   end function GetGDP
   
