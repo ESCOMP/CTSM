@@ -163,9 +163,9 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1839;
+my $ntests = 1844;
 if ( defined($opts{'compare'}) ) {
-   $ntests += 1251;
+   $ntests += 1254;
 }
 plan( tests=>$ntests );
 
@@ -337,6 +337,8 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
       if ( $driver eq "mct" ) {
          $base_options = "$base_options -lnd_frac $DOMFILE";
+      } else {
+         $base_options = "$base_options -namelist '&a force_send_to_atm = .false./'";
       }
       eval{ system( "$bldnml $base_options $options > $tempfile 2>&1 " ); };
       is( $@, '', "options: $base_options $options" );
@@ -462,6 +464,7 @@ foreach my $options (
                       "-bgc sp  -use_case 2000_control -res 0.9x1.25 -namelist '&a use_soil_moisture_streams = T/'",
                       "-bgc bgc -use_case 1850-2100_SSP5-8.5_transient -namelist '&a start_ymd=19101023/'",
                       "-bgc bgc -use_case 2000_control -namelist \"&a fire_method='nofire'/\" -crop",
+                      "-res 0.9x1.25 -bgc sp -use_case 1850_noanthro_control -drydep -fire_emis",
                       "-res 0.9x1.25 -bgc bgc -use_case 1850_noanthro_control -drydep -fire_emis -light_res 360x720",
                      ) {
    my $file = $startfile;
@@ -637,12 +640,6 @@ my %failtest = (
                                      namelst=>"baset_mapping='constant', baset_latvary_slope=1.0, baset_latvary_intercept=10.0",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
-                                   },
-     # This one should fail now, because we don't have non irrigated non-crop datasets
-     "-irrigate=F without -crop" =>{ options=>"-bgc bgc -no-crop -envxml_dir .",
-                                    namelst=>"irrigate=.false.",
-                                    GLC_TWO_WAY_COUPLING=>"FALSE",
-                                    phys=>"clm4_5",
                                    },
      "grainproductWOcrop"       =>{ options=>"-bgc bgc -no-crop -envxml_dir .",
                                     namelst=>"use_grainproduct=.true.",
@@ -884,7 +881,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "both lnd_frac and on nml"  =>{ options=>"-driver mct -lnd_frac domain.nc -envxml_dir .",
+     "both lnd_frac and on nml"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
@@ -894,7 +891,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
-     "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac domain.nc -envxml_dir .",
+     "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac $DOMFILE -envxml_dir .",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
@@ -906,6 +903,11 @@ my %failtest = (
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "force_send but not nuopc"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
+                                     namelst=>"force_send_to_atm = .false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
@@ -943,6 +945,11 @@ my %failtest = (
                                      namelst=>"use_cn=.true.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
+                                   },
+     "useFATESWcrop"             =>{ options=>"-bgc fates -envxml_dir . -no-megan -crop",
+                                     namelst=>"",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
                                    },
      "useFATESWcreatecrop"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"create_crop_landunit=.true.",

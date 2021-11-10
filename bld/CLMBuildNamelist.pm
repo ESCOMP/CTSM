@@ -747,14 +747,13 @@ sub setup_cmdl_fates_mode {
       # want to set a catch to fail and warn users if they explicitly set incompatible user namelist
       # options
 
-#      my $var = "use_somevar";
-#      $val = $nl_flags->{$var};
-#      if ( defined($nl->get_value($var))  ) {
-#	  if ( &value_is_true($nl->get_value($var)) ) {
-#	      $log->fatal_error("$var was set to .true., which is incompatible when -bgc fates option is used.");
-#	  }
-#      }
-
+       my $var = "use_crop";
+       $val = $nl_flags->{$var};
+       if ( defined($nl->get_value($var))  ) {
+          if ( &value_is_true($nl->get_value($var)) ) {
+             $log->fatal_error("$var was set to .true., which is incompatible when -bgc fates option is used.");
+          }
+       }
 
       # The following variables may be set by the user and are compatible with use_fates
       # no need to set defaults, covered in a different routine
@@ -870,12 +869,13 @@ sub setup_cmdl_bgc {
   my $var = "soil_decomp_method";
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
               'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+  my $soil_decomp_method = remove_leading_and_trailing_quotes( $nl->get_value( $var ) );
 
   if ( &value_is_true($nl_flags->{'use_cn'}) ||  &value_is_true($nl_flags->{'use_fates'}))  {
-     if ( remove_leading_and_trailing_quotes( $nl->get_value($var)) eq "None" ) {
+     if ( $soil_decomp_method eq "None" ) {
         $log->fatal_error("$var must NOT be None if use_cn or use_fates are on");
      }
-  } elsif ( remove_leading_and_trailing_quotes($nl->get_value($var)) ne "None" ) {
+  } elsif ( $soil_decomp_method ne "None" ) {
      $log->fatal_error("$var must be None if use_cn or use_fates are not");
   }
   #
@@ -885,13 +885,13 @@ sub setup_cmdl_bgc {
   my %settings = ( 'bgc_mode'=>$nl_flags->{'bgc_mode'} );
   foreach my $var ( @list ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
-                 'phys'=>$nl_flags->{'phys'}, 'use_cn'=>$nl_flags->{'use_cn'}, 'use_fates'=>$nl_flags->{'use_fates'} );
+                 'phys'=>$nl_flags->{'phys'}, 'soil_decomp_method'=>$soil_decomp_method );
      $nl_flags->{$var} = $nl->get_value($var);
   }
-  if ( remove_leading_and_trailing_quotes( $nl->get_value($var)) eq "None" ) {
+  if ( $soil_decomp_method eq "None" ) {
      foreach my $var ( @list ) {
         if ( &value_is_true($nl_flags->{$var}) ) {
-           $log->fatal_error("When soil_decomp_method is NONE $var can NOT be TRUE");
+           $log->fatal_error("When soil_decomp_method is None $var can NOT be TRUE");
         }
      }
   } else {
@@ -1304,9 +1304,10 @@ sub setup_cmdl_vichydro {
 
   $var = "use_vichydro";
   $val = $nl->get_value($var);
+  my $set = undef;
   if ($nl_flags->{'vichydro'} eq 1) {
      my $group = $definition->get_group_name($var);
-     my $set = ".true.";
+     $set = ".true.";
      if ( defined($val) && $set ne $val ) {
         $log->fatal_error("$var contradicts the command-line -vichydro option" );
      }
@@ -1315,7 +1316,10 @@ sub setup_cmdl_vichydro {
         my @valid_values   = $definition->get_valid_values( $var );
         $log->fatal_error("$var has a value ($val) that is NOT valid. Valid values are: @valid_values");
      }
+  } else {
+     $set = ".false.";
   }
+  $nl_flags->{$var} = $set;
 }
 
 
@@ -2165,6 +2169,7 @@ sub setup_logic_demand {
   $settings{'hgrid'}          = $nl_flags->{'res'};
   $settings{'sim_year'}       = $nl_flags->{'sim_year'};
   $settings{'sim_year_range'} = $nl_flags->{'sim_year_range'};
+  $settings{'use_vichydro'}   = $nl_flags->{'use_vichydro'};
   $settings{'mask'}           = $nl_flags->{'mask'};
   $settings{'crop'}           = $nl_flags->{'crop'};
   $settings{'ssp_rcp'}        = $nl_flags->{'ssp_rcp'};
@@ -2202,7 +2207,22 @@ sub setup_logic_demand {
     if ( $item eq "finidat" ) {
         $log->fatal_error( "Do NOT put findat in the clm_demand list, set the clm_start_type=startup so initial conditions are required");
     }
+    # For landuse.timeseries try with crop and irrigate on first, if found use it, otherwise try with exact settings
+    # Logic for this is identical for fsurdat
+    if ( $item eq "flanduse_timeseries" ) {
+       $settings{'irrigate'} = ".true.";
+       $settings{'use_crop'} = ".true.";
+       $settings{'nofail'}   = 1;
+    }
     add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
+    if ( $item eq "flanduse_timeseries" ) {
+       $settings{'nofail'}   = 0;
+       $settings{'irrigate'} = $nl_flags->{'irrigate'};
+       $settings{'use_crop'} = $nl_flags->{'use_crop'};
+       if ( ! defined($nl->get_value( $item )) ) {
+          add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $item, %settings );
+       }
+    }
   }
 }
 
@@ -2231,10 +2251,27 @@ sub setup_logic_surface_dataset {
   if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
      $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
   }
-  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fsurdat',
-              'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
-              'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
-              'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
+  #
+  # Always get the crop version of the datasets now and let the code turn it into the form desired
+  # Provided this isn't with FATES on
+  #
+  my $var = "fsurdat";
+  if ( !  &value_is_true($nl_flags->{'use_fates'}) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'},
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>".true.", 'use_vichydro'=>$nl_flags->{'use_vichydro'},
+                 'use_crop'=>".true.", 'glc_nec'=>$nl_flags->{'glc_nec'}, 'nofail'=>1);
+  }
+  # If didn't find the crop version check for the exact match
+  if ( ! defined($nl->get_value($var) ) ) {
+     if ( !  &value_is_true($nl_flags->{'use_fates'}) ) {
+        $log->verbose_message( "Crop version of $var NOT found, searching for an exact match" );
+     }
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
+                 'hgrid'=>$nl_flags->{'res'}, 'ssp_rcp'=>$nl_flags->{'ssp_rcp'}, 'use_vichydro'=>$nl_flags->{'use_vichydro'},
+                 'sim_year'=>$nl_flags->{'sim_year'}, 'irrigate'=>$nl_flags->{'irrigate'},
+                 'use_crop'=>$nl_flags->{'use_crop'}, 'glc_nec'=>$nl_flags->{'glc_nec'});
+  }
 }
 
 #-------------------------------------------------------------------------------
@@ -2919,7 +2956,7 @@ sub setup_logic_hydrology_switches {
   }
   # Test bad configurations
   my $lower   = $nl->get_value( 'lower_boundary_condition'  );
-  my $use_vic = $nl->get_value( 'use_vichydro'              );
+  my $use_vic = $nl_flags->{'use_vichydro'};
   my $use_bed = $nl->get_value( 'use_bedrock'               );
   my $soilmtd = $nl->get_value( 'soilwater_movement_method' );
   if ( defined($soilmtd) && defined($lower) && $soilmtd == 0 && $lower != 4 ) {
@@ -4043,6 +4080,13 @@ sub setup_logic_misc {
    #
    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+   if ( $opts->{'driver'} ne "nuopc" ) {
+      my $var = "force_send_to_atm";
+      my $val = $nl->get_value($var);
+      if ( defined($val) ) {
+         $log->fatal_error( "$var can only be set for the nuopc driver" );
+      }
+   }
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
 }
@@ -4083,6 +4127,9 @@ sub write_output_files {
   # Eventually only list namelists that are actually used when CN on
   if ( &value_is_true($nl_flags->{'use_lch4'}) ) {
      push @groups, "ch4par_in";
+  }
+  if ( $opts->{'driver'} eq "nuopc" ) {
+     push @groups, "ctsm_nuopc_cap";
   }
   push @groups, "clm_humanindex_inparm";
   push @groups, "cnmresp_inparm";
@@ -4318,8 +4365,9 @@ sub check_input_files {
 
                 if ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
-                        #MV $pathname =~ s:$inputdata_rootdir::;
-                        print OUTFILE "$var = $pathname\n";
+                        if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
+                           print OUTFILE "$var = $pathname\n";
+                        }
                     }
                     else {
                         if (-e $pathname) {  # use -e rather than -f since the absolute pathname
@@ -4340,7 +4388,9 @@ sub check_input_files {
                     if ($inputdata_rootdir) {
                         $pathname = "$rootdir/$pathname";
                         #MV $pathname =~ s:$inputdata_rootdir::;
-                        print OUTFILE "$var = $pathname\n";
+                        if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
+                           print OUTFILE "$var = $pathname\n";
+                        }
                     }
                     else {
                         if (-f "$rootdir/$pathname") {
