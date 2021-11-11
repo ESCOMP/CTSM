@@ -10,10 +10,12 @@ import unittest
 import tempfile
 import shutil
 from subprocess import call
-
-import ctsm.unit_testing
+from configparser import ConfigParser
 
 import xarray as xr
+
+import ctsm.unit_testing
+from ctsm.utils import get_config_value
 
 
 class TestSysFsurdatModifier(unittest.TestCase):
@@ -30,40 +32,76 @@ class TestSysFsurdatModifier(unittest.TestCase):
         This test specifies a minimal amount of information
         """
 
-        # fsurdat_out that we expect to create
-        prefix = 'test_'
-        case = 'modify_minimal'
-        suffix = '.nc'
-        file_name_out = prefix + case + suffix
+        # get fsurdat_in and fsurdat_out from the .cfg (config) file
+        cfg_path = 'ctsm/test/testinputs/modify_minimal.cfg'
+        config = ConfigParser()
+        config.read(cfg_path)
+        section = config.sections()[0]  # name of the first section
+        fsurdat_in = get_config_value(config=config,
+            section=section, item='fsurdat_in',
+            file_path=cfg_path)
+        fsurdat_out = get_config_value(config=config,
+            section=section, item='fsurdat_out',
+            file_path=cfg_path)
 
-        if os.path.exists(file_name_out):
-            os.remove(file_name_out)  # remove old file to write the new one
+        if os.path.exists(fsurdat_out):
+            os.remove(fsurdat_out)  # remove old file to write the new one
 
         # run the fsurdat_modifier tool
-        prefix_1 = '../tools/modify_fsurdat/'  # location of tool
-        tool = 'fsurdat_modifier'
-        prefix_2 = 'ctsm/test/inputdata/'  # location of .cfg and fsurdat_in
-        suffix = '.cfg'
-        command = prefix_1 + tool + ' ' + prefix_2 + case + suffix
+        tool = '../tools/modify_fsurdat/fsurdat_modifier'
+        command = tool + ' ' + cfg_path
         call(command, shell=True)
         # the critical piece of this test is that the above command
         # doesn't generate errors; however, we also do some assertions below
 
         # move the generated file to _tempdir
-        file_name_final = os.path.join(self._tempdir, file_name_out)
-        shutil.move(file_name_out, file_name_final)
+        fsurdat_out_final = os.path.join(self._tempdir, fsurdat_out)
+        shutil.move(fsurdat_out, fsurdat_out_final)
 
-        # TODO read fsurdat_in and fsurdat_out as xarray datasets and compare
-        # TODO get filename_in from .cfg using argparse rather than hardwiring
-        file_name_in = prefix_2 + \
-            'surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc'
-        fsurdat_in = xr.open_dataset(file_name_in)
-        fsurdat_out = xr.open_dataset(file_name_final)
+        fsurdat_in_data = xr.open_dataset(fsurdat_in)
+        fsurdat_out_data = xr.open_dataset(fsurdat_out_final)
 
-#   def test_allInfo(self):
-#       """
-#       This version specifies all possible information
-#       """
+        self.assertTrue(fsurdat_out_data.equals(fsurdat_in_data))
+
+
+    def test_allInfo(self):
+        """
+        This version specifies all possible information
+        """
+
+        # get fsurdat_in and fsurdat_out from the .cfg (config) file
+        cfg_path = 'ctsm/test/testinputs/modify_all.cfg'
+        config = ConfigParser()
+        config.read(cfg_path)
+        section = config.sections()[0]  # name of the first section
+        fsurdat_in = get_config_value(config=config,
+            section=section, item='fsurdat_in',
+            file_path=cfg_path)
+        fsurdat_out = get_config_value(config=config,
+            section=section, item='fsurdat_out',
+            file_path=cfg_path)
+
+        if os.path.exists(fsurdat_out):
+            os.remove(fsurdat_out)  # remove old file to write the new one
+
+        # run the fsurdat_modifier tool
+        tool = '../tools/modify_fsurdat/fsurdat_modifier'
+        command = tool + ' ' + cfg_path
+        call(command, shell=True)
+        # the critical piece of this test is that the above command
+        # doesn't generate errors; however, we also do some assertions below
+
+        # move the generated file to _tempdir
+        fsurdat_out_final = os.path.join(self._tempdir, fsurdat_out)
+        shutil.move(fsurdat_out, fsurdat_out_final)
+
+        fsurdat_in_data = xr.open_dataset(fsurdat_in)
+        fsurdat_out_data = xr.open_dataset(fsurdat_out_final)
+
+        self.assertFalse(fsurdat_out_data.equals(fsurdat_in_data))
+        # TODO read template file and self.assertTrue is
+        # easier than needing to specify every variable...
+
 
 if __name__ == '__main__':
     unit_testing.setup_for_tests()
