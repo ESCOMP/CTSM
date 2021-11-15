@@ -4418,7 +4418,6 @@ contains
 
        if (decomp_method == mimics_decomp) then
           ! Calculate ligninNratio for leaves and fine roots
-          ! TODO init. ligninNratio vars if nec. for call p2c to work
           associate(ivt => patch%itype)  ! Input: [integer (:)] patch plant type
             ligninNratio_leaf_patch(p) = pftcon%lf_flig(ivt(p)) * &
                                          pftcon%lflitcn(ivt(p)) * &

@@ -97,8 +97,8 @@ module SoilBiogeochemDecompCascadeBGCMod
 
      real(r8) :: cwd_fcel_bgc !cellulose fraction for CWD
 
-     real(r8), allocatable :: initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
-     real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
+     real(r8), allocatable :: bgc_initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
+     real(r8) :: bgc_initial_Cstocks_depth  ! Soil depth for initial Carbon stocks for a cold-start
      
   end type params_type
   !
@@ -211,15 +211,15 @@ contains
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
     params_inst%cwd_fcel_bgc=tempr
 
-    allocate(params_inst%initial_Cstocks(ndecomp_pools_max))
-    tString='initial_Cstocks_bgc'
-    call ncd_io(trim(tString), params_inst%initial_Cstocks(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%bgc_initial_Cstocks(ndecomp_pools_max))
+    tString='bgc_initial_Cstocks'
+    call ncd_io(trim(tString), params_inst%bgc_initial_Cstocks(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    tString='initial_Cstocks_depth_bgc'
+    tString='bgc_initial_Cstocks_depth'
     call ncd_io(trim(tString),tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%initial_Cstocks_depth=tempr
+    params_inst%bgc_initial_Cstocks_depth=tempr
 
   end subroutine readParams
 
@@ -305,7 +305,7 @@ contains
             rf_s1s3(c,j) = t
          end do
       end do
-      initial_stock_soildepth = params_inst%initial_Cstocks_depth
+      initial_stock_soildepth = params_inst%bgc_initial_Cstocks_depth
 
       !-------------------  list of pools and their attributes  ------------
       i_litr_min = 1
@@ -319,7 +319,7 @@ contains
       is_soil(i_met_lit) = .false.
       is_cwd(i_met_lit) = .false.
       initial_cn_ratio(i_met_lit) = 90._r8
-      initial_stock(i_met_lit) = params_inst%initial_Cstocks(i_met_lit)
+      initial_stock(i_met_lit) = params_inst%bgc_initial_Cstocks(i_met_lit)
       is_metabolic(i_met_lit) = .true.
       is_cellulose(i_met_lit) = .false.
       is_lignin(i_met_lit) = .false.
@@ -334,7 +334,7 @@ contains
       is_soil(i_cel_lit) = .false.
       is_cwd(i_cel_lit) = .false.
       initial_cn_ratio(i_cel_lit) = 90._r8
-      initial_stock(i_cel_lit) = params_inst%initial_Cstocks(i_cel_lit)
+      initial_stock(i_cel_lit) = params_inst%bgc_initial_Cstocks(i_cel_lit)
       is_metabolic(i_cel_lit) = .false.
       is_cellulose(i_cel_lit) = .true.
       is_lignin(i_cel_lit) = .false.
@@ -349,7 +349,7 @@ contains
       is_soil(i_lig_lit) = .false.
       is_cwd(i_lig_lit) = .false.
       initial_cn_ratio(i_lig_lit) = 90._r8
-      initial_stock(i_lig_lit) = params_inst%initial_Cstocks(i_lig_lit)
+      initial_stock(i_lig_lit) = params_inst%bgc_initial_Cstocks(i_lig_lit)
       is_metabolic(i_lig_lit) = .false.
       is_cellulose(i_lig_lit) = .false.
       is_lignin(i_lig_lit) = .true.
@@ -374,7 +374,7 @@ contains
       is_soil(i_act_som) = .true.
       is_cwd(i_act_som) = .false.
       initial_cn_ratio(i_act_som) = cn_s1
-      initial_stock(i_act_som) = params_inst%initial_Cstocks(i_act_som)
+      initial_stock(i_act_som) = params_inst%bgc_initial_Cstocks(i_act_som)
       is_metabolic(i_act_som) = .false.
       is_cellulose(i_act_som) = .false.
       is_lignin(i_act_som) = .false.
@@ -389,7 +389,7 @@ contains
       is_soil(i_slo_som) = .true.
       is_cwd(i_slo_som) = .false.
       initial_cn_ratio(i_slo_som) = cn_s2
-      initial_stock(i_slo_som) = params_inst%initial_Cstocks(i_slo_som)
+      initial_stock(i_slo_som) = params_inst%bgc_initial_Cstocks(i_slo_som)
       is_metabolic(i_slo_som) = .false.
       is_cellulose(i_slo_som) = .false.
       is_lignin(i_slo_som) = .false.
@@ -404,7 +404,7 @@ contains
       is_soil(i_pas_som) = .true.
       is_cwd(i_pas_som) = .false.
       initial_cn_ratio(i_pas_som) = cn_s3
-      initial_stock(i_pas_som) = params_inst%initial_Cstocks(i_pas_som)
+      initial_stock(i_pas_som) = params_inst%bgc_initial_Cstocks(i_pas_som)
       is_metabolic(i_pas_som) = .false.
       is_cellulose(i_pas_som) = .false.
       is_lignin(i_pas_som) = .false.
@@ -421,7 +421,7 @@ contains
          is_soil(i_cwd) = .false.
          is_cwd(i_cwd) = .true.
          initial_cn_ratio(i_cwd) = 90._r8
-         initial_stock(i_cwd) = params_inst%initial_Cstocks(i_cwd)
+         initial_stock(i_cwd) = params_inst%bgc_initial_Cstocks(i_cwd)
          is_metabolic(i_cwd) = .false.
          is_cellulose(i_cwd) = .false.
          is_lignin(i_cwd) = .false.
@@ -502,7 +502,7 @@ contains
          cascade_receiver_pool(i_cwdl3) = i_lig_lit
       end if
 
-      deallocate(params_inst%initial_Cstocks)
+      deallocate(params_inst%bgc_initial_Cstocks)
 
     end associate
 

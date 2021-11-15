@@ -33,7 +33,7 @@ module SoilBiogeochemStateType
      real(r8) , pointer :: fpi_vr_col                  (:,:)   ! (no units) fraction of potential immobilization 
      real(r8) , pointer :: fpi_col                     (:)     ! (no units) fraction of potential immobilization 
      real(r8),  pointer :: fpg_col                     (:)     ! (no units) fraction of potential gpp 
-     real(r8) , pointer :: nue_decomp_cascade_col      (:)     ! (TODO) N use efficiency for a given transition
+     real(r8) , pointer :: nue_decomp_cascade_col      (:)     ! (gN going into microbe / gN decomposed) N use efficiency for a given transition
      real(r8) , pointer :: nfixation_prof_col          (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: ndep_prof_col               (:,:)   ! (1/m) profile for N fixation additions 
      real(r8) , pointer :: som_adv_coef_col            (:,:)   ! (m2/s) SOM advective flux 

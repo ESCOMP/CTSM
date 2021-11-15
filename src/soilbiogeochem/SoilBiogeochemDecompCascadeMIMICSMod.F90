@@ -108,29 +108,29 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   real(r8), private :: kslope_s1_m2  !
 
   type, private :: params_type
-     real(r8) :: mimics_nue_into_mic
+     real(r8) :: mimics_nue_into_mic  ! microbial N use efficiency for N fluxes
      real(r8) :: mimics_desorpQ10
-     real(r8) :: mimics_densdep
-     real(r8) :: mimics_tau_mod_factor
+     real(r8) :: mimics_densdep  ! exponent controling the density dependence of microbial turnover
+     real(r8) :: mimics_tau_mod_factor  ! (1 / tauModDenom) from testbed code
      real(r8) :: mimics_tau_mod_min
      real(r8) :: mimics_tau_mod_max
      real(r8) :: mimics_ko_r
      real(r8) :: mimics_ko_k
-     real(r8) :: mimics_cn_r
-     real(r8) :: mimics_cn_k
-     real(r8) :: mimics_cn_mod_num
+     real(r8) :: mimics_cn_r  ! C:N of MICr
+     real(r8) :: mimics_cn_k  ! C:N of MICk
+     real(r8) :: mimics_cn_mod_num  ! adjusts microbial CN based on fmet
      real(r8) :: mimics_t_soi_ref
-     real(r8) :: initial_Cstocks_depth      ! Soil depth for initial Carbon stocks for a cold-start
-     real(r8), allocatable :: initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
+     real(r8) :: mimics_initial_Cstocks_depth  ! Soil depth for initial Carbon stocks for a cold-start
+     real(r8), allocatable :: mimics_initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
      ! The next few vectors are dimensioned by the number of decomposition
      ! transitions making use of the corresponding parameters. The transitions
      ! are represented in this order: l1m1 l2m1 s1m1 l1m2 l2m2 s1m2
      real(r8), allocatable :: mimics_mge(:)  ! Microbial growth efficiency (mg/mg)
      real(r8), allocatable :: mimics_vmod(:)  ! 
-     real(r8), allocatable :: mimics_vint(:)  ! 
-     real(r8), allocatable :: mimics_vslope(:)  ! 
+     real(r8), allocatable :: mimics_vint(:)  ! regression intercept (5.47 ln(mg Cs (mg MIC)-1 h-1) )
+     real(r8), allocatable :: mimics_vslope(:)  ! transition regression coeffs (ln(mg Cs (mg MIC)-1 h-1) ¡C-1)
      real(r8), allocatable :: mimics_kmod(:)  ! 
-     real(r8), allocatable :: mimics_kint(:)  ! 
+     real(r8), allocatable :: mimics_kint(:)  ! regression intercept
      real(r8), allocatable :: mimics_kslope(:)  ! 
      ! The next few vectors are dimensioned by the number of
      ! parameters with the same name used in the same formula.
@@ -176,20 +176,14 @@ contains
     !-----------------------------------------------------------------------
 
     ! Read off of netcdf file
-    ! TODO When ready for final params values, talk to @wwieder
-    ! TODO Need next one for spin-ups? If so, then add prefixes
-    ! mimics here and bgc in BGCMod if these two will differ or
-    ! move reading the parameter to CNSharedParamsMod if they
-    ! will not differ.
-    tString='initial_Cstocks_depth_bgc'
+    tString='mimics_initial_Cstocks_depth'
     call ncd_io(trim(tString), tempr, 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
-    params_inst%initial_Cstocks_depth=tempr
+    params_inst%mimics_initial_Cstocks_depth=tempr
 
-    ! TODO initial_Cstocks definitely needs to differ: mimics_ vs. bgc_
-    allocate(params_inst%initial_Cstocks(ndecomp_pools_max))
-    tString='initial_Cstocks_bgc'
-    call ncd_io(trim(tString), params_inst%initial_Cstocks(:), 'read', ncid, readvar=readv)
+    allocate(params_inst%mimics_initial_Cstocks(ndecomp_pools_max))
+    tString='mimics_initial_Cstocks'
+    call ncd_io(trim(tString), params_inst%mimics_initial_Cstocks(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
     allocate(params_inst%mimics_mge(ndecomp_pools_max))
@@ -252,12 +246,12 @@ contains
     call ncd_io(trim(tString), params_inst%mimics_fmet(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_fchem_r(2))
+    allocate(params_inst%mimics_fchem_r(4))
     tString='mimics_fchem_r'
     call ncd_io(trim(tString), params_inst%mimics_fchem_r(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
 
-    allocate(params_inst%mimics_fchem_k(2))
+    allocate(params_inst%mimics_fchem_k(4))
     tString='mimics_fchem_k'
     call ncd_io(trim(tString), params_inst%mimics_fchem_k(:), 'read', ncid, readvar=readv)
     if ( .not. readv ) call endrun(msg=trim(errCode)//trim(tString)//errMsg(sourcefile, __LINE__))
@@ -367,7 +361,7 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                                     &
-         nue_decomp_cascade             => soilbiogeochem_state_inst%nue_decomp_cascade_col      , & ! Output: [real(r8)          (:)     ]  N use efficiency for a given transition (TODO)
+         nue_decomp_cascade             => soilbiogeochem_state_inst%nue_decomp_cascade_col      , & ! Output: [real(r8)          (:)     ]  N use efficiency for a given transition (gN going into microbe / gN decomposed)
 
          cellclay                       => soilstate_inst%cellclay_col                           , & ! Input:  [real(r8)          (:,:)   ]  column 3D clay
          
@@ -473,7 +467,7 @@ contains
                                       dexp(mimics_p_scalar_p2 * dsqrt(clay)))
          end do
       end do
-      initial_stock_soildepth = params_inst%initial_Cstocks_depth
+      initial_stock_soildepth = params_inst%mimics_initial_Cstocks_depth
 
       !-------------------  list of pools and their attributes  ------------
       i_litr_min = 1
@@ -488,8 +482,7 @@ contains
       is_soil(i_met_lit) = .false.
       is_cwd(i_met_lit) = .false.
       initial_cn_ratio(i_met_lit) = 10._r8  ! 90 in BGC; not used in MIMICS
-      initial_stock(i_met_lit) = params_inst%initial_Cstocks(i_met_lit)
-      initial_stock(i_met_lit) = 1._r8  ! TODO slevis: finalize in params files
+      initial_stock(i_met_lit) = params_inst%mimics_initial_Cstocks(i_met_lit)
       is_metabolic(i_met_lit) = .true.
       is_cellulose(i_met_lit) = .false.
       is_lignin(i_met_lit) = .false.
@@ -505,8 +498,7 @@ contains
       is_soil(i_str_lit) = .false.
       is_cwd(i_str_lit) = .false.
       initial_cn_ratio(i_str_lit) = 10._r8  ! 90 in BGC; not used in MIMICS
-      initial_stock(i_str_lit) = params_inst%initial_Cstocks(i_str_lit)
-      initial_stock(i_str_lit) = 1._r8  ! TODO slevis: finalize in params files
+      initial_stock(i_str_lit) = params_inst%mimics_initial_Cstocks(i_str_lit)
       is_metabolic(i_str_lit) = .false.
       is_cellulose(i_str_lit) = .true.
       is_lignin(i_str_lit) = .true.
@@ -532,8 +524,7 @@ contains
       is_soil(i_avl_som) = .true.
       is_cwd(i_avl_som) = .false.
       initial_cn_ratio(i_avl_som) = 10._r8  ! cn_s1 in BGC; not used in MIMICS
-      initial_stock(i_avl_som) = params_inst%initial_Cstocks(i_avl_som)
-      initial_stock(i_avl_som) = 200._r8  ! TODO slevis: finalize in params files
+      initial_stock(i_avl_som) = params_inst%mimics_initial_Cstocks(i_avl_som)
       is_metabolic(i_avl_som) = .false.
       is_cellulose(i_avl_som) = .false.
       is_lignin(i_avl_som) = .false.
@@ -549,8 +540,7 @@ contains
       is_soil(i_chem_som) = .true.
       is_cwd(i_chem_som) = .false.
       initial_cn_ratio(i_chem_som) = 10._r8  ! cn_s2 in BGC; not used in MIMICS
-      initial_stock(i_chem_som) = params_inst%initial_Cstocks(i_chem_som)
-      initial_stock(i_chem_som) = 200._r8  ! TODO slevis: finalize in params files
+      initial_stock(i_chem_som) = params_inst%mimics_initial_Cstocks(i_chem_som)
       is_metabolic(i_chem_som) = .false.
       is_cellulose(i_chem_som) = .false.
       is_lignin(i_chem_som) = .false.
@@ -566,8 +556,7 @@ contains
       is_soil(i_phys_som) = .true.
       is_cwd(i_phys_som) = .false.
       initial_cn_ratio(i_phys_som) = 10._r8  ! cn_s3 in BGC; not used in MIMICS
-      initial_stock(i_phys_som) = params_inst%initial_Cstocks(i_phys_som)
-      initial_stock(i_phys_som) = 200._r8  ! TODO slevis: finalize in params files
+      initial_stock(i_phys_som) = params_inst%mimics_initial_Cstocks(i_phys_som)
       is_metabolic(i_phys_som) = .false.
       is_cellulose(i_phys_som) = .false.
       is_lignin(i_phys_som) = .false.
@@ -583,8 +572,7 @@ contains
       is_soil(i_cop_mic) = .false.
       is_cwd(i_cop_mic) = .false.
       initial_cn_ratio(i_cop_mic) = 10._r8  ! MIMICS may use this
-      initial_stock(i_cop_mic) = params_inst%initial_Cstocks(i_cop_mic)
-      initial_stock(i_cop_mic) = 1._r8  ! TODO slevis: finalize in params files
+      initial_stock(i_cop_mic) = params_inst%mimics_initial_Cstocks(i_cop_mic)
       is_metabolic(i_cop_mic) = .false.
       is_cellulose(i_cop_mic) = .false.
       is_lignin(i_cop_mic) = .false.
@@ -600,8 +588,7 @@ contains
       is_soil(i_oli_mic) = .false.
       is_cwd(i_oli_mic) = .false.
       initial_cn_ratio(i_oli_mic) = 10._r8  ! MIMICS may use this
-      initial_stock(i_oli_mic) = params_inst%initial_Cstocks(i_oli_mic)
-      initial_stock(i_oli_mic) = 1._r8  ! TODO slevis: finalize in params files
+      initial_stock(i_oli_mic) = params_inst%mimics_initial_Cstocks(i_oli_mic)
       is_metabolic(i_oli_mic) = .false.
       is_cellulose(i_oli_mic) = .false.
       is_lignin(i_oli_mic) = .false.
@@ -619,8 +606,7 @@ contains
          is_soil(i_cwd) = .false.
          is_cwd(i_cwd) = .true.
          initial_cn_ratio(i_cwd) = 10._r8  ! 90 in BGC; not used in MIMICS
-         initial_stock(i_cwd) = params_inst%initial_Cstocks(i_cwd)
-         initial_stock(i_cwd) = 1._r8  ! TODO slevis: finalize in params files
+         initial_stock(i_cwd) = params_inst%mimics_initial_Cstocks(i_cwd)
          is_metabolic(i_cwd) = .false.
          is_cellulose(i_cwd) = .false.
          is_lignin(i_cwd) = .false.
@@ -752,7 +738,7 @@ contains
       deallocate(params_inst%mimics_desorp)
       deallocate(params_inst%mimics_fphys_r)
       deallocate(params_inst%mimics_fphys_k)
-      deallocate(params_inst%initial_Cstocks)
+      deallocate(params_inst%mimics_initial_Cstocks)
 
     end associate
 
@@ -825,8 +811,10 @@ contains
     real(r8):: mimics_fmet_p4
     real(r8):: mimics_fchem_r_p1
     real(r8):: mimics_fchem_r_p2
+    real(r8):: mimics_fchem_r_p3
     real(r8):: mimics_fchem_k_p1
     real(r8):: mimics_fchem_k_p2
+    real(r8):: mimics_fchem_k_p3
     real(r8):: mimics_tau_mod_min
     real(r8):: mimics_tau_mod_max
     real(r8):: mimics_tau_mod_factor
@@ -1004,7 +992,6 @@ contains
             end do
          end do
 
-         ! TODO May need a hook from MIMICS to ch4 code for this to work
          ! Calculate ANOXIA
          ! anoxia = .true. when (use_lch4)
 
@@ -1083,8 +1070,10 @@ contains
       mimics_fmet_p4 = params_inst%mimics_fmet(4)
       mimics_fchem_r_p1 = params_inst%mimics_fchem_r(1)
       mimics_fchem_r_p2 = params_inst%mimics_fchem_r(2)
+      mimics_fchem_r_p3 = params_inst%mimics_fchem_r(3)
       mimics_fchem_k_p1 = params_inst%mimics_fchem_k(1)
       mimics_fchem_k_p2 = params_inst%mimics_fchem_k(2)
+      mimics_fchem_k_p3 = params_inst%mimics_fchem_k(3)
       mimics_tau_mod_min = params_inst%mimics_tau_mod_min
       mimics_tau_mod_max = params_inst%mimics_tau_mod_max
       mimics_tau_mod_factor = params_inst%mimics_tau_mod_factor
@@ -1097,12 +1086,11 @@ contains
       mimics_densdep = params_inst%mimics_densdep
       mimics_desorpQ10 = params_inst%mimics_desorpQ10
       mimics_t_soi_ref = params_inst%mimics_t_soi_ref
-      mimics_cn_mod_num = params_inst%mimics_cn_mod_num  ! TODO slevis: I don't see values in the testbed or
-      mimics_cn_r = params_inst%mimics_cn_r  ! ... in the testbed's
-      mimics_cn_k = params_inst%mimics_cn_k  ! ... params file for these 3
+      mimics_cn_mod_num = params_inst%mimics_cn_mod_num
+      mimics_cn_r = params_inst%mimics_cn_r
+      mimics_cn_k = params_inst%mimics_cn_k
 
       ! calculate rates for all litter and som pools
-      ! TODO Ok that I reversed order of do-loops?
       do fc = 1,num_soilc
          c = filter_soilc(fc)
 
@@ -1136,10 +1124,10 @@ contains
 
          ! Used in the update of certain pathfrac terms that vary with time
          ! in the next loop
-         fchem_m1 = min(1.0_r8, max(0.0_r8, mimics_fchem_r_p1 * &
-                                            exp(mimics_fchem_r_p2 * fmet)))
-         fchem_m2 = min(1.0_r8, max(0.0_r8, mimics_fchem_k_p1 * &
-                                            exp(mimics_fchem_k_p2 * fmet)))
+         fchem_m1 = min(1._r8, max(0._r8, mimics_fchem_r_p1 * &
+                    exp(mimics_fchem_r_p2 * fmet) * mimics_fchem_r_p3))
+         fchem_m2 = min(1._r8, max(0._r8, mimics_fchem_k_p1 * &
+                    exp(mimics_fchem_k_p2 * fmet) * mimics_fchem_k_p3))
 
          do j = 1,nlevdecomp
             ! vmax ends up in units of per hour but is expected
@@ -1194,26 +1182,38 @@ contains
 
             ! decomp_k used in SoilBiogeochemPotentialMod.F90
             ! also updating pathfrac terms that vary with time
-            ! TODO No spinup terms for now (see cwd below)
             term_1 = vmax_l1_m1 * m1_conc / (km_l1_m1 + m1_conc)
             term_2 = vmax_l1_m2 * m2_conc / (km_l1_m2 + m2_conc)
             decomp_k(c,j,i_met_lit) = (term_1 + term_2) * w_d_o_scalars
-            ! TODO May need if-statment for all cases that term_1 +/ term_2
-            ! are zero bc biomass would never flow into such pools in that case
-            pathfrac_decomp_cascade(c,j,i_l1m1) = term_1 / (term_1 + term_2)
-            pathfrac_decomp_cascade(c,j,i_l1m2) = term_2 / (term_1 + term_2)
+            if (term_1 + term_2 /= 0._r8) then
+               pathfrac_decomp_cascade(c,j,i_l1m1) = term_1 / (term_1 + term_2)
+               pathfrac_decomp_cascade(c,j,i_l1m2) = term_2 / (term_1 + term_2)
+            else
+               pathfrac_decomp_cascade(c,j,i_l1m1) = 0._r8
+               pathfrac_decomp_cascade(c,j,i_l1m2) = 0._r8
+            end if
 
             term_1 = vmax_l2_m1 * m1_conc / (km_l2_m1 + m1_conc)
             term_2 = vmax_l2_m2 * m2_conc / (km_l2_m2 + m2_conc)
             decomp_k(c,j,i_str_lit) = (term_1 + term_2) * w_d_o_scalars
-            pathfrac_decomp_cascade(c,j,i_l2m1) = term_1 / (term_1 + term_2)
-            pathfrac_decomp_cascade(c,j,i_l2m2) = term_2 / (term_1 + term_2)
+            if (term_1 + term_2 /= 0._r8) then
+               pathfrac_decomp_cascade(c,j,i_l2m1) = term_1 / (term_1 + term_2)
+               pathfrac_decomp_cascade(c,j,i_l2m2) = term_2 / (term_1 + term_2)
+            else
+               pathfrac_decomp_cascade(c,j,i_l2m1) = 0._r8
+               pathfrac_decomp_cascade(c,j,i_l2m2) = 0._r8
+            end if
 
             term_1 = vmax_s1_m1 * m1_conc / (km_s1_m1 + m1_conc)
             term_2 = vmax_s1_m2 * m2_conc / (km_s1_m2 + m2_conc)
             decomp_k(c,j,i_avl_som) = (term_1 + term_2) * w_d_o_scalars
-            pathfrac_decomp_cascade(c,j,i_s1m1) = term_1 / (term_1 + term_2)
-            pathfrac_decomp_cascade(c,j,i_s1m2) = term_2 / (term_1 + term_2)
+            if (term_1 + term_2 /= 0._r8) then
+               pathfrac_decomp_cascade(c,j,i_s1m1) = term_1 / (term_1 + term_2)
+               pathfrac_decomp_cascade(c,j,i_s1m2) = term_2 / (term_1 + term_2)
+            else
+               pathfrac_decomp_cascade(c,j,i_s1m1) = 0._r8
+               pathfrac_decomp_cascade(c,j,i_s1m2) = 0._r8
+            end if
 
             decomp_k(c,j,i_phys_som) = desorption * depth_scalar(c,j)
 
