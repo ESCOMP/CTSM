@@ -1691,6 +1691,7 @@ contains
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     logical do_plant_prescribed ! is today the prescribed sowing date?
+    logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
     logical do_harvest    ! Are harvest conditions satisfied?
     logical force_harvest ! Should we harvest today no matter what?
     !------------------------------------------------------------------------
@@ -1811,19 +1812,24 @@ contains
 
             do_plant_prescribed = next_rx_sdate(p) == jday
 
+            ! Only allow sowing according to normal "window" rules if not using prescribed
+            ! sowing dates at all, or if this cell had no values in the prescribed sowing
+            ! date file.
+            allow_unprescribed_planting = (.not. use_cropcal_streams) .or. crop_inst%rx_sdates_thisyr(p,1)<0
+
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
             if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
 
                ! Are all the normal requirements for planting met?
-               do_plant_normal = (.not. use_cropcal_streams)           .and. &
+               do_plant_normal = allow_unprescribed_planting           .and. &
                                  a5tmin(p)   /= spval                  .and. &
                                  a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
                                  jday        >= minplantjday(ivt(p),h) .and. &
                                  (gdd020(p)  /= spval                  .and. &
                                  gdd020(p)   >= gddmin(ivt(p)))
                ! If not, but it's the last day of the planting window, what about relaxed rules?
-               do_plant_lastchance = (.not. use_cropcal_streams)           .and. &
+               do_plant_lastchance = allow_unprescribed_planting           .and. &
                                      (.not. do_plant_normal)               .and. &
                                      jday       >=  maxplantjday(ivt(p),h) .and. &
                                      gdd020(p)  /= spval                   .and. &
@@ -1851,7 +1857,7 @@ contains
                !         while the gdd part is either true or false for the year.
 
                ! Are all the normal requirements for planting met?
-               do_plant_normal = (.not. use_cropcal_streams)           .and. &
+               do_plant_normal = allow_unprescribed_planting               .and. &
                                  t10(p) /= spval .and. a10tmin(p) /= spval .and. &
                                  t10(p)     > planttemp(ivt(p))            .and. &
                                  a10tmin(p) > minplanttemp(ivt(p))         .and. &
@@ -1860,7 +1866,7 @@ contains
                                  gdd820(p)  /= spval                       .and. &
                                  gdd820(p)  >= gddmin(ivt(p))
                ! If not, but it's the last day of the planting window, what about relaxed rules?
-               do_plant_lastchance = (.not. use_cropcal_streams)    .and. &
+               do_plant_lastchance = allow_unprescribed_planting    .and. &
                                      (.not. do_plant_normal)        .and. &
                                      jday == maxplantjday(ivt(p),h) .and. &
                                      gdd820(p) > 0._r8 .and. &
