@@ -875,8 +875,10 @@ contains
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
     if (fldchk(exportState, Flrl_irrig)) then ! irrigation flux to be removed from main channel storage (negative)
+       ! NOTE: EBK 11/15/2021 -- Don't initialize to spval as otherwise RTM dies
+       ! with NaN's (see #1545 for the non-FATES issue)
        call state_setexport_1d(exportState, Flrl_irrig, waterlnd2atmbulk_inst%qirrig_grc(begg:), &
-            minus = .true., init_spval=.true., rc=rc)
+            minus = .true., init_spval=.false., rc=rc)
        if (ChkErr(rc,__LINE__,u_FILE_u)) return
     end if
     if (fldchk(exportState, Flrl_rofsub)) then
