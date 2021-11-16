@@ -58,7 +58,7 @@ contains
 
     use clm_varpar       , only : nlevgrnd, nlevurb
     use clm_time_manager , only : get_step_size_real, get_nstep
-    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, PerchedLateralFlowHillslope, LateralFlowPowerLaw, LateralFlowHillslope
+    use SoilHydrologyMod , only : CLMVICMap, Drainage, PerchedLateralFlow, SubsurfaceLateralFlow
     use SoilWaterMovementMod , only : use_aquifer_layer
     use HillslopeHydrologyMod, only : streamflow_manning, HillslopeStreamOutflow, HillslopeUpdateStreamWater
     
@@ -144,42 +144,27 @@ contains
               waterstatebulk_inst, waterfluxbulk_inst)
       else
          
-         if(use_hillslope) then 
-            call PerchedLateralFlowHillslope(bounds, &
-                 num_hydrologyc, filter_hydrologyc, &
+         call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
                  soilhydrology_inst, soilstate_inst, &
-                 waterstatebulk_inst, waterfluxbulk_inst,&
+                 waterstatebulk_inst, waterfluxbulk_inst, &
                  wateratm2lndbulk_inst)
-            
-            call LateralFlowHillslope(bounds, &
-                 num_hillslope, filter_hillslopec, &
+         call SubsurfaceLateralFlow(bounds, &
                  num_hydrologyc, filter_hydrologyc, &
                  num_urbanc, filter_urbanc,&
                  soilhydrology_inst, soilstate_inst, &
                  waterstatebulk_inst, waterfluxbulk_inst, &
                  wateratm2lndbulk_inst)
-            
-            if(use_hillslope_routing) then 
-               call HillslopeStreamOutflow(bounds,&
-                    waterstatebulk_inst, waterfluxbulk_inst, &
-                    streamflow_method=streamflow_manning)
-               
-               call HillslopeUpdateStreamWater(bounds, &
-                    waterstatebulk_inst, waterfluxbulk_inst, &
-                    wateratm2lndbulk_inst)
-            endif
-         else
-            call PerchedLateralFlow(bounds, num_hydrologyc, filter_hydrologyc, &
-                 num_urbanc, filter_urbanc,&
-                 soilhydrology_inst, soilstate_inst, &
-                 waterstatebulk_inst, waterfluxbulk_inst)
-            
-            call LateralFlowPowerLaw(bounds, num_hydrologyc, filter_hydrologyc, &
-                 num_urbanc, filter_urbanc,&
-                 soilhydrology_inst, soilstate_inst, &
-                 waterstatebulk_inst, waterfluxbulk_inst)
-         endif
 
+         if(use_hillslope_routing) then 
+            call HillslopeStreamOutflow(bounds,&
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 streamflow_method=streamflow_manning)
+            
+            call HillslopeUpdateStreamWater(bounds, &
+                 waterstatebulk_inst, waterfluxbulk_inst, &
+                 wateratm2lndbulk_inst)
+         endif
+         
       endif
 
       do j = 1, nlevgrnd

@@ -82,6 +82,7 @@ module ColumnType
      real(r8), pointer :: hill_aspect          (:)   ! azimuth angle of column wrt to north, positive to east (radians)
 
      ! other column characteristics
+     logical , pointer :: is_hillslope_column(:)     ! true if this column is a hillslope element
      logical , pointer :: hydrologically_active(:)   ! true if this column is a hydrologically active type
      logical , pointer :: urbpoi               (:)   ! true=>urban point
 
@@ -158,6 +159,7 @@ contains
     allocate(this%micro_sigma (begc:endc))                     ; this%micro_sigma (:)   = nan
     allocate(this%topo_slope  (begc:endc))                     ; this%topo_slope  (:)   = nan
     allocate(this%topo_std    (begc:endc))                     ; this%topo_std    (:)   = nan
+    allocate(this%is_hillslope_column(begc:endc))              ; this%is_hillslope_column(:) = .false.
     allocate(this%hydrologically_active(begc:endc))            ; this%hydrologically_active(:) = .false.
     allocate(this%urbpoi      (begc:endc))                     ; this%urbpoi      (:)   = .false.
 
@@ -195,6 +197,7 @@ contains
     deallocate(this%topo_std   )
     deallocate(this%nbedrock   )
     deallocate(this%levgrnd_class)
+    deallocate(this%is_hillslope_column)
     deallocate(this%hydrologically_active)
     deallocate(this%col_ndx    )
     deallocate(this%colu       )

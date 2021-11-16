@@ -14,6 +14,7 @@ module HillslopeHydrologyMod
   use clm_varctl     , only : use_hillslope_routing
   use decompMod      , only : bounds_type
   use clm_varcon     , only : rpi
+  use spmdMod        , only : masterproc, iam
 
   ! !PUBLIC TYPES:
   implicit none
@@ -67,6 +68,7 @@ contains
     type(bounds_type), intent(in) :: bounds
     character(len=*) , intent(in) :: fsurdat    ! surface data file name
     integer,  pointer     :: ihillslope_in(:,:) ! read in - integer
+    integer,  pointer     :: ncolumns_hillslope_in(:) ! read in number of columns
     integer,  allocatable :: hill_ndx(:,:)      ! hillslope index
     integer,  allocatable :: col_ndx(:,:)       ! column index
     integer,  allocatable :: col_dndx(:,:)      ! downhill column index
@@ -114,7 +116,26 @@ contains
          hill_width   (bounds%begl:bounds%endl,max_columns_hillslope), &
          hill_height  (bounds%begl:bounds%endl,max_columns_hillslope), &
          stat=ierr)
+
+    allocate(ncolumns_hillslope_in(bounds%begg:bounds%endg))
     
+    call ncd_io(ncid=ncid, varname='nhillcolumns', flag='read', data=ncolumns_hillslope_in, dim1name=grlnd, readvar=readvar)
+    if (.not. readvar) then
+       if (masterproc) then
+          call endrun( 'ERROR:: nhillcolumns not found on surface data set.'//errmsg(sourcefile, __LINE__) )
+       end if
+    end if
+    do l = bounds%begl,bounds%endl
+       g = lun%gridcell(l)
+       ! vegetated landunits having nonzero hillslope columns
+       if(lun%itype(l) == istsoil .and. ncolumns_hillslope_in(g) > 0) then
+          do c = lun%coli(l), lun%colf(l)
+             col%is_hillslope_column(c) = .true.
+          enddo
+       endif
+    enddo
+    deallocate(ncolumns_hillslope_in)
+
     allocate(fhillslope_in(bounds%begg:bounds%endg,nhillslope))
     
     call ncd_io(ncid=ncid, varname='pct_hillslope', flag='read', data=fhillslope_in, dim1name=grlnd, readvar=readvar)
@@ -162,15 +183,6 @@ contains
     do l = bounds%begl,bounds%endl
        g = lun%gridcell(l)
        col_dndx(l,:) = ihillslope_in(g,:)
-!scs
-!!$       do c=1,max_columns_hillslope
-!!$          if (abs(col_dndx(l,c)-col_ndx(l,c)) > 16 .and. col_dndx(l,c) > -999) then
-!!$             write(iulog,*) 'colndx  ',c,col_ndx(l,c),col_dndx(l,c)
-!!$             write(iulog,*) 'colndx2 ',grc%londeg(g),grc%latdeg(g)
-!!$             write(iulog,*) 'ihill ',ihillslope_in(g,:)
-!!$          endif
-!!$       enddo
-          
     enddo
     deallocate(ihillslope_in)
     
@@ -375,7 +387,7 @@ contains
              endif
              if ( allocated(hill_pftndx) ) &
                   col%hill_pftndx(c) = hill_pftndx(l,ci)
-
+             
           enddo
 
           ! Calculate total hillslope area on landunit and
@@ -390,38 +402,34 @@ contains
              endif
           enddo
 
-          ! Total area occupied by each hillslope (m2) is
-          ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
-          ! Number of representative hillslopes per landunit
-          ! is the total area divided by individual area
-          
-          do nh = 1, nhillslope
-             if(hillslope_area(nh) > 0._r8) then
-                nhill_per_landunit(nh) = grc%area(g)*1.e6_r8*lun%wtgcell(l) &
-                     *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
-             endif
-          enddo
+          if (use_hillslope_routing) then 
+                       
+             ! Total area occupied by each hillslope (m2) is
+             ! grc%area(g)*1.e6*lun%wtgcell(l)*pct_hillslope(l,nh)*0.01
+             ! Number of representative hillslopes per landunit
+             ! is the total area divided by individual area
              
-          ! Calculate steam channel length
-          ! Total length of stream banks is individual widths
-          ! times number of hillslopes per landunit divided
-          ! by 2 to convert from bank length to channel length
+             do nh = 1, nhillslope
+                if(hillslope_area(nh) > 0._r8) then
+                   nhill_per_landunit(nh) = grc%area(g)*1.e6_r8*lun%wtgcell(l) &
+                        *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
+                endif
+             enddo
+             
+             ! Calculate steam channel length
+             ! Total length of stream banks is individual widths
+             ! times number of hillslopes per landunit divided
+             ! by 2 to convert from bank length to channel length
 
-          lun%stream_channel_length(l) = 0._r8
-          do c = lun%coli(l), lun%colf(l)
-             if(col%cold(c) == ispval) then
-                lun%stream_channel_length(l) = lun%stream_channel_length(l) &
-                     + col%hill_width(c) * nhill_per_landunit(col%hillslope_ndx(c))
-             endif
-          enddo
-          lun%stream_channel_length(l) = 0.5_r8 * lun%stream_channel_length(l)
-          
-          do nh = 1, nhillslope
-             if(hillslope_area(nh) > 0._r8) then
-                nhill_per_landunit(nh) = grc%area(g)*1.e6_r8*lun%wtgcell(l) &
-                     *pct_hillslope(l,nh)*0.01/hillslope_area(nh)
-             endif
-          enddo
+             lun%stream_channel_length(l) = 0._r8
+             do c = lun%coli(l), lun%colf(l)
+                if(col%cold(c) == ispval) then
+                   lun%stream_channel_length(l) = lun%stream_channel_length(l) &
+                        + col%hill_width(c) * nhill_per_landunit(col%hillslope_ndx(c))
+                endif
+             enddo
+             lun%stream_channel_length(l) = 0.5_r8 * lun%stream_channel_length(l)
+          endif
                        
           ! if missing hillslope information on surface dataset, fill data
           ! and recalculate hillslope_area
@@ -429,33 +437,40 @@ contains
              do c = lun%coli(l), lun%colf(l)
                 nh = col%hillslope_ndx(c)
                 col%hill_area(c) = (grc%area(g)/real(lun%ncolumns(l),r8))*1.e6_r8 ! km2 to m2
-                col%hill_distance(c) = sqrt(col%hill_area(c)) &
-                     *((c-lun%coli(l))/ncol_per_hillslope(nh))
                 col%hill_width(c)    = sqrt(col%hill_area(c))
-                col%hill_elev(c)     = col%topo_std(c) &
-                     *((c-lun%coli(l))/ncol_per_hillslope(nh))
                 col%hill_slope(c)    = tan((rpi/180.)*col%topo_slope(c))
                 col%hill_aspect(c)   = (rpi/2.) ! east (arbitrarily chosen)
-                nh = col%hillslope_ndx(c)
-                pct_hillslope(l,nh)  = 100/nhillslope
+                if (nh > 0) then
+                   col%hill_elev(c)     = col%topo_std(c) &
+                        *((c-lun%coli(l))/ncol_per_hillslope(nh))
+                   col%hill_distance(c) = sqrt(col%hill_area(c)) &
+                        *((c-lun%coli(l))/ncol_per_hillslope(nh))
+                   pct_hillslope(l,nh)  = 100/nhillslope
+                else
+                   col%hill_elev(c)     = col%topo_std(c)
+                   col%hill_distance(c) = sqrt(col%hill_area(c))
+                endif
              enddo
+             
           endif
           
           ! Recalculate column weights using input areas
           check_weight = 0._r8
           do c = lun%coli(l), lun%colf(l)
              nh = col%hillslope_ndx(c)
-             if (nh > 0) then
+             if (col%is_hillslope_column(c)) then
                 col%wtlunit(c) = (col%hill_area(c)/hillslope_area(nh)) &
                      * (pct_hillslope(l,nh)*0.01_r8)
              else
-                col%wtlunit(c) = 0._r8
+                ! do not reweight if no input hillslope data 
+                !col%wtlunit(c) = 0._r8
              endif
              check_weight = check_weight + col%wtlunit(c)
           enddo
           if (abs(1._r8 - check_weight) > 1.e-6_r8) then 
              write(iulog,*) 'col%wtlunit does not sum to 1: ', check_weight
              write(iulog,*) 'weights: ', col%wtlunit(lun%coli(l):lun%colf(l))
+             write(iulog,*) 'location: ',grc%londeg(g),grc%latdeg(g)
              write(iulog,*) ' '
           endif
        endif
@@ -483,8 +498,12 @@ contains
        ! this may require modifying subgridMod/natveg_patch_exists
        ! to ensure patch exists in every gridcell
 
+       ! Specify single dominant pft per gridcell
        call HillslopeDominantPft()
-    
+
+       ! Specify different pfts for uplands / lowlands
+       !call HillslopeDominantLowlandPft()
+       
        !upland_ivt  = 13 ! c3 non-arctic grass
        !lowland_ivt = 7  ! broadleaf deciduous tree 
        !call HillslopeSetLowlandUplandPfts(lowland_ivt=7,upland_ivt=13)

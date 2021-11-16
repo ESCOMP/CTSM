@@ -402,6 +402,7 @@ contains
     !
     ! !USES:
     use histFileMod , only : hist_addfld1d, hist_addfld2d, no_snow_normal
+    use clm_varctl  , only : use_hillslope, use_hillslope_routing
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
@@ -500,30 +501,34 @@ contains
          long_name=this%info%lname('sub-surface drainage'), &
          ptr_col=this%qflx_drain_col, c2l_scale_type='urbanf')
 
-    this%qflx_latflow_out_col(begc:endc) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('QLATFLOWOUT'),  &
-         units='mm/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('hillcol lateral outflow'), &
-         ptr_col=this%qflx_latflow_out_col, c2l_scale_type='urbanf')
+    if (use_hillslope) then
+       this%qflx_latflow_out_col(begc:endc) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('QLATFLOWOUT'),  &
+            units='mm/s',  &
+            avgflag='A', &
+            long_name=this%info%lname('hillcol lateral outflow'), &
+            ptr_col=this%qflx_latflow_out_col, c2l_scale_type='urbanf')
 
-    this%qdischarge_col(begc:endc) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('QDISCHARGE'),  &
-         units='m3/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('hillslope discharge from column'), &
-         ptr_col=this%qdischarge_col, c2l_scale_type='urbanf')
+       this%qdischarge_col(begc:endc) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('QDISCHARGE'),  &
+            units='m3/s',  &
+            avgflag='A', &
+            long_name=this%info%lname('hillslope discharge from column'), &
+            ptr_col=this%qdischarge_col, c2l_scale_type='urbanf')
 
-    this%qstreamflow_lun(begl:endl) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('QSTREAMFLOW'),  &
-         units='m3/s',  &
-         avgflag='A', &
-         long_name=this%info%lname('streamflow discharge'), &
-         l2g_scale_type='veg', &
-         ptr_lunit=this%qstreamflow_lun)
+       if (use_hillslope_routing) then
+          this%qstreamflow_lun(begl:endl) = spval
+          call hist_addfld1d ( &
+               fname=this%info%fname('QSTREAMFLOW'),  &
+               units='m3/s',  &
+               avgflag='A', &
+               long_name=this%info%lname('streamflow discharge'), &
+               l2g_scale_type='veg', &
+               ptr_lunit=this%qstreamflow_lun)
+       endif
+    endif
 
     this%qflx_drain_perched_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -852,6 +857,7 @@ contains
     !
     ! !USES:
     use landunit_varcon, only : istsoil, istcrop
+    use clm_varctl     , only : use_hillslope_routing
     !
     ! !ARGUMENTS:
     class(waterflux_type), intent(in) :: this
@@ -908,11 +914,13 @@ contains
           this%qdischarge_col(c) = 0._r8
        end if
     end do
-    do l = bounds%begl, bounds%endl
-       if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
-          this%qstreamflow_lun(l) = 0._r8
-       end if
-    end do
+    if (use_hillslope_routing) then
+       do l = bounds%begl, bounds%endl
+          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
+             this%qstreamflow_lun(l) = 0._r8
+          end if
+       end do
+    endif
           
   end subroutine InitCold
 
