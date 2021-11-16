@@ -270,17 +270,11 @@ YEAR:   foreach my $sim_year ( $definition->get_valid_values( "sim_year", 'noquo
 
            my @bgcsettings   = $definition->get_valid_values( "bgc_mode", 'noquotes'=>1 );
            print "bgc=@bgcsettings\n" if $printing;
-           print "decomp=@decompsettings\n" if $printing;
            #
            # Loop over all possible BGC settings
            #
            foreach my $bgc ( @bgcsettings ) {
               $settings{'bgc'} = $bgc;
-              if ( $bgc eq "bgc" || $bgc eq "fates" ) {
-                foreach my $decomp ( @decompsettings ) {
-                  $settings{'decomp'} = $decomp;
-                }
-              }
               my @crop_vals;
               if ( $bgc =~ /^cn/ ) {
                  @crop_vals = ( "on", "off" );
