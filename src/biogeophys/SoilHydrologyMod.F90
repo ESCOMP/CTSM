@@ -1826,7 +1826,7 @@ contains
              else
                 ! Non-hillslope columns
                 ! specify maximum drainage rate
-                q_perch_max = perched_baseflow_scalar &
+                q_perch_max = params_inst%perched_baseflow_scalar &
                      * sin(col%topo_slope(c) * (rpi/180._r8))
 
                 wtsub = 0._r8
