@@ -766,7 +766,7 @@ module CLMFatesInterfaceMod
       integer  :: nld_si                   ! site specific number of decomposition layers
       integer  :: ft                       ! plant functional type
       real(r8), pointer :: lnfm24(:)       ! 24-hour averaged lightning data
-      real(r8), pointer :: gdp(:)          ! gdp data
+      real(r8), pointer :: gdp_lf_col(:)          ! gdp data
       integer  :: ier
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
@@ -807,12 +807,12 @@ module CLMFatesInterfaceMod
       end if
       
       if (fates_spitfire_mode .eq. anthro_suppression) then
-         allocate(gdp(bounds_clump%begg:bounds_clump%endg), stat=ier)
+         allocate(gdp_lf_col(bounds_clump%begc:bounds_clump%endc), stat=ier)
          if (ier /= 0) then
             call endrun(msg="allocation error for gdp"//&
                  errmsg(sourcefile, __LINE__))
          endif
-         gdp = this%fates_fire_data_method%GetGDP()
+         gdp_lf_col = this%fates_fire_data_method%GetGDP()
       end if
 
       do s=1,this%fates(nc)%nsites
@@ -828,12 +828,12 @@ module CLMFatesInterfaceMod
                   this%fates(nc)%bc_in(s)%pop_density(ifp) = this%fates_fire_data_method%forc_hdm(g)
                end if
 
-               if (fates_spitfire_mode .eq. anthro_suppression) then
-               ! Placeholder for future fates use of gdp - comment out before integration
-                  this%fates(nc)%bc_in(s)%gdp(ifp) = gdp(g) ! k US$/capita(g)
-               end if
-
             end do ! ifp
+
+            if (fates_spitfire_mode .eq. anthro_suppression) then
+               ! Placeholder for future fates use of gdp - comment out before integration
+               !this%fates(nc)%bc_in(s)%gdp = gdp_lf_col(c) ! k US$/capita(g)
+            end if
          end if
 
          nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
@@ -2435,6 +2435,7 @@ module CLMFatesInterfaceMod
 
     call t_startf('fates_init2')
 
+    write(iulog,*) 'Init2: calling FireInit'
     call this%fates_fire_data_method%FireInit(bounds, NLFilename)
 
     call t_stopf('fates_init2')
