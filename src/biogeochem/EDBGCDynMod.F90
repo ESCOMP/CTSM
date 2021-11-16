@@ -186,10 +186,6 @@ contains
        call decomp_rates_mimics(bounds, num_soilc, filter_soilc, &
             soilstate_inst, temperature_inst, cnveg_carbonflux_inst, ch4_inst, &
             soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst)
-    else
-       write(iulog,*) 'WARNING:'
-       write(iulog,*) 'Neither use_mimics_decomp nor century_decomp'
-       write(iulog,*) 'have been set. Is this intentional?'
     end if
 
     ! calculate potential decomp rates and total immobilization demand (previously inlined in CNDecompAlloc)

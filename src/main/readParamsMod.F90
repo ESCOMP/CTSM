@@ -104,10 +104,6 @@ contains
           call readSoilBiogeochemDecompMimicsParams(ncid)
        else if (decomp_method == century_decomp) then
           call readSoilBiogeochemDecompBgcParams(ncid)
-       else
-          write(iulog,*) 'WARNING:'
-          write(iulog,*) 'Neither use_mimics_decomp nor century_decomp'
-          write(iulog,*) 'have been set. Is this intentional?'
        end if
        call readSoilBiogeochemDecompParams(ncid)
        call readSoilBiogeochemLittVertTranspParams(ncid)

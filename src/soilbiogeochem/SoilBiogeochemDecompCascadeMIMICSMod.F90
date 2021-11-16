@@ -42,6 +42,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   ! !PUBLIC DATA MEMBERS 
   !
   ! !PRIVATE DATA MEMBERS 
+  ! next four 2d vars are dimensioned (columns,nlevdecomp)
   real(r8), private, allocatable :: desorp(:,:)
   real(r8), private, allocatable :: fphys_m1(:,:)
   real(r8), private, allocatable :: fphys_m2(:,:)
@@ -50,7 +51,7 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   integer, private :: i_chem_som  ! index of chemically protected SOM
   integer, private :: i_avl_som  ! index of available (aka active) SOM
   integer, private :: i_str_lit  ! index of structural litter pool
-  integer, private :: i_l1m1
+  integer, private :: i_l1m1  ! indices of transitions, eg l1m1: litter 1 -> first microbial pool
   integer, private :: i_l1m2
   integer, private :: i_l2m1
   integer, private :: i_l2m2
@@ -64,48 +65,48 @@ module SoilBiogeochemDecompCascadeMIMICSMod
   integer, private :: i_s3s1
   integer, private :: i_m1s3
   integer, private :: i_m2s3
-  real(r8), private :: rf_l1m1
+  real(r8), private :: rf_l1m1  ! respiration fractions by transition
   real(r8), private :: rf_l1m2
   real(r8), private :: rf_l2m1
   real(r8), private :: rf_l2m2
   real(r8), private :: rf_s1m1
   real(r8), private :: rf_s1m2
-  real(r8), private :: vint_l1_m1  !
-  real(r8), private :: vint_l2_m1  !
-  real(r8), private :: vint_s1_m1  !
-  real(r8), private :: vint_l1_m2  !
-  real(r8), private :: vint_l2_m2  !
-  real(r8), private :: vint_s1_m2  !
-  real(r8), private :: kint_l1_m1  !
-  real(r8), private :: kint_l2_m1  !
-  real(r8), private :: kint_s1_m1  !
-  real(r8), private :: kint_l1_m2  !
-  real(r8), private :: kint_l2_m2  !
-  real(r8), private :: kint_s1_m2  !
-  real(r8), private :: vmod_l1_m1  !
-  real(r8), private :: vmod_l2_m1  !
-  real(r8), private :: vmod_s1_m1  !
-  real(r8), private :: vmod_l1_m2  !
-  real(r8), private :: vmod_l2_m2  !
-  real(r8), private :: vmod_s1_m2  !
-  real(r8), private :: kmod_l1_m1  !
-  real(r8), private :: kmod_l2_m1  !
-  real(r8), private :: kmod_s1_m1  !
-  real(r8), private :: kmod_l1_m2  !
-  real(r8), private :: kmod_l2_m2  !
-  real(r8), private :: kmod_s1_m2  !
-  real(r8), private :: vslope_l1_m1  !
-  real(r8), private :: vslope_l2_m1  !
-  real(r8), private :: vslope_s1_m1  !
-  real(r8), private :: vslope_l1_m2  !
-  real(r8), private :: vslope_l2_m2  !
-  real(r8), private :: vslope_s1_m2  !
-  real(r8), private :: kslope_l1_m1  !
-  real(r8), private :: kslope_l2_m1  !
-  real(r8), private :: kslope_s1_m1  !
-  real(r8), private :: kslope_l1_m2  !
-  real(r8), private :: kslope_l2_m2  !
-  real(r8), private :: kslope_s1_m2  !
+  real(r8), private :: vint_l1_m1  ! regression intercepts by transition
+  real(r8), private :: vint_l2_m1
+  real(r8), private :: vint_s1_m1
+  real(r8), private :: vint_l1_m2
+  real(r8), private :: vint_l2_m2
+  real(r8), private :: vint_s1_m2
+  real(r8), private :: kint_l1_m1  ! regression intercepts by transition
+  real(r8), private :: kint_l2_m1
+  real(r8), private :: kint_s1_m1
+  real(r8), private :: kint_l1_m2
+  real(r8), private :: kint_l2_m2
+  real(r8), private :: kint_s1_m2
+  real(r8), private :: vmod_l1_m1  ! vmod = vmod * av from Wieder et al 2015
+  real(r8), private :: vmod_l2_m1
+  real(r8), private :: vmod_s1_m1
+  real(r8), private :: vmod_l1_m2
+  real(r8), private :: vmod_l2_m2
+  real(r8), private :: vmod_s1_m2
+  real(r8), private :: kmod_l1_m1  ! kmod = ak / kmod from Wieder et al 2015
+  real(r8), private :: kmod_l2_m1
+  real(r8), private :: kmod_s1_m1
+  real(r8), private :: kmod_l1_m2
+  real(r8), private :: kmod_l2_m2
+  real(r8), private :: kmod_s1_m2
+  real(r8), private :: vslope_l1_m1  ! regression coefficients by transition
+  real(r8), private :: vslope_l2_m1
+  real(r8), private :: vslope_s1_m1
+  real(r8), private :: vslope_l1_m2
+  real(r8), private :: vslope_l2_m2
+  real(r8), private :: vslope_s1_m2
+  real(r8), private :: kslope_l1_m1  ! regression coefficients by transition
+  real(r8), private :: kslope_l2_m1
+  real(r8), private :: kslope_s1_m1
+  real(r8), private :: kslope_l1_m2
+  real(r8), private :: kslope_l2_m2
+  real(r8), private :: kslope_s1_m2
 
   type, private :: params_type
      real(r8) :: mimics_nue_into_mic  ! microbial N use efficiency for N fluxes
@@ -119,23 +120,26 @@ module SoilBiogeochemDecompCascadeMIMICSMod
      real(r8) :: mimics_cn_r  ! C:N of MICr
      real(r8) :: mimics_cn_k  ! C:N of MICk
      real(r8) :: mimics_cn_mod_num  ! adjusts microbial CN based on fmet
-     real(r8) :: mimics_t_soi_ref
-     real(r8) :: mimics_initial_Cstocks_depth  ! Soil depth for initial Carbon stocks for a cold-start
-     real(r8), allocatable :: mimics_initial_Cstocks(:)  ! Initial Carbon stocks for a cold-start
+     real(r8) :: mimics_t_soi_ref  ! reference soil temperature (degC)
+     real(r8) :: mimics_initial_Cstocks_depth  ! Soil depth for initial C stocks for a cold-start (m)
+     real(r8), allocatable :: mimics_initial_Cstocks(:)  ! Initial C stocks for a cold-start (gC/m3)
      ! The next few vectors are dimensioned by the number of decomposition
-     ! transitions making use of the corresponding parameters. The transitions
-     ! are represented in this order: l1m1 l2m1 s1m1 l1m2 l2m2 s1m2
+     ! transitions that make use of the corresponding parameters, currently
+     ! six. The transitions are represented in this order:
+     ! l1m1 l2m1 s1m1 l1m2 l2m2 s1m2
      real(r8), allocatable :: mimics_mge(:)  ! Microbial growth efficiency (mg/mg)
-     real(r8), allocatable :: mimics_vmod(:)  ! 
-     real(r8), allocatable :: mimics_vint(:)  ! regression intercept (5.47 ln(mg Cs (mg MIC)-1 h-1) )
-     real(r8), allocatable :: mimics_vslope(:)  ! transition regression coeffs (ln(mg Cs (mg MIC)-1 h-1) ¡C-1)
-     real(r8), allocatable :: mimics_kmod(:)  ! 
-     real(r8), allocatable :: mimics_kint(:)  ! regression intercept
-     real(r8), allocatable :: mimics_kslope(:)  ! 
-     ! The next few vectors are dimensioned by the number of
-     ! parameters with the same name used in the same formula.
-     ! In the formulas themselves, we use scalar copies of each parameter
-     ! with suffixes _p1, p2, p3, ... to distinguish among them.
+     real(r8), allocatable :: mimics_vmod(:)  ! vmod = vmod * av from Wieder et al 2015
+     real(r8), allocatable :: mimics_vint(:)  ! regression intercepts (5.47 ln(mg Cs (mg MIC)-1 h-1) )
+     real(r8), allocatable :: mimics_vslope(:)  ! regression coeffs (ln(mg Cs (mg MIC)-1 h-1) ¡C-1)
+     real(r8), allocatable :: mimics_kmod(:)  ! kmod = ak / kmod from Wieder et al 2015
+     real(r8), allocatable :: mimics_kint(:)  ! regression intercepts
+     real(r8), allocatable :: mimics_kslope(:)  ! regression coeffs
+     ! The next few vectors are dimensioned by the number of parameters with
+     ! the same name (eg 2 for mimics_tau_r_p1, mimics_tau_r_p2) used in the
+     ! respective formula. In the formulas, we use scalar copies of each
+     ! parameter with suffixes _p1, p2, p3, ... to distinguish among them.
+     ! See allocate statements below for the size of each of the following
+     ! vectors.
      real(r8), allocatable :: mimics_fmet(:)
      real(r8), allocatable :: mimics_p_scalar(:)
      real(r8), allocatable :: mimics_fphys_r(:)
@@ -770,6 +774,7 @@ contains
     type(soilbiogeochem_carbonstate_type), intent(in)    :: soilbiogeochem_carbonstate_inst
     !
     ! !LOCAL VARIABLES:
+    real(r8), parameter :: eps = 1.e-6_r8
     real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
     real(r8), allocatable:: fr(:,:)         ! column-level rooting fraction by soil depth
     real(r8):: psi                          ! temporary soilpsi for water scalar
@@ -879,51 +884,51 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             !
-            if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. eps) then
                spinup_geogterm_l1(c) = spinup_factor(i_met_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_l1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_str_lit) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_str_lit) - 1._r8) .gt. eps) then
                spinup_geogterm_l2(c) = spinup_factor(i_str_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_l2(c) = 1._r8
             endif
             !
             if ( .not. use_fates ) then
-               if ( abs(spinup_factor(i_cwd) - 1._r8) .gt. .000001_r8) then
+               if ( abs(spinup_factor(i_cwd) - 1._r8) .gt. eps) then
                   spinup_geogterm_cwd(c) = spinup_factor(i_cwd) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
                else
                   spinup_geogterm_cwd(c) = 1._r8
                endif
             endif
             !
-            if ( abs(spinup_factor(i_avl_som) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_avl_som) - 1._r8) .gt. eps) then
                spinup_geogterm_s1(c) = spinup_factor(i_avl_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_chem_som) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_chem_som) - 1._r8) .gt. eps) then
                spinup_geogterm_s2(c) = spinup_factor(i_chem_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s2(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_phys_som) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_phys_som) - 1._r8) .gt. eps) then
                spinup_geogterm_s3(c) = spinup_factor(i_phys_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s3(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_cop_mic) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_cop_mic) - 1._r8) .gt. eps) then
                spinup_geogterm_m1(c) = spinup_factor(i_cop_mic) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_m1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_oli_mic) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_oli_mic) - 1._r8) .gt. eps) then
                spinup_geogterm_m2(c) = spinup_factor(i_oli_mic) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_m2(c) = 1._r8

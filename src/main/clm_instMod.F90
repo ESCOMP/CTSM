@@ -388,10 +388,6 @@ contains
        else if (decomp_method == mimics_decomp ) then
           call init_decompcascade_mimics(bounds, soilbiogeochem_state_inst, &
                                          soilstate_inst)
-       else
-          write(iulog,*) 'WARNING:'
-          write(iulog,*) 'Neither use_mimics_decomp nor century_decomp'
-          write(iulog,*) 'have been set. Is this intentional?'
        end if
 
        ! Initalize soilbiogeochem carbon types

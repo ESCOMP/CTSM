@@ -10,7 +10,7 @@ module SoilBiogeochemDecompCascadeBGCMod
   use shr_const_mod                      , only : SHR_CONST_TKFRZ
   use shr_log_mod                        , only : errMsg => shr_log_errMsg
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools_max
-  use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit, i_cwd
+  use clm_varpar                         , only : i_litr_min, i_litr_max, i_met_lit, i_cwd, i_cwdl2
   use clm_varctl                         , only : iulog, spinup_state, anoxia, use_lch4, use_fates
   use clm_varcon                         , only : zsoi
   use decompMod                          , only : bounds_type
@@ -71,7 +71,6 @@ module SoilBiogeochemDecompCascadeBGCMod
   integer, private :: i_s2s1
   integer, private :: i_s2s3
   integer, private :: i_s3s1
-  integer, private :: i_cwdl2
   integer, private :: i_cwdl3
 
   type, private :: params_type
@@ -531,6 +530,7 @@ contains
     type(soilbiogeochem_carbonflux_type) , intent(inout) :: soilbiogeochem_carbonflux_inst
     !
     ! !LOCAL VARIABLES:
+    real(r8), parameter :: eps = 1.e-6_r8
     real(r8):: frw(bounds%begc:bounds%endc) ! rooting fraction weight
     real(r8), allocatable:: fr(:,:)         ! column-level rooting fraction by soil depth
     real(r8):: psi                          ! temporary soilpsi for water scalar
@@ -618,39 +618,39 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             !
-            if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_met_lit) - 1._r8) .gt. eps) then
                spinup_geogterm_l1(c) = spinup_factor(i_met_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_l1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_cel_lit) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_cel_lit) - 1._r8) .gt. eps) then
                spinup_geogterm_l23(c) = spinup_factor(i_cel_lit) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_l23(c) = 1._r8
             endif
             !
             if ( .not. use_fates ) then
-               if ( abs(spinup_factor(i_cwd) - 1._r8) .gt. .000001_r8) then
+               if ( abs(spinup_factor(i_cwd) - 1._r8) .gt. eps) then
                   spinup_geogterm_cwd(c) = spinup_factor(i_cwd) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
                else
                   spinup_geogterm_cwd(c) = 1._r8
                endif
             endif
             !
-            if ( abs(spinup_factor(i_act_som) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_act_som) - 1._r8) .gt. eps) then
                spinup_geogterm_s1(c) = spinup_factor(i_act_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s1(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_slo_som) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_slo_som) - 1._r8) .gt. eps) then
                spinup_geogterm_s2(c) = spinup_factor(i_slo_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s2(c) = 1._r8
             endif
             !
-            if ( abs(spinup_factor(i_pas_som) - 1._r8) .gt. .000001_r8) then
+            if ( abs(spinup_factor(i_pas_som) - 1._r8) .gt. eps) then
                spinup_geogterm_s3(c) = spinup_factor(i_pas_som) * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
             else
                spinup_geogterm_s3(c) = 1._r8
