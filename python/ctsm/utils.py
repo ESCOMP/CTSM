@@ -142,6 +142,10 @@ def get_config_value(config, section, item, file_path, allowed_values=None, defa
     Give a helpful error message if we can't find the given section or item
     Note that the file_path argument is only used for the sake of the error message
     If allowed_values is present, it should be a list of strings giving allowed values
+    The function _handle_config_value determines what to do if we read:
+    - CONFIG_UNSET or
+    - a list or
+    - a str that needs to be converted to int or float
     """
     try:
         val = config.get(section, item)

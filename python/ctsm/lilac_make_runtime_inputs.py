@@ -46,14 +46,6 @@ _ENV_LILAC_TEMPLATE = """
 </file>
 """
 
-# This string is used in the out-of-the-box ctsm.cfg file to denote a value that needs to
-# be filled in
-_PLACEHOLDER = 'FILL_THIS_IN'
-
-# This string is used in the out-of-the-box ctsm.cfg file to denote a value that can be
-# filled in, but doesn't absolutely need to be
-_UNSET = 'UNSET'
-
 # ========================================================================
 # Fake case class that can be used to satisfy the interface of CIME functions that need a
 # case object
@@ -195,11 +187,11 @@ def buildnml(cime_path, rundir):
 
     # determine if fsurdat and/or finidat should appear in the -namelist option
     extra_namelist_opts = ''
-    if fsurdat != _UNSET:
-        # NOTE(wjs, 2020-06-30) With the current logic, fsurdat should never be _UNSET,
-        # but it's possible that this will change in the future.
+    if fsurdat != None:
+        # NOTE(wjs, 2020-06-30) With the current logic, fsurdat should never be UNSET
+        # (ie None here) but it's possible that this will change in the future.
         extra_namelist_opts = extra_namelist_opts + " fsurdat = '{}' ".format(fsurdat)
-    if finidat != _UNSET:
+    if finidat != None:
         extra_namelist_opts = extra_namelist_opts + " finidat = '{}' ".format(finidat)
 
     # call build-namelist
