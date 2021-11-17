@@ -232,7 +232,6 @@ class ModifyFsurdat:
         # common value used here in pct_not_nat_veg = 0
         pct_nat_veg = 100  # do not change; works with pct_not_nat_veg = 0
         pct_not_nat_veg = 0  # do not change; works with pct_nat_veg = 0
-        pct_cft = 100  # PCT_CROP = 0 but sum(PCT_CFT) must = 100
         pct_sand = 43  # loam
         pct_clay = 18  # loam
         soil_color = 15  # loam
@@ -282,8 +281,9 @@ class ModifyFsurdat:
             # initialize 3D variable; set outside the loop below
             self.file['PCT_CFT'][cft_local,:,:] = \
              self.file['PCT_CFT'][cft_local,:,:]. \
-                  where(self.not_rectangle, other=pct_not_nat_veg)
+                  where(self.not_rectangle, other=0)
 
         # set 3D variable
+        # NB. sum(PCT_CFT) must = 100 even though PCT_CROP = 0
         self.file['PCT_CFT'][0,:,:] = \
-         self.file['PCT_CFT'][0,:,:].where(self.not_rectangle, other=pct_cft)
+         self.file['PCT_CFT'][0,:,:].where(self.not_rectangle, other=100)
