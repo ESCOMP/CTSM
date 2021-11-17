@@ -143,29 +143,26 @@ class ModifyFsurdat:
             (float) User's entry of MONTHLY_HEIGHT_BOT for their dom_nat_pft
         """
 
-        for pft in self.file.natpft:
-            # initialize 3D variable; set outside the loop below
-            self.file['PCT_NAT_PFT'][pft,:,:] = \
-             self.file['PCT_NAT_PFT'][pft,:,:]. \
-                  where(self.not_rectangle, other=0)
-
-            # dictionary of 4d variables to loop over
-            vars_4d = {'MONTHLY_LAI': lai,
-                       'MONTHLY_SAI': sai,
-                       'MONTHLY_HEIGHT_TOP': hgt_top,
-                       'MONTHLY_HEIGHT_BOT': hgt_bot}
-            for var_name, var in vars_4d.items():
-                if var is not None:
-                    self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                          var_name=var_name, var=var)
-
-        # set 3D variable
+        # initialize 3D variable
+        self.file['PCT_NAT_PFT'][:,:,:] = \
+         self.file['PCT_NAT_PFT'][:,:,:].where(self.not_rectangle, other=0)
+        # set 3D variable value for dom_nat_pft
         self.file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
          self.file['PCT_NAT_PFT'][dom_nat_pft,:,:]. \
               where(self.not_rectangle, other=100)
 
+        # dictionary of 4d variables to loop over
+        vars_4d = {'MONTHLY_LAI': lai,
+                   'MONTHLY_SAI': sai,
+                   'MONTHLY_HEIGHT_TOP': hgt_top,
+                   'MONTHLY_HEIGHT_BOT': hgt_bot}
+        for var_name, var in vars_4d.items():
+            if var is not None:
+                self.set_lai_sai_hgts(dom_nat_pft=dom_nat_pft,
+                                      var_name=var_name, var=var)
 
-    def set_lai_sai_hgts(self, pft, dom_nat_pft, var_name, var):
+
+    def set_lai_sai_hgts(self, dom_nat_pft, var_name, var):
         """
         Description
         -----------
@@ -179,11 +176,10 @@ class ModifyFsurdat:
                      'entries in the configure file: ' + var_name
             abort(errmsg)
         for mon in self.file.time - 1:  # loop over 12 months
-            if pft == dom_nat_pft:
-                # set 4D variable to value for dom_nat_pft
-                self.file[var_name][mon,pft,:,:] = \
-                 self.file[var_name][mon,pft,:,:]. \
-                      where(self.not_rectangle, other=var[int(mon)])
+            # set 4D variable to value for dom_nat_pft
+            self.file[var_name][mon,dom_nat_pft,:,:] = \
+             self.file[var_name][mon,dom_nat_pft,:,:]. \
+                  where(self.not_rectangle, other=var[int(mon)])
 
 
     def zero_nonveg(self):
