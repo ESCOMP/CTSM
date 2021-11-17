@@ -23,7 +23,8 @@ module mkurbanparMod
    public :: mkurbanInit
    public :: mkurban
    public :: mkurbanpar
-
+   public :: update_max_array_urban
+   
    ! The following could be private, but because there are associated test routines in a
    ! separate module, it needs to be public
    public :: normalize_urbn_by_tot
@@ -755,5 +756,31 @@ contains
 
 end subroutine mkurbanpar
 !------------------------------------------------------------------------------
+
+!-----------------------------------------------------------------------
+subroutine update_max_array_urban(pct_urbmax_arr,pct_urban_arr)
+  !
+  ! !DESCRIPTION:
+  ! Update the maximum percent cover of each urban class
+  ! 
+  ! !ARGUMENTS:
+  real(r8)         , intent(inout):: pct_urbmax_arr(:,:)           ! max percent cover of each urban class
+  real(r8)         , intent(in):: pct_urban_arr(:,:)           ! percent cover of each urban class that is used to update the old pct_urbmax_arr
+  !
+  ! !LOCAL VARIABLES:
+  integer :: n,k,ns              ! indices
+
+  character(len=*), parameter :: subname = 'update_max_array_urban'
+  !-----------------------------------------------------------------------
+  ns = size(pct_urban_arr,1)
+  do n = 1, ns
+     do k =1, numurbl
+        if (pct_urban_arr(n,k) > pct_urbmax_arr(n,k)) then 
+           pct_urbmax_arr(n,k) = pct_urban_arr(n,k)
+        end if
+      end do
+  end do
+
+end subroutine update_max_array_urban
 
 end module mkurbanparMod
