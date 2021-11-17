@@ -227,8 +227,11 @@ class ModifyFsurdat:
         slope = 0  # mean topographic slope
         pftdata_mask = 1
         landfrac_pft = 1
-        pct_nat_veg = 100
-        pct_not_nat_veg = 0
+        # if pct_nat_veg had to be set to less than 100, then each special
+        # landunit would have to receive a unique pct value rather than the
+        # common value used here in pct_not_nat_veg = 0
+        pct_nat_veg = 100  # do not change; works with pct_not_nat_veg = 0
+        pct_not_nat_veg = 0  # do not change; works with pct_nat_veg = 0
         pct_cft = 100  # PCT_CROP = 0 but sum(PCT_CFT) must = 100
         pct_sand = 43  # loam
         pct_clay = 18  # loam
