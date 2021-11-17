@@ -40,7 +40,8 @@ class ModifyFsurdat:
             self.not_rectangle = np.logical_not(rectangle)
 
 
-    def _get_not_rectangle(self, lon_1, lon_2, lat_1, lat_2, longxy, latixy):
+    @staticmethod
+    def _get_not_rectangle(lon_1, lon_2, lat_1, lat_2, longxy, latixy):
         """
         Description
         -----------
@@ -148,22 +149,15 @@ class ModifyFsurdat:
              self.file['PCT_NAT_PFT'][pft,:,:]. \
                   where(self.not_rectangle, other=0)
 
-            var_name='MONTHLY_LAI'
-            if lai is not None:
-                self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                      var_name=var_name, var=lai)
-            var_name='MONTHLY_SAI'
-            if sai is not None:
-                self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                      var_name=var_name, var=sai)
-            var_name='MONTHLY_HEIGHT_TOP'
-            if hgt_top is not None:
-                self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                      var_name=var_name, var=hgt_top)
-            var_name='MONTHLY_HEIGHT_BOT'
-            if hgt_bot is not None:
-                self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
-                                      var_name=var_name, var=hgt_bot)
+            # dictionary of 4d variables to loop over
+            vars_4d = {'MONTHLY_LAI': lai,
+                       'MONTHLY_SAI': sai,
+                       'MONTHLY_HEIGHT_TOP': hgt_top,
+                       'MONTHLY_HEIGHT_BOT': hgt_bot}
+            for var_name, var in vars_4d.items():
+                if var is not None:
+                    self.set_lai_sai_hgts(pft=pft, dom_nat_pft=dom_nat_pft,
+                                          var_name=var_name, var=var)
 
         # set 3D variable
         self.file['PCT_NAT_PFT'][dom_nat_pft,:,:] = \
