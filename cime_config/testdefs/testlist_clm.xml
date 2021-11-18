@@ -23,7 +23,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm45BgcCru at f09</option>
     </options>
   </test>
@@ -33,7 +33,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm45BgcCru at f19</option>
     </options>
   </test>
@@ -86,7 +86,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm50Sp at f09</option>
     </options>
   </test>
@@ -96,7 +96,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm50Sp at f19</option>
     </options>
   </test>
@@ -106,7 +106,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm50SpCru at f09</option>
     </options>
   </test>
@@ -116,7 +116,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm50SpCru at f19</option>
     </options>
   </test>
@@ -307,7 +307,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm50Bgc at f19</option>
     </options>
   </test>
@@ -317,7 +317,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm50Bgc at f09</option>
     </options>
   </test>
@@ -344,7 +344,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm50BgcCrop at f09</option>
     </options>
   </test>
@@ -354,7 +354,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm50BgcCrop at f19</option>
     </options>
   </test>
@@ -459,7 +459,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm50SpCru at f09</option>
     </options>
   </test>
@@ -469,7 +469,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm50SpCru at f19</option>
     </options>
   </test>
@@ -712,7 +712,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm50BgcCropCru at f09</option>
     </options>
   </test>
@@ -722,7 +722,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm50BgcCropCru at f19</option>
     </options>
   </test>
@@ -765,7 +765,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm45Bgc at f09</option>
     </options>
   </test>
@@ -775,7 +775,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for I1850Clm45Bgc at f19</option>
     </options>
   </test>
@@ -829,7 +829,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm45BgcCru at f09</option>
     </options>
   </test>
@@ -839,7 +839,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm45BgcCru at f19</option>
     </options>
   </test>
@@ -849,7 +849,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm45Bgc at f09</option>
     </options>
   </test>
@@ -859,7 +859,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm45Bgc at f19</option>
     </options>
   </test>
@@ -877,7 +877,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm45Sp at f09</option>
     </options>
   </test>
@@ -887,7 +887,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm45Sp at f19</option>
     </options>
   </test>
@@ -1441,7 +1441,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm50Sp at f09</option>
     </options>
   </test>
@@ -1451,7 +1451,7 @@
       <machine name="izumi"    compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">01:40:00</option>
       <option name="comment"  >Science support for IHistClm50Sp at f19</option>
     </options>
   </test>
