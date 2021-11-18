@@ -1359,7 +1359,7 @@
       <option name="comment"  >pgi test for MCT driver since nuopc is not passing</option>
     </options>
   </test>
-  <test name="SMS__Vmct_D_Ld1" grid="f09_g17" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
+  <test name="SMS_Vmct_D_Ld1" grid="f09_g17" compset="I1850Clm50BgcSpinup" testmods="clm/cplhist">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm"/>
     </machines>
