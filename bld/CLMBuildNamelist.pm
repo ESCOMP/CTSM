@@ -2319,6 +2319,7 @@ sub setup_logic_initial_conditions {
     my $fsurdat          = $nl->get_value('fsurdat');
     $fsurdat             =~ s!(.*)/!!;
     $settings{'fsurdat'} = $fsurdat;
+    $settings{'do_transient_pfts'} = $nl->get_value('do_transient_pfts');
     #
     # If not transient use sim_year, otherwise use date
     #
