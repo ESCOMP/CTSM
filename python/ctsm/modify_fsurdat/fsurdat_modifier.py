@@ -10,7 +10,6 @@ import logging
 import argparse
 from configparser import ConfigParser
 from ctsm.utils import get_config_value
-from ctsm.utils import CONFIG_UNSET
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 
@@ -47,46 +46,53 @@ def main ():
 
     # required but fallback values available for variables omitted
     # entirely from the .cfg file
-    idealized = config.getboolean(section, 'idealized', fallback=False)
-    zero_nonveg = config.getboolean(section, 'zero_nonveg',
-                                    fallback=False)
+    idealized = get_config_value(config=config, section=section,
+        item='idealized', file_path=args.cfg_path, convert_to_type=bool)
+    zero_nonveg = get_config_value(config=config, section=section,
+        item='zero_nonveg', file_path=args.cfg_path, convert_to_type=bool)
 
-    lnd_lat_1 = config.getfloat(section, 'lnd_lat_1', fallback=-90)
-    lnd_lat_2 = config.getfloat(section, 'lnd_lat_2', fallback=90)
-    lnd_lon_1 = config.getfloat(section, 'lnd_lon_1', fallback=0)
-    lnd_lon_2 = config.getfloat(section, 'lnd_lon_2', fallback=360)
+    lnd_lat_1 = get_config_value(config=config, section=section,
+        item='lnd_lat_1', file_path=args.cfg_path, convert_to_type=float)
+    lnd_lat_2 = get_config_value(config=config, section=section,
+        item='lnd_lat_2', file_path=args.cfg_path, convert_to_type=float)
+    lnd_lon_1 = get_config_value(config=config, section=section,
+        item='lnd_lon_1', file_path=args.cfg_path, convert_to_type=float)
+    lnd_lon_2 = get_config_value(config=config, section=section,
+        item='lnd_lon_2', file_path=args.cfg_path, convert_to_type=float)
 
     landmask_file = get_config_value(config=config, section=section,
-        item='landmask_file', file_path=args.cfg_path)
+        item='landmask_file', file_path=args.cfg_path, can_be_unset=True)
 
     # not required: user may set these in the .cfg file
     dom_nat_pft = get_config_value(config=config, section=section,
         item='dom_nat_pft', file_path=args.cfg_path,
-        allowed_values=['0','1','2','3','4','5','6','7','8','9','10',
-        '11','12','13','14',CONFIG_UNSET], convert_to_type=int)
+        allowed_values=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        convert_to_type=int, can_be_unset=True)
 
     lai = get_config_value(config=config, section=section, item='lai',
-        file_path=args.cfg_path, is_list=True, convert_to_type=float)
+        file_path=args.cfg_path, is_list=True,
+        convert_to_type=float, can_be_unset=True)
     sai = get_config_value(config=config, section=section, item='sai',
-        file_path=args.cfg_path, is_list=True, convert_to_type=float)
+        file_path=args.cfg_path, is_list=True,
+        convert_to_type=float, can_be_unset=True)
     hgt_top = get_config_value(config=config, section=section,
         item='hgt_top', file_path=args.cfg_path, is_list=True,
-        convert_to_type=float)
+        convert_to_type=float, can_be_unset=True)
     hgt_bot = get_config_value(config=config, section=section,
         item='hgt_bot', file_path=args.cfg_path, is_list=True,
-        convert_to_type=float)
+        convert_to_type=float, can_be_unset=True)
 
     soil_color = get_config_value(config=config, section=section,
         item='soil_color', file_path=args.cfg_path,
-        allowed_values=['1','2','3','4','5','6','7','8','9','10','11',
-        '12','13','14','15','16','17','18','19','20',CONFIG_UNSET],
-        convert_to_type=int)
+        allowed_values=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        convert_to_type=int, can_be_unset=True)
 
     std_elev = get_config_value(config=config, section=section,
-        item='std_elev', file_path=args.cfg_path, convert_to_type=float)
+        item='std_elev', file_path=args.cfg_path,
+        convert_to_type=float, can_be_unset=True)
     max_sat_area = get_config_value(config=config, section=section,
         item='max_sat_area', file_path=args.cfg_path,
-        convert_to_type=float)
+        convert_to_type=float, can_be_unset=True)
 
     # Create ModifyFsurdat object
     modify_fsurdat = ModifyFsurdat(fsurdat_in, lon_1=lnd_lon_1,

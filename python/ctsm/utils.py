@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 _CONFIG_PLACEHOLDER = 'FILL_THIS_IN'
 # This string is used in the out-of-the-box ctsm.cfg and modify.cfg files
 # to denote a value that can be filled in, but doesn't absolutely need to be
-CONFIG_UNSET = 'UNSET'
+_CONFIG_UNSET = 'UNSET'
 
 def abort(errmsg):
     """Abort the program with the given error message
@@ -137,15 +137,17 @@ def lon_range_0_to_360(lon_in):
 
     return lon_out
 
-def get_config_value(config, section, item, file_path, allowed_values=None, default=None, is_list=False, convert_to_type=None):
+def get_config_value(config, section, item, file_path, allowed_values=None,
+                     default=None, is_list=False, convert_to_type=None,
+                     can_be_unset=False):
     """Get a given item from a given section of the config object
     Give a helpful error message if we can't find the given section or item
     Note that the file_path argument is only used for the sake of the error message
     If allowed_values is present, it should be a list of strings giving allowed values
     The function _handle_config_value determines what to do if we read:
-    - CONFIG_UNSET or
+    - _CONFIG_UNSET or
     - a list or
-    - a str that needs to be converted to int or float
+    - a str that needs to be converted to int / float / bool
     """
     try:
         val = config.get(section, item)
@@ -158,41 +160,67 @@ def get_config_value(config, section, item, file_path, allowed_values=None, defa
     if val == _CONFIG_PLACEHOLDER:
         abort("Error: {} needs to be specified in config file {}".format(item, file_path))
 
-    if allowed_values is not None:
-        if val not in allowed_values:
-            abort("Error: {} is not an allowed value for {} in config file {}\n"
-                  "Allowed values: {}".format(val, item, file_path, allowed_values))
-
     val = _handle_config_value(var=val, default=default, item=item,
-        is_list=is_list, convert_to_type=convert_to_type)
+        is_list=is_list, convert_to_type=convert_to_type,
+        can_be_unset=can_be_unset, allowed_values=allowed_values)
 
     return val
 
-def _handle_config_value(var, default, item, is_list, convert_to_type):
+def _handle_config_value(var, default, item, is_list, convert_to_type,
+                         can_be_unset, allowed_values):
     """
     Description
     -----------
     Assign the default value or the user-specified one to var.
     Convert from default type (str) to reqested type (int or float).
+
+    If is_list is True, then default should be a list
     """
-    if var == CONFIG_UNSET:
-        var = default  # default may be None
+    if var == _CONFIG_UNSET:
+        if can_be_unset:
+            return default  # default may be None
+        abort('Must set a value for .cfg file variable: {}'.format(item))
 
-    if var is not None and is_list:
-        var = list(var.split())  # convert string to list of strings
-        try:
-            var = list(map(convert_to_type, var))  # convert
-        except Exception as err:
-            errmsg = '--> Check .cfg file variable: ' + item
-            err.args = (str(err) + errmsg,)
-            raise
+    # convert string to list of strings; if there is just one element,
+    # we will get a list of size one, which we will convert back to a
+    # scalar later if needed
+    var = var.split()
 
-    if var is not None and not is_list and convert_to_type is not None:
+    if convert_to_type is bool:
         try:
-            var = convert_to_type(var)
-        except Exception as err:
-            errmsg = '--> Check .cfg file variable: ' + item
-            err.args = (str(err) + errmsg,)
-            raise
+            var = [_convert_to_bool(v) for v in var]
+        except ValueError:
+            abort('Non-boolean value found for .cfg file variable: {}'.format(item))
+    elif convert_to_type is not None:
+        try:
+            var = [convert_to_type(v) for v in var]
+        except ValueError:
+            abort('Wrong type for .cfg file variable: {}'.format(item))
+
+    # TODO prelim. testing of this abort: errmsg didn't come through upon FAIL
+    if allowed_values is not None:
+        for v in var:
+            print('v in var', v)
+            if v not in allowed_values:
+                print('v in var not in allowed_values', v)
+                errmsg = "{} is not an allowed value for {} in .cfg file\n" \
+                         "Allowed values: {}".format(v, item, allowed_values)
+                abort(errmsg)
+
+    if not is_list:
+        if len(var) > 1:
+            abort('More than 1 element found for .cfg file variable: {}'.format(item))
+        var = var[0]
 
     return var
+
+def _convert_to_bool(val):
+    """Convert the given value to boolean
+
+    Conversion is as in config files 'getboolean'
+    """
+    if val.lower() in ['1', 'yes', 'true', 'on']:
+        return True
+    if val.lower() in ['0', 'no', 'false', 'off']:
+        return False
+    raise ValueError("{} cannot be converted to boolean".format(val))
