@@ -1178,8 +1178,6 @@ program mksurfdat
           call update_max_array_urban(pcturb_max,urbn_classes_g)
 
           ! Output time-varying data for current year
-          call check_ret(nf_inq_varid(ncid, 'PCT_NATVEG', varid), subname)
-          call ncd_put_time_slice(ncid, varid, ntim, get_pct_l2g_array(pctnatpft))
           
           call check_ret(nf_inq_varid(ncid, 'PCT_NAT_PFT', varid), subname)
           call ncd_put_time_slice(ncid, varid, ntim, get_pct_p2l_array(pctnatpft))

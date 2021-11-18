@@ -761,7 +761,7 @@ end subroutine mkurbanpar
 subroutine update_max_array_urban(pct_urbmax_arr,pct_urban_arr)
   !
   ! !DESCRIPTION:
-  ! Update the maximum percent cover of each urban class
+  ! Update the maximum percent cover of each urban class for landuse.timeseries file
   ! 
   ! !ARGUMENTS:
   real(r8)         , intent(inout):: pct_urbmax_arr(:,:)           ! max percent cover of each urban class

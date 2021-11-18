@@ -548,9 +548,6 @@ contains
             lev1name='numurbl', &
             long_name='maximum percent urban for each density type', units='unitless')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='PCT_NATVEG', xtype=xtype, &
-            lev1name='time', &
-            long_name='total percent natural vegetation landunit', units='unitless')
                           
        call harvdata%getFieldsIdx( ind1D, ind2D )
        do j = 1, harvdata%num1Dfields()
