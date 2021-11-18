@@ -122,8 +122,10 @@ module clm_varcon
 
   real(r8), public, parameter :: aquifer_water_baseline = 5000._r8 ! baseline value for water in the unconfined aquifer [mm]
   real(r8), public, parameter :: c_to_b = 2.0_r8         ! conversion between mass carbon and total biomass (g biomass /g C)
+  ! Some non-tunable conversions (may need to place elsewhere)
   real(r8), public, parameter :: g_to_mg = 1.0e3_r8  ! coefficient to convert g to mg
   real(r8), public, parameter :: cm3_to_m3 = 1.0e-6_r8  ! coefficient to convert cm3 to m3
+  real(r8), public, parameter :: pct_to_frac = 1.0e-2_r8  ! coefficient to convert % to fraction
   
   !!! C13
   real(r8), public, parameter :: preind_atm_del13c = -6.0_r8   ! preindustrial value for atmospheric del13C

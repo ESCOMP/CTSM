@@ -340,6 +340,7 @@ contains
     ! decomposition cascade of the MIMICS model.
     !
     ! !USES:
+    use clm_varcon, only: pct_to_frac
     !
     ! !ARGUMENTS:
     type(bounds_type)               , intent(in)    :: bounds  
@@ -360,14 +361,14 @@ contains
 
     real(r8):: speedup_fac                  ! acceleration factor, higher when vertsoilc = .true.
 
-    real(r8) :: clay  ! local copy of cellclay
-    integer  :: c, j    ! indices
+    real(r8) :: clay_frac  ! local copy of cellclay converted from % (fraction)
+    integer  :: c, j  ! indices
     !-----------------------------------------------------------------------
 
     associate(                                                                                     &
          nue_decomp_cascade             => soilbiogeochem_state_inst%nue_decomp_cascade_col      , & ! Output: [real(r8)          (:)     ]  N use efficiency for a given transition (gN going into microbe / gN decomposed)
 
-         cellclay                       => soilstate_inst%cellclay_col                           , & ! Input:  [real(r8)          (:,:)   ]  column 3D clay
+         cellclay                       => soilstate_inst%cellclay_col                           , & ! Input:  [real(r8)          (:,:)   ]  column 3D clay (%)
          
          cascade_donor_pool             => decomp_cascade_con%cascade_donor_pool                 , & ! Output: [integer           (:)     ]  which pool is C taken from for a given decomposition step 
          cascade_receiver_pool          => decomp_cascade_con%cascade_receiver_pool              , & ! Output: [integer           (:)     ]  which pool is C added to for a given decomposition step   
@@ -461,14 +462,15 @@ contains
             ! need to use the max function to limit these expressions.
             ! We apply the min function on cellclay because we are looping over
             ! some non-soil columns here that contain cellclay = 1e36.
-            clay = dmin1(100.0_r8, cellclay(c,j))
-            desorp(c,j) = mimics_desorp_p1 * dexp(mimics_desorp_p2 * clay)
+            clay_frac = pct_to_frac * &
+                        dmin1(100.0_r8, cellclay(c,j))  ! conv. % to fraction
+            desorp(c,j) = mimics_desorp_p1 * dexp(mimics_desorp_p2 * clay_frac)
             fphys_m1(c,j) = dmin1(1.0_r8, mimics_fphys_r_p1 * &
-                                          dexp(mimics_fphys_r_p2 * clay))
+                                          dexp(mimics_fphys_r_p2 * clay_frac))
             fphys_m2(c,j) = dmin1(1.0_r8, mimics_fphys_k_p1 * &
-                                          dexp(mimics_fphys_k_p2 * clay))
+                                          dexp(mimics_fphys_k_p2 * clay_frac))
             p_scalar(c,j) = 1.0_r8 / (mimics_p_scalar_p1 * &
-                                      dexp(mimics_p_scalar_p2 * dsqrt(clay)))
+                                      dexp(mimics_p_scalar_p2 * dsqrt(clay_frac)))
          end do
       end do
       initial_stock_soildepth = params_inst%mimics_initial_Cstocks_depth
