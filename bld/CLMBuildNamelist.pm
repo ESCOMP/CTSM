@@ -253,7 +253,7 @@ sub process_commandline {
                co2_type              => undef,
                co2_ppmv              => undef,
                clm_demand            => "null",
-               driver                => "mct",
+               driver                => "nuopc",
                help                  => 0,
                glc_nec               => "default",
                glc_use_antarctica    => 0,
@@ -1528,10 +1528,10 @@ sub process_namelist_inline_logic {
   setup_logic_soilstate($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_demand($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_surface_dataset($opts,  $nl_flags, $definition, $defaults, $nl);
+  setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
   if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) ne "branch" ) {
     setup_logic_initial_conditions($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   }
-  setup_logic_dynamic_subgrid($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_spinup($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_supplemental_nitrogen($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_snowpack($opts,  $nl_flags, $definition, $defaults, $nl);
@@ -2319,6 +2319,7 @@ sub setup_logic_initial_conditions {
     my $fsurdat          = $nl->get_value('fsurdat');
     $fsurdat             =~ s!(.*)/!!;
     $settings{'fsurdat'} = $fsurdat;
+    $settings{'do_transient_pfts'} = $nl->get_value('do_transient_pfts');
     #
     # If not transient use sim_year, otherwise use date
     #
@@ -4080,6 +4081,13 @@ sub setup_logic_misc {
    #
    my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+   if ( $opts->{'driver'} ne "nuopc" ) {
+      my $var = "force_send_to_atm";
+      my $val = $nl->get_value($var);
+      if ( defined($val) ) {
+         $log->fatal_error( "$var can only be set for the nuopc driver" );
+      }
+   }
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'for_testing_run_ncdiopio_tests');
    add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hist_master_list_file');
 }
@@ -4120,6 +4128,9 @@ sub write_output_files {
   # Eventually only list namelists that are actually used when CN on
   if ( &value_is_true($nl_flags->{'use_lch4'}) ) {
      push @groups, "ch4par_in";
+  }
+  if ( $opts->{'driver'} eq "nuopc" ) {
+     push @groups, "ctsm_nuopc_cap";
   }
   push @groups, "clm_humanindex_inparm";
   push @groups, "cnmresp_inparm";
@@ -4355,8 +4366,9 @@ sub check_input_files {
 
                 if ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
-                        #MV $pathname =~ s:$inputdata_rootdir::;
-                        print OUTFILE "$var = $pathname\n";
+                        if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
+                           print OUTFILE "$var = $pathname\n";
+                        }
                     }
                     else {
                         if (-e $pathname) {  # use -e rather than -f since the absolute pathname
@@ -4377,7 +4389,9 @@ sub check_input_files {
                     if ($inputdata_rootdir) {
                         $pathname = "$rootdir/$pathname";
                         #MV $pathname =~ s:$inputdata_rootdir::;
-                        print OUTFILE "$var = $pathname\n";
+                        if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
+                           print OUTFILE "$var = $pathname\n";
+                        }
                     }
                     else {
                         if (-f "$rootdir/$pathname") {
