@@ -38,10 +38,9 @@ class LILACSMOKE(SystemTestsCommon):
 
     def build_phase(self, sharedlib_only=False, model_only=False):
         if not sharedlib_only:
-            caseroot = self._case.get_value('CASEROOT')
             lndroot = self._case.get_value('COMP_ROOT_DIR_LND')
             exeroot = self._case.get_value('EXEROOT')
-            build_dir = os.path.join(caseroot, 'lilac_build')
+            build_dir = self._lilac_build_dir()
             script_path = os.path.abspath(os.path.join(lndroot, 'lilac', 'build_ctsm'))
 
             # We only run the initial build command if the build_dir doesn't exist
@@ -103,13 +102,13 @@ class LILACSMOKE(SystemTestsCommon):
                       os.path.join(blddir, 'Makefile'))
         symlink_force(os.path.join(lndroot, 'lilac', 'atm_driver', 'atm_driver.F90'),
                       os.path.join(blddir, 'atm_driver.F90'))
-        symlink_force(os.path.join(caseroot, 'Macros.make'),
+        symlink_force(os.path.join(self._lilac_build_dir(), 'case', 'Macros.make'),
                       os.path.join(blddir, 'Macros.make'))
 
         makevars = 'COMPILER={compiler} DEBUG={debug} CTSM_MKFILE={ctsm_mkfile}'.format(
             compiler=self._case.get_value('COMPILER'),
             debug=str(self._case.get_value('DEBUG')).upper(),
-            ctsm_mkfile=os.path.join(caseroot, 'lilac_build', 'ctsm.mk'))
+            ctsm_mkfile=os.path.join(self._lilac_build_dir(), 'ctsm.mk'))
         makecmd = 'make {makevars} atm_driver'.format(makevars=makevars)
 
         # Normally the user will source either ctsm_build_environment.sh or
@@ -323,8 +322,11 @@ class LILACSMOKE(SystemTestsCommon):
             replacement_done = False
         return (newline, replacement_done)
 
+    def _lilac_build_dir(self):
+        return os.path.join(self._case.get_value('CASEROOT'), 'lilac_build')
+
     def _runtime_inputs_dir(self):
-        return os.path.join(self._case.get_value('CASEROOT'), 'lilac_build', 'runtime_inputs')
+        return os.path.join(self._lilac_build_dir(), 'runtime_inputs')
 
     def _atm_driver_rundir(self):
         return os.path.join(self._case.get_value('CASEROOT'), 'lilac_atm_driver', 'run')

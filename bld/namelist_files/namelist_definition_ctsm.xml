@@ -116,6 +116,14 @@ This means that computations will be run even over these 0-weight points.
 THIS IS ONLY FOR TESTING PURPOSES - IT HAS NOT BEEN CHECKED FOR SCIENTIFIC VALIDITY.
 </entry>
 
+<entry id="force_send_to_atm"
+       type="logical"
+       category="drv_physics"
+       group="ctsm_nuopc_cap"
+       valid_values="" >
+If TRUE (which is the default), send the expcrt state for the nuopc driver to the ATM even if running with a data ATM
+</entry>
+
 <entry id="organic_frac_squared" type="logical" category="clm_physics"
        group="clm_soilstate_inparm" valid_values="" >
 If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
