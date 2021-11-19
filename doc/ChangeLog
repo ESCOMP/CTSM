@@ -1,15 +1,20 @@
 ===============================================================
 Tag name:  ctsm5.1.dev062
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Thu Nov 18 22:31:00 MST 2021
+Date: Fri Nov 19 00:53:29 MST 2021
 One-line Summary: Make NUOPC the default driver rather than MCT
 
 Purpose and description of changes
 ----------------------------------
 
-Remove MODEL as a setting for the build system, use COMP_NAME instead.
-Adds a container machine definition.
+Make NUOPC the default driver rather than MCT. Update externals and switch
+tests so nuopc tests are explicit for mct. Fix several issues. Update the README
+files and in-place documentation.
 
+Remove MODEL as a setting for the build system, use COMP_NAME instead.
+Adds a container machine definition in cime.
+
+See README.NUOPC_driver.md at the top level for a description of what changes.
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
@@ -53,14 +58,15 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
+   domain files are normally no longer used
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  See README.NUOPC_driver.md for a description of what changes
 
 Changes made to namelist defaults (e.g., changed parameter values):
+   New namelist added force_send_to_atm
 
-Changes to the datasets (e.g., parameter, surface or initial files):
-
-Substantial timing or memory changes:
+Substantial timing or memory changes: A bit slower, but less overall memory
     The PFS test shows the following:
     Model Cost:             265.58   pe-hrs/simulated_year 
     Model Throughput:       165.91   simulated_years/day 
@@ -69,19 +75,16 @@ Substantial timing or memory changes:
     Model Throughput:       205.52   simulated_years/day 
     The RUN length in TestStatus for dev05* and dev06* versions varied from 58 to 81 seconds
       so about up to a 20% variation
+    Highwater memory mark is higher (67 vs 131 GB), and last usage (323 vs 165MB) lower than MCT
 
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
 Changes to tests or testing:
+   Switch nuopc tests for mct. Remove ctsm_sci tests on izumi. Set MOSART_MODE==NULL for spinup tests
+   PTCLM and gen_domain tools tests removed
 
-
-Testing summary: regular fates ctsm_sci
+Testing summary: regular fates ctsm_sci tools
 ----------------
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
 
@@ -91,7 +94,7 @@ Testing summary: regular fates ctsm_sci
 
   tools-tests (test/tools) (if tools have been changed):
 
-    cheyenne - 
+    cheyenne - OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -156,7 +159,9 @@ List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
+   #1530 -- Add compsets for multiple ice-sheets
    #1502 -- Make the NUOPC driver the default
+   #1540 -- Implement fates_levleaf as a FATES 1D dimension variable 
 
 ===============================================================
 ===============================================================
