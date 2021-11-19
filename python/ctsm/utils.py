@@ -200,7 +200,6 @@ def _handle_config_value(var, default, item, is_list, convert_to_type,
     # TODO prelim. testing of this abort: errmsg didn't come through upon FAIL
     if allowed_values is not None:
         for v in var:
-            print('v in var', v)
             if v not in allowed_values:
                 print('v in var not in allowed_values', v)
                 errmsg = "{} is not an allowed value for {} in .cfg file\n" \
