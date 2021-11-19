@@ -1,4 +1,165 @@
 ===============================================================
+Tag name:  ctsm5.1.dev062
+Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Thu Nov 18 22:31:00 MST 2021
+One-line Summary: Make NUOPC the default driver rather than MCT
+
+Purpose and description of changes
+----------------------------------
+
+Remove MODEL as a setting for the build system, use COMP_NAME instead.
+Adds a container machine definition.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm5_1
+
+[x] clm5_0
+
+[x] ctsm5_0-nwp
+
+[x] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1557 more procesors on izumi for f09/f19
+  Fixes #1478 Rework some tests when we go to nuopc
+  Fixes #1365 NUOPC changes DATM_CLMNCEP_YR to DATM_YR
+  Fixes #1083 Use named constants rather than literal strings in NUOPC cap
+  Fixes #1237 Add namelist flag force_send_to_atm
+  Fixes #1502 Make NUOPC the default
+  Fixes #1476 Remove blank lines from ctsm.input_data_list
+  Fixes #1517 Don't allow -namelist as an option to CLM_BLDNML_OPTS
+  Fixes #1523 Change MODEL to COMP_NAME in buildlib
+  Fixes #1545 NUOPC tests that fail with floating point errors
+  Fixes #1192 Incompatible IC files for f09
+  Fixes #1544 MOSART dies for SSP tests
+  Fixes #1543 usgs mask doesn't work with nuopc
+
+Known bugs found since the previous tag (include issue #):
+  #1528 If possible, set more lnd -> mediator coupling fields to spval over ocean 
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Substantial timing or memory changes:
+    The PFS test shows the following:
+    Model Cost:             265.58   pe-hrs/simulated_year 
+    Model Throughput:       165.91   simulated_years/day 
+    The previous baseline for the MCT driver showed this
+    Model Cost:             214.41   pe-hrs/simulated_year 
+    Model Throughput:       205.52   simulated_years/day 
+    The RUN length in TestStatus for dev05* and dev06* versions varied from 58 to 81 seconds
+      so about up to a 20% variation
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+
+Testing summary: regular fates ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (486 tests differ from baseline as expected)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - 
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne -  PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+  
+  fates tests:
+    cheyenne ---- OK
+
+  ctsm_sci tests:
+    cheyenne ---- PASS
+
+  any other testing (give details below):
+     Did run ctsm_sci tests on izumi before we decided to remove them
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes! (because NUOPC is the default driver now rather than MCT)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All where driver changes
+    - what platforms/compilers: All
+    - nature of change: similar climate
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+   /glade/work/oleson/cesm2_3_alpha03a/cime/scripts/ctsm51_cesm23a03a_1deg_GSWP3V1_mct_hist
+   /glade/work/oleson/cesm2_3_alpha03a/cime/scripts/ctsm51_cesm23a03a_1deg_GSWP3V1_nuopc_hist
+
+   The history output is here (for now):
+
+   /glade/p/cgd/tss/people/oleson/ctsm51_cesm23a03a_1deg_GSWP3V1_mct_hist
+   /glade/p/cgd/tss/people/oleson/ctsm51_cesm23a03a_1deg_GSWP3V1_nuopc_hist
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+   The diagnostics comparing NUOPC to MCT are here:
+
+   https://webext.cgd.ucar.edu/I20TR/ctsm51_cesm23a03a_1deg_GSWP3V1_nuopc_hist/lnd/ctsm51_cesm23a03a_1deg_GSWP3V1_nuopc_hist.1995_2014-ctsm51_cesm23a03a_1deg_GSWP3V1_mct_hist.1995_2014/setsIndex.html
+	
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+   cism   to cismwrap_2_1_93
+   rtm    to rtm1_0_78
+   mosart to mosart1_0_45
+   cime   to cime6.0.11
+   cmeps  to cmeps0.13.40
+   cdeps  to cmeps0.13.40
+   cpl7   to cpl7.0.5
+   share  to share1.0.8
+   fates  to sci.1.49.1_api.17.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   #1502 -- Make the NUOPC driver the default
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev061
 Originator(s): mvertens (Mariana Vertenstein)
 Date:  Tue Oct 19 11:56:30 MDT 2021
