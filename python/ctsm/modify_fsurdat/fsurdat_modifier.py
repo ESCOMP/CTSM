@@ -66,7 +66,7 @@ def main ():
     # not required: user may set these in the .cfg file
     dom_nat_pft = get_config_value(config=config, section=section,
         item='dom_nat_pft', file_path=args.cfg_path,
-        allowed_values=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        allowed_values=range(15),  # integers from 0 to 14
         convert_to_type=int, can_be_unset=True)
 
     lai = get_config_value(config=config, section=section, item='lai',
@@ -84,7 +84,7 @@ def main ():
 
     soil_color = get_config_value(config=config, section=section,
         item='soil_color', file_path=args.cfg_path,
-        allowed_values=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        allowed_values=range(1, 21),  # integers from 1 to 20
         convert_to_type=int, can_be_unset=True)
 
     std_elev = get_config_value(config=config, section=section,
