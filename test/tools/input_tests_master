@@ -54,13 +54,6 @@ bli59 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_if10
 smi79 TSMscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
 bli79 TBLscript_tools.sh mkmapdata   mkmapdata.sh            mkmapdata_i1x1_brazil
 
-smf84 TSMscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
-blf84 TBLscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_clm4_5^buildtools
-smfc4 TSMscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_Cycle_clm4_5^buildtools
-blfc4 TBLscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_Cycle_clm4_5^buildtools
-smfg4 TSMscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_Global_clm4_5^buildtools
-blfg4 TBLscript_tools.sh site_and_regional/PTCLM   PTCLMmkdata             PTCLM_USUMB_Global_clm4_5^buildtools
-
 smiS4 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional
 bliS4 TBLscript_tools.sh site_and_regional getregional_datasets.pl getregional
 smiS8 TSMscript_tools.sh site_and_regional getregional_datasets.pl getregional_ndep
