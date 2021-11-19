@@ -2454,6 +2454,7 @@ contains
        call ncd_defdim(lnfid, 'fates_levscpf', nlevsclass*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcapf', nlevcoage*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levcan', nclmax, dimid)
+       call ncd_defdim(lnfid, 'fates_levleaf', nlevleaf, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlf', nlevleaf * nclmax, dimid)
        call ncd_defdim(lnfid, 'fates_levcnlfpf', nlevleaf * nclmax * numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levelem', num_elements_fates, dimid)
@@ -2992,6 +2993,7 @@ contains
     use FatesInterfaceTypesMod, only : fates_hdim_levfuel
     use FatesInterfaceTypesMod, only : fates_hdim_levcwdsc
     use FatesInterfaceTypesMod, only : fates_hdim_levcan
+    !use FatesInterfaceTypesMod, only : fates_hdim_levleaf
     use FatesInterfaceTypesMod, only : fates_hdim_canmap_levcnlf
     use FatesInterfaceTypesMod, only : fates_hdim_lfmap_levcnlf
     use FatesInterfaceTypesMod, only : fates_hdim_canmap_levcnlfpf
@@ -3075,8 +3077,11 @@ contains
                   long_name='FATES pft index of the combined pft-size class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_scmap_levscpf',xtype=ncd_int, dim1name='fates_levscpf', &
                   long_name='FATES size index of the combined pft-size class dimension', units='-', ncid=nfid(t))
+             ! Units are dash here with units of yr added to the long name so
+             ! that postprocessors (like ferret) won't get confused with what
+             ! the time coordinate is. EBK Nov/3/2021 (see #1540)
              call ncd_defvar(varname='fates_levcacls', xtype=tape(t)%ncprec, dim1name='fates_levcacls', &
-                  long_name='FATES cohort age class lower bound', units='years', ncid=nfid(t))
+                  long_name='FATES cohort age class lower bound (yr)', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_pftmap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
                   long_name='FATES pft index of the combined pft-cohort age class dimension', units='-', ncid=nfid(t))
              call ncd_defvar(varname='fates_camap_levcapf',xtype=ncd_int, dim1name='fates_levcapf', &
@@ -3093,6 +3098,8 @@ contains
                   long_name='FATES cwd size class', ncid=nfid(t))
              call ncd_defvar(varname='fates_levcan',xtype=ncd_int, dim1name='fates_levcan', &
                   long_name='FATES canopy level', ncid=nfid(t))
+             call ncd_defvar(varname='fates_levleaf',xtype=ncd_int, dim1name='fates_levleaf', &
+                  long_name='FATES leaf+stem level', units='VAI', ncid=nfid(t))
              call ncd_defvar(varname='fates_canmap_levcnlf',xtype=ncd_int, dim1name='fates_levcnlf', &
                   long_name='FATES canopy level of combined canopy-leaf dimension', ncid=nfid(t))
              call ncd_defvar(varname='fates_lfmap_levcnlf',xtype=ncd_int, dim1name='fates_levcnlf', &
@@ -3149,6 +3156,7 @@ contains
              call ncd_io(varname='fates_levfuel',data=fates_hdim_levfuel, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcwdsc',data=fates_hdim_levcwdsc, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_levcan',data=fates_hdim_levcan, ncid=nfid(t), flag='write')
+             !call ncd_io(varname='fates_levleaf',data=fates_hdim_levleaf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_canmap_levcnlf',data=fates_hdim_canmap_levcnlf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_lfmap_levcnlf',data=fates_hdim_lfmap_levcnlf, ncid=nfid(t), flag='write')
              call ncd_io(varname='fates_canmap_levcnlfpf',data=fates_hdim_canmap_levcnlfpf, ncid=nfid(t), flag='write')
@@ -5446,6 +5454,8 @@ contains
        num2d = nlevage*numpft_fates
     case ('fates_levcan')
        num2d = nclmax
+    case ('fates_levleaf')
+       num2d = nlevleaf
     case ('fates_levcnlf')
        num2d = nlevleaf * nclmax
     case ('fates_levcnlfpf')
