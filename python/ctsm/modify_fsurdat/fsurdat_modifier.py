@@ -120,16 +120,16 @@ def main ():
                                        hgt_top=hgt_top, hgt_bot=hgt_bot)
 
     if max_sat_area is not None:  # overwrite "idealized" value
-        modify_fsurdat.file['FMAX'] = \
-         modify_fsurdat.file['FMAX'].where(modify_fsurdat.not_rectangle, other=max_sat_area)
+        modify_fsurdat.file['FMAX'] = modify_fsurdat.setvar(
+            modify_fsurdat.file['FMAX'], max_sat_area)
 
     if std_elev is not None:  # overwrite "idealized" value
-        modify_fsurdat.file['STD_ELEV'] = \
-         modify_fsurdat.file['STD_ELEV'].where(modify_fsurdat.not_rectangle, other=std_elev)
+        modify_fsurdat.file['STD_ELEV'] = modify_fsurdat.setvar(
+            modify_fsurdat.file['STD_ELEV'], std_elev)
 
     if soil_color is not None:  # overwrite "idealized" value
-        modify_fsurdat.file['SOIL_COLOR'] = \
-         modify_fsurdat.file['SOIL_COLOR'].where(modify_fsurdat.not_rectangle, other=soil_color)
+        modify_fsurdat.file['SOIL_COLOR'] = modify_fsurdat.setvar(
+            modify_fsurdat.file['SOIL_COLOR'], soil_color)
 
     if zero_nonveg:
         modify_fsurdat.zero_nonveg()
