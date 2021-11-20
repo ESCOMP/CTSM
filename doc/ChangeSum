@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev063 glemieux 11/19/2021 Provide access to the fraction of canopy covered by snow variable to fates
     ctsm5.1.dev062     erik 11/19/2021 Make NUOPC the default driver rather than MCT
     ctsm5.1.dev061 mvertens 10/19/2021 Changes needed to get aux history output with cmeps
     ctsm5.1.dev060 glemieux 10/18/2021 Izumi aux_clm test fixes for fates testmods

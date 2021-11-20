@@ -1,4 +1,68 @@
 ===============================================================
+Tag name:  ctsm5.1.dev063
+Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
+Date:  Fri 19 Nov 2021 10:04:18 PM PST
+One-line Summary: Provide access to the fraction of canopy covered by snow variable to fates
+
+Purpose and description of changes
+----------------------------------
+
+This tag provides the FATES model access to the fcansno variable to facilitate a correction
+of it's radiation transfer code.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+    FATES #744 -- Use of SAI in surface albedo routines.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+  fates tests:
+    cheyenne ---- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes (ONLY for FATES tests due to FATES tag update)
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+    fates: sci.1.50.0_api.17.0.0 -> sci.1.50.1_api.18.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev062
 Originator(s):  erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Fri Nov 19 00:53:29 MST 2021
