@@ -276,7 +276,7 @@ contains
     real(r8)               , intent(in)            :: nextsw_cday        ! calendar day at Greenwich (1.00, ..., days/year)
     real(r8)               , intent(in)            :: declinp1           ! declination angle (radians) for next time step
     type(hlm_fates_interface_type), intent(inout)  :: clm_fates
-   type(aerosol_type)     , intent(in)            :: aerosol_inst
+    type(aerosol_type)     , intent(in)            :: aerosol_inst
     type(canopystate_type) , intent(in)            :: canopystate_inst
     type(waterstatebulk_type)  , intent(in)            :: waterstatebulk_inst
     type(waterdiagnosticbulk_type)  , intent(in)            :: waterdiagnosticbulk_inst
