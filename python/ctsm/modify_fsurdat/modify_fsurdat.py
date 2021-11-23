@@ -11,7 +11,7 @@ import logging
 import numpy as np
 import xarray as xr
 
-from ctsm.utils import abort, get_git_sha, update_metadata, lon_range_0_to_360
+from ctsm.utils import abort, get_ctsm_git_sha, update_metadata, lon_range_0_to_360
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class ModifyFsurdat:
         title = 'Modified fsurdat file'
         summary = 'Modified fsurdat file'
         contact = 'N/A'
-        data_script = os.path.abspath(__file__) + " -- " + get_git_sha()
+        data_script = os.path.abspath(__file__) + " -- " + get_ctsm_git_sha()
         description = 'Modified this file: ' + fsurdat_in
         update_metadata(self.file, title=title, summary=summary,
                         contact=contact, data_script=data_script,
@@ -207,6 +207,7 @@ class ModifyFsurdat:
             self.file[var] = self.file[var].where(
                 self.not_rectangle, other=val)
         elif fourth_dim is None and third_dim == -1:
+            # TODO check whether this one works!!!
             self.file[var][:,:,:] = self.file[var][:,:,:].where(
                 self.not_rectangle, other=val)
         elif fourth_dim is None and third_dim >= 0:

@@ -135,5 +135,3 @@ def main ():
     # Output the now modified CTSM surface data file
     # ----------------------------------------------
     modify_fsurdat.write_output(fsurdat_in, fsurdat_out)
-
-    sys.exit('SUCCESS')

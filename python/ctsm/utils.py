@@ -10,6 +10,7 @@ import subprocess
 from datetime import date
 from getpass import getuser
 from configparser import NoSectionError, NoOptionError
+from ctsm.path_utils import path_to_ctsm_root
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,12 @@ def get_git_sha():
     Returns Git short SHA for the currect directory.
     """
     return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode()
+
+def get_ctsm_git_sha():
+    """
+    Returns Git short SHA for the ctsm directory.
+    """
+    return subprocess.check_output(['git', '-C', path_to_ctsm_root(), 'rev-parse', '--short', 'HEAD']).strip().decode()
 
 def add_tag_to_filename(filename, tag):
     """
