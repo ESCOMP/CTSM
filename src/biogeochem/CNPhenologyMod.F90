@@ -1796,6 +1796,8 @@ contains
             end do
          end if
 
+         do_plant_prescribed = next_rx_sdate(p) == jday
+
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
          if ( (.not. croplive(p)) .and. sowing_count(p) == 0 ) then
 
@@ -1814,7 +1816,6 @@ contains
             !         According to Chris Kucharik, the dataset of
             !         xinpdate was generated from a previous model run at 0.5 deg resolution
 
-            do_plant_prescribed = next_rx_sdate(p) == jday
 
             ! Only allow sowing according to normal "window" rules if not using prescribed
             ! sowing dates at all, or if this cell had no values in the prescribed sowing
@@ -2032,7 +2033,11 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            if (generate_crop_gdds) then
+            if (do_plant_prescribed) then
+                ! Today is the planting day, but the crop still hasn't been harvested.
+                do_harvest = .true.
+                force_harvest = .true.
+            else if (generate_crop_gdds) then
                if (.not. use_cropcal_streams) then 
                   write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
                   call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -2049,7 +2054,7 @@ contains
                ! Original harvest rule
                do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))
             endif
-            force_harvest = generate_crop_gdds .and. do_harvest
+            force_harvest = force_harvest .or. (generate_crop_gdds .and. do_harvest)
 
             if ((.not. force_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
