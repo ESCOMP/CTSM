@@ -187,11 +187,11 @@ def buildnml(cime_path, rundir):
 
     # determine if fsurdat and/or finidat should appear in the -namelist option
     extra_namelist_opts = ''
-    if fsurdat != None:
+    if fsurdat is not None:
         # NOTE(wjs, 2020-06-30) With the current logic, fsurdat should never be UNSET
         # (ie None here) but it's possible that this will change in the future.
         extra_namelist_opts = extra_namelist_opts + " fsurdat = '{}' ".format(fsurdat)
-    if finidat != None:
+    if finidat is not None:
         extra_namelist_opts = extra_namelist_opts + " finidat = '{}' ".format(finidat)
 
     # call build-namelist

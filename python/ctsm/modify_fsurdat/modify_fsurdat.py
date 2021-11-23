@@ -248,7 +248,7 @@ class ModifyFsurdat:
         # landunit would have to receive a unique pct value rather than the
         # common value used here in pct_not_nat_veg = 0
         pct_nat_veg = 100  # do not change; works with pct_not_nat_veg = 0
-        pct_not_nat_veg = 0  # do not change; works with pct_nat_veg = 0
+        pct_not_nat_veg = 0  # do not change; works with pct_nat_veg = 100
         pct_sand = 43  # loam
         pct_clay = 18  # loam
         soil_color = 15  # loam
