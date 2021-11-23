@@ -654,9 +654,9 @@
   </test>
   <test name="ERP_Ld5" grid="f19_g17" compset="I2000Clm50SpRtmFl" testmods="clm/default">
     <machines>
-      <machine name="izumi" compiler="gnu" category="aux_clm"/>
-      <machine name="izumi" compiler="gnu" category="prebeta"/>
-      <machine name="izumi" compiler="gnu" category="prealpha"/>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm"/>
+      <machine name="cheyenne" compiler="gnu" category="prebeta"/>
+      <machine name="cheyenne" compiler="gnu" category="prealpha"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>

@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev063
 Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date:  Fri 19 Nov 2021 10:04:18 PM PST
+Date:  Fri 22 Nov 2021 14:04:18 PM PST
 One-line Summary: Provide access to the fraction of canopy covered by snow variable to fates
 
 Purpose and description of changes
@@ -33,6 +33,15 @@ Bugs fixed or introduced
 Issues fixed (include CTSM Issue #):
     FATES #744 -- Use of SAI in surface albedo routines.
 
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+
+    Replaced the f19 nag compiler fates testmod in the izumi fates list with an f45 test
+    since the pes layout change for f19 grids takes longer to run now.  Coverage for f19
+    grids (and higher resolution) is provided via cheyenne test lists.
+    
 Testing summary:
 ----------------
 
