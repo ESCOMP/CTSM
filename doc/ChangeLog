@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev063
 Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date:  Fri Nov 23 09:24:00 PST 2021
+Date: Tue Nov 23 12:51:48 MST 2021
 One-line Summary: Provide access to the fraction of canopy covered by snow variable to fates
 
 Purpose and description of changes
@@ -52,17 +52,25 @@ Changes to tests or testing:
     in the izumi aux_clm list to cheyenne to maintain coverage for this test.  The ctsm5.1.dev063
     aux_clm baseline on cheyenne has been updated to include this test.
   
-Testing summary:
+Testing summary: regular fates
 ----------------
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- OK
     izumi ------- OK
   
-  fates tests:
+  fates tests: (baseline: fates-sci.1.50.1_api.18.0.0-ctsm5.1.dev063)
     cheyenne ---- OK
     izumi ------- OK
 
@@ -74,11 +82,12 @@ Changes answers relative to baseline: Yes (ONLY for FATES tests due to FATES tag
 Other details
 -------------
 
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.): fates
     fates: sci.1.50.0_api.17.0.0 -> sci.1.50.1_api.18.0.0
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
+  #1531 -- Adding fcansno to FATES interface
 
 ===============================================================
 ===============================================================
