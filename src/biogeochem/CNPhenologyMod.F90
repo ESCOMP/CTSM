@@ -1725,7 +1725,8 @@ contains
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
          next_rx_sdate     =>    crop_inst%next_rx_sdate                       , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
-         growingseason_count =>  crop_inst%growingseason_count                 , & ! Inout:  [integer  (:) ]  number of growing seasons that have begun this year for this patch
+         sowing_count      =>    crop_inst%sowing_count                        , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
+         harvest_count     =>    crop_inst%harvest_count                       , & ! Inout:  [integer  (:) ]  number of harvest events this year for this patch
          peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -1785,7 +1786,8 @@ contains
          ! on an annual basis in cropresidue subroutine
 
          if ( is_beg_curr_year() ) then
-            growingseason_count(p) = 0
+            sowing_count(p) = 0
+            harvest_count(p) = 0
             do s = 1, mxgrowseas
                crop_inst%sdates_thisyr(p,s) = -1._r8
                crop_inst%hdates_thisyr(p,s) = -1._r8
@@ -1793,7 +1795,7 @@ contains
          end if
 
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
-         if ( (.not. croplive(p)) .and. growingseason_count(p) == 0 ) then
+         if ( (.not. croplive(p)) .and. sowing_count(p) == 0 ) then
 
             ! gdd needed for * chosen crop and a likely hybrid (for that region) *
             ! to reach full physiological maturity
@@ -2075,7 +2077,8 @@ contains
 
             else if (do_harvest) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
-               crop_inst%hdates_thisyr(p, growingseason_count(p) = jday
+               harvest_count(p) = harvest_count(p) + 1
+               crop_inst%hdates_thisyr(p, harvest_count(p) = jday
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
@@ -2246,7 +2249,7 @@ contains
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          next_rx_sdate     =>    crop_inst%next_rx_sdate                         , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
-         growingseason_count =>  crop_inst%growingseason_count                   , & ! Inout:  [integer  (:) ]  number of growing seasons that have begun this year for this patch
+         sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
@@ -2259,13 +2262,13 @@ contains
       croplive(p)  = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
-      growingseason_count(p) = growingseason_count(p) + 1
-      if (growingseason_count(p) <= crop_inst%n_growingseasons_thisyear_thispatch(p)) then
-         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, growingseason_count(p))
+      sowing_count(p) = sowing_count(p) + 1
+      if (sowing_count(p) <= crop_inst%n_growingseasons_thisyear_thispatch(p)) then
+         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, sowing_count(p))
       else
          next_rx_sdate(p) = -1
       endif
-      crop_inst%sdates_thisyr(p,growingseason_count(p)) = jday
+      crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset

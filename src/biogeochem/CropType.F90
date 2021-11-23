@@ -43,7 +43,8 @@ module CropType
      integer , pointer :: rx_sdates_thisyr        (:,:) ! all prescribed sowing dates for this patch this year
      real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
      real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
-     integer , pointer :: growingseason_count     (:)   ! number of growing seasons that have begun this year for this patch
+     integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
+     integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
      integer , pointer :: n_growingseasons_thisyear_thispatch (:)   ! number of sowing dates read in for this patch this year
 
    contains
@@ -208,7 +209,8 @@ contains
     allocate(this%rx_sdates_thisyr(begp:endp,1:mxgrowseas))
     allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas))
     allocate(this%hdates_thisyr(begp:endp,1:mxgrowseas))
-    allocate(this%growingseason_count(begp:endp)) ; this%growingseason_count(:) = 0
+    allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
+    allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
     allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
 
     this%rx_sdates_thisyr(:,:) = -1
