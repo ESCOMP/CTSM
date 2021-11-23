@@ -635,7 +635,6 @@ contains
     ! !USES:
     use restUtilMod
     use ncdio_pio
-    use clm_varctl, only : use_vertsoilc
     !
     ! !ARGUMENTS:
     class(soilbiogeochem_carbonflux_type) :: this
@@ -655,42 +654,23 @@ contains
     !
     if ( use_fates ) then
        
-       if (use_vertsoilc) then
-          ptr2d => this%FATES_c_to_litr_lab_c_col
-          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
+       ptr2d => this%FATES_c_to_litr_lab_c_col
+       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
           
-          ptr2d => this%FATES_c_to_litr_cel_c_col
-          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
+       ptr2d => this%FATES_c_to_litr_cel_c_col
+       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
           
-          ptr2d => this%FATES_c_to_litr_lig_c_col
-          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
-               long_name='', units='gC/m3/s', scale_by_thickness=.false., &
-               interpinic_flag='interp', readvar=readvar, data=ptr2d) 
-          
-       else
-          ptr1d => this%FATES_c_to_litr_lab_c_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lab_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='gC/m3/s', &
-               interpinic_flag='interp', readvar=readvar, data=ptr1d) 
-          
-          ptr1d => this%FATES_c_to_litr_cel_c_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_cel_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='gC/m3/s', &
-               interpinic_flag='interp', readvar=readvar, data=ptr1d) 
-          
-          ptr1d => this%FATES_c_to_litr_lig_c_col(:,1)
-          call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
-               dim1name='column', long_name='', units='gC/m3/s', &
-               interpinic_flag='interp', readvar=readvar, data=ptr1d) 
-          
-       end if
+       ptr2d => this%FATES_c_to_litr_lig_c_col
+       call restartvar(ncid=ncid, flag=flag, varname='FATES_c_to_litr_lig_c_col', xtype=ncd_double,  &
+            dim1name='column', dim2name='levgrnd', switchdim=.true., &
+            long_name='', units='gC/m3/s', scale_by_thickness=.false., &
+            interpinic_flag='interp', readvar=readvar, data=ptr2d) 
 
        ! Copy last 3 variables to an array of litter pools for use in do loops.
        ! Repeat copy in src/utils/clmfates_interfaceMod.F90.

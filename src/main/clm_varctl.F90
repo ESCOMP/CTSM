@@ -197,9 +197,6 @@ module clm_varctl
   ! which snow cover fraction parameterization to use
   character(len=64), public :: snow_cover_fraction_method
 
-  ! true => write global average diagnostics to std out
-  logical,  public :: wrtdia       = .false.            
-
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
 
@@ -243,6 +240,8 @@ module clm_varctl
   logical, public            :: use_fates_ed_prescribed_phys = .false. ! true => prescribed physiology
   logical, public            :: use_fates_inventory_init = .false.     ! true => initialize fates from inventory
   logical, public            :: use_fates_fixed_biogeog = .false.           ! true => use fixed biogeography mode
+  logical, public            :: use_fates_nocomp = .false.           ! true => use no comopetition mode
+  logical, public            :: use_fates_sp = .false.           ! true => use FATES satellite phenology mode
   character(len=256), public :: fates_inventory_ctrl_filename = ''     ! filename for inventory control
 
   !----------------------------------------------------------
@@ -375,12 +374,10 @@ module clm_varctl
   ! Migration of CPP variables
   !----------------------------------------------------------
 
-  logical, public :: use_lch4            = .false.
-  logical, public :: use_nitrif_denitrif = .false.
-  logical, public :: use_vertsoilc       = .false.
+  logical, public :: use_lch4            = .true.
+  logical, public :: use_nitrif_denitrif = .true.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
-  logical, public :: use_century_decomp  = .false.
   logical, public :: use_cn              = .false.
   logical, public :: use_cndv            = .false.
   logical, public :: use_grainproduct    = .false.

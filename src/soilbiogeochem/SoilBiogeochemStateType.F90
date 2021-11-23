@@ -11,7 +11,7 @@ module SoilBiogeochemStateType
   use clm_varcon     , only : spval, ispval, c14ratio, grlnd
   use landunit_varcon, only : istsoil, istcrop
   use clm_varpar     , only : nlevsno, nlevgrnd, nlevlak
-  use clm_varctl     , only : use_vertsoilc, use_cn 
+  use clm_varctl     , only : use_cn 
   use clm_varctl     , only : iulog
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
