@@ -2080,7 +2080,7 @@ contains
             else if (do_harvest) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
                harvest_count(p) = harvest_count(p) + 1
-               crop_inst%hdates_thisyr(p, harvest_count(p) = jday
+               crop_inst%hdates_thisyr(p, harvest_count(p)) = DBLE(jday)
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
