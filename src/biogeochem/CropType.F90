@@ -182,7 +182,7 @@ contains
   subroutine InitAllocate(this, bounds)
     ! !USES:
     !
-    use clm_varpar, only : mxgrowseas
+    use clm_varpar, only : mxgrowseas, mxharvests
     !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
@@ -208,7 +208,7 @@ contains
     allocate(this%next_rx_sdate(begp:endp)) ; this%next_rx_sdate(:) = -1
     allocate(this%rx_sdates_thisyr(begp:endp,1:mxgrowseas))
     allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas))
-    allocate(this%hdates_thisyr(begp:endp,1:mxgrowseas))
+    allocate(this%hdates_thisyr(begp:endp,1:mxharvests))
     allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
     allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
     allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
@@ -270,7 +270,7 @@ contains
          ptr_patch=this%sdates_thisyr, default='inactive')
 
     this%hdates_thisyr(begp:endp,:) = -1._r8
-    call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxgrowseas', &
+    call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
          avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
          ptr_patch=this%hdates_thisyr, default='inactive')
 

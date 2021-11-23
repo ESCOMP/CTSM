@@ -14,7 +14,7 @@ module CNPhenologyMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use shr_sys_mod                     , only : shr_sys_flush
   use decompMod                       , only : bounds_type
-  use clm_varpar                      , only : maxveg, nlevdecomp_full, mxgrowseas
+  use clm_varpar                      , only : maxveg, nlevdecomp_full, mxgrowseas, mxharvests
   use clm_varpar                      , only : i_litr_min, i_litr_max
   use clm_varctl                      , only : iulog, use_cndv
   use clm_varcon                      , only : tfrz
@@ -1790,6 +1790,8 @@ contains
             harvest_count(p) = 0
             do s = 1, mxgrowseas
                crop_inst%sdates_thisyr(p,s) = -1._r8
+            end do
+            do s = 1, mxharvests
                crop_inst%hdates_thisyr(p,s) = -1._r8
             end do
          end if
