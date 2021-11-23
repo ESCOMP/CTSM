@@ -144,24 +144,22 @@ class ModifyFsurdat:
         """
 
         # initialize 3D variable
-        self.file['PCT_NAT_PFT'][:,:,:] = self.setvar(
-            self.file['PCT_NAT_PFT'][:,:,:], 0)
+        self.setvar('PCT_NAT_PFT', val=0, third_dim=-1)
         # set 3D variable value for dom_nat_pft
-        self.file['PCT_NAT_PFT'][dom_nat_pft,:,:] = self.setvar(
-            self.file['PCT_NAT_PFT'][dom_nat_pft,:,:], 100)
+        self.setvar('PCT_NAT_PFT', val=100, third_dim=dom_nat_pft)
 
         # dictionary of 4d variables to loop over
         vars_4d = {'MONTHLY_LAI': lai,
                    'MONTHLY_SAI': sai,
                    'MONTHLY_HEIGHT_TOP': hgt_top,
                    'MONTHLY_HEIGHT_BOT': hgt_bot}
-        for var_name, var in vars_4d.items():
-            if var is not None:
+        for var, val in vars_4d.items():
+            if val is not None:
                 self.set_lai_sai_hgts(dom_nat_pft=dom_nat_pft,
-                                      var_name=var_name, var=var)
+                                      var=var, val=val)
 
 
-    def set_lai_sai_hgts(self, dom_nat_pft, var_name, var):
+    def set_lai_sai_hgts(self, dom_nat_pft, var, val):
         """
         Description
         -----------
@@ -169,15 +167,15 @@ class ModifyFsurdat:
         values selected by the user for dom_nat_pft. Else do nothing.
         """
         if dom_nat_pft == 0:  # bare soil: var must equal 0
-            var = [0] * 12
-        if len(var) != 12:
+            val = [0] * 12
+        if len(val) != 12:
             errmsg = 'Error: Variable should have exactly 12 ' \
-                     'entries in the configure file: ' + var_name
+                     'entries in the configure file: ' + var
             abort(errmsg)
         for mon in self.file.time - 1:  # loop over 12 months
             # set 4D variable to value for dom_nat_pft
-            self.file[var_name][mon,dom_nat_pft,:,:] = self.setvar(
-                self.file[var_name][mon,dom_nat_pft,:,:], var[int(mon)])
+            self.setvar(var, val[int(mon)], third_dim=dom_nat_pft,
+                         fourth_dim=mon)
 
 
     def zero_nonveg(self):
@@ -199,15 +197,29 @@ class ModifyFsurdat:
         self.file['PCT_GLACIER'][:,:] = 0
 
 
-    def setvar(self, var, val):
+    def setvar(self, var, val, third_dim=None, fourth_dim=None):
         """
         Set variable var to value val in the *rectangle* domain, which
         is denoted as *other* in the *not_rectangle* domain.
         """
 
-        var = var.where(self.not_rectangle, other=val)
-
-        return var
+        if fourth_dim is None and third_dim is None:
+            self.file[var] = self.file[var].where(
+                self.not_rectangle, other=val)
+        elif fourth_dim is None and third_dim == -1:
+            self.file[var][:,:,:] = self.file[var][:,:,:].where(
+                self.not_rectangle, other=val)
+        elif fourth_dim is None and third_dim >= 0:
+            self.file[var][third_dim,:,:] = \
+                self.file[var][third_dim,:,:].where(
+                self.not_rectangle, other=val)
+        elif fourth_dim is not None and third_dim is not None:
+            self.file[var][fourth_dim,third_dim,:,:] = \
+                self.file[var][fourth_dim,third_dim,:,:].where(
+                self.not_rectangle, other=val)
+        else:
+            errmsg = "Unexpected dimension setting for variable " + var + ". It's likely that the problem is in the third_dim and/or fourth_dim settings when calling setvar"
+            abort(errmsg)
 
 
     def set_idealized(self):
@@ -243,46 +255,32 @@ class ModifyFsurdat:
         organic = 0
 
         # 2D variables
-        self.file['F0'] = self.setvar(self.file['F0'], max_inundated)
-        self.file['FMAX'] = self.setvar(self.file['FMAX'], max_sat_area)
-        self.file['STD_ELEV'] = self.setvar(self.file['STD_ELEV'], std_elev)
-        self.file['SLOPE'] = self.setvar(self.file['SLOPE'], slope)
-        self.file['zbedrock'] = self.setvar(self.file['zbedrock'], zbedrock)
-        self.file['SOIL_COLOR'] = self.setvar(
-            self.file['SOIL_COLOR'], soil_color)
-        self.file['PFTDATA_MASK'] = self.setvar(
-            self.file['PFTDATA_MASK'], pftdata_mask)
-        self.file['LANDFRAC_PFT'] = self.setvar(
-            self.file['LANDFRAC_PFT'], landfrac_pft)
-        self.file['PCT_WETLAND'] = self.setvar(
-            self.file['PCT_WETLAND'], pct_not_nat_veg)
-        self.file['PCT_CROP'] = self.setvar(
-            self.file['PCT_CROP'], pct_not_nat_veg)
-        self.file['PCT_LAKE'] = self.setvar(
-            self.file['PCT_LAKE'], pct_not_nat_veg)
-        self.file['PCT_URBAN'] = self.setvar(
-            self.file['PCT_URBAN'], pct_not_nat_veg)
-        self.file['PCT_GLACIER'] = self.setvar(
-            self.file['PCT_GLACIER'], pct_not_nat_veg)
-        self.file['PCT_NATVEG'] = self.setvar(
-            self.file['PCT_NATVEG'], pct_nat_veg)
+        self.setvar('F0', max_inundated)
+        self.setvar('FMAX', max_sat_area)
+        self.setvar('STD_ELEV', std_elev)
+        self.setvar('SLOPE', slope)
+        self.setvar('zbedrock', zbedrock)
+        self.setvar('SOIL_COLOR', soil_color)
+        self.setvar('PFTDATA_MASK', pftdata_mask)
+        self.setvar('LANDFRAC_PFT', landfrac_pft)
+        self.setvar('PCT_WETLAND', pct_not_nat_veg)
+        self.setvar('PCT_CROP', pct_not_nat_veg)
+        self.setvar('PCT_LAKE', pct_not_nat_veg)
+        self.setvar('PCT_URBAN', pct_not_nat_veg)
+        self.setvar('PCT_GLACIER', pct_not_nat_veg)
+        self.setvar('PCT_NATVEG', pct_nat_veg)
 
         for lev in self.file.nlevsoi:
             # set next three 3D variables to values representing loam
-            self.file['PCT_SAND'][lev,:,:] = self.setvar(
-                self.file['PCT_SAND'][lev,:,:], pct_sand)
-            self.file['PCT_CLAY'][lev,:,:] = self.setvar(
-                self.file['PCT_CLAY'][lev,:,:], pct_clay)
-            self.file['ORGANIC'][lev,:,:] = self.setvar(
-                self.file['ORGANIC'][lev,:,:], organic)
+            self.setvar('PCT_SAND', val=pct_sand, third_dim=lev)
+            self.setvar('PCT_CLAY', val=pct_clay, third_dim=lev)
+            self.setvar('ORGANIC', val=organic, third_dim=lev)
 
         for crop in self.file.cft:
             cft_local = crop - (max(self.file.natpft) + 1)
             # initialize 3D variable; set outside the loop below
-            self.file['PCT_CFT'][cft_local,:,:] = self.setvar(
-                self.file['PCT_CFT'][cft_local,:,:], 0)
+            self.setvar('PCT_CFT', val=0, third_dim=cft_local)
 
         # set 3D variable
         # NB. sum(PCT_CFT) must = 100 even though PCT_CROP = 0
-        self.file['PCT_CFT'][0,:,:] = self.setvar(
-            self.file['PCT_CFT'][0,:,:], 100)
+        self.setvar('PCT_CFT', val=100, third_dim=0)
