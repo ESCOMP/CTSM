@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev063
 Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date:  Fri 22 Nov 2021 14:04:18 PM PST
+Date:  Fri Nov 23 09:24:00 PST 2021
 One-line Summary: Provide access to the fraction of canopy covered by snow variable to fates
 
 Purpose and description of changes
@@ -31,17 +31,27 @@ Bugs fixed or introduced
 ------------------------
 
 Issues fixed (include CTSM Issue #):
-    FATES #744 -- Use of SAI in surface albedo routines.
-
+    Fixes FATES #744 -- Use of SAI in surface albedo routines.
+    Fixes #1559 -- A few tests in the testlist were for hobart
+    
+Known bugs found since the previous tag (include issue #):
+    #1559 -- A few tests in the testlist were for hobart
+    
+    
 Notes of particular relevance for developers:
 ---------------------------------------------
 
 Changes to tests or testing:
 
-    Replaced the f19 nag compiler fates testmod in the izumi fates list with an f45 test
-    since the pes layout change for f19 grids takes longer to run now.  Coverage for f19
-    grids (and higher resolution) is provided via cheyenne test lists.
+    Replaced the only f19 grid resolution testmod in the izumi fates list with an f45 test
+    since the pes layout change for izumi from ctsm5.1.dev062 results in high resolution grids 
+    taking longer to run now.  Coverage for high resolution fates tests is provided via cheyenne 
+    test lists.
     
+    For the same reasons as above, I transferred the only high res (f19) grid resolution testmod 
+    in the izumi aux_clm list to cheyenne to maintain coverage for this test.  The ctsm5.1.dev063
+    aux_clm baseline on cheyenne has been updated to include this test.
+  
 Testing summary:
 ----------------
 
