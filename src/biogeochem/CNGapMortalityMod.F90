@@ -124,6 +124,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: p                ! patch index
     integer :: fp               ! patch filter index
+    real(r8):: dt               ! time step (sec)
     real(r8):: am               ! rate for fractional mortality (1/yr)
     real(r8):: m                ! rate for fractional mortality (1/s)
     real(r8):: mort_max         ! asymptotic max mortality rate (/yr)

@@ -632,12 +632,12 @@ contains
        if (use_vertsoilc) then
              ptr2d => this%matrix_cap_decomp_npools_vr_col(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., scale_by_thickness=.false., &
                long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)			   
              ptr2d => this%decomp0_npools_vr_col(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double, &
-               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., scale_by_thickness=.false., &
                long_name='', units='', &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)			   
        else
@@ -656,22 +656,22 @@ contains
              ptr2d => this%in_nacc_2d(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_nacc_vr", xtype=ncd_double,  &
                 dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                long_name='',  units='', &
+                long_name='',  units='', scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=ptr2d)
              ptr2d => this%vert_up_tran_nacc(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_nacc_vr", xtype=ncd_double,  &
                 dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                long_name='',  units='', &
+                long_name='',  units='', scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=ptr2d)
              ptr2d => this%vert_down_tran_nacc(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_nacc_vr", xtype=ncd_double,  &
                 dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                long_name='',  units='', &
+                long_name='',  units='', scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=ptr2d)
              ptr2d => this%exit_nacc(:,:,k)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_nacc_vr", xtype=ncd_double,  &
                 dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                long_name='',  units='', &
+                long_name='',  units='', scale_by_thickness=.false., &
                 interpinic_flag='interp', readvar=readvar, data=ptr2d)
           else
              ptr1d => this%in_nacc_2d(:,1,k)
@@ -705,7 +705,7 @@ contains
              ptr2d => this%hori_tran_nacc(:,:,i)
              call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_nacc_vr", xtype=ncd_double,  &
                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
-                 long_name='',  units='', &
+                 long_name='',  units='', scale_by_thickness=.false., &
                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
           else
              ptr1d => this%hori_tran_nacc(:,1,i)
