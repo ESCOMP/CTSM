@@ -29,7 +29,7 @@ module CropType
 
      integer , pointer :: nyrs_crop_active_patch  (:)   ! number of years this crop patch has been active (0 for non-crop patches)
      logical , pointer :: croplive_patch          (:)   ! patch Flag, true if planted, not harvested
-     integer , pointer :: harvdate_patch          (:)   ! patch harvest date
+     integer , pointer :: harvdate_patch          (:)   ! most recent patch harvest date; 999 if currently (or never) planted
      real(r8), pointer :: fertnitro_patch         (:)   ! patch fertilizer nitrogen
      real(r8), pointer :: gddplant_patch          (:)   ! patch accum gdd past planting date for crop       (ddays)
      real(r8), pointer :: gddtsoi_patch           (:)   ! patch growing degree-days from planting (top two soil layers) (ddays)
@@ -40,10 +40,12 @@ module CropType
      real(r8) :: baset_latvary_intercept
      real(r8) :: baset_latvary_slope
      integer , pointer :: next_rx_sdate           (:)   ! prescribed sowing date for the next growing season this year
-     integer , pointer :: sdates_thisyr           (:,:) ! all prescribed sowing dates for this patch this year
-     integer , pointer :: growingseason_count     (:)   ! number of growing seasons that have begun this year for this patch
+     integer , pointer :: rx_sdates_thisyr        (:,:) ! all prescribed sowing dates for this patch this year
+     real(r8), pointer :: sdates_thisyr           (:,:) ! all actual sowing dates for this patch this year
+     real(r8), pointer :: hdates_thisyr           (:,:) ! all actual harvest dates for this patch this year
+     integer , pointer :: sowing_count            (:)   ! number of sowing events this year for this patch
+     integer , pointer :: harvest_count           (:)   ! number of sowing events this year for this patch
      integer , pointer :: n_growingseasons_thisyear_thispatch (:)   ! number of sowing dates read in for this patch this year
-     integer           :: max_growingseasons_per_year   ! maximum number of growing seasons per year allowed in any patch
 
    contains
      ! Public routines
@@ -180,6 +182,8 @@ contains
   subroutine InitAllocate(this, bounds)
     ! !USES:
     !
+    use clm_varpar, only : mxgrowseas, mxharvests
+    !
     ! !ARGUMENTS:
     class(crop_type) , intent(inout) :: this
     type(bounds_type), intent(in)    :: bounds
@@ -192,9 +196,6 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
 
-    ! SSR TODO: Replace this with read from netCDF
-    this%max_growingseasons_per_year = 1
-
     allocate(this%nyrs_crop_active_patch(begp:endp)) ; this%nyrs_crop_active_patch(:) = 0
     allocate(this%croplive_patch (begp:endp)) ; this%croplive_patch (:) = .false.
     allocate(this%harvdate_patch (begp:endp)) ; this%harvdate_patch (:) = huge(1) 
@@ -205,11 +206,16 @@ contains
     allocate(this%cphase_patch   (begp:endp)) ; this%cphase_patch   (:) = 0.0_r8
     allocate(this%latbaset_patch (begp:endp)) ; this%latbaset_patch (:) = spval
     allocate(this%next_rx_sdate(begp:endp)) ; this%next_rx_sdate(:) = -1
-    allocate(this%sdates_thisyr(begp:endp,1:this%max_growingseasons_per_year))
-    allocate(this%growingseason_count(begp:endp)) ; this%growingseason_count(:) = 0
+    allocate(this%rx_sdates_thisyr(begp:endp,1:mxgrowseas))
+    allocate(this%sdates_thisyr(begp:endp,1:mxgrowseas))
+    allocate(this%hdates_thisyr(begp:endp,1:mxharvests))
+    allocate(this%sowing_count(begp:endp)) ; this%sowing_count(:) = 0
+    allocate(this%harvest_count(begp:endp)) ; this%harvest_count(:) = 0
     allocate(this%n_growingseasons_thisyear_thispatch(begp:endp)) ; this%n_growingseasons_thisyear_thispatch(:) = 0
 
-    this%sdates_thisyr(:,:) = -1
+    this%rx_sdates_thisyr(:,:) = -1
+    this%sdates_thisyr(:,:) = -1._r8
+    this%hdates_thisyr(:,:) = -1._r8
 
   end subroutine InitAllocate
 
@@ -217,7 +223,7 @@ contains
   subroutine InitHistory(this, bounds)
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use histFileMod    , only : hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(crop_type),  intent(inout) :: this
@@ -257,6 +263,16 @@ contains
             avgflag='A', long_name='latitude vary base temperature for gddplant', &
             ptr_patch=this%latbaset_patch, default='inactive')
     end if
+
+    this%sdates_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='SDATES', units='day of year', type2d='mxgrowseas', &
+         avgflag='I', long_name='actual crop sowing dates; should only be output annually', &
+         ptr_patch=this%sdates_thisyr, default='inactive')
+
+    this%hdates_thisyr(begp:endp,:) = spval
+    call hist_addfld2d (fname='HDATES', units='day of year', type2d='mxharvests', &
+         avgflag='I', long_name='actual crop harvest dates; should only be output annually', &
+         ptr_patch=this%hdates_thisyr, default='inactive')
 
   end subroutine InitHistory
 

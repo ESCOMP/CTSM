@@ -14,7 +14,7 @@ module CNPhenologyMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use shr_sys_mod                     , only : shr_sys_flush
   use decompMod                       , only : bounds_type
-  use clm_varpar                      , only : maxveg, nlevdecomp_full
+  use clm_varpar                      , only : maxveg, nlevdecomp_full, mxgrowseas, mxharvests
   use clm_varpar                      , only : i_litr_min, i_litr_max
   use clm_varctl                      , only : iulog, use_cndv
   use clm_varcon                      , only : tfrz
@@ -1647,7 +1647,7 @@ contains
     ! handle CN fluxes during the phenological onset                       & offset periods.
     
     ! !USES:
-    use clm_time_manager , only : get_curr_date, get_curr_calday, get_days_per_year, get_rad_step_size
+    use clm_time_manager , only : get_curr_calday, get_days_per_year, get_rad_step_size, is_beg_curr_year
     use pftconMod        , only : ntmp_corn, nswheat, nwwheat, ntmp_soybean
     use pftconMod        , only : nirrig_tmp_corn, nirrig_swheat, nirrig_wwheat, nirrig_tmp_soybean
     use pftconMod        , only : ntrp_corn, nsugarcane, ntrp_soybean, ncotton, nrice
@@ -1677,15 +1677,12 @@ contains
     type(cnveg_carbonstate_type)   , intent(inout) :: c14_cnveg_carbonstate_inst
     !
     ! LOCAL VARAIBLES:
-    integer kyr       ! current year
-    integer kmo       ! month of year  (1, ..., 12)
-    integer kda       ! day of month   (1, ..., 31)
-    integer mcsec     ! seconds of day (0, ..., seconds/day)
     integer jday      ! julian day of the year
     integer fp,p      ! patch indices
     integer c         ! column indices
     integer g         ! gridcell indices
     integer h         ! hemisphere indices
+    integer s         ! growing season indices
     integer idpp      ! number of days past planting
     real(r8) :: dtrad ! radiation time step delta t (seconds)
     real(r8) dayspyr  ! days per year
@@ -1694,6 +1691,7 @@ contains
     logical do_plant_normal ! are the normal planting rules defined and satisfied?
     logical do_plant_lastchance ! if not the above, what about relaxed rules for the last day of the planting window?
     logical do_plant_prescribed ! is today the prescribed sowing date?
+    logical allow_unprescribed_planting ! should crop be allowed to be planted according to sowing window rules?
     logical do_harvest    ! Are harvest conditions satisfied?
     logical force_harvest ! Should we harvest today no matter what?
     !------------------------------------------------------------------------
@@ -1701,7 +1699,7 @@ contains
     associate(                                                                   & 
          ivt               =>    patch%itype                                     , & ! Input:  [integer  (:) ]  patch vegetation type                                
          
-         leaf_long         =>    pftcon%leaf_long                              , & ! Input:  leaf longevity (yrs)                              
+         leaf_long         =>    pftcon%leaf_long                                , & ! Input:  leaf longevity (yrs)                              
          leafcn            =>    pftcon%leafcn                                 , & ! Input:  leaf C:N (gC/gN)                                  
          manunitro         =>    pftcon%manunitro                              , & ! Input:  max manure to be applied in total (kgN/m2)
          mxmat             =>    pftcon%mxmat                                  , & ! Input:  
@@ -1727,7 +1725,8 @@ contains
          croplive          =>    crop_inst%croplive_patch                      , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested               
          vf                =>    crop_inst%vf_patch                            , & ! Output: [real(r8) (:) ]  vernalization factor                              
          next_rx_sdate     =>    crop_inst%next_rx_sdate                       , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
-         growingseason_count =>  crop_inst%growingseason_count                 , & ! Inout:  [integer  (:) ]  number of growing seasons that have begun this year for this patch
+         sowing_count      =>    crop_inst%sowing_count                        , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
+         harvest_count     =>    crop_inst%harvest_count                       , & ! Inout:  [integer  (:) ]  number of harvest events this year for this patch
          peaklai           =>  cnveg_state_inst%peaklai_patch                  , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
          tlai              =>    canopystate_inst%tlai_patch                   , & ! Input:  [real(r8) (:) ]  one-sided leaf area index, no burying by snow     
          
@@ -1759,7 +1758,6 @@ contains
       ! get time info
       dayspyr = get_days_per_year()
       jday    = get_curr_calday()
-      call get_curr_date(kyr, kmo, kda, mcsec)
       dtrad   = real( get_rad_step_size(), r8 )
 
       if (use_fertilizer) then
@@ -1787,12 +1785,21 @@ contains
          ! initialize other variables that are calculated for crops
          ! on an annual basis in cropresidue subroutine
 
-         if ( jday == 1 .and. mcsec == 0 ) then
-            growingseason_count(p) = 0
+         if ( is_beg_curr_year() ) then
+            sowing_count(p) = 0
+            harvest_count(p) = 0
+            do s = 1, mxgrowseas
+               crop_inst%sdates_thisyr(p,s) = -1._r8
+            end do
+            do s = 1, mxharvests
+               crop_inst%hdates_thisyr(p,s) = -1._r8
+            end do
          end if
 
+         do_plant_prescribed = next_rx_sdate(p) == jday
+
          ! Once outputs can handle >1 planting per year, remove 2nd condition.
-         if ( (.not. croplive(p)) .and. growingseason_count(p) == 0 ) then
+         if ( (.not. croplive(p)) .and. sowing_count(p) == 0 ) then
 
             ! gdd needed for * chosen crop and a likely hybrid (for that region) *
             ! to reach full physiological maturity
@@ -1809,21 +1816,25 @@ contains
             !         According to Chris Kucharik, the dataset of
             !         xinpdate was generated from a previous model run at 0.5 deg resolution
 
-            do_plant_prescribed = next_rx_sdate(p) == jday
+
+            ! Only allow sowing according to normal "window" rules if not using prescribed
+            ! sowing dates at all, or if this cell had no values in the prescribed sowing
+            ! date file.
+            allow_unprescribed_planting = (.not. use_cropcal_streams) .or. crop_inst%rx_sdates_thisyr(p,1)<0
 
             ! winter temperate cereal : use gdd0 as a limit to plant winter cereal
 
             if (ivt(p) == nwwheat .or. ivt(p) == nirrig_wwheat) then
 
                ! Are all the normal requirements for planting met?
-               do_plant_normal = (.not. use_cropcal_streams)           .and. &
+               do_plant_normal = allow_unprescribed_planting           .and. &
                                  a5tmin(p)   /= spval                  .and. &
                                  a5tmin(p)   <= minplanttemp(ivt(p))   .and. &
                                  jday        >= minplantjday(ivt(p),h) .and. &
                                  (gdd020(p)  /= spval                  .and. &
                                  gdd020(p)   >= gddmin(ivt(p)))
                ! If not, but it's the last day of the planting window, what about relaxed rules?
-               do_plant_lastchance = (.not. use_cropcal_streams)           .and. &
+               do_plant_lastchance = allow_unprescribed_planting           .and. &
                                      (.not. do_plant_normal)               .and. &
                                      jday       >=  maxplantjday(ivt(p),h) .and. &
                                      gdd020(p)  /= spval                   .and. &
@@ -1851,7 +1862,7 @@ contains
                !         while the gdd part is either true or false for the year.
 
                ! Are all the normal requirements for planting met?
-               do_plant_normal = (.not. use_cropcal_streams)           .and. &
+               do_plant_normal = allow_unprescribed_planting               .and. &
                                  t10(p) /= spval .and. a10tmin(p) /= spval .and. &
                                  t10(p)     > planttemp(ivt(p))            .and. &
                                  a10tmin(p) > minplanttemp(ivt(p))         .and. &
@@ -1860,7 +1871,7 @@ contains
                                  gdd820(p)  /= spval                       .and. &
                                  gdd820(p)  >= gddmin(ivt(p))
                ! If not, but it's the last day of the planting window, what about relaxed rules?
-               do_plant_lastchance = (.not. use_cropcal_streams)    .and. &
+               do_plant_lastchance = allow_unprescribed_planting    .and. &
                                      (.not. do_plant_normal)        .and. &
                                      jday == maxplantjday(ivt(p),h) .and. &
                                      gdd820(p) > 0._r8 .and. &
@@ -2022,7 +2033,11 @@ contains
                hui(p) = max(hui(p),huigrain(p))
             endif
 
-            if (generate_crop_gdds) then
+            if (do_plant_prescribed) then
+                ! Today is the planting day, but the crop still hasn't been harvested.
+                do_harvest = .true.
+                force_harvest = .true.
+            else if (generate_crop_gdds) then
                if (.not. use_cropcal_streams) then 
                   write(iulog,*) 'If using generate_crop_gdds, you must set use_cropcal_streams to true.'
                   call endrun(msg=errMsg(sourcefile, __LINE__))
@@ -2039,7 +2054,7 @@ contains
                ! Original harvest rule
                do_harvest = hui(p) >= gddmaturity(p) .or. idpp >= mxmat(ivt(p))
             endif
-            force_harvest = generate_crop_gdds .and. do_harvest
+            force_harvest = force_harvest .or. (generate_crop_gdds .and. do_harvest)
 
             if ((.not. force_harvest) .and. leafout(p) >= huileaf(p) .and. hui(p) < huigrain(p) .and. idpp < mxmat(ivt(p))) then
                cphase(p) = 2._r8
@@ -2069,6 +2084,8 @@ contains
 
             else if (do_harvest) then
                if (harvdate(p) >= NOT_Harvested) harvdate(p) = jday
+               harvest_count(p) = harvest_count(p) + 1
+               crop_inst%hdates_thisyr(p, harvest_count(p)) = DBLE(jday)
                croplive(p) = .false.     ! no re-entry in greater if-block
                cphase(p) = 4._r8
                if (tlai(p) > 0._r8) then ! plant had emerged before harvest
@@ -2239,7 +2256,7 @@ contains
          croplive          =>    crop_inst%croplive_patch                        , & ! Output: [logical  (:) ]  Flag, true if planted, not harvested
          harvdate          =>    crop_inst%harvdate_patch                        , & ! Output: [integer  (:) ]  harvest date
          next_rx_sdate     =>    crop_inst%next_rx_sdate                         , & ! Inout:  [integer  (:) ]  prescribed sowing date of next growing season this year
-         growingseason_count =>  crop_inst%growingseason_count                   , & ! Inout:  [integer  (:) ]  number of growing seasons that have begun this year for this patch
+         sowing_count      =>    crop_inst%sowing_count                          , & ! Inout:  [integer  (:) ]  number of sowing events this year for this patch
          idop              =>    cnveg_state_inst%idop_patch                     , & ! Output: [integer  (:) ]  date of planting                                   
          leafc_xfer        =>    cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Output: [real(r8) (:) ]  (gC/m2)   leaf C transfer
          leafn_xfer        =>    cnveg_nitrogenstate_inst%leafn_xfer_patch       , & ! Output: [real(r8) (:) ]  (gN/m2)   leaf N transfer
@@ -2252,12 +2269,13 @@ contains
       croplive(p)  = .true.
       idop(p)      = jday
       harvdate(p)  = NOT_Harvested
-      growingseason_count(p) = growingseason_count(p) + 1
-      if (growingseason_count(p) <= crop_inst%n_growingseasons_thisyear_thispatch(p)) then
-         next_rx_sdate(p) = crop_inst%sdates_thisyr(p, growingseason_count(p))
+      sowing_count(p) = sowing_count(p) + 1
+      if (sowing_count(p) <= crop_inst%n_growingseasons_thisyear_thispatch(p)) then
+         next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p, sowing_count(p))
       else
          next_rx_sdate(p) = -1
       endif
+      crop_inst%sdates_thisyr(p,sowing_count(p)) = jday
 
       leafc_xfer(p)  = initial_seed_at_planting
       leafn_xfer(p) = leafc_xfer(p) / leafcn_in ! with onset
