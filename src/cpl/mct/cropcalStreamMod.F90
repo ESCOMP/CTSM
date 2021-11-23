@@ -18,6 +18,7 @@ module cropcalStreamMod
   use spmdMod         , only : masterproc, mpicom, comp_id
   use ncdio_pio
   use mct_mod
+!  use GridcellType                    , only : grc ! SSR troubleshooting
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -213,6 +214,7 @@ contains
     use PatchType       , only : patch
     use filterMod       , only : filter
     use decompMod       , only : get_proc_clumps
+!    use clm_time_manager , only : get_curr_date ! SSR troubleshooting
     !
     ! !ARGUMENTS:
     implicit none
@@ -224,6 +226,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: ivt, p, ip, ig
     integer :: nc, fp
+!    integer :: yr, mon, day, tod, ymd, c, g ! SSR troubleshooting
     character(len=CL)  :: stream_var_name
     !-----------------------------------------------------------------------
     SHR_ASSERT_FL( (lbound(g_to_ig,1) <= bounds%begg ), sourcefile, __LINE__)
@@ -232,6 +235,10 @@ contains
     ! SSR TODO: Make this work with mxgrowseas > 1
     SHR_ASSERT_FL( (lbound(sdat_sdate%avs(1)%rAttr,2) <= g_to_ig(bounds%begg) ), sourcefile, __LINE__)
     SHR_ASSERT_FL( (ubound(sdat_sdate%avs(1)%rAttr,2) >= g_to_ig(bounds%endg) ), sourcefile, __LINE__)
+
+    ! SSR troubleshooting
+!    call get_curr_date( yr, mon, day, tod )
+!    ymd = yr*10000 + mon*100 + day
 
     ! SSR TODO: Make this work with mxgrowseas > 1
     do fp = 1, num_pcropp
@@ -253,6 +260,10 @@ contains
 
        ! Only for first sowing date of the year
        crop_inst%next_rx_sdate(p) = crop_inst%rx_sdates_thisyr(p,1)
+!       ! SSR troubleshooting
+!       c = patch%column(p)
+!       g = patch%gridcell(p)
+!       write(iulog,'(I8,A,F8.3,A,F8.3,A,I4,A,I7)') ymd,' (',grc%londeg(g),',',grc%latdeg(g),') crop ',ivt,' read rx_sdate ',crop_inst%rx_sdates_thisyr(p,1)
 
     end do
 
