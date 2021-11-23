@@ -65,6 +65,13 @@ def buildnml(case, caseroot, compname):
     driver = case.get_value("COMP_INTERFACE").lower()
 
     # -----------------------------------------------------
+    # Error checking
+    # -----------------------------------------------------
+    if ( clm_bldnml_opts.find("-namelist") >= 0 ):
+        expect(False, "The -namelist option is NOT allowed to be part of CLM_BLDNML_OPTS, " + \
+               "use the CLM_NAMELIST_OPTS option or add namelist items to user_nl_clm instead " );
+
+    # -----------------------------------------------------
     # Set ctsmconf
     # -----------------------------------------------------
 

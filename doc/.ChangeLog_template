@@ -105,11 +105,6 @@ infrastructure should be run when appropriate, as described below.
 
     cheyenne - 
 
-  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
-  (PTCLM is being deprecated, so we only expect this to be done on occasion)
-
-    cheyenne - 
-
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
     (any machine) - 
@@ -119,7 +114,7 @@ infrastructure should be run when appropriate, as described below.
     cheyenne ---- 
     izumi ------- 
   
-  fates tests:
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     cheyenne ---- 
 
   any other testing (give details below):
