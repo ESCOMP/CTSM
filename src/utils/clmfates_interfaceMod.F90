@@ -2028,7 +2028,6 @@ module CLMFatesInterfaceMod
     use pftconMod         , only : pftcon
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
-    use EDTypesMod        , only : dinc_ed
     use EDtypesMod        , only : ed_patch_type, ed_cohort_type, ed_site_type
 
     !
