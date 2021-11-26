@@ -2173,7 +2173,7 @@ module CLMFatesInterfaceMod
  ! ======================================================================================
 
  subroutine wrap_canopy_radiation(this, bounds_clump, nc, &
-         num_vegsol, filter_vegsol, coszen, surfalb_inst)
+         num_vegsol, filter_vegsol, coszen, fcansno,  surfalb_inst)
 
 
     ! Arguments
@@ -2185,6 +2185,7 @@ module CLMFatesInterfaceMod
     integer            , intent(in)            :: filter_vegsol(num_vegsol)
     ! cosine solar zenith angle for next time step
     real(r8)           , intent(in)            :: coszen( bounds_clump%begp: )
+    real(r8)           , intent(in)            :: fcansno( bounds_clump%begp: )
     type(surfalb_type) , intent(inout)         :: surfalb_inst
 
     ! locals
@@ -2214,6 +2215,7 @@ module CLMFatesInterfaceMod
 
              this%fates(nc)%bc_in(s)%filter_vegzen_pa(ifp) = .true.
              this%fates(nc)%bc_in(s)%coszen_pa(ifp)  = coszen(p)
+             this%fates(nc)%bc_in(s)%fcansno_pa(ifp)  = fcansno(p)
              this%fates(nc)%bc_in(s)%albgr_dir_rb(:) = albgrd_col(c,:)
              this%fates(nc)%bc_in(s)%albgr_dif_rb(:) = albgri_col(c,:)
 

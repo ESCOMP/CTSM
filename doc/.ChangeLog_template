@@ -114,7 +114,7 @@ infrastructure should be run when appropriate, as described below.
     cheyenne ---- 
     izumi ------- 
   
-  fates tests:
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
     cheyenne ---- 
 
   any other testing (give details below):
