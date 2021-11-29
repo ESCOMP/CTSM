@@ -35,6 +35,8 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._fsurdat_out = os.path.join(self._tempdir, 'fsurdat_out.nc')
 
     def tearDown(self):
+        """
+        """
         shutil.rmtree(self._tempdir, ignore_errors=True)
 
     def test_minimalInfo(self):
@@ -134,8 +136,6 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = 'std_elev = 0.1'
                     elif re.match(r' *max_sat_area *=', line):
                         line = 'max_sat_area = 0.2'
-                    elif re.match(r' *zero_nonveg *=', line):
-                        line = 'zero_nonveg = True'
                     cfg_out.write(line)
 
 

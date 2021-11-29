@@ -185,17 +185,14 @@ class ModifyFsurdat:
         -----------
         Set all landunit weights to 0 except the natural vegetation landunit.
         Set that one to 100%.
-
-        Arguments
-        ---------
         """
 
-        self.file['PCT_NATVEG'][:,:] = 100
-        self.file['PCT_CROP'][:,:] = 0
-        self.file['PCT_LAKE'][:,:] = 0
-        self.file['PCT_WETLAND'][:,:] = 0
-        self.file['PCT_URBAN'][:,:] = 0
-        self.file['PCT_GLACIER'][:,:] = 0
+        self.setvar_lev0('PCT_NATVEG', 100)
+        self.setvar_lev0('PCT_CROP', 0)
+        self.setvar_lev0('PCT_LAKE', 0)
+        self.setvar_lev0('PCT_WETLAND', 0)
+        self.setvar_lev0('PCT_URBAN', 0)
+        self.setvar_lev0('PCT_GLACIER', 0)
 
 
     def setvar_lev0(self, var, val):
@@ -212,7 +209,7 @@ class ModifyFsurdat:
         Sets 3d variable var to value val in user-defined rectangle,
         defined as "other" in the function
         """
-        self.file[var][third_dim,:,:] = self.file[var][third_dim,:,:].where(
+        self.file[var][third_dim, ...] = self.file[var][third_dim, ...].where(
             self.not_rectangle, other=val)
 
 
@@ -221,8 +218,8 @@ class ModifyFsurdat:
         Sets 4d variable var to value val in user-defined rectangle,
         defined as "other" in the function
         """
-        self.file[var][fourth_dim,third_dim,:,:] = \
-            self.file[var][fourth_dim,third_dim,:,:].where(
+        self.file[var][fourth_dim,third_dim, ...] = \
+            self.file[var][fourth_dim,third_dim, ...].where(
             self.not_rectangle, other=val)
 
 
