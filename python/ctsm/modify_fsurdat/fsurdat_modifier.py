@@ -120,13 +120,13 @@ def main ():
                                        hgt_top=hgt_top, hgt_bot=hgt_bot)
 
     if max_sat_area is not None:  # overwrite "idealized" value
-        modify_fsurdat.setvar('FMAX', max_sat_area)
+        modify_fsurdat.setvar_lev0('FMAX', max_sat_area)
 
     if std_elev is not None:  # overwrite "idealized" value
-        modify_fsurdat.setvar('STD_ELEV', std_elev)
+        modify_fsurdat.setvar_lev0('STD_ELEV', std_elev)
 
     if soil_color is not None:  # overwrite "idealized" value
-        modify_fsurdat.setvar('SOIL_COLOR', soil_color)
+        modify_fsurdat.setvar_lev0('SOIL_COLOR', soil_color)
 
     if zero_nonveg:
         modify_fsurdat.zero_nonveg()
