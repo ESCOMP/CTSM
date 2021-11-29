@@ -22,14 +22,19 @@ Significant changes to scientifically-supported configurations
 Does this tag change answers significantly for any of the following physics configurations?
 (Details of any changes will be given in the "Answer changes" section below.)
 
-[X] clm5_1
+[ ] clm5_1
 
-[X] clm5_0
+[ ] clm5_0
 
-[X] ctsm5_0-nwp
+[ ] ctsm5_0-nwp
 
-[X] clm4_5
+[ ] clm4_5
 
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+    Fixes FATES issues #530 and #535
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -63,11 +68,15 @@ Testing summary:
     cheyenne ---- OK
     izumi ------- OK
 
+ Answer changes
+ --------------
 
-Answer changes
---------------
+ Changes answers relative to baseline: YES
 
-Changes answers relative to baseline: YES
+   Summarize any changes to answers, i.e.,
+     - what code configurations: FATES
+     - what platforms/compilers: all
+     - nature of change (roundoff; larger than roundoff/same climate; new climate): diagnostic only
 
   All FATES output history variables and/or units changed so we expect DIFF
   or FIELDLIST differences for all comparisons to baselines.
