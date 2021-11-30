@@ -1539,6 +1539,11 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
+               call fates_hist%flush_hvars(nc,upfreq_in=1)
+               do s = 1,this%fates(nc)%nsites
+                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s),     &
+                     upfreq_in=1)
+               end do
                call fates_hist%update_history_dyn( nc, &
                                                    this%fates(nc)%nsites,                 &
                                                    this%fates(nc)%sites)
@@ -1703,7 +1708,12 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
            ! ------------------------------------------------------------------------
-           call fates_hist%update_history_dyn( nc, &
+            call fates_hist%flush_hvars(nc,upfreq_in=1)
+            do s = 1,this%fates(nc)%nsites
+               call fates_hist%zero_site_hvars(this%fates(nc)%sites(s),        &
+                  upfreq_in=1)
+            end do
+            call fates_hist%update_history_dyn( nc, &
                 this%fates(nc)%nsites,                 &
                 this%fates(nc)%sites)
 
@@ -2036,7 +2046,6 @@ module CLMFatesInterfaceMod
     use pftconMod         , only : pftcon
     use PatchType         , only : patch
     use quadraticMod      , only : quadratic
-    use EDTypesMod        , only : dinc_ed
     use EDtypesMod        , only : ed_patch_type, ed_cohort_type, ed_site_type
 
     !
@@ -2194,7 +2203,7 @@ module CLMFatesInterfaceMod
  ! ======================================================================================
 
  subroutine wrap_canopy_radiation(this, bounds_clump, nc, &
-         num_vegsol, filter_vegsol, coszen, surfalb_inst)
+         num_vegsol, filter_vegsol, coszen, fcansno,  surfalb_inst)
 
 
     ! Arguments
@@ -2206,6 +2215,7 @@ module CLMFatesInterfaceMod
     integer            , intent(in)            :: filter_vegsol(num_vegsol)
     ! cosine solar zenith angle for next time step
     real(r8)           , intent(in)            :: coszen( bounds_clump%begp: )
+    real(r8)           , intent(in)            :: fcansno( bounds_clump%begp: )
     type(surfalb_type) , intent(inout)         :: surfalb_inst
 
     ! locals
@@ -2235,6 +2245,7 @@ module CLMFatesInterfaceMod
 
              this%fates(nc)%bc_in(s)%filter_vegzen_pa(ifp) = .true.
              this%fates(nc)%bc_in(s)%coszen_pa(ifp)  = coszen(p)
+             this%fates(nc)%bc_in(s)%fcansno_pa(ifp)  = fcansno(p)
              this%fates(nc)%bc_in(s)%albgr_dir_rb(:) = albgrd_col(c,:)
              this%fates(nc)%bc_in(s)%albgr_dif_rb(:) = albgri_col(c,:)
 
