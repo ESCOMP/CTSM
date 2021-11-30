@@ -145,9 +145,9 @@ class ModifyFsurdat:
 
         for pft in self.file.natpft:
             # initialize 3D variable; set outside the loop below
-            self.setvar_lev1('PCT_NAT_PFT', val=0, third_dim=pft)
+            self.setvar_lev1('PCT_NAT_PFT', val=0, lev1_dim=pft)
         # set 3D variable value for dom_nat_pft
-        self.setvar_lev1('PCT_NAT_PFT', val=100, third_dim=dom_nat_pft)
+        self.setvar_lev1('PCT_NAT_PFT', val=100, lev1_dim=dom_nat_pft)
 
         # dictionary of 4d variables to loop over
         vars_4d = {'MONTHLY_LAI': lai,
@@ -175,8 +175,8 @@ class ModifyFsurdat:
             abort(errmsg)
         for mon in self.file.time - 1:  # loop over 12 months
             # set 4D variable to value for dom_nat_pft
-            self.setvar_lev2(var, val[int(mon)], third_dim=dom_nat_pft,
-                         fourth_dim=mon)
+            self.setvar_lev2(var, val[int(mon)], lev1_dim=dom_nat_pft,
+                             lev2_dim=mon)
 
 
     def zero_nonveg(self):
@@ -204,22 +204,22 @@ class ModifyFsurdat:
             self.not_rectangle, other=val)
 
 
-    def setvar_lev1(self, var, val, third_dim):
+    def setvar_lev1(self, var, val, lev1_dim):
         """
         Sets 3d variable var to value val in user-defined rectangle,
         defined as "other" in the function
         """
-        self.file[var][third_dim, ...] = self.file[var][third_dim, ...].where(
+        self.file[var][lev1_dim, ...] = self.file[var][lev1_dim, ...].where(
             self.not_rectangle, other=val)
 
 
-    def setvar_lev2(self, var, val, third_dim, fourth_dim):
+    def setvar_lev2(self, var, val, lev1_dim, lev2_dim):
         """
         Sets 4d variable var to value val in user-defined rectangle,
         defined as "other" in the function
         """
-        self.file[var][fourth_dim,third_dim, ...] = \
-            self.file[var][fourth_dim,third_dim, ...].where(
+        self.file[var][lev2_dim,lev1_dim, ...] = \
+            self.file[var][lev2_dim,lev1_dim, ...].where(
             self.not_rectangle, other=val)
 
 
@@ -273,15 +273,15 @@ class ModifyFsurdat:
 
         for lev in self.file.nlevsoi:
             # set next three 3D variables to values representing loam
-            self.setvar_lev1('PCT_SAND', val=pct_sand, third_dim=lev)
-            self.setvar_lev1('PCT_CLAY', val=pct_clay, third_dim=lev)
-            self.setvar_lev1('ORGANIC', val=organic, third_dim=lev)
+            self.setvar_lev1('PCT_SAND', val=pct_sand, lev1_dim=lev)
+            self.setvar_lev1('PCT_CLAY', val=pct_clay, lev1_dim=lev)
+            self.setvar_lev1('ORGANIC', val=organic, lev1_dim=lev)
 
         for crop in self.file.cft:
             cft_local = crop - (max(self.file.natpft) + 1)
             # initialize 3D variable; set outside the loop below
-            self.setvar_lev1('PCT_CFT', val=0, third_dim=cft_local)
+            self.setvar_lev1('PCT_CFT', val=0, lev1_dim=cft_local)
 
         # set 3D variable
         # NB. sum(PCT_CFT) must = 100 even though PCT_CROP = 0
-        self.setvar_lev1('PCT_CFT', val=100, third_dim=0)
+        self.setvar_lev1('PCT_CFT', val=100, lev1_dim=0)
