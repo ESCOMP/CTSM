@@ -1519,6 +1519,11 @@ module CLMFatesInterfaceMod
                ! ------------------------------------------------------------------------
                ! Update history IO fields that depend on ecosystem dynamics
                ! ------------------------------------------------------------------------
+               call fates_hist%flush_hvars(nc,upfreq_in=1)
+               do s = 1,this%fates(nc)%nsites
+                  call fates_hist%zero_site_hvars(this%fates(nc)%sites(s),     &
+                     upfreq_in=1)
+               end do
                call fates_hist%update_history_dyn( nc, &
                                                    this%fates(nc)%nsites,                 &
                                                    this%fates(nc)%sites)
@@ -1683,7 +1688,12 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
            ! Update history IO fields that depend on ecosystem dynamics
            ! ------------------------------------------------------------------------
-           call fates_hist%update_history_dyn( nc, &
+            call fates_hist%flush_hvars(nc,upfreq_in=1)
+            do s = 1,this%fates(nc)%nsites
+               call fates_hist%zero_site_hvars(this%fates(nc)%sites(s),        &
+                  upfreq_in=1)
+            end do
+            call fates_hist%update_history_dyn( nc, &
                 this%fates(nc)%nsites,                 &
                 this%fates(nc)%sites)
 

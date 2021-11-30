@@ -1,4 +1,106 @@
 ===============================================================
+Tag name:  ctsm5.1.dev064
+Originator(s):  afoster (Adrianna Foster)
+Date: Mon Nov 29 09:50:50 MST 2021
+One-line Summary: Updates to facilitate FATES history variable overhaul
+
+Purpose and description of changes
+----------------------------------
+
+This tag facilitates updates to FATES history variable names, units, other metadata,
+and flushing behavior. Variables are now initially flushed to the CTSM ignore value,
+then flushed to 0.0 on the FATES side.
+
+Calls were added to flush_hvars and zero_site_hvars inside the
+init_coldstart and restart subroutines in clmfates_interfaceMod.F90.
+FATES history variables names were updated to the new names in the
+user_nl_clm hist_fincl1 lists in the testmods directory.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+    Fixes FATES issues #530 and #535
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+All FATES output history variable units and names have changed so any post-processing
+scripts or history variable namelists (e.g. hist_fincl1) will be affected.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+
+Updated the hist_fincl1 namelists in the user_nl_clm files in the FATES
+testmods directory to reflect FATES history variable name changes.
+
+Updated name of ERS_Ld30.f45_f45_mg37.I2000Clm50FatesCruRsGs.cheyenne_intel.clm-FatesColdDefReducedComplexSatPhen
+in the ExpectedTestFails.xml list, and changed the phase to RUN, as it is now
+failing in the run phase.
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+
+  fates tests: (baseline: sci.1.50.1_api.18.0.0-ctsm5.1.dev063)
+    cheyenne ---- OK
+    izumi ------- OK
+
+ Answer changes
+ --------------
+
+ Changes answers relative to baseline: YES
+
+   Summarize any changes to answers, i.e.,
+     - what code configurations: FATES
+     - what platforms/compilers: all
+     - nature of change (roundoff; larger than roundoff/same climate; new climate): diagnostic only
+
+  All FATES output history variables and/or units changed so we expect DIFF
+  or FIELDLIST differences for all comparisons to baselines.
+
+  I created a test at a single point to compare FATES variables
+  (over a 5-year simulation) from master (sci.1.50.1_api.18.0.0) and this
+  updated branch. This test confirms that the old variables can be matched
+  to a new variable (except for a select few where we removed some
+  variables due to duplication), and that when we did see changes in the
+  output values, these changes were the expected factor differences based
+  on the intended units change.
+
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+fates: sci.1.50.1_api.18.0.0 -> fates-sci.1.51.0_api.19.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+ #1542 -- Updates to facilitate FATES history variable overhaul
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev063
 Originator(s):  glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Tue Nov 23 12:51:48 MST 2021
@@ -33,25 +135,25 @@ Bugs fixed or introduced
 Issues fixed (include CTSM Issue #):
     Fixes FATES #744 -- Use of SAI in surface albedo routines.
     Fixes #1559 -- A few tests in the testlist were for hobart
-    
+
 Known bugs found since the previous tag (include issue #):
     #1559 -- A few tests in the testlist were for hobart
-    
-    
+
+
 Notes of particular relevance for developers:
 ---------------------------------------------
 
 Changes to tests or testing:
 
     Replaced the only f19 grid resolution testmod in the izumi fates list with an f45 test
-    since the pes layout change for izumi from ctsm5.1.dev062 results in high resolution grids 
-    taking longer to run now.  Coverage for high resolution fates tests is provided via cheyenne 
+    since the pes layout change for izumi from ctsm5.1.dev062 results in high resolution grids
+    taking longer to run now.  Coverage for high resolution fates tests is provided via cheyenne
     test lists.
-    
-    For the same reasons as above, I transferred the only high res (f19) grid resolution testmod 
+
+    For the same reasons as above, I transferred the only high res (f19) grid resolution testmod
     in the izumi aux_clm list to cheyenne to maintain coverage for this test.  The ctsm5.1.dev063
     aux_clm baseline on cheyenne has been updated to include this test.
-  
+
 Testing summary: regular fates
 ----------------
 
@@ -69,7 +171,7 @@ Testing summary: regular fates
 
     cheyenne ---- OK
     izumi ------- OK
-  
+
   fates tests: (baseline: fates-sci.1.50.1_api.18.0.0-ctsm5.1.dev063)
     cheyenne ---- OK
     izumi ------- OK
@@ -144,7 +246,7 @@ Issues fixed (include CTSM Issue #):
   Fixes #1543 usgs mask doesn't work with nuopc
 
 Known bugs found since the previous tag (include issue #):
-  #1528 If possible, set more lnd -> mediator coupling fields to spval over ocean 
+  #1528 If possible, set more lnd -> mediator coupling fields to spval over ocean
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -160,11 +262,11 @@ Changes made to namelist defaults (e.g., changed parameter values):
 
 Substantial timing or memory changes: A bit slower, but less overall memory
     The PFS test shows the following:
-    Model Cost:             265.58   pe-hrs/simulated_year 
-    Model Throughput:       165.91   simulated_years/day 
+    Model Cost:             265.58   pe-hrs/simulated_year
+    Model Throughput:       165.91   simulated_years/day
     The previous baseline for the MCT driver showed this
-    Model Cost:             214.41   pe-hrs/simulated_year 
-    Model Throughput:       205.52   simulated_years/day 
+    Model Cost:             214.41   pe-hrs/simulated_year
+    Model Throughput:       205.52   simulated_years/day
     The RUN length in TestStatus for dev05* and dev06* versions varied from 58 to 81 seconds
       so about up to a 20% variation
     Highwater memory mark is higher (67 vs 131 GB), and last usage (323 vs 165MB) lower than MCT
@@ -196,7 +298,7 @@ Testing summary: regular fates ctsm_sci tools
 
     cheyenne ---- PASS
     izumi ------- OK
-  
+
   fates tests:
     cheyenne ---- OK
 
@@ -234,7 +336,7 @@ Changes answers relative to baseline: Yes! (because NUOPC is the default driver 
    The diagnostics comparing NUOPC to MCT are here:
 
    https://webext.cgd.ucar.edu/I20TR/ctsm51_cesm23a03a_1deg_GSWP3V1_nuopc_hist/lnd/ctsm51_cesm23a03a_1deg_GSWP3V1_nuopc_hist.1995_2014-ctsm51_cesm23a03a_1deg_GSWP3V1_mct_hist.1995_2014/setsIndex.html
-	
+
 
 Other details
 -------------
@@ -253,7 +355,7 @@ Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
    #1530 -- Add compsets for multiple ice-sheets
    #1502 -- Make the NUOPC driver the default
-   #1540 -- Implement fates_levleaf as a FATES 1D dimension variable 
+   #1540 -- Implement fates_levleaf as a FATES 1D dimension variable
 
 ===============================================================
 ===============================================================
@@ -316,7 +418,7 @@ Changes answers relative to baseline: YES
   Summarize any changes to answers, i.e.,
     - what code configurations: NUOPC only
     - what platforms/compilers: all
-    - nature of change (roundoff; larger than roundoff/same climate; new climate): 
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
       Just changes missing value patterns for lnd -> mediator fields
 
       Most lnd -> mediator fields now have missing value over ocean
