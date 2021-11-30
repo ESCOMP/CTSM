@@ -26,8 +26,8 @@ a -- modify_data
 b -- subset_data
 c -- mkprocdata_map
 d -- mkmapgrids
-e -- gen_domain
-f -- PTCLM
+e -- unused
+f -- unused
 g -- mksurfdata_map
 h -- unused
 i -- tools scripts
