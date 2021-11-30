@@ -11,12 +11,10 @@ import unittest
 import tempfile
 import shutil
 from subprocess import check_call
-from configparser import ConfigParser
 
 import xarray as xr
 
 import ctsm.unit_testing
-from ctsm.utils import get_config_value, fill_template_file
 from ctsm.path_utils import path_to_ctsm_root
 
 

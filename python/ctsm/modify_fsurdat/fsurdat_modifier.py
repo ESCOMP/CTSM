@@ -5,7 +5,6 @@ tools/modify_fsurdat/fsurdat_modifier
 The wrapper script includes a full description and instructions.
 """
 
-import sys
 import logging
 import argparse
 from configparser import ConfigParser

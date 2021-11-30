@@ -58,7 +58,8 @@ def get_ctsm_git_sha():
     """
     Returns Git short SHA for the ctsm directory.
     """
-    return subprocess.check_output(['git', '-C', path_to_ctsm_root(), 'rev-parse', '--short', 'HEAD']).strip().decode()
+    return subprocess.check_output(['git', '-C', path_to_ctsm_root(),
+        'rev-parse', '--short', 'HEAD']).strip().decode()
 
 def add_tag_to_filename(filename, tag):
     """
@@ -133,9 +134,8 @@ def lon_range_0_to_360(lon_in):
     """
     if -180 <= lon_in < 0:
         lon_out = lon_in + 360
-        message = 'INFO: Resetting longitude from ' + str(lon_in) + \
-                  ' to ' + str(lon_out) + ' to keep in the range 0 to 360'
-        print(message)  # TODO Use logging to print this
+        logger.info('Resetting longitude from %s to %s to keep in the range ' \
+                    ' 0 to 360', str(lon_in), str(lon_out))
     elif 0 <= lon_in <= 360 or lon_in is None:
         lon_out = lon_in
     else:
@@ -204,7 +204,6 @@ def _handle_config_value(var, default, item, is_list, convert_to_type,
         except ValueError:
             abort('Wrong type for .cfg file variable: {}'.format(item))
 
-    # TODO prelim. testing of this abort: errmsg didn't come through upon FAIL
     if allowed_values is not None:
         for v in var:
             if v not in allowed_values:
