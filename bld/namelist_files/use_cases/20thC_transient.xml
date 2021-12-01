@@ -12,6 +12,10 @@
 
 <clm_start_type>arb_ic</clm_start_type>
 
+<!-- For now use cycle for transient cases until CDEPS issue 201 is resolved
+<ndep_taxmode use_cn=".true." >limit</ndep_taxmode>
+-->
+
 <clm_demand >flanduse_timeseries</clm_demand>
 
 <irrigate use_crop=".true." phys="clm5_1"  use_cndv=".false.">.true.</irrigate>
