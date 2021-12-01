@@ -4391,7 +4391,7 @@ contains
           ! Rather than trying to keep the BGC variables physically meaningful in urban landunits, 
           ! we will just pack these variables in a way that should conserve these variables, even if
           ! the values in each of the urban columns is somewhat nonsensical. Specifically: we'll take
-          ! col%wtgcell at face value in urban columns in dynColumnStateUpdaterMod \u2013 i.e., for the sake
+          ! col%wtgcell at face value in urban columns in dynColumnStateUpdaterMod - i.e., for the sake
           ! of storing / conserving these BGC variables, we'll act as if that gives the true column 
           ! weight on the grid cell. This way we'll end up storing all of the C & N from the vegetated
           ! column in the urban columns, and there shouldn't be any that is lost from the system. If that

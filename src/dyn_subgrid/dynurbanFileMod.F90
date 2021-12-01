@@ -88,9 +88,7 @@ contains
           dyn_file = dynurban_file, varname=urban_varname, &
           dim1name=grlnd, conversion_factor=100._r8, &
           do_check_sums_equal_1=.false., data_shape=wturb_shape)
-  
-    ! Check that urban data is valid
-!KO    call CheckUrban(bounds%begg, bounds%endg, wturban(bounds%begg:bounds%endg,:), subname)
+
  
   end subroutine dynurban_init
   
