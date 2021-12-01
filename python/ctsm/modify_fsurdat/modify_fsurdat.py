@@ -256,7 +256,6 @@ class ModifyFsurdat:
         organic = 0
 
         # 2D variables
-        self.setvar_lev0('F0', max_inundated)
         self.setvar_lev0('FMAX', max_sat_area)
         self.setvar_lev0('STD_ELEV', std_elev)
         self.setvar_lev0('SLOPE', slope)

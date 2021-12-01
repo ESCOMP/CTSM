@@ -35,7 +35,6 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
                         self._fsurdat_in = fsurdat_in.group(1)
                         break
 
-#           self._fsurdat_in = os.path.join('/glade/work/slevis/git/mksurfdata_maps_wo_src_masks/python/ctsm/test/testinputs/surfdata_5x5_amazon_16pfts_Irrig_CMIP6_simyr2000_c171214.nc')
             self._fsurdat_out = os.path.join(
                 self._get_caseroot(), 'fsurdat.nc')
             self._ctsm_root = self._case.get_value(
