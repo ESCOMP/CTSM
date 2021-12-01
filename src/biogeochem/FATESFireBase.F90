@@ -61,7 +61,7 @@ module FATESFireBase
   !------------------------------------------------------------------------
   function GetGDP_interface( this ) result(gdp)
     !
-    ! !DESCRIPTION: Get the 24-hour averaged lightning data
+    ! !DESCRIPTION: Get the global gross domestic product data
     ! !USES
     use shr_kind_mod   , only: r8 => shr_kind_r8
     import :: fates_fire_base_type
