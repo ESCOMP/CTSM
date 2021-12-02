@@ -4363,7 +4363,7 @@ sub check_input_files {
                 my $pathname = $nl->get_variable_value($group, $var);
                 # Need to strip the quotes
                 $pathname =~ s/['"]//g;
-
+                next if ($pathname =~ /UNSET$/);
                 if ($input_pathname_type eq 'abs') {
                     if ($inputdata_rootdir) {
                         if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null

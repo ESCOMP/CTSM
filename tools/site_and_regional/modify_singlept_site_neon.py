@@ -518,7 +518,7 @@ def main():
     current_dir = os.getcwd()
     parent_dir = os.path.dirname(current_dir)
     clone_dir = os.path.abspath(os.path.join(__file__, "../../.."))
-    neon_dir = os.path.join(clone_dir, "neon_surffiles_v3")
+    neon_dir = os.path.join(clone_dir, "neon_surffiles")
 
     print("Present Directory", current_dir)
 
@@ -681,7 +681,6 @@ def main():
         print (f2.PCT_NAT_PFT.values[0])
         f2.PCT_NAT_PFT.values[0] =[[100.]]
         print (f2.PCT_NAT_PFT[0].values)
-
 
     out_dir = args.out_dir
 
