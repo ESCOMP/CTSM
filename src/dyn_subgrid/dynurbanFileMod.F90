@@ -107,7 +107,7 @@ contains
     ! dyn_var_time_uninterp_type. 
     !
     ! !USES:
-    use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md, isturb_MIN, isturb_MAX
+    use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md
     use subgridWeightsMod , only : set_landunit_weight
     !
     ! !ARGUMENTS:
