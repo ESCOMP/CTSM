@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev065
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
-Date: Wed 01 Dec 2021 10:52:05 MST
+Date: Thu Dec  2 00:13:37 MST 2021
 One-line Summary: Refactor static fire data input by moving variables into fire_base_type from cnveg_state_type
 
 Purpose and description of changes
