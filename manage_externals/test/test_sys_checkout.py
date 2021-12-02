@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """Unit test driver for checkout_externals
 
@@ -38,7 +38,6 @@ import logging
 import os
 import os.path
 import shutil
-import sys
 import unittest
 
 from manic.externals_description import ExternalsDescription
