@@ -649,7 +649,7 @@ Switch deciding which nutrient model to use in FATES.
 </entry>
 
 <entry id="fates_spitfire_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="0,1,2,3,4" value=".false.">
+        group="clm_inparm" valid_values="0,1,2,3,4,5" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
 Allowed values are:
  0 : Simulations of fire are off
@@ -657,6 +657,7 @@ Allowed values are:
  2 : use an external lightning dataset. 
  3 : use an external confirmed ignitions dataset (not available through standard CSEM dataset collection).
  4 : use external lightning and population datasets to simulate both natural and anthropogenic
+ 5 : use gross domestic production and population datasets to simulate anthropogenic fire supression
 ignitions.
 (Only relevant if FATES is on)
 </entry>
