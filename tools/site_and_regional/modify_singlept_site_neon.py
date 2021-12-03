@@ -432,7 +432,7 @@ def check_neon_time():
     A function to download and parse neon listing file.
 
     Returns:
-        dict_out (str) : 
+        dict_out (str) :
             dictionary of *_surfaceData.csv files with the last modified
     """
     listing_file = "listing.csv"
@@ -626,7 +626,6 @@ def main():
     fill_interpolate(f2, "PCT_CLAY", method)
     fill_interpolate(f2, "PCT_SAND", method)
     fill_interpolate(f2, "ORGANIC", method)
-
 
     # -- Update zbedrock if neon observation does not make it down to 2m depth
     rock_thresh = 2
