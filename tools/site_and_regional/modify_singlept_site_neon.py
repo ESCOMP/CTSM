@@ -601,7 +601,6 @@ def main():
         # -- Check to make sure the rounded oc is not higher than carbon_tot.
         # -- Use carbon_tot if estimated_oc is bigger than carbon_tot.
 
-
         if estimated_oc > carbon_tot:
             estimated_oc = carbon_tot
 
@@ -610,7 +609,7 @@ def main():
             - df["biogeoTopDepth"][bin_index[soil_lev]]
         )
 
-        #f2["ORGANIC"][soil_lev] = estimated_oc * bulk_den / 0.58
+        # f2["ORGANIC"][soil_lev] = estimated_oc * bulk_den / 0.58
 
         # -- after adding caco3 by NEON:
         # -- if caco3 exists:
@@ -620,22 +619,21 @@ def main():
         # -- oranigc = estimated_oc * bulk_den /0.58
 
         caco3 = df["caco3Conc"][bin_index[soil_lev]]
-        inorganic = caco3 /100.0869*12.0107
-        print ("inorganic:", inorganic)
+        inorganic = caco3 / 100.0869 * 12.0107
+        print("inorganic:", inorganic)
 
         if not np.isnan(inorganic):
-            actual_oc = carbon_tot -inorganic
+            actual_oc = carbon_tot - inorganic
         else:
             actual_oc = estimated_oc
 
-
         f2["ORGANIC"][soil_lev] = actual_oc * bulk_den / 0.58
 
-        print ("~~~~~~~~~~~~~~~~~~~~~~~~")
-        print ("inorganic:")
-        print ("~~~~~~~~~~~~~~~~~~~~~~~~")
-        print (inorganic)
-        print ("~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("inorganic:")
+        print("~~~~~~~~~~~~~~~~~~~~~~~~")
+        print(inorganic)
+        print("~~~~~~~~~~~~~~~~~~~~~~~~")
 
         print("bin_index    : ", bin_index[soil_lev])
         print("layer_depth  : ", layer_depth)
@@ -663,24 +661,23 @@ def main():
 
     sort_print_soil_layers(obs_bot, soil_bot)
 
-
     # -- updates for ag sites : KONA and STER
-    ag_sites = ['KONA', 'STER']
+    ag_sites = ["KONA", "STER"]
     if site_name in ag_sites:
-        print ("Updating PCT_NATVEG")
-        print ("Original : ", f2.PCT_NATVEG.values)
-        f2.PCT_NATVEG.values = [[0.]]
-        print ("Updated  : ", f2.PCT_NATVEG.values)
+        print("Updating PCT_NATVEG")
+        print("Original : ", f2.PCT_NATVEG.values)
+        f2.PCT_NATVEG.values = [[0.0]]
+        print("Updated  : ", f2.PCT_NATVEG.values)
 
-        print ("Updating PCT_CROP")
-        print ("Original : ",f2.PCT_CROP.values)
-        f2.PCT_CROP.values =[[100.]]
-        print ("Updated  : ",f2.PCT_CROP.values)
+        print("Updating PCT_CROP")
+        print("Original : ", f2.PCT_CROP.values)
+        f2.PCT_CROP.values = [[100.0]]
+        print("Updated  : ", f2.PCT_CROP.values)
 
-        print ("Updating PCT_NAT_PFT")
-        print (f2.PCT_NAT_PFT.values[0])
-        f2.PCT_NAT_PFT.values[0] =[[100.]]
-        print (f2.PCT_NAT_PFT[0].values)
+        print("Updating PCT_NAT_PFT")
+        print(f2.PCT_NAT_PFT.values[0])
+        f2.PCT_NAT_PFT.values[0] = [[100.0]]
+        print(f2.PCT_NAT_PFT[0].values)
 
     out_dir = args.out_dir
 
