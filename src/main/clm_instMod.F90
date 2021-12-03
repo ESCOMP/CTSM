@@ -295,6 +295,10 @@ contains
 
     call canopystate_inst%Init(bounds)
 
+    if(use_hillslope) then 
+       call InitHillslope(bounds, fsurdat)
+    endif
+
     call soilstate_inst%Init(bounds)
     call SoilStateInitTimeConst(bounds, soilstate_inst, nlfilename) ! sets hydraulic and thermal soil properties
 
@@ -331,10 +335,6 @@ contains
 
     call saturated_excess_runoff_inst%Init(bounds)
     call infiltration_excess_runoff_inst%Init(bounds)
-
-    if(use_hillslope) then 
-       call InitHillslope(bounds, fsurdat)
-    endif
 
     call solarabs_inst%Init(bounds)
 
