@@ -66,7 +66,10 @@ class ModifyFsurdat:
             # rectangles don't overlap: stradling the 0-degree meridian
             union_1 = np.logical_or(rectangle_1, rectangle_2)
 
-        if lat_1 <= lat_2:
+        if lat_1 < -90 or lat_1 > 90 or lat_2 < -90 or lat_2 > 90:
+            errmsg = 'lat_1 and lat_2 need to be in the range -90 to 90'
+            abort(errmsg)
+        elif lat_1 <= lat_2:
             # rectangles overlap
             union_2 = np.logical_and(rectangle_3, rectangle_4)
         else:
@@ -240,7 +243,6 @@ class ModifyFsurdat:
         # Default values
         zbedrock = 10
         max_sat_area = 0  # max saturated area
-        max_inundated = 0  # max inundated fraction
         std_elev = 0  # standard deviation of elevation
         slope = 0  # mean topographic slope
         pftdata_mask = 1
