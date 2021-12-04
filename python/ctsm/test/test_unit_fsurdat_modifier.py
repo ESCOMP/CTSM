@@ -3,6 +3,7 @@
 import unittest
 
 import numpy as np
+import xarray as xr
 
 from ctsm import unit_testing
 from ctsm.utils import lon_range_0_to_360
@@ -12,6 +13,64 @@ from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 # readable; in pylint can use: disable=invalid-name
 
 class TestFsurdatModifier(unittest.TestCase):
+
+    def test_setvarLev0(self):
+        """
+        Tests that setvar_lev0, setvar_lev1, and setvar_lev2 update values of
+        variables within a rectangle defined by user-specified
+        lon_1, lon_2, lat_1, lat_2
+        """
+        # get longxy, latixy that would normally come from an fsurdat file
+        # self._get_longxy_latixy will convert -180 to 180 to 0-360 longitudes
+        # get cols, rows also
+        min_lon = 2  # expects min_lon < max_lon
+        min_lat = 3  # expects min_lat < max_lat
+        longxy, latixy, cols, rows = self._get_longxy_latixy(
+            _min_lon=min_lon, _max_lon=10, _min_lat=min_lat, _max_lat=12)
+
+        # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
+        lon_1 = 3
+        lon_2 = 5  # lon_1 < lon_2
+        lat_1 = 5
+        lat_2 = 7  # lat_1 < lat_2
+        ModifyFsurdat.not_rectangle = ModifyFsurdat._get_not_rectangle(
+            lon_1=lon_1, lon_2=lon_2, lat_1=lat_1, lat_2=lat_2,
+            longxy=longxy, latixy=latixy)
+
+        # create xarray dataset containing lev0, lev1, and lev2 variables;
+        # the fsurdat_modify tool reads variables like this from fsurdat file
+        var_1d = np.arange(cols)
+        var_lev2 = var_1d * np.ones((rows,cols,rows,cols))
+        var_lev1 = var_1d * np.ones((cols,rows,cols))
+        var_lev0 = longxy  # just since it's available
+        ModifyFsurdat.file = xr.Dataset(data_vars=dict(
+            var_lev0=(["x", "y"], var_lev0),
+            var_lev1=(["w", "x", "y"], var_lev1),
+            var_lev2=(["v", "w", "x", "y"], var_lev2)))
+
+        # initialize and then modify the comparison matrices
+        comp_lev0 = ModifyFsurdat.file.var_lev0
+        comp_lev1 = ModifyFsurdat.file.var_lev1
+        comp_lev2 = ModifyFsurdat.file.var_lev2
+        val_for_rectangle = 1.5
+        comp_lev0[lat_1-min_lat:lat_2-min_lat+1,
+                  lon_1-min_lon:lon_2-min_lon+1] = val_for_rectangle
+        comp_lev1[...,lat_1-min_lat:lat_2-min_lat+1,
+                    lon_1-min_lon:lon_2-min_lon+1] = val_for_rectangle
+        comp_lev2[...,lat_1-min_lat:lat_2-min_lat+1,
+                      lon_1-min_lon:lon_2-min_lon+1] = val_for_rectangle
+
+        # test setvar
+        ModifyFsurdat.setvar_lev0(ModifyFsurdat, 'var_lev0', val_for_rectangle)
+        self.assertTrue(ModifyFsurdat.file.var_lev0.equals(comp_lev0))
+
+        ModifyFsurdat.setvar_lev1(ModifyFsurdat, 'var_lev1', val_for_rectangle,
+                                  cols-1)
+        self.assertTrue(ModifyFsurdat.file.var_lev1.equals(comp_lev1))
+
+        ModifyFsurdat.setvar_lev2(ModifyFsurdat, 'var_lev2', val_for_rectangle,
+                                  cols-1, rows-1)
+        self.assertTrue(ModifyFsurdat.file.var_lev2.equals(comp_lev2))
 
     def test_getNotRectangle_lon1leLon2Lat1leLat2(self):
         """
