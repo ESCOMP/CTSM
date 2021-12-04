@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.1.dev066
 Originator(s): rgknox (Ryan Knox,,,)
-Date: Fri Dec  3 16:24:17 EST 2021
+Date: Sat Dec  4 01:58:42 MST 2021
 One-line Summary: API change with FATES to enable running means inside fates, includes passing in of model timestep
 
 Purpose and description of changes
