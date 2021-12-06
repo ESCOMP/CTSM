@@ -548,6 +548,9 @@ contains
             lev1name='numurbl', &
             long_name='maximum percent urban for each density type', units='unitless')
 
+       call ncd_def_spatial_var(ncid=ncid, varname='HASURBAN', xtype=xtype, &
+            lev1name='numurbl', &
+            long_name='whether the grid ever has urban during the considered time period', units='unitless')
                           
        call harvdata%getFieldsIdx( ind1D, ind2D )
        do j = 1, harvdata%num1Dfields()
