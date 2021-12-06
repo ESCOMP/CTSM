@@ -207,9 +207,8 @@ def _handle_config_value(var, default, item, is_list, convert_to_type,
     if allowed_values is not None:
         for v in var:
             if v not in allowed_values:
-                print('v in var not in allowed_values', v)
-                errmsg = "{} is not an allowed value for {} in .cfg file\n" \
-                         "Allowed values: {}".format(v, item, allowed_values)
+                print('v = ', v, ' in var not in allowed_values')
+                errmsg = '{} is not an allowed value for {} in .cfg file. Check allowed_values'.format(v, item)
                 abort(errmsg)
 
     if not is_list:
