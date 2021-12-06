@@ -1236,7 +1236,7 @@ program mksurfdat
        call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctcft_max)), subname)
 
        call check_ret(nf_inq_varid(ncid, 'HASURBAN', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, hasurban), subname)
+       call check_ret(nf_put_var_int(ncid, varid, hasurban), subname)
        
        call check_ret(nf_inq_varid(ncid, 'PCT_URBAN_MAX', varid), subname)
        call check_ret(nf_put_var_double(ncid, varid, pcturb_max), subname)
