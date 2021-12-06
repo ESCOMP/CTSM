@@ -111,5 +111,9 @@
       -->
     <module_system type="none"/>
 
+    <environment_variables comp_interface="nuopc">
+      <env name="ESMFMKFILE">$ESMF_MKFILE_PATH</env>
+    </environment_variables>
+
   </machine>
 </config_machines>

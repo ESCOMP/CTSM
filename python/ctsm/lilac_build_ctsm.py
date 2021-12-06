@@ -71,7 +71,7 @@ def main(cime_path):
                    machine=args.machine,
                    os_type=args.os,
                    netcdf_path=args.netcdf_path,
-                   esmf_lib_path=args.esmf_lib_path,
+                   esmf_mkfile_path=args.esmf_mkfile_path,
                    max_mpitasks_per_node=args.max_mpitasks_per_node,
                    gmake=args.gmake,
                    gmake_j=args.gmake_j,
@@ -92,7 +92,7 @@ def build_ctsm(cime_path,
                machine=None,
                os_type=None,
                netcdf_path=None,
-               esmf_lib_path=None,
+               esmf_mkfile_path=None,
                max_mpitasks_per_node=None,
                gmake=None,
                gmake_j=None,
@@ -117,7 +117,7 @@ def build_ctsm(cime_path,
         Must be given if machine isn't given; ignored if machine is given
     netcdf_path (str or None): path to NetCDF installation
         Must be given if machine isn't given; ignored if machine is given
-    esmf_lib_path (str or None): path to ESMF library directory
+    esmf_mkfile_path (str or None): path to esmf.mk file (typically within ESMF library directory)
         Must be given if machine isn't given; ignored if machine is given
     max_mpitasks_per_node (int or None): number of physical processors per shared-memory node
         Must be given if machine isn't given; ignored if machine is given
@@ -153,7 +153,7 @@ def build_ctsm(cime_path,
     if machine is None:
         assert os_type is not None, 'with machine absent, os_type must be given'
         assert netcdf_path is not None, 'with machine absent, netcdf_path must be given'
-        assert esmf_lib_path is not None, 'with machine absent, esmf_lib_path must be given'
+        assert esmf_mkfile_path is not None, 'with machine absent, esmf_mkfile_path must be given'
         assert max_mpitasks_per_node is not None, ('with machine absent '
                                                    'max_mpitasks_per_node must be given')
         os_type = _check_and_transform_os(os_type)
@@ -161,7 +161,7 @@ def build_ctsm(cime_path,
                                 os_type=os_type,
                                 compiler=compiler,
                                 netcdf_path=netcdf_path,
-                                esmf_lib_path=esmf_lib_path,
+                                esmf_mkfile_path=esmf_mkfile_path,
                                 max_mpitasks_per_node=max_mpitasks_per_node,
                                 gmake=gmake,
                                 gmake_j=gmake_j,
@@ -242,7 +242,7 @@ Typical usage:
 
     For a fresh build with a machine that has NOT been ported to cime:
 
-        build_ctsm /path/to/nonexistent/directory --os OS --compiler COMPILER --netcdf-path NETCDF_PATH --esmf-lib-path ESMF_LIB_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
+        build_ctsm /path/to/nonexistent/directory --os OS --compiler COMPILER --netcdf-path NETCDF_PATH --esmf-mkfile-path ESMF_MKFILE_PATH --max-mpitasks-per-node MAX_MPITASKS_PER_NODE --pnetcdf-path PNETCDF_PATH
 
         If PNetCDF is not available, set --no-pnetcdf instead of --pnetcdf-path.
 
@@ -346,10 +346,10 @@ Typical usage:
                                       'named lib, include, etc.)')
     new_machine_required_list.append('netcdf-path')
 
-    new_machine_required.add_argument('--esmf-lib-path',
-                                      help='Path to ESMF library directory\n'
-                                      'This directory should include an esmf.mk file')
-    new_machine_required_list.append('esmf-lib-path')
+    new_machine_required.add_argument('--esmf-mkfile-path',
+                                      help='Path to esmf.mk file\n'
+                                      '(typically within ESMF library directory)')
+    new_machine_required_list.append('esmf-mkfile-path')
 
     new_machine_required.add_argument('--max-mpitasks-per-node', type=int,
                                       help='Number of physical processors per shared-memory node\n'
@@ -499,7 +499,7 @@ def _fill_out_machine_files(build_dir,
                             os_type,
                             compiler,
                             netcdf_path,
-                            esmf_lib_path,
+                            esmf_mkfile_path,
                             max_mpitasks_per_node,
                             gmake,
                             gmake_j,
@@ -526,7 +526,8 @@ def _fill_out_machine_files(build_dir,
                        'CIME_OUTPUT_ROOT':build_dir,
                        'GMAKE':gmake,
                        'GMAKE_J':gmake_j,
-                       'MAX_MPITASKS_PER_NODE':max_mpitasks_per_node})
+                       'MAX_MPITASKS_PER_NODE':max_mpitasks_per_node,
+                       'ESMF_MKFILE_PATH':esmf_mkfile_path})
 
     # ------------------------------------------------------------------------
     # Fill in config_compilers.xml
@@ -558,7 +559,6 @@ def _fill_out_machine_files(build_dir,
                        'NETCDF_PATH':netcdf_path,
                        'PIO_FILESYSTEM_HINTS':pio_filesystem_hints_tag,
                        'PNETCDF_PATH':pnetcdf_path_tag,
-                       'ESMF_LIBDIR':esmf_lib_path,
                        'EXTRA_CFLAGS':extra_cflags,
                        'EXTRA_FFLAGS':extra_fflags})
 

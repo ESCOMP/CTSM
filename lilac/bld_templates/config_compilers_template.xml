@@ -29,8 +29,6 @@ $$MYVAR refers to the MYVAR cime variable.
          blank line. -->
     $PNETCDF_PATH
 
-    <ESMF_LIBDIR>$ESMF_LIBDIR</ESMF_LIBDIR>
-
     <CFLAGS>
       <append> $EXTRA_CFLAGS </append>
     </CFLAGS>
