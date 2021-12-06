@@ -1,5 +1,10 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+    ctsm5.1.dev066   rgknox 12/04/2021 API change with FATES to enable running means inside fates, includes passing in of model timestep
+    ctsm5.1.dev065 glemieux 12/02/2021 Refactor static fire data input by moving variables into fire_base_type from cnveg_state_type
+    ctsm5.1.dev064  afoster 11/29/2021 Updates to facilitate FATES history variable overhaul
+    ctsm5.1.dev063 glemieux 11/23/2021 Provide access to the fraction of canopy covered by snow variable to fates
+    ctsm5.1.dev062     erik 11/19/2021 Make NUOPC the default driver rather than MCT
     ctsm5.1.dev061 mvertens 10/19/2021 Changes needed to get aux history output with cmeps
     ctsm5.1.dev060 glemieux 10/18/2021 Izumi aux_clm test fixes for fates testmods
     ctsm5.1.dev059 glemieux 10/13/2021 Update fates tests and list for diversity and coverage

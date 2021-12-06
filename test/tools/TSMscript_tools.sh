@@ -49,20 +49,7 @@ cp $cfgdir/sample_* $rundir
 optfile=${3%^*}
 cfgfile=${3#*^}
 
-if [[ "$1" == "site_and_regional/PTCLM" ]]; then
-  echo "TSMscript_tools.sh: calling TCBscripttools.sh to prepare executables for $1"
-  ${CLM_SCRIPTDIR}/TCBscripttools.sh $1 $cfgfile
-  rc=$?
-  if [ $rc -ne 0 ]; then
-      echo "TSMscript_tools.sh: error from TCBscripttools.sh= $rc"
-      echo "FAIL.job${JOBID}" > TestStatus
-      exit 4
-  fi 
-  # Copy map files so we can use them
-  subdir=1x1pt_US-UMB
-  mkdir $rundir/$subdir
-  cp $CSMDATA/lnd/clm2/PTCLMmydatafiles.c171024/$subdir/map_* $rundir/$subdir
-elif [ "$optfile" != "$3" ]; then
+if [ "$optfile" != "$3" ]; then
   echo "TSMscript_tools.sh: calling TCBtools.sh to prepare $1 executable"
   ${CLM_SCRIPTDIR}/TCBtools.sh $1 $cfgfile
   rc=$?
