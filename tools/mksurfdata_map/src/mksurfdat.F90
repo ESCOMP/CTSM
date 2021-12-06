@@ -1224,7 +1224,7 @@ program mksurfdat
        end do   ! end of read loop
        do n = 1,ns_o
           do k =1, numurbl
-             if pcturb_max(n,k) > 1.e-6_r8 then 
+             if (pcturb_max(n,k) > 1.e-6_r8) then 
                 hasurban(n,k) = 1
              end if    
           end do
