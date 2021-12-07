@@ -778,7 +778,7 @@ subroutine update_max_array_urban(pct_urbmax_arr,pct_urban_arr)
         if (pct_urban_arr(n,k) > pct_urbmax_arr(n,k)) then 
            pct_urbmax_arr(n,k) = pct_urban_arr(n,k)
         end if
-      end do
+     end do
   end do
 
 end subroutine update_max_array_urban

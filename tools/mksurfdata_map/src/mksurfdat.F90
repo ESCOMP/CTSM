@@ -1238,9 +1238,6 @@ program mksurfdat
        call check_ret(nf_inq_varid(ncid, 'HASURBAN', varid), subname)
        call check_ret(nf_put_var_int(ncid, varid, hasurban), subname)
        
-       call check_ret(nf_inq_varid(ncid, 'PCT_URBAN_MAX', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, pcturb_max), subname)
-       
        if (num_cft > 0) then
           call check_ret(nf_inq_varid(ncid, 'PCT_CFT_MAX', varid), subname)
           call check_ret(nf_put_var_double(ncid, varid, get_pct_p2l_array(pctcft_max)), subname)
@@ -1449,7 +1446,7 @@ subroutine normalizencheck_landuse(ldomain)
        suma = pctlak(n) + pctwet(n) + pcturb(n) + pctgla(n)
        if (suma > (100._r8 + tol_loose)) then
           write(6,*) subname, ' ERROR: pctlak + pctwet + pcturb + pctgla must be'
-          write(6,*) '<= 100% before calling this subroutine'
+          write(6,*) '<= 100% before normalizing vegetated area'
           write(6,*) 'n, pctlak, pctwet, pcturb, pctgla = ', &
                n, pctlak(n), pctwet(n), pcturb(n), pctgla(n)
           call abort()
