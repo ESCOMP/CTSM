@@ -1174,7 +1174,7 @@ program mksurfdat
           call change_landuse(ldomain, dynpft=.true.)
 
           call normalizencheck_landuse(ldomain)
-	        call normalize_classes_by_gcell(urbn_classes, pcturb, urbn_classes_g)
+          call normalize_classes_by_gcell(urbn_classes, pcturb, urbn_classes_g)
           
           call update_max_array(pctnatpft_max,pctnatpft)
           call update_max_array(pctcft_max,pctcft)
