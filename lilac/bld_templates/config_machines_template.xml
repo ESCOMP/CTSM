@@ -12,7 +12,7 @@
      -->
 
 <config_machines version="2.0">
-  <machine MACH="ctsm_build">
+  <machine MACH="ctsm-build">
 
     <!-- Text description of the machine -->
     <DESC>Temporary build information for a CTSM build</DESC>

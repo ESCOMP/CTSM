@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # ========================================================================
 
 # this matches the machine name in config_machines_template.xml
-_MACH_NAME = 'ctsm_build'
+_MACH_NAME = 'ctsm-build'
 
 # these are arbitrary, since we only use the case for its build, not any of the runtime
 # settings; they just need to be valid
@@ -512,7 +512,7 @@ def _fill_out_machine_files(build_dir,
 
     For documentation of args, see the documentation in the build_ctsm function
     """
-    os.makedirs(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME))
+    os.makedirs(os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, "cmake_macros"))
 
     # ------------------------------------------------------------------------
     # Fill in config_machines.xml
@@ -530,7 +530,7 @@ def _fill_out_machine_files(build_dir,
                        'ESMF_MKFILE_PATH':esmf_mkfile_path})
 
     # ------------------------------------------------------------------------
-    # Fill in config_compilers.xml
+    # Fill in ctsm-build_template.cmake
     # ------------------------------------------------------------------------
 
     if gptl_nano_timers:
@@ -539,26 +539,26 @@ def _fill_out_machine_files(build_dir,
         gptl_cppdefs = ''
 
     if pio_filesystem_hints:
-        pio_filesystem_hints_tag = '<PIO_FILESYSTEM_HINTS>{}</PIO_FILESYSTEM_HINTS>'.format(
+        pio_filesystem_hints_addition = 'set(PIO_FILESYSTEM_HINTS "{}")'.format(
             pio_filesystem_hints)
     else:
-        pio_filesystem_hints_tag = ''
+        pio_filesystem_hints_addition = ''
 
     if pnetcdf_path:
-        pnetcdf_path_tag = '<PNETCDF_PATH>{}</PNETCDF_PATH>'.format(
+        pnetcdf_path_addition = 'set(PNETCDF_PATH "{}")'.format(
             pnetcdf_path)
     else:
-        pnetcdf_path_tag = ''
+        pnetcdf_path_addition = ''
 
     fill_template_file(
         path_to_template=os.path.join(_PATH_TO_TEMPLATES,
-                                      'config_compilers_template.xml'),
-        path_to_final=os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, 'config_compilers.xml'),
-        substitutions={'COMPILER':compiler,
-                       'GPTL_CPPDEFS':gptl_cppdefs,
+                                      'ctsm-build_template.cmake'),
+        path_to_final=os.path.join(build_dir, _MACHINE_CONFIG_DIRNAME, "cmake_macros",
+                                   '{}_{}.cmake'.format(compiler, _MACH_NAME)),
+        substitutions={'GPTL_CPPDEFS':gptl_cppdefs,
                        'NETCDF_PATH':netcdf_path,
-                       'PIO_FILESYSTEM_HINTS':pio_filesystem_hints_tag,
-                       'PNETCDF_PATH':pnetcdf_path_tag,
+                       'PIO_FILESYSTEM_HINTS':pio_filesystem_hints_addition,
+                       'PNETCDF_PATH':pnetcdf_path_addition,
                        'EXTRA_CFLAGS':extra_cflags,
                        'EXTRA_FFLAGS':extra_fflags})
 
