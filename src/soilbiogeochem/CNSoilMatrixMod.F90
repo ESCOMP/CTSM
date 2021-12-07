@@ -22,7 +22,7 @@ module CNSoilMatrixMod
   use clm_time_manager                   , only : is_first_restart_step,is_beg_curr_year,is_end_curr_year,is_first_step_of_this_run_segment
   use clm_varpar                         , only : ndecomp_pools, nlevdecomp, ndecomp_pools_vr        !number of biogeochemically active soil layers
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_cascade_outtransitions
-  use clm_varpar                         , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varpar                         , only : i_cwd
   use clm_varcon                         , only : dzsoi_decomp,zsoi,secspday,c3_r2,c14ratio
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con    
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type

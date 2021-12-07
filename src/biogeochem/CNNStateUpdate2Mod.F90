@@ -210,7 +210,7 @@ contains
                ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
                !           i_cwd = 0 if fates, so not including in the i-loop
                nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) + nf_veg%harvest_n_to_cwdn_col(c,j,i) * dt
+                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) + nf_veg%harvest_n_to_cwdn_col(c,j) * dt
             end if !not use_soil_matrixcn
          end do
       end do
