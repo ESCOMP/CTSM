@@ -7,8 +7,8 @@ module CNNStateUpdate1Mod
   ! !USES:
   use shr_kind_mod                    , only: r8 => shr_kind_r8
   use clm_time_manager                , only : get_step_size_real
-  use clm_varpar                      , only : nlevdecomp, ndecomp_pools, ndecomp_cascade_transitions
-  use clm_varpar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd, ioutn, iretransn
+  use clm_varpar                      , only : nlevdecomp
+  use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd, ioutn, iretransn
   use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_matrixcn, use_soil_matrixcn
   use clm_varcon                      , only : nitrif_n2o_loss_frac
   use pftconMod                       , only : npcropmin, pftcon
@@ -51,6 +51,7 @@ contains
     integer  :: g   ! gridcell index
     integer  :: fc  ! column filter index
     integer  :: j   ! level index
+    integer  :: i   ! litter pool index
     real(r8) :: dt  ! time step (seconds)
 
     character(len=*), parameter :: subname = 'NStateUpdateDynPatch'
@@ -68,12 +69,11 @@ contains
     do j = 1, nlevdecomp
        do fc = 1, num_soilc_with_inactive
           c = filter_soilc_with_inactive(fc)
-          ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + &
-               nf_veg%dwt_frootn_to_litr_met_n_col(c,j) * dt
-          ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + &
-               nf_veg%dwt_frootn_to_litr_cel_n_col(c,j) * dt
-          ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + &
-               nf_veg%dwt_frootn_to_litr_lig_n_col(c,j) * dt
+          do i = i_litr_min, i_litr_max
+             ns_soil%decomp_npools_vr_col(c,j,i) = &
+                ns_soil%decomp_npools_vr_col(c,j,i) + &
+                nf_veg%dwt_frootn_to_litr_n_col(c,j,i) * dt
+          end do
           ns_soil%decomp_npools_vr_col(c,j,i_cwd) = ns_soil%decomp_npools_vr_col(c,j,i_cwd) + &
                ( nf_veg%dwt_livecrootn_to_cwdn_col(c,j) + nf_veg%dwt_deadcrootn_to_cwdn_col(c,j) ) * dt
        end do
@@ -107,7 +107,7 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,j,l,g,k ! indices
+    integer :: c,p,j,l,g,k,i  ! indices
     integer :: fp,fc     ! lake filter indices
     real(r8):: dt        ! radiation time step (seconds)
     !-----------------------------------------------------------------------
@@ -132,14 +132,10 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             if (.not. use_soil_matrixcn) then ! to be consistent with C
-               nf_soil%decomp_npools_sourcesink_col(c,j,i_met_lit) = &
-                    nf_veg%phenology_n_to_litr_met_n_col(c,j) * dt
-
-               nf_soil%decomp_npools_sourcesink_col(c,j,i_cel_lit) = &
-                    nf_veg%phenology_n_to_litr_cel_n_col(c,j) * dt
-
-               nf_soil%decomp_npools_sourcesink_col(c,j,i_lig_lit) = &
-                    nf_veg%phenology_n_to_litr_lig_n_col(c,j) * dt
+               do i = i_litr_min, i_litr_max
+                  nf_soil%decomp_npools_sourcesink_col(c,j,i) = &
+                     nf_veg%phenology_n_to_litr_n_col(c,j,i) * dt
+               end do
 
             ! NOTE(wjs, 2017-01-02) This used to be set to a non-zero value, but the
             ! terms have been moved to CStateUpdateDynPatch. I think this is zeroed every
@@ -147,15 +143,10 @@ contains
                nf_soil%decomp_npools_sourcesink_col(c,j,i_cwd) = 0._r8
 
             else
-               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
-                    nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_met_n_col(c,j) *dt
-
-               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
-                    nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_cel_n_col(c,j) *dt
-
-               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
-                    nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_lig_n_col(c,j) *dt
-
+               do i = i_litr_min, i_litr_max
+                  nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
+                       nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%phenology_n_to_litr_n_col(c,j,i) *dt
+               end do
             end if
          end do
       end do

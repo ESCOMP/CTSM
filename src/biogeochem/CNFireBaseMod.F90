@@ -448,7 +448,7 @@ contains
    use clm_varcon           , only: secspday
    use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: run_has_transient_landcover
-   use clm_varpar           , only: nlevdecomp_full, ndecomp_pools, nlevdecomp
+   use clm_varpar           , only: nlevdecomp_full, ndecomp_pools, nlevdecomp, i_litr_max, i_met_lit
    use clm_varpar           , only: ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
                                     ilivestem,ilivestem_st,ilivestem_xf,&
                                     ideadstem,ideadstem_st,ideadstem_xf,&
@@ -484,7 +484,7 @@ contains
    real(r8)                             , intent(out)   :: somc_fire_col(bounds%begc:)              ! (gC/m2/s) fire C emissions due to peat burning
    !
    ! !LOCAL VARIABLES:
-   integer :: g,c,p,j,l,kyr, kmo, kda, mcsec   ! indices
+   integer :: i,g,c,p,j,l,kyr, kmo, kda, mcsec  ! indices
    integer :: fp,fc                ! filter indices
    real(r8):: f                    ! rate for fire effects (1/s)
    real(r8):: m                    ! acceleration factor for fuel carbon
@@ -538,12 +538,8 @@ contains
          fm_root                             => pftcon%fm_root                                                    , & ! Input: 
          fm_lroot                            => pftcon%fm_lroot                                                   , & ! Input: 
          fm_droot                            => pftcon%fm_droot                                                   , & ! Input: 
-         lf_flab                             => pftcon%lf_flab                                                    , & ! Input: 
-         lf_fcel                             => pftcon%lf_fcel                                                    , & ! Input: 
-         lf_flig                             => pftcon%lf_flig                                                    , & ! Input: 
-         fr_flab                             => pftcon%fr_flab                                                    , & ! Input: 
-         fr_fcel                             => pftcon%fr_fcel                                                    , & ! Input: 
-         fr_flig                             => pftcon%fr_flig                                                    , & ! Input: 
+         lf_f                                => pftcon%lf_f                                                       , & ! Input:
+         fr_f                                => pftcon%fr_f                                                       , & ! Input:
 
          cmb_cmplt_fact_litter               => cnfire_const%cmb_cmplt_fact_litter                                , & ! Input:  [real(r8) (:)     ]  Combustion completion factor for litter (unitless)
          cmb_cmplt_fact_cwd                  => cnfire_const%cmb_cmplt_fact_cwd                                   , & ! Input:  [real(r8) (:)     ]  Combustion completion factor for CWD (unitless)
@@ -648,9 +644,7 @@ contains
          m_gresp_storage_to_litter_fire      => cnveg_carbonflux_inst%m_gresp_storage_to_litter_fire_patch        , & ! Output: [real(r8) (:)     ]                                                    
          m_gresp_xfer_to_litter_fire         => cnveg_carbonflux_inst%m_gresp_xfer_to_litter_fire_patch           , & ! Output: [real(r8) (:)     ]                                                    
          m_decomp_cpools_to_fire_vr          => cnveg_carbonflux_inst%m_decomp_cpools_to_fire_vr_col              , & ! Output: [real(r8) (:,:,:) ]  (gC/m3/s) VR decomp. C fire loss
-         m_c_to_litr_met_fire                => cnveg_carbonflux_inst%m_c_to_litr_met_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
-         m_c_to_litr_cel_fire                => cnveg_carbonflux_inst%m_c_to_litr_cel_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
-         m_c_to_litr_lig_fire                => cnveg_carbonflux_inst%m_c_to_litr_lig_fire_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
+         m_c_to_litr_fire                    => cnveg_carbonflux_inst%m_c_to_litr_fire_col                        , & ! Output: [real(r8) (:,:,:) ]
          
          fire_mortality_n_to_cwdn            => cnveg_nitrogenflux_inst%fire_mortality_n_to_cwdn_col              , & ! Input:  [real(r8) (:,:)   ]  N flux fire mortality to CWD (gN/m3/s)
          m_leafn_to_fire                     => cnveg_nitrogenflux_inst%m_leafn_to_fire_patch                     , & ! Input:  [real(r8) (:)     ]  (gN/m2/s) N emis. leafn		  
@@ -694,9 +688,7 @@ contains
          m_deadcrootn_xfer_to_litter_fire    => cnveg_nitrogenflux_inst%m_deadcrootn_xfer_to_litter_fire_patch    , & ! Output: [real(r8) (:)     ]                                                    
          m_retransn_to_litter_fire           => cnveg_nitrogenflux_inst%m_retransn_to_litter_fire_patch           , & ! Output: [real(r8) (:)     ]                                                    
          m_decomp_npools_to_fire_vr          => cnveg_nitrogenflux_inst%m_decomp_npools_to_fire_vr_col            , & ! Output: [real(r8) (:,:,:) ]  VR decomp. N fire loss (gN/m3/s)
-         m_n_to_litr_met_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_met_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
-         m_n_to_litr_cel_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_cel_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
-         m_n_to_litr_lig_fire                => cnveg_nitrogenflux_inst%m_n_to_litr_lig_fire_col                  , & ! Output: [real(r8) (:,:)   ]                                                  
+         m_n_to_litr_fire                    => cnveg_nitrogenflux_inst%m_n_to_litr_fire_col                      , & ! Output: [real(r8) (:,:)   ]                                                  
          ileaf_to_iout_fic                   => cnveg_carbonflux_inst%ileaf_to_iout_fi                            , & ! Input: [integer (:)] Index of fire related C transfer from leaf pool to outside of vegetation pools
          ileafst_to_iout_fic                 => cnveg_carbonflux_inst%ileafst_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related C transfer from leaf storage pool to outside of vegetation pools
          ileafxf_to_iout_fic                 => cnveg_carbonflux_inst%ileafxf_to_iout_fi                          , & ! Input: [integer (:)] Index of fire related C transfer from leaf transfer pool to outside of vegetation pools
@@ -1137,13 +1129,14 @@ contains
                 m_livecrootn_to_litter_fire(p) * patch%wtcol(p) * croot_prof(p,j)
 
 
-           m_c_to_litr_met_fire(c,j)=m_c_to_litr_met_fire(c,j) + &
-                ((m_leafc_to_litter_fire(p)*lf_flab(patch%itype(p)) &
+           m_c_to_litr_fire(c,j,i_met_lit) = &
+                m_c_to_litr_fire(c,j,i_met_lit) + &
+                ((m_leafc_to_litter_fire(p) * lf_f(patch%itype(p),i_met_lit) &
                 +m_leafc_storage_to_litter_fire(p) + &
                 m_leafc_xfer_to_litter_fire(p) + &
                 m_gresp_storage_to_litter_fire(p) &
                 +m_gresp_xfer_to_litter_fire(p))*leaf_prof(p,j) + &
-                (m_frootc_to_litter_fire(p)*fr_flab(patch%itype(p)) &
+                (m_frootc_to_litter_fire(p) * fr_f(patch%itype(p),i_met_lit) &
                 +m_frootc_storage_to_litter_fire(p) + &
                 m_frootc_xfer_to_litter_fire(p))*froot_prof(p,j) &
                 +(m_livestemc_storage_to_litter_fire(p) + &
@@ -1154,34 +1147,41 @@ contains
                 m_livecrootc_xfer_to_litter_fire(p) &
                 +m_deadcrootc_storage_to_litter_fire(p) + &
                 m_deadcrootc_xfer_to_litter_fire(p))* croot_prof(p,j))* patch%wtcol(p)    
-           m_c_to_litr_cel_fire(c,j)=m_c_to_litr_cel_fire(c,j) + &
-                (m_leafc_to_litter_fire(p)*lf_fcel(patch%itype(p))*leaf_prof(p,j) + &
-                m_frootc_to_litter_fire(p)*fr_fcel(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
-           m_c_to_litr_lig_fire(c,j)=m_c_to_litr_lig_fire(c,j) + &
-                (m_leafc_to_litter_fire(p)*lf_flig(patch%itype(p))*leaf_prof(p,j) + &
-                m_frootc_to_litter_fire(p)*fr_flig(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p)  
+           ! Here metabolic litter is treated differently than other
+           ! types of litter, so it remains outside this litter loop,
+           ! in the line above
+           do i = i_met_lit+1, i_litr_max
+              m_c_to_litr_fire(c,j,i) = m_c_to_litr_fire(c,j,i) + &
+                 (m_leafc_to_litter_fire(p) * lf_f(patch%itype(p),i) * leaf_prof(p,j) + &
+                 m_frootc_to_litter_fire(p) * fr_f(patch%itype(p),i) * froot_prof(p,j)) * patch%wtcol(p) 
+           end do
 
-           m_n_to_litr_met_fire(c,j)=m_n_to_litr_met_fire(c,j) + &
-                ((m_leafn_to_litter_fire(p)*lf_flab(patch%itype(p)) &
-                +m_leafn_storage_to_litter_fire(p) + &
-                m_leafn_xfer_to_litter_fire(p)+m_retransn_to_litter_fire(p)) &
-                *leaf_prof(p,j) +(m_frootn_to_litter_fire(p)*fr_flab(patch%itype(p)) &
-                +m_frootn_storage_to_litter_fire(p) + &
-                m_frootn_xfer_to_litter_fire(p))*froot_prof(p,j) &
-                +(m_livestemn_storage_to_litter_fire(p) + &
-                m_livestemn_xfer_to_litter_fire(p) &
-                +m_deadstemn_storage_to_litter_fire(p) + &
-                m_deadstemn_xfer_to_litter_fire(p))* stem_prof(p,j)&
-                +(m_livecrootn_storage_to_litter_fire(p) + &
-                m_livecrootn_xfer_to_litter_fire(p) &
-                +m_deadcrootn_storage_to_litter_fire(p) + &
-                m_deadcrootn_xfer_to_litter_fire(p))* croot_prof(p,j))* patch%wtcol(p)    
-           m_n_to_litr_cel_fire(c,j)=m_n_to_litr_cel_fire(c,j) + &
-                (m_leafn_to_litter_fire(p)*lf_fcel(patch%itype(p))*leaf_prof(p,j) + &
-                m_frootn_to_litter_fire(p)*fr_fcel(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
-           m_n_to_litr_lig_fire(c,j)=m_n_to_litr_lig_fire(c,j) + &
-                (m_leafn_to_litter_fire(p)*lf_flig(patch%itype(p))*leaf_prof(p,j) + &
-                m_frootn_to_litter_fire(p)*fr_flig(patch%itype(p))*froot_prof(p,j))* patch%wtcol(p) 
+           m_n_to_litr_fire(c,j,i_met_lit) = &
+              m_n_to_litr_fire(c,j,i_met_lit) + &
+              ((m_leafn_to_litter_fire(p) * lf_f(patch%itype(p),i_met_lit) + &
+                m_leafn_storage_to_litter_fire(p) + &
+                m_leafn_xfer_to_litter_fire(p) + &
+                m_retransn_to_litter_fire(p)) * leaf_prof(p,j) + &
+               (m_frootn_to_litter_fire(p) * fr_f(patch%itype(p),i_met_lit) + &
+                m_frootn_storage_to_litter_fire(p) + &
+                m_frootn_xfer_to_litter_fire(p)) * froot_prof(p,j) + &
+               (m_livestemn_storage_to_litter_fire(p) + &
+                m_livestemn_xfer_to_litter_fire(p) + &
+                m_deadstemn_storage_to_litter_fire(p) + &
+                m_deadstemn_xfer_to_litter_fire(p)) * stem_prof(p,j) + &
+               (m_livecrootn_storage_to_litter_fire(p) + &
+                m_livecrootn_xfer_to_litter_fire(p) + &
+                m_deadcrootn_storage_to_litter_fire(p) + &
+                m_deadcrootn_xfer_to_litter_fire(p)) * croot_prof(p,j)) * patch%wtcol(p)
+           ! Here metabolic litter is treated differently than other
+           ! types of litter, so it remains outside this litter loop,
+           ! in the line above
+           do i = i_met_lit+1, i_litr_max
+              m_n_to_litr_fire(c,j,i) = &
+                 m_n_to_litr_fire(c,j,i) + &
+                 (m_leafn_to_litter_fire(p) * lf_f(patch%itype(p),i) * leaf_prof(p,j) + &
+                  m_frootn_to_litter_fire(p) * fr_f(patch%itype(p),i) * froot_prof(p,j)) * patch%wtcol(p)
+           end do
         end do
      end do
      !

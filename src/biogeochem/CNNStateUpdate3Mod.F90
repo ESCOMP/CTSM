@@ -10,7 +10,7 @@ module CNNStateUpdate3Mod
   use clm_varpar                      , only: nlevdecomp, ndecomp_pools
   use clm_time_manager                , only : get_step_size_real
   use clm_varctl                      , only : iulog, use_nitrif_denitrif,use_matrixcn,use_soil_matrixcn
-  use clm_varpar                      , only : i_cwd, i_met_lit, i_cel_lit, i_lig_lit
+  use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
@@ -84,24 +84,21 @@ contains
                ns_soil%decomp_npools_vr_col(c,j,i_cwd) = ns_soil%decomp_npools_vr_col(c,j,i_cwd) + &
                  nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
 
-            ! patch-level wood to column-level litter (uncombusted wood)
-               ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + &
-                 nf_veg%m_n_to_litr_met_fire_col(c,j)* dt
-               ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + &
-                 nf_veg%m_n_to_litr_cel_fire_col(c,j)* dt
-               ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + &
-                 nf_veg%m_n_to_litr_lig_fire_col(c,j)* dt
+               ! patch-level wood to column-level litter (uncombusted wood)
+               do k = i_litr_min, i_litr_max
+                  ns_soil%decomp_npools_vr_col(c,j,k) = &
+                     ns_soil%decomp_npools_vr_col(c,j,k) + &
+                     nf_veg%m_n_to_litr_fire_col(c,j,k) * dt
+               end do
             else
                nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) + &
                  nf_veg%fire_mortality_n_to_cwdn_col(c,j) * dt
 
-            ! patch-level wood to column-level litter (uncombusted wood)
-               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + &
-                 nf_veg%m_n_to_litr_met_fire_col(c,j)* dt
-               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + &
-                 nf_veg%m_n_to_litr_cel_fire_col(c,j)* dt
-               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + &
-                 nf_veg%m_n_to_litr_lig_fire_col(c,j)* dt
+               ! patch-level wood to column-level litter (uncombusted wood)
+               do k = i_litr_min, i_litr_max
+                  nf_soil%matrix_Ninput%V(c,j+(k-1)*nlevdecomp) = nf_soil%matrix_Ninput%V(c,j+(k-1)*nlevdecomp) + &
+                    nf_veg%m_n_to_litr_fire_col(c,j,k)* dt
+               end do
             end if ! not use_soil_matrix
          end do ! end of column loop
       end do

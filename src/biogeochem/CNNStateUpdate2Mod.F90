@@ -8,7 +8,7 @@ module CNNStateUpdate2Mod
   use shr_kind_mod                    , only : r8 => shr_kind_r8
   use clm_time_manager                , only : get_step_size_real
   use clm_varpar                      , only : nlevsoi, nlevdecomp
-  use clm_varpar                      , only : i_met_lit, i_cel_lit, i_lig_lit, i_cwd
+  use clm_varpar                      , only : i_litr_min, i_litr_max, i_cwd
   use clm_varctl                      , only : iulog, use_matrixcn,use_soil_matrixcn
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
@@ -47,7 +47,7 @@ contains
     type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,p,j,l ! indices
+    integer  :: c,p,j,l,i  ! indices
     integer  :: fp,fc   ! lake filter indices
     real(r8) :: dt      ! radiation time step (seconds)
     !-----------------------------------------------------------------------
@@ -69,21 +69,22 @@ contains
             c = filter_soilc(fc)
 
             if (.not. use_soil_matrixcn)then 
-               ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + nf_veg%gap_mortality_n_to_litr_met_n_col(c,j) * dt
-               ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + nf_veg%gap_mortality_n_to_litr_cel_n_col(c,j) * dt
-               ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + nf_veg%gap_mortality_n_to_litr_lig_n_col(c,j) * dt
+               do i = i_litr_min, i_litr_max
+                  ns_soil%decomp_npools_vr_col(c,j,i) = &
+                     ns_soil%decomp_npools_vr_col(c,j,i) + &
+                     nf_veg%gap_mortality_n_to_litr_n_col(c,j,i) * dt
+               end do
+               ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
+               !           i_cwd = 0 if fates, so not including in the i-loop
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
             else
-               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_met_n_col(c,j) * dt
-               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_cel_n_col(c,j) * dt
-               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_lig_n_col(c,j) * dt
+               do i = i_litr_min, i_litr_max
+                  nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
+                    nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%gap_mortality_n_to_litr_n_col(c,j,i) * dt
+               end do
+               ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
+               !           i_cwd = 0 if fates, so not including in the i-loop
                nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
                  nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + nf_veg%gap_mortality_n_to_cwdn_col(c,j)       * dt
             end if !not use_soil_matrix
@@ -171,7 +172,7 @@ contains
     type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
     !
     ! !LOCAL VARIABLES:
-    integer :: c,p,j,l ! indices
+    integer :: c,p,j,l,i  ! indices
     integer :: fp,fc   ! lake filter indices
     real(r8):: dt      ! radiation time step (seconds)
     !-----------------------------------------------------------------------
@@ -192,23 +193,24 @@ contains
          do fc = 1,num_soilc
             c = filter_soilc(fc)
             if (.not. use_soil_matrixcn)then
-               ns_soil%decomp_npools_vr_col(c,j,i_met_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_met_lit) + nf_veg%harvest_n_to_litr_met_n_col(c,j) * dt
-               ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_cel_lit) + nf_veg%harvest_n_to_litr_cel_n_col(c,j) * dt
-               ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) = &
-                 ns_soil%decomp_npools_vr_col(c,j,i_lig_lit) + nf_veg%harvest_n_to_litr_lig_n_col(c,j) * dt
+               do i = i_litr_min, i_litr_max
+                  ns_soil%decomp_npools_vr_col(c,j,i) = &
+                     ns_soil%decomp_npools_vr_col(c,j,i) + &
+                     nf_veg%harvest_n_to_litr_n_col(c,j,i) * dt
+               end do
+               ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
+               !           i_cwd = 0 if fates, so not including in the i-loop
                ns_soil%decomp_npools_vr_col(c,j,i_cwd)     = &
                  ns_soil%decomp_npools_vr_col(c,j,i_cwd)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
             else
-               nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_met_lit-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_met_n_col(c,j) * dt
-               nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_cel_lit-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_cel_n_col(c,j) * dt
-               nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_lig_lit-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_lig_n_col(c,j) * dt
-               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     = &
-                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp)     + nf_veg%harvest_n_to_cwdn_col(c,j)       * dt
+               do i = i_litr_min, i_litr_max
+                  nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) = &
+                    nf_soil%matrix_Ninput%V(c,j+(i-1)*nlevdecomp) + nf_veg%harvest_n_to_litr_n_col(c,j,i) * dt
+               end do
+               ! Currently i_cwd .ne. i_litr_max + 1 if .not. fates and
+               !           i_cwd = 0 if fates, so not including in the i-loop
+               nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) = &
+                 nf_soil%matrix_Ninput%V(c,j+(i_cwd-1)*nlevdecomp) + nf_veg%harvest_n_to_cwdn_col(c,j,i) * dt
             end if !not use_soil_matrixcn
          end do
       end do

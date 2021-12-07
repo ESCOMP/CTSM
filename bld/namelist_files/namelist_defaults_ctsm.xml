@@ -497,9 +497,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
 <!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c210305.nc</paramfile>
-<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c210217.nc</paramfile>
-<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c210217.nc</paramfile>
+<paramfile phys="clm5_1" >lnd/clm2/paramdata/ctsm51_params.c210528.nc</paramfile>
+<paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c210528.nc</paramfile>
+<paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c210528.nc</paramfile>
 
 <!-- ================================================================== -->
 <!-- FATES default parameter file                                       -->
@@ -1475,20 +1475,6 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <leaf_mr_vcm phys="clm5_0" >0.015d00</leaf_mr_vcm>
 <leaf_mr_vcm phys="clm4_5" >0.015d00</leaf_mr_vcm>
 
-<!-- Initial Carbon stocks for BGC -->
-<initial_Cstocks phys="clm4_5"  use_cn=".true."  use_fates=".false." use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
-<initial_Cstocks phys="clm5_0"  use_cn=".true."  use_fates=".false." use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
-<initial_Cstocks phys="clm5_1"  use_cn=".true."  use_fates=".false." use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
-<initial_Cstocks phys="clm4_5"  use_cn=".false." use_fates=".true."  use_century_decomp=".true." >20.0d00, 20.0d00, 20.0d00</initial_Cstocks>
-<initial_Cstocks phys="clm5_0"  use_cn=".false." use_fates=".true."  use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
-<initial_Cstocks phys="clm5_1"  use_cn=".false." use_fates=".true."  use_century_decomp=".true." >200.0d00, 200.0d00, 200.0d00</initial_Cstocks>
-
-<initial_Cstocks_depth phys="clm5_1"  use_cn=".true."   use_fates=".false." use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm5_0"  use_cn=".true."   use_fates=".false." use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm4_5"  use_cn=".true."   use_fates=".false." use_century_decomp=".true." >0.3</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm5_1"  use_cn=".false."  use_fates=".true."  use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm5_0"  use_cn=".false."  use_fates=".true."  use_century_decomp=".true." >1.50d00</initial_Cstocks_depth>
-<initial_Cstocks_depth phys="clm4_5"  use_cn=".false."  use_fates=".true."  use_century_decomp=".true." >0.3</initial_Cstocks_depth>
 
 <initial_vegC phys="clm5_1"  use_cn=".true."  mm_nuptake_opt=".true." >100.d00</initial_vegC>
 <initial_vegC phys="clm5_0"  use_cn=".true."  mm_nuptake_opt=".true." >100.d00</initial_vegC>
