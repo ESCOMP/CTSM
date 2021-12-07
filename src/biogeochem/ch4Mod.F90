@@ -4414,27 +4414,8 @@ contains
        do fc = 1, num_nolakec
           c = filter_nolakec(fc)
           l = col%landunit(c)
-          ! Rather than trying to keep the BGC variables physically meaningful in urban landunits, 
-          ! we will just pack these variables in a way that should conserve these variables, even if
-          ! the values in each of the urban columns is somewhat nonsensical. Specifically: we'll take
-          ! col%wtgcell at face value in urban columns in dynColumnStateUpdaterMod - i.e., for the sake
-          ! of storing / conserving these BGC variables, we'll act as if that gives the true column 
-          ! weight on the grid cell. This way we'll end up storing all of the C & N from the vegetated
-          ! column in the urban columns, and there shouldn't be any that is lost from the system. If that
-          ! urban landunit later shrinks, the stored C & N should be restored symmetrically. It shouldn't
-          ! really matter that it was stored in a non-physical way (e.g., with some C & N stored in urban 
-          ! walls), since the BGC variables are irrelevant over the urban areas and we just want to be able
-          ! to restore the amount that was originally stored if an urban landunit grows and then later shrinks.
-          ! But for this to work right, we need to treat the relevant BGC variables as having the same dz over
-          ! all urban columns as over the soil column. Note that there already seems to be an implicit assumption
-          ! that dz is the same for all columns in the dynamic column state updates, in that dz doesn't enter 
-          ! into the conservation equations. In terms of what needs to change, we think that the only relevant 
-          ! code is the code that sums up total C / N / CH4 for the sake of balance checks: these balance checks
-          ! need to be consistent with the assumptions made in the conservation code. The C and N summations 
-          ! already use dzsoi_decomp, which is the same for all columns, so this is already what we want. 
-          ! So it may be that the only thing that needs to change is the use of dz in ch4_totcolch4: that will
-          ! need to use dzsoi_decomp over urban columns. (This begs the question of why this isn't already using
-          ! dzsoi_decomp for consistency with the C & N code; we're not sure about this.)
+          ! See doc/design/dynamic_urban.rst for an explanation of why we use dzsoi_decomp instead of dz for 
+          ! urban landunits.
           if (lun%itype(l) .eq. isturb_tbd .or. lun%itype(l) .eq. isturb_hd .or. lun%itype(l) .eq. isturb_md) then
              totcolch4(c) = totcolch4(c) + &
                   (finundated(c)*conc_ch4_sat(c,j) + (1._r8-finundated(c))*conc_ch4_unsat(c,j)) * &
