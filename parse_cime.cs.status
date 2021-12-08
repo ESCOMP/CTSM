@@ -302,6 +302,7 @@ sub print_categories {
    if ( ! -f $expectedfailfile ) {
       $expectedfailfile = "$scrdir/cime_config/testdefs/ExpectedTestFails.xml";
    }
+   my @failfiles = (  $expectedfailfile, "$scrdir/components/mizuRoute/cime_config/testdefs/ExpectedTestFails.xml" );
    my @passes;
    my @fails;
    my @pendings;
@@ -341,8 +342,10 @@ sub print_categories {
       print( "================================================================================\n" );
       foreach my $key ( @passes ) {
          my $expect = ""; 
-         `grep $key $expectedfailfile > /dev/null`;
-         if ( $? == 0 ) { $expect = "FAILED PREVIOUSLY"; }
+         foreach my $expectedfailfile ( @failfiles ) {
+            `grep $key $expectedfailfile > /dev/null`;
+            if ( $? == 0 ) { $expect = "FAILED PREVIOUSLY"; }
+         }
          print( "$key\t\t\t$expect\n" );
       }
    }
@@ -368,8 +371,10 @@ sub print_categories {
       print( "================================================================================\n" );
       foreach my $key ( @pendings ) {
          my $expect = ""; 
-         `grep $key $expectedfailfile > /dev/null`;
-         if ( $? == 0 ) { $expect = "EXPECTED"; }
+         foreach my $expectedfailfile ( @failfiles ) {
+            `grep $key $expectedfailfile > /dev/null`;
+            if ( $? == 0 ) { $expect = "EXPECTED"; }
+         }
          print( "$key\t\t$expect\n" );
       }
    }
@@ -379,8 +384,10 @@ sub print_categories {
       print( "================================================================================\n" );
       foreach my $key ( @fails ) {
          my $expect = ""; 
-         `grep $key $expectedfailfile > /dev/null`;
-         if ( $? == 0 ) { $expect = "EXPECTED"; }
+         foreach my $expectedfailfile ( @failfiles ) {
+            `grep $key $expectedfailfile > /dev/null`;
+            if ( $? == 0 ) { $expect = "EXPECTED"; }
+         }
          print( "$key\t\t$expect\n" );
       }
    }
