@@ -262,7 +262,7 @@ contains
     use clm_varctl         , only : use_subgrid_fluxes, use_snicar_frc, use_fates
     use CLMFatesInterfaceMod, only : hlm_fates_interface_type
     use landunit_varcon     , only : istsoil
-    use clm_varctl          , only : use_hillslope
+    use clm_varctl          , only : use_hillslope,downscale_hillslope_meteorology
 
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)            :: bounds             ! bounds
@@ -420,7 +420,7 @@ contains
     
     do c = bounds%begc,bounds%endc
        g = col%gridcell(c)
-       if (use_hillslope .and. lun%itype(col%landunit(c)) == istsoil) then
+       if (use_hillslope .and. downscale_hillslope_meteorology .and. lun%itype(col%landunit(c)) == istsoil) then
 ! calculate local incidence angle based on column slope and aspect
           zenith_angle = acos(coszen_grc(g))
           
