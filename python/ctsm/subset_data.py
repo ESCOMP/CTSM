@@ -97,6 +97,14 @@ from ctsm.site_and_regional.base_case import BaseCase
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 
+from ctsm.ctsm_logging import (
+    setup_logging_pre_config,
+    add_logging_args,
+    process_logging_args,
+)   
+    
+logger = logging.getLogger(__name__)
+
 myname = getuser()
 
 
@@ -572,6 +580,19 @@ class StreamToLogger(object):
 
 
 def main():
+
+    # -- add logging flags from ctsm_logging
+    setup_logging_pre_config()
+    parser = get_parser()
+    add_logging_args(parser)
+
+    args = parser.parse_args()
+
+    process_logging_args(args)
+
+    logger.info("hello!")
+    logger.debug("hello!")
+    exit()
 
     args = get_parser().parse_args()
 
