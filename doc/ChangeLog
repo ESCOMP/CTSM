@@ -1,4 +1,187 @@
 ===============================================================
+Tag name:  ctsm5.1.dev045
+Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Tue Jun 29 20:05:21 MDT 2021
+One-line Summary: Include CWD in heterotrophic respiration (HR)
+
+Purpose and description of changes
+----------------------------------
+
+ Params file sets the respiration fractions for CWD to zero:
+ rf_cwdl2_bgc = 0
+ rf_cwdl3_bgc = 0
+ The model has no code to handle rf_cwd* > 0. So...
+ - I have introduced cwdhr_col to track this HR the same way that we track
+ lithr_col for litter.
+ - I have removed if-statements that prevented CWD HR pools and decomposition
+ from writing to history.
+ - I have introduced a new test to the cheyenne test-suite that makes active
+ seven history fields pertaining to CWD HR and points to a params file with
+ rf_cwd* > 0. I have confirmed that the new test returns the new active
+ variables as greater than 0 when pointing to the new params file and equal
+ to 0 when pointing to the default params file.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+Issues fixed (include CTSM Issue #): #1361 #1417
+  Fixes #1361 -- HR fluxes don't include CWD
+  Fixes #1417 -- NoAnthro build-namelist test fails
+
+Notes of particular relevance for users
+---------------------------------------
+Substantial timing or memory changes: None
+ Total 17 MEMCOMP non-passes with the same warning as this one:
+ FAIL PFS_Ld20.f09_g17.I2000Clm50BgcCrop.cheyenne_intel MEMCOMP Error:
+ Memory usage increase > 10% from baseline
+
+ Total 5 TPUTCOMP non-passes with this warning:
+ TPUTCOMP: Computation time increase > 25% from baseline
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+ New test added to cheyenne test-suite:
+ ERS_Ld3.f10_f10_mg37.I2000Clm51Bgc.cheyenne_intel.clm-ciso_cwd_hr
+ Details in "Purpose and description of changes"
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+       cheyenne - OK (2 tests fail compare because of fix in #1417)
+
+     python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+       cheyenne - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK
+    izumi ------- OK
+  
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1400
+
+===============================================================
+===============================================================
+Tag name:  ctsm5.1.dev044
+Originator(s): mvertens (Mariana Vertenstein)
+Date:  Thu Jun 24 15:59:08 MDT 2021
+One-line Summary: New stream functionality when using NUOPC or LILAC
+
+Purpose and description of changes
+----------------------------------
+
+This tag creates new stream functionality when using the NUOPC and LILAC
+caps, and maintains backwards compatibility with the older CPL7 stream
+functionality when using the MCT cap.
+
+- New stream code has been placed in src/cpl/share_esmf (so that they
+  can also be leveraged by LILAC)
+- Older stream code for mct is now in src/cpl/mct
+- LILAC interface has been changed to leverage the new stream code as well
+
+Where possible share code was used. In particular, this holds for SatellitePhenologyMod.F90.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New mesh stream entries are needed now for NUOPC and LILAC compsets
+
+Substantial timing or memory changes: None for mct. For
+ERS_Ly3_P72x2_Vnuopc.f10_f10_mg37.IHistClm50BgcCropG.cheyenne_intel.clm-cropMonthOutput,
+overall run time is slightly less than the baseline - probably within
+machine variability. A more careful investigation would be needed to
+determine if the CDEPS streams have changed performance significantly
+relative to the MCT-based streams, but the overall timing suggests that
+there probably aren't *large* differences.
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- ok
+    izumi ------- ok
+
+  Ran most testing on eb696be8d; from this hash, there were FIELDLIST
+  diffs for SP cases. Reran the tests with FIELDLIST diffs from the
+  final version and generated new, fixed baselines.
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: YES, just for NUOPC/LILAC configurations
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: NUOPC/LILAC
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      Larger than roundoff / same climate. Diffs arise due to changes in
+      the interpolation used in cdeps streams vs. the old mct-based
+      streams. Diffs generally keep 3-4 digits of equivalence or better.
+
+Other details
+-------------
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+- cime: cime5.8.47 -> branch_tags/cime5.8.47_a01
+- cdeps: cdeps0.12.4 -> cdeps0.12.11
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/escomp/ctsm/issues/1356
+
+===============================================================
+===============================================================
 Tag name:  ctsm5.1.dev043
 Originator(s):  slevis/ekluzek (Samuel Levis,SLevis Consulting,303-665-1310)
 Date: Thu Jun  3 17:14:30 MDT 2021

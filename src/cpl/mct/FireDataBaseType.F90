@@ -156,7 +156,7 @@ contains
    !
    ! !ARGUMENTS:
    implicit none
-   class(fire_base_type)       :: this
+   class(fire_base_type)         :: this
    type(bounds_type), intent(in) :: bounds
    character(len=*),  intent(in) :: NLFilename   ! Namelist filename
    !
@@ -170,6 +170,8 @@ contains
    character(len=CL)  :: stream_fldFileName_popdens  ! population density streams filename
    character(len=CL)  :: popdensmapalgo = 'bilinear' ! mapping alogrithm for population density
    character(len=CL)  :: popdens_tintalgo = 'nearest'! time interpolation alogrithm for population density
+   character(len=CL)  :: stream_meshfile_popdens     ! not used
+
    character(*), parameter :: subName = "('hdmdyn_init')"
    character(*), parameter :: F00 = "('(hdmdyn_init) ',4a)"
    !-----------------------------------------------------------------------
@@ -180,6 +182,7 @@ contains
         model_year_align_popdens,   &
         popdensmapalgo,             &
         stream_fldFileName_popdens, &
+        stream_meshfile_popdens   , &
         popdens_tintalgo
 
    ! Default values for namelist
