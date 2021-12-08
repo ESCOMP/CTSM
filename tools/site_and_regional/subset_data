@@ -6,12 +6,8 @@ The original code (subset_data.py) is located under
 python/ctsm folder.
 For full instructions on how to run the code and different options,
 please check python/ctsm/subset_data.py file.
-
 This script extracts domain files, surface dataset, and DATM files
 at either a single point or a region using the global dataset.
-
-
-
 To see all available options for single-point subsetting:
     ./subset_data point --help
 To see all available options for region subsetting:

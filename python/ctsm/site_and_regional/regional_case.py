@@ -70,7 +70,8 @@ class RegionalCase(BaseCase):
         print("Creating surface dataset file at region:", self.tag)
         # create 1d coordinate variables to enable sel() method
         filename = self.fsurf_in
-        f2 = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f2 = self.create_1d_coord(
+            filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f2["lat"]
         lon = f2["lon"]
         # subset longitude and latitude arrays
@@ -93,7 +94,8 @@ class RegionalCase(BaseCase):
         # print ("Creating surface dataset file at region", self.lon1+"-"+self.lat2,self.lat1+"-"+self.lat2)
         print("Creating surface dataset file at region:", self.tag)
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f2 = self.create_1d_coord(
+            self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f2["lat"]
         lon = f2["lon"]
         # subset longitude and latitude arrays

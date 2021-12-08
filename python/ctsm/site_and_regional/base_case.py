@@ -12,9 +12,7 @@ myname = getuser()
 class BaseCase:
     """
     Parent class to SinglePointCase and RegionalCase
-
     ...
-
     Attributes
     ----------
     create_domain : bool
@@ -25,12 +23,10 @@ class BaseCase:
         flag for creating landuse file
     create_datm : bool
         flag for creating DATM files
-
     Methods
     -------
     create_1d_coord(filename, lon_varname , lat_varname,x_dim , y_dim )
         create 1d coordinate variables to enable sel() method
-
     add_tag_to_filename(filename, tag)
        add a tag and timetag to a filename ending with
        [._]cYYMMDD.nc or [._]YYMMDD.nc
@@ -136,7 +132,8 @@ class BaseCase:
         """
         try:
             sha = (
-                subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+                subprocess.check_output(
+                    ["git", "rev-parse", "--short", "HEAD"])
                 .strip()
                 .decode()
             )

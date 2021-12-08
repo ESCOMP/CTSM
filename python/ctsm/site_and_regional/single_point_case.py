@@ -8,9 +8,7 @@ from datetime import date
 class SinglePointCase(BaseCase):
     """
     A case to encapsulate single point cases.
-
     ...
-
     Attributes
     ----------
     plat : float
@@ -19,13 +17,11 @@ class SinglePointCase(BaseCase):
         longitude
     site_name: str -- default = None
         Site name
-
     Methods
     -------
     create_tag
         create a tag for single point which is the site name
         or the "lon-lat" format if the site name does not exist.
-
     create_domain_at_point
         Create domain file at a single point.
     create_landuse_at_point:
@@ -118,7 +114,8 @@ class SinglePointCase(BaseCase):
         print("----------------------------------------------------------------------")
         print("Creating landuse file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f2 = self.create_1d_coord(
+            self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
 
@@ -131,7 +128,8 @@ class SinglePointCase(BaseCase):
 
         # revert expand dimensions of YEAR
         year = np.squeeze(np.asarray(f3["YEAR"]))
-        x = xr.DataArray(year, coords={"time": f3["time"]}, dims="time", name="YEAR")
+        x = xr.DataArray(
+            year, coords={"time": f3["time"]}, dims="time", name="YEAR")
         x.attrs["units"] = "unitless"
         x.attrs["long_name"] = "Year of PFT data"
         f3["YEAR"] = x
@@ -152,11 +150,16 @@ class SinglePointCase(BaseCase):
         print("Creating surface dataset file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
         filename = self.fsurf_in
-        f2 = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f2 = self.create_1d_coord(
+            filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         # extract gridcell closest to plon/plat
         f3 = f2.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
         # expand dimensions
         f3 = f3.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
+
+        # update the plon and plat to match the surface data
+        self.plat = f3.coords['lsmlat'].values[0]
+        self.plon = f3.coords['lsmlon'].values[0]
 
         # modify surface data properties
         if self.overwrite_single_pft:
@@ -243,20 +246,33 @@ class SinglePointCase(BaseCase):
         f2.close()
         f3.close()
 
-    def create_datm_at_point(self):
+    def write_shell_commands(self, file):
+        # writes out shell commands for single-point runs
+
+        file.write('! Change below line if you move the user mods')
+        file.write('\n' + './xmlchange CLM_USRDAT_DIR=' + self.out_dir + '\n')
+        file.write('\n' + "./xmlchange PTS_LON=" + str(self.plon) + '\n')
+        file.write('\n' + "./xmlchange PTS_LAT=" + str(self.plat) + '\n')
+        file.write('\n' + "./xmlchange MPILIB=mpi-serial" + '\n')
+        file.close()
+
+    def write_nl_commands(self, streamname, file):
+        line_mapalgo = streamname + ':mapalgo=none'
+        line_meshfile = streamname + ':meshfile=none'
+
+        file.write("\n" + line_meshfile + "\n")
+        file.write("\n" + line_mapalgo + "\n")
+
+    def create_datm_at_point(self, create_user_mods, datm_streams_file):
         print("----------------------------------------------------------------------")
         print("Creating DATM files at ", self.plon, self.plat, ".")
-        # --  specify subdirectory names and filename prefixes
-        solrdir = "Solar/"
-        precdir = "Precip/"
-        tpqwldir = "TPHWL/"
-        prectag = "clmforc.GSWP3.c2011.0.5x0.5.Prec."
-        solrtag = "clmforc.GSWP3.c2011.0.5x0.5.Solr."
-        tpqwtag = "clmforc.GSWP3.c2011.0.5x0.5.TPQWL."
 
         # --  create data files
         infile = []
         outfile = []
+        solarfiles = []
+        precfiles = []
+        tpqwfiles = []
         for y in range(self.datm_syr, self.datm_eyr + 1):
             ystr = str(y)
             for m in range(1, 13):
@@ -266,17 +282,18 @@ class SinglePointCase(BaseCase):
 
                 dtag = ystr + "-" + mstr
 
-                fsolar = self.dir_input_datm + solrdir + solrtag + dtag + ".nc"
-                fsolar2 = self.dir_output_datm + solrtag + self.tag + "." + dtag + ".nc"
-                fprecip = self.dir_input_datm + precdir + prectag + dtag + ".nc"
-                fprecip2 = (
-                    self.dir_output_datm + prectag + self.tag + "." + dtag + ".nc"
-                )
-                ftpqw = self.dir_input_datm + tpqwldir + tpqwtag + dtag + ".nc"
-                ftpqw2 = self.dir_output_datm + tpqwtag + self.tag + "." + dtag + ".nc"
+                fsolar = os.path.join(self.dir_input_datm, self.dir_solar, self.tag_solar + dtag + ".nc")
+                fsolar2 = os.path.join(self.dir_output_datm, self.tag_solar + self.tag + "." + dtag + ".nc")
+                fprecip = os.path.join(self.dir_input_datm, self.dir_prec, self.tag_prec + dtag + ".nc")
+                fprecip2 = os.path.join(self.dir_output_datm, self.tag_prec + self.tag + "." + dtag + ".nc")
+                ftpqw = os.path.join(self.dir_input_datm, self.dir_tpqw, self.tag_tpqw + dtag + ".nc")
+                ftpqw2 = os.path.join(self.dir_output_datm, self.tag_tpqw + self.tag + "." + dtag + ".nc")
 
                 infile += [fsolar, fprecip, ftpqw]
                 outfile += [fsolar2, fprecip2, ftpqw2]
+                solarfiles.append(fsolar2)
+                precfiles.append(fprecip2)
+                tpqwfiles.append(ftpqw2)
 
         nm = len(infile)
         for n in range(nm):
@@ -286,3 +303,16 @@ class SinglePointCase(BaseCase):
             self.extract_datm_at(file_in, file_out)
 
         print("All DATM files are created in: " + self.dir_output_datm)
+
+        if create_user_mods:
+            solarfile_line = self.name_solar + ':datafiles=' + ','.join(solarfiles)
+            precfile_line = self.name_prec + ':datafiles=' + ','.join(precfiles)
+            tpqwfile_line = self.name_tpqw + ':datafiles=' + ','.join(tpqwfiles)
+
+            with open(datm_streams_file, 'a') as user_nl_file:
+                user_nl_file.write('\n' + solarfile_line + '\n')
+                self.write_nl_commands(self.name_solar, user_nl_file)
+                user_nl_file.write('\n' + precfile_line + '\n')
+                self.write_nl_commands(self.name_prec, user_nl_file)
+                user_nl_file.write('\n' + tpqwfile_line + '\n')
+                self.write_nl_commands(self.name_tpqw, user_nl_file)
