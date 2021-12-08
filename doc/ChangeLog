@@ -99,7 +99,7 @@ infrastructure should be run when appropriate, as described below.
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    (any machine) - ./run_ctsm_py_tests PASS on cheyenne
+    (any machine) - ./run_ctsm_py_tests PASS on cheyenne and on izumi
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
