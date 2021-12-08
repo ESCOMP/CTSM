@@ -27,6 +27,11 @@ then that is a sign that you may not have Git LFS installed. You can first try
 running "git lfs pull". If that doesn't work, then install Git LFS as documented
 above.
 
+When you have new large files to commit, use the usual syntax of adding and
+committing:
+git add <filename>
+git commit
+
 For more information on using Git LFS with CTSM, search for lfs here:
 <https://github.com/ESCOMP/CTSM/wiki/Directions-for-editing-CLM-documentation-on-github-and-sphinx>.
 Most of the notes about using Git LFS for the documentation's image files apply
