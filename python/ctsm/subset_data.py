@@ -528,17 +528,17 @@ def main():
     # --  Specify input and output directories and files
 
     # top-level output directory
-    if not os.path.isdir(args.dir_output):
-        os.mkdir(args.dir_output)
+    if not os.path.isdir(args.outdir):
+        os.mkdir(args.outdir)
 
     # datm data
     dir_output_datm = "datmdata"
     dir_input_datm = defaults.get('datm_gswp3', 'dir')
     if args.create_datm:
-        if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
-            os.mkdir(os.path.join(args.out_dir, dir_output_datm))
+        if not os.path.isdir(os.path.join(args.outdir, dir_output_datm)):
+            os.mkdir(os.path.join(args.outdir, dir_output_datm))
         print("dir_input_datm  : ", dir_input_datm)
-        print("dir_output_datm : ", os.path.join(args.out_dir, dir_output_datm))
+        print("dir_output_datm : ", os.path.join(args.outdir, dir_output_datm))
 
     # -- Set up user mods directories and base files
     if args.create_user_mods:
