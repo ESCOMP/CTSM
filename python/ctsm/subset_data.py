@@ -592,9 +592,6 @@ def main():
 
     logger.info("hello!")
     logger.debug("hello!")
-    exit()
-
-    args = get_parser().parse_args()
 
     # --------------------------------- #
 
@@ -603,22 +600,22 @@ def main():
 
     pwd = os.getcwd()
 
-    log_file = os.path.join(pwd, today_string + ".log")
+    #log_file = os.path.join(pwd, today_string + ".log")
 
-    log_level = logging.DEBUG
-    setup_logging(log_file, log_level)
-    log = logging.getLogger(__name__)
+    #log_level = logging.DEBUG
+    #setup_logging(log_file, log_level)
+    #log = logging.getLogger(__name__)
 
-    print("User = " + myname)
-    print("Current directory = " + pwd)
+    logging.info("User = " + myname)
+    logging.info("Current directory = " + pwd)
 
     # --------------------------------- #
 
     if args.run_type == "point":
-        print(
+        logging.info(
             "----------------------------------------------------------------------------"
         )
-        print(
+        logging.info(
             "This script extracts a single point from the global CTSM inputdata datasets."
         )
 
@@ -665,7 +662,7 @@ def main():
         )
         single_point.create_tag()
 
-        print(single_point)
+        logging.debug(single_point)
         # output_to_logger (single_point)
 
         if crop_flag:
@@ -673,7 +670,7 @@ def main():
         else:
             num_pft = "16"
 
-        print("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
+        logging.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
 
         # --  Set input and output filenames
         # --  Specify input and output directories
@@ -686,12 +683,14 @@ def main():
         dir_input_datm = os.path.join(
             dir_clm_forcedata, "atm_forcing.datm7.GSWP3.0.5d.v1.c170516/"
         )
+
         dir_output_datm = os.path.join(dir_output, "datmdata/")
+        # -- create output dir if it does not exist
         if not os.path.isdir(dir_output_datm):
             os.mkdir(dir_output_datm)
 
-        print("dir_input_datm  : ", dir_input_datm)  #
-        print("dir_output_datm : ", dir_output_datm)  #
+        logging.info("dir_input_datm  : "+ dir_input_datm)  #
+        logging.info("dir_output_datm : "+ dir_output_datm)  #
 
         # --  Set time stamp
         today = date.today()
@@ -706,8 +705,8 @@ def main():
         )
         single_point.fdomain_in = fdomain_in
         single_point.fdomain_out = fdomain_out
-        print("fdomain_in  :", fdomain_in)  #
-        print("fdomain_out :", fdomain_out)  #
+        logging.info("fdomain_in  : "+ fdomain_in)  #
+        logging.info("fdomain_out : "+ fdomain_out)  #
 
         # --  Specify surface data file  --------------------------------
         if crop_flag:
@@ -727,8 +726,9 @@ def main():
         )
         single_point.fsurf_in = fsurf_in
         single_point.fsurf_out = fsurf_out
-        print("fsurf_in   :", fsurf_in)  #
-        print("fsurf_out  :", fsurf_out)  #
+
+        logging.info("fsurf_in   : "+ fsurf_in)  #
+        logging.info("fsurf_out  : "+ fsurf_out)  #
 
         # --  Specify landuse file  -------------------------------------
         if crop_flag:
@@ -747,8 +747,8 @@ def main():
         )
         single_point.fluse_in = fluse_in
         single_point.fluse_out = fluse_out
-        print("fluse_in   :", fluse_in)  #
-        print("fluse_out  :", fluse_out)  #
+        logging.info("fluse_in   : "+ fluse_in)  #
+        logging.info("fluse_out  : "+ fluse_out)  #
 
         # --  Specify datm domain file  ---------------------------------
         fdatmdomain_in = os.path.join(
@@ -760,8 +760,8 @@ def main():
         )
         single_point.fdatmdomain_in = fdatmdomain_in
         single_point.fdatmdomain_out = fdatmdomain_out
-        print("fdatmdomain_in   : ", fdatmdomain_in)  #
-        print("fdatmdomain out  : ", fdatmdomain_out)  #
+        logging.info("fdatmdomain_in   : "+ fdatmdomain_in)  #
+        logging.info("fdatmdomain out  : "+ fdatmdomain_out)  #
 
         # --  Create CTSM domain file
         if create_domain:
@@ -784,11 +784,11 @@ def main():
             single_point.dir_output_datm = dir_output_datm
             single_point.create_datm_at_point()
 
-        print("Successfully ran script for single point.")
+        logging.info("Successfully ran script for single point.")
         exit()
 
     elif args.run_type == "reg":
-        print("Running the script for the region")
+        logging.info("Running the script for the region")
         # --  Specify region to extract
         lat1 = args.lat1
         lat2 = args.lat2
@@ -821,14 +821,14 @@ def main():
             create_datm,
         )
 
-        print(region)
+        logging.debug(region)
 
         if crop_flag:
             num_pft = "78"
         else:
             num_pft = "16"
 
-        print(" crop_flag = " + crop_flag.__str__() + " num_pft =" + num_pft)
+        logging.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
 
         region.create_tag()
 
@@ -846,7 +846,7 @@ def main():
         x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
         x = x2.communicate()
         timetag = x[0].strip()
-        print(timetag)
+        logging.info(timetag)
 
         # --  Specify land domain file  ---------------------------------
         fdomain_in = (
@@ -898,7 +898,7 @@ def main():
         # --  Create CTSM transient landuse data file
         if create_landuse:
             region.create_landuse_at_reg()
-        print("Successfully ran script for a regional case.")
+        logging.info("Successfully ran script for a regional case.")
 
     else:
         # print help when no option is chosen

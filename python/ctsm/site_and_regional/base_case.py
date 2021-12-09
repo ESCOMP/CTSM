@@ -1,4 +1,5 @@
 import os
+import logging
 import numpy as np
 import xarray as xr
 import subprocess
@@ -8,6 +9,7 @@ from getpass import getuser
 
 myname = getuser()
 
+logger = logging.getLogger(__name__)
 
 class BaseCase:
     """
@@ -62,7 +64,7 @@ class BaseCase:
         x_dim: dimension name in X -- lon
         y_dim: dimension name in Y -- lat
         """
-        print("Open file: " + filename)
+        logging.debug("Open file: " + filename)
         f1 = xr.open_dataset(filename)
 
         # create 1d coordinate variables to enable sel() method
@@ -90,7 +92,7 @@ class BaseCase:
         if basename[cend] == "c":
             cend = cend - 1
         if (basename[cend] != ".") and (basename[cend] != "_"):
-            print("Trouble figuring out where to add tag to filename:" + filename)
+            logging.error("Trouble figuring out where to add tag to filename:" + filename)
             os.abort()
         today = date.today()
         today_string = today.strftime("%y%m%d")
@@ -123,7 +125,7 @@ class BaseCase:
 
         for attr in del_attrs:
             if attr in attr_list:
-                # print ("This attr should be deleted:", attr)
+                logging.debug ("This attr should be deleted : "+ attr)
                 del nc.attrs[attr]
 
         # for attr, value in attr_list.items():
