@@ -46,6 +46,7 @@ class SinglePointCase(BaseCase):
         zero_nonveg_landunits,
         uniform_snowpack,
         no_saturation_excess,
+        output_dir
     ):
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
         self.plat = plat
@@ -56,6 +57,7 @@ class SinglePointCase(BaseCase):
         self.zero_nonveg_landunits = zero_nonveg_landunits
         self.uniform_snowpack = uniform_snowpack
         self.no_saturation_excess = no_saturation_excess
+        self.output_dir = output_dir
 
     def create_tag(self):
         if self.site_name:
@@ -104,7 +106,7 @@ class SinglePointCase(BaseCase):
         self.update_metadata(f3)
         f3.attrs["Created_from"] = self.fdomain_in
 
-        wfile = self.fdomain_out
+        wfile = os.path.join(self.output_dir, self.fdomain_out)
         f3.to_netcdf(path=wfile, mode="w")
         print("Successfully created file (fdomain_out)" + self.fdomain_out)
         f2.close()
@@ -138,7 +140,7 @@ class SinglePointCase(BaseCase):
         self.update_metadata(f3)
         f3.attrs["Created_from"] = self.fluse_in
 
-        wfile = self.fluse_out
+        wfile = os.path.join(self.output_dir, self.fluse_out)
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode="w")
         print("Successfully created file (luse_out)" + self.fluse_out, ".")
@@ -149,7 +151,7 @@ class SinglePointCase(BaseCase):
         print("----------------------------------------------------------------------")
         print("Creating surface dataset file at ", self.plon, self.plat, ".")
         # create 1d coordinate variables to enable sel() method
-        filename = self.fsurf_in
+        filename = os.path.join(self.output_dir, self.fsurf_in)
         f2 = self.create_1d_coord(
             filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         # extract gridcell closest to plon/plat
@@ -249,7 +251,7 @@ class SinglePointCase(BaseCase):
     def write_shell_commands(self, file):
         # writes out shell commands for single-point runs
 
-        file.write('! Change below line if you move the user mods')
+        file.write('! Change below line if you move the subset data directory')
         file.write('\n' + './xmlchange CLM_USRDAT_DIR=' + self.out_dir + '\n')
         file.write('\n' + "./xmlchange PTS_LON=" + str(self.plon) + '\n')
         file.write('\n' + "./xmlchange PTS_LAT=" + str(self.plat) + '\n')
@@ -282,18 +284,20 @@ class SinglePointCase(BaseCase):
 
                 dtag = ystr + "-" + mstr
 
-                fsolar = os.path.join(self.dir_input_datm, self.dir_solar, self.tag_solar + dtag + ".nc")
-                fsolar2 = os.path.join(self.dir_output_datm, self.tag_solar + self.tag + "." + dtag + ".nc")
+                fsolar = os.path.join(self.dir_solar, self.tag_solar + dtag + ".nc")
+                fsolar2 = os.path.join(self.tag_solar + self.tag + "." + dtag + ".nc")
                 fprecip = os.path.join(self.dir_input_datm, self.dir_prec, self.tag_prec + dtag + ".nc")
-                fprecip2 = os.path.join(self.dir_output_datm, self.tag_prec + self.tag + "." + dtag + ".nc")
+                fprecip2 = os.path.join(self.tag_prec + self.tag + "." + dtag + ".nc")
                 ftpqw = os.path.join(self.dir_input_datm, self.dir_tpqw, self.tag_tpqw + dtag + ".nc")
-                ftpqw2 = os.path.join(self.dir_output_datm, self.tag_tpqw + self.tag + "." + dtag + ".nc")
+                ftpqw2 = os.path.join(self.tag_tpqw + self.tag + "." + dtag + ".nc")
 
+                outdir = os.path.join(self.output_dir, self.dir_output_datm)
                 infile += [fsolar, fprecip, ftpqw]
-                outfile += [fsolar2, fprecip2, ftpqw2]
-                solarfiles.append(fsolar2)
-                precfiles.append(fprecip2)
-                tpqwfiles.append(ftpqw2)
+                outfile += [os.path.join(outdir, fsolar2), os.path.join(outdir, fprecip2),
+                            os.path.join(outdir, ftpqw2)]
+                solarfiles.append(os.path.join("$CLM_USRDAT_DIR", self.dir_output_dtam, fsolar2))
+                precfiles.append(os.path.join("$CLM_USRDAT_DIR", self.dir_output_dtam, fprecip2))
+                tpqwfiles.append(os.path.join("$CLM_USRDAT_DIR", self.dir_output_dtam, ftpqw2))
 
         nm = len(infile)
         for n in range(nm):
@@ -302,8 +306,9 @@ class SinglePointCase(BaseCase):
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
-        print("All DATM files are created in: " + self.dir_output_datm)
+        print("All DATM files are created in: " + outdir)
 
+        # write to user_nl_datm_streams if specified
         if create_user_mods:
             solarfile_line = self.name_solar + ':datafiles=' + ','.join(solarfiles)
             precfile_line = self.name_prec + ':datafiles=' + ','.join(precfiles)
