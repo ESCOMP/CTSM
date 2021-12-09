@@ -21,11 +21,9 @@ class ModifyFsurdat:
     -----------
     """
 
-    def __init__(self, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file):
+    def __init__(self, my_data, lon_1, lon_2, lat_1, lat_2, landmask_file):
 
-        logger.info(
-            'Opening fsurdat_in file to be modified: %s', fsurdat_in)
-        self.file = xr.open_dataset(fsurdat_in)
+        self.file = my_data
 
         self.not_rectangle = self._get_not_rectangle(
             lon_1=lon_1, lon_2=lon_2,
@@ -38,6 +36,13 @@ class ModifyFsurdat:
             self._landmask_file = xr.open_dataset(landmask_file)
             rectangle = self._landmask_file.landmask
             self.not_rectangle = np.logical_not(rectangle)
+
+
+    @classmethod
+    def init_from_file(cls, fsurdat_in, lon_1, lon_2, lat_1, lat_2, landmask_file):
+        logger.info( 'Opening fsurdat_in file to be modified: %s', fsurdat_in)
+        my_file = xr.open_dataset(fsurdat_in)
+        return cls(my_file, lon_1, lon_2, lat_1, lat_2, landmask_file)
 
 
     @staticmethod

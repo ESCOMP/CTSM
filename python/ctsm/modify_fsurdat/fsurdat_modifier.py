@@ -94,9 +94,8 @@ def main ():
         convert_to_type=float, can_be_unset=True)
 
     # Create ModifyFsurdat object
-    modify_fsurdat = ModifyFsurdat(fsurdat_in, lon_1=lnd_lon_1,
-        lon_2=lnd_lon_2, lat_1=lnd_lat_1, lat_2=lnd_lat_2,
-        landmask_file=landmask_file)
+    modify_fsurdat = ModifyFsurdat.init_from_file(fsurdat_in,
+        lnd_lon_1, lnd_lon_2, lnd_lat_1, lnd_lat_2, landmask_file)
 
     # ------------------------------
     # modify surface data properties
