@@ -23,7 +23,7 @@ PYLINT_ARGS=-j 4 --rcfile=ctsm/.pylintrc
 PYLINT_SRC = \
 	ctsm
 
-all: test lint
+all: test lint black
 test: utest stest
 
 .PHONY: utest
@@ -37,6 +37,10 @@ stest: FORCE
 .PHONY: lint
 lint: FORCE
 	$(PYLINT) $(PYLINT_ARGS) $(PYLINT_SRC)
+
+.PHONY: black
+black: FORCE
+	black $(PYLINT_SRC)
 
 .PHONY: clean
 clean: FORCE
