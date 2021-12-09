@@ -1,4 +1,63 @@
 ===============================================================
+Tag name: ctsm5.1.dev066
+Originator(s): rgknox (Ryan Knox,,,)
+Date: Sat Dec  4 01:58:42 MST 2021
+One-line Summary: API change with FATES to enable running means inside fates, includes passing in of model timestep
+
+Purpose and description of changes
+----------------------------------
+
+This set of changes synchronizes CTSM with API 20 of FATES.  API 20 of FATES requires a modification to timing boundary conditions so that FATES can maintain its own internal running means.  FATES also no-longer asks CTSM for the 24hour vegetation temperature, since this is a patch(pft) level variable, and FATES has more suitable averaging mechanisms.  These changes are synchronized with FATES Pull Request: https://github.com/NGEET/fates/pull/724, which subsequently created tag: https://github.com/NGEET/fates/releases/tag/sci.1.52.0_api.20.0.0
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+[x] clm_fates
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Developers should be aware that FATES does require information on the model timestep, which was not necessarily available in initialize1. Efforts were made to circumvent needing the model timetep at this phase of initialization, so impact on non-fates code was minimal.
+
+
+Testing summary:
+----------------
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ----  PASS (fates had expectedly different results compared to base) 
+    izumi -------  PASS (fates had expectedly different results compared to base)
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ---- PASS (fates had expectedly different results compared to base) 
+    izumi -------
+
+
+   Additional tests:
+	Multi-decadal simulations were also run to evaluate fates side sensitivity to slightly different averaging scheme. The differences were not so subtle, attributed mostly to fixing an initialization bug (the previous 24hour temperature had initialized at 0K) and a 1-hour phase change in the 24-hour start-stop cycle.
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:  all FATES active simulations have different results.
+
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev065
 Originator(s): glemieux (Gregory Lemieux,LBL/NGEET,510-486-5049)
 Date: Thu Dec  2 00:13:37 MST 2021
