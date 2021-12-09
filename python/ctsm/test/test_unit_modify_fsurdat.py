@@ -12,7 +12,7 @@ from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable; in pylint can use: disable=invalid-name
 
-class TestFsurdatModifier(unittest.TestCase):
+class TestModifyFsurdat(unittest.TestCase):
 
     def test_handleConfigValue_UnsetCantBeUnset(self):
         """
