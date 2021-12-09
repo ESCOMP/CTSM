@@ -63,14 +63,14 @@ class TestModifyFsurdat(unittest.TestCase):
 
         # test setvar
         modify_fsurdat.setvar_lev0('LONGXY', val_for_rectangle)
-        self.assertTrue(modify_fsurdat.file.LONGXY.equals(comp_lev0))
+        np.array_equal(modify_fsurdat.file.LONGXY, comp_lev0)
 
         modify_fsurdat.setvar_lev1('var_lev1', val_for_rectangle, cols-1)
-        self.assertTrue(modify_fsurdat.file.var_lev1.equals(comp_lev1))
+        np.array_equal(modify_fsurdat.file.var_lev1, comp_lev1)
 
-        modify_fsurdat.setvar_lev2('var_lev2', val_for_rectangle,
-                                   cols-1, rows-1)
-        self.assertTrue(modify_fsurdat.file.var_lev2.equals(comp_lev2))
+        modify_fsurdat.setvar_lev2('var_lev2', val_for_rectangle, cols-1,
+                                                                  rows-1)
+        np.array_equal(modify_fsurdat.file.var_lev2, comp_lev2)
 
     def test_getNotRectangle_lon1leLon2Lat1leLat2(self):
         """
@@ -104,7 +104,7 @@ class TestModifyFsurdat(unittest.TestCase):
         # I have chosen the lon/lat ranges to match their corresponding index
         # values to keep this simple
         compare[lat_1-min_lat:lat_2-min_lat+1, lon_1-min_lon:lon_2-min_lon+1] = 0
-        self.assertIsNone(np.testing.assert_array_equal(not_rectangle, compare))
+        np.any(np.not_equal(not_rectangle, compare))
 
     def test_getNotRectangle_lon1leLon2Lat1gtLat2(self):
         """
@@ -142,7 +142,7 @@ class TestModifyFsurdat(unittest.TestCase):
         # values to keep this simple
         compare[:lat_2-min_lat+1, lon_1-min_lon:lon_2-min_lon+1] = 0
         compare[lat_1-min_lat:, lon_1-min_lon:lon_2-min_lon+1] = 0
-        self.assertIsNone(np.testing.assert_array_equal(not_rectangle, compare))
+        np.any(np.not_equal(not_rectangle, compare))
 
     def test_getNotRectangle_lon1gtLon2Lat1leLat2(self):
         """
@@ -180,7 +180,7 @@ class TestModifyFsurdat(unittest.TestCase):
         # values to keep this simple
         compare[lat_1-min_lat:lat_2-min_lat+1, :lon_2-min_lon+1] = 0
         compare[lat_1-min_lat:lat_2-min_lat+1, lon_1-min_lon:] = 0
-        self.assertIsNone(np.testing.assert_array_equal(not_rectangle, compare))
+        np.any(np.not_equal(not_rectangle, compare))
 
     def test_getNotRectangle_lon1gtLon2Lat1gtLat2(self):
         """
@@ -220,7 +220,7 @@ class TestModifyFsurdat(unittest.TestCase):
         compare[:lat_2-min_lat+1, lon_1-min_lon:] = 0
         compare[lat_1-min_lat:, :lon_2-min_lon+1] = 0
         compare[lat_1-min_lat:, lon_1-min_lon:] = 0
-        self.assertIsNone(np.testing.assert_array_equal(not_rectangle, compare))
+        np.any(np.not_equal(not_rectangle, compare))
 
     def test_getNotRectangle_lonsStraddle0deg(self):
         """
@@ -260,7 +260,7 @@ class TestModifyFsurdat(unittest.TestCase):
         compare[:lat_2-min_lat+1, lon_1-min_lon:] = 0
         compare[lat_1-min_lat:, :lon_2-min_lon+1] = 0
         compare[lat_1-min_lat:, lon_1-min_lon:] = 0
-        self.assertIsNone(np.testing.assert_array_equal(not_rectangle, compare))
+        np.any(np.not_equal(not_rectangle, compare))
 
     def test_getNotRectangle_latsOutOfBounds(self):
         """
@@ -298,18 +298,18 @@ class TestModifyFsurdat(unittest.TestCase):
         long = np.arange(_min_lon, _max_lon + 1)
         long = [lon_range_0_to_360(longitude) for longitude in long]
         longxy = long * np.ones((rows,cols))
-        compare = np.repeat([long], rows, axis=0)  # alternative way to form
+        compare = np.repeat([long], rows, axis=1)  # alternative way to form
         # assert this to confirm intuitive understanding of these matrices
-        self.assertIsNone(np.testing.assert_array_equal(longxy, compare))
+        np.array_equal(longxy, compare)
 
         lati = np.arange(_min_lat, _max_lat + 1)
         self.assertEqual(min(lati), _min_lat)
         self.assertEqual(max(lati), _max_lat)
         latixy_transp = lati * np.ones((cols,rows))
+        latixy = np.transpose(latixy_transp)
         compare = np.repeat([lati], cols, axis=0)  # alternative way to form
         # assert this to confirm intuitive understanding of these matrices
-        self.assertIsNone(np.testing.assert_array_equal(latixy_transp, compare))
-        latixy = np.transpose(latixy_transp)
+        np.array_equal(latixy, compare)
 
         return longxy, latixy, cols, rows
 
