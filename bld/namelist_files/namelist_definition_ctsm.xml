@@ -116,6 +116,14 @@ This means that computations will be run even over these 0-weight points.
 THIS IS ONLY FOR TESTING PURPOSES - IT HAS NOT BEEN CHECKED FOR SCIENTIFIC VALIDITY.
 </entry>
 
+<entry id="force_send_to_atm"
+       type="logical"
+       category="drv_physics"
+       group="ctsm_nuopc_cap"
+       valid_values="" >
+If TRUE (which is the default), send the expcrt state for the nuopc driver to the ATM even if running with a data ATM
+</entry>
+
 <entry id="organic_frac_squared" type="logical" category="clm_physics"
        group="clm_soilstate_inparm" valid_values="" >
 If TRUE, square the organic fraction when it's used (as was done in CLM4.5)
@@ -641,7 +649,7 @@ Switch deciding which nutrient model to use in FATES.
 </entry>
 
 <entry id="fates_spitfire_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="0,1,2,3,4" value=".false.">
+        group="clm_inparm" valid_values="0,1,2,3,4,5" value=".false.">
 Turn on spitfire module to simulate fire by setting fates_spitfire_mode > 0.
 Allowed values are:
  0 : Simulations of fire are off
@@ -649,6 +657,7 @@ Allowed values are:
  2 : use an external lightning dataset. 
  3 : use an external confirmed ignitions dataset (not available through standard CSEM dataset collection).
  4 : use external lightning and population datasets to simulate both natural and anthropogenic
+ 5 : use gross domestic production and population datasets to simulate anthropogenic fire supression
 ignitions.
 (Only relevant if FATES is on)
 </entry>
