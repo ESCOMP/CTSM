@@ -51,7 +51,7 @@ class SinglePointCase(BaseCase):
         dominant_pft,
         zero_nonveg_landunits,
         uniform_snowpack,
-        no_saturation_excess,
+        saturation_excess,
     ):
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
         self.plat = plat
@@ -61,7 +61,7 @@ class SinglePointCase(BaseCase):
         self.dominant_pft = dominant_pft
         self.zero_nonveg_landunits = zero_nonveg_landunits
         self.uniform_snowpack = uniform_snowpack
-        self.no_saturation_excess = no_saturation_excess
+        self.saturation_excess = saturation_excess
 
     def create_tag(self):
         if self.site_name:
@@ -176,7 +176,7 @@ class SinglePointCase(BaseCase):
             f3["PCT_GLACIER"][:, :] = 0.0
         if self.uniform_snowpack:
             f3["STD_ELEV"][:, :] = 20.0
-        if self.no_saturation_excess:
+        if not self.saturation_excess:
             f3["FMAX"][:, :] = 0.0
 
         # specify dimension order
