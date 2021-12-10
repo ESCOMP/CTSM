@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev0??
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Tue Dec  7 12:14:14 MST 2021
+Date:  Tue Dec 10 10:00:14 MST 2021
 One-line Summary: Adding fsurdat_modifier tool
 
 Purpose and description of changes
@@ -99,11 +99,12 @@ infrastructure should be run when appropriate, as described below.
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    (any machine) - ./run_ctsm_py_tests PASS on cheyenne and on izumi
+    cheyenne ---- PASS
+    izumi ------- PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    cheyenne ---- 
+    cheyenne ---- PASS
     izumi ------- 
   
   fates tests:
