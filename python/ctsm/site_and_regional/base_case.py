@@ -1,12 +1,14 @@
 import os
+import subprocess
+
 import numpy as np
 import xarray as xr
-import subprocess
 
 from datetime import date
 from getpass import getuser
 
 myname = getuser()
+USRDAT_DIR = "CLM_USRDAT_DIR"
 
 
 class BaseCase:
@@ -23,6 +25,8 @@ class BaseCase:
         flag for creating landuse file
     create_datm : bool
         flag for creating DATM files
+    create_user_mods
+        flag for creating a user_mods directory
     Methods
     -------
     create_1d_coord(filename, lon_varname , lat_varname,x_dim , y_dim )
@@ -30,25 +34,20 @@ class BaseCase:
     add_tag_to_filename(filename, tag)
        add a tag and timetag to a filename ending with
        [._]cYYMMDD.nc or [._]YYMMDD.nc
+    update_metadata(self, nc)
+       updates metadata for a netcdf file and removes attributes that should not be there
     """
 
-    def __init__(self, create_domain, create_surfdata, create_landuse, create_datm):
+    def __init__(self, create_domain, create_surfdata, create_landuse, create_datm, create_user_mods):
         self.create_domain = create_domain
         self.create_surfdata = create_surfdata
         self.create_landuse = create_landuse
         self.create_datm = create_datm
+        self.create_user_mods = create_user_mods
 
     def __str__(self):
-        return (
-            str(self.__class__)
-            + "\n"
-            + "\n".join(
-                (
-                    str(item) + " = " + str(self.__dict__[item])
-                    for item in sorted(self.__dict__)
-                )
-            )
-        )
+        return "{}\n{}".format(str(self.__class__), "\n".join(
+            ("{} = {}".format(str(key), str(self.__dict__[key])) for key in sorted(self.__dict__))))
 
     @staticmethod
     def create_1d_coord(filename, lon_varname, lat_varname, x_dim, y_dim):
@@ -128,15 +127,17 @@ class BaseCase:
     @staticmethod
     def get_git_sha():
         """
-        Returns Git short SHA for the currect directory.
+        Returns Git short SHA for the current directory.
         """
         try:
-            sha = (
-                subprocess.check_output(
-                    ["git", "rev-parse", "--short", "HEAD"])
-                .strip()
-                .decode()
-            )
+            sha = (subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode())
         except subprocess.CalledProcessError:
             sha = "NOT-A-GIT-REPOSITORY"
         return sha
+
+    @staticmethod
+    def write_to_file(text, file):
+        """
+        Writes text to a file, surrounding text with \n characters
+        """
+        file.write("\n{}\n".format(text))

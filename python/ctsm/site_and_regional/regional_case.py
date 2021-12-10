@@ -1,49 +1,90 @@
-from ctsm.site_and_regional.base_case import BaseCase
-
 import numpy as np
-import xarray as xr
+
+from ctsm.site_and_regional.base_case import BaseCase
 
 
 class RegionalCase(BaseCase):
     """
     A case to encapsulate regional cases.
+    ...
+    Attributes
+    ----------
+    lat1 : float
+        start latitude
+    lat2 : float
+        end latitude
+    lon1 : float
+        start longitude
+    lon2 : float
+        end longitude
+    reg_name: str -- default = None
+        region name
+    tag : str
+        ending tag for output file naming
+    fluse_out : str
+        file name of output subset land use file
+    fluse_in : str
+        file name of input land use file to subset
+    fsurf_out : str
+        file name of output subset surface data file
+    fsurf_in : str
+        file name of input surface data to subset
+    fdomain_out : str
+        file name of output domain subset domain file
+    fdomain_in : str
+        file name of input domain file to subset
+
+    Methods
+    -------
+    create_tag
+        create a tag for a region which is the region name
+        or the "lon1-lon2-lat1-lat2" format if the region name does not exist.
+    create_domain_at_reg
+        Create domain file for a region
+    create_landuse_at_reg:
+        Create landuse file file for a region
+    create_surfdata_at_reg:
+        Create surface dataset file for a region
+    create_datmdomain_at_reg:
+        Create DATM domain file for a region
     """
 
     def __init__(
-        self,
-        lat1,
-        lat2,
-        lon1,
-        lon2,
-        reg_name,
-        create_domain,
-        create_surfdata,
-        create_landuse,
-        create_datm,
+            self,
+            lat1,
+            lat2,
+            lon1,
+            lon2,
+            reg_name,
+            create_domain,
+            create_surfdata,
+            create_landuse,
+            create_datm,
+            create_user_mods,
+            output_dir,
     ):
-        super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
+        super().__init__(create_domain, create_surfdata, create_landuse, create_datm, create_user_mods)
         self.lat1 = lat1
         self.lat2 = lat2
         self.lon1 = lon1
         self.lon2 = lon2
         self.reg_name = reg_name
+        self.output_dir = output_dir
+        self.tag = None
+        self.fluse_out = None
+        self.fluse_in = None
+        self.fsurf_out = None
+        self.fsurf_in = None
+        self.fdomain_out = None
+        self.fdomain_in = None
 
     def create_tag(self):
         if self.reg_name:
             self.tag = self.reg_name
         else:
-            self.tag = (
-                str(self.lon1)
-                + "-"
-                + str(self.lon2)
-                + "_"
-                + str(self.lat1)
-                + "-"
-                + str(self.lat2)
-            )
+            self.tag = "{}-{}_{}-{}".format(str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2))
 
     def create_domain_at_reg(self):
-        # print ("Creating domain file at region", self.lon1+"-"+self.lat2,self.lat1+"-"+self.lat2)
         print("Creating domain file at region:", self.tag)
         # create 1d coordinate variables to enable sel() method
         f2 = self.create_1d_coord(self.fdomain_in, "xc", "yc", "ni", "nj")
@@ -66,12 +107,10 @@ class RegionalCase(BaseCase):
         f3.close()
 
     def create_surfdata_at_reg(self):
-        # print ("Creating surface dataset file at region", self.lon1+"-"+self.lat2,self.lat1+"-"+self.lat2)
         print("Creating surface dataset file at region:", self.tag)
         # create 1d coordinate variables to enable sel() method
         filename = self.fsurf_in
-        f2 = self.create_1d_coord(
-            filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f2 = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f2["lat"]
         lon = f2["lon"]
         # subset longitude and latitude arrays
@@ -91,11 +130,9 @@ class RegionalCase(BaseCase):
         f3.close()
 
     def create_landuse_at_reg(self):
-        # print ("Creating surface dataset file at region", self.lon1+"-"+self.lat2,self.lat1+"-"+self.lat2)
         print("Creating surface dataset file at region:", self.tag)
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(
-            self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f2 = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f2["lat"]
         lon = f2["lon"]
         # subset longitude and latitude arrays

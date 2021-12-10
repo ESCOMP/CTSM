@@ -41,31 +41,24 @@ files, the appropriate flags should be used.
 
 #  Import libraries
 from __future__ import print_function
-from ctsm.site_and_regional.regional_case import RegionalCase
-from ctsm.site_and_regional.single_point_case import SinglePointCase
-from ctsm.site_and_regional.base_case import BaseCase
-from ctsm.path_utils import path_to_ctsm_root
-from ctsm import add_cime_to_path
-
 import sys
 import os
-import string
 import logging
 import subprocess
 import argparse
 import configparser
 
-import numpy as np
-import xarray as xr
-
 from datetime import date
 from getpass import getuser
 from logging.handlers import RotatingFileHandler
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentParser
 
-# Get the ctsm util tools and then the cime tools.
-_CTSM_PYTHON = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), "..", "..", 'python'))
+from ctsm.site_and_regional.base_case import USRDAT_DIR
+from ctsm.site_and_regional.regional_case import RegionalCase
+from ctsm.site_and_regional.single_point_case import SinglePointCase
+from ctsm.path_utils import path_to_ctsm_root
+
+_CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 'python'))
 sys.path.insert(1, _CTSM_PYTHON)
 
 # -- Globals and Default Values ---
@@ -331,9 +324,7 @@ def str2bool(v):
     elif v.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError(
-            "Boolean value expected. [true or false] or [y or n]"
-        )
+        raise argparse.ArgumentTypeError("Boolean value expected. [true or false] or [y or n]")
 
 
 def plat_type(x):
@@ -350,9 +341,7 @@ def plat_type(x):
     """
     x = float(x)
     if (x < -90) or (x > 90):
-        raise argparse.ArgumentTypeError(
-            "ERROR: Latitude should be between -90 and 90."
-        )
+        raise argparse.ArgumentTypeError("ERROR: Latitude should be between -90 and 90.")
     return x
 
 
@@ -370,13 +359,11 @@ def plon_type(x):
     """
     x = float(x)
     if (-180 < x) and (x < 0):
-        print("lon is :", x)
+        print("lon is: ", x)
         x = x % 360
-        print("after modulo lon is :", x)
+        print("after modulo lon is: ", x)
     if (x < 0) or (x > 360):
-        raise argparse.ArgumentTypeError(
-            "ERROR: Latitude of single point should be between 0 and 360 or -180 and 180."
-        )
+        raise argparse.ArgumentTypeError("ERROR: Latitude of single point should be between 0 and 360 or -180 and 180.")
     return x
 
 
@@ -387,11 +374,7 @@ def get_git_sha():
     try:
 
         # os.abspath(__file__)
-        sha = (
-            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-                .strip()
-                .decode()
-        )
+        sha = (subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode())
     except subprocess.CalledProcessError:
         sha = "NOT-A-GIT-REPOSITORY"
     return sha
@@ -407,14 +390,9 @@ def setup_logging(log_file, log_level):
 
     # setup log file
     one_mb = 1000000
-    handler = logging.handlers.RotatingFileHandler(
-        log_file, maxBytes=one_mb, backupCount=10
-    )
+    handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=one_mb, backupCount=10)
 
-    fmt = logging.Formatter(
-        "%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
-        datefmt="%y-%m-%d %H:%M:%S",
-    )
+    fmt = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s", datefmt="%y-%m-%d %H:%M:%S")
 
     handler.setFormatter(fmt)
     root_logger.addHandler(handler)
@@ -482,8 +460,7 @@ class StreamToLogger(object):
 
 
 def main():
-
-    # parse arguments
+    # parse command-line arguments
     args = get_parser().parse_args()
 
     # parse defaults file
@@ -516,29 +493,29 @@ def main():
     # data file
     if args.crop_flag:
         num_pft = "78"
-        fsurf_in = defaults.get('surfdat', 'surfdat_78pft')
-        fluse_in = defaults.get('landuse', 'landuse_78pft')
+        fsurf_in = defaults.get("surfdat", "surfdat_78pft")
+        fluse_in = defaults.get("landuse", "landuse_78pft")
     else:
         num_pft = "16"
-        fsurf_in = defaults.get('surfdat', 'surfdat_16pft')
-        fluse_in = defaults.get('landuse', 'landuse_16pft')
+        fsurf_in = defaults.get("surfdat", "surfdat_16pft")
+        fluse_in = defaults.get("landuse", "landuse_16pft")
 
-    print("crop_flag = " + args.crop_flag.__str__() + " => num_pft =" + num_pft)
+    print("crop_flag = {} => num_pft = {}".format(args.crop_flag.__str__(), num_pft))
 
     # --  Specify input and output directories and files
 
-    # top-level output directory
+    # Top-level output directory
     if not os.path.isdir(args.out_dir):
         os.mkdir(args.out_dir)
 
-    # datm data
+    # DATM data
     dir_output_datm = "datmdata"
-    dir_input_datm = defaults.get('datm_gswp3', 'dir')
+    dir_input_datm = defaults.get("datm_gswp3", "dir")
     if args.create_datm:
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
-        print("dir_input_datm  : ", dir_input_datm)
-        print("dir_output_datm : ", os.path.join(args.out_dir, dir_output_datm))
+        print("dir_input_datm : ", dir_input_datm)
+        print("dir_output_datm: ", os.path.join(args.out_dir, dir_output_datm))
 
     # -- Set up user mods directories and base files
     if args.create_user_mods:
@@ -551,38 +528,37 @@ def main():
         if args.create_surfdata or args.create_landuse:
             nl_clm_base = os.path.join(cesmroot, "cime_config/user_nl_clm")
             nl_clm = os.path.join(args.user_mods_dir, "user_nl_clm")
-            with open(nl_clm_base, 'r') as basefile, open(nl_clm, 'w') as userfile:
+            with open(nl_clm_base, "r") as basefile, open(nl_clm, "w") as user_file:
                 for line in basefile:
-                    userfile.write(line)
+                    user_file.write(line)
 
         # -- Create empty user_nl_datm_streams file
         if args.create_datm:
-            nl_datm_base = os.path.join(
-                cesmroot, "components/cdeps/datm/cime_config/user_nl_datm_streams")
+            nl_datm_base = os.path.join(cesmroot, "components/cdeps/datm/cime_config/user_nl_datm_streams")
             nl_datm = os.path.join(args.user_mods_dir, "user_nl_datm_streams")
-            with open(nl_datm_base, 'r') as basefile, open(nl_datm, 'w') as userfile:
-                for line in basefile:
-                    userfile.write(line)
+            with open(nl_datm_base, "r") as base_file, open(nl_datm, 'w') as user_file:
+                for line in base_file:
+                    user_file.write(line)
 
     # Default files
-    dir_inputdata = defaults.get('main', 'clmforcingindir')
-    dir_inputsurf = defaults.get('surfdat', 'dir')
-    dir_inputluse = defaults.get('landuse', 'dir')
-    fdomain_in = os.path.join(dir_inputdata, defaults.get('domain', 'file'))
-    fdatmdomain_in = os.path.join(dir_input_datm, defaults.get('datm_gswp3', 'domain'))
-    datm_solardir = defaults.get('datm_gswp3', 'solardir')
-    datm_precdir = defaults.get('datm_gswp3', 'precdir')
-    datm_tpqwdir = defaults.get('datm_gswp3', 'tpqwdir')
-    datm_solartag = defaults.get('datm_gswp3', 'solartag')
-    datm_prectag = defaults.get('datm_gswp3', 'prectag')
-    datm_tpqwtag = defaults.get('datm_gswp3', 'tpqwtag')
-    datm_solarname = defaults.get('datm_gswp3', 'solarname')
-    datm_precname = defaults.get('datm_gswp3', 'precname')
-    datm_tpqwname = defaults.get('datm_gswp3', 'tpqwname')
+    dir_inputdata = defaults.get("main", "clmforcingindir")
+    dir_inputsurf = defaults.get("surfdat", "dir")
+    dir_inputluse = defaults.get("landuse", "dir")
+    fdomain_in = os.path.join(dir_inputdata, defaults.get("domain", "file"))
+    fdatmdomain_in = os.path.join(dir_input_datm, defaults.get("datm_gswp3", "domain"))
+    datm_solardir = defaults.get("datm_gswp3", "solardir")
+    datm_precdir = defaults.get("datm_gswp3", "precdir")
+    datm_tpqwdir = defaults.get("datm_gswp3", "tpqwdir")
+    datm_solartag = defaults.get("datm_gswp3", "solartag")
+    datm_prectag = defaults.get("datm_gswp3", "prectag")
+    datm_tpqwtag = defaults.get("datm_gswp3", "tpqwtag")
+    datm_solarname = defaults.get("datm_gswp3", "solarname")
+    datm_precname = defaults.get("datm_gswp3", "precname")
+    datm_tpqwname = defaults.get("datm_gswp3", "tpqwname")
 
     if args.run_type == "point":
         print("----------------------------------------------------------------------------")
-        print( "This script extracts a single point from the global CTSM datasets.")
+        print("This script extracts a single point from the global CTSM datasets.")
 
         # --  Create SinglePoint Object
         single_point = SinglePointCase(
@@ -593,22 +569,26 @@ def main():
             args.create_surfdata,
             args.create_landuse,
             args.create_datm,
+            args.create_user_mods,
             args.overwrite_single_pft,
             args.dom_pft,
             args.zero_nonveg,
             args.uni_snow,
             args.no_saturation_excess,
-            args.out_dir
+            args.out_dir,
         )
         single_point.create_tag()
+
+        if single_point.create_user_mods and single_point.create_datm:
+            single_point.datm_streams_file = nl_datm
 
         # --  Create CTSM domain file
         if single_point.create_domain:
             # --  Specify land domain file  ---------------------------------
             single_point.fdomain_in = os.path.join(dir_inputdata, fdomain_in)
             single_point.fdomain_out = single_point.add_tag_to_filename(fdomain_in, single_point.tag)
-            print("fdomain_in  :", single_point.fdomain_in)
-            print("fdomain_out :", os.path.join(single_point.output_dir, single_point.fdomain_out))
+            print("fdomain_in:  ", single_point.fdomain_in)
+            print("fdomain_out: ", os.path.join(single_point.output_dir, single_point.fdomain_out))
             single_point.create_domain_at_point()
 
         # --  Create CTSM surface data file
@@ -616,15 +596,15 @@ def main():
             # --  Specify surface file  ---------------------------------
             single_point.fsurf_in = os.path.join(dir_inputdata, dir_inputsurf, fsurf_in)
             single_point.fsurf_out = single_point.create_fileout_name(fsurf_in, single_point.tag)
-            print("fsurf_in   :", single_point.fsurf_in)
-            print("fsurf_out  :", single_point.fsurf_out)
+            print("fsurf_in:  ", single_point.fsurf_in)
+            print("fsurf_out: ", single_point.fsurf_out)
             single_point.create_surfdata_at_point()
 
             # write to user_nl_clm if specified
             if args.create_user_mods:
                 nl_clm = open(os.path.join(args.user_mods_dir, "user_nl_clm"), "a")
-                line = 'fsurdat = ' + "'$CLM_USRDAT_DIR/" + single_point.fsurf_out + "'"
-                nl_clm.write('\n' + line + '\n')
+                line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, single_point.fsurf_out))
+                single_point.write_to_file(line, nl_clm)
                 nl_clm.close()
 
         # --  Create CTSM transient landuse data file
@@ -632,26 +612,25 @@ def main():
             # --  Specify surface file  ---------------------------------
             single_point.fluse_in = os.path.join(dir_inputdata, dir_inputluse, fluse_in)
             single_point.fluse_out = single_point.create_fileout_name(fluse_in, single_point.tag)
-            print("fluse_in   :", single_point.fluse_in)
-            print("fluse_out  :", single_point.fluse_out)
+            print("fluse_in:  ", single_point.fluse_in)
+            print("fluse_out: ", single_point.fluse_out)
             single_point.create_landuse_at_point()
 
             # write to user_nl_clm data if specified
-            if args.create_user_mods:
+            if single_point.create_user_mods:
                 nl_clm = open(os.path.join(args.user_mods_dir, "user_nl_clm"), "a")
-                line = 'fsurdat = ' + "'$CLM_USRDAT_DIR/" + single_point.fluse_out + "'"
-                nl_clm.write('\n' + line + '\n')
+                line = "landuse = '${}'".format(os.path.join(USRDAT_DIR, single_point.fluse_out))
+                single_point.write_to_file(line, nl_clm)
                 nl_clm.close()
 
         # --  Create single point atmospheric forcing data
         if single_point.create_datm:
             # --  Specify datm and subset domain file  ---------------------------------
             single_point.fdatmdomain_in = os.path.join(dir_input_datm, fdatmdomain_in)
-            single_point.fdatmdomain_out = os.path.join(dir_output_datm,
-                                                        single_point.add_tag_to_filename(single_point.fdatmdomain_in,
-                                                                                         single_point.tag))
-            print("fdatmdomain_in   : ", single_point.fdatmdomain_in)
-            print("fdatmdomain out  : ", single_point.fdatmdomain_out)
+            datm_file = single_point.add_tag_to_filename(single_point.fdatmdomain_in, single_point.tag)
+            single_point.fdatmdomain_out = os.path.join(dir_output_datm, datm_file)
+            print("fdatmdomain_in:  ", single_point.fdatmdomain_in)
+            print("fdatmdomain out: ", single_point.fdatmdomain_out)
             single_point.create_datmdomain_at_point()
 
             # -- Specify DATM directories, tags, and stream names
@@ -668,11 +647,11 @@ def main():
             single_point.name_solar = datm_solarname
             single_point.name_prec = datm_precname
             single_point.name_tpqw = datm_tpqwname
-            single_point.create_datm_at_point(args.create_user_mods, nl_datm)
+            single_point.create_datm_at_point()
 
         # -- Write shell commands
-        if args.create_user_mods:
-            shell_commands_file = open(os.path.join(args.user_mods_dir,"shell_commands"), 'w')
+        if single_point.create_user_mods:
+            shell_commands_file = open(os.path.join(args.user_mods_dir, "shell_commands"), "w")
             single_point.write_shell_commands(shell_commands_file)
 
         print("Successfully ran script for single point.")
@@ -680,7 +659,7 @@ def main():
 
     elif args.run_type == "reg":
         print("----------------------------------------------------------------------------")
-        print( "This script extracts a region from the global CTSM datasets.")
+        print("This script extracts a region from the global CTSM datasets.")
 
         # --  Create Region Object
         region = RegionalCase(
@@ -693,53 +672,54 @@ def main():
             args.create_surfdata,
             args.create_landuse,
             args.create_datm,
+            args.create_user_mods,
+            args.out_dir,
         )
         region.create_tag()
 
-        # --  Set time stamp
-        command = 'date "+%y%m%d"'
-        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
-        x = x2.communicate()
-        timetag = x[0].strip()
-        print(timetag)
-
-        # --  Specify land domain file  ---------------------------------
-        fdomain_out = os.path.join(args.out_dir, "domain.lnd.fv1.9x2.5_gx1v7." + region.tag + "_170518.nc")
-
-        # SinglePointCase.set_fdomain (fdomain)
-        region.fdomain_in = fdomain_in
-        region.fdomain_out = fdomain_out
-
-        # --  Specify surface data file  --------------------------------
-        fsurf_out = os.path.join(
-                args.out_dir,
-                "surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_"
-                + region.tag
-                + "_c170824.nc"
-        )
-        region.fsurf_in = fsurf_in
-        region.fsurf_out = fsurf_out
-
-        # --  Specify landuse file  -------------------------------------
-        fluse_out = os.path.join(
-                args.out_dir,
-                "landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_"
-                + region.tag
-                + ".c170824.nc"
-        )
-        region.fluse_in = fluse_in
-        region.fluse_out = fluse_out
-
         # --  Create CTSM domain file
         if region.create_domain:
+            # --  Specify land domain file  ---------------------------------
+            region.fdomain_in = os.path.join(dir_inputdata, fdomain_in)
+            region.fdomain_out = os.path.join(args.out_dir, "domain.lnd.fv1.9x2.5_gx1v7." + region.tag + "_170518.nc")
+            print("fdomain_in:  ", region.fdomain_in)
+            print("fdomain_out: ", os.path.join(region.output_dir, region.fdomain_out))
             region.create_domain_at_reg()
 
         # --  Create CTSM surface data file
         if region.create_surfdata:
+            # --  Specify surface file  ---------------------------------
+            region.fsurf_in = os.path.join(dir_inputdata, dir_inputsurf, fsurf_in)
+            region.fsurf_out = os.path.join(args.out_dir, "surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_" + region.tag
+                                            + "_c170824.nc")
+            print("fsurf_in:  ", region.fsurf_in)
+            print("fsurf_out: ", region.fsurf_out)
             region.create_surfdata_at_reg()
+
+            # write to user_nl_clm if specified
+            if args.create_user_mods:
+                nl_clm = open(os.path.join(args.user_mods_dir, "user_nl_clm"), "a")
+                line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, region.fsurf_out))
+                region.write_to_file(line, nl_clm)
+                nl_clm.close()
 
         # --  Create CTSM transient landuse data file
         if region.create_landuse:
+            # --  Specify surface file  ---------------------------------
+            region.fluse_in = os.path.join(dir_inputdata, dir_inputluse, fluse_in)
+            region.fluse_out = os.path.join(args.out_dir,
+                                            "landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_" +
+                                            region.tag + ".c170824.nc")
+            print("fluse_in:  ", region.fluse_in)
+            print("fluse_out: ", region.fluse_out)
             region.create_landuse_at_reg()
+
+            # write to user_nl_clm data if specified
+            if region.create_user_mods:
+                nl_clm = open(os.path.join(args.user_mods_dir, "user_nl_clm"), "a")
+                line = "landuse = '${}'".format(os.path.join(USRDAT_DIR, region.fluse_out))
+                region.write_to_file(line, nl_clm)
+                nl_clm.close()
+
         print("Successfully ran script for a regional case.")
         exit()
