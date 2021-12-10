@@ -81,15 +81,6 @@ if [ "$TOOLSLIBS" != "" ]; then
 fi
 while [ $still_compiling = "TRUE" ]; do
 
-   if [ "$2" = "gen_domain" ]; then
-      HOSTNAME=`uname -n | cut -c 1-2`
-      if [ "$HOSTNAME" = "be" ]; then
-         echo "TCBtools.sh: run configure for gen_domain on bluefire"
-         env CIMEROOT=${CLM_ROOT}/cime ${CLM_ROOT}/cime/tools/configure -mach bluefire >> test.log 2>&1
-         rc=$?
-      fi
-   fi
-
     ln -s Macros.make Macros
 
     echo "TCBtools.sh: call to make:" 

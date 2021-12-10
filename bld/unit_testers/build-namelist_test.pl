@@ -163,7 +163,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 1843;
+my $ntests = 1844;
 if ( defined($opts{'compare'}) ) {
    $ntests += 1254;
 }
@@ -190,7 +190,7 @@ my $mode = "-phys $phys";
 
 my $DOMFILE = "$inputdata_rootdir/atm/datm7/domain.lnd.T31_gx3v7.090928.nc";
 my $real_par_file = "user_nl_ctsm_real_parameters";
-my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -lnd_frac $DOMFILE -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
+my $bldnml = "../build-namelist -verbose -csmdata $inputdata_rootdir -configuration clm -structure standard -glc_nec 10 -no-note -output_reals $real_par_file";
 if ( $opts{'test'} ) {
    $bldnml .= " -test";
 }
@@ -335,8 +335,10 @@ foreach my $driver ( "mct", "nuopc" ) {
       my $file = $startfile;
       &make_env_run();
       my $base_options = "-res 0.9x1.25 -envxml_dir . -driver $driver";
-      if ( $driver eq "nuopc" ) {
-         $base_options = "$base_options -lnd_frac UNSET";
+      if ( $driver eq "mct" ) {
+         $base_options = "$base_options -lnd_frac $DOMFILE";
+      } else {
+         $base_options = "$base_options -namelist '&a force_send_to_atm = .false./'";
       }
       eval{ system( "$bldnml $base_options $options > $tempfile 2>&1 " ); };
       is( $@, '', "options: $base_options $options" );
@@ -879,7 +881,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
                                    },
-     "both lnd_frac and on nml"  =>{ options=>"-driver mct -lnd_frac domain.nc -envxml_dir .",
+     "both lnd_frac and on nml"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_0",
@@ -889,7 +891,7 @@ my %failtest = (
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
-     "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac domain.nc -envxml_dir .",
+     "lnd_frac set but nuopc"    =>{ options=>"-driver nuopc -lnd_frac $DOMFILE -envxml_dir .",
                                      namelst=>"",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
@@ -901,6 +903,11 @@ my %failtest = (
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
+                                     GLC_TWO_WAY_COUPLING=>"FALSE",
+                                     phys=>"clm5_1",
+                                   },
+     "force_send but not nuopc"  =>{ options=>"-driver mct -lnd_frac $DOMFILE -envxml_dir .",
+                                     namelst=>"force_send_to_atm = .false.",
                                      GLC_TWO_WAY_COUPLING=>"FALSE",
                                      phys=>"clm5_1",
                                    },
