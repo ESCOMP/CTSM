@@ -10,12 +10,12 @@ import re
 import unittest
 import tempfile
 import shutil
-from subprocess import check_call
 
 import xarray as xr
 
 from ctsm.path_utils import path_to_ctsm_root
-
+from ctsm import unit_testing
+from ctsm.modify_fsurdat.fsurdat_modifier import fsurdat_modifier
 
 class TestSysFsurdatModifier(unittest.TestCase):
     """System tests for fsurdat_modifier"""
@@ -45,10 +45,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._create_config_file_minimal()
 
         # run the fsurdat_modifier tool
-        tool_path = os.path.join(path_to_ctsm_root(),
-            'tools/modify_fsurdat/fsurdat_modifier')
-        tool_command = tool_path + ' ' + self._cfg_file_path
-        check_call(tool_command, shell=True)
+        fsurdat_modifier(self._cfg_file_path)
         # the critical piece of this test is that the above command
         # doesn't generate errors; however, we also do some assertions below
 
@@ -66,10 +63,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         self._create_config_file_complete()
 
         # run the fsurdat_modifier tool
-        tool_path = os.path.join(path_to_ctsm_root(),
-            'tools/modify_fsurdat/fsurdat_modifier')
-        tool_command = tool_path + ' --debug ' + self._cfg_file_path
-        check_call(tool_command, shell=True)
+        fsurdat_modifier(self._cfg_file_path)
         # the critical piece of this test is that the above command
         # doesn't generate errors; however, we also do some assertions below
 
