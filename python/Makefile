@@ -39,8 +39,10 @@ lint: FORCE
 	$(PYLINT) $(PYLINT_ARGS) $(PYLINT_SRC)
 
 .PHONY: black
+# Run black on all of the .py* python modules under python as well as the main top level script
+# Exclude the pylint file
 black: FORCE
-	black $(PYLINT_SRC)
+	black --check --include '(run_ctsm_py_tests|\.py)' --exclude '(\.pylintrc)' .
 
 .PHONY: clean
 clean: FORCE
