@@ -86,6 +86,7 @@ import argparse
 
 import numpy as np
 import xarray as xr
+import textwrap
 
 from datetime import date
 from getpass import getuser
@@ -105,7 +106,6 @@ from ctsm.ctsm_logging import (
 
 logger = logging.getLogger(__name__)
 
-myname = getuser()
 
 def get_parser():
     """
@@ -151,87 +151,6 @@ def get_parser():
         default="",
     )
     pt_parser.add_argument(
-        "--create-domain",
-        help="Flag for creating CLM domain file at single point. [default: %(default)s]",
-        action="store",
-        dest="create_domain",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
-    pt_parser.add_argument(
-        "--create-surface",
-        help="Flag for creating surface data file at single point. [default: %(default)s]",
-        action="store",
-        dest="create_surfdata",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=True,
-    )
-    pt_parser.add_argument(
-        "--create-landuse",
-        help="Flag for creating landuse data file at single point. [default: %(default)s]",
-        action="store",
-        dest="create_landuse",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
-    pt_parser.add_argument(
-        "--create-datm",
-        help="Flag for creating DATM forcing data at single point. [default: %(default)s]",
-        action="store",
-        dest="create_datm",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
-    pt_parser.add_argument(
-        "--datm-syr",
-        help="Start year for creating DATM forcing at single point. [default: %(default)s]",
-        action="store",
-        dest="datm_syr",
-        required=False,
-        type=int,
-        default=1901,
-    )
-    pt_parser.add_argument(
-        "--datm-eyr",
-        help="End year for creating DATM forcing at single point. [default: %(default)s]",
-        action="store",
-        dest="datm_eyr",
-        required=False,
-        type=int,
-        default=2014,
-    )
-    pt_parser.add_argument(
-        "--crop",
-        help="Flag for creating datasets using the extensive list of prognostic crop types. [default: %(default)s]",
-        action="store",
-        dest="crop_flag",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
-    pt_parser.add_argument(
-        "--dompft",
-        help="Dominant PFT type . [default: %(default)s] ",
-        action="store",
-        dest="dom_pft",
-        type=int,
-        default=7,
-    )
-    pt_parser.add_argument(
         "--unisnow",
         help="Flag for creating datasets using uniform snowpack. [default: %(default)s]",
         action="store",
@@ -275,15 +194,6 @@ def get_parser():
         required=False,
         default=True,
     )
-    pt_parser.add_argument(
-        "--outdir",
-        help="Output directory. [default: %(default)s]",
-        action="store",
-        dest="out_dir",
-        type=str,
-        default="/glade/scratch/" + myname + "/single_point/",
-    )
-
     # -- region-specific parser options
     rg_parser.add_argument(
         "--lat1",
@@ -330,92 +240,112 @@ def get_parser():
         type=str,
         default="",
     )
-    rg_parser.add_argument(
-        "--create-domain",
-        help="Flag for creating CLM domain file for a region. [default: %(default)s]",
-        action="store",
-        dest="create_domain",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
-    rg_parser.add_argument(
-        "--create-surface",
-        help="Flag for creating surface data file for a region. [default: %(default)s]",
-        action="store",
-        dest="create_surfdata",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=True,
-    )
-    rg_parser.add_argument(
-        "--create-landuse",
-        help="Flag for creating landuse data file for a region. [default: %(default)s]",
-        action="store",
-        dest="create_landuse",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
-    rg_parser.add_argument(
-        "--create-datm",
-        help="Flag for creating DATM forcing data for a region. [default: %(default)s]",
-        action="store",
-        dest="create_datm",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        required=False,
-        default=False,
-    )
-    rg_parser.add_argument(
-        "--datm-syr",
-        help="Start year for creating DATM forcing for a region. [default: %(default)s]",
-        action="store",
-        dest="datm_syr",
-        required=False,
-        type=int,
-        default=1901,
-    )
-    rg_parser.add_argument(
-        "--datm-eyr",
-        help="End year for creating DATM forcing for a region.  [default: %(default)s]",
-        action="store",
-        dest="datm_eyr",
-        required=False,
-        type=int,
-        default=2014,
-    )
-    rg_parser.add_argument(
-        "--crop",
-        help="Create datasets using the extensive list of prognostic crop types. [default: %(default)s]",
-        action="store_true",
-        dest="crop_flag",
-        default=False,
-    )
-    rg_parser.add_argument(
-        "--dompft",
-        help="Dominant PFT type . [default: %(default)s] ",
-        action="store",
-        dest="dom_pft",
-        type=int,
-        default=7,
-    )
-    rg_parser.add_argument(
-        "--outdir",
-        help="Output directory. [default: %(default)s]",
-        action="store",
-        dest="out_dir",
-        type=str,
-        default="/glade/scratch/" + myname + "/regional/",
-    )
 
+    # -- common options between both subparsers
+    for subparser in [pt_parser, rg_parser]:
+        subparser.add_argument(
+            "--create-domain",
+            help="Flag for creating CLM domain file at single point/region. [default: %(default)s]",
+            action="store",
+            dest="create_domain",
+            type=str2bool,
+            nargs="?",
+            const=True,
+            required=False,
+            default=False,
+        )
+        subparser.add_argument(
+            "--create-surface",
+            help="Flag for creating surface data file at single point/region. [default: %(default)s]",
+            action="store",
+            dest="create_surfdata",
+            type=str2bool,
+            nargs="?",
+            const=True,
+            required=False,
+            default=True,
+        )
+        subparser.add_argument(
+            "--create-landuse",
+            help="Flag for creating landuse data file at single point/region. [default: %(default)s]",
+            action="store",
+            dest="create_landuse",
+            type=str2bool,
+            nargs="?",
+            const=True,
+            required=False,
+            default=False,
+        )
+        subparser.add_argument(
+            "--create-datm",
+            help="Flag for creating DATM forcing data at single point/region. [default: %(default)s]",
+            action="store",
+            dest="create_datm",
+            type=str2bool,
+            nargs="?",
+            const=True,
+            required=False,
+            default=False,
+        )
+        subparser.add_argument(
+            "--datm-syr",
+            help="Start year for creating DATM forcing at single point/region. [default: %(default)s]",
+            action="store",
+            dest="datm_syr",
+            required=False,
+            type=int,
+            default=1901,
+        )
+        subparser.add_argument(
+            "--datm-eyr",
+            help="End year for creating DATM forcing at single point/region. [default: %(default)s]",
+            action="store",
+            dest="datm_eyr",
+            required=False,
+            type=int,
+            default=2014,
+        )
+        subparser.add_argument(
+            "--crop",
+            help="Flag for creating datasets using the extensive list of prognostic crop types. [default: %(default)s]",
+            action="store",
+            dest="crop_flag",
+            type=str2bool,
+            nargs="?",
+            const=True,
+            required=False,
+            default=False,
+        )
+        subparser.add_argument(
+            "--dompft",
+            help="Dominant PFT type . [default: %(default)s] ",
+            action="store",
+            dest="dom_pft",
+            type=int,
+            default=7,
+        )
+
+        if subparser == pt_parser:
+            parser_name = "single_point"
+        else:
+            parser_name = "regional"
+
+        subparser.add_argument(
+            "--outdir",
+            help="Output directory. \n [default: %(default)s]",
+            action="store",
+            dest="out_dir",
+            type=str,
+            default=os.path.join(os.getcwd(), "subset_data_" + parser_name),
+        )
+
+    # -- print help for both subparsers
+    parser.epilog = textwrap.dedent(
+        f"""\
+         {pt_parser.format_help()}
+         {rg_parser.format_help()}
+         """
+    )
     return parser
 
 
@@ -530,6 +460,8 @@ def main():
 
     today = date.today()
     today_string = today.strftime("%Y%m%d")
+
+    myname = getuser()
 
     pwd = os.getcwd()
 
