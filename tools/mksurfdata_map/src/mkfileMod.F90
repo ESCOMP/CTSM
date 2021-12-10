@@ -544,7 +544,7 @@ contains
             lev1name='numurbl', lev2name='time', &
             long_name='percent urban for each density type', units='unitless')
 
-       call ncd_def_spatial_var(ncid=ncid, varname='HASURBAN', xtype=xtype, &
+       call ncd_def_spatial_var(ncid=ncid, varname='HASURBAN', xtype=nf_int, &
             lev1name='numurbl', &
             long_name='whether the grid ever has urban during the considered time period', units='unitless')
                           

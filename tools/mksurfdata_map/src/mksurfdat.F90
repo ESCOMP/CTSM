@@ -110,7 +110,7 @@ program mksurfdat
     real(r8), allocatable  :: pctwet(:)          ! percent of grid cell that is wetland  
     real(r8), allocatable  :: pcturb(:)          ! percent of grid cell that is urbanized (total across all urban classes)
     real(r8), allocatable  :: pcturb_max(:,:)    ! maximum percent cover of each urban class, as % of grid cell
-    real(r8), allocatable  :: hasurban(:,:)      ! whether the urban class should be active in transient urban simulations
+    integer , allocatable  :: hasurban(:,:)      ! whether the urban class should be active in transient urban simulations
     real(r8), allocatable  :: urbn_classes(:,:)  ! percent cover of each urban class, as % of total urban area
     real(r8), allocatable  :: urbn_classes_g(:,:)! percent cover of each urban class, as % of grid cell
     real(r8), allocatable  :: elev(:)            ! glc elevation (m)
@@ -480,7 +480,7 @@ program mksurfdat
     pctlak(:)             = spval
     pctwet(:)             = spval
     pcturb(:)             = spval
-    hasurban(:,:)         = spval
+    hasurban(:,:)         = 0
     urban_region(:)       = -999
     urbn_classes(:,:)     = spval
     urbn_classes_g(:,:)   = spval
@@ -1225,9 +1225,9 @@ program mksurfdat
        do n = 1,ns_o
           do k =1, numurbl
              if (pcturb_max(n,k) > 1.e-6_r8) then 
-                hasurban(n,k) = 1._r8
+                hasurban(n,k) = 1
              else 
-                hasurban(n,k) = 0._r8             
+                hasurban(n,k) = 0             
              end if    
           end do
        end do        
@@ -1238,7 +1238,7 @@ program mksurfdat
        call check_ret(nf_put_var_double(ncid, varid, get_pct_l2g_array(pctcft_max)), subname)
 
        call check_ret(nf_inq_varid(ncid, 'HASURBAN', varid), subname)
-       call check_ret(nf_put_var_double(ncid, varid, hasurban), subname)
+       call check_ret(nf_put_var_int(ncid, varid, hasurban), subname)
        
        if (num_cft > 0) then
           call check_ret(nf_inq_varid(ncid, 'PCT_CFT_MAX', varid), subname)
