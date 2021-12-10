@@ -1,5 +1,6 @@
 """
-CTSM-specific test to ...
+CTSM-specific test that first runs the fsurdat_modifier tool and then ensures
+that the CTSM does not fail using the just-generated modified fsurdat file
 """
 
 import os
@@ -23,8 +24,7 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
             'done_FSURDATMODIFYCTSM_setup.txt')):
             # Create out-of-the-box lnd_in to obtain fsurdat_in
             case.create_namelists(component='lnd')
-            # If fsurdat_in does not exist, download it from the
-            # server
+            # If fsurdat_in does not exist, download it from the server
             case.check_all_input_data()
 
             lnd_in_path = os.path.join(self._get_caseroot(), 'CaseDocs/lnd_in')
@@ -35,12 +35,10 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
                         self._fsurdat_in = fsurdat_in.group(1)
                         break
 
-            self._fsurdat_out = os.path.join(
-                self._get_caseroot(), 'fsurdat.nc')
-            self._ctsm_root = self._case.get_value(
-                'COMP_ROOT_DIR_LND')
-            self._cfg_file_path = os.path.join(
-                self._get_caseroot(), 'modify_fsurdat.cfg')
+            self._fsurdat_out = os.path.join(self._get_caseroot(), 'fsurdat.nc')
+            self._ctsm_root = self._case.get_value( 'COMP_ROOT_DIR_LND')
+            self._cfg_file_path = os.path.join(self._get_caseroot(),
+                                               'modify_fsurdat.cfg')
 
             self._create_config_file()
             self._run_modify_fsurdat()
@@ -67,10 +65,9 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
     def _run_modify_fsurdat(self):
         tool_path = os.path.join(self._ctsm_root,
                                  'tools/modify_fsurdat/fsurdat_modifier')
-
-        # Need to specify a specific python version that has the required dependencies
+        # Need to specify a specific python version that has the required
+        # dependencies
         python_path = _get_python_path()
-
         subprocess.check_call([python_path, tool_path, self._cfg_file_path])
 
     def _modify_user_nl(self):
@@ -81,13 +78,14 @@ class FSURDATMODIFYCTSM(SystemTestsCommon):
 def _get_python_path():
     """Get path to ncar_pylib's python on cheyenne
 
-    This is needed because we need a python environment that includes xarray and its
-    dependencies. This is currently hard-coded for cheyenne until we come up with a robust
-    way in CIME of ensuring the correct python environment is loaded.
+    This is needed because we need a python environment that includes xarray
+    and its dependencies. This is currently hard-coded for cheyenne until we
+    come up with a robust way in CIME of ensuring that the correc python
+    environment is loaded.
 
     """
-    out = subprocess.check_output(['/glade/u/apps/opt/ncar_pylib/ncar_pylib', '-l'],
-                                  universal_newlines=True)
+    out = subprocess.check_output(['/glade/u/apps/opt/ncar_pylib/ncar_pylib',
+                                   '-l'], universal_newlines=True)
 
     # First look for a loaded ('L') python
     path = _find_path_from_pylib_output(out, 'L')

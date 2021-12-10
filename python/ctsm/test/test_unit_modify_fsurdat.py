@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+Unit tests for _get_not_rectangle
+"""
+
 import unittest
 
 import numpy as np
@@ -13,6 +17,9 @@ from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 # readable; in pylint can use: disable=invalid-name
 
 class TestModifyFsurdat(unittest.TestCase):
+    """Tests the setvar_lev functions and the
+                 _get_not_rectangle function
+    """
 
     def test_setvarLev(self):
         """
@@ -272,7 +279,7 @@ class TestModifyFsurdat(unittest.TestCase):
         # get cols, rows also
         min_lon = 0  # expects min_lon < max_lon
         min_lat = -5  # expects min_lat < max_lat
-        longxy, latixy, cols, rows = self._get_longxy_latixy(
+        longxy, latixy, _, _ = self._get_longxy_latixy(
             _min_lon=min_lon, _max_lon=359, _min_lat=min_lat, _max_lat=5)
 
         # get not_rectangle from user-defined lon_1, lon_2, lat_1, lat_2
@@ -313,8 +320,6 @@ class TestModifyFsurdat(unittest.TestCase):
 
         return longxy, latixy, cols, rows
 
-"""Unit tests for _get_not_rectangle
-"""
 if __name__ == '__main__':
     unit_testing.setup_for_tests()
     unittest.main()

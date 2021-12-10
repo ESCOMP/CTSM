@@ -14,7 +14,6 @@ from subprocess import check_call
 
 import xarray as xr
 
-import ctsm.unit_testing
 from ctsm.path_utils import path_to_ctsm_root
 
 
@@ -34,6 +33,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
 
     def tearDown(self):
         """
+        Remove temporary directory
         """
         shutil.rmtree(self._tempdir, ignore_errors=True)
 

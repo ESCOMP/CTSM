@@ -61,35 +61,38 @@ class TestUtilsLonRange0to360(unittest.TestCase):
         """
         Tests that negative inputs to lon_range_0_to_360 get 360 added to them
         """
-        input = -180
-        result = lon_range_0_to_360(input)
-        self.assertEqual(result, input + 360)
+        inval = -180
+        result = lon_range_0_to_360(inval)
+        self.assertEqual(result, inval + 360)
 
     def test_lonRange0To360_lonIsNegGreaterThan1(self):
         """
         Tests that negative inputs to lon_range_0_to_360 get 360 added to them
         """
-        input = -0.001
-        result = lon_range_0_to_360(input)
-        self.assertEqual(result, input + 360)
+        inval = -0.001
+        result = lon_range_0_to_360(inval)
+        self.assertEqual(result, inval + 360)
 
     def test_lonRange0To360_lonIs0(self):
         """
         Tests that input to lon_range_0_to_360 of 0 remains unchanged
         """
-        input = 0
-        result = lon_range_0_to_360(input)
-        self.assertEqual(result, input)
+        inval = 0
+        result = lon_range_0_to_360(inval)
+        self.assertEqual(result, inval)
 
     def test_lonRange0To360_lonIs360(self):
         """
         Tests that input to lon_range_0_to_360 of 360 remains unchanged
         """
-        input = 360
-        result = lon_range_0_to_360(input)
-        self.assertEqual(result, input)
+        inval = 360
+        result = lon_range_0_to_360(inval)
+        self.assertEqual(result, inval)
 
     def test_lonRange0To360_outOfBounds(self):
+        """
+        Tests that lon_range_0_to_360 aborts gracefully when lon = 361
+        """
         with self.assertRaisesRegex(SystemExit,
                                     "lon_in needs to be in the range 0 to 360"):
             _ = lon_range_0_to_360(361)
@@ -191,8 +194,8 @@ class TestUtilsHandleConfigValue(unittest.TestCase):
             is_list=is_list, convert_to_type=convert_to_type,
             can_be_unset=can_be_unset, allowed_values=allowed_values)
 
-        self.assertEquals(val[0], -9)
-        self.assertEquals(val[1], 0.001)
+        self.assertEqual(val[0], -9)
+        self.assertEqual(val[1], 0.001)
 
     def test_handleConfigValue_convertToTypeFail(self):
         """
@@ -224,7 +227,8 @@ class TestUtilsHandleConfigValue(unittest.TestCase):
         can_be_unset = False
         allowed_values = [1, 2, 3, 4, 5, 6, 7]
         v = 4.5  # v must equal the misstyped value in val
-        errmsg = '{} is not an allowed value for {} in .cfg file. Check allowed_values'.format(v, item)
+        errmsg = ('{} is not an allowed value for {} in .cfg file. Check allowed_values'.
+                  format(v, item))
 
         with self.assertRaisesRegex(SystemExit, errmsg):
             val = _handle_config_value(var=val, default=default, item=item,

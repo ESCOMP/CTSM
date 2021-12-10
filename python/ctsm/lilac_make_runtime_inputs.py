@@ -6,7 +6,6 @@ import argparse
 import logging
 
 from configparser import ConfigParser
-from configparser import NoSectionError, NoOptionError
 
 from CIME.buildnml import create_namelist_infile # pylint: disable=import-error
 
@@ -132,8 +131,10 @@ def buildnml(cime_path, rundir):
     config.read(ctsm_cfg_path)
 
     lnd_domain_file = get_config_value(config, 'buildnml_input', 'lnd_domain_file', ctsm_cfg_path)
-    fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat', ctsm_cfg_path, can_be_unset=True)
-    finidat = get_config_value(config, 'buildnml_input', 'finidat', ctsm_cfg_path, can_be_unset=True)
+    fsurdat = get_config_value(config, 'buildnml_input', 'fsurdat',
+                               ctsm_cfg_path, can_be_unset=True)
+    finidat = get_config_value(config, 'buildnml_input', 'finidat',
+                               ctsm_cfg_path, can_be_unset=True)
 
     ctsm_phys = get_config_value(config, 'buildnml_input', 'ctsm_phys', ctsm_cfg_path,
                                  allowed_values=['clm4_5', 'clm5_0', 'clm5_1'])
