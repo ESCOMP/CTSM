@@ -1,9 +1,19 @@
-from ctsm.site_and_regional.base_case import BaseCase
+"""
+This module includes the definition for singlepoint class.
+"""
+
+#-- Import libraries
 import os
 import logging
+
+from datetime import date
+
+#-- 3rd party libraries
 import numpy as np
 import xarray as xr
-from datetime import date
+
+#-- import local classes for this script
+from ctsm.site_and_regional.base_case import BaseCase
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +40,13 @@ class SinglePointCase(BaseCase):
 
     create_domain_at_point
         Create domain file at a single point.
+
     create_landuse_at_point:
         Create landuse file at a single point.
+
     create_surfdata_at_point:
         Create surface dataset at a single point.
+
     create_datmdomain_at_point:
         Create DATM domain file at a single point.
     """

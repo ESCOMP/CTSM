@@ -11,11 +11,8 @@ load the following into your local environment
     ncar_pylib
 
 -------------------------------------------------------------------
-To see the available options for single point cases:
-    ./subset_data.py point --help
-
-To see the available options for regional cases:
-    ./subset_data.py reg --help 
+To see the available options for single point or regional cases:
+    ./subset_data.py --help 
 -------------------------------------------------------------------
 
 This script extracts domain files, surface dataset, and DATM files
@@ -60,56 +57,58 @@ By default, it only extracts surface dataset and for extracting other
 files, the appropriate flags should be used.
 -------------------------------------------------------------------
 To run the script for a single point:
-    ./subset_data.py point --help
+    ./subset_data.py point
  
 To run the script for a region:
-    ./subset_data.py reg --help 
+    ./subset_data.py reg
 
 To remove NPL from your environment on Cheyenne/Casper:
     deactivate
 -------------------------------------------------------------------
 """
 
-# TODO
-# Automatic downloading of missing files if they are missing
+# TODO [NS]:
+# -[] Automatic downloading of missing files if they are missing
 # default 78 pft vs 16 pft
 
-#  Import libraries
-from __future__ import print_function
+#-- Import libraries
 
-import sys
+#-- standard libraries
 import os
+import sys
 import string
 import logging
-import subprocess
 import argparse
-
-import numpy as np
-import xarray as xr
 import textwrap
+import subprocess
 
 from datetime import date
 from getpass import getuser
-from logging.handlers import RotatingFileHandler
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
+#-- 3rd party libraries
+import numpy as np
+import xarray as xr
 
+#-- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 
-from ctsm.ctsm_logging import (
-    setup_logging_pre_config,
-    add_logging_args,
-    process_logging_args,
-)
+from ctsm.utils import str2bool
+
+#-- import ctsm logging flags
+from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 
 logger = logging.getLogger(__name__)
-
 
 def get_parser():
     """
     Get the parser object for subset_data.py script.
+
+    Returns:
+        parser (ArgumentParser): ArgumentParser which includes all the parser information.
+
     """
     parser = ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -314,7 +313,7 @@ def get_parser():
             nargs="?",
             const=True,
             required=False,
-            default=False,
+            default=True,
         )
         subparser.add_argument(
             "--dompft",
@@ -347,34 +346,6 @@ def get_parser():
          """
     )
     return parser
-
-
-def str2bool(v):
-    """
-    Function for converting different forms of
-    command line boolean strings to boolean value.
-
-    Args:
-        v (str): String bool input
-
-    Raises:
-        if the argument is not an acceptable boolean string
-        (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
-        argparse.ArgumentTypeError: The string should be one of the mentioned values.
-
-    Returns:
-        bool: Boolean value corresponding to the input.
-    """
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ("yes", "true", "t", "y", "1"):
-        return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
-        return False
-    else:
-        raise argparse.ArgumentTypeError(
-            "Boolean value expected. [true or false] or [y or n]"
-        )
 
 
 def plat_type(x):
@@ -428,23 +399,6 @@ def plon_type(x):
     return x
 
 
-def get_git_sha():
-    """
-    Returns Git short SHA for the currect directory.
-    """
-    try:
-
-        # os.abspath(__file__)
-        sha = (
-            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
-            .strip()
-            .decode()
-        )
-    except subprocess.CalledProcessError:
-        sha = "NOT-A-GIT-REPOSITORY"
-    return sha
-
-
 def main():
 
     # -- add logging flags from ctsm_logging
@@ -456,20 +410,11 @@ def main():
 
     process_logging_args(args)
 
-    # --------------------------------- #
-
     today = date.today()
     today_string = today.strftime("%Y%m%d")
 
     myname = getuser()
-
     pwd = os.getcwd()
-
-    # log_file = os.path.join(pwd, today_string + ".log")
-
-    # log_level = logging.DEBUG
-    # setup_logging(log_file, log_level)
-    # log = logging.getLogger(__name__)
 
     logging.info("User = " + myname)
     logging.info("Current directory = " + pwd)
@@ -490,10 +435,13 @@ def main():
 
         # --  Create regional CLM domain file
         create_domain = args.create_domain
+
         # --  Create CLM surface data file
         create_surfdata = args.create_surfdata
+
         # --  Create CLM surface data file
         create_landuse = args.create_landuse
+
         # --  Create single point DATM atmospheric forcing data
         create_datm = args.create_datm
         datm_syr = args.datm_syr
@@ -525,10 +473,10 @@ def main():
             uniform_snowpack,
             saturation_excess,
         )
+
         single_point.create_tag()
 
         logging.debug(single_point)
-        # output_to_logger (single_point)
 
         if crop_flag:
             num_pft = "78"
@@ -558,16 +506,16 @@ def main():
         logging.info("dir_output_datm : " + dir_output_datm)  #
 
         # --  Set time stamp
-        today = date.today()
-        timetag = today.strftime("%y%m%d")
+        #today = date.today()
+        #timetag = today.strftime("%y%m%d")
 
         # --  Specify land domain file  ---------------------------------
         fdomain_in = os.path.join(
             dir_inputdata, "share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc"
         )
-        fdomain_out = dir_output + single_point.add_tag_to_filename(
+        fdomain_out = os.path.join(dir_output , single_point.add_tag_to_filename(
             fdomain_in, single_point.tag
-        )
+        ))
         single_point.fdomain_in = fdomain_in
         single_point.fdomain_out = fdomain_out
         logging.info("fdomain_in  : " + fdomain_in)  #
@@ -586,9 +534,9 @@ def main():
             )
 
         # fsurf_out  = dir_output + single_point.add_tag_to_filename(fsurf_in, single_point.tag) # remove res from filename for singlept
-        fsurf_out = dir_output + single_point.create_fileout_name(
+        fsurf_out = os.path.join( dir_output , single_point.create_fileout_name(
             fsurf_in, single_point.tag
-        )
+        ))
         single_point.fsurf_in = fsurf_in
         single_point.fsurf_out = fsurf_out
 
@@ -653,7 +601,13 @@ def main():
         exit()
 
     elif args.run_type == "reg":
-        logging.info("Running the script for the region")
+        logging.info(
+            "----------------------------------------------------------------------------"
+        )
+        logging.info( 
+            "This script extracts a single point from the global CTSM inputdata datasets."
+        )
+
         # --  Specify region to extract
         lat1 = args.lat1
         lat2 = args.lat2
@@ -663,10 +617,13 @@ def main():
 
         # --  Create regional CLM domain file
         create_domain = args.create_domain
+
         # --  Create CLM surface data file
         create_surfdata = args.create_surfdata
+
         # --  Create CLM surface data file
         create_landuse = args.create_landuse
+
         # --  Create DATM atmospheric forcing data
         create_datm = args.create_datm
 
@@ -686,6 +643,8 @@ def main():
             create_datm,
         )
 
+        region.create_tag()
+
         logging.debug(region)
 
         if crop_flag:
@@ -694,8 +653,6 @@ def main():
             num_pft = "16"
 
         logging.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
-
-        region.create_tag()
 
         # --  Set input and output filenames
         # --  Specify input and output directories
@@ -707,50 +664,53 @@ def main():
         dir_clm_forcedata = "/glade/p/cgd/tss/CTSM_datm_forcing_data/"
 
         # --  Set time stamp
-        command = 'date "+%y%m%d"'
-        x2 = subprocess.Popen(command, stdout=subprocess.PIPE, shell="True")
-        x = x2.communicate()
-        timetag = x[0].strip()
-        logging.info(timetag)
+        #today = date.today() 
+        #timetag = today.strftime("%y%m%d")
 
         # --  Specify land domain file  ---------------------------------
-        fdomain_in = (
-            dir_inputdata + "share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc"
+        fdomain_in = os.path.join(
+            dir_inputdata , "share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc"
         )
-        fdomain_out = (
-            dir_output + "domain.lnd.fv1.9x2.5_gx1v7." + region.tag + "_170518.nc"
+        fdomain_out = os.path.join(
+            dir_output , "domain.lnd.fv1.9x2.5_gx1v7." + region.tag + "_170518.nc"
         )
         # SinglePointCase.set_fdomain (fdomain)
         region.fdomain_in = fdomain_in
         region.fdomain_out = fdomain_out
+        logging.info("fdomain_in  : " + fdomain_in)
+        logging.info("fdomain_out : " + fdomain_out)
 
         # --  Specify surface data file  --------------------------------
-        fsurf_in = (
+        fsurf_in = os.path.join(
             dir_inputdata
-            + "lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc"
+            , "lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc"
         )
-        fsurf_out = (
+        fsurf_out = os.path.join(
             dir_output
-            + "surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_"
+            , "surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_"
             + region.tag
             + "_c170824.nc"
         )
         region.fsurf_in = fsurf_in
         region.fsurf_out = fsurf_out
+        logging.info("fsurf_in  : " + fdomain_in)
+        logging.info("fsurf_out : " + fdomain_out)
 
         # --  Specify landuse file  -------------------------------------
-        fluse_in = (
+        fluse_in = os.path.join(
             dir_inputdata
-            + "lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc"
+            , "lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc"
         )
-        fluse_out = (
+        fluse_out = os.path.join(
             dir_output
-            + "landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_"
+            , "landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_"
             + region.tag
             + ".c170824.nc"
         )
         region.fluse_in = fluse_in
         region.fluse_out = fluse_out
+        logging.info("fluse_in  : " + fdomain_in)
+        logging.info("fluse_out : " + fdomain_out)
 
         # --  Create CTSM domain file
         if create_domain:
