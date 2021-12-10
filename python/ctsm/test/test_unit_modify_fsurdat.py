@@ -14,7 +14,10 @@ from ctsm.utils import lon_range_0_to_360
 from ctsm.modify_fsurdat.modify_fsurdat import ModifyFsurdat
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
-# readable; in pylint can use: disable=invalid-name
+# readable
+# pylint: disable=invalid-name
+
+# pylint: disable=protected-access
 
 class TestModifyFsurdat(unittest.TestCase):
     """Tests the setvar_lev functions and the

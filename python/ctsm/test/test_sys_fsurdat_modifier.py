@@ -17,6 +17,10 @@ from ctsm.path_utils import path_to_ctsm_root
 from ctsm import unit_testing
 from ctsm.modify_fsurdat.fsurdat_modifier import fsurdat_modifier
 
+# Allow test names that pylint doesn't like; otherwise hard to make them
+# readable
+# pylint: disable=invalid-name
+
 class TestSysFsurdatModifier(unittest.TestCase):
     """System tests for fsurdat_modifier"""
 
