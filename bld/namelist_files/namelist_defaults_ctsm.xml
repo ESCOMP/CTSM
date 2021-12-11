@@ -2549,7 +2549,8 @@ lnd/clm2/surfdata_map/release-clm5.0.30/surfdata_ne0np4.CONUS.ne30x8_hist_78pfts
 <!-- ===== FATES DEFAULTS =========== -->
 <fates_spitfire_mode           use_fates=".true.">0</fates_spitfire_mode>
 <use_fates_planthydro          use_fates=".true.">.false.</use_fates_planthydro>
-<use_fates_hardening          use_fates=".true.">.false.</use_fates_hardening>
+<use_fates_hydrohard          use_fates=".true.">.false.</use_fates_frosthard>
+<use_fates_frosthard          use_fates=".true.">.false.</use_fates_hydrohard>
 <use_fates_cohort_age_tracking use_fates=".true.">.false.</use_fates_cohort_age_tracking>
 <use_fates_ed_st3              use_fates=".true.">.false.</use_fates_ed_st3>
 <use_fates_ed_prescribed_phys  use_fates=".true.">.false.</use_fates_ed_prescribed_phys>

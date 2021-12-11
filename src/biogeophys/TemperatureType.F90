@@ -7,7 +7,7 @@ module TemperatureType
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use decompMod       , only : bounds_type
   use abortutils      , only : endrun
-  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage, use_fates_hardening !marius
+  use clm_varctl      , only : use_cndv, iulog, use_luna, use_crop, use_biomass_heat_storage,use_fates_hydrohard,use_fates_frosthard !marius
   use clm_varpar      , only : nlevsno, nlevgrnd, nlevlak, nlevurb, nlevmaxurbgrnd
   use clm_varcon      , only : spval, ispval
   use GridcellType    , only : grc
@@ -589,7 +589,7 @@ contains
     end if
 
     ! Accumulated quantities
-    if (use_fates_hardening) then !Marius
+    if (use_fates_hydrohard .or. use_fates_frosthard) then !Marius
       this%t_ref2m_24_patch(begp:endp)  = spval
       call hist_addfld1d (fname='T2m_24', units='K',  &
            avgflag='A', long_name='average temperature 2m (24hrs)', &
@@ -918,7 +918,7 @@ contains
     logical :: readvar   ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 
-    if (use_fates_hardening) then !marius
+    if (use_fates_hydrohard .or. use_fates_frosthard) then !marius
       call restartvar(ncid=ncid, flag=flag, varname='T_HARD5', xtype=ncd_double,  &
            dim1name='pft', &
            long_name='5 year average of min yearly 2-m temperature for hardening', units='K', &
@@ -1204,7 +1204,7 @@ contains
          subgrid_type='pft', numlev=1, init_value=0._r8)
 
     !Marius
-    if (use_fates_hardening) then 
+    if (use_fates_hydrohard .or. use_fates_frosthard) then 
       this%t_ref2m_24_patch(bounds%begp:bounds%endp) = spval
       call init_accum_field (name='T_REF24', units='K', &    
          desc='24 hour average of 2-m temperature', accum_type='timeavg', accum_period=-1, &
@@ -1327,7 +1327,7 @@ contains
     call extract_accum_field ('T_VEG240', rbufslp, nstep)
     this%t_veg240_patch(begp:endp) = rbufslp(begp:endp)
 
-    if (use_fates_hardening) then
+    if (use_fates_hydrohard .or. use_fates_frosthard) then
       call extract_accum_field ('T_REF24', rbufslp, nstep) !marius
       this%t_ref2m_24_patch(begp:endp) = rbufslp(begp:endp)
       call extract_accum_field ('T_HARD5', rbufslp, nstep) !marius
@@ -1457,7 +1457,7 @@ contains
     call extract_accum_field ('T_VEG240', this%t_veg240_patch , nstep)
 
     !----------------------------------------------------------------------------marius
-    if (use_fates_hardening) then
+    if (use_fates_hydrohard .or. use_fates_frosthard) then
       ! Accumulate and extract T_REF24 
       call update_accum_field  ('T_REF24' , this%t_ref2m_patch , nstep)
       call extract_accum_field ('T_REF24' , rbufslp , nstep)
