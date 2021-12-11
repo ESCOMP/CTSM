@@ -1,7 +1,7 @@
 ===============================================================
 Tag name:  ctsm5.1.dev0??
 Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
-Date:  Tue Dec 10 10:00:14 MST 2021
+Date:  Fri Dec 10 18:00:14 MST 2021
 One-line Summary: Adding fsurdat_modifier tool
 
 Purpose and description of changes
@@ -56,46 +56,8 @@ Changes to tests or testing:
 
 Testing summary:
 ----------------
-[... Remove before making master tag.
-
-Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
-However, it occasionally makes sense to do more or less system testing;
-here is guidance on different available levels of system testing:
-    a) no system testing (for use when the only changes are ones that
-                          have absolutely no impact on system runs; this
-                          includes documentation-only tags, tags that
-                          just change the tools or some python code that
-                          does not impact system runs, etc.)
-    b) minimal (for use in rare cases where only a small change with 
-                known behavior is added ... eg. a minor bug fix. This
-		might be to just run the "short" test list, or to run
-		a single test. Whatever makes sense for the particular case.)
-    c) regular (regular tests on normal machines if CTSM source is modified)
-    d) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
-                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.) 
-		would be run as well)
-
-In addition, various other tests of the tools, python and perl
-infrastructure should be run when appropriate, as described below.
-
-...]
-
-[Remove any lines that don't apply.]
 
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
-
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    cheyenne - 
-
-  tools-tests (test/tools) (if tools have been changed):
-
-    cheyenne - 
-
-  PTCLM testing (tools/shared/PTCLM/test): (if cime or cime_config are changed)
-  (PTCLM is being deprecated, so we only expect this to be done on occasion)
-
-    cheyenne - 
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
@@ -105,28 +67,13 @@ infrastructure should be run when appropriate, as described below.
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- PASS
-    izumi ------- 
-  
-  fates tests:
-    cheyenne ---- 
-
-  any other testing (give details below):
-
-If the tag used for baseline comparisons was NOT the previous tag, note that here:
-
 
 Answer changes
 --------------
-
 Changes answers relative to baseline: NO
-
 
 Other details
 -------------
-[Remove any lines that don't apply.]
-
-List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
-
 Pull Requests that document the changes (include PR ids):
  https://github.com/ESCOMP/ctsm/pull/1448
 
