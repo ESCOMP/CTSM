@@ -1,4 +1,180 @@
 ===============================================================
+Tag name: ctsm5.1.dev0??
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Date: Sat Dec 11 12:28:45 MST 2021
+One-line Summary: Introduce vert. resolved MIMICS as new method to solve below ground decomp.
+
+Purpose and description of changes
+----------------------------------
+
+ Introducing new option to solve below ground decomposition: MIMICSWieder2015.
+ The old option (CENTURYKoven2013) remains available. User will select one or
+ the other via the namelist variable soil_decomp_method.
+
+ Elin's MIMICS+ github issue relates: #1260.
+ MIMICS spinup issues relate and are listed in caveats for users.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Issues fixed (include CTSM Issue #):
+ #1356 : remove decompCN code and testing
+
+CIME Issues fixed (include issue #):
+
+Known bugs introduced in this tag (include issue #):
+
+Known bugs found since the previous tag (include issue #):
+
+
+Notes of particular relevance for users
+---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for users (e.g., need to interpolate initial conditions):
+ MIMICS spinup method is in development:
+ #1451
+ #1455
+ #1457
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ New option MIMICSWieder2015 for use with namelist variable soil_decomp_method
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+ CLM parameter files now include new MIMICS-related parameters prefixed with
+ mimics_. Existing CENTURYKoven-specific parameters were renamed to include the
+ prefix bgc_. Parameters used by both CENTURYKoven2013 and MIMICSWieder2015 have
+ neither prefix.
+
+Substantial timing or memory changes:
+ Timing comparison between CENTURYKoven (BGC for short) and MIMICSWieder:
+ In a 1x1_brazil test writing annual output and restarts every 10 yrs,
+ BGC took ~2.8 hrs/100 yrs, MIMICS took ~3.6 hrs/100 yrs.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+ New test-suite tests:
+ ERP_D_P36x2_Ld3.f10_f10_mg37.I1850Clm51BgcCrop.cheyenne_gnu.clm-mimics
+ SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm50BgcQianRs.izumi_gnu.clm-mimics
+
+Testing summary:
+----------------
+[... Remove before making master tag.
+
+Nearly all CTSM tags should undergo 'regular' (aux_clm) testing.
+However, it occasionally makes sense to do more or less system testing;
+here is guidance on different available levels of system testing:
+    a) no system testing (for use when the only changes are ones that
+                          have absolutely no impact on system runs; this
+                          includes documentation-only tags, tags that
+                          just change the tools or some python code that
+                          does not impact system runs, etc.)
+    b) minimal (for use in rare cases where only a small change with
+                known behavior is added ... eg. a minor bug fix. This
+		might be to just run the "short" test list, or to run
+		a single test. Whatever makes sense for the particular case.)
+    c) regular (regular tests on normal machines if CTSM source is modified)
+    d) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+                and normally all of the ancillary tests (build-namelist, python, ptclm, etc.)
+		would be run as well)
+
+In addition, various other tests of the tools, python and perl
+infrastructure should be run when appropriate, as described below.
+
+...]
+
+[Remove any lines that don't apply.]
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne -
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    (any machine) -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- OK most recent against dev061
+    izumi ------- OK most recent against dev061
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    cheyenne ----
+    izumi -------
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: NO
+
+  [ If a tag changes answers relative to baseline comparison the
+    following should be filled in (otherwise remove this section).
+    And always remove these three lines and parts that don't apply. ]
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename:
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1318
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev066
 Originator(s): rgknox (Ryan Knox,,,)
 Date: Sat Dec  4 01:58:42 MST 2021
