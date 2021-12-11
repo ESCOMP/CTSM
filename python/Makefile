@@ -39,10 +39,10 @@ lint: FORCE
 	$(PYLINT) $(PYLINT_ARGS) $(PYLINT_SRC)
 
 .PHONY: black
-# Run black on all of the .py* python modules under python as well as the main top level script
-# Exclude the pylint file
+# Run black on all of the python files here and undeneath.
+# Use the black configure file to explicitly set a few things and specifiy the exact files.
 black: FORCE
-	black --check --include '(run_ctsm_py_tests|\.py)' --exclude '(\.pylintrc)' .
+	black --check --config pyproject.toml .
 
 .PHONY: clean
 clean: FORCE
