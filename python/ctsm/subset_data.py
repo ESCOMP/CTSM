@@ -43,6 +43,7 @@ files, the appropriate flags should be used.
 from __future__ import print_function
 import sys
 import os
+import string
 import logging
 import subprocess
 import argparse
@@ -52,6 +53,7 @@ from datetime import date
 from getpass import getuser
 from logging.handlers import RotatingFileHandler
 from argparse import ArgumentParser
+import textwrap
 
 from ctsm.site_and_regional.base_case import USRDAT_DIR
 from ctsm.site_and_regional.regional_case import RegionalCase
@@ -61,14 +63,20 @@ from ctsm.path_utils import path_to_ctsm_root
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", 'python'))
 sys.path.insert(1, _CTSM_PYTHON)
 
-# -- Globals and Default Values ---
 DEFAULTS_FILE = "default_data.cfg"
-myname = getuser()
+
+from ctsm.ctsm_logging import (
+    setup_logging_pre_config,
+    add_logging_args,
+    process_logging_args,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def get_parser():
     """
-    Get parser object for this script.
+    Get the parser object for subset_data.py script.
     """
     parser = ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -81,7 +89,7 @@ def get_parser():
         "point", help="Run script for a single point.")
     rg_parser = subparsers.add_parser("reg", help="Run script for a region.")
 
-    # First add arguments specific to a point or regional parser
+    # -- signle point parser options
     pt_parser.add_argument(
         "--lat",
         help="Single point latitude. [default: %(default)s]",
@@ -110,13 +118,50 @@ def get_parser():
         default="",
     )
     pt_parser.add_argument(
-        "--outdir",
-        help="Output directory. [default: %(default)s]",
+        "--unisnow",
+        help="Flag for creating datasets using uniform snowpack. [default: %(default)s]",
         action="store",
-        dest="out_dir",
-        type=str,
-        default="/glade/scratch/" + myname + "/single_point/",
+        dest="uni_snow",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        required=False,
+        default=True,
     )
+    pt_parser.add_argument(
+        "--single-pft",
+        help="Flag for making the whole grid 100%% single PFT. [default: %(default)s]",
+        action="store",
+        dest="overwrite_single_pft",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        required=False,
+        default=True,
+    )
+    pt_parser.add_argument(
+        "--zero-nonveg",
+        help="Flag for setting all non-vegetation landunits to zero. [default: %(default)s]",
+        action="store",
+        dest="zero_nonveg",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        required=False,
+        default=True,
+    )
+    pt_parser.add_argument(
+        "--saturation-excess",
+        help="Flag for making dataset using saturation excess. [default: %(default)s]",
+        action="store",
+        dest="saturation_excess",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        required=False,
+        default=True,
+    )
+    # -- region-specific parser options
     rg_parser.add_argument(
         "--lat1",
         help="Region start latitude. [default: %(default)s]",
@@ -162,20 +207,12 @@ def get_parser():
         type=str,
         default="",
     )
-    rg_parser.add_argument(
-        "--outdir",
-        help="Output directory. [default: %(default)s]",
-        action="store",
-        dest="out_dir",
-        type=str,
-        default="/glade/scratch/" + myname + "/region/",
-    )
 
-    # Now add arguments shared between pt_parser and rg_parser
+    # -- common options between both subparsers
     for subparser in [pt_parser, rg_parser]:
         subparser.add_argument(
             "--create-domain",
-            help="Create CLM domain file at single point or region. [default: %(default)s]",
+            help="Flag for creating CLM domain file at single point/region. [default: %(default)s]",
             action="store",
             dest="create_domain",
             type=str2bool,
@@ -186,7 +223,7 @@ def get_parser():
         )
         subparser.add_argument(
             "--create-surface",
-            help="Create surface data file at single point or region. [default: %(default)s]",
+            help="Flag for creating surface data file at single point/region. [default: %(default)s]",
             action="store",
             dest="create_surfdata",
             type=str2bool,
@@ -197,7 +234,7 @@ def get_parser():
         )
         subparser.add_argument(
             "--create-landuse",
-            help="Create landuse data file at single point or region. [default: %(default)s]",
+            help="Flag for creating landuse data file at single point/region. [default: %(default)s]",
             action="store",
             dest="create_landuse",
             type=str2bool,
@@ -208,7 +245,7 @@ def get_parser():
         )
         subparser.add_argument(
             "--create-datm",
-            help="Create DATM forcing data at single point or region. [default: %(default)s]",
+            help="Flag for creating DATM forcing data at single point/region. [default: %(default)s]",
             action="store",
             dest="create_datm",
             type=str2bool,
@@ -218,8 +255,19 @@ def get_parser():
             default=False,
         )
         subparser.add_argument(
+            "--create-user-mods",
+            help="Flag for creating a user mods directory for running CTSM. [default: %(default)s]",
+            action="store",
+            dest="create_user_mods",
+            type=str2bool,
+            nargs="?",
+            const=True,
+            required=False,
+            default=False,
+        )
+        subparser.add_argument(
             "--datm-syr",
-            help="Start year for creating DATM forcing. [default: %(default)s]",
+            help="Start year for creating DATM forcing at single point/region. [default: %(default)s]",
             action="store",
             dest="datm_syr",
             required=False,
@@ -228,7 +276,7 @@ def get_parser():
         )
         subparser.add_argument(
             "--datm-eyr",
-            help="End year for creating DATM forcing. [default: %(default)s]",
+            help="End year for creating DATM forcing at single point/region. [default: %(default)s]",
             action="store",
             dest="datm_eyr",
             required=False,
@@ -237,70 +285,53 @@ def get_parser():
         )
         subparser.add_argument(
             "--crop",
-            help="Create datasets using the extensive list of prognostic crop types. [default: %(default)s]",
-            action="store_true",
+            help="Flag for creating datasets using the extensive list of prognostic crop types. [default: %(default)s]",
+            action="store",
             dest="crop_flag",
+            type=str2bool,
+            nargs="?",
+            const=True,
+            required=False,
             default=False,
         )
         subparser.add_argument(
             "--dompft",
-            help="Dominant PFT type. [default: %(default)s] ",
+            help="Dominant PFT type . [default: %(default)s] ",
             action="store",
             dest="dom_pft",
             type=int,
             default=7,
         )
-        subparser.add_argument(
-            "--no-unisnow",
-            help="Turn off the flag for create uniform snowpack. [default: %(default)s]",
-            action="store_false",
-            dest="uni_snow",
-            default=True,
-        )
-        subparser.add_argument(
-            "--no-overwrite-single-pft",
-            help="Turn off the flag for making the whole grid 100%% single PFT. [default: %(default)s]",
-            action="store_false",
-            dest="overwrite_single_pft",
-            default=True,
-        )
-        subparser.add_argument(
-            "--zero-nonveg",
-            help="Set all non-vegetation landunits to zero. [default: %(default)s]",
-            action="store",
-            dest="zero_nonveg",
-            type=bool,
-            default=True,
-        )
-        subparser.add_argument(
-            "--no-saturation-excess",
-            help="Turn off the flag for saturation excess. [default: %(default)s]",
-            action="store",
-            dest="no_saturation_excess",
-            type=bool,
-            default=True,
-        )
-        subparser.add_argument(
-            "--create-user-mods",
-            help="Create a user mods directory for running CTSM. [default: %(default)s]",
-            action="store",
-            dest="create_user_mods",
-            type=str2bool,
-            default=False,
 
+        if subparser == pt_parser:
+            parser_name = "single_point"
+        else:
+            parser_name = "regional"
+
+        subparser.add_argument(
+            "--outdir",
+            help="Output directory. \n [default: %(default)s]",
+            action="store",
+            dest="out_dir",
+            type=str,
+            default=os.path.join(os.getcwd(), "subset_data_" + parser_name),
         )
         subparser.add_argument(
             "--user-mods-dir",
-            help="Path to user mods directory. [default: %(default)s]",
+            help="User mods directory. \n [default: %(default)s]",
             action="store",
             dest="user_mods_dir",
             type=str,
-            default="/glade/scratch/" + myname + "/subset_data/user_mods",
+            default="",
         )
 
-    newline = "\n"
-    parser.epilog = f"""==================================={newline}{newline}{pt_parser.format_help()}{newline}{newline}{rg_parser.format_help()}"""
-
+    # -- print help for both subparsers
+    parser.epilog = textwrap.dedent(
+        f"""\
+         {pt_parser.format_help()}
+         {rg_parser.format_help()}
+         """
+    )
     return parser
 
 
@@ -374,94 +405,26 @@ def get_git_sha():
     try:
 
         # os.abspath(__file__)
-        sha = (subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode())
+        sha = (
+            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+            .strip()
+            .decode()
+        )
     except subprocess.CalledProcessError:
         sha = "NOT-A-GIT-REPOSITORY"
     return sha
 
 
-def setup_logging(log_file, log_level):
-    """
-    Setup logging to log to console and log file.
-    """
-
-    root_logger = logging.getLogger()
-    root_logger.setLevel(log_level)
-
-    # setup log file
-    one_mb = 1000000
-    handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=one_mb, backupCount=10)
-
-    fmt = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s", datefmt="%y-%m-%d %H:%M:%S")
-
-    handler.setFormatter(fmt)
-    root_logger.addHandler(handler)
-
-    # setup logging to console
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(fmt)
-    root_logger.addHandler(stream_handler)
-
-    # redirect stdout/err to log file
-    StreamToLogger.setup_stdout()
-    StreamToLogger.setup_stderr()
-
-
-class StreamToLogger(object):
-    """
-    Custom class to log all stdout and stderr streams.
-    modified from:
-    https://www.electricmonk.nl/log/2011/08/14/redirect-stdout-and-stderr-to-a-logger-in-python/
-    """
-
-    def __init__(
-            self, stream, logger, log_level=logging.INFO, also_log_to_stream=False
-    ):
-        self.logger = logger
-        self.stream = stream
-        self.log_level = log_level
-        self.linebuf = ""
-        self.also_log_to_stream = also_log_to_stream
-
-    @classmethod
-    def setup_stdout(cls, also_log_to_stream=True):
-        """
-        Setup logger for stdout
-        """
-        stdout_logger = logging.getLogger("STDOUT")
-        sl = StreamToLogger(sys.stdout, stdout_logger,
-                            logging.INFO, also_log_to_stream)
-        sys.stdout = sl
-
-    @classmethod
-    def setup_stderr(cls, also_log_to_stream=True):
-        """
-        Setup logger for stdout
-        """
-        stderr_logger = logging.getLogger("STDERR")
-        sl = StreamToLogger(
-            sys.stderr, stderr_logger, logging.ERROR, also_log_to_stream
-        )
-        sys.stderr = sl
-
-    def write(self, buf):
-        temp_linebuf = self.linebuf + buf
-        self.linebuf = ""
-        for line in temp_linebuf.splitlines(True):
-            if line[-1] == "\n":
-                self.logger.log(self.log_level, line.rstrip())
-            else:
-                self.linebuf += line
-
-    def flush(self):
-        if self.linebuf != "":
-            self.logger.log(self.log_level, self.linebuf.rstrip())
-        self.linebuf = ""
-
-
 def main():
-    # parse command-line arguments
-    args = get_parser().parse_args()
+
+    # -- add logging flags from ctsm_logging
+    setup_logging_pre_config()
+    parser = get_parser()
+    add_logging_args(parser)
+
+    args = parser.parse_args()
+
+    process_logging_args(args)
 
     # parse defaults file
     defaults = configparser.ConfigParser()
@@ -472,15 +435,18 @@ def main():
     today = date.today()
     today_string = today.strftime("%Y%m%d")
 
+    myname = getuser()
+
     pwd = os.getcwd()
 
-    log_file = os.path.join(pwd, today_string + ".log")
+    # log_file = os.path.join(pwd, today_string + ".log")
 
-    log_level = logging.DEBUG
-    setup_logging(log_file, log_level)
+    # log_level = logging.DEBUG
+    # setup_logging(log_file, log_level)
+    # log = logging.getLogger(__name__)
 
-    print("User = " + myname)
-    print("Current directory = " + pwd)
+    logging.info("User = " + myname)
+    logging.info("Current directory = " + pwd)
 
     # --------------------------------- #
 
@@ -500,7 +466,7 @@ def main():
         fsurf_in = defaults.get("surfdat", "surfdat_16pft")
         fluse_in = defaults.get("landuse", "landuse_16pft")
 
-    print("crop_flag = {} => num_pft = {}".format(args.crop_flag.__str__(), num_pft))
+    logging.debug("crop_flag = {} => num_pft = {}".format(args.crop_flag.__str__(), num_pft))
 
     # --  Specify input and output directories and files
 
@@ -514,11 +480,13 @@ def main():
     if args.create_datm:
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
-        print("dir_input_datm : ", dir_input_datm)
-        print("dir_output_datm: ", os.path.join(args.out_dir, dir_output_datm))
+        logging.info("dir_input_datm : ", dir_input_datm)
+        logging.info("dir_output_datm: ", os.path.join(args.out_dir, dir_output_datm))
 
     # -- Set up user mods directories and base files
     if args.create_user_mods:
+        if args.user_mods_dir == "":
+            args.user_mods_dir = os.path.join(args.out_dir, "user_mods")
         if not os.path.isdir(args.user_mods_dir):
             os.mkdir(args.user_mods_dir)
 
@@ -557,8 +525,8 @@ def main():
     datm_tpqwname = defaults.get("datm_gswp3", "tpqwname")
 
     if args.run_type == "point":
-        print("----------------------------------------------------------------------------")
-        print("This script extracts a single point from the global CTSM datasets.")
+        logging.info("----------------------------------------------------------------------------")
+        logging.info("This script extracts a single point from the global CTSM datasets.")
 
         # --  Create SinglePoint Object
         single_point = SinglePointCase(
@@ -574,7 +542,7 @@ def main():
             args.dom_pft,
             args.zero_nonveg,
             args.uni_snow,
-            args.no_saturation_excess,
+            args.saturation_excess,
             args.out_dir,
         )
         single_point.create_tag()
@@ -582,13 +550,15 @@ def main():
         if single_point.create_user_mods and single_point.create_datm:
             single_point.datm_streams_file = nl_datm
 
+        logging.debug(single_point)
+
         # --  Create CTSM domain file
         if single_point.create_domain:
             # --  Specify land domain file  ---------------------------------
             single_point.fdomain_in = os.path.join(dir_inputdata, fdomain_in)
             single_point.fdomain_out = single_point.add_tag_to_filename(fdomain_in, single_point.tag)
-            print("fdomain_in:  ", single_point.fdomain_in)
-            print("fdomain_out: ", os.path.join(single_point.output_dir, single_point.fdomain_out))
+            logging.info("fdomain_in:  ", single_point.fdomain_in)
+            logging.info("fdomain_out: ", os.path.join(single_point.output_dir, single_point.fdomain_out))
             single_point.create_domain_at_point()
 
         # --  Create CTSM surface data file
@@ -596,8 +566,8 @@ def main():
             # --  Specify surface file  ---------------------------------
             single_point.fsurf_in = os.path.join(dir_inputdata, dir_inputsurf, fsurf_in)
             single_point.fsurf_out = single_point.create_fileout_name(fsurf_in, single_point.tag)
-            print("fsurf_in:  ", single_point.fsurf_in)
-            print("fsurf_out: ", single_point.fsurf_out)
+            logging.info("fsurf_in:  ", single_point.fsurf_in)
+            logging.info("fsurf_out: ", os.path.join(single_point.output_dir, single_point.fsurf_out))
             single_point.create_surfdata_at_point()
 
             # write to user_nl_clm if specified
@@ -612,8 +582,8 @@ def main():
             # --  Specify surface file  ---------------------------------
             single_point.fluse_in = os.path.join(dir_inputdata, dir_inputluse, fluse_in)
             single_point.fluse_out = single_point.create_fileout_name(fluse_in, single_point.tag)
-            print("fluse_in:  ", single_point.fluse_in)
-            print("fluse_out: ", single_point.fluse_out)
+            logging.info("fluse_in:  ", single_point.fluse_in)
+            logging.info("fluse_out: ", os.path.join(single_point.output_dir, single_point.fluse_out))
             single_point.create_landuse_at_point()
 
             # write to user_nl_clm data if specified
@@ -629,8 +599,8 @@ def main():
             single_point.fdatmdomain_in = os.path.join(dir_input_datm, fdatmdomain_in)
             datm_file = single_point.add_tag_to_filename(single_point.fdatmdomain_in, single_point.tag)
             single_point.fdatmdomain_out = os.path.join(dir_output_datm, datm_file)
-            print("fdatmdomain_in:  ", single_point.fdatmdomain_in)
-            print("fdatmdomain out: ", single_point.fdatmdomain_out)
+            logging.info("fdatmdomain_in:  ", single_point.fdatmdomain_in)
+            logging.info("fdatmdomain out: ", os.path.join(single_point.output_dir, single_point.fdatmdomain_out))
             single_point.create_datmdomain_at_point()
 
             # -- Specify DATM directories, tags, and stream names
@@ -654,12 +624,12 @@ def main():
             shell_commands_file = open(os.path.join(args.user_mods_dir, "shell_commands"), "w")
             single_point.write_shell_commands(shell_commands_file)
 
-        print("Successfully ran script for single point.")
+        logging.info("Successfully ran script for single point.")
         exit()
 
     elif args.run_type == "reg":
-        print("----------------------------------------------------------------------------")
-        print("This script extracts a region from the global CTSM datasets.")
+        logging.info("----------------------------------------------------------------------------")
+        logging.info("This script extracts a region from the global CTSM datasets.")
 
         # --  Create Region Object
         region = RegionalCase(
@@ -677,13 +647,15 @@ def main():
         )
         region.create_tag()
 
+        logging.debug(region)
+
         # --  Create CTSM domain file
         if region.create_domain:
             # --  Specify land domain file  ---------------------------------
             region.fdomain_in = os.path.join(dir_inputdata, fdomain_in)
             region.fdomain_out = os.path.join(args.out_dir, "domain.lnd.fv1.9x2.5_gx1v7." + region.tag + "_170518.nc")
-            print("fdomain_in:  ", region.fdomain_in)
-            print("fdomain_out: ", os.path.join(region.output_dir, region.fdomain_out))
+            logging.info("fdomain_in:  ", region.fdomain_in)
+            logging.info("fdomain_out: ", region.fdomain_out)
             region.create_domain_at_reg()
 
         # --  Create CTSM surface data file
@@ -692,8 +664,8 @@ def main():
             region.fsurf_in = os.path.join(dir_inputdata, dir_inputsurf, fsurf_in)
             region.fsurf_out = os.path.join(args.out_dir, "surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_" + region.tag
                                             + "_c170824.nc")
-            print("fsurf_in:  ", region.fsurf_in)
-            print("fsurf_out: ", region.fsurf_out)
+            logging.info("fsurf_in:  ", region.fsurf_in)
+            logging.info("fsurf_out: ", region.fsurf_out)
             region.create_surfdata_at_reg()
 
             # write to user_nl_clm if specified
@@ -710,8 +682,8 @@ def main():
             region.fluse_out = os.path.join(args.out_dir,
                                             "landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_" +
                                             region.tag + ".c170824.nc")
-            print("fluse_in:  ", region.fluse_in)
-            print("fluse_out: ", region.fluse_out)
+            logging.info("fluse_in:  ", region.fluse_in)
+            logging.info("fluse_out: ", region.fluse_out)
             region.create_landuse_at_reg()
 
             # write to user_nl_clm data if specified
@@ -721,5 +693,5 @@ def main():
                 region.write_to_file(line, nl_clm)
                 nl_clm.close()
 
-        print("Successfully ran script for a regional case.")
+        logging.info("Successfully ran script for a regional case.")
         exit()

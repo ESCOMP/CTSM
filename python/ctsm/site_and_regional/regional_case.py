@@ -1,7 +1,11 @@
+import logging
+
 import numpy as np
+import xarray as xr
 
 from ctsm.site_and_regional.base_case import BaseCase
 
+logger = logging.getLogger(__name__)
 
 class RegionalCase(BaseCase):
     """
@@ -85,7 +89,8 @@ class RegionalCase(BaseCase):
             self.tag = "{}-{}_{}-{}".format(str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2))
 
     def create_domain_at_reg(self):
-        print("Creating domain file at region:", self.tag)
+        #logging.debug ("Creating domain file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+        logging.info("Creating domain file at region:"+ self.tag)
         # create 1d coordinate variables to enable sel() method
         f2 = self.create_1d_coord(self.fdomain_in, "xc", "yc", "ni", "nj")
         lat = f2["lat"]
@@ -102,12 +107,13 @@ class RegionalCase(BaseCase):
         wfile = self.fdomain_out
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode="w")
-        print("Successfully created file (fdomain_out)" + self.fdomain_out)
+        logging.info("Successfully created file (fdomain_out)" + self.fdomain_out)
         f2.close()
         f3.close()
 
     def create_surfdata_at_reg(self):
-        print("Creating surface dataset file at region:", self.tag)
+        #logging.debug ("Creating surface dataset file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+        logging.info("Creating surface dataset file at region:"+ self.tag)
         # create 1d coordinate variables to enable sel() method
         filename = self.fsurf_in
         f2 = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
@@ -124,13 +130,14 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         f3.to_netcdf(path=self.fsurf_out, mode="w")
-        print("created file (fsurf_out)" + self.fsurf_out)
+        logging.info("created file (fsurf_out)" + self.fsurf_out)
         # f1.close();
         f2.close()
         f3.close()
 
     def create_landuse_at_reg(self):
-        print("Creating surface dataset file at region:", self.tag)
+        #logging.debug ("Creating landuse file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+        logging.info("Creating landuse file at region:"+ self.tag)
         # create 1d coordinate variables to enable sel() method
         f2 = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f2["lat"]
@@ -147,6 +154,6 @@ class RegionalCase(BaseCase):
         wfile = self.fluse_out
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode="w")
-        print("Successfully created file (fdomain_out)" + self.fdomain_out)
+        logging.info("Successfully created file (fdomain_out)" + self.fdomain_out)
         f2.close()
         f3.close()

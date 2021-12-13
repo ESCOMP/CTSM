@@ -1,12 +1,13 @@
 import os
+import logging
+from datetime import date
 
 import numpy as np
 import xarray as xr
 
-from datetime import date
-
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
 
+logger = logging.getLogger(__name__)
 
 class SinglePointCase(BaseCase):
     """
@@ -28,7 +29,7 @@ class SinglePointCase(BaseCase):
         flag to set surface data to all natural vegetation (100% NATVEG, 0% other)
     uniform_snowpack
         flag to set the the surface data STD_ELEV to 0.0
-    no_saturation_excess : bool
+    saturation_excess : bool
         flag to set the surface data FMAX to 0.0
     output_dir : str
         main output directory to write subset files to
@@ -108,7 +109,7 @@ class SinglePointCase(BaseCase):
             dominant_pft,
             zero_nonveg_landunits,
             uniform_snowpack,
-            no_saturation_excess,
+            saturation_excess,
             output_dir,
     ):
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm, create_user_mods)
@@ -119,7 +120,7 @@ class SinglePointCase(BaseCase):
         self.dominant_pft = dominant_pft
         self.zero_nonveg_landunits = zero_nonveg_landunits
         self.uniform_snowpack = uniform_snowpack
-        self.no_saturation_excess = no_saturation_excess
+        self.saturation_excess = saturation_excess
         self.output_dir = output_dir
         self.tag = None
         self.fdomain_in = None
@@ -163,8 +164,8 @@ class SinglePointCase(BaseCase):
         return new_string
 
     def create_domain_at_point(self):
-        print("----------------------------------------------------------------------")
-        print("Creating domain file at ", self.plon, self.plat)
+        logging.info("----------------------------------------------------------------------")
+        logging.info("Creating domain file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
         # create 1d coordinate variables to enable sel() method
         f2 = self.create_1d_coord(self.fdomain_in, "xc", "yc", "ni", "nj")
         # extract gridcell closest to plon/plat
@@ -178,13 +179,13 @@ class SinglePointCase(BaseCase):
 
         wfile = os.path.join(self.output_dir, self.fdomain_out)
         f3.to_netcdf(path=wfile, mode="w")
-        print("Successfully created file (fdomain_out) " + self.fdomain_out)
+        logging.info("Successfully created file (fdomain_out) at" + wfile)
         f2.close()
         f3.close()
 
     def create_landuse_at_point(self):
-        print("----------------------------------------------------------------------")
-        print("Creating landuse file at ", self.plon, self.plat)
+        logging.info("----------------------------------------------------------------------")
+        logging.info("Creating landuse file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
         # create 1d coordinate variables to enable sel() method
         f2 = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         # extract gridcell closest to plon/plat
@@ -211,13 +212,13 @@ class SinglePointCase(BaseCase):
         wfile = os.path.join(self.output_dir, self.fluse_out)
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode="w")
-        print("Successfully created file (fluse_out) " + self.fluse_out)
+        logging.info("Successfully created file (fluse_out) at " + wfile)
         f2.close()
         f3.close()
 
     def create_surfdata_at_point(self):
-        print("----------------------------------------------------------------------")
-        print("Creating surface dataset file at ", self.plon, self.plat)
+        logging.info("----------------------------------------------------------------------")
+        logging.info("Creating surface dataset file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
         # create 1d coordinate variables to enable sel() method
         filename = os.path.join(self.output_dir, self.fsurf_in)
         f2 = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
@@ -245,7 +246,7 @@ class SinglePointCase(BaseCase):
             f3["PCT_GLACIER"][:, :] = 0.0
         if self.uniform_snowpack:
             f3["STD_ELEV"][:, :] = 20.0
-        if self.no_saturation_excess:
+        if not self.saturation_excess:
             f3["FMAX"][:, :] = 0.0
 
         # specify dimension order
@@ -270,27 +271,27 @@ class SinglePointCase(BaseCase):
         f3.attrs["Created_from"] = self.fsurf_in
         del f3.attrs["History_Log"]
         # mode 'w' overwrites file
-        f3.to_netcdf(path=self.fsurf_out, mode="w")
-        print("Successfully created file (fsurf_out): " + self.fsurf_out)
+        f3.to_netcdf(path=os.path.join(self.output_dir, self.fsurf_out), mode="w")
+        logging.info("Successfully created file (fsurf_out) at " + os.path.join(self.output_dir, self.fsurf_out))
         f2.close()
         f3.close()
 
     def create_datmdomain_at_point(self):
-        print("----------------------------------------------------------------------")
-        print("Creating DATM domain file at ", self.plon, self.plat)
+        logging.info("----------------------------------------------------------------------")
+        logging.info("Creating DATM domain file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
         # create 1d coordinate variables to enable sel() method
         f2 = self.create_1d_coord(self.fdatmdomain_in, "xc", "yc", "ni", "nj")
         # extract gridcell closest to plon/plat
         f3 = f2.sel(ni=self.plon, nj=self.plat, method="nearest")
         # expand dimensions
         f3 = f3.expand_dims(["nj", "ni"])
-        wfile = self.fdatmdomain_out
+        wfile = os.path.join(self.output_dir, self.fdatmdomain_out)
         # update attributes
         self.update_metadata(f3)
         f3.attrs["Created_from"] = self.fdatmdomain_in
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode="w")
-        print("Successfully created file (fdatmdomain_out): " + self.fdatmdomain_out)
+        logging.info("Successfully created file (fdatmdomain_out) at " + wfile)
         f2.close()
         f3.close()
 
@@ -309,7 +310,7 @@ class SinglePointCase(BaseCase):
         f3.attrs["Created_from"] = file_in
         # mode 'w' overwrites file
         f3.to_netcdf(path=file_out, mode="w")
-        print("Successfully created file: " + file_out)
+        logging.info("Successfully created file at " + file_out)
         f2.close()
         f3.close()
 
@@ -323,8 +324,8 @@ class SinglePointCase(BaseCase):
         # write_to_file surrounds text with newlines
         self.write_to_file("! Change below line if you move the subset data directory", file)
         self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.output_dir), file)
-        self.write_to_file("./xmlchange PTS_LON=".format(str(self.plon)), file)
-        self.write_to_file("./xmlchange PTS_LAT=".format(str(self.plat)), file)
+        self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), file)
+        self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), file)
         self.write_to_file("./xmlchange MPILIB=mpi-serial", file)
         file.close()
 
@@ -342,8 +343,8 @@ class SinglePointCase(BaseCase):
         self.write_to_file("{}:meshfile=none".format(streamname), file)
 
     def create_datm_at_point(self):
-        print("----------------------------------------------------------------------")
-        print("Creating DATM files at ", self.plon, self.plat, ".")
+        logging.info("----------------------------------------------------------------------")
+        logging.info("Creating DATM files at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
 
         # --  create data files
         infile = []
@@ -378,12 +379,12 @@ class SinglePointCase(BaseCase):
 
         nm = len(infile)
         for n in range(nm):
-            print(outfile[n])
+            logging.debug(outfile[n])
             file_in = infile[n]
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
-        print("All DATM files are created in: " + self.output_dir)
+        logging.info("All DATM files are created in: "+ self.dir_output_datm+".")
 
         # write to user_nl_datm_streams if specified
         if self.create_user_mods:
