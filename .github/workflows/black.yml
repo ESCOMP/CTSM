@@ -1,0 +1,19 @@
+name: push black workflow
+#
+# Run the python formatting in check mode
+#
+on: push
+
+jobs:
+  black-check:
+     runs-on: ubuntu-latest
+     steps:
+        # Checkout the code
+        - uses: actions/checkout@v2
+        # Use a specific version of the black-checker
+        # Use version that's the same as with conda on cheyenne
+        # Tag for black-check corresponds to the black version tag
+        - uses: jpetrucciani/black-check@21.11b1
+          with:
+             path: python
+             black_flags: --config python/pyproject.toml
