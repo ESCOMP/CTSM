@@ -1,4 +1,124 @@
 ===============================================================
+Tag name: ctsm5.1.dev067
+Originator(s): jedwards4b/negin513/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Sun Dec 12 17:44:44 MST 2021
+One-line Summary: NEON UI update, externals updates, small miscellanouse fixes
+
+Purpose and description of changes
+----------------------------------
+
+Redo options list to remove positional arguments that were difficult to input correctly.
+Transient runs now use run_type startup and get finidat from s3 server unless --run-from-postad option is used (or finidat is not
+available). Use mpi instead of mpi-serial, this mod was recommended for container use. Add a new script neon_finidat_upload which
+allows authorized users to upload finidat files to the s3 server.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1563
+  Fixes #1550
+  Fixes #1574
+
+CIME Issues fixed (include issue #):
+
+Known bugs introduced in this tag (include issue #):
+
+Known bugs found since the previous tag (include issue #):
+  #1575 -- Build problem for mksurfdata tools testers
+
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., parameter, surface or initial files):
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+
+Testing summary:   regular tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - OK (new black checks do NOT pass as expected)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+  any other testing (give details below):
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit (other than NEON tests because of updated namelists and surface dataset)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+    - what platforms/compilers:
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+
+   If this tag changes climate describe the run(s) done to evaluate the new
+   climate (put details of the simulations in the experiment database)
+       - casename:
+
+   URL for LMWG diagnostics output used to validate new climate:
+
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev066
 Originator(s): rgknox (Ryan Knox,,,)
 Date: Sat Dec  4 01:58:42 MST 2021
