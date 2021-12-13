@@ -48,6 +48,10 @@ module clm_instur
   
   ! whether we have lake to initialise in each grid cell
   logical , pointer :: haslake(:)
+  
+  ! whether we have urban to initialize in each grid cell
+  ! (second dimension goes 0:numurbl-1)
+  logical , pointer :: hasurban(:,:)
   !-----------------------------------------------------------------------
 
 end module clm_instur

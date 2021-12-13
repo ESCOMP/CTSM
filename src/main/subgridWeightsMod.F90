@@ -334,9 +334,17 @@ contains
           is_active_l = .true.
        end if
 
-       if ((lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) .and. &
-            run_zero_weight_urban) then
-          is_active_l = .true.
+!       if ((lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) .and. &
+!            run_zero_weight_urban) then
+!          is_active_l = .true.
+!       end if
+       
+       ! Set urban land units to active, as long as memory is allocated for such land units.
+       ! By doing this, urban land units are also run virtually in grid cells which will grow
+       ! urban during the transient run.
+
+       if (lun%itype(l) >= isturb_MIN .and. lun%itype(l) <= isturb_MAX) then
+            is_active_l = .true.
        end if
 
        ! In general, include a virtual natural vegetation landunit. This aids
