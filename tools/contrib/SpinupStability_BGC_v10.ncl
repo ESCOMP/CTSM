@@ -1,6 +1,6 @@
 ; NCL script
-; SpinupStability_v10.ncl
-; Script to examine stability of spinup simulation.
+; SpinupStability_BGC_v10.ncl
+; Script to examine stability of BGC spinup simulation.
 ; This version operates on either monthly mean or multi-annual mean multi-variable history files 
 ; NOTE: THIS SCRIPT IS ONLY INTENDED FOR USE WITH 2-D LAT/LON GRIDS
 ; Keith Oleson, Mar 2020
