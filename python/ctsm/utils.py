@@ -7,6 +7,7 @@ import pdb
 
 logger = logging.getLogger(__name__)
 
+
 def abort(errmsg):
     """Abort the program with the given error message
 
@@ -15,7 +16,8 @@ def abort(errmsg):
     if logger.isEnabledFor(logging.DEBUG):
         pdb.set_trace()
 
-    sys.exit('ERROR: {}'.format(errmsg))
+    sys.exit("ERROR: {}".format(errmsg))
+
 
 def fill_template_file(path_to_template, path_to_final, substitutions):
     """Given a template file (based on python's template strings), write a copy of the
@@ -31,5 +33,5 @@ def fill_template_file(path_to_template, path_to_final, substitutions):
         template_file_contents = template_file.read()
     template = string.Template(template_file_contents)
     final_file_contents = template.substitute(substitutions)
-    with open(path_to_final, 'w') as final_file:
+    with open(path_to_final, "w") as final_file:
         final_file.write(final_file_contents)

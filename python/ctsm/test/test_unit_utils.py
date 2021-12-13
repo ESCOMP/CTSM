@@ -15,6 +15,7 @@ from ctsm.utils import fill_template_file
 # to make readable unit test names
 # pylint: disable=invalid-name
 
+
 class TestUtilsFillTemplateFile(unittest.TestCase):
     """Tests of utils: fill_template_file"""
 
@@ -26,19 +27,18 @@ class TestUtilsFillTemplateFile(unittest.TestCase):
 
     def test_fillTemplateFile_basic(self):
         """Basic test of fill_template_file"""
-        template_path = os.path.join(self._testdir, 'template.txt')
-        final_path = os.path.join(self._testdir, 'final.txt')
+        template_path = os.path.join(self._testdir, "template.txt")
+        final_path = os.path.join(self._testdir, "final.txt")
         template_contents = """\
 Hello
 $foo
 Goodbye
 $bar
 """
-        with open(template_path, 'w') as f:
+        with open(template_path, "w") as f:
             f.write(template_contents)
 
-        fillins = {'foo':'aardvark',
-                   'bar':'zyzzyva'}
+        fillins = {"foo": "aardvark", "bar": "zyzzyva"}
         fill_template_file(template_path, final_path, fillins)
 
         expected_final_text = """\
@@ -52,6 +52,7 @@ zyzzyva
 
         self.assertEqual(final_contents, expected_final_text)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unit_testing.setup_for_tests()
     unittest.main()
