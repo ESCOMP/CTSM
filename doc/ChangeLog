@@ -1,4 +1,157 @@
 ===============================================================
+Tag name: ctsm5.1.dev067
+Originator(s): jedwards4b/negin513/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Dec 13 00:50:01 MST 2021
+One-line Summary: NEON UI update, externals updates, small miscellanouse fixes
+
+Purpose and description of changes
+----------------------------------
+
+Redo options list to remove positional arguments that were difficult to input correctly.
+Transient runs now use run_type startup and get finidat from s3 server unless --run-from-postad option is used (or finidat is not
+available). Use mpi instead of mpi-serial, this mod was recommended for container use. Add a new script neon_finidat_upload which
+allows authorized users to upload finidat files to the s3 server.
+
+This includes the following changes to the script for updating the surface dataset at neon sites using available neon data (i.e.
+modify_singlept_site_neon.py) to address ctsm/issues #1353, #1429, and neon/issue #44:
+
+Update Organic calculation to use the following equation based on discussions in
+https://github.com/ESCOMP/CTSM/pull/1375/files#r669590971 :
+ORGANIC = estimatedOC * bulkDensity / 0.58
+
+Because estimatedOC is rounded to the nearest integer in neon data, it is sometimes bigger than carbonTot. Therefore, in cases where
+estimatedOC > carbonTot, we use carbonTot instead of estimatedOC in the above equation.
+
+Previously, we had missing data on neon files for some neon soil layers (see Modified NEON surface datasets have errors  #1429
+(comment)). Therefore, it caused some missing values in the updated dataset. Here, we interpolate to fill in the missing data using
+different interpolation techniques. Finally, we chose to use linear interpolation to fill in missing data.
+
+This includes the scripts for modification of the surface dataset for neon sites to address #1429.
+Specifically, the following has been addressed in this PR:
+
+Update the calculation of ORGANIC to use the new field (CaCO3) from NEON data.
+For this calculation if CaCO3 data is available, we first calculate inorganic carbon by:
+inorganic carbon = (caco3 /100.0869)*12.0107
+Next, we calculate organic carbon by subtracting inorganic carbon from the total carbon:
+[organic carbon = carbon_tot - inorganic carbon]
+If the CaCO3 is not available then the code uses carbonTot and estimatedOC by NEON.
+
+Discussed here (Modified NEON surface datasets have errors  #1429 (comment))
+For the Ag sites (KONA and STER), it changes the PCT_NATVEG, PCT_CROP, and PCT_NAT_PFT to avoid the error that we previously had in
+spin-up: surfrd_veg_all ERROR: sum of wt_nat_patch not 1.00000000000000 at nl= 1 sum is: 0.000000000000000E+000
+
+Discussed here (Modified NEON surface datasets have errors  #1429 (comment))
+There was a typo previously in the NEON data for ABBY sites caused by mix of sample measurements. Please note that this was updated
+by hand once data was downloaded from NEON site.
+
+With recent versions of CIME, the LILAC build with a user-defined machine was broken for a couple of reasons. This fixes it.
+
+Fix mksurfdata_map for 1x1_brazil. Get tools testing working again. Increase skip_steps by 1, which is needed for a change in CAM
+where balance checks need to occur after the radiation update now rather than before. glob changed for bsd_glob in perl MkDepends
+for mksurfdata_map.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed or introduced
+------------------------
+
+Issues fixed (include CTSM Issue #):
+  Fixes #1563 increase skip_steps for balance checks by one to permit new CAM physics re-ordering
+  Fixes #1550 In perl code replace glob with bsd_glob
+  Fixes #1574 Trouble with 1x1_brazil for mksurfdata_map because of negative longitude in SCRIP grid file
+  Fixes #1429 Modified NEON surface datasets have errors
+  Fixes #1353 Modify NEON surface data
+  Fixes #1492 Need to update LILAC build process to use cmake macros instead of config_compilers.xml
+
+Known bugs found since the previous tag (include issue #):
+  #1575 -- Build problem for mksurfdata tools testers
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values): New 1x1_brazil SCRIP grid file and maps
+   Some NEON namelist settings changed. Last year is now 2020
+
+Changes to the datasets (e.g., parameter, surface or initial files): New NEON surface datasets
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   pyproject.toml file added to configure for black python formatter in python directory
+
+Changes to tests or testing:
+   Got tools testing working again.
+
+
+Testing summary:   regular tools
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    cheyenne - PASS (47 compare tests fail because of changes to NEON sites)
+
+  tools-tests (test/tools) (if tools have been changed):
+
+    cheyenne - OK (1x1_brazil mksurfdata changes, run_neon and modify_subset fail as expected)
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne - OK (new black checks do NOT pass as expected)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit (other than NEON tests because of updated namelists and surface dataset)
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only NEON sites
+    - what platforms/compilers: all
+    - nature of change: new surface datasets and settings
+
+Other details
+-------------
+List any externals directories updated (cime, rtm, mosart, cism, fates, etc.):
+    Update most externals to version in cesm2_3_alpha07c
+    cmeps to cmeps0.13.43 (version with channel depths)
+    cpl7  to cpl7.0.7
+    share to share1.0.10
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   PR #1467 -- Improve UI for NEON script
+   PR #1474 -- Script for modifying neon surface dataset -- updated  (negin513)
+   PR #1539 -- Neon modify surfurface dataset (negin513)
+   PR #1571 -- Fix LILAC build with user-defined machine with latest CIME (billsacks)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev066
 Originator(s): rgknox (Ryan Knox,,,)
 Date: Sat Dec  4 01:58:42 MST 2021
