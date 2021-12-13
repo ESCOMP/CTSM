@@ -427,8 +427,9 @@ def main():
     process_logging_args(args)
 
     # parse defaults file
+    cesmroot = path_to_ctsm_root()
     defaults = configparser.ConfigParser()
-    defaults.read(DEFAULTS_FILE)
+    defaults.read(os.path.join(cesmroot, 'tools/site_and_regional', DEFAULTS_FILE))
 
     # --------------------------------- #
 
@@ -490,7 +491,7 @@ def main():
         if not os.path.isdir(args.user_mods_dir):
             os.mkdir(args.user_mods_dir)
 
-        cesmroot = path_to_ctsm_root()
+
 
         # -- Create empty user_nl_clm file
         if args.create_surfdata or args.create_landuse:

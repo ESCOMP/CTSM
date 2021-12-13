@@ -363,7 +363,7 @@ class SinglePointCase(BaseCase):
 
                 fsolar = os.path.join(self.dir_input_datm, self.dir_solar, "{}{}.nc".format(self.tag_solar, dtag))
                 fsolar2 = "{}{}.{}.nc".format(self.tag_solar, self.tag, dtag)
-                fprecip = os.path.join(self.dir_input_datm, self.dir_solar, "{}{}.nc".format(self.tag_prec, dtag))
+                fprecip = os.path.join(self.dir_input_datm, self.dir_prec, "{}{}.nc".format(self.tag_prec, dtag))
                 fprecip2 = "{}{}.{}.nc".format(self.tag_prec, self.tag, dtag)
                 ftpqw = os.path.join(self.dir_input_datm, self.dir_tpqw, "{}{}.nc".format(self.tag_tpqw, dtag))
                 ftpqw2 = "{}{}.{}.nc".format(self.tag_tpqw, self.tag, dtag)

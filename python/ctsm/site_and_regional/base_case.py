@@ -132,7 +132,7 @@ class BaseCase:
         Returns Git short SHA for the current directory.
         """
         try:
-            sha = (subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip().decode())
+            sha = (subprocess.check_output(["git", "-C", os.path.dirname(__file__), "rev-parse", "--short", "HEAD"]).strip().decode())
         except subprocess.CalledProcessError:
             sha = "NOT-A-GIT-REPOSITORY"
         return sha
