@@ -606,7 +606,7 @@ subroutine mkglacier(ldomain, mapfname, datfname, ndiag, zero_out, glac_o)
         write (6,*) 'MKGLACIER error: glacier = ',glac_o(no), &
                 ' greater than 100.000001 for column, row = ',no
         call shr_sys_flush(6)
-        stop
+        call abort()
      end if
   enddo
 
