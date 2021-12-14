@@ -82,32 +82,6 @@ class SinglePointCase(BaseCase):
         else:
             self.tag = str(self.plon) + "_" + str(self.plat)
 
-    @staticmethod
-    def create_fileout_name(filename, tag):
-
-        basename = os.path.basename(filename)
-        items = basename.split("_")
-        today = date.today()
-        today_string = today.strftime("%y%m%d")
-        new_string = (
-            items[0]
-            + "_"
-            + items[2]
-            + "_"
-            + items[3]
-            + "_"
-            + items[4]
-            + "_"
-            + items[5]
-            + "_"
-            + items[6]
-            + "_"
-            + tag
-            + "_c"
-            + today_string
-            + ".nc"
-        )
-        return new_string
 
     def create_domain_at_point(self):
         logging.info("----------------------------------------------------------------------")

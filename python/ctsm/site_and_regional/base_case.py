@@ -177,3 +177,32 @@ class BaseCase:
         # for attr, value in attr_list.items():
         #    print (attr + " = "+str(value))
 
+    @staticmethod                                                                                        
+    def create_fileout_name(filename, tag):
+ 
+        basename = os.path.basename(filename)
+        items = basename.split("_")
+        today = date.today()
+        today_string = today.strftime("%y%m%d")
+        print (items)
+        print (len(items))
+        new_string = ( 
+            items[0]
+            + "_" 
+            + items[2]
+            + "_" 
+            + items[3]
+            + "_" 
+            + items[4]
+            + "_" 
+            + items[5]
+            + "_" 
+            + items[6]
+            + "_" 
+            + tag 
+            + "_c"
+            + today_string
+            + ".nc"
+        )   
+        return new_string
+
