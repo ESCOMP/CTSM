@@ -92,33 +92,6 @@ class SinglePointCase(BaseCase):
         """ 
         Initializes SinglePointCase with the given arguments.
 
-        Parameters
-        ----------
-        plat : float
-            latitude of the single point
-        plon : float
-            longitude of the single point
-        site_name: str -- default = None
-            Site name
-        create_domain : bool
-            flag for creating domain file
-        create_surfdata : bool
-            flag for creating surface dataset
-        create_landuse : bool
-            flag for creating landuse file
-        create_datm : bool
-            flag for creating DATM files
-        overwrite_single_pft : bool
-            flag to overwrite the whole grid 100% single PFT.
-        dominant_pft : int
-            dominant pft type for this single point
-        zero_nonveg_landunits : bool
-            flag for setting all non-vegetation landunits to zero
-        overwrite_single_pft : bool
-            flag for creating datasets using uniform snowpack
-        saturation_excess : bool
-            flag for making dataset using saturation excess
-
         """
 
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
@@ -148,10 +121,13 @@ class SinglePointCase(BaseCase):
         """
         logging.info("----------------------------------------------------------------------")
         logging.info("Creating domain file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(self.fdomain_in, "xc", "yc", "ni", "nj")
+
         # extract gridcell closest to plon/plat
         f_out = f_in.sel(ni=self.plon, nj=self.plat, method="nearest")
+
         # expand dimensions
         f_out = f_out.expand_dims(["nj", "ni"])
 
@@ -171,13 +147,16 @@ class SinglePointCase(BaseCase):
         """
         logging.info("----------------------------------------------------------------------")
         logging.info("Creating landuse file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+
         # extract gridcell closest to plon/plat
         f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"])
+
         # specify dimension order
         # f_out = f_out.transpose('time','lat','lon')
         f_out = f_out.transpose(u"time", u"cft", u"natpft", u"lsmlat", u"lsmlon")
@@ -207,11 +186,14 @@ class SinglePointCase(BaseCase):
         """
         logging.info("----------------------------------------------------------------------")
         logging.info("Creating surface dataset file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+
         # create 1d coordinate variables to enable sel() method
         filename = self.fsurf_in
         f_in = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+
         # extract gridcell closest to plon/plat
         f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+
         # expand dimensions
         f_out = f_out.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
 
@@ -262,19 +244,27 @@ class SinglePointCase(BaseCase):
         f_out.close()
 
     def create_datmdomain_at_point(self):
+        """
+        Create DATM domain file at a single point
+        """
         logging.info("----------------------------------------------------------------------")
         logging.info("Creating DATM domain file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+
         # create 1d coordinate variables to enable sel() method
         filename = self.fdatmdomain_in
         f_in = self.create_1d_coord(filename, "xc", "yc", "ni", "nj")
+
         # extract gridcell closest to plon/plat
         f_out = f_in.sel(ni=self.plon, nj=self.plat, method="nearest")
+
         # expand dimensions
         f_out = f_out.expand_dims(["nj", "ni"])
         wfile = self.fdatmdomain_out
+
         # update attributes
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = self.fdatmdomain_in
+
         # mode 'w' overwrites file
         f_out.to_netcdf(path=wfile, mode="w")
         logging.info("Successfully created file (fdatmdomain_out) :" + self.fdatmdomain_out)
@@ -284,16 +274,20 @@ class SinglePointCase(BaseCase):
     def extract_datm_at(self, file_in, file_out):
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(file_in, "LONGXY", "LATIXY", "lon", "lat")
+
         # extract gridcell closest to plon/plat
         f_out = f_in.sel(lon=self.plon, lat=self.plat, method="nearest")
+
         # expand dimensions
         f_out = f_out.expand_dims(["lat", "lon"])
+
         # specify dimension order
         f_out = f_out.transpose(u"scalar", "time", "lat", "lon")
 
         # update attributes
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = file_in
+
         # mode 'w' overwrites file
         f_out.to_netcdf(path=file_out, mode="w")
         logging.info("Successfully created file :" + file_out)
@@ -301,6 +295,9 @@ class SinglePointCase(BaseCase):
         f_out.close()
 
     def create_datm_at_point(self):
+        """
+        Create all DATM dataset at a point.
+        """
         logging.info("----------------------------------------------------------------------")
         logging.info("Creating DATM files at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
         # --  specify subdirectory names and filename prefixes

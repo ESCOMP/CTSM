@@ -16,19 +16,45 @@ logger = logging.getLogger(__name__)
 
 class RegionalCase(BaseCase):
     """
-    A case to encapsulate regional cases.
+    A class to encapsulate regional cases.
 
     ...
     Attributes
     ----------
-    plat : float
-        latitude
-    plon : float
-        longitude
-    site_name: str -- default = None
-        Site name
+    lat1 : float
+        first (left) latitude of a region.
+    lat1 : float
+        second (right) latitude of a region.
+    lon1 : float
+        first (bottom) longitude of a region.
+    lon2 : float
+        second (top) longitude of a region.
+    reg_name: str -- default = None
+        Region's name
+    create_domain : bool
+        flag for creating domain file
+    create_surfdata : bool
+        flag for creating surface dataset
+    create_landuse : bool
+        flag for creating landuse file
+    create_datm : bool
+        flag for creating DATM files
 
+    Methods
+    -------
+    create_tag
+        Create a tag for this region which is either
+        region's name or a combination of bounds of this
+        region lat1-lat2_lon1-lon2
 
+    create_domain_at_reg
+        Create domain file at this region
+
+    create_surfdata_at_reg
+        Create surface dataset at this region
+
+    create_landuse_at_reg
+        Create landuse file at this region
 
     """
 
@@ -44,6 +70,9 @@ class RegionalCase(BaseCase):
         create_landuse,
         create_datm,
     ):
+        """ 
+        Initializes SinglePointCase with the given arguments.
+        """
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
         self.lat1 = lat1
         self.lat2 = lat2

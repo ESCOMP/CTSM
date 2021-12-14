@@ -436,7 +436,7 @@ def main():
         plon = args.plon
         plat = args.plat
 
-        # --  Create regional CLM domain file
+        # --  Create single point  CLM domain file
         create_domain = args.create_domain
 
         # --  Create CLM surface data file
@@ -505,8 +505,8 @@ def main():
         if not os.path.isdir(dir_output_datm):
             os.mkdir(dir_output_datm)
 
-        logging.info("dir_input_datm  : " + dir_input_datm)  #
-        logging.info("dir_output_datm : " + dir_output_datm)  #
+        logging.info("dir_input_datm  : " + dir_input_datm)
+        logging.info("dir_output_datm : " + dir_output_datm)
 
         # --  Specify land domain file  ---------------------------------
         fdomain_in = os.path.join(
@@ -519,8 +519,8 @@ def main():
         single_point.fdomain_in = fdomain_in
         single_point.fdomain_out = fdomain_out
 
-        logging.info("fdomain_in  : " + fdomain_in)  #
-        logging.info("fdomain_out : " + fdomain_out)  #
+        logging.info("fdomain_in  : " + fdomain_in)
+        logging.info("fdomain_out : " + fdomain_out)
 
         # --  Specify surface data file  --------------------------------
         if crop_flag:
@@ -541,8 +541,8 @@ def main():
         single_point.fsurf_in = fsurf_in
         single_point.fsurf_out = fsurf_out
 
-        logging.info("fsurf_in   : " + fsurf_in)  #
-        logging.info("fsurf_out  : " + fsurf_out)  #
+        logging.info("fsurf_in   : " + fsurf_in)
+        logging.info("fsurf_out  : " + fsurf_out)
 
         # --  Specify landuse file  -------------------------------------
         if crop_flag:
@@ -562,8 +562,8 @@ def main():
         single_point.fluse_in = fluse_in
         single_point.fluse_out = fluse_out
 
-        logging.info("fluse_in   : " + fluse_in)  #
-        logging.info("fluse_out  : " + fluse_out)  #
+        logging.info("fluse_in   : " + fluse_in)
+        logging.info("fluse_out  : " + fluse_out)
 
         # --  Specify datm domain file  ---------------------------------
         fdatmdomain_in = os.path.join(
@@ -575,8 +575,9 @@ def main():
         ))
         single_point.fdatmdomain_in = fdatmdomain_in
         single_point.fdatmdomain_out = fdatmdomain_out
-        logging.info("fdatmdomain_in   : " + fdatmdomain_in)  #
-        logging.info("fdatmdomain out  : " + fdatmdomain_out)  #
+
+        logging.info("fdatmdomain_in   : " + fdatmdomain_in)
+        logging.info("fdatmdomain out  : " + fdatmdomain_out)
 
         # --  Create CTSM domain file
         if create_domain:
@@ -679,6 +680,7 @@ def main():
 
         region.fdomain_in = fdomain_in
         region.fdomain_out = fdomain_out
+
         logging.info("fdomain_in  : " + fdomain_in)
         logging.info("fdomain_out : " + fdomain_out)
 
@@ -693,6 +695,7 @@ def main():
 
         region.fsurf_in = fsurf_in
         region.fsurf_out = fsurf_out
+
         logging.info("fsurf_in  : " + fdomain_in)
         logging.info("fsurf_out : " + fdomain_out)
 
@@ -706,6 +709,7 @@ def main():
         ))
         region.fluse_in = fluse_in
         region.fluse_out = fluse_out
+
         logging.info("fluse_in  : " + fdomain_in)
         logging.info("fluse_out : " + fdomain_out)
 
