@@ -1,18 +1,19 @@
 """
 This module includes the definition for a RegionalCase classs.
 """
-#-- Import libraries
-#-- Import Python Standard Libraries
+# -- Import libraries
+# -- Import Python Standard Libraries
 import logging
 
-#-- 3rd party libraries
+# -- 3rd party libraries
 import numpy as np
 import xarray as xr
 
-#-- import local classes for this script
+# -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase
 
 logger = logging.getLogger(__name__)
+
 
 class RegionalCase(BaseCase):
     """
@@ -70,7 +71,7 @@ class RegionalCase(BaseCase):
         create_landuse,
         create_datm,
     ):
-        """ 
+        """
         Initializes SinglePointCase with the given arguments.
         """
         super().__init__(create_domain, create_surfdata, create_landuse, create_datm)
@@ -95,8 +96,8 @@ class RegionalCase(BaseCase):
             )
 
     def create_domain_at_reg(self):
-        #logging.debug ("Creating domain file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
-        logging.info("Creating domain file at region:"+ self.tag)
+        # logging.debug ("Creating domain file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+        logging.info("Creating domain file at region:" + self.tag)
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(self.fdomain_in, "xc", "yc", "ni", "nj")
         lat = f_in["lat"]
@@ -118,8 +119,8 @@ class RegionalCase(BaseCase):
         f_out.close()
 
     def create_surfdata_at_reg(self):
-        #logging.debug ("Creating surface dataset file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
-        logging.info("Creating surface dataset file at region:"+ self.tag)
+        # logging.debug ("Creating surface dataset file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+        logging.info("Creating surface dataset file at region:" + self.tag)
         # create 1d coordinate variables to enable sel() method
         filename = self.fsurf_in
         f_in = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
@@ -142,10 +143,12 @@ class RegionalCase(BaseCase):
         f_out.close()
 
     def create_landuse_at_reg(self):
-        #logging.debug ("Creating landuse file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
-        logging.info("Creating landuse file at region:"+ self.tag)
+        # logging.debug ("Creating landuse file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+        logging.info("Creating landuse file at region:" + self.tag)
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f_in = self.create_1d_coord(
+            self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat"
+        )
         lat = f_in["lat"]
         lon = f_in["lon"]
         # subset longitude and latitude arrays
@@ -163,5 +166,3 @@ class RegionalCase(BaseCase):
         logging.info("Successfully created file (fdomain_out)" + self.fdomain_out)
         f_in.close()
         f_out.close()
-
-

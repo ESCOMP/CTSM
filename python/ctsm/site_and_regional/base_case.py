@@ -3,9 +3,9 @@ This module includes the definition for a parent class for SinglePointCase
 and RegionalCase. The common functionalities of SinglePointCase and
 RegionalCase are defined in this Class.
 """
-#-- Import libraries
+# -- Import libraries
 
-#-- standard libraries
+# -- standard libraries
 import os
 import logging
 import subprocess
@@ -13,14 +13,15 @@ import subprocess
 from datetime import date
 from getpass import getuser
 
-#-- 3rd party libraries
+# -- 3rd party libraries
 import numpy as np
 import xarray as xr
 
-#-- import local classes for this script
+# -- import local classes for this script
 from ctsm.git_utils import get_git_short_hash
 
 logger = logging.getLogger(__name__)
+
 
 class BaseCase:
     """
@@ -103,7 +104,7 @@ class BaseCase:
 
         Raises
         ------
-            None 
+            None
 
         Returns
         -------
@@ -152,7 +153,9 @@ class BaseCase:
         if basename[cend] == "c":
             cend = cend - 1
         if (basename[cend] != ".") and (basename[cend] != "_"):
-            logging.error("Trouble figuring out where to add tag to filename:" + filename)
+            logging.error(
+                "Trouble figuring out where to add tag to filename:" + filename
+            )
             os.abort()
         today = date.today()
         today_string = today.strftime("%y%m%d")
@@ -204,9 +207,8 @@ class BaseCase:
 
         for attr in del_attrs:
             if attr in attr_list:
-                logging.debug ("This attr should be deleted : "+ attr)
+                logging.debug("This attr should be deleted : " + attr)
                 del nc.attrs[attr]
 
         # for attr, value in attr_list.items():
         #    print (attr + " = "+str(value))
-

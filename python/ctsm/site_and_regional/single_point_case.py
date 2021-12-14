@@ -2,19 +2,20 @@
 This module includes the definition for SinglePointCase class.
 """
 
-#-- Import libraries
-#-- Import Python Standard Libraries
+# -- Import libraries
+# -- Import Python Standard Libraries
 import os
 import logging
 
-#-- 3rd party libraries
+# -- 3rd party libraries
 import numpy as np
 import xarray as xr
 
-#-- import local classes for this script
+# -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase
 
 logger = logging.getLogger(__name__)
+
 
 class SinglePointCase(BaseCase):
     """
@@ -89,7 +90,7 @@ class SinglePointCase(BaseCase):
         uniform_snowpack,
         saturation_excess,
     ):
-        """ 
+        """
         Initializes SinglePointCase with the given arguments.
 
         """
@@ -114,13 +115,20 @@ class SinglePointCase(BaseCase):
         else:
             self.tag = str(self.plon) + "_" + str(self.plat)
 
-
     def create_domain_at_point(self):
         """
         Create domain file for this SinglePointCase class.
         """
-        logging.info("----------------------------------------------------------------------")
-        logging.info("Creating domain file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+        logging.info(
+            "----------------------------------------------------------------------"
+        )
+        logging.info(
+            "Creating domain file at "
+            + self.plon.__str__()
+            + " "
+            + self.plat.__str__()
+            + "."
+        )
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(self.fdomain_in, "xc", "yc", "ni", "nj")
@@ -145,11 +153,21 @@ class SinglePointCase(BaseCase):
         """
         Create landuse file at a single point.
         """
-        logging.info("----------------------------------------------------------------------")
-        logging.info("Creating landuse file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+        logging.info(
+            "----------------------------------------------------------------------"
+        )
+        logging.info(
+            "Creating landuse file at "
+            + self.plon.__str__()
+            + " "
+            + self.plat.__str__()
+            + "."
+        )
 
         # create 1d coordinate variables to enable sel() method
-        f_in = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f_in = self.create_1d_coord(
+            self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat"
+        )
 
         # extract gridcell closest to plon/plat
         f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
@@ -176,7 +194,7 @@ class SinglePointCase(BaseCase):
         wfile = self.fluse_out
         # mode 'w' overwrites file
         f_out.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (luse_out)" + self.fluse_out+ ".")
+        logging.info("Successfully created file (luse_out)" + self.fluse_out + ".")
         f_in.close()
         f_out.close()
 
@@ -184,8 +202,16 @@ class SinglePointCase(BaseCase):
         """
         Create surface data file at a single point.
         """
-        logging.info("----------------------------------------------------------------------")
-        logging.info("Creating surface dataset file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+        logging.info(
+            "----------------------------------------------------------------------"
+        )
+        logging.info(
+            "Creating surface dataset file at "
+            + self.plon.__str__()
+            + " "
+            + self.plat.__str__()
+            + "."
+        )
 
         # create 1d coordinate variables to enable sel() method
         filename = self.fsurf_in
@@ -247,8 +273,16 @@ class SinglePointCase(BaseCase):
         """
         Create DATM domain file at a single point
         """
-        logging.info("----------------------------------------------------------------------")
-        logging.info("Creating DATM domain file at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+        logging.info(
+            "----------------------------------------------------------------------"
+        )
+        logging.info(
+            "Creating DATM domain file at "
+            + self.plon.__str__()
+            + " "
+            + self.plat.__str__()
+            + "."
+        )
 
         # create 1d coordinate variables to enable sel() method
         filename = self.fdatmdomain_in
@@ -267,7 +301,9 @@ class SinglePointCase(BaseCase):
 
         # mode 'w' overwrites file
         f_out.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fdatmdomain_out) :" + self.fdatmdomain_out)
+        logging.info(
+            "Successfully created file (fdatmdomain_out) :" + self.fdatmdomain_out
+        )
         f_in.close()
         f_out.close()
 
@@ -298,8 +334,16 @@ class SinglePointCase(BaseCase):
         """
         Create all DATM dataset at a point.
         """
-        logging.info("----------------------------------------------------------------------")
-        logging.info("Creating DATM files at "+ self.plon.__str__()+" "+ self.plat.__str__()+".")
+        logging.info(
+            "----------------------------------------------------------------------"
+        )
+        logging.info(
+            "Creating DATM files at "
+            + self.plon.__str__()
+            + " "
+            + self.plat.__str__()
+            + "."
+        )
         # --  specify subdirectory names and filename prefixes
         solrdir = "Solar/"
         precdir = "Precip/"
@@ -339,4 +383,4 @@ class SinglePointCase(BaseCase):
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
-        logging.info("All DATM files are created in: "+ self.dir_output_datm+".")
+        logging.info("All DATM files are created in: " + self.dir_output_datm + ".")
