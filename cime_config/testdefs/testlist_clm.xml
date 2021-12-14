@@ -2477,12 +2477,35 @@
     </machines>
   </test>
 
+  <test name="FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1" grid="5x5_amazon" compset="I2000Clm50SpRs">
+    <machines>
+      <machine name="cheyenne" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">00:20:00</option>
+          <option name="comment">Smoke test that first runs the fsurdat_modifier tool and then ensures that the CTSM does not fail using the just-generated modified fsurdat file. Regional SP case. A global BGC CROP case was confirmed to PASS when this regional SP case was introduced.</option>
+        </options>
+      </machine>
+      <machine name="cheyenne" compiler="intel" category="clm_pymods">
+        <options>
+          <option name="wallclock">00:20:00</option>
+          <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+
   <test name="LILACSMOKE_D_Ld2" grid="f10_f10_mg37" compset="I2000Ctsm50NwpSpAsRs" testmods="clm-lilac">
     <machines>
       <machine name="cheyenne" compiler="intel" category="aux_clm">
         <options>
           <option name="wallclock">00:20:00</option>
           <option name="comment">Basic LILAC smoke test. Needs to use the nuopc driver. Uses stub atmosphere to avoid needing to download a bunch of unnecessary data if run on a different machine.</option>
+        </options>
+      </machine>
+      <machine name="cheyenne" compiler="intel" category="clm_pymods">
+        <options>
+          <option name="wallclock">00:20:00</option>
+          <option name="comment">This LILAC test invokes lilac python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
         </options>
       </machine>
     </machines>

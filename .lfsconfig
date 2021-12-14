@@ -1,2 +1,7 @@
 [lfs]
-        fetchexclude = *
+	# We auto-fetch any netCDF files, because they are needed for
+	# running tests; however, we do NOT auto-fetch other binary
+	# files, in particular image files that are part of the
+	# documentation source (these are fetched as part of the
+	# documentation build process).
+	fetchinclude = *.nc
