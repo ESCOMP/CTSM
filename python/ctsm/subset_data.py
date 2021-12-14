@@ -71,36 +71,34 @@ To remove NPL from your environment on Cheyenne/Casper:
 # -[] Automatic downloading of missing files if they are missing
 # default 78 pft vs 16 pft
 
-#-- Import libraries
+# -- Import libraries
 
-#-- standard libraries
+# -- standard libraries
 import os
-import sys
-import string
 import logging
 import argparse
 import textwrap
-import subprocess
 
 from datetime import date
 from getpass import getuser
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-#-- 3rd party libraries
+# -- 3rd party libraries
 import numpy as np
 import xarray as xr
 
-#-- import local classes for this script
+# -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 
 from ctsm.utils import str2bool
 
-#-- import ctsm logging flags
+# -- import ctsm logging flags
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 
 logger = logging.getLogger(__name__)
+
 
 def get_parser():
     """
@@ -249,7 +247,7 @@ def get_parser():
         const=True,
         required=False,
         default=False,
-        )
+    )
 
     # -- common options between both subparsers
     for subparser in [pt_parser, rg_parser]:
@@ -411,7 +409,6 @@ def plon_type(x):
 
 
 def main():
-
     # -- add logging flags from ctsm_logging
     setup_logging_pre_config()
     parser = get_parser()
@@ -420,9 +417,6 @@ def main():
     args = parser.parse_args()
 
     process_logging_args(args)
-
-    today = date.today()
-    today_string = today.strftime("%Y%m%d")
 
     myname = getuser()
     pwd = os.getcwd()
@@ -518,7 +512,7 @@ def main():
         fdomain_in = os.path.join(
             dir_inputdata, "share/domains/domain.lnd.fv0.9x1.25_gx1v7.151020.nc"
         )
-        fdomain_out = os.path.join(dir_output , single_point.add_tag_to_filename(
+        fdomain_out = os.path.join(dir_output, single_point.add_tag_to_filename(
             fdomain_in, single_point.tag
         ))
 
@@ -540,7 +534,7 @@ def main():
                 "lnd/clm2/surfdata_map/release-clm5.0.18/surfdata_0.9x1.25_hist_16pfts_Irrig_CMIP6_simyr2000_c190214.nc",
             )
 
-        fsurf_out = os.path.join(dir_output , single_point.add_tag_to_filename(
+        fsurf_out = os.path.join(dir_output, single_point.add_tag_to_filename(
             fsurf_in, single_point.tag
         ))
 
@@ -562,7 +556,7 @@ def main():
                 "lnd/clm2/surfdata_map/release-clm5.0.18/landuse.timeseries_0.9x1.25_hist_78pfts_CMIP6_simyr1850-2015_c190214.nc",
             )
         # fluse_out   = dir_output + single_point.add_tag_to_filename( fluse_in, single_point.tag ) # remove resolution from filename for singlept cases
-        fluse_out = os.path.join( dir_output , single_point.add_tag_to_filename(
+        fluse_out = os.path.join(dir_output, single_point.add_tag_to_filename(
             fluse_in, single_point.tag
         ))
         single_point.fluse_in = fluse_in
@@ -576,7 +570,7 @@ def main():
             dir_clm_forcedata,
             "atm_forcing.datm7.GSWP3.0.5d.v1.c170516/domain.lnd.360x720_gswp3.0v1.c170606.nc",
         )
-        fdatmdomain_out = os.path.join(dir_output_datm , single_point.add_tag_to_filename(
+        fdatmdomain_out = os.path.join(dir_output_datm, single_point.add_tag_to_filename(
             fdatmdomain_in, single_point.tag
         ))
         single_point.fdatmdomain_in = fdatmdomain_in
@@ -612,7 +606,7 @@ def main():
         logging.info(
             "----------------------------------------------------------------------------"
         )
-        logging.info( 
+        logging.info(
             "This script extracts a single point from the global CTSM inputdata datasets."
         )
 
@@ -677,12 +671,9 @@ def main():
 
         # --  Specify land domain file  ---------------------------------
         fdomain_in = os.path.join(
-            dir_inputdata , "share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc"
+            dir_inputdata, "share/domains/domain.lnd.fv1.9x2.5_gx1v7.170518.nc"
         )
-        fdomain_out = os.path.join(
-            dir_output , "domain.lnd.fv1.9x2.5_gx1v7." + region.tag + "_170518.nc"
-        )
-        fdomain_out = os.path.join(dir_output , region.add_tag_to_filename(
+        fdomain_out = os.path.join(dir_output, region.add_tag_to_filename(
             fdomain_in, region.tag
         ))
 
@@ -696,7 +687,7 @@ def main():
             dir_inputdata
             , "lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc"
         )
-        fsurf_out = os.path.join(dir_output , region.add_tag_to_filename(
+        fsurf_out = os.path.join(dir_output, region.add_tag_to_filename(
             fsurf_in, region.tag
         ))
 
@@ -710,7 +701,7 @@ def main():
             dir_inputdata
             , "lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc"
         )
-        fluse_out = os.path.join(dir_output , region.add_tag_to_filename(
+        fluse_out = os.path.join(dir_output, region.add_tag_to_filename(
             fluse_in, region.tag
         ))
         region.fluse_in = fluse_in
