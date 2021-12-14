@@ -1,6 +1,6 @@
 ===============================================================
 Tag name:  ctsm5.1.dev068
-Originator(s):  slevis (Samuel Levis,SLevis Consulting,303-665-1310)
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310), sacks (Bill Sacks)
 Date: Mon Dec 13 15:42:07 MST 2021
 One-line Summary: Adding fsurdat_modifier tool
 
@@ -62,11 +62,12 @@ Testing summary:
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
     cheyenne ---- PASS
-    izumi ------- PASS
+    Bill's Mac -- PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
     cheyenne ---- PASS
+    izumi ------- OK
 
 Answer changes
 --------------
