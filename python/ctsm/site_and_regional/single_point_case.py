@@ -350,12 +350,12 @@ class SinglePointCase(BaseCase):
         writes out xml commands commands to a file (i.e. shell_commands) for single-point runs
         """
         # write_to_file surrounds text with newlines
-        with open(file, 'w'):
-            self.write_to_file("# Change below line if you move the subset data directory", file)
-            self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.output_dir), file)
-            self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), file)
-            self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), file)
-            self.write_to_file("./xmlchange MPILIB=mpi-serial", file)
+        with open(file, 'w') as nl_file:
+            self.write_to_file("# Change below line if you move the subset data directory", nl_file)
+            self.write_to_file("./xmlchange {}={}".format(USRDAT_DIR, self.output_dir), nl_file)
+            self.write_to_file("./xmlchange PTS_LON={}".format(str(self.plon)), nl_file)
+            self.write_to_file("./xmlchange PTS_LAT={}".format(str(self.plat)), nl_file)
+            self.write_to_file("./xmlchange MPILIB=mpi-serial", nl_file)
 
     def write_datm_streams_lines(self, streamname, datmfiles, file):
         """
