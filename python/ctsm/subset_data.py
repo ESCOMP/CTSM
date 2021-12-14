@@ -474,7 +474,7 @@ def setup_files(args, defaults, cesmroot):
                     'dir_prec': defaults.get(datm_type, 'precdir'),
                     'dir_tpqw': defaults.get(datm_type, 'tpqwdir'),
                     'tag_solar': defaults.get(datm_type, 'solartag'),
-                    'tag_prec': defaults.get(datm_type, 'prec_tag'),
+                    'tag_prec': defaults.get(datm_type, 'prectag'),
                     'tag_tpqw': defaults.get(datm_type, 'tpqwtag'),
                     'name_solar': defaults.get(datm_type, 'solarname'),
                     'name_prec': defaults.get(datm_type, 'precname'),
