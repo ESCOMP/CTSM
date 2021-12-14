@@ -467,10 +467,10 @@ def setup_files(args, defaults, cesmroot):
                                            os.path.join(defaults.get("landuse", "dir"))),
                  'fsurf_in': fsurf_in,
                  'fluse_in': fluse_in,
-                 'fdatmdomain_in': defaults.get(datm_type, "domain"),
                  'datm_dict': {
                      'datm_indir': dir_input_datm,
                      'datm_outdir': dir_output_datm,
+                     'fdatmdomain_in': defaults.get(datm_type, "domain"),
                      'dir_solar': defaults.get(datm_type, 'solardir'),
                      'dir_prec': defaults.get(datm_type, 'precdir'),
                      'dir_tpqw': defaults.get(datm_type, 'tpqwdir'),

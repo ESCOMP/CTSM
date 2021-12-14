@@ -241,8 +241,8 @@ class SinglePointCase(BaseCase):
             f_out["PCT_LAKE"][:, :] = 0.0
             f_out["PCT_WETLAND"][:, :] = 0.0
             f_out["PCT_URBAN"][
-                :,
-                :,
+            :,
+            :,
             ] = 0.0
             f_out["PCT_GLACIER"][:, :] = 0.0
         if self.uniform_snowpack:
@@ -284,14 +284,13 @@ class SinglePointCase(BaseCase):
                 line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, fsurf_out))
                 self.write_to_file(line, nl_clm)
 
-    def create_datmdomain_at_point(self, datm_dict : dict):
+    def create_datmdomain_at_point(self, datm_dict: dict):
         """
         Create DATM domain file at a single point
         """
         logging.info("----------------------------------------------------------------------")
         logging.info(
             "Creating DATM domain file at %s, %s", self.plon.__str__(), self.plat.__str__())
-
 
         # specify files
         fdatmdomain_in = os.path.join(datm_dict["datm_indir"], datm_dict["fdatmdomain_in"])
