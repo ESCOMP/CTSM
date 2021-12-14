@@ -143,8 +143,9 @@ class SinglePointCase(BaseCase):
         self.update_metadata(f_out)
         f_out.attrs["Created_from"] = fdomain_in
 
+        wfile = os.path.join(self.output_dir, fdomain_out)
         f_out.to_netcdf(path=fdomain_out, mode="w")
-        logging.info("Successfully created file (fdomain_out) %s", fdomain_out)
+        logging.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
 
@@ -191,7 +192,7 @@ class SinglePointCase(BaseCase):
         wfile = os.path.join(self.output_dir, fluse_out)
         # mode 'w' overwrites file
         f_out.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fluse_out), %s", fluse_out)
+        logging.info("Successfully created file (fluse_out), %s", wfile)
         f_in.close()
         f_out.close()
 
@@ -271,8 +272,9 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fsurf_in
         del f_out.attrs["History_Log"]
         # mode 'w' overwrites file
-        f_out.to_netcdf(path=fsurf_out, mode="w")
-        logging.info("Successfully created file (fsurf_out) %s", fsurf_out)
+        wfile = os.path.join(self.output_dir, fsurf_out)
+        f_out.to_netcdf(path=wfile, mode="w")
+        logging.info("Successfully created file (fsurf_out) %s", wfile)
         f_in.close()
         f_out.close()
 
@@ -311,8 +313,9 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = fdatmdomain_in
 
         # mode 'w' overwrites file
-        f_out.to_netcdf(path=fdatmdomain_out, mode="w")
-        logging.info("Successfully created file (fdatmdomain_out) : %s", fdatmdomain_out)
+        wfile = os.path.join(self.output_dir, fdatmdomain_out)
+        f_out.to_netcdf(path=wfile, mode="w")
+        logging.info("Successfully created file (fdatmdomain_out) : %s", wfile)
         f_in.close()
         f_out.close()
 

@@ -106,9 +106,9 @@ class RegionalCase(BaseCase):
 
         # specify files
         fdomain_in = os.path.join(indir, file)
-        fdomain_out = os.path.join(self.output_dir, self.add_tag_to_filename(fdomain_in, self.tag))
+        fdomain_out = self.add_tag_to_filename(fdomain_in, self.tag)
         logging.info("fdomain_in:  %s", fdomain_in)
-        logging.info("fdomain_out: %s", fdomain_out)
+        logging.info("fdomain_out: %s", os.path.join(self.output_dir, fdomain_out))
         logging.info("Creating domain file at region: %s", self.tag)
 
         # create 1d coordinate variables to enable sel() method
@@ -125,8 +125,9 @@ class RegionalCase(BaseCase):
         f_out.attrs["Created_from"] = fdomain_in
 
         # mode 'w' overwrites file
-        f_out.to_netcdf(path=fdomain_out, mode="w")
-        logging.info("Successfully created file (fdomain_out) %s", fdomain_out)
+        wfile = os.path.join(self.output_dir, fdomain_out)
+        f_out.to_netcdf(path=wfile, mode="w")
+        logging.info("Successfully created file (fdomain_out) %s", wfile)
         f_in.close()
         f_out.close()
 
@@ -139,9 +140,9 @@ class RegionalCase(BaseCase):
 
         # specify files
         fsurf_in = os.path.join(indir, file)
-        fsurf_out = os.path.join(self.output_dir, self.add_tag_to_filename(fsurf_in, self.tag))
+        fsurf_out = self.add_tag_to_filename(fsurf_in, self.tag)
         logging.info("fsurf_in:  %s", fsurf_in)
-        logging.info("fsurf_out: %s", fsurf_out)
+        logging.info("fsurf_out: %s", os.path.join(self.output_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
@@ -157,8 +158,9 @@ class RegionalCase(BaseCase):
         f_out.attrs["Created_from"] = fsurf_in
 
         # mode 'w' overwrites file
-        f_out.to_netcdf(path=fsurf_out, mode="w")
-        logging.info("created file (fsurf_out) %s", fsurf_out)
+        wfile = os.path.join(self.output_dir, fsurf_out)
+        f_out.to_netcdf(path=wfile, mode="w")
+        logging.info("created file (fsurf_out) %s", wfile)
         f_in.close()
         f_out.close()
 
@@ -177,9 +179,9 @@ class RegionalCase(BaseCase):
 
         # specify files
         fluse_in = os.path.join(indir, file)
-        fluse_out = os.path.join(self.output_dir, self.add_tag_to_filename(fluse_in, self.tag))
+        fluse_out = self.add_tag_to_filename(fluse_in, self.tag)
         logging.info("fluse_in:  %s", fluse_in)
-        logging.info("fluse_out: %s", fluse_out)
+        logging.info("fluse_out: %s", os.path.join(self.output_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
         f_in = self.create_1d_coord(
@@ -197,8 +199,9 @@ class RegionalCase(BaseCase):
         f_out.attrs["Created_from"] = fluse_in
 
         # mode 'w' overwrites file
-        f_out.to_netcdf(path=fluse_out, mode="w")
-        logging.info("Successfully created file (fluse_out) %s", fluse_out)
+        wfile = os.path.join(self.output_dir, fluse_out)
+        f_out.to_netcdf(path=wfile, mode="w")
+        logging.info("Successfully created file (fluse_out) %s", wfile)
         f_in.close()
         f_out.close()
 
