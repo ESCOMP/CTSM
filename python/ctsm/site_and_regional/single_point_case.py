@@ -1,14 +1,17 @@
 """
-Holds the class SinglePointCase
+This module includes the definition for SinglePointCase class.
 """
 
-import os
+# -- Import libraries
+# -- Import Python Standard Libraries
 import logging
-from datetime import date
+import os
 
+# -- 3rd party libraries
 import numpy as np
 import xarray as xr
 
+# -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
 
 logger = logging.getLogger(__name__)
@@ -16,47 +19,63 @@ logger = logging.getLogger(__name__)
 
 class SinglePointCase(BaseCase):
     """
-        A case to encapsulate single point cases.
-        ...
-        Attributes
-        ----------
-        plat : float
-            latitude
-        plon : float
-            longitude
-        site_name: str -- default = None
-            Site name
-        overwrite_single_pft : bool
-            flag to overwrite surface data with one uniform plant functional type
-        dominant_pft: int
-            index of plant functional type to set to 100% cover if overwrite_single_pft = True
-        zero_nonveg_landunits : bool
-            flag to set surface data to all natural vegetation (100% NATVEG, 0% other)
-        uniform_snowpack
-            flag to set the the surface data STD_ELEV to 0.0
-        saturation_excess : bool
-            flag to set the surface data FMAX to 0.0
-        output_dir : str
-            main output directory to write subset files to
-        tag : str
-            ending tag for output file naming
+    A class to encapsulate everything for single point cases.
 
-        Methods
-        -------
-        create_tag:
-            create a tag for single point which is the site name
-            or the "lon-lat" format if the site name does not exist.
-        create_fileout_name:
-            creates a file name from a basename and a specified tag
-        create_domain_at_point
-            creates domain file at a single point.
-        create_landuse_at_point:
-            creates landuse file at a single point.
-        create_surfdata_at_point:
-            creates surface dataset at a single point.
-        create_datmdomain_at_point:
-            creates DATM domain file at a single point.
-        """
+    ...
+
+    Attributes
+    ----------
+    plat : float
+        latitude of the single point
+    plon : float
+        longitude of the single point
+    site_name: str -- default = None
+        Site name
+    create_domain : bool
+        flag for creating domain file
+    create_surfdata : bool
+        flag for creating surface dataset
+    create_landuse : bool
+        flag for creating landuse file
+    create_datm : bool
+        flag for creating DATM files
+    create_user_mods : bool
+        flag for creating user mods directories and files
+    overwrite_single_pft : bool
+        flag to overwrite the whole grid 100% single PFT.
+    dominant_pft : int
+        dominant pft type for this single point
+    zero_nonveg_landunits : bool
+        flag for setting all non-vegetation landunits to zero
+    overwrite_single_pft : bool
+        flag for creating datasets using uniform snowpack
+    saturation_excess : bool
+        flag for making dataset using saturation excess
+
+    Methods
+    -------
+    create_tag
+        create a tag for single point which is the site name
+        or the "lon-lat" format if the site name does not exist.
+
+    create_domain_at_point
+        Create domain file at a single point.
+
+    create_landuse_at_point:
+        Create landuse file at a single point.
+
+    create_surfdata_at_point:
+        Create surface dataset at a single point.
+
+    create_datmdomain_at_point:
+        Create DATM domain file at a single point.
+
+    extract_datm_at:
+        Extract DATM for one file at a single point.
+
+    create_datm_at_point:
+        Extract all DATM data at a single point.
+    """
 
     def __init__(
             self,
@@ -89,26 +108,21 @@ class SinglePointCase(BaseCase):
         self.tag = None
 
     def create_tag(self):
+        """
+        Create a tag for single point which is the site name
+        or the "lon-lat" format if the site name does not exist.
+        """
         if self.site_name:
             self.tag = self.site_name
         else:
             self.tag = "{}_{}".format(str(self.plon), str(self.plat))
 
-    @staticmethod
-    def create_fileout_name(filename, tag):
-
-        basename = os.path.basename(filename)
-        items = basename.split("_")
-        today = date.today()
-        today_string = today.strftime("%y%m%d")
-        new_string = "{}_{}_c{}.nc".format("_".join([items[0]] + items[2:7]), tag, today_string)
-
-        return new_string
-
     def create_domain_at_point(self, indir, file):
+        """
+        Create domain file for this SinglePointCase class.
+        """
         logging.info("----------------------------------------------------------------------")
-        logging.info(
-            "Creating domain file at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
+        logging.info("Creating domain file at %s, %s.", self.plon.__str__(), self.plat.__str__())
 
         # specify files
         fdomain_in = os.path.join(indir, file)
@@ -117,63 +131,69 @@ class SinglePointCase(BaseCase):
         logging.info("fdomain_out: %s", os.path.join(self.output_dir, fdomain_out))
 
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
+        f_in = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
 
         # extract gridcell closest to plon/plat
-        f3 = f2.sel(ni=self.plon, nj=self.plat, method="nearest")
+        f_out = f_in.sel(ni=self.plon, nj=self.plat, method="nearest")
+
         # expand dimensions
-        f3 = f3.expand_dims(["nj", "ni"])
+        f_out = f_out.expand_dims(["nj", "ni"])
 
         # update attributes
-        self.update_metadata(f3)
-        f3.attrs["Created_from"] = fdomain_in
+        self.update_metadata(f_out)
+        f_out.attrs["Created_from"] = fdomain_in
 
-        wfile = os.path.join(self.output_dir, fdomain_out)
-        f3.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fdomain_out) at %s", wfile)
-        f2.close()
-        f3.close()
+        f_out.to_netcdf(path=fdomain_out, mode="w")
+        logging.info("Successfully created file (fdomain_out) %s", fdomain_out)
+        f_in.close()
+        f_out.close()
 
     def create_landuse_at_point(self, indir, file, user_mods_dir):
+        """
+        Create landuse file at a single point.
+        """
         logging.info("----------------------------------------------------------------------")
-        logging.info(
-            "Creating land use file at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
+        logging.info("Creating land use file at %s, %s.", self.plon.__str__(), self.plat.__str__())
 
         # specify files
         fluse_in = os.path.join(indir, file)
-        fluse_out = self.create_fileout_name(fluse_in, self.tag)
+        fluse_out = self.add_tag_to_filename(fluse_in, self.tag)
         logging.info("fluse_in:  %s", fluse_in)
         logging.info("fluse_out: %s", os.path.join(self.output_dir, fluse_out))
 
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f_in = self.create_1d_coord(
+            fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat"
+        )
+
         # extract gridcell closest to plon/plat
-        f3 = f2.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
 
         # expand dimensions
-        f3 = f3.expand_dims(["lsmlat", "lsmlon"])
+        f_out = f_out.expand_dims(["lsmlat", "lsmlon"])
+
         # specify dimension order
-        # f3 = f3.transpose('time','lat','lon')
-        f3 = f3.transpose(u"time", u"cft", u"natpft", u"lsmlat", u"lsmlon")
-        # f3['YEAR'] = f3['YEAR'].squeeze()
+        # f_out = f_out.transpose('time','lat','lon')
+        f_out = f_out.transpose(u"time", u"cft", u"natpft", u"lsmlat", u"lsmlon")
+        # f_out['YEAR'] = f_out['YEAR'].squeeze()
 
         # revert expand dimensions of YEAR
-        year = np.squeeze(np.asarray(f3["YEAR"]))
-        x = xr.DataArray(year, coords={"time": f3["time"]}, dims="time", name="YEAR")
-        x.attrs["units"] = "unitless"
-        x.attrs["long_name"] = "Year of PFT data"
-        f3["YEAR"] = x
+        year = np.squeeze(np.asarray(f_out["YEAR"]))
+        temp_xr = xr.DataArray(year, coords={"time": f_out["time"]}, dims="time", name="YEAR")
+        temp_xr.attrs["units"] = "unitless"
+        temp_xr.attrs["long_name"] = "Year of PFT data"
+        f_out["YEAR"] = temp_xr
 
         # update attributes
-        self.update_metadata(f3)
-        f3.attrs["Created_from"] = fluse_in
+        self.update_metadata(f_out)
+        f_out.attrs["Created_from"] = fluse_in
 
         wfile = os.path.join(self.output_dir, fluse_out)
         # mode 'w' overwrites file
-        f3.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fluse_out) at %s", wfile)
-        f2.close()
-        f3.close()
+        f_out.to_netcdf(path=wfile, mode="w")
+        logging.info("Successfully created file (fluse_out), %s", fluse_out)
+        f_in.close()
+        f_out.close()
 
         # write to user_nl_clm data if specified
         if self.create_user_mods:
@@ -182,50 +202,56 @@ class SinglePointCase(BaseCase):
                 self.write_to_file(line, nl_clm)
 
     def create_surfdata_at_point(self, indir, file, user_mods_dir):
+        """
+        Create surface data file at a single point.
+        """
         logging.info("----------------------------------------------------------------------")
         logging.info(
-            "Creating surface dataset file at {}, {}.".format(self.plon.__str__(),
-                                                              self.plat.__str__()))
+            "Creating surface dataset file at %s, %s", self.plon.__str__(), self.plat.__str__())
 
         # specify file
         fsurf_in = os.path.join(indir, file)
-        fsurf_out = self.create_fileout_name(fsurf_in, self.tag)
+        fsurf_out = self.add_tag_to_filename(fsurf_in, self.tag)
         logging.info("fsurf_in:  %s", fsurf_in)
         logging.info("fsurf_out: %s", os.path.join(self.output_dir, fsurf_out))
 
         # create 1d coordinate variables to enable sel() method
-        filename = os.path.join(self.output_dir, fsurf_in)
-        f2 = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f_in = self.create_1d_coord(fsurf_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+
         # extract gridcell closest to plon/plat
-        f3 = f2.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+        f_out = f_in.sel(lsmlon=self.plon, lsmlat=self.plat, method="nearest")
+
         # expand dimensions
-        f3 = f3.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
+        f_out = f_out.expand_dims(["lsmlat", "lsmlon"]).copy(deep=True)
 
         # update the plon and plat to match the surface data
         # we do this so that if we create user_mods the PTS_LON and PTS_LAT in CIME match
         # the surface data coordinates - which is required
-        self.plat = f3.coords["lsmlat"].values[0]
-        self.plon = f3.coords["lsmlon"].values[0]
+        self.plat = f_out.coords["lsmlat"].values[0]
+        self.plon = f_out.coords["lsmlon"].values[0]
 
         # modify surface data properties
         if self.overwrite_single_pft:
-            f3["PCT_NAT_PFT"][:, :, :] = 0
-            f3["PCT_NAT_PFT"][:, :, self.dominant_pft] = 100
+            f_out["PCT_NAT_PFT"][:, :, :] = 0
+            f_out["PCT_NAT_PFT"][:, :, self.dominant_pft] = 100
         if self.zero_nonveg_landunits:
-            f3["PCT_NATVEG"][:, :] = 100
-            f3["PCT_CROP"][:, :] = 0
-            f3["PCT_LAKE"][:, :] = 0.0
-            f3["PCT_WETLAND"][:, :] = 0.0
-            f3["PCT_URBAN"][:, :, ] = 0.0
-            f3["PCT_GLACIER"][:, :] = 0.0
+            f_out["PCT_NATVEG"][:, :] = 100
+            f_out["PCT_CROP"][:, :] = 0
+            f_out["PCT_LAKE"][:, :] = 0.0
+            f_out["PCT_WETLAND"][:, :] = 0.0
+            f_out["PCT_URBAN"][
+                :,
+                :,
+            ] = 0.0
+            f_out["PCT_GLACIER"][:, :] = 0.0
         if self.uniform_snowpack:
-            f3["STD_ELEV"][:, :] = 20.0
+            f_out["STD_ELEV"][:, :] = 20.0
         if not self.saturation_excess:
-            f3["FMAX"][:, :] = 0.0
+            f_out["FMAX"][:, :] = 0.0
 
         # specify dimension order
-        # f3 = f3.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
-        f3 = f3.transpose(
+        # f_out = f_out.transpose(u'time', u'cft', u'natpft', u'lsmlat', u'lsmlon')
+        f_out = f_out.transpose(
             u"time",
             u"cft",
             u"lsmpft",
@@ -241,15 +267,14 @@ class SinglePointCase(BaseCase):
         )
 
         # update attributes
-        self.update_metadata(f3)
-        f3.attrs["Created_from"] = fsurf_in
-        del f3.attrs["History_Log"]
+        self.update_metadata(f_out)
+        f_out.attrs["Created_from"] = fsurf_in
+        del f_out.attrs["History_Log"]
         # mode 'w' overwrites file
-        f3.to_netcdf(path=os.path.join(self.output_dir, fsurf_out), mode="w")
-        logging.info("Successfully created file (fsurf_out) at %s", os.path.join(self.output_dir,
-                                                                                 fsurf_out))
-        f2.close()
-        f3.close()
+        f_out.to_netcdf(path=fsurf_out, mode="w")
+        logging.info("Successfully created file (fsurf_out) %s", fsurf_out)
+        f_in.close()
+        f_out.close()
 
         # write to user_nl_clm if specified
         if self.create_user_mods:
@@ -258,9 +283,12 @@ class SinglePointCase(BaseCase):
                 self.write_to_file(line, nl_clm)
 
     def create_datmdomain_at_point(self, indir, file, dir_output_datm):
+        """
+        Create DATM domain file at a single point
+        """
         logging.info("----------------------------------------------------------------------")
         logging.info(
-            "Creating DATM domain file at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
+            "Creating DATM domain file at %s, %s", self.plon.__str__(), self.plat.__str__())
 
         # specify files
         fdatmdomain_in = os.path.join(indir, file)
@@ -270,39 +298,49 @@ class SinglePointCase(BaseCase):
         logging.info("fdatmdomain out: %s", os.path.join(self.output_dir, fdatmdomain_out))
 
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(fdatmdomain_in, "xc", "yc", "ni", "nj")
+        f_in = self.create_1d_coord(fdatmdomain_in, "xc", "yc", "ni", "nj")
+
         # extract gridcell closest to plon/plat
-        f3 = f2.sel(ni=self.plon, nj=self.plat, method="nearest")
+        f_out = f_in.sel(ni=self.plon, nj=self.plat, method="nearest")
+
         # expand dimensions
-        f3 = f3.expand_dims(["nj", "ni"])
-        wfile = os.path.join(self.output_dir, fdatmdomain_out)
+        f_out = f_out.expand_dims(["nj", "ni"])
+
         # update attributes
-        self.update_metadata(f3)
-        f3.attrs["Created_from"] = fdatmdomain_in
+        self.update_metadata(f_out)
+        f_out.attrs["Created_from"] = fdatmdomain_in
+
         # mode 'w' overwrites file
-        f3.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fdatmdomain_out) at %s", wfile)
-        f2.close()
-        f3.close()
+        f_out.to_netcdf(path=fdatmdomain_out, mode="w")
+        logging.info("Successfully created file (fdatmdomain_out) : %s", fdatmdomain_out)
+        f_in.close()
+        f_out.close()
 
     def extract_datm_at(self, file_in, file_out):
+        """
+        Create a DATM dataset at a point.
+        """
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(file_in, "LONGXY", "LATIXY", "lon", "lat")
+        f_in = self.create_1d_coord(file_in, "LONGXY", "LATIXY", "lon", "lat")
+
         # extract gridcell closest to plon/plat
-        f3 = f2.sel(lon=self.plon, lat=self.plat, method="nearest")
+        f_out = f_in.sel(lon=self.plon, lat=self.plat, method="nearest")
+
         # expand dimensions
-        f3 = f3.expand_dims(["lat", "lon"])
+        f_out = f_out.expand_dims(["lat", "lon"])
+
         # specify dimension order
-        f3 = f3.transpose(u"scalar", "time", "lat", "lon")
+        f_out = f_out.transpose(u"scalar", "time", "lat", "lon")
 
         # update attributes
-        self.update_metadata(f3)
-        f3.attrs["Created_from"] = file_in
+        self.update_metadata(f_out)
+        f_out.attrs["Created_from"] = file_in
+
         # mode 'w' overwrites file
-        f3.to_netcdf(path=file_out, mode="w")
-        logging.info("Successfully created file at %s", file_out)
-        f2.close()
-        f3.close()
+        f_out.to_netcdf(path=file_out, mode="w")
+        logging.info("Successfully created file : %s", file_out)
+        f_in.close()
+        f_out.close()
 
     def write_shell_commands(self, file):
         """
@@ -330,9 +368,11 @@ class SinglePointCase(BaseCase):
         self.write_to_file("{}:meshfile=none".format(streamname), file)
 
     def create_datm_at_point(self, datm_dict: dict, datm_syr, datm_eyr, datm_streams_file):
+        """
+        Create all of a DATM dataset at a point.
+        """
         logging.info("----------------------------------------------------------------------")
-        logging.info(
-            "Creating DATM files at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
+        logging.info("Creating DATM files at %s, %s", self.plon.__str__(), self.plat.__str__())
 
         # --  create data files
         infile = []
@@ -340,11 +380,11 @@ class SinglePointCase(BaseCase):
         solarfiles = []
         precfiles = []
         tpqwfiles = []
-        for y in range(datm_syr, datm_eyr + 1):
-            ystr = str(y)
-            for m in range(1, 13):
-                mstr = str(m)
-                if m < 10:
+        for year in range(datm_syr, datm_eyr + 1):
+            ystr = str(year)
+            for month in range(1, 13):
+                mstr = str(month)
+                if month < 10:
                     mstr = "0" + mstr
 
                 dtag = ystr + "-" + mstr

@@ -77,3 +77,13 @@ def process_logging_args(args):
         root_logger.setLevel(logging.INFO)
     else:
         root_logger.setLevel(logging.WARNING)
+
+def output_to_file(filepath, message, log_to_logger=False):
+    """
+    helper functionn to write to log file.
+    """
+    with open(filepath, 'a') as fl:
+        fl.write(message)
+    if log_to_logger:
+        logger.info(message)
+

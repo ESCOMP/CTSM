@@ -10,24 +10,25 @@ from ctsm import unit_testing
 # to make readable unit test names
 # pylint: disable=invalid-name
 
-class TestSubsetData(unittest.TestCase):
 
+class TestSubsetData(unittest.TestCase):
     def test_plonType_positive(self):
         result = plon_type(30)
-        self.assertEqual(result, 30.)
+        self.assertEqual(result, 30.0)
 
     def test_plonType_negative(self):
         result = plon_type(-30)
-        self.assertEqual(result, 330.)
+        self.assertEqual(result, 330.0)
 
     def test_plonType_outOfBounds(self):
-        with self.assertRaisesRegex(argparse.ArgumentTypeError,
-                                    "Latitude.*should be between"):
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError, "Latitude.*should be between"
+        ):
             _ = plon_type(361)
+
 
 """Unit tests for subset_data
 """
-if __name__ == '__main__':
+if __name__ == "__main__":
     unit_testing.setup_for_tests()
     unittest.main()
-

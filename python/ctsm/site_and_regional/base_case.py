@@ -1,21 +1,25 @@
 """
-Holds the class BaseCase, parent class to Regional and Single-Point cases
+This module includes the definition for a parent class for SinglePointCase
+and RegionalCase. The common functionalities of SinglePointCase and
+RegionalCase are defined in this Class.
 """
+# -- Import libraries
+
+# -- standard libraries
 import os
 import logging
-
-import subprocess
 
 from datetime import date
 from getpass import getuser
 
+# -- 3rd party libraries
 import numpy as np
 import xarray as xr
 
-from ctsm.get_utils import get_get_short_hash
+# -- import local classes for this script
+from ctsm.git_utils import get_git_short_hash
 
 USRDAT_DIR = "CLM_USRDAT_DIR"
-
 logger = logging.getLogger(__name__)
 
 
@@ -42,8 +46,8 @@ class BaseCase:
     add_tag_to_filename(filename, tag)
        add a tag and timetag to a filename ending with
        [._]cYYMMDD.nc or [._]YYMMDD.nc
-    update_metadata(self, nc)
-       Class method for adding some new attributes (such as date, username) and
+    update_metadata(nc)
+        Class method for adding some new attributes (such as date, username) and
         remove the old attributes from the netcdf file.
     """
 
@@ -51,6 +55,19 @@ class BaseCase:
                  create_user_mods):
         """
         Initializes BaseCase with the given arguments.
+
+        Parameters
+        ----------
+        create_domain : bool
+            Flag for creating domain file a region/single point
+        create_surfdata : bool
+            Flag for creating domain file a region/single point
+        create_landuse : bool
+            Flag for creating landuse file a region/single point
+        create_datmdata : bool
+            Flag for creating datm files a region/single point
+        create_user_mods : bool
+            Flag for creating user mods directories and files for running CTSM
         """
         self.create_domain = create_domain
         self.create_surfdata = create_surfdata
@@ -68,15 +85,24 @@ class BaseCase:
     @staticmethod
     def create_1d_coord(filename, lon_varname, lat_varname, x_dim, y_dim):
         """
-        Creates 1d coordinate variables for a netcdf file to enable sel() method
-        Args
+        Create 1d coordinate variables for a netcdf file to enable sel() method
+
+        Parameters
+        ----------
             filename (str) : name of the netcdf file
             lon_varname (str) : variable name that has 2d lon
             lat_varname (str) : variable name that has 2d lat
             x_dim (str) : dimension name in X -- lon
             y_dim (str): dimension name in Y -- lat
-        Returns:
+
+        Raises
+        ------
+            None
+
+        Returns
+        -------
             f_out (xarray Dataset): Xarray Dataset with 1-d coords
+
         """
         logging.debug("Open file: %s", filename)
         f_in = xr.open_dataset(filename)
@@ -100,13 +126,20 @@ class BaseCase:
         Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
         Add the tag to just before that ending part
         and change the ending part to the current time tag.
-        Args
+
+        Parameters
+        ----------
             filename (str) : file name
             tag (str) : string of a tag to be added to the end of filename
-        Raises:
+
+        Raises
+        ------
             Error: When it cannot find . and _ in the filename.
-        Returns:
+
+        Returns
+        ------
             fname_out (str): filename with the tag and date string added
+
         """
         basename = os.path.basename(filename)
         cend = -10
@@ -120,17 +153,32 @@ class BaseCase:
         fname_out = "{}_{}_c{}.nc".format(basename[:cend], tag, today_string)
         return fname_out
 
-    def update_metadata(self, nc):
+    @staticmethod
+    def update_metadata(nc):
         """
         Class method for adding some new attributes (such as date, username) and
         remove the old attributes from the netcdf file.
+
+        Parameters
+        ----------
+            nc (xarray dataset) :
+                Xarray dataset of netcdf file that we'd want to update it's metadata.
+
+        Raises
+        ------
+            None
+
+        Returns
+        ------
+            None
+
         """
         # update attributes
         today = date.today()
         today_string = today.strftime("%Y-%m-%d")
 
         # get git hash
-        sha = get_get_short_hash()
+        sha = get_git_short_hash()
 
         nc.attrs["Created_on"] = today_string
         nc.attrs["Created_by"] = getuser()

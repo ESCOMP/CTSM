@@ -8,10 +8,8 @@ load the following into your local environment
     module load python
     ncar_pylib
 -------------------------------------------------------------------
-To see the available options for single point cases:
-    ./subset_data.py point --help
-To see the available options for regional cases:
-    ./subset_data.py reg --help
+To see the available options for single point or regional cases:
+    ./subset_data.py --help
 -------------------------------------------------------------------
 This script extracts domain files, surface dataset, and DATM files
 at either a single point or a region using a global dataset. Currently this
@@ -33,27 +31,42 @@ in the ./create.newcase call.
 By default, this script only extracts surface dataset. For extracting other
 files, the appropriate flags should be used.
 -------------------------------------------------------------------
+To run the script for a single point:
+    ./subset_data.py point
+
+To run the script for a region:
+    ./subset_data.py region
+
+To remove NPL from your environment on Cheyenne/Casper:
+    deactivate
+-------------------------------------------------------------------
 """
 
-# TODO
-# Automatic downloading of missing files if they are missing
+# TODO [NS]:
+# -[] Automatic downloading of missing files if they are missing
 # default 78 pft vs 16 pft
 
-#  Import libraries
-from __future__ import print_function
-import sys
+# -- Import libraries
+
+# -- standard libraries
 import os
+import sys
 import logging
 import argparse
+import textwrap
 import configparser
 
 from getpass import getuser
 from argparse import ArgumentParser
-import textwrap
 
-from ctsm.site_and_regional.regional_case import RegionalCase
+# -- import local classes for this script
 from ctsm.site_and_regional.single_point_case import SinglePointCase
+from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.path_utils import path_to_ctsm_root
+
+from ctsm.utils import str2bool
+
+# -- import ctsm logging flags
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
     add_logging_args,
@@ -71,6 +84,10 @@ logger = logging.getLogger(__name__)
 def get_parser():
     """
     Get the parser object for subset_data.py script.
+
+    Returns:
+        parser (ArgumentParser): ArgumentParser which includes all the parser information.
+
     """
     parser = ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -78,10 +95,10 @@ def get_parser():
 
     parser.print_usage = parser.print_help
     subparsers = parser.add_subparsers(
-        help="Two possible ways to run this script, either:", dest="run_type")
-    pt_parser = subparsers.add_parser(
-        "point", help="Run script for a single point.")
-    rg_parser = subparsers.add_parser("reg", help="Run script for a region.")
+        help="Two possible ways to run this sript, either:", dest="run_type"
+    )
+    pt_parser = subparsers.add_parser("point", help="Run script for a single point.")
+    rg_parser = subparsers.add_parser("region", help="Run script for a region.")
 
     # -- signle point parser options
     pt_parser.add_argument(
@@ -201,6 +218,17 @@ def get_parser():
         type=str,
         default="",
     )
+    rg_parser.add_argument(
+        "--create-mesh",
+        help="Flag for subsetting mesh file. [default: %(default)s]",
+        action="store",
+        dest="create_mesh",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        required=False,
+        default=False,
+    )
 
     # -- common options between both subparsers
     for subparser in [pt_parser, rg_parser]:
@@ -292,7 +320,7 @@ def get_parser():
             nargs="?",
             const=True,
             required=False,
-            default=False,
+            default=True,
         )
         subparser.add_argument(
             "--dompft",
@@ -335,67 +363,45 @@ def get_parser():
     return parser
 
 
-def str2bool(v):
-    """
-    Function for converting different forms of
-    command line boolean strings to boolean value.
-    Args:
-        v (str): String bool input
-    Raises:
-        if the argument is not an acceptable boolean string
-        (such as yes or no ; true or false ; y or n ; t or f ; 0 or 1).
-        argparse.ArgumentTypeError: The string should be one of the mentioned values.
-    Returns:
-        bool: Boolean value corresponding to the input.
-    """
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ("yes", "true", "t", "y", "1"):
-        return True
-    if v.lower() in ("no", "false", "f", "n", "0"):
-        return False
-    raise argparse.ArgumentTypeError("Boolean value expected. [true or false] or [y or n]")
-
-
-def plat_type(x):
+def plat_type(plat):
     """
     Function to define lat type for the parser
     and
     raise error if latitude is not between -90 and 90.
     Args:
-        x(str): latitude
+        plat(str): latitude
     Raises:
-        Error when x (latitude) is not between -90 and 90.
+        Error when plat (latitude) is not between -90 and 90.
     Returns:
-        x (float): latitude in float
+        plat (float): latitude in float
     """
-    x = float(x)
-    if (x < -90) or (x > 90):
+    plat = float(plat)
+    if (plat < -90) or (plat > 90):
         raise argparse.ArgumentTypeError("ERROR: Latitude should be between -90 and 90.")
-    return x
+    return plat
 
 
-def plon_type(x):
+def plon_type(plon):
     """
     Function to define lon type for the parser and
     convert negative longitudes and
     raise error if lon is not between -180 and 360.
     Args:
-        x (str): longitude
+        plon (str): longitude
     Raises:
-        Error: when latitude is <-180 and >360.
+        Error: when longitude is <-180 and >360.
     Returns:
-        x(float): converted longitude between 0 and 360
+        plon(float): converted longitude between 0 and 360
     """
-    x = float(x)
-    if -180 <= x < 0:
-        logging.info("lon is: %f", x)
-        x = x % 360
-        logging.info("after modulo lon is: %f", x)
-    if x < 0 or x > 360:
-        raise argparse.ArgumentTypeError("ERROR: Latitude of single point should be between 0 and "
+    plon = float(plon)
+    if -180 <= plon < 0:
+        logging.info("lon is: %f", plon)
+        plon = plon % 360
+        logging.info("after modulo lon is: %f", plon)
+    if plon < 0 or plon > 360:
+        raise argparse.ArgumentTypeError("ERROR: Longitude of single point should be between 0 and "
                                          "360 or -180 and 180.")
-    return x
+    return plon
 
 
 def setup_user_mods(out_dir, user_mods_dir, cesmroot):
@@ -450,7 +456,7 @@ def setup_files(args, defaults, cesmroot):
         num_pft = "16"
         fsurf_in = defaults.get("surfdat", "surfdat_16pft")
         fluse_in = defaults.get("landuse", "landuse_16pft")
-    logging.debug("crop_flag = {} => num_pft = {}".format(args.crop_flag.__str__(), num_pft))
+    logging.debug("crop_flag = %s => num_pft = %s", args.crop_flag.__str__(), num_pft)
 
     file_dict = {'main_dir': defaults.get("main", "clmforcingindir"),
                  'fdomain_in': defaults.get("domain", "file"),
