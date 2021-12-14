@@ -1,4 +1,4 @@
-"""General-purpose utility functions"""
+"""General-purpose git utility functions"""
 
 import logging
 import subprocess
