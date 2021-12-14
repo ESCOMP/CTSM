@@ -432,8 +432,9 @@ def setup_files(args, defaults, cesmroot):
         setup_user_mods(args.out_dir, args.user_mods_dir, cesmroot)
 
     # DATM data
+    datm_type = 'datm_gswp3'
     dir_output_datm = "datmdata"
-    dir_input_datm = defaults.get("datm_gswp3", "dir")
+    dir_input_datm = defaults.get(datm_type, "dir")
     if args.create_datm:
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
@@ -451,7 +452,6 @@ def setup_files(args, defaults, cesmroot):
         fluse_in = defaults.get("landuse", "landuse_16pft")
     logging.debug("crop_flag = {} => num_pft = {}".format(args.crop_flag.__str__(), num_pft))
 
-    datm_type = 'datm_gswp3'
     file_dict = {'main_dir': defaults.get("main", "clmforcingindir"),
                  'fdomain_in': defaults.get("domain", "file"),
                  'fsurf_dir': os.path.join(defaults.get("main", "clmforcingindir"),
@@ -461,23 +461,24 @@ def setup_files(args, defaults, cesmroot):
                  'fsurf_in': fsurf_in,
                  'fluse_in': fluse_in,
                  'fdatmdomain_in': defaults.get(datm_type, "domain"),
-                 'datm_indir': dir_input_datm,
-                 'datm_outdir': dir_output_datm,
-                 'dir_solar': defaults.get(datm_type, 'solardir'),
-                 'dir_prec': defaults.get(datm_type, 'precdir'),
-                 'dir_tpqw': defaults.get(datm_type, 'tpqwdir'),
-                 'tag_solar': defaults.get(datm_type, 'solartag'),
-                 'tag_prec': defaults.get(datm_type, 'prec_tag'),
-                 'tag_tpqw': defaults.get(datm_type, 'tpqwtag'),
-                 'name_solar': defaults.get(datm_type, 'solarname'),
-                 'name_prec': defaults.get(datm_type, 'precname'),
-                 'name_tpqw': defaults.get(datm_type, 'tpqwname')
+                 'datm_dict' : {
+                    'datm_indir': dir_input_datm,
+                    'datm_outdir': dir_output_datm,
+                    'dir_solar': defaults.get(datm_type, 'solardir'),
+                    'dir_prec': defaults.get(datm_type, 'precdir'),
+                    'dir_tpqw': defaults.get(datm_type, 'tpqwdir'),
+                    'tag_solar': defaults.get(datm_type, 'solartag'),
+                    'tag_prec': defaults.get(datm_type, 'prec_tag'),
+                    'tag_tpqw': defaults.get(datm_type, 'tpqwtag'),
+                    'name_solar': defaults.get(datm_type, 'solarname'),
+                    'name_prec': defaults.get(datm_type, 'precname'),
+                    'name_tpqw': defaults.get(datm_type, 'tpqwname')}
                  }
 
     return file_dict
 
 
-def subset_point(args, file_dict):
+def subset_point(args, file_dict : dict):
     """
     Subsets surface, domain, land use, and/or DATM files at a single point
     """
@@ -508,28 +509,29 @@ def subset_point(args, file_dict):
 
     # --  Create CTSM domain file
     if single_point.create_domain:
-        single_point.create_domain_at_point(file_dict.main_dir, file_dict.fdomain_in)
+        single_point.create_domain_at_point(file_dict["main_dir"], file_dict["fdomain_in"])
 
     # --  Create CTSM surface data file
     if single_point.create_surfdata:
-        single_point.create_surfdata_at_point(file_dict.fsurf_dir, file_dict.fsurf_in,
+        single_point.create_surfdata_at_point(file_dict["fsurf_dir"], file_dict["fsurf_in"],
                                               args.user_mods_dir)
 
     # --  Create CTSM transient landuse data file
     if single_point.create_landuse:
-        single_point.create_landuse_at_point(file_dict.fluse_dir, file_dict.fluse_in,
+        single_point.create_landuse_at_point(file_dict["fluse_dir"], file_dict["fluse_in"],
                                              args.user_mods_dir)
 
     # --  Create single point atmospheric forcing data
     if single_point.create_datm:
 
         # subset DATM domain file
-        single_point.create_datmdomain_at_point(file_dict.datm_indir, file_dict.fdatmdomain_in,
-                                                file_dict.datm_outdir)
+        single_point.create_datmdomain_at_point(file_dict["datm_indir"],
+                                                file_dict["fdatmdomain_in"],
+                                                file_dict["datm_outdir"])
 
         # subset the DATM data
         nl_datm = os.path.join(args.user_mods_dir, "user_nl_datm_streams")
-        single_point.create_datm_at_point(file_dict, args.datm_syr, args.datm_eyr,
+        single_point.create_datm_at_point(file_dict['datm_dict'], args.datm_syr, args.datm_eyr,
                                           nl_datm)
 
     # -- Write shell commands
@@ -539,7 +541,7 @@ def subset_point(args, file_dict):
     logging.info("Successfully ran script for single point.")
 
 
-def subset_region(args, file_dict):
+def subset_region(args, file_dict : dict):
     """
     Subsets surface, domain, land use, and/or DATM files for a region
     """
@@ -567,16 +569,16 @@ def subset_region(args, file_dict):
 
     # --  Create CTSM domain file
     if region.create_domain:
-        region.create_domain_at_reg(file_dict.main_dir, file_dict.fdomain_in)
+        region.create_domain_at_reg(file_dict["main_dir"], file_dict["fdomain_in"])
 
     # --  Create CTSM surface data file
     if region.create_surfdata:
-        region.create_surfdata_at_reg(file_dict.fsurf_dir, file_dict.fsurf_in,
+        region.create_surfdata_at_reg(file_dict["fsurf_dir"], file_dict["fsurf_in"],
                                       args.user_mods_dir)
 
     # --  Create CTSM transient landuse data file
     if region.create_landuse:
-        region.create_landuse_at_reg(file_dict.fluse_dir, file_dict.fluse_in,
+        region.create_landuse_at_reg(file_dict["fluse_dir"], file_dict["fluse_in"],
                                              args.user_mods_dir)
 
     logging.info("Successfully ran script for a regional case.")

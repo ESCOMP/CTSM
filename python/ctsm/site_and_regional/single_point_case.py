@@ -329,7 +329,7 @@ class SinglePointCase(BaseCase):
         self.write_to_file("{}:mapalgo=none".format(streamname), file)
         self.write_to_file("{}:meshfile=none".format(streamname), file)
 
-    def create_datm_at_point(self, file_dict, datm_syr, datm_eyr, datm_streams_file):
+    def create_datm_at_point(self, datm_dict: dict, datm_syr, datm_eyr, datm_streams_file):
         logging.info("----------------------------------------------------------------------")
         logging.info(
             "Creating DATM files at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
@@ -349,27 +349,27 @@ class SinglePointCase(BaseCase):
 
                 dtag = ystr + "-" + mstr
 
-                fsolar = os.path.join(file_dict.datm_indir, file_dict.dir_solar,
-                                      "{}{}.nc".format(file_dict.tag_solar, dtag))
-                fsolar2 = "{}{}.{}.nc".format(file_dict.tag_solar, self.tag, dtag)
-                fprecip = os.path.join(file_dict.datm_indir, file_dict.dir_prec,
-                                       "{}{}.nc".format(file_dict.tag_prec, dtag))
-                fprecip2 = "{}{}.{}.nc".format(file_dict.tag_prec, self.tag, dtag)
-                ftpqw = os.path.join(file_dict.datm_indir, file_dict.dir_tpqw,
-                                     "{}{}.nc".format(file_dict.tag_tpqw, dtag))
-                ftpqw2 = "{}{}.{}.nc".format(file_dict.tag_tpqw, self.tag, dtag)
+                fsolar = os.path.join(datm_dict["datm_indir"], datm_dict["dir_solar"],
+                                      "{}{}.nc".format(datm_dict["tag_solar"], dtag))
+                fsolar2 = "{}{}.{}.nc".format(datm_dict["tag_solar"], self.tag, dtag)
+                fprecip = os.path.join(datm_dict["datm_indir"], datm_dict["dir_prec"],
+                                       "{}{}.nc".format(datm_dict["tag_prec"], dtag))
+                fprecip2 = "{}{}.{}.nc".format(datm_dict["tag_prec"], self.tag, dtag)
+                ftpqw = os.path.join(datm_dict["datm_indir"], datm_dict["dir_tpqw"],
+                                     "{}{}.nc".format(datm_dict["tag_tpqw"], dtag))
+                ftpqw2 = "{}{}.{}.nc".format(datm_dict["tag_tpqw"], self.tag, dtag)
 
-                outdir = os.path.join(self.output_dir, file_dict.datm_outdir)
+                outdir = os.path.join(self.output_dir, datm_dict["datm_outdir"])
                 infile += [fsolar, fprecip, ftpqw]
                 outfile += [os.path.join(outdir, fsolar2),
                             os.path.join(outdir, fprecip2),
                             os.path.join(outdir, ftpqw2)]
                 solarfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), file_dict.datm_outdir, fsolar2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_dict["datm_outdir"], fsolar2))
                 precfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), file_dict.datm_outdir, fprecip2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_dict["datm_outdir"], fprecip2))
                 tpqwfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), file_dict.datm_outdir, ftpqw2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_dict["datm_outdir"], ftpqw2))
 
         nm = len(infile)
         for n in range(nm):
@@ -378,11 +378,11 @@ class SinglePointCase(BaseCase):
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
-        logging.info("All DATM files are created in: %s", file_dict.datm_outdir)
+        logging.info("All DATM files are created in: %s", datm_dict["datm_outdir"])
 
         # write to user_nl_datm_streams if specified
         if self.create_user_mods:
             with open(datm_streams_file, "a") as file:
-                self.write_datm_streams_lines(file_dict.name_solar, solarfiles, file)
-                self.write_datm_streams_lines(file_dict.name_prec, precfiles, file)
-                self.write_datm_streams_lines(file_dict.name_tpqw, tpqwfiles, file)
+                self.write_datm_streams_lines(datm_dict["name_solar"], solarfiles, file)
+                self.write_datm_streams_lines(datm_dict["name_prec"], precfiles, file)
+                self.write_datm_streams_lines(datm_dict["name_tpqw"], tpqwfiles, file)
