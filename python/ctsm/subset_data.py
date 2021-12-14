@@ -404,12 +404,10 @@ def plon_type(plon):
     return plon
 
 
-def setup_user_mods(out_dir, user_mods_dir, cesmroot):
+def setup_user_mods(user_mods_dir, cesmroot):
     """
     Sets up the user mods files and directories
     """
-    if user_mods_dir == "":
-        user_mods_dir = os.path.join(out_dir, "user_mods")
     if not os.path.isdir(user_mods_dir):
         os.mkdir(user_mods_dir)
 
@@ -431,11 +429,14 @@ def setup_files(args, defaults, cesmroot):
     """
     Sets up the files and folders needed for this program
     """
+
+    if args.user_mods_dir == "":
+        args.user_mods_dir = os.path.join(args.out_dir, "user_mods")
     if not os.path.isdir(args.out_dir):
         os.mkdir(args.out_dir)
 
     if args.create_user_mods:
-        setup_user_mods(args.out_dir, args.user_mods_dir, cesmroot)
+        setup_user_mods(args.user_mods_dir, cesmroot)
 
     # DATM data
     datm_type = 'datm_gswp3'
