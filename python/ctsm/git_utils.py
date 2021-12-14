@@ -34,3 +34,10 @@ def get_git_long_hash():
     except subprocess.CalledProcessError:
         sha = "NOT-A-GIT-REPOSITORY"
     return sha
+
+def get_git_describe():
+    """
+    Returns git describe output
+    """
+    label = subprocess.check_output(["git", "describe"]).strip()
+    return label.decode()

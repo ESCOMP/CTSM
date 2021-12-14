@@ -4,7 +4,6 @@ This module includes the definition for SinglePointCase class.
 
 # -- Import libraries
 # -- Import Python Standard Libraries
-import os
 import logging
 
 # -- 3rd party libraries

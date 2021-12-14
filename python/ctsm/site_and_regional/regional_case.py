@@ -7,7 +7,6 @@ import logging
 
 # -- 3rd party libraries
 import numpy as np
-import xarray as xr
 
 # -- import local classes for this script
 from ctsm.site_and_regional.base_case import BaseCase

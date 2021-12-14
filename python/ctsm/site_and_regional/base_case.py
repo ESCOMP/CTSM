@@ -8,7 +8,6 @@ RegionalCase are defined in this Class.
 # -- standard libraries
 import os
 import logging
-import subprocess
 
 from datetime import date
 from getpass import getuser
