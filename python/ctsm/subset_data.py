@@ -585,7 +585,8 @@ def subset_region(args, file_dict):
 
 def main():
     """
-    Calls functions that subset surface, landuse, domain, and/or DATM files.
+    Calls functions that subset surface, landuse, domain, and/or DATM files for a region or a
+    single point.
     """
 
     # add logging flags from ctsm_logging
