@@ -1,4 +1,85 @@
 ===============================================================
+Tag name:  ctsm5.1.dev068
+Originator(s): slevis (Samuel Levis,SLevis Consulting,303-665-1310), sacks (Bill Sacks)
+Date: Mon Dec 13 15:42:07 MST 2021
+One-line Summary: Adding fsurdat_modifier tool
+
+Purpose and description of changes
+----------------------------------
+
+ I copied the next four paragraphs from /tools/modify_fsurdat/fsurdat_modifier:
+ fsurdat_modifier is a tool that modifies fsurdat files. It reads a surface
+ dataset (fsurdat file) and outputs a modified copy of the same file.
+
+ Current applications are limited to the simplest CTSM(SP) mode, so bgc, fire,
+ urban, vic, lake, transient, and crop-related variables in the fsurdat file
+ remain unchanged.
+
+ It differs from modify_singlept_site_neon.py in that the latter specifically
+ modifies soil properties of single-point surface datasets. Some functions
+ could/should become shared for use by fsurdat_modifier.
+
+ It also differs from the subset_data tool in that the latter subsets fsurdat
+ files to regional or single-point domains. Though subset_data includes some
+ "modify" functionality when subsetting to single-point, we intend for similar
+ functionality to be more extensive and more object oriented in
+ fsurdat_modifier. Again, some functions could/should become shared among
+ these tools.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[ ] clm5_1
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+
+Changes to tests or testing:
+ Added python/ctsm/test/test_sys_fsurdat_modifier.py
+ Added python/ctsm/test/test_unit_fsurdat_modifier.py
+ Added new unit tests to python/ctsm/test/test_unit_utils.py
+ Added FSURDATMODIFYCTSM test to cime_config/config_tests.xml
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    cheyenne ---- PASS
+    Bill's Mac -- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    cheyenne ---- PASS
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: NO
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/1448
+
+===============================================================
+===============================================================
 Tag name: ctsm5.1.dev067
 Originator(s): jedwards4b/negin513/erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon Dec 13 00:50:01 MST 2021
