@@ -18,12 +18,12 @@ module SnowHydrologyMod
   ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
-  use decompMod       , only : bounds_type
+  use decompMod       , only : bounds_type, subgrid_level_column
   use abortutils      , only : endrun
   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
   use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd, nlevmaxurbgrnd
   use clm_varctl      , only : iulog, use_subgrid_fluxes
-  use clm_varcon      , only : namec, h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz
+  use clm_varcon      , only : h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz
   use clm_varcon      , only : cpice, cpliq
   use atm2lndType     , only : atm2lnd_type
   use AerosolMod      , only : aerosol_type, AerosolFluxes
@@ -1229,7 +1229,8 @@ contains
           write(iulog,*) "frac_sno_eff        = ", frac_sno_eff(c)
           write(iulog,*) "qflx_soliddew_to_top_layer*dtime = ", qflx_soliddew_to_top_layer(c)*dtime
           write(iulog,*) "qflx_solidevap_from_top_layer*dtime = ", qflx_solidevap_from_top_layer(c)*dtime
-          call endrun("In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative")
+          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+               msg="In UpdateState_TopLayerFluxes, h2osoi_ice has gone significantly negative")
        end if
 
        if (h2osoi_liq(c,lev_top(c)) < 0._r8) then
@@ -1242,7 +1243,8 @@ contains
           write(iulog,*) "qflx_liq_grnd*dtime  = ", qflx_liq_grnd(c)*dtime
           write(iulog,*) "qflx_liqdew_to_top_layer*dtime  = ", qflx_liqdew_to_top_layer(c)*dtime
           write(iulog,*) "qflx_liqevap_from_top_layer*dtime = ", qflx_liqevap_from_top_layer(c)*dtime
-          call endrun("In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative")
+          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+               msg="In UpdateState_TopLayerFluxes, h2osoi_liq has gone significantly negative")
        end if
 
     end do
@@ -1393,6 +1395,7 @@ contains
        end do
 
        call CalcTracerFromBulkMasked( &
+            subgrid_level = subgrid_level_column, &
             lb            = begc, &
             num_pts       = num_snowc, &
             filter_pts    = filter_snowc, &
@@ -2813,14 +2816,14 @@ contains
                 if ( abs(dztot(c)) > 1.e-10_r8) then
                    write(iulog,*)'Inconsistency in SnowDivision_Lake! c, remainders', &
                         'dztot = ',c,dztot(c)
-                   call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                   call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                 end if
 
                 do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
                    if ( abs(snwicetot(wi,c)) > 1.e-7_r8 .or. abs(snwliqtot(wi,c)) > 1.e-7_r8 ) then
                       write(iulog,*)'Inconsistency in SnowDivision_Lake! wi, c, remainders', &
                            'snwicetot, snwliqtot = ',wi,c,snwicetot(wi,c),snwliqtot(wi,c)
-                      call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+                      call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
                    end if
                 end do
              end if
@@ -3279,7 +3282,7 @@ contains
 
     ! Always keep at least this fraction of the bottom snow layer when doing snow capping
     ! This needs to be slightly greater than 0 to avoid roundoff problems
-    real(r8), parameter :: min_snow_to_keep = 1.e-9_r8  ! fraction of bottom snow layer to keep with capping
+    real(r8), parameter :: min_snow_to_keep = 1.e-3_r8  ! fraction of bottom snow layer to keep with capping
 
     character(len=*), parameter :: subname = 'BulkFlux_SnowCappingFluxes'
     !-----------------------------------------------------------------------
@@ -3478,6 +3481,7 @@ contains
          )
 
     call CalcTracerFromBulk( &
+         subgrid_level = subgrid_level_column, &
          lb            = begc, &
          num_pts       = snow_capping_filterc%num, &
          filter_pts    = snow_capping_filterc%indices, &
@@ -3487,6 +3491,7 @@ contains
          tracer_val    = trac_qflx_snwcp_ice(begc:endc))
 
     call CalcTracerFromBulk( &
+         subgrid_level = subgrid_level_column, &
          lb            = begc, &
          num_pts       = snow_capping_filterc%num, &
          filter_pts    = snow_capping_filterc%indices, &
@@ -3496,6 +3501,7 @@ contains
          tracer_val    = trac_qflx_snwcp_liq(begc:endc))
 
     call CalcTracerFromBulk( &
+         subgrid_level = subgrid_level_column, &
          lb            = begc, &
          num_pts       = snow_capping_filterc%num, &
          filter_pts    = snow_capping_filterc%indices, &
@@ -3505,6 +3511,7 @@ contains
          tracer_val    = trac_qflx_snwcp_discarded_ice(begc:endc))
 
     call CalcTracerFromBulk( &
+         subgrid_level = subgrid_level_column, &
          lb            = begc, &
          num_pts       = snow_capping_filterc%num, &
          filter_pts    = snow_capping_filterc%indices, &
@@ -3558,7 +3565,7 @@ contains
        if (h2osoi_ice_bottom(c) < 0._r8 .or. h2osoi_liq_bottom(c) < 0._r8 ) then
           write(iulog,*)'ERROR: capping procedure failed (negative mass remaining) c = ',c
           write(iulog,*)'h2osoi_ice_bottom = ', h2osoi_ice_bottom(c), ' h2osoi_liq_bottom = ', h2osoi_liq_bottom(c)
-          call endrun(decomp_index=c, clmlevel=namec, msg=errmsg(sourcefile, __LINE__))
+          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errmsg(sourcefile, __LINE__))
        end if
 
     end do

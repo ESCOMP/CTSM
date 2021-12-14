@@ -364,7 +364,7 @@ contains
           data1dptr => this%decomp_cascade_sminn_flux_col(:,l)
           if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
              fieldname = 'SMINN_TO_'//&
-                  trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
+                  trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
                   trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))
              longname =  'mineral N flux for decomp. of '&
                   //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//&
@@ -401,7 +401,7 @@ contains
              data2dptr => this%decomp_cascade_sminn_flux_vr_col(:,:,l)
              if ( decomp_cascade_con%cascade_receiver_pool(l) /= 0 ) then
                 fieldname = 'SMINN_TO_'&
-                     //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
+                     //trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))//'N_'//&
                      trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_donor_pool(l)))//trim(vr_suffix)
                 longname =  'mineral N flux for decomp. of '&
                      //trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//&

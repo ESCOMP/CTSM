@@ -62,7 +62,7 @@ module AnnualFluxDribbler
   use abortutils       , only : endrun
   use shr_kind_mod     , only : r8 => shr_kind_r8
   use decompMod        , only : bounds_type, get_beg, get_end
-  use decompMod        , only : BOUNDS_SUBGRID_GRIDCELL, BOUNDS_SUBGRID_PATCH
+  use decompMod        , only : subgrid_level_gridcell, subgrid_level_patch
   use clm_varcon       , only : secspday, nameg, namep
   use clm_time_manager , only : get_days_per_year, get_step_size_real, is_beg_curr_year
   use clm_time_manager , only : get_curr_yearfrac, get_prev_yearfrac, get_prev_date
@@ -93,7 +93,6 @@ module AnnualFluxDribbler
 
      ! Which subgrid level this dribbler is operating at, stored in various ways
      character(len=subgrid_maxlen) :: dim1name
-     character(len=subgrid_maxlen) :: name_subgrid
      integer :: bounds_subgrid_level
 
      ! Annual amount to dribble in over the year
@@ -167,8 +166,7 @@ contains
     !-----------------------------------------------------------------------
 
     this%dim1name = 'gridcell'
-    this%name_subgrid = nameg
-    this%bounds_subgrid_level = BOUNDS_SUBGRID_GRIDCELL
+    this%bounds_subgrid_level = subgrid_level_gridcell
 
     call this%allocate_and_initialize_data(bounds)
     call this%set_metadata(name, units, allows_non_annual_delta)
@@ -204,8 +202,7 @@ contains
     !-----------------------------------------------------------------------
 
     this%dim1name = 'pft'
-    this%name_subgrid = namep
-    this%bounds_subgrid_level = BOUNDS_SUBGRID_PATCH
+    this%bounds_subgrid_level = subgrid_level_patch
 
     call this%allocate_and_initialize_data(bounds)
     call this%set_metadata(name, units, allows_non_annual_delta)
@@ -274,7 +271,7 @@ contains
                 write(iulog,*) 'other than the first time step of the year, which this dribbler was told not to expect.'
                 write(iulog,*) 'If this non-zero mid-year delta is expected, then you can suppress this error'
                 write(iulog,*) 'by setting allows_non_annual_delta to .true. when constructing this dribbler.'
-                call endrun(decomp_index=i, clmlevel=this%name_subgrid, &
+                call endrun(subgrid_index=i, subgrid_level=this%bounds_subgrid_level, &
                      msg=subname//': found unexpected non-zero delta mid-year: ' // &
                      errMsg(sourcefile, __LINE__))
              end if

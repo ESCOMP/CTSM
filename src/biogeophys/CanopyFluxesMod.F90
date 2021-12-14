@@ -16,9 +16,8 @@ module CanopyFluxesMod
   use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
                                      use_luna, use_hydrstress, use_biomass_heat_storage
   use clm_varpar            , only : nlevgrnd, nlevsno, mxpft
-  use clm_varcon            , only : namep 
   use pftconMod             , only : pftcon
-  use decompMod             , only : bounds_type
+  use decompMod             , only : bounds_type, subgrid_level_patch
   use ActiveLayerMod        , only : active_layer_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
@@ -224,7 +223,7 @@ contains
     !
     ! !USES:
     use shr_const_mod      , only : SHR_CONST_RGAS, shr_const_pi
-    use clm_time_manager   , only : get_step_size_real, get_prev_date,is_end_curr_day
+    use clm_time_manager   , only : get_step_size_real, get_prev_date
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, c_to_b
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
     use clm_varcon         , only : c14ratio
@@ -237,6 +236,7 @@ contains
                                     swbgt, hmdex, dis_coi, dis_coiS, THIndex, &
                                     SwampCoolEff, KtoC, VaporPres
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
+    use LunaMod            , only : is_time_to_run_LUNA
     !
     ! !ARGUMENTS:
     type(bounds_type)                      , intent(in)            :: bounds 
@@ -402,7 +402,6 @@ contains
     real(r8) :: h2ocan                                   ! total canopy water (mm H2O)
     real(r8) :: dt_veg_temp(bounds%begp:bounds%endp)
     integer  :: iv
-    logical  :: is_end_day                               ! is end of current day
     real(r8) :: dbh(bounds%begp:bounds%endp)             ! diameter at breast height of vegetation
     real(r8) :: cp_leaf(bounds%begp:bounds%endp)         ! heat capacity of leaves
     real(r8) :: cp_stem(bounds%begp:bounds%endp)         ! heat capacity of stems
@@ -615,7 +614,6 @@ contains
       ! Determine step size
 
       dtime = get_step_size_real()
-      is_end_day = is_end_curr_day()
 
       ! Make a local copy of the exposedvegp filter. With the current implementation,
       ! this is needed because the filter is modified in the iteration loop.
@@ -923,7 +921,7 @@ bioms:   do f = 1, fn
       if (found) then
          if ( .not. use_fates ) then
             write(iulog,*)'Error: Forcing height is below canopy height for patch index '
-            call endrun(decomp_index=index, clmlevel=namep, msg=errmsg(sourcefile, __LINE__))
+            call endrun(subgrid_index=index, subgrid_level=subgrid_level_patch, msg=errmsg(sourcefile, __LINE__))
          end if
       end if
 
@@ -1577,7 +1575,7 @@ bioms:   do f = 1, fn
                  surfalb_inst, solarabs_inst, &
                  temperature_inst)
             
-            if(is_end_day)then
+            if(is_time_to_run_LUNA())then
                
                call Acc240_Climate_LUNA(bounds, fn, filterp, &
                     o2(begp:endp), &
@@ -1600,7 +1598,8 @@ bioms:   do f = 1, fn
                     surfalb_inst, &
                     solarabs_inst, &
                     waterdiagnosticbulk_inst,&
-                    frictionvel_inst)        
+                    frictionvel_inst, &
+                    ozone_inst)
                
                call Clear24_Climate_LUNA(bounds, fn, filterp, &
                     canopystate_inst, photosyns_inst, &

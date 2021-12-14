@@ -252,14 +252,14 @@ contains
     !
     ! !DESCRIPTION:
     ! Set CLM filters.
-    use decompMod , only : BOUNDS_LEVEL_CLUMP
+    use decompMod , only : bounds_level_clump
     !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in) :: bounds
     type(glc_behavior_type) , intent(in) :: glc_behavior
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_clump, sourcefile, __LINE__)
 
     call setFiltersOneGroup(bounds, &
          filter, include_inactive = .false., &
@@ -299,7 +299,7 @@ contains
     ! is called at the right time in the driver loop.
     !
     ! !USES:
-    use decompMod       , only : BOUNDS_LEVEL_CLUMP
+    use decompMod       , only : bounds_level_clump
     use pftconMod       , only : npcropmin
     use landunit_varcon , only : istsoil, istcrop, istice
     !
@@ -319,7 +319,7 @@ contains
     integer :: g           !gridcell index
     !------------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_clump, sourcefile, __LINE__)
 
     nc = bounds%clump_index
 
@@ -554,7 +554,7 @@ contains
     ! need to be called at a different time in the driver loop. 
     !
     ! !USES:
-    use decompMod , only : BOUNDS_LEVEL_CLUMP
+    use decompMod , only : bounds_level_clump
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in) :: bounds  
@@ -569,7 +569,7 @@ contains
     character(len=*), parameter :: subname = 'setExposedvegpFilter'
     !-----------------------------------------------------------------------
 
-    SHR_ASSERT_FL(bounds%level == BOUNDS_LEVEL_CLUMP, sourcefile, __LINE__)
+    SHR_ASSERT_FL(bounds%level == bounds_level_clump, sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(frac_veg_nosno) == (/bounds%endp/)), sourcefile, __LINE__)
 
     nc = bounds%clump_index

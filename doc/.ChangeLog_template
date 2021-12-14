@@ -53,9 +53,8 @@ Changes made to namelist defaults (e.g., changed parameter values):
 Changes to the datasets (e.g., parameter, surface or initial files):
 
 Substantial timing or memory changes:
-[For timing changes, you should at least check the PFS test in the test
- suite, whether or not you expect timing changes: ensure that its run
- time has not increased significantly relative to the baseline.]
+[e.g., check PFS test in the test suite and look at timings, if you
+expect possible significant timing changes]
 
 
 Notes of particular relevance for developers:
