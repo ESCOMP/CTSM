@@ -1,3 +1,7 @@
+"""
+Holds the class SinglePointCase
+"""
+
 import os
 import logging
 from datetime import date
@@ -36,48 +40,6 @@ class SinglePointCase(BaseCase):
             main output directory to write subset files to
         tag : str
             ending tag for output file naming
-        fdomain_in : str
-            file name of input domain file to subset
-        fdomain_out : str
-            file name of output subset domain domain file
-        fluse_in : str
-            file name of input land use file to subset
-        fluse_out : str
-            file name of output subset land use file
-        fsurf_in : str
-            file name of input surface data file to subset
-        fsurf_out : str
-            file name of output subset surface data file
-        fdatmdomain_in : str
-            file name of input DATM domain file to subset
-        fdatmdomain_out : str
-            file name of output subset DATM domain file
-        datm_syr : int
-            starting year for subset DATM data
-        datm_eyr : int
-            ending year for subset DATM data
-        dir_tpqw : str
-            input directory for TPQW DATM data
-        dir_prec : str
-            input directory for precipitation DATM data
-        dir_solar : str
-            input directory for solar DATM data
-        tag_tpqw : str
-            tag (file naming convention) for input TPQW DATM data
-        tag_prec : str
-            tag (file naming convention) for input precipitation DATM data
-        tag_solar : str
-            tag (file naming convention) for input solar DATM data
-        name_tpqw : str
-            stream name for TPQW DATM data
-        name_prec : str
-            stream name for precipitation DATM data
-        name_solar : str
-            stream name for solar DATM data
-        dir_output_datm : str
-            directory to write subset DATM data to (default to within main output directory)
-        datm_stream_file : str
-            file name of usr_nl_datm_streams file to write to for user_mods creation
 
         Methods
         -------
@@ -125,7 +87,6 @@ class SinglePointCase(BaseCase):
         self.saturation_excess = saturation_excess
         self.output_dir = output_dir
         self.tag = None
-        self.datm_streams_file = None
 
     def create_tag(self):
         if self.site_name:
@@ -147,7 +108,7 @@ class SinglePointCase(BaseCase):
     def create_domain_at_point(self, indir, file):
         logging.info("----------------------------------------------------------------------")
         logging.info(
-            "Creating domain file at " + self.plon.__str__() + " " + self.plat.__str__() + ".")
+            "Creating domain file at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
 
         # specify files
         fdomain_in = os.path.join(indir, file)
@@ -169,14 +130,14 @@ class SinglePointCase(BaseCase):
 
         wfile = os.path.join(self.output_dir, fdomain_out)
         f3.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fdomain_out) at" + wfile)
+        logging.info("Successfully created file (fdomain_out) at %s", wfile)
         f2.close()
         f3.close()
 
     def create_landuse_at_point(self, indir, file, user_mods_dir):
         logging.info("----------------------------------------------------------------------")
         logging.info(
-            "Creating landuse file at " + self.plon.__str__() + " " + self.plat.__str__() + ".")
+            "Creating land use file at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
 
         # specify files
         fluse_in = os.path.join(indir, file)
@@ -210,7 +171,7 @@ class SinglePointCase(BaseCase):
         wfile = os.path.join(self.output_dir, fluse_out)
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fluse_out) at " + wfile)
+        logging.info("Successfully created file (fluse_out) at %s", wfile)
         f2.close()
         f3.close()
 
@@ -223,7 +184,8 @@ class SinglePointCase(BaseCase):
     def create_surfdata_at_point(self, indir, file, user_mods_dir):
         logging.info("----------------------------------------------------------------------")
         logging.info(
-            "Creating surface dataset file at " + self.plon.__str__() + " " + self.plat.__str__() + ".")
+            "Creating surface dataset file at {}, {}.".format(self.plon.__str__(),
+                                                              self.plat.__str__()))
 
         # specify file
         fsurf_in = os.path.join(indir, file)
@@ -284,8 +246,8 @@ class SinglePointCase(BaseCase):
         del f3.attrs["History_Log"]
         # mode 'w' overwrites file
         f3.to_netcdf(path=os.path.join(self.output_dir, fsurf_out), mode="w")
-        logging.info("Successfully created file (fsurf_out) at " + os.path.join(self.output_dir,
-                                                                                fsurf_out))
+        logging.info("Successfully created file (fsurf_out) at %s", os.path.join(self.output_dir,
+                                                                                 fsurf_out))
         f2.close()
         f3.close()
 
@@ -298,7 +260,7 @@ class SinglePointCase(BaseCase):
     def create_datmdomain_at_point(self, indir, file, dir_output_datm):
         logging.info("----------------------------------------------------------------------")
         logging.info(
-            "Creating DATM domain file at " + self.plon.__str__() + " " + self.plat.__str__() + ".")
+            "Creating DATM domain file at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
 
         # specify files
         fdatmdomain_in = os.path.join(indir, file)
@@ -319,7 +281,7 @@ class SinglePointCase(BaseCase):
         f3.attrs["Created_from"] = fdatmdomain_in
         # mode 'w' overwrites file
         f3.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fdatmdomain_out) at " + wfile)
+        logging.info("Successfully created file (fdatmdomain_out) at %s", wfile)
         f2.close()
         f3.close()
 
@@ -338,7 +300,7 @@ class SinglePointCase(BaseCase):
         f3.attrs["Created_from"] = file_in
         # mode 'w' overwrites file
         f3.to_netcdf(path=file_out, mode="w")
-        logging.info("Successfully created file at " + file_out)
+        logging.info("Successfully created file at %s", file_out)
         f2.close()
         f3.close()
 
@@ -370,7 +332,7 @@ class SinglePointCase(BaseCase):
     def create_datm_at_point(self, file_dict, datm_syr, datm_eyr, datm_streams_file):
         logging.info("----------------------------------------------------------------------")
         logging.info(
-            "Creating DATM files at " + self.plon.__str__() + " " + self.plat.__str__() + ".")
+            "Creating DATM files at {}, {}.".format(self.plon.__str__(), self.plat.__str__()))
 
         # --  create data files
         infile = []
@@ -416,7 +378,7 @@ class SinglePointCase(BaseCase):
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
-        logging.info("All DATM files are created in: " + file_dict.datm_outdir + ".")
+        logging.info("All DATM files are created in: %s", file_dict.datm_outdir)
 
         # write to user_nl_datm_streams if specified
         if self.create_user_mods:

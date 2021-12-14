@@ -44,7 +44,6 @@ from __future__ import print_function
 import sys
 import os
 import logging
-import subprocess
 import argparse
 import configparser
 
@@ -52,7 +51,6 @@ from getpass import getuser
 from argparse import ArgumentParser
 import textwrap
 
-from ctsm.site_and_regional.base_case import USRDAT_DIR
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.path_utils import path_to_ctsm_root
@@ -423,7 +421,7 @@ def setup_user_mods(out_dir, user_mods_dir, cesmroot):
             user_file.write(line)
 
 
-def setup_files(args, defaults):
+def setup_files(args, defaults, cesmroot):
     """
     Sets up the files and folders needed for this program
     """
@@ -431,7 +429,7 @@ def setup_files(args, defaults):
         os.mkdir(args.out_dir)
 
     if args.create_user_mods:
-        setup_user_mods(args.out_dir, args.user_mods_dir)
+        setup_user_mods(args.out_dir, args.user_mods_dir, cesmroot)
 
     # DATM data
     dir_output_datm = "datmdata"
@@ -617,7 +615,7 @@ def main():
         sys.exit()
 
     # create files and folders necessary and return dictionary of file/folder locations
-    file_dict = setup_files(args, defaults)
+    file_dict = setup_files(args, defaults, cesmroot)
 
     if args.run_type == "point":
         subset_point(args, file_dict)

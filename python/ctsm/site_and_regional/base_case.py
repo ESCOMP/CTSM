@@ -4,12 +4,11 @@ Holds the class BaseCase, parent class to Regional and Single-Point cases
 import os
 import subprocess
 import logging
+from datetime import date
+from getpass import getuser
 
 import numpy as np
 import xarray as xr
-
-from datetime import date
-from getpass import getuser
 
 myname = getuser()
 USRDAT_DIR = "CLM_USRDAT_DIR"
@@ -64,7 +63,7 @@ class BaseCase:
         x_dim: dimension name in X -- lon
         y_dim: dimension name in Y -- lat
         """
-        logging.debug("Open file: " + filename)
+        logging.debug("Open file: %s", filename)
         f1 = xr.open_dataset(filename)
 
         # create 1d coordinate variables to enable sel() method
@@ -128,11 +127,8 @@ class BaseCase:
 
         for attr in del_attrs:
             if attr in attr_list:
-                logging.debug("This attr should be deleted : " + attr)
+                logging.debug("This attr should be deleted : %s", attr)
                 del nc.attrs[attr]
-
-        # for attr, value in attr_list.items():
-        #    print (attr + " = "+str(value))
 
     @staticmethod
     def get_git_sha():
@@ -152,7 +148,3 @@ class BaseCase:
         Writes text to a file, surrounding text with \n characters
         """
         file.write("\n{}\n".format(text))
-
-
-
-

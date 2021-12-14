@@ -1,3 +1,6 @@
+"""
+Holds the class RegionalCase
+"""
 import logging
 import os
 
@@ -25,18 +28,6 @@ class RegionalCase(BaseCase):
         region name
     tag : str
         ending tag for output file naming
-    fluse_out : str
-        file name of output subset land use file
-    fluse_in : str
-        file name of input land use file to subset
-    fsurf_out : str
-        file name of output subset surface data file
-    fsurf_in : str
-        file name of input surface data to subset
-    fdomain_out : str
-        file name of output domain subset domain file
-    fdomain_in : str
-        file name of input domain file to subset
 
     Methods
     -------
@@ -67,7 +58,8 @@ class RegionalCase(BaseCase):
             create_user_mods,
             output_dir,
     ):
-        super().__init__(create_domain, create_surfdata, create_landuse, create_datm, create_user_mods)
+        super().__init__(create_domain, create_surfdata, create_landuse, create_datm,
+                         create_user_mods)
         self.lat1 = lat1
         self.lat2 = lat2
         self.lon1 = lon1
@@ -80,17 +72,18 @@ class RegionalCase(BaseCase):
         if self.reg_name:
             self.tag = self.reg_name
         else:
-            self.tag = "{}-{}_{}-{}".format(str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2))
+            self.tag = "{}-{}_{}-{}".format(str(self.lon1), str(self.lon2), str(self.lat1),
+                                            str(self.lat2))
 
     def create_domain_at_reg(self, indir, file):
 
         # specify files
         fdomain_in = os.path.join(indir, file)
-        fdomain_out = os.path.join(self.out_dir, "domain.lnd.fv1.9x2.5_gx1v7." +
+        fdomain_out = os.path.join(self.output_dir, "domain.lnd.fv1.9x2.5_gx1v7." +
                                           self.tag + "_170518.nc")
         logging.info("fdomain_in:  %s", fdomain_in)
         logging.info("fdomain_out: %s", fdomain_out)
-        logging.info("Creating domain file at region:"+ self.tag)
+        logging.info("Creating domain file at region: %s", self.tag)
 
         # create 1d coordinate variables to enable sel() method
         f2 = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
@@ -107,17 +100,17 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         f3.to_netcdf(path=fdomain_out, mode="w")
-        logging.info("Successfully created file (fdomain_out)" + fdomain_out)
+        logging.info("Successfully created file (fdomain_out) at %s", fdomain_out)
         f2.close()
         f3.close()
 
     def create_surfdata_at_reg(self, indir, file, user_mods_dir):
 
-        logging.info("Creating surface dataset file at region:"+ self.tag)
+        logging.info("Creating surface dataset file at region: %s", self.tag)
 
         # specify files
         fsurf_in = os.path.join(indir, file)
-        fsurf_out = os.path.join(self.out_dir,
+        fsurf_out = os.path.join(self.output_dir,
                                         "surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_" + self.tag
                                         + "_c170824.nc")
         logging.info("fsurf_in:  %s", fsurf_in)
@@ -139,7 +132,7 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         f3.to_netcdf(path=fsurf_out, mode="w")
-        logging.info("created file (fsurf_out)" + fsurf_out)
+        logging.info("created file (fsurf_out) %s", fsurf_out)
         # f1.close();
         f2.close()
         f3.close()
@@ -151,11 +144,11 @@ class RegionalCase(BaseCase):
                 self.write_to_file(line, nl_clm)
 
     def create_landuse_at_reg(self, indir, file, user_mods_dir):
-        logging.info("Creating landuse file at region:"+ self.tag)
+        logging.info("Creating landuse file at region: %s", self.tag)
 
         # specify files
         fluse_in = os.path.join(indir, file)
-        fluse_out = os.path.join(self.out_dir,
+        fluse_out = os.path.join(self.output_dir,
                                         "landuse.timeseries_1.9x2"
                                         ".5_hist_78pfts_CMIP6_simyr1850-2015_" +
                                         self.tag + ".c170824.nc")
@@ -177,7 +170,7 @@ class RegionalCase(BaseCase):
 
         # mode 'w' overwrites file
         f3.to_netcdf(path=fluse_out, mode="w")
-        logging.info("Successfully created file (fluse_out)" + fluse_out)
+        logging.info("Successfully created file (fluse_out) %s", fluse_out)
         f2.close()
         f3.close()
 
