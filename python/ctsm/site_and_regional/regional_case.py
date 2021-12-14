@@ -1,9 +1,9 @@
 import logging
+import os
 
 import numpy as np
-import xarray as xr
 
-from ctsm.site_and_regional.base_case import BaseCase
+from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -75,12 +75,6 @@ class RegionalCase(BaseCase):
         self.reg_name = reg_name
         self.output_dir = output_dir
         self.tag = None
-        self.fluse_out = None
-        self.fluse_in = None
-        self.fsurf_out = None
-        self.fsurf_in = None
-        self.fdomain_out = None
-        self.fdomain_in = None
 
     def create_tag(self):
         if self.reg_name:
@@ -88,11 +82,18 @@ class RegionalCase(BaseCase):
         else:
             self.tag = "{}-{}_{}-{}".format(str(self.lon1), str(self.lon2), str(self.lat1), str(self.lat2))
 
-    def create_domain_at_reg(self):
-        #logging.debug ("Creating domain file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+    def create_domain_at_reg(self, indir, file):
+
+        # specify files
+        fdomain_in = os.path.join(indir, file)
+        fdomain_out = os.path.join(self.out_dir, "domain.lnd.fv1.9x2.5_gx1v7." +
+                                          self.tag + "_170518.nc")
+        logging.info("fdomain_in:  %s", fdomain_in)
+        logging.info("fdomain_out: %s", fdomain_out)
         logging.info("Creating domain file at region:"+ self.tag)
+
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(self.fdomain_in, "xc", "yc", "ni", "nj")
+        f2 = self.create_1d_coord(fdomain_in, "xc", "yc", "ni", "nj")
         lat = f2["lat"]
         lon = f2["lon"]
         # subset longitude and latitude arrays
@@ -102,20 +103,28 @@ class RegionalCase(BaseCase):
 
         # update attributes
         self.update_metadata(f3)
-        f3.attrs["Created_from"] = self.fdomain_in
+        f3.attrs["Created_from"] = fdomain_in
 
-        wfile = self.fdomain_out
         # mode 'w' overwrites file
-        f3.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fdomain_out)" + self.fdomain_out)
+        f3.to_netcdf(path=fdomain_out, mode="w")
+        logging.info("Successfully created file (fdomain_out)" + fdomain_out)
         f2.close()
         f3.close()
 
-    def create_surfdata_at_reg(self):
-        #logging.debug ("Creating surface dataset file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+    def create_surfdata_at_reg(self, indir, file, user_mods_dir):
+
         logging.info("Creating surface dataset file at region:"+ self.tag)
+
+        # specify files
+        fsurf_in = os.path.join(indir, file)
+        fsurf_out = os.path.join(self.out_dir,
+                                        "surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_" + self.tag
+                                        + "_c170824.nc")
+        logging.info("fsurf_in:  %s", fsurf_in)
+        logging.info("fsurf_out: %s", fsurf_out)
+
         # create 1d coordinate variables to enable sel() method
-        filename = self.fsurf_in
+        filename = fsurf_in
         f2 = self.create_1d_coord(filename, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f2["lat"]
         lon = f2["lon"]
@@ -126,20 +135,35 @@ class RegionalCase(BaseCase):
 
         # update attributes
         self.update_metadata(f3)
-        f3.attrs["Created_from"] = self.fsurf_in
+        f3.attrs["Created_from"] = fsurf_in
 
         # mode 'w' overwrites file
-        f3.to_netcdf(path=self.fsurf_out, mode="w")
-        logging.info("created file (fsurf_out)" + self.fsurf_out)
+        f3.to_netcdf(path=fsurf_out, mode="w")
+        logging.info("created file (fsurf_out)" + fsurf_out)
         # f1.close();
         f2.close()
         f3.close()
 
-    def create_landuse_at_reg(self):
-        #logging.debug ("Creating landuse file at region"+ self.lon1.__str__()+"-"+self.lat2.__str__()+" "+self.lat1.__str__()+"-"+self.lat2.__str__())
+        # write to user_nl_clm if specified
+        if self.create_user_mods:
+            with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
+                line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, fsurf_out))
+                self.write_to_file(line, nl_clm)
+
+    def create_landuse_at_reg(self, indir, file, user_mods_dir):
         logging.info("Creating landuse file at region:"+ self.tag)
+
+        # specify files
+        fluse_in = os.path.join(indir, file)
+        fluse_out = os.path.join(self.out_dir,
+                                        "landuse.timeseries_1.9x2"
+                                        ".5_hist_78pfts_CMIP6_simyr1850-2015_" +
+                                        self.tag + ".c170824.nc")
+        logging.info("fluse_in:  %s", fluse_in)
+        logging.info("fluse_out: %s", fluse_out)
+
         # create 1d coordinate variables to enable sel() method
-        f2 = self.create_1d_coord(self.fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
+        f2 = self.create_1d_coord(fluse_in, "LONGXY", "LATIXY", "lsmlon", "lsmlat")
         lat = f2["lat"]
         lon = f2["lon"]
         # subset longitude and latitude arrays
@@ -149,11 +173,16 @@ class RegionalCase(BaseCase):
 
         # update attributes
         self.update_metadata(f3)
-        f3.attrs["Created_from"] = self.fluse_in
+        f3.attrs["Created_from"] = fluse_in
 
-        wfile = self.fluse_out
         # mode 'w' overwrites file
-        f3.to_netcdf(path=wfile, mode="w")
-        logging.info("Successfully created file (fdomain_out)" + self.fdomain_out)
+        f3.to_netcdf(path=fluse_out, mode="w")
+        logging.info("Successfully created file (fluse_out)" + fluse_out)
         f2.close()
         f3.close()
+
+        # write to user_nl_clm data if specified
+        if self.create_user_mods:
+            with open(os.path.join(user_mods_dir, "user_nl_clm"), "a") as nl_clm:
+                line = "landuse = '${}'".format(os.path.join(USRDAT_DIR, fluse_out))
+                self.write_to_file(line, nl_clm)

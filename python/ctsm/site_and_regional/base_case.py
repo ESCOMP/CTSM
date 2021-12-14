@@ -1,3 +1,6 @@
+"""
+Holds the class BaseCase, parent class to Regional and Single-Point cases
+"""
 import os
 import subprocess
 import logging
@@ -12,6 +15,7 @@ myname = getuser()
 USRDAT_DIR = "CLM_USRDAT_DIR"
 
 logger = logging.getLogger(__name__)
+
 
 class BaseCase:
     """
@@ -40,7 +44,8 @@ class BaseCase:
        updates metadata for a netcdf file and removes attributes that should not be there
     """
 
-    def __init__(self, create_domain, create_surfdata, create_landuse, create_datm, create_user_mods):
+    def __init__(self, create_domain, create_surfdata, create_landuse, create_datm,
+                 create_user_mods):
         self.create_domain = create_domain
         self.create_surfdata = create_surfdata
         self.create_landuse = create_landuse
@@ -78,22 +83,25 @@ class BaseCase:
     def add_tag_to_filename(filename, tag):
         """
         Add a tag and replace timetag of a filename
-        # Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
-        # Add the tag to just before that ending part
-        # and change the ending part to the current time tag
+        Expects file to end with [._]cYYMMDD.nc or [._]YYMMDD.nc
+        Add the tag to just before that ending part
+        and change the ending part to the current time tag
         """
         basename = os.path.basename(filename)
         cend = -10
         if basename[cend] == "c":
             cend = cend - 1
         if (basename[cend] != ".") and (basename[cend] != "_"):
-            logging.error("Trouble figuring out where to add tag to filename:" + filename)
+            logging.error("Trouble figuring out where to add tag to filename: %s", filename)
             os.abort()
         today = date.today()
         today_string = today.strftime("%y%m%d")
         return basename[:cend] + "_" + tag + "_c" + today_string + ".nc"
 
     def update_metadata(self, nc):
+        """
+        Updates the metadata for a subset netcdf file.
+        """
         # update attributes
         today = date.today()
         today_string = today.strftime("%Y-%m-%d")
@@ -120,7 +128,7 @@ class BaseCase:
 
         for attr in del_attrs:
             if attr in attr_list:
-                logging.debug ("This attr should be deleted : "+ attr)
+                logging.debug("This attr should be deleted : " + attr)
                 del nc.attrs[attr]
 
         # for attr, value in attr_list.items():
@@ -132,7 +140,8 @@ class BaseCase:
         Returns Git short SHA for the current directory.
         """
         try:
-            sha = (subprocess.check_output(["git", "-C", os.path.dirname(__file__), "rev-parse", "--short", "HEAD"]).strip().decode())
+            sha = (subprocess.check_output(["git", "-C", os.path.dirname(__file__), "rev-parse",
+                                            "--short", "HEAD"]).strip().decode())
         except subprocess.CalledProcessError:
             sha = "NOT-A-GIT-REPOSITORY"
         return sha
@@ -143,3 +152,7 @@ class BaseCase:
         Writes text to a file, surrounding text with \n characters
         """
         file.write("\n{}\n".format(text))
+
+
+
+
