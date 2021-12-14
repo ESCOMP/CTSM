@@ -57,6 +57,16 @@ class BaseCase:
         """
         Initializes BaseCase with the given arguments.
 
+        Parameters
+        ----------
+        create_domain : bool
+            Flag for creating domain file a region/single point
+        create_surfdata : bool
+            Flag for creating domain file a region/single point
+        create_landuse : bool
+            Flag for creating landuse file a region/single point
+        create_datmdata : bool
+            Flag for creating datm files a region/single point
         """
         self.create_domain = create_domain
         self.create_surfdata = create_surfdata
@@ -83,14 +93,20 @@ class BaseCase:
         """
         Create 1d coordinate variables for a netcdf file to enable sel() method
 
-        Args
+        Parameters
+        ----------
             filename (str) : name of the netcdf file
             lon_varname (str) : variable name that has 2d lon
             lat_varname (str) : variable name that has 2d lat
             x_dim (str) : dimension name in X -- lon
             y_dim (str): dimension name in Y -- lat
 
-        Returns:
+        Raises
+        ------
+            None 
+
+        Returns
+        -------
             f_out (xarray Dataset): Xarray Dataset with 1-d coords
 
         """
@@ -117,14 +133,17 @@ class BaseCase:
         Add the tag to just before that ending part
         and change the ending part to the current time tag.
 
-        Args
+        Parameters
+        ----------
             filename (str) : file name
             tag (str) : string of a tag to be added to the end of filename
 
-        Raises:
+        Raises
+        ------
             Error: When it cannot find . and _ in the filename.
 
-        Returns:
+        Returns
+        ------
             fname_out (str): filename with the tag and date string added
 
         """
@@ -144,6 +163,20 @@ class BaseCase:
         """
         Class method for adding some new attributes (such as date, username) and
         remove the old attributes from the netcdf file.
+
+        Parameters
+        ----------
+            nc (xarray dataset) :
+                Xarray dataset of netcdf file that we'd want to update it's metadata.
+
+        Raises
+        ------
+            None
+
+        Returns
+        ------
+            None
+
         """
         # update attributes
         today = date.today()
@@ -176,33 +209,4 @@ class BaseCase:
 
         # for attr, value in attr_list.items():
         #    print (attr + " = "+str(value))
-
-    @staticmethod                                                                                        
-    def create_fileout_name(filename, tag):
- 
-        basename = os.path.basename(filename)
-        items = basename.split("_")
-        today = date.today()
-        today_string = today.strftime("%y%m%d")
-        print (items)
-        print (len(items))
-        new_string = ( 
-            items[0]
-            + "_" 
-            + items[2]
-            + "_" 
-            + items[3]
-            + "_" 
-            + items[4]
-            + "_" 
-            + items[5]
-            + "_" 
-            + items[6]
-            + "_" 
-            + tag 
-            + "_c"
-            + today_string
-            + ".nc"
-        )   
-        return new_string
 

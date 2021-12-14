@@ -239,6 +239,17 @@ def get_parser():
         type=str,
         default="",
     )
+    rg_parser.add_argument(
+        "--create-mesh",
+        help="Flag for subsetting mesh file. [default: %(default)s]",
+        action="store",
+        dest="create_mesh",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        required=False,
+        default=False,
+        )
 
     # -- common options between both subparsers
     for subparser in [pt_parser, rg_parser]:
@@ -536,8 +547,6 @@ def main():
         single_point.fsurf_in = fsurf_in
         single_point.fsurf_out = fsurf_out
 
-        print("fsurf_in   : " + fsurf_in)  #
-        print("fsurf_out  : " + fsurf_out)  #
         logging.info("fsurf_in   : " + fsurf_in)  #
         logging.info("fsurf_out  : " + fsurf_out)  #
 
@@ -558,8 +567,7 @@ def main():
         ))
         single_point.fluse_in = fluse_in
         single_point.fluse_out = fluse_out
-        print("fluse_in   : " + fluse_in)  #
-        print("fluse_out  : " + fluse_out)  #
+
         logging.info("fluse_in   : " + fluse_in)  #
         logging.info("fluse_out  : " + fluse_out)  #
 
@@ -600,7 +608,7 @@ def main():
         logging.info("Successfully ran script for single point.")
         exit()
 
-    elif args.run_type == "reg":
+    elif args.run_type == "region":
         logging.info(
             "----------------------------------------------------------------------------"
         )
@@ -626,6 +634,9 @@ def main():
 
         # --  Create DATM atmospheric forcing data
         create_datm = args.create_datm
+
+        # --  Create mesh file
+        create_mesh = args.create_mesh
 
         crop_flag = args.crop_flag
 
