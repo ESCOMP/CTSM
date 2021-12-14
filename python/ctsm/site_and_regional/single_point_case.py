@@ -294,7 +294,7 @@ class SinglePointCase(BaseCase):
 
 
         # specify files
-        fdatmdomain_in = os.path.join(datm_dict["datm_indir"], datm_dict["fdatmdomain_in"],)
+        fdatmdomain_in = os.path.join(datm_dict["datm_indir"], datm_dict["fdatmdomain_in"])
         datm_file = self.add_tag_to_filename(fdatmdomain_in, self.tag)
         fdatmdomain_out = os.path.join(datm_dict["datm_outdir"], datm_file)
         logging.info("fdatmdomain_in:  %s", fdatmdomain_in)
