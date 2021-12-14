@@ -141,7 +141,7 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--single-pft",
-        help="Flag for making the whole grid 100%% single PFT. [default: %(default)s]",
+        help="Flag for making the whole grid 100% single PFT. [default: %(default)s]",
         action="store",
         dest="overwrite_single_pft",
         type=str2bool,

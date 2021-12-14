@@ -37,13 +37,13 @@ def fill_template_file(path_to_template, path_to_final, substitutions):
         final_file.write(final_file_contents)
 
 
-def str2bool(v):
+def str2bool(arg):
     """
     Function for converting different forms of
     command line boolean strings to boolean value.
 
     Args:
-        v (str): String bool input
+        arg (str): String bool input
 
     Raises:
         if the argument is not an acceptable boolean string
@@ -53,11 +53,10 @@ def str2bool(v):
     Returns:
         bool: Boolean value corresponding to the input.
     """
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ("yes", "true", "t", "y", "1"):
+    if isinstance(arg, bool):
+        return arg
+    if arg.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
+    if arg.lower() in ("no", "false", "f", "n", "0"):
         return False
-    else:
-        raise ValueError("Boolean value expected. [true or false] or [y or n]")
+    raise ValueError("Boolean value expected. [true or false] or [y or n]")
