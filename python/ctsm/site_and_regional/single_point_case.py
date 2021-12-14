@@ -48,14 +48,14 @@ class SinglePointCase(BaseCase):
             or the "lon-lat" format if the site name does not exist.
         create_fileout_name:
             creates a file name from a basename and a specified tag
-        create_domain_at_point:
-            Create domain file at a single point.
+        create_domain_at_point
+            creates domain file at a single point.
         create_landuse_at_point:
-            Create landuse file at a single point.
+            creates landuse file at a single point.
         create_surfdata_at_point:
-            Create surface dataset at a single point.
+            creates surface dataset at a single point.
         create_datmdomain_at_point:
-            Create DATM domain file at a single point.
+            creates DATM domain file at a single point.
         """
 
     def __init__(
