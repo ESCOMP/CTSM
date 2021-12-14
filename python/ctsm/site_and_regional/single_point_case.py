@@ -284,7 +284,7 @@ class SinglePointCase(BaseCase):
                 line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, fsurf_out))
                 self.write_to_file(line, nl_clm)
 
-    def create_datmdomain_at_point(self, indir, file, dir_output_datm):
+    def create_datmdomain_at_point(self, datm_dict : dict):
         """
         Create DATM domain file at a single point
         """
@@ -292,10 +292,11 @@ class SinglePointCase(BaseCase):
         logging.info(
             "Creating DATM domain file at %s, %s", self.plon.__str__(), self.plat.__str__())
 
+
         # specify files
-        fdatmdomain_in = os.path.join(indir, file)
+        fdatmdomain_in = os.path.join(datm_dict["datm_indir"], datm_dict["fdatmdomain_in"],)
         datm_file = self.add_tag_to_filename(fdatmdomain_in, self.tag)
-        fdatmdomain_out = os.path.join(dir_output_datm, datm_file)
+        fdatmdomain_out = os.path.join(datm_dict["datm_outdir"], datm_file)
         logging.info("fdatmdomain_in:  %s", fdatmdomain_in)
         logging.info("fdatmdomain out: %s", os.path.join(self.output_dir, fdatmdomain_out))
 

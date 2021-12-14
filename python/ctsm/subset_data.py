@@ -468,24 +468,24 @@ def setup_files(args, defaults, cesmroot):
                  'fsurf_in': fsurf_in,
                  'fluse_in': fluse_in,
                  'fdatmdomain_in': defaults.get(datm_type, "domain"),
-                 'datm_dict' : {
-                    'datm_indir': dir_input_datm,
-                    'datm_outdir': dir_output_datm,
-                    'dir_solar': defaults.get(datm_type, 'solardir'),
-                    'dir_prec': defaults.get(datm_type, 'precdir'),
-                    'dir_tpqw': defaults.get(datm_type, 'tpqwdir'),
-                    'tag_solar': defaults.get(datm_type, 'solartag'),
-                    'tag_prec': defaults.get(datm_type, 'prectag'),
-                    'tag_tpqw': defaults.get(datm_type, 'tpqwtag'),
-                    'name_solar': defaults.get(datm_type, 'solarname'),
-                    'name_prec': defaults.get(datm_type, 'precname'),
-                    'name_tpqw': defaults.get(datm_type, 'tpqwname')}
+                 'datm_dict': {
+                     'datm_indir': dir_input_datm,
+                     'datm_outdir': dir_output_datm,
+                     'dir_solar': defaults.get(datm_type, 'solardir'),
+                     'dir_prec': defaults.get(datm_type, 'precdir'),
+                     'dir_tpqw': defaults.get(datm_type, 'tpqwdir'),
+                     'tag_solar': defaults.get(datm_type, 'solartag'),
+                     'tag_prec': defaults.get(datm_type, 'prectag'),
+                     'tag_tpqw': defaults.get(datm_type, 'tpqwtag'),
+                     'name_solar': defaults.get(datm_type, 'solarname'),
+                     'name_prec': defaults.get(datm_type, 'precname'),
+                     'name_tpqw': defaults.get(datm_type, 'tpqwname')}
                  }
 
     return file_dict
 
 
-def subset_point(args, file_dict : dict):
+def subset_point(args, file_dict: dict):
     """
     Subsets surface, domain, land use, and/or DATM files at a single point
     """
@@ -530,11 +530,8 @@ def subset_point(args, file_dict : dict):
 
     # --  Create single point atmospheric forcing data
     if single_point.create_datm:
-
         # subset DATM domain file
-        single_point.create_datmdomain_at_point(file_dict["datm_indir"],
-                                                file_dict["fdatmdomain_in"],
-                                                file_dict["datm_outdir"])
+        single_point.create_datmdomain_at_point(file_dict["datm_dict"])
 
         # subset the DATM data
         nl_datm = os.path.join(args.user_mods_dir, "user_nl_datm_streams")
@@ -548,7 +545,7 @@ def subset_point(args, file_dict : dict):
     logging.info("Successfully ran script for single point.")
 
 
-def subset_region(args, file_dict : dict):
+def subset_region(args, file_dict: dict):
     """
     Subsets surface, domain, land use, and/or DATM files for a region
     """
@@ -586,7 +583,7 @@ def subset_region(args, file_dict : dict):
     # --  Create CTSM transient landuse data file
     if region.create_landuse:
         region.create_landuse_at_reg(file_dict["fluse_dir"], file_dict["fluse_in"],
-                                             args.user_mods_dir)
+                                     args.user_mods_dir)
 
     logging.info("Successfully ran script for a regional case.")
     sys.exit()
