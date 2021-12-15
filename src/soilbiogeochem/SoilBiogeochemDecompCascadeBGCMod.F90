@@ -970,11 +970,11 @@ contains
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c) * dt
                Ksoil%DM(c,j+nlevdecomp*(i_lig_lit-1)) = k_l2_l3 * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_l23(c) * dt
-               Ksoil%DM(c,j+nlevdecomp*(i_pro_som-1)) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
+               Ksoil%DM(c,j+nlevdecomp*(i_act_som-1)) = k_s1    * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s1(c) * dt
-               Ksoil%DM(c,j+nlevdecomp*(i_rec_som-1)) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * &
+               Ksoil%DM(c,j+nlevdecomp*(i_slo_som-1)) = k_s2    * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s2(c) * dt
-               Ksoil%DM(c,j+nlevdecomp*(i_avl_som-1)) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * &
+               Ksoil%DM(c,j+nlevdecomp*(i_pas_som-1)) = k_s3    * t_scalar(c,j) * w_scalar(c,j) * &
                   depth_scalar(c,j) * o_scalar(c,j) * spinup_geogterm_s3(c) * dt
                ! same for cwd but only if fates is not enabled; fates handles CWD
                ! on its own structure
