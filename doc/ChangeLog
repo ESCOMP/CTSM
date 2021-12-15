@@ -1,8 +1,8 @@
 ===============================================================
 Tag name: ctsm5.1.dev069
 Originator(s): fang-bowen (Bowen Fang) / oleson (Keith Oleson,UCAR/TSS,303-497-1332)
-               / Lei Zhao / keerzhang1 (Keer Zhang) / sacks (Bill Sacks)
-Date: Wed Dec 15 12:39:19 MST 2021
+               / Face2sea (Lei Zhao) / keerzhang1 (Keer Zhang) / sacks (Bill Sacks)
+Date: Wed Dec 15 13:01:19 MST 2021
 One-line Summary: Implement dynamic (transient) urban capability
 
 Purpose and description of changes
