@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-    ctsm5.1.dev069   oleson 12/15/2021 Implement dynamic (transient) urban capability
+    ctsm5.1.dev069 multiple 12/15/2021 Implement dynamic (transient) urban capability
     ctsm5.1.dev068 multiple 12/13/2021 Adding fsurdat_modifier tool
     ctsm5.1.dev067 jedwards 12/13/2021 NEON UI update, externals updates, small miscellanouse fixes
     ctsm5.1.dev066   rgknox 12/04/2021 API change with FATES to enable running means inside fates, includes passing in of model timestep
