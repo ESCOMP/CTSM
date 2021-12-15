@@ -65,8 +65,6 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.path_utils import path_to_ctsm_root
 
-from ctsm.utils import _convert_to_bool as str2bool
-
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
@@ -96,12 +94,12 @@ def get_parser():
 
     parser.print_usage = parser.print_help
     subparsers = parser.add_subparsers(
-        help="Two possible ways to run this sript, either:", dest="run_type"
+        help="Two possible ways to run this script, either:", dest="run_type"
     )
     pt_parser = subparsers.add_parser("point", help="Run script for a single point.")
     rg_parser = subparsers.add_parser("region", help="Run script for a region.")
 
-    # -- signle point parser options
+    # -- single point parser options
     pt_parser.add_argument(
         "--lat",
         help="Single point latitude. [default: %(default)s]",
@@ -131,47 +129,47 @@ def get_parser():
     )
     pt_parser.add_argument(
         "--unisnow",
-        help="Flag for creating datasets using uniform snowpack. [default: %(default)s]",
-        action="store",
+        help="Create surface dataset to a uniform snowpack. [default: %(default)s]",
+        action="store_true",
         dest="uni_snow",
-        type=str2bool,
         nargs="?",
         const=True,
         required=False,
-        default=True,
     )
     pt_parser.add_argument(
         "--single-pft",
-        help="Flag for making the whole grid 100% single PFT. [default: %(default)s]",
-        action="store",
+        help="Make the whole grid 100% single PFT. [default: %(default)s]",
+        action="store_true",
         dest="overwrite_single_pft",
-        type=str2bool,
         nargs="?",
         const=True,
         required=False,
-        default=False,
     )
     pt_parser.add_argument(
-        "--zero-nonveg",
-        help="Flag for setting all non-vegetation landunits to zero. [default: %(default)s]",
+        "--dompft",
+        help="Dominant PFT type . [default: %(default)s]",
         action="store",
+        dest="dom_pft",
+        type=int,
+        default=7,
+    )
+    pt_parser.add_argument(
+        "--no-zero-nonveg",
+        help="Don't set all non-vegetation landunits to zero. [default: %(default)s]",
+        action="store_false",
         dest="zero_nonveg",
-        type=str2bool,
         nargs="?",
         const=True,
         required=False,
-        default=True,
     )
     pt_parser.add_argument(
-        "--saturation-excess",
-        help="Flag for making dataset using saturation excess. [default: %(default)s]",
-        action="store",
+        "--no-saturation-excess",
+        help="Don't allow for saturation excess conditions in surface file. [default: %(default)s]",
+        action="store_false",
         dest="saturation_excess",
-        type=str2bool,
         nargs="?",
         const=True,
         required=False,
-        default=True,
     )
     # -- region-specific parser options
     rg_parser.add_argument(
@@ -222,9 +220,8 @@ def get_parser():
     rg_parser.add_argument(
         "--create-mesh",
         help="Flag for subsetting mesh file. [default: %(default)s]",
-        action="store",
+        action="store_true",
         dest="create_mesh",
-        type=str2bool,
         nargs="?",
         const=True,
         required=False,
@@ -236,60 +233,50 @@ def get_parser():
         subparser.add_argument(
             "--create-domain",
             help="Flag for creating CLM domain file at single point/region. [default: %(default)s]",
-            action="store",
+            action="store_true",
             dest="create_domain",
-            type=str2bool,
             nargs="?",
             const=True,
             required=False,
-            default=False,
         )
         subparser.add_argument(
-            "--create-surface",
+            "--no-create-surface",
             help="Flag for creating surface data file at single point/region. [default: %("
                  "default)s]",
-            action="store",
+            action="store_false",
             dest="create_surfdata",
-            type=str2bool,
             nargs="?",
             const=True,
             required=False,
-            default=True,
         )
         subparser.add_argument(
             "--create-landuse",
             help="Flag for creating landuse data file at single point/region. [default: %("
                  "default)s]",
-            action="store",
+            action="store_true",
             dest="create_landuse",
-            type=str2bool,
             nargs="?",
             const=True,
             required=False,
-            default=False,
         )
         subparser.add_argument(
             "--create-datm",
             help="Flag for creating DATM forcing data at single point/region. [default: %("
                  "default)s]",
-            action="store",
+            action="store_true",
             dest="create_datm",
-            type=str2bool,
             nargs="?",
             const=True,
             required=False,
-            default=False,
         )
         subparser.add_argument(
             "--create-user-mods",
             help="Flag for creating a user mods directory for running CTSM. [default: %(default)s]",
-            action="store",
+            action="store_true",
             dest="create_user_mods",
-            type=str2bool,
             nargs="?",
             const=True,
             required=False,
-            default=False,
         )
         subparser.add_argument(
             "--datm-syr",
@@ -312,24 +299,15 @@ def get_parser():
             default=2014,
         )
         subparser.add_argument(
-            "--crop",
-            help="Flag for creating datasets using the extensive list of prognostic crop types. ["
+            "--no-crop",
+            help="Use 16-PFT version of surface dataset rather than the crop (78-PFT) version.  "
+                 "Note that the 78-PFT version does not currently work in CTSM-FATES. ["
                  "default: %(default)s]",
-            action="store",
+            action="store_false",
             dest="crop_flag",
-            type=str2bool,
             nargs="?",
             const=True,
             required=False,
-            default=True,
-        )
-        subparser.add_argument(
-            "--dompft",
-            help="Dominant PFT type . [default: %(default)s] ",
-            action="store",
-            dest="dom_pft",
-            type=int,
-            default=7,
         )
 
         if subparser == pt_parser:

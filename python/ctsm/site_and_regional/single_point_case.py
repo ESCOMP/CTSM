@@ -240,10 +240,7 @@ class SinglePointCase(BaseCase):
             f_out["PCT_CROP"][:, :] = 0
             f_out["PCT_LAKE"][:, :] = 0.0
             f_out["PCT_WETLAND"][:, :] = 0.0
-            f_out["PCT_URBAN"][
-            :,
-            :,
-            ] = 0.0
+            f_out["PCT_URBAN"][:, :, ] = 0.0
             f_out["PCT_GLACIER"][:, :] = 0.0
         if self.uniform_snowpack:
             f_out["STD_ELEV"][:, :] = 20.0
