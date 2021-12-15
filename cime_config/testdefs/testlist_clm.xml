@@ -1669,6 +1669,16 @@
       </machine>
     </machines>
   </test>
+  <test name="ERS_Lm25" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
+    <machines>
+      <machine name="cheyenne" compiler="gnu" category="aux_clm">
+        <options>
+          <option name="wallclock">0:50:00</option>
+          <option name="comment">Include a test of transient urban</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
   <test name="SMS_D_P48x1_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_spunup">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
