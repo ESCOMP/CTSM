@@ -399,7 +399,7 @@ class SinglePointCase(BaseCase):
                                        "{}{}.nc".format(datm_tuple.tag_prec, dtag))
                 fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, dtag)
                 ftpqw = os.path.join(datm_tuple.indir, datm_tuple.dir_tpqw,
-                                     "{}{}.nc".format(datm_tuple.dir_tpqw, dtag))
+                                     "{}{}.nc".format(datm_tuple.tag_tpqw, dtag))
                 ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, dtag)
 
                 outdir = os.path.join(self.output_dir, datm_tuple.outdir)
@@ -421,11 +421,11 @@ class SinglePointCase(BaseCase):
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
-        logging.info("All DATM files are created in: %s", datm_tuple["datm_outdir"])
+        logging.info("All DATM files are created in: %s", datm_tuple.outdir)
 
         # write to user_nl_datm_streams if specified
         if self.create_user_mods:
             with open(datm_streams_file, "a") as file:
-                self.write_datm_streams_lines(datm_tuple["name_solar"], solarfiles, file)
-                self.write_datm_streams_lines(datm_tuple["name_prec"], precfiles, file)
-                self.write_datm_streams_lines(datm_tuple["name_tpqw"], tpqwfiles, file)
+                self.write_datm_streams_lines(datm_tuple.name_solar, solarfiles, file)
+                self.write_datm_streams_lines(datm_tuple.name_prec, precfiles, file)
+                self.write_datm_streams_lines(datm_tuple.name_tpqw, tpqwfiles, file)
