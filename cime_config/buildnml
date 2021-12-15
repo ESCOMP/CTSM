@@ -65,6 +65,13 @@ def buildnml(case, caseroot, compname):
     driver = case.get_value("COMP_INTERFACE").lower()
 
     # -----------------------------------------------------
+    # Error checking
+    # -----------------------------------------------------
+    if ( clm_bldnml_opts.find("-namelist") >= 0 ):
+        expect(False, "The -namelist option is NOT allowed to be part of CLM_BLDNML_OPTS, " + \
+               "use the CLM_NAMELIST_OPTS option or add namelist items to user_nl_clm instead " );
+
+    # -----------------------------------------------------
     # Set ctsmconf
     # -----------------------------------------------------
 
@@ -166,7 +173,11 @@ def buildnml(case, caseroot, compname):
 
     inputdata_file = os.path.join(caseroot,"Buildconf","ctsm.input_data_list")
 
-    lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
+    if driver == "nuopc":
+        lndfrac_setting = " "
+    else:
+        lndfrac_file = os.path.join(lnd_domain_path,lnd_domain_file)
+        lndfrac_setting = "-lnd_frac "+lndfrac_file
 
     config_cache_file = os.path.join(caseroot,"Buildconf", compname+"conf","config_cache.xml")
 
@@ -232,12 +243,12 @@ def buildnml(case, caseroot, compname):
         command = ("%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist \"&clm_inparm  start_ymd=%s %s/ \" "
                    "%s %s -res %s %s -clm_start_type %s -envxml_dir %s "
                    "-configuration %s -structure %s "
-                   "-lnd_frac %s -glc_nec %s %s -co2_ppmv %s -co2_type %s -config %s -driver %s "
+                   "%s -glc_nec %s %s -co2_ppmv %s -co2_type %s -config %s -driver %s "
                    "%s %s %s %s"
                    %(cmd, _CIMEROOT, infile, din_loc_root, inputdata_file, ignore, start_ymd, clm_namelist_opts,
                      nomeg, usecase, lnd_grid, clmusr, start_type, caseroot,
                      configuration, structure,
-                     lndfrac_file, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file, driver, 
+                     lndfrac_setting, glc_nec, glc_use_antarctica_flag, ccsm_co2_ppmv, clm_co2_type, config_cache_file, driver, 
                      clm_bldnml_opts, spinup, tuning, gridmask))
 
         rc, out, err = run_cmd(command, from_dir=ctsmconf)
@@ -265,6 +276,8 @@ def _main_func():
     caseroot = parse_input(sys.argv)
     with Case(caseroot) as case:
         compname = case.get_value("COMP_LND")
+        logger.warning( "WARNING: buildnml is being called a s program rather than a subroutine " +
+                        "as it is expected to be in the CESM context" )
         buildnml(case, caseroot, compname)
 
 if __name__ == "__main__":

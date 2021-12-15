@@ -145,7 +145,7 @@ subroutine mkagfirepkmon(ldomain, mapfname, datfname, ndiag, &
   ! Check validity of output data
   if (min_bad(agfirepkmon_o, min_valid, 'agfirepkmon') .or. &
       max_bad(agfirepkmon_o, max_valid, 'agfirepkmon')) then
-     stop
+     call abort()
   end if
   
 

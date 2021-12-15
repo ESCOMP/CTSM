@@ -4,12 +4,12 @@ module CNFireLi2021Mod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! module for fire dynamics 
+  ! module for fire dynamics
   ! created in Nov, 2012  and revised in Apr, 2013 by F. Li and S. Levis
   ! based on Li et al. (2012a,b; 2013)
   ! revised in Apr, 2014 according to Li et al.(2014)
   ! revised in May, 2015, according to Li et al. (2015, in prep.)
-  ! Fire-related parameters were calibrated or tuned in May, 2015 based on the 
+  ! Fire-related parameters were calibrated or tuned in May, 2015 based on the
   ! 20th Century transient simulations at f19_g16 with a CLM4.5 version
   ! (clm50fire), CRUNCEPv5, and climatological lightning data.
   !
@@ -39,9 +39,9 @@ module CNFireLi2021Mod
   use WaterStateBulkType                 , only : waterstatebulk_type
   use SoilStateType                      , only : soilstate_type
   use SoilWaterRetentionCurveMod         , only : soil_water_retention_curve_type
-  use GridcellType                       , only : grc                
-  use ColumnType                         , only : col                
-  use PatchType                          , only : patch                
+  use GridcellType                       , only : grc
+  use ColumnType                         , only : col
+  use PatchType                          , only : patch
   use SoilBiogeochemStateType            , only : get_spinup_latitude_term
   use FireMethodType                     , only : fire_method_type
   use CNFireBaseMod                      , only : cnfire_base_type, cnfire_const, cnfire_params
@@ -92,7 +92,7 @@ contains
        cnveg_state_inst, cnveg_carbonstate_inst, totlitc_col, decomp_cpools_vr_col, t_soi17cm_col)
     !
     ! !DESCRIPTION:
-    ! Computes column-level burned area 
+    ! Computes column-level burned area
     !
     ! !USES:
     use clm_time_manager     , only: get_step_size_real, get_days_per_year, get_curr_date, get_nstep
@@ -104,7 +104,7 @@ contains
     !
     ! !ARGUMENTS:
     class(cnfire_li2021_type)                             :: this
-    type(bounds_type)                     , intent(in)    :: bounds 
+    type(bounds_type)                     , intent(in)    :: bounds
     integer                               , intent(in)    :: num_soilc       ! number of soil columns in filter
     integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
@@ -112,7 +112,7 @@ contains
     integer                               , intent(in)    :: num_exposedvegp        ! number of points in filter_exposedvegp
     integer                               , intent(in)    :: filter_exposedvegp(:)  ! patch filter for non-snow-covered veg
     integer                               , intent(in)    :: num_noexposedvegp       ! number of points in filter_noexposedvegp
-    integer                               , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0 
+    integer                               , intent(in)    :: filter_noexposedvegp(:) ! patch filter where frac_veg_nosno is 0
     type(atm2lnd_type)                    , intent(in)    :: atm2lnd_inst
     type(energyflux_type)                 , intent(in)    :: energyflux_inst
     type(saturated_excess_runoff_type)    , intent(in)    :: saturated_excess_runoff_inst
@@ -139,7 +139,7 @@ contains
     real(r8) :: fgdp     ! impact of gdp on agricultural fire
     real(r8) :: fire_m   ! combustability of fuel for fire occurrence
     real(r8) :: spread_m ! combustability of fuel for fire spread
-    real(r8) :: Lb_lf    ! length-to-breadth ratio added by Lifang 
+    real(r8) :: Lb_lf    ! length-to-breadth ratio added by Lifang
     integer  :: i_cwd    ! cwd pool
     real(r8) :: lh       ! anthro. ignitions (count/km2/hr)
     real(r8) :: fs       ! hd-dependent fires suppression (0-1)
@@ -151,7 +151,7 @@ contains
     logical  :: transient_landcover  ! whether this run has any prescribed transient landcover
     real(r8), target  :: prec60_col_target(bounds%begc:bounds%endc)
     real(r8), target  :: prec10_col_target(bounds%begc:bounds%endc)
-    real(r8), target  :: rh30_col_target(bounds%begc:bounds%endc) 
+    real(r8), target  :: rh30_col_target(bounds%begc:bounds%endc)
     real(r8), pointer :: prec60_col(:)
     real(r8), pointer :: prec10_col(:)
     real(r8), pointer :: rh30_col(:)
@@ -161,10 +161,10 @@ contains
     SHR_ASSERT_ALL_FL((ubound(decomp_cpools_vr_col)  == (/bounds%endc,nlevdecomp_full,ndecomp_pools/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(t_soi17cm_col)         == (/bounds%endc/)), sourcefile, __LINE__)
 
-    associate(                                                                      & 
-         totlitc            => totlitc_col                                     , & ! Input:  [real(r8) (:)     ]  (gC/m2) total lit C (column-level mean)           
+    associate(                                                                      &
+         totlitc            => totlitc_col                                     , & ! Input:  [real(r8) (:)     ]  (gC/m2) total lit C (column-level mean)
          decomp_cpools_vr   => decomp_cpools_vr_col                            , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  VR decomp. (litter, cwd, soil)
-         tsoi17             => t_soi17cm_col                                   , & ! Input:  [real(r8) (:)     ]  (K) soil T for top 0.17 m                             
+         tsoi17             => t_soi17cm_col                                   , & ! Input:  [real(r8) (:)     ]  (K) soil T for top 0.17 m
 
          lfuel              => cnfire_const%lfuel                              , & ! Input:  [real(r8)         ]  (gC/m2) Lower threshold of fuel mass
          ufuel              => cnfire_const%ufuel                              , & ! Input:  [real(r8)         ]  (gC/m2) Upper threshold of fuel mass
@@ -175,74 +175,74 @@ contains
          non_boreal_peatfire_c => cnfire_const%non_boreal_peatfire_c           , & ! Input:  [real(r8)         ]  (/hr) c parameter for non-boreal peatland fire
          pot_hmn_ign_counts_alpha => cnfire_const%pot_hmn_ign_counts_alpha     , & ! Input:  [real(r8)         ]  (/person/month) Potential human ignition counts
          boreal_peatfire_c  => cnfire_const%boreal_peatfire_c                  , & ! Input:  [real(r8)         ]  (/hr) c parameter for boreal peatland fire
-         
+
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
          rswf_min           => pftcon%rswf_min                                 , & ! Input:
          rswf_max           => pftcon%rswf_max                                 , & ! Input:
-         btran2             => this%cnfire_base_type%btran2_patch              , & ! Input:  [real(r8) (:)     ]  root zone soil wetness                            
-         fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface       
-         wf2                => waterdiagnosticbulk_inst%wf2_col                , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m         
-         
-         is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool                         
-         spinup_factor      => decomp_cascade_con%spinup_factor                , & ! Input:  [real(r8) (:)     ]  factor for AD spinup associated with each pool           
+         btran2             => this%cnfire_base_type%btran2_patch              , & ! Input:  [real(r8) (:)     ]  root zone soil wetness
+         fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface
+         wf2                => waterdiagnosticbulk_inst%wf2_col                , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m
 
-         forc_rh            => wateratm2lndbulk_inst%forc_rh_grc               , & ! Input:  [real(r8) (:)     ]  relative humidity                                 
-         forc_wind          => atm2lnd_inst%forc_wind_grc                      , & ! Input:  [real(r8) (:)     ]  atmospheric wind speed (m/s)                       
-         forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)                  
-         forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled rain                                              
-         forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled snow                                              
-         prec60             => wateratm2lndbulk_inst%prec60_patch              , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation         
-         prec10             => wateratm2lndbulk_inst%prec10_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation         
-         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation 
+         is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool
+         spinup_factor      => decomp_cascade_con%spinup_factor                , & ! Input:  [real(r8) (:)     ]  factor for AD spinup associated with each pool
+
+         forc_rh            => wateratm2lndbulk_inst%forc_rh_grc               , & ! Input:  [real(r8) (:)     ]  relative humidity
+         forc_wind          => atm2lnd_inst%forc_wind_grc                      , & ! Input:  [real(r8) (:)     ]  atmospheric wind speed (m/s)
+         forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)
+         forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled rain
+         forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled snow
+         prec60             => wateratm2lndbulk_inst%prec60_patch              , & ! Input:  [real(r8) (:)     ]  60-day running mean of tot. precipitation
+         prec10             => wateratm2lndbulk_inst%prec10_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
+         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
-         cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column                   
-         gdp_lf             => cnveg_state_inst%gdp_lf_col                     , & ! Input:  [real(r8) (:)     ]  gdp data                                          
-         peatf_lf           => cnveg_state_inst%peatf_lf_col                   , & ! Input:  [real(r8) (:)     ]  peatland fraction data                            
-         abm_lf             => cnveg_state_inst%abm_lf_col                     , & ! Input:  [integer  (:)     ]  prescribed crop fire time                          
-         baf_crop           => cnveg_state_inst%baf_crop_col                   , & ! Output: [real(r8) (:)     ]  burned area fraction for cropland (/sec)  
-         baf_peatf          => cnveg_state_inst%baf_peatf_col                  , & ! Output: [real(r8) (:)     ]  burned area fraction for peatland (/sec)  
-         burndate           => cnveg_state_inst%burndate_patch                 , & ! Output: [integer  (:)     ]  burn date for crop                                 
+         cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column
+         gdp_lf             => this%gdp_lf_col                                 , & ! Input:  [real(r8) (:)     ]  gdp data
+         peatf_lf           => this%peatf_lf_col                               , & ! Input:  [real(r8) (:)     ]  peatland fraction data
+         abm_lf             => this%abm_lf_col                                 , & ! Input:  [integer  (:)     ]  prescribed crop fire time
+         baf_crop           => cnveg_state_inst%baf_crop_col                   , & ! Output: [real(r8) (:)     ]  burned area fraction for cropland (/sec)
+         baf_peatf          => cnveg_state_inst%baf_peatf_col                  , & ! Output: [real(r8) (:)     ]  burned area fraction for peatland (/sec)
+         burndate           => cnveg_state_inst%burndate_patch                 , & ! Output: [integer  (:)     ]  burn date for crop
          fbac               => cnveg_state_inst%fbac_col                       , & ! Output: [real(r8) (:)     ]  total burned area out of conversion (/sec)
          fbac1              => cnveg_state_inst%fbac1_col                      , & ! Output: [real(r8) (:)     ]  burned area out of conversion region due to land use fire
          farea_burned       => cnveg_state_inst%farea_burned_col               , & ! Output: [real(r8) (:)     ]  total fractional area burned (/sec)
          nfire              => cnveg_state_inst%nfire_col                      , & ! Output: [real(r8) (:)     ]  fire counts (count/km2/sec), valid only in Reg. C
          fsr_col            => cnveg_state_inst%fsr_col                        , & ! Output: [real(r8) (:)     ]  fire spread rate at column level
          fd_col             => cnveg_state_inst%fd_col                         , & ! Output: [real(r8) (:)     ]  fire duration rate at column level
-         lgdp_col           => cnveg_state_inst%lgdp_col                       , & ! Output: [real(r8) (:)     ]  gdp limitation factor for nfire                   
-         lgdp1_col          => cnveg_state_inst%lgdp1_col                      , & ! Output: [real(r8) (:)     ]  gdp limitation factor for baf per fire            
-         lpop_col           => cnveg_state_inst%lpop_col                       , & ! Output: [real(r8) (:)     ]  pop limitation factor for baf per fire            
+         lgdp_col           => cnveg_state_inst%lgdp_col                       , & ! Output: [real(r8) (:)     ]  gdp limitation factor for nfire
+         lgdp1_col          => cnveg_state_inst%lgdp1_col                      , & ! Output: [real(r8) (:)     ]  gdp limitation factor for baf per fire
+         lpop_col           => cnveg_state_inst%lpop_col                       , & ! Output: [real(r8) (:)     ]  pop limitation factor for baf per fire
          lfwt               => cnveg_state_inst%lfwt_col                       , & ! Output: [real(r8) (:)     ]  fractional coverage of non-crop and non-bare-soil Patches
-         trotr1_col         => cnveg_state_inst%trotr1_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BET on the column (0-1)           
-         trotr2_col         => cnveg_state_inst%trotr2_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BDT on the column (0-1)           
+         trotr1_col         => cnveg_state_inst%trotr1_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BET on the column (0-1)
+         trotr2_col         => cnveg_state_inst%trotr2_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BDT on the column (0-1)
          dtrotr_col         => cnveg_state_inst%dtrotr_col                     , & ! Output: [real(r8) (:)     ]  decreased frac. coverage of BET+BDT on grid for dt
          lfc                => cnveg_state_inst%lfc_col                        , & ! Output: [real(r8) (:)     ]  conversion area frac. of BET+BDT that haven't burned before
-         wtlf               => cnveg_state_inst%wtlf_col                       , & ! Output: [real(r8) (:)     ]  fractional coverage of non-crop Patches              
-         
-         totvegc            => cnveg_carbonstate_inst%totvegc_col              , & ! Input: [real(r8) (:)     ]  totvegc at column level                           
-         deadcrootc         => cnveg_carbonstate_inst%deadcrootc_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C                        
-         deadcrootc_storage => cnveg_carbonstate_inst%deadcrootc_storage_patch , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C storage                
-         deadcrootc_xfer    => cnveg_carbonstate_inst%deadcrootc_xfer_patch    , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C transfer               
+         wtlf               => cnveg_state_inst%wtlf_col                       , & ! Output: [real(r8) (:)     ]  fractional coverage of non-crop Patches
+
+         totvegc            => cnveg_carbonstate_inst%totvegc_col              , & ! Input: [real(r8) (:)     ]  totvegc at column level
+         deadcrootc         => cnveg_carbonstate_inst%deadcrootc_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C
+         deadcrootc_storage => cnveg_carbonstate_inst%deadcrootc_storage_patch , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C storage
+         deadcrootc_xfer    => cnveg_carbonstate_inst%deadcrootc_xfer_patch    , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead coarse root C transfer
          deadstemc          => cnveg_carbonstate_inst%deadstemc_patch          , & ! Input:  [real(r8) (:)     ]  (gC/m2) dead stem root C
-         frootc             => cnveg_carbonstate_inst%frootc_patch             , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C                               
-         frootc_storage     => cnveg_carbonstate_inst%frootc_storage_patch     , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C storage                       
-         frootc_xfer        => cnveg_carbonstate_inst%frootc_xfer_patch        , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C transfer                      
-         livecrootc         => cnveg_carbonstate_inst%livecrootc_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) live coarse root C                        
-         livecrootc_storage => cnveg_carbonstate_inst%livecrootc_storage_patch , & ! Input:  [real(r8) (:)     ]  (gC/m2) live coarse root C storage                
-         livecrootc_xfer    => cnveg_carbonstate_inst%livecrootc_xfer_patch    , & ! Input:  [real(r8) (:)     ]  (gC/m2) live coarse root C transfer               
-         leafc              => cnveg_carbonstate_inst%leafc_patch              , & ! Input:  [real(r8) (:)     ]  (gC/m2) leaf C                                    
-         leafc_storage      => cnveg_carbonstate_inst%leafc_storage_patch      , & ! Input:  [real(r8) (:)     ]  (gC/m2) leaf C storage                            
-         leafc_xfer         => cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) leaf C transfer                           
-         rootc_col          => cnveg_carbonstate_inst%rootc_col                , & ! Output: [real(r8) (:)     ]  root carbon                                       
-         leafc_col          => cnveg_carbonstate_inst%leafc_col                , & ! Output: [real(r8) (:)     ]  leaf carbon at column level                       
+         frootc             => cnveg_carbonstate_inst%frootc_patch             , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C
+         frootc_storage     => cnveg_carbonstate_inst%frootc_storage_patch     , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C storage
+         frootc_xfer        => cnveg_carbonstate_inst%frootc_xfer_patch        , & ! Input:  [real(r8) (:)     ]  (gC/m2) fine root C transfer
+         livecrootc         => cnveg_carbonstate_inst%livecrootc_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) live coarse root C
+         livecrootc_storage => cnveg_carbonstate_inst%livecrootc_storage_patch , & ! Input:  [real(r8) (:)     ]  (gC/m2) live coarse root C storage
+         livecrootc_xfer    => cnveg_carbonstate_inst%livecrootc_xfer_patch    , & ! Input:  [real(r8) (:)     ]  (gC/m2) live coarse root C transfer
+         leafc              => cnveg_carbonstate_inst%leafc_patch              , & ! Input:  [real(r8) (:)     ]  (gC/m2) leaf C
+         leafc_storage      => cnveg_carbonstate_inst%leafc_storage_patch      , & ! Input:  [real(r8) (:)     ]  (gC/m2) leaf C storage
+         leafc_xfer         => cnveg_carbonstate_inst%leafc_xfer_patch         , & ! Input:  [real(r8) (:)     ]  (gC/m2) leaf C transfer
+         rootc_col          => cnveg_carbonstate_inst%rootc_col                , & ! Output: [real(r8) (:)     ]  root carbon
+         leafc_col          => cnveg_carbonstate_inst%leafc_col                , & ! Output: [real(r8) (:)     ]  leaf carbon at column level
          deadstemc_col      => cnveg_carbonstate_inst%deadstemc_col            , & ! Output: [real(r8) (:)     ]  deadstem carbon at column level
-         fuelc              => cnveg_carbonstate_inst%fuelc_col                , & ! Output: [real(r8) (:)     ]  fuel load coutside cropland                 
-         fuelc_crop         => cnveg_carbonstate_inst%fuelc_crop_col             & ! Output: [real(r8) (:)     ]  fuel load for cropland                 
+         fuelc              => cnveg_carbonstate_inst%fuelc_col                , & ! Output: [real(r8) (:)     ]  fuel load coutside cropland
+         fuelc_crop         => cnveg_carbonstate_inst%fuelc_crop_col             & ! Output: [real(r8) (:)     ]  fuel load for cropland
          )
- 
+
       transient_landcover = run_has_transient_landcover()
 
-      !pft to column average 
+      !pft to column average
       prec10_col =>prec10_col_target
       call p2c(bounds, num_soilc, filter_soilc, &
            prec10(bounds%begp:bounds%endp), &
@@ -256,8 +256,8 @@ contains
       rh30_col =>rh30_col_target
       call p2c(bounds, num_soilc, filter_soilc, &
            rh30(bounds%begp:bounds%endp), &
-           rh30_col(bounds%begc:bounds%endc))  
-      
+           rh30_col(bounds%begc:bounds%endc))
+
       call p2c(bounds, num_soilc, filter_soilc, &
            leafc(bounds%begp:bounds%endp), &
            leafc_col(bounds%begc:bounds%endc))
@@ -281,18 +281,18 @@ contains
            baf_peatf(c)    = 0._r8
            fbac(c)         = 0._r8
            fbac1(c)        = 0._r8
-           cropf_col(c)    = 0._r8 
+           cropf_col(c)    = 0._r8
         end do
         return
      end if
      !
-     ! Calculate fraction of crop (cropf_col) and non-crop and non-bare-soil 
+     ! Calculate fraction of crop (cropf_col) and non-crop and non-bare-soil
      ! vegetation (lfwt) in vegetated column
      !
      do fc = 1,num_soilc
         c = filter_soilc(fc)
-        cropf_col(c) = 0._r8 
-        lfwt(c)      = 0._r8   
+        cropf_col(c) = 0._r8
+        lfwt(c)      = 0._r8
      end do
      do fp = 1, num_soilp
         p = filter_soilp(fp)
@@ -306,8 +306,8 @@ contains
            lfwt(c) = lfwt(c) + patch%wtcol(p)
         end if
      end do
-     ! 
-     ! Calculate crop fuel   
+     !
+     ! Calculate crop fuel
      !
      do fc = 1,num_soilc
         c = filter_soilc(fc)
@@ -326,7 +326,7 @@ contains
                 totlitc(c)*leafc(p)/leafc_col(c)*patch%wtcol(p)/cropf_col(c)
         end if
      end do
-     !   
+     !
      ! Calculate noncrop column variables
      !
      do fc = 1,num_soilc
@@ -433,7 +433,7 @@ contains
 
            ! all these constants are in Li et al. BG (2012a,b;2013)
 
-           if( hdmlf  >  0.1_r8 )then            
+           if( hdmlf  >  0.1_r8 )then
               ! For NOT bare-soil
               if( patch%itype(p)  /=  noveg )then
                  ! For shrub and grass (crop already excluded above)
@@ -451,7 +451,7 @@ contains
                  else   ! for trees
                     if( gdp_lf(c)  >  20._r8 )then
                        lgdp_col(c) =lgdp_col(c)+cnfire_const%occur_hi_gdp_tree*patch%wtcol(p)/(1._r8 - cropf_col(c))
-                       lgdp1_col(c) =lgdp1_col(c)+0.62_r8*patch%wtcol(p)/(1._r8 - cropf_col(c)) 
+                       lgdp1_col(c) =lgdp1_col(c)+0.62_r8*patch%wtcol(p)/(1._r8 - cropf_col(c))
                     else
                        if( gdp_lf(c) > 8._r8 )then
                           lgdp_col(c)=lgdp_col(c)+0.79_r8*patch%wtcol(p)/(1._r8 - cropf_col(c))
@@ -472,12 +472,12 @@ contains
               lpop_col(c)  = lpop_col(c)+patch%wtcol(p)/(1.0_r8 -cropf_col(c))
            end if
 
-           fd_col(c) = fd_col(c) + fd_pft(patch%itype(p)) * patch%wtcol(p) * secsphr / (1.0_r8-cropf_col(c))         
+           fd_col(c) = fd_col(c) + fd_pft(patch%itype(p)) * patch%wtcol(p) * secsphr / (1.0_r8-cropf_col(c))
         end if
      end do
 
      ! estimate annual decreased fractional coverage of BET+BDT
-     ! land cover conversion in CLM4.5 is the same for each timestep except for the beginning  
+     ! land cover conversion in CLM4.5 is the same for each timestep except for the beginning
 
      if (transient_landcover) then
         do fc = 1,num_soilc
@@ -503,7 +503,7 @@ contains
      end do
 
      do fp = 1,num_soilp
-        p = filter_soilp(fp)  
+        p = filter_soilp(fp)
         if( kmo == 1 .and. kda == 1 .and. mcsec == 0 )then
            burndate(p) = 10000 ! init. value; actual range [0 365]
         end if
@@ -582,21 +582,21 @@ contains
            fuelc(c) = totlitc(c)+totvegc(c)-rootc_col(c)-fuelc_crop(c)*cropf_col(c)
            if (spinup_state == 2) then
               fuelc(c) = fuelc(c) + ((spinup_factor_deadwood - 1._r8)*deadstemc_col(c))
-              do j = 1, nlevdecomp  
+              do j = 1, nlevdecomp
                  fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j) * spinup_factor(i_cwd) &
                             * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
               end do
            else
-              do j = 1, nlevdecomp  
+              do j = 1, nlevdecomp
                  fuelc(c) = fuelc(c)+decomp_cpools_vr(c,j,i_cwd) * dzsoi_decomp(j)
               end do
            end if
            fuelc(c) = fuelc(c)/(1._r8-cropf_col(c))
            fb       = max(0.0_r8,min(1.0_r8,(fuelc(c)-lfuel)/(ufuel-lfuel)))
-           if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then  
+           if (trotr1_col(c)+trotr2_col(c)<=0.6_r8) then
               afuel  =min(1._r8,max(0._r8,(fuelc(c)-2500._r8)/(5000._r8-2500._r8)))
               arh=1._r8-max(0._r8, min(1._r8,(forc_rh(g)-rh_low)/(rh_hgh-rh_low)))
-              arh30=1._r8-max(0.7_r8, min(1._r8,rh30_col(c)/90._r8))
+              arh30=1._r8-max(cnfire_params%prh30, min(1._r8,rh30_col(c)/90._r8))
               if (forc_rh(g) < rh_hgh.and. wtlf(c) > 0._r8 .and. tsoi17(c)> SHR_CONST_TKFRZ)then
                 fire_m   = ((afuel*arh30+(1._r8-afuel)*arh)**1.5_r8) &
                              *((1._r8-btran_col(c)/wtlf(c))**0.5_r8)
@@ -606,8 +606,8 @@ contains
               lh       = pot_hmn_ign_counts_alpha*6.8_r8*hdmlf**(0.43_r8)/30._r8/24._r8
               fs       = 1._r8-(0.01_r8+0.98_r8*exp(-0.025_r8*hdmlf))
               ig       = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
-                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))*0.22_r8)  &
-                         *(1._r8-fs)*(1._r8-cropf_col(c))
+                     cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
+                         cnfire_params%ignition_efficiency)*(1._r8-fs)*(1._r8-cropf_col(c))
               nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
               Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
               spread_m = fire_m**0.5_r8
@@ -619,7 +619,7 @@ contains
              farea_burned(c)=min(1._r8,baf_crop(c)+baf_peatf(c))
            end if
            !
-           ! if landuse change data is used, calculate deforestation fires and 
+           ! if landuse change data is used, calculate deforestation fires and
            ! add it in the total of burned area fraction
            !
            if (transient_landcover) then
@@ -636,10 +636,10 @@ contains
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
                     farea_burned(c) = fb*cli*(cli_scale/secspday)+baf_crop(c)+baf_peatf(c)
                     ! burned area out of conversion region due to land use fire
-                    fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)   
+                    fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)
                  end if
-                 ! total burned area out of conversion 
-                 fbac(c) = fbac1(c)+baf_crop(c)+baf_peatf(c) 
+                 ! total burned area out of conversion
+                 fbac(c) = fbac1(c)+baf_crop(c)+baf_peatf(c)
               else
                  fbac(c) = farea_burned(c)
               end if

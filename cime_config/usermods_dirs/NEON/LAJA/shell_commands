@@ -1,3 +1,4 @@
 ./xmlchange NEONSITE=LAJA
 ./xmlchange PTS_LON=292.92392
 ./xmlchange PTS_LAT=18.02184
+./xmlchange RUN_STARTDATE=2018-05-01

@@ -478,7 +478,7 @@ subroutine mklakparams(ldomain, mapfname, datfname, ndiag, &
 
   ! Check validity of output data
   if (min_bad(lakedepth_o, min_valid_lakedepth, 'lakedepth')) then
-     stop
+     call abort()
   end if
 
   call output_diagnostics_continuous(data_i, lakedepth_o, tgridmap, "Lake Depth", "m", ndiag, tdomain%mask, frac_dst)
