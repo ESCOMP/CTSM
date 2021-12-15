@@ -8,6 +8,7 @@ RegionalCase are defined in this Class.
 # -- standard libraries
 import os
 import logging
+from collections import namedtuple
 
 from datetime import date
 from getpass import getuser
@@ -22,6 +23,12 @@ from ctsm.git_utils import get_git_short_hash
 USRDAT_DIR = "CLM_USRDAT_DIR"
 logger = logging.getLogger(__name__)
 
+# named tuple for datm input/output files and folder names
+DatmFiles = namedtuple(
+    "DatmFiles",
+    "indir outdir fdomain_in dir_solar dir_prec dir_tpqw tag_solar tag_prec tag_tpqw name_solar "
+    "name_prec name_tpqw "
+)
 
 class BaseCase:
     """

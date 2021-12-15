@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 
 # -- import local classes for this script
-from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR
+from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
 
 logger = logging.getLogger(__name__)
 
@@ -284,7 +284,7 @@ class SinglePointCase(BaseCase):
                 line = "fsurdat = '${}'".format(os.path.join(USRDAT_DIR, fsurf_out))
                 self.write_to_file(line, nl_clm)
 
-    def create_datmdomain_at_point(self, datm_dict: dict):
+    def create_datmdomain_at_point(self, datm_tuple: DatmFiles):
         """
         Create DATM domain file at a single point
         """
@@ -293,9 +293,9 @@ class SinglePointCase(BaseCase):
             "Creating DATM domain file at %s, %s", self.plon.__str__(), self.plat.__str__())
 
         # specify files
-        fdatmdomain_in = os.path.join(datm_dict["datm_indir"], datm_dict["fdatmdomain_in"])
+        fdatmdomain_in = os.path.join(datm_tuple.indir, datm_tuple.fdomain_in)
         datm_file = self.add_tag_to_filename(fdatmdomain_in, self.tag)
-        fdatmdomain_out = os.path.join(datm_dict["datm_outdir"], datm_file)
+        fdatmdomain_out = os.path.join(datm_tuple.outdir, datm_file)
         logging.info("fdatmdomain_in:  %s", fdatmdomain_in)
         logging.info("fdatmdomain out: %s", os.path.join(self.output_dir, fdatmdomain_out))
 
@@ -370,7 +370,7 @@ class SinglePointCase(BaseCase):
         self.write_to_file("{}:mapalgo=none".format(streamname), file)
         self.write_to_file("{}:meshfile=none".format(streamname), file)
 
-    def create_datm_at_point(self, datm_dict: dict, datm_syr, datm_eyr, datm_streams_file):
+    def create_datm_at_point(self, datm_tuple: DatmFiles, datm_syr, datm_eyr, datm_streams_file):
         """
         Create all of a DATM dataset at a point.
         """
@@ -392,27 +392,27 @@ class SinglePointCase(BaseCase):
 
                 dtag = ystr + "-" + mstr
 
-                fsolar = os.path.join(datm_dict["datm_indir"], datm_dict["dir_solar"],
-                                      "{}{}.nc".format(datm_dict["tag_solar"], dtag))
-                fsolar2 = "{}{}.{}.nc".format(datm_dict["tag_solar"], self.tag, dtag)
-                fprecip = os.path.join(datm_dict["datm_indir"], datm_dict["dir_prec"],
-                                       "{}{}.nc".format(datm_dict["tag_prec"], dtag))
-                fprecip2 = "{}{}.{}.nc".format(datm_dict["tag_prec"], self.tag, dtag)
-                ftpqw = os.path.join(datm_dict["datm_indir"], datm_dict["dir_tpqw"],
-                                     "{}{}.nc".format(datm_dict["tag_tpqw"], dtag))
-                ftpqw2 = "{}{}.{}.nc".format(datm_dict["tag_tpqw"], self.tag, dtag)
+                fsolar = os.path.join(datm_tuple.indir, datm_tuple.dir_solar,
+                                      "{}{}.nc".format(datm_tuple.tag_solar, dtag))
+                fsolar2 = "{}{}.{}.nc".format(datm_tuple.tag_solar, self.tag, dtag)
+                fprecip = os.path.join(datm_tuple.indir, datm_tuple.dir_prec,
+                                       "{}{}.nc".format(datm_tuple.tag_prec, dtag))
+                fprecip2 = "{}{}.{}.nc".format(datm_tuple.tag_prec, self.tag, dtag)
+                ftpqw = os.path.join(datm_tuple.indir, datm_tuple.dir_tpqw,
+                                     "{}{}.nc".format(datm_tuple.dir_tpqw, dtag))
+                ftpqw2 = "{}{}.{}.nc".format(datm_tuple.tag_tpqw, self.tag, dtag)
 
-                outdir = os.path.join(self.output_dir, datm_dict["datm_outdir"])
+                outdir = os.path.join(self.output_dir, datm_tuple.outdir)
                 infile += [fsolar, fprecip, ftpqw]
                 outfile += [os.path.join(outdir, fsolar2),
                             os.path.join(outdir, fprecip2),
                             os.path.join(outdir, ftpqw2)]
                 solarfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_dict["datm_outdir"], fsolar2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fsolar2))
                 precfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_dict["datm_outdir"], fprecip2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, fprecip2))
                 tpqwfiles.append(
-                    os.path.join("${}".format(USRDAT_DIR), datm_dict["datm_outdir"], ftpqw2))
+                    os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
 
         nm = len(infile)
         for n in range(nm):
@@ -421,11 +421,11 @@ class SinglePointCase(BaseCase):
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
-        logging.info("All DATM files are created in: %s", datm_dict["datm_outdir"])
+        logging.info("All DATM files are created in: %s", datm_tuple["datm_outdir"])
 
         # write to user_nl_datm_streams if specified
         if self.create_user_mods:
             with open(datm_streams_file, "a") as file:
-                self.write_datm_streams_lines(datm_dict["name_solar"], solarfiles, file)
-                self.write_datm_streams_lines(datm_dict["name_prec"], precfiles, file)
-                self.write_datm_streams_lines(datm_dict["name_tpqw"], tpqwfiles, file)
+                self.write_datm_streams_lines(datm_tuple["name_solar"], solarfiles, file)
+                self.write_datm_streams_lines(datm_tuple["name_prec"], precfiles, file)
+                self.write_datm_streams_lines(datm_tuple["name_tpqw"], tpqwfiles, file)

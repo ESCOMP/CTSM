@@ -16,9 +16,9 @@ at either a single point or a region using a global dataset. Currently this
 script subsets default surface, landuse, and DATM files, which can be seen in
 the defaults.cfg file.
 
-To run a single-point or regional case using this data, you must update the
-variable(s) `fsurdat` and/or `landuse` in the user_nl_clm namelist file to be
-the full path to the subset files. This script will automatically create this
+To run a single-point or regional case using this data with the NUOPC driver,
+you must update the variable(s) `fsurdat` and/or `landuse` in the user_nl_clm namelist
+file to be the full path to the subset files. This script will automatically create this
 file using the flag --create-user-mods.
 To use subset climate data, the namelist file user_nl_datm_streams must also
 be updated - this script will automatically create this file with
@@ -60,6 +60,7 @@ from getpass import getuser
 from argparse import ArgumentParser
 
 # -- import local classes for this script
+from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.path_utils import path_to_ctsm_root
@@ -148,7 +149,7 @@ def get_parser():
         nargs="?",
         const=True,
         required=False,
-        default=True,
+        default=False,
     )
     pt_parser.add_argument(
         "--zero-nonveg",
@@ -467,19 +468,18 @@ def setup_files(args, defaults, cesmroot):
                                            os.path.join(defaults.get("landuse", "dir"))),
                  'fsurf_in': fsurf_in,
                  'fluse_in': fluse_in,
-                 'datm_dict': {
-                     'datm_indir': dir_input_datm,
-                     'datm_outdir': dir_output_datm,
-                     'fdatmdomain_in': defaults.get(datm_type, "domain"),
-                     'dir_solar': defaults.get(datm_type, 'solardir'),
-                     'dir_prec': defaults.get(datm_type, 'precdir'),
-                     'dir_tpqw': defaults.get(datm_type, 'tpqwdir'),
-                     'tag_solar': defaults.get(datm_type, 'solartag'),
-                     'tag_prec': defaults.get(datm_type, 'prectag'),
-                     'tag_tpqw': defaults.get(datm_type, 'tpqwtag'),
-                     'name_solar': defaults.get(datm_type, 'solarname'),
-                     'name_prec': defaults.get(datm_type, 'precname'),
-                     'name_tpqw': defaults.get(datm_type, 'tpqwname')}
+                 'datm_tuple': DatmFiles(dir_input_datm,
+                                         dir_output_datm,
+                                         defaults.get(datm_type, "domain"),
+                                         defaults.get(datm_type, 'solardir'),
+                                         defaults.get(datm_type, 'precdir'),
+                                         defaults.get(datm_type, 'tpqwdir'),
+                                         defaults.get(datm_type, 'solartag'),
+                                         defaults.get(datm_type, 'prectag'),
+                                         defaults.get(datm_type, 'tpqwtag'),
+                                         defaults.get(datm_type, 'solarname'),
+                                         defaults.get(datm_type, 'precname'),
+                                         defaults.get(datm_type, 'tpqwname'))
                  }
 
     return file_dict
@@ -531,11 +531,11 @@ def subset_point(args, file_dict: dict):
     # --  Create single point atmospheric forcing data
     if single_point.create_datm:
         # subset DATM domain file
-        single_point.create_datmdomain_at_point(file_dict["datm_dict"])
+        single_point.create_datmdomain_at_point(file_dict["datm_tuple"])
 
         # subset the DATM data
         nl_datm = os.path.join(args.user_mods_dir, "user_nl_datm_streams")
-        single_point.create_datm_at_point(file_dict['datm_dict'], args.datm_syr, args.datm_eyr,
+        single_point.create_datm_at_point(file_dict['datm_tuple'], args.datm_syr, args.datm_eyr,
                                           nl_datm)
 
     # -- Write shell commands
@@ -617,7 +617,7 @@ def main():
     # --------------------------------- #
 
     # print help and exit when no option is chosen
-    if args.run_type != "point" and args.run_type != "reg":
+    if args.run_type != "point" and args.run_type != "region":
         get_parser().print_help()
         sys.exit()
 
