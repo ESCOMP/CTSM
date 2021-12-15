@@ -414,12 +414,9 @@ class SinglePointCase(BaseCase):
                 tpqwfiles.append(
                     os.path.join("${}".format(USRDAT_DIR), datm_tuple.outdir, ftpqw2))
 
-        nm = len(infile)
-        for n in range(nm):
-            logging.debug(outfile[n])
-            file_in = infile[n]
-            file_out = outfile[n]
-            self.extract_datm_at(file_in, file_out)
+        for out_f, in_f in enumerate(infile):
+            logging.debug(outfile[out_f])
+            self.extract_datm_at(in_f, outfile[out_f])
 
         logging.info("All DATM files are created in: %s", datm_tuple.outdir)
 

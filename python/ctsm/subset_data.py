@@ -65,7 +65,7 @@ from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.path_utils import path_to_ctsm_root
 
-from ctsm.utils import str2bool
+from ctsm.utils import _convert_to_bool as str2bool
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (

@@ -161,7 +161,7 @@ class BaseCase:
         return fname_out
 
     @staticmethod
-    def update_metadata(nc):
+    def update_metadata(nc_file):
         """
         Class method for adding some new attributes (such as date, username) and
         remove the old attributes from the netcdf file.
@@ -187,9 +187,9 @@ class BaseCase:
         # get git hash
         sha = get_git_short_hash()
 
-        nc.attrs["Created_on"] = today_string
-        nc.attrs["Created_by"] = getuser()
-        nc.attrs["Created_with"] = os.path.abspath(__file__) + " -- " + sha
+        nc_file.attrs["Created_on"] = today_string
+        nc_file.attrs["Created_by"] = getuser()
+        nc_file.attrs["Created_with"] = os.path.abspath(__file__) + " -- " + sha
 
         # delete unrelated attributes if they exist
         del_attrs = [
@@ -202,12 +202,12 @@ class BaseCase:
             "Version",
             "Compiler_Optimized",
         ]
-        attr_list = nc.attrs
+        attr_list = nc_file.attrs
 
         for attr in del_attrs:
             if attr in attr_list:
                 logging.debug("This attr should be deleted : %s", attr)
-                del nc.attrs[attr]
+                del nc_file.attrs[attr]
 
     @staticmethod
     def write_to_file(text, file):
