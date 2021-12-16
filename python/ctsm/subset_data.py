@@ -152,48 +152,36 @@ def get_parser():
         default="",
     )
     pt_parser.add_argument(
-        "--unisnow",
-        help="Flag for creating datasets using uniform snowpack. [default: %(default)s]",
-        action="store",
+        "--variable-snow-fraction",
+        help="Creating datasets using variable snow fraction.If unset, snow is set to  uniform fraction.",
+        action="store_false",
         dest="uni_snow",
-        type=str2bool,
-        nargs="?",
-        const=True,
         required=False,
         default=True,
     )
     pt_parser.add_argument(
-        "--single-pft",
-        help="Flag for making the whole grid 100%% single PFT. [default: %(default)s]",
-        action="store",
+        "--allow-multiple-pft",
+        help="Creating dataset using multiple pft. If unset, it assumes the whole grid is 100% single PFT set by --dom-pft.",
+        action="store_false",
         dest="overwrite_single_pft",
-        type=str2bool,
-        nargs="?",
-        const=True,
         required=False,
         default=True,
     )
     pt_parser.add_argument(
         "--zero-nonveg",
-        help="Flag for setting all non-vegetation landunits to zero. [default: %(default)s]",
-        action="store",
+        help="Creating dataset by setting all non-vegetation landunits to zero.",
+        action="store_true",
         dest="zero_nonveg",
-        type=str2bool,
-        nargs="?",
-        const=True,
         required=False,
-        default=True,
+        default=False,
     )
     pt_parser.add_argument(
-        "--saturation-excess",
-        help="Flag for making dataset using saturation excess. [default: %(default)s]",
-        action="store",
+        "--allow-saturation-excess",
+        help="Creating dataset allowing saturatated conditions. If unset saturation_excess is set to zero.",
+        action="store_true",
         dest="saturation_excess",
-        type=str2bool,
-        nargs="?",
-        const=True,
         required=False,
-        default=True,
+        default=False,
     )
     # -- region-specific parser options
     rg_parser.add_argument(
@@ -243,12 +231,9 @@ def get_parser():
     )
     rg_parser.add_argument(
         "--create-mesh",
-        help="Flag for subsetting mesh file. [default: %(default)s]",
-        action="store",
+        help="Flag for subsetting mesh file.",
+        action="store_true",
         dest="create_mesh",
-        type=str2bool,
-        nargs="?",
-        const=True,
         required=False,
         default=False,
     )
@@ -257,45 +242,33 @@ def get_parser():
     for subparser in [pt_parser, rg_parser]:
         subparser.add_argument(
             "--create-domain",
-            help="Flag for creating CLM domain file at single point/region. [default: %(default)s]",
-            action="store",
+            help="Create CLM domain file at single point/region.",
+            action="store_true",
             dest="create_domain",
-            type=str2bool,
-            nargs="?",
-            const=True,
             required=False,
             default=False,
         )
         subparser.add_argument(
             "--create-surface",
-            help="Flag for creating surface data file at single point/region. [default: %(default)s]",
-            action="store",
+            help="Create surface data file at single point/region.",
+            action="store_true",
             dest="create_surfdata",
-            type=str2bool,
-            nargs="?",
-            const=True,
             required=False,
             default=False,
         )
         subparser.add_argument(
             "--create-landuse",
-            help="Flag for creating landuse data file at single point/region. [default: %(default)s]",
-            action="store",
+            help="Create landuse data file at single point/region.",
+            action="store_true",
             dest="create_landuse",
-            type=str2bool,
-            nargs="?",
-            const=True,
             required=False,
             default=False,
         )
         subparser.add_argument(
             "--create-datm",
-            help="Flag for creating DATM forcing data at single point/region. [default: %(default)s]",
-            action="store",
+            help="Create DATM forcing data at single point/region.",
+            action="store_true",
             dest="create_datm",
-            type=str2bool,
-            nargs="?",
-            const=True,
             required=False,
             default=False,
         )
@@ -319,14 +292,11 @@ def get_parser():
         )
         subparser.add_argument(
             "--crop",
-            help="Flag for creating datasets using the extensive list of prognostic crop types. [default: %(default)s]",
-            action="store",
+            help="Create datasets using the extensive list of prognostic crop types.",
+            action="store_true",
             dest="crop_flag",
-            type=str2bool,
-            nargs="?",
-            const=True,
             required=False,
-            default=True,
+            default=False,
         )
         subparser.add_argument(
             "--dompft",
@@ -351,13 +321,10 @@ def get_parser():
             default=os.path.join(os.getcwd(), "subset_data_" + parser_name),
         )
 
-    pt_parser.add_argument('--datm_from_tower',
-                help='Flag for creating DATM forcing data at single point for a tower data. [default: %(default)s]', 
-                action="store",
+    pt_parser.add_argument('--datm-from-tower',
+                help='Create DATM forcing data at single point for a tower data.',
+                action="store_true",
                 dest="datm_tower",
-                type = str2bool,
-                nargs = '?',
-                const = True,
                 required = False,
                 default = False)
     pt_parser.add_argument('--create_user_mods',
