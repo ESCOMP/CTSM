@@ -321,32 +321,36 @@ def get_parser():
             default=os.path.join(os.getcwd(), "subset_data_" + parser_name),
         )
 
-    pt_parser.add_argument('--datm-from-tower',
-                help='Create DATM forcing data at single point for a tower data.',
-                action="store_true",
-                dest="datm_tower",
-                required = False,
-                default = False)
-    pt_parser.add_argument('--create_user_mods',
-                help='Flag for creating user mods directory . [default: %(default)s]', 
-                action="store",
-                dest="datm_tower",
-                type = str2bool,
-                nargs = '?',
-                const = True,
-                required = False,
-                default = False)
-    pt_parser.add_argument('--user_mods_dir',
-                help='Flag for creating user mods directory . [default: %(default)s]', 
-                action="store",
-                dest="user_mod_dir",
-                type = str,
-                nargs = '?',
-                const = True,
-                required = False,
-                default = False)
-
-
+    pt_parser.add_argument(
+        "--datm-from-tower",
+        help="Create DATM forcing data at single point for a tower data.",
+        action="store_true",
+        dest="datm_tower",
+        required=False,
+        default=False,
+    )
+    pt_parser.add_argument(
+        "--create_user_mods",
+        help="Flag for creating user mods directory . [default: %(default)s]",
+        action="store",
+        dest="datm_tower",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        required=False,
+        default=False,
+    )
+    pt_parser.add_argument(
+        "--user_mods_dir",
+        help="Flag for creating user mods directory . [default: %(default)s]",
+        action="store",
+        dest="user_mod_dir",
+        type=str,
+        nargs="?",
+        const=True,
+        required=False,
+        default=False,
+    )
 
     # -- print help for both subparsers
     parser.epilog = textwrap.dedent(
@@ -422,14 +426,14 @@ def main():
     myname = getuser()
     pwd = os.getcwd()
 
-    logging.info("User = " + myname)
-    logging.info("Current directory = " + pwd)
+    logger.info("User = " + myname)
+    logger.info("Current directory = " + pwd)
 
     if args.run_type == "point":
-        logging.info(
+        logger.info(
             "----------------------------------------------------------------------------"
         )
-        logging.info(
+        logger.info(
             "This script extracts a single point from the global CTSM inputdata datasets."
         )
 
@@ -480,14 +484,14 @@ def main():
 
         single_point.create_tag()
 
-        logging.debug(single_point)
+        logger.debug(single_point)
 
         if crop_flag:
             num_pft = "78"
         else:
             num_pft = "16"
 
-        logging.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
+        logger.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
 
         # --  Set input and output filenames
         # --  Specify input and output directories
@@ -506,8 +510,8 @@ def main():
         if not os.path.isdir(dir_output_datm):
             os.mkdir(dir_output_datm)
 
-        logging.info("dir_input_datm  : " + dir_input_datm)
-        logging.info("dir_output_datm : " + dir_output_datm)
+        logger.info("dir_input_datm  : " + dir_input_datm)
+        logger.info("dir_output_datm : " + dir_output_datm)
 
         # --  Specify land domain file  ---------------------------------
         fdomain_in = os.path.join(
@@ -520,8 +524,8 @@ def main():
         single_point.fdomain_in = fdomain_in
         single_point.fdomain_out = fdomain_out
 
-        logging.info("fdomain_in  : " + fdomain_in)
-        logging.info("fdomain_out : " + fdomain_out)
+        logger.info("fdomain_in  : " + fdomain_in)
+        logger.info("fdomain_out : " + fdomain_out)
 
         # --  Specify surface data file  --------------------------------
         if crop_flag:
@@ -542,8 +546,8 @@ def main():
         single_point.fsurf_in = fsurf_in
         single_point.fsurf_out = fsurf_out
 
-        logging.info("fsurf_in   : " + fsurf_in)
-        logging.info("fsurf_out  : " + fsurf_out)
+        logger.info("fsurf_in   : " + fsurf_in)
+        logger.info("fsurf_out  : " + fsurf_out)
 
         # --  Specify landuse file  -------------------------------------
         if crop_flag:
@@ -562,8 +566,8 @@ def main():
         single_point.fluse_in = fluse_in
         single_point.fluse_out = fluse_out
 
-        logging.info("fluse_in   : " + fluse_in)
-        logging.info("fluse_out  : " + fluse_out)
+        logger.info("fluse_in   : " + fluse_in)
+        logger.info("fluse_out  : " + fluse_out)
 
         # --  Specify datm domain file  ---------------------------------
         fdatmdomain_in = os.path.join(
@@ -577,8 +581,8 @@ def main():
         single_point.fdatmdomain_in = fdatmdomain_in
         single_point.fdatmdomain_out = fdatmdomain_out
 
-        logging.info("fdatmdomain_in   : " + fdatmdomain_in)
-        logging.info("fdatmdomain out  : " + fdatmdomain_out)
+        logger.info("fdatmdomain_in   : " + fdatmdomain_in)
+        logger.info("fdatmdomain out  : " + fdatmdomain_out)
 
         # --  Create CTSM domain file
         if create_domain:
@@ -601,13 +605,18 @@ def main():
             single_point.dir_output_datm = dir_output_datm
             single_point.create_datm_at_point()
 
-        logging.info("Successfully ran script for single point.")
+        if create_domain or create_surfdata or create_landuse or create_datm:
+            logger.info("Successfully ran script for single point.")
+        else:
+            logger.warning(
+                "Please choose at least one of the following flags to create the files: \n --create-domain \n --create-surface \n --create-landuse \n --create-datm"
+            )
 
     elif args.run_type == "region":
-        logging.info(
+        logger.info(
             "----------------------------------------------------------------------------"
         )
-        logging.info(
+        logger.info(
             "This script extracts a single point from the global CTSM inputdata datasets."
         )
 
@@ -651,14 +660,14 @@ def main():
 
         region.create_tag()
 
-        logging.debug(region)
+        logger.debug(region)
 
         if crop_flag:
             num_pft = "78"
         else:
             num_pft = "16"
 
-        logging.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
+        logger.debug("crop_flag = " + crop_flag.__str__() + " => num_pft =" + num_pft)
 
         # --  Set input and output filenames
         # --  Specify input and output directories
@@ -681,37 +690,33 @@ def main():
         region.fdomain_in = fdomain_in
         region.fdomain_out = fdomain_out
 
-        logging.info("fdomain_in  : " + fdomain_in)
-        logging.info("fdomain_out : " + fdomain_out)
+        logger.info("fdomain_in  : " + fdomain_in)
+        logger.info("fdomain_out : " + fdomain_out)
 
         # --  Specify surface data file  --------------------------------
         fsurf_in = os.path.join(
             dir_inputdata,
             "lnd/clm2/surfdata_map/surfdata_1.9x2.5_78pfts_CMIP6_simyr1850_c170824.nc",
         )
-        fsurf_out = os.path.join(
-            dir_output, add_tag_to_filename(fsurf_in, region.tag)
-        )
+        fsurf_out = os.path.join(dir_output, add_tag_to_filename(fsurf_in, region.tag))
 
         region.fsurf_in = fsurf_in
         region.fsurf_out = fsurf_out
 
-        logging.info("fsurf_in  : " + fdomain_in)
-        logging.info("fsurf_out : " + fdomain_out)
+        logger.info("fsurf_in  : " + fdomain_in)
+        logger.info("fsurf_out : " + fdomain_out)
 
         # --  Specify landuse file  -------------------------------------
         fluse_in = os.path.join(
             dir_inputdata,
             "lnd/clm2/surfdata_map/landuse.timeseries_1.9x2.5_hist_78pfts_CMIP6_simyr1850-2015_c170824.nc",
         )
-        fluse_out = os.path.join(
-            dir_output, add_tag_to_filename(fluse_in, region.tag)
-        )
+        fluse_out = os.path.join(dir_output, add_tag_to_filename(fluse_in, region.tag))
         region.fluse_in = fluse_in
         region.fluse_out = fluse_out
 
-        logging.info("fluse_in  : " + fdomain_in)
-        logging.info("fluse_out : " + fdomain_out)
+        logger.info("fluse_in  : " + fdomain_in)
+        logger.info("fluse_out : " + fdomain_out)
 
         # --  Create CTSM domain file
         if create_domain:
@@ -724,7 +729,12 @@ def main():
         # --  Create CTSM transient landuse data file
         if create_landuse:
             region.create_landuse_at_reg()
-        logging.info("Successfully ran script for a regional case.")
+        if create_domain or create_surfdata or create_landuse or create_datm:
+            logger.info("Successfully ran script for a regional case.")
+        else:
+            logger.warning(
+                "Please choose at least one of the following flags to create the files: \n --create-domain \n --create-surface \n --create-landuse \n --create-mesh"
+            )
 
     else:
         # print help when no option is chosen

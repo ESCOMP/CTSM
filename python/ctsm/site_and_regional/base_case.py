@@ -110,7 +110,7 @@ class BaseCase:
             f_out (xarray Dataset): Xarray Dataset with 1-d coords
 
         """
-        logging.debug("Open file: " + filename)
+        logger.debug("Open file: " + filename)
         f_in = xr.open_dataset(filename)
 
         # create 1d coordinate variables to enable sel() method
@@ -170,7 +170,7 @@ class BaseCase:
 
         for attr in del_attrs:
             if attr in attr_list:
-                logging.debug("This attr should be deleted : " + attr)
+                logger.debug("This attr should be deleted : " + attr)
                 del nc.attrs[attr]
 
         # for attr, value in attr_list.items():

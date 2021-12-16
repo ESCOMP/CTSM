@@ -118,10 +118,10 @@ class SinglePointCase(BaseCase):
         """
         Create domain file for this SinglePointCase class.
         """
-        logging.info(
+        logger.info(
             "----------------------------------------------------------------------"
         )
-        logging.info(
+        logger.info(
             "Creating domain file at "
             + self.plon.__str__()
             + " "
@@ -144,7 +144,7 @@ class SinglePointCase(BaseCase):
 
         wfile = self.fdomain_out
         f_out.to_netcdf(path=wfile, mode="w", format='NETCDF3_64BIT')
-        logging.info("Successfully created file (fdomain_out)" + self.fdomain_out)
+        logger.info("Successfully created file (fdomain_out)" + self.fdomain_out)
         f_in.close()
         f_out.close()
 
@@ -152,10 +152,10 @@ class SinglePointCase(BaseCase):
         """
         Create landuse file at a single point.
         """
-        logging.info(
+        logger.info(
             "----------------------------------------------------------------------"
         )
-        logging.info(
+        logger.info(
             "Creating landuse file at "
             + self.plon.__str__()
             + " "
@@ -193,7 +193,7 @@ class SinglePointCase(BaseCase):
         wfile = self.fluse_out
         # mode 'w' overwrites file
         f_out.to_netcdf(path=wfile, mode="w", format='NETCDF3_64BIT')
-        logging.info("Successfully created file (luse_out)" + self.fluse_out + ".")
+        logger.info("Successfully created file (luse_out)" + self.fluse_out + ".")
         f_in.close()
         f_out.close()
 
@@ -201,10 +201,10 @@ class SinglePointCase(BaseCase):
         """
         Create surface data file at a single point.
         """
-        logging.info(
+        logger.info(
             "----------------------------------------------------------------------"
         )
-        logging.info(
+        logger.info(
             "Creating surface dataset file at "
             + self.plon.__str__()
             + " "
@@ -271,7 +271,7 @@ class SinglePointCase(BaseCase):
         del f_out.attrs["History_Log"]
         # mode 'w' overwrites file
         f_out.to_netcdf(path=self.fsurf_out, mode="w", format = 'NETCDF3_64BIT')
-        logging.info("Successfully created file (fsurf_out) :" + self.fsurf_out)
+        logger.info("Successfully created file (fsurf_out) :" + self.fsurf_out)
         f_in.close()
         f_out.close()
 
@@ -279,10 +279,10 @@ class SinglePointCase(BaseCase):
         """
         Create DATM domain file at a single point
         """
-        logging.info(
+        logger.info(
             "----------------------------------------------------------------------"
         )
-        logging.info(
+        logger.info(
             "Creating DATM domain file at "
             + self.plon.__str__()
             + " "
@@ -306,8 +306,8 @@ class SinglePointCase(BaseCase):
         f_out.attrs["Created_from"] = self.fdatmdomain_in
 
         # mode 'w' overwrites file
-        f_out.to_netcdf(path=wfile, mode="w")
-        logging.info(
+        f_out.to_netcdf(path=wfile, mode="w", format = 'NETCDF3_64BIT')
+        logger.info(
             "Successfully created file (fdatmdomain_out) :" + self.fdatmdomain_out
         )
         f_in.close()
@@ -332,7 +332,7 @@ class SinglePointCase(BaseCase):
 
         # mode 'w' overwrites file
         f_out.to_netcdf(path=file_out, mode="w")
-        logging.info("Successfully created file :" + file_out)
+        logger.info("Successfully created file :" + file_out)
         f_in.close()
         f_out.close()
 
@@ -340,10 +340,10 @@ class SinglePointCase(BaseCase):
         """
         Create all DATM dataset at a point.
         """
-        logging.info(
+        logger.info(
             "----------------------------------------------------------------------"
         )
-        logging.info(
+        logger.info(
             "Creating DATM files at "
             + self.plon.__str__()
             + " "
@@ -384,9 +384,9 @@ class SinglePointCase(BaseCase):
 
         nm = len(infile)
         for n in range(nm):
-            logging.debug(outfile[n])
+            logger.debug(outfile[n])
             file_in = infile[n]
             file_out = outfile[n]
             self.extract_datm_at(file_in, file_out)
 
-        logging.info("All DATM files are created in: " + self.dir_output_datm + ".")
+        logger.info("All DATM files are created in: " + self.dir_output_datm + ".")
